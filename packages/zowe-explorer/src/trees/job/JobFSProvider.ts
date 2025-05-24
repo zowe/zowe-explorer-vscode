@@ -34,8 +34,19 @@ import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class JobFSProvider extends BaseProvider implements vscode.FileSystemProvider {
+    public supportSpoolPagination(doc: vscode.TextDocument): boolean {
+        const profInfo = this._getInfoFromUri(doc.uri);
+        try {
+            const paginationEnabled = SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled");
+            const supportPagination = ZoweExplorerApiRegister.getJesApi(profInfo.profile).supportSpoolPagination?.();
+            return paginationEnabled && supportPagination;
+        } catch (err) {
+            return false;
+        }
+    }
     private static _instance: JobFSProvider;
 
     private constructor() {
@@ -207,26 +218,45 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
         const bufBuilder = new BufferBuilder();
 
+        const metadata = spoolEntry.metadata ?? this._getInfoFromUri(uri);
+        const profile = Profiles.getInstance().loadNamedProfile(metadata.profile.name);
+        const profileEncoding = spoolEntry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
+
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
         await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
+        const query = new URLSearchParams(uri.query);
+        let recordRange = "";
+        const recordsToFetch = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
+
+        if (query.has("startLine")) {
+            const startLine = parseInt(query.get("startLine")!);
+            const endLine = query.has("endLine") ? parseInt(query.get("endLine")!) : startLine + (recordsToFetch - 1);
+            recordRange = `${startLine}-${endLine}`;
+        } else {
+            const defFetchSetting = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
+            if (defFetchSetting > 1) {
+                recordRange = `0-${defFetchSetting - 1}`;
+            }
+        }
+
         try {
+            const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
             if (jesApi.downloadSingleSpool) {
                 const spoolDownloadObject: IDownloadSpoolContentParms = {
                     jobFile: spoolEntry.spool,
                     stream: bufBuilder,
+                    binary: spoolEntry.encoding?.kind === "binary",
+                    recordRange:
+                        jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled")
+                            ? recordRange
+                            : undefined,
+                    encoding: spoolEncoding,
                 };
 
-                // Handle encoding and binary options
-                if (spoolEntry.encoding) {
-                    spoolDownloadObject.binary = spoolEntry.encoding.kind === "binary";
-                    if (spoolEntry.encoding.kind === "other") {
-                        spoolDownloadObject.encoding = spoolEntry.encoding.codepage;
-                    }
-                }
                 await jesApi.downloadSingleSpool(spoolDownloadObject);
             } else {
                 const jobEntry = this._lookupParentDirectory(uri) as JobEntry;
-                bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id));
+                bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id, spoolEncoding));
             }
         } catch (err) {
             await AuthUtils.handleProfileAuthOnError(err, spoolEntry.metadata.profile);
@@ -234,11 +264,17 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
-        spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
+
+        if (query.has("startLine") && !query.has("endLine")) {
+            spoolEntry.data = Buffer.concat([spoolEntry.data, bufBuilder.read() ?? new Uint8Array()]);
+        } else {
+            spoolEntry.data = bufBuilder.read() ?? new Uint8Array();
+        }
+
         spoolEntry.mtime = Date.now();
         spoolEntry.size = spoolEntry.data.byteLength;
         if (editor) {
-            await this._updateResourceInEditor(uri);
+            await this._updateResourceInEditor(uri.with({ query: "" }));
         }
 
         return spoolEntry;

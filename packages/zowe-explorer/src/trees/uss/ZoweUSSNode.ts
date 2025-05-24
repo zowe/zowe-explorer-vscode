@@ -100,6 +100,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const isSession = this.getParent() == null;
         if (isSession) {
             this.id = `uss.${this.label.toString()}`;
+            this.tooltip = opts.label;
         }
         if (opts.profile) {
             this.profile = opts.profile;
@@ -113,6 +114,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             });
             if (isSession) {
                 UssFSProvider.instance.createDirectory(this.resourceUri);
+                const toolTipList: string[] = [];
+                toolTipList.push(`${vscode.l10n.t("Profile: ")}${opts.label}`);
+                toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
+                this.tooltip = toolTipList.join("\n");
             } else if (this.contextValue === Constants.INFORMATION_CONTEXT) {
                 this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
             } else if (this.collapsibleState === vscode.TreeItemCollapsibleState.None) {
@@ -151,6 +156,27 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return undefined;
         }
         return ussEntry.attributes;
+    }
+
+    public async fetchAttributes(): Promise<Types.FileAttributes> {
+        const ussEntry = UssFSProvider.instance.lookup(this.resourceUri, true) as UssFile | UssDirectory;
+        if (ussEntry == null || FsAbstractUtils.isDirectoryEntry(ussEntry)) {
+            return undefined;
+        }
+        const response = await this.getUssFiles(this.profile);
+        if (response.success === false || response.apiResponse?.items.length === 0 || response.apiResponse?.items.length > 1) {
+            return undefined;
+        }
+        const item = response.apiResponse.items[0];
+        const attrs: Types.FileAttributes = {
+            gid: item.gid,
+            uid: item.uid,
+            group: item.group,
+            perms: item.mode,
+            owner: item.user,
+        };
+        this.setAttributes(attrs);
+        return attrs;
     }
 
     public setAttributes(attributes: Partial<Types.FileAttributes>): void {
@@ -662,11 +688,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     private async getUssFiles(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse> {
         try {
             if (!ZoweExplorerApiRegister.getUssApi(profile).getSession(profile)) {
-                throw new imperative.ImperativeError({
-                    msg: vscode.l10n.t("Profile auth error"),
-                    additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401 as number}`,
-                });
+                ZoweLogger.warn(`[ZoweUSSNode.getUssFiles] Session undefined for profile ${profile.name}`);
+                return { success: false, commandResponse: "Session is not defined for profile" };
             }
             if (SharedContext.isSession(this)) {
                 return await UssFSProvider.instance.listFiles(

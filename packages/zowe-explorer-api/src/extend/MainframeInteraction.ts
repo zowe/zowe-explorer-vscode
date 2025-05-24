@@ -404,6 +404,7 @@ export namespace MainframeInteraction {
      * @export
      */
     export interface IJes extends ICommon {
+        supportSpoolPagination?(): boolean;
         /**
          * Returns a list of jobs for any parameters.
          *
@@ -453,9 +454,10 @@ export namespace MainframeInteraction {
          * @param {string} jobname
          * @param {string} jobid
          * @param {number} spoolId
+         * @param {encoding} string
          * @returns {Promise<string>}
          */
-        getSpoolContentById(jobname: string, jobid: string, spoolId: number): Promise<string>;
+        getSpoolContentById(jobname: string, jobid: string, spoolId: number, encoding?: string): Promise<string>;
 
         /**
          * Returns the JCL of a job as a string.

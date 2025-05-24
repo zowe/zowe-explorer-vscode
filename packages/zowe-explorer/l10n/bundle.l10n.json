@@ -15,6 +15,7 @@
   "File History": "File History",
   "Sessions": "Sessions",
   "Encoding History": "Encoding History",
+  "Search Keyword History": "Search Keyword History",
   "Delete Selected": "Delete Selected",
   "Select an item before deleting": "Select an item before deleting",
   "Delete": "Delete",
@@ -85,7 +86,6 @@
   "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.",
   "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.": "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
   "Create New": "Create New",
-  "\"Update Credentials\" operation not supported when \"autoStore\" is false": "\"Update Credentials\" operation not supported when \"autoStore\" is false",
   "Connection Name": "Connection Name",
   "Enter a name for the connection.": "Enter a name for the connection.",
   "Operation cancelled": "Operation cancelled",
@@ -95,6 +95,7 @@
       "Profile name"
     ]
   },
+  "User: ": "User: ",
   "Zowe home directory is located at {0}/Zowe directory path": {
     "message": "Zowe home directory is located at {0}",
     "comment": [
@@ -131,6 +132,12 @@
   "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles.": "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles.",
   "Convert existing profiles": "Convert existing profiles",
   "Tree item is not a Zowe Explorer item.": "Tree item is not a Zowe Explorer item.",
+  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}/Error message": {
+    "message": "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
   "Zowe Explorer": "Zowe Explorer",
   "Initialized logger for Zowe Explorer": "Initialized logger for Zowe Explorer",
   "This log file can be found at {0}/Log file location": {
@@ -168,6 +175,17 @@
       "Profile name"
     ]
   },
+  "Auth Method: ": "Auth Method: ",
+  "Token-based Authentication": "Token-based Authentication",
+  "Basic Authentication": "Basic Authentication",
+  "Certificate Authentication": "Certificate Authentication",
+  "Unknown": "Unknown",
+  "Pattern: ": "Pattern: ",
+  "Path: ": "Path: ",
+  "Owner: ": "Owner: ",
+  "JobId: ": "JobId: ",
+  "Profile: ": "Profile: ",
+  "Profile Type: ": "Profile Type: ",
   "Use the search button to list USS files": "Use the search button to list USS files",
   "Invalid node": "Invalid node",
   "Delete action was cancelled.": "Delete action was cancelled.",
@@ -195,8 +213,6 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.",
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
-  "Profile auth error": "Profile auth error",
-  "Profile is not authenticated, please log in to continue": "Profile is not authenticated, please log in to continue",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
@@ -235,6 +251,7 @@
   },
   "Continue": "Continue",
   "Prompting the user to choose a member from the filtered list": "Prompting the user to choose a member from the filtered list",
+  "You are already at the root directory.": "You are already at the root directory.",
   "Prompting the user for a USS path": "Prompting the user for a USS path",
   "Select a filter": "Select a filter",
   "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
@@ -312,12 +329,6 @@
   "Uploading file to USS tree": "Uploading file to USS tree",
   "Upload action was cancelled.": "Upload action was cancelled.",
   "Uploading USS file": "Uploading USS file",
-  "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}/File names": {
-    "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
-    "comment": [
-      "File names"
-    ]
-  },
   "Delete action was canceled.": "Delete action was canceled.",
   "Copying file structure...": "Copying file structure...",
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
@@ -367,6 +378,7 @@
       "Name of USS session"
     ]
   },
+  "(default)": "(default)",
   "Confirm": "Confirm",
   "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
@@ -383,12 +395,17 @@
   "You must enter a pattern.": "You must enter a pattern.",
   "Prompting the user to choose a recent member for editing": "Prompting the user to choose a recent member for editing",
   "Select a recent member to open": "Select a recent member to open",
+  "Profile not found.": "Profile not found.",
   "No recent members found.": "No recent members found.",
+  "Update Zowe configuration schema": "Update Zowe configuration schema",
+  "Choose the schema location(s) to update.": "Choose the schema location(s) to update.",
+  "Update Global schema only": "Update Global schema only",
+  "Update Global and Project level schemas": "Update Global and Project level schemas",
   "Use the search button to display jobs": "Use the search button to display jobs",
   "No spool files found": "No spool files found",
   "No jobs found": "No jobs found",
   "Retrieving response from JES list API": "Retrieving response from JES list API",
-  "Job ID (default)": "Job ID (default)",
+  "Job ID": "Job ID",
   "Date Submitted": "Date Submitted",
   "Date Completed": "Date Completed",
   "Job Name": "Job Name",
@@ -528,6 +545,7 @@
       "Document file name"
     ]
   },
+  "No document found": "No document found",
   "Modify Command": "Modify Command",
   "Command response: {0}/Command response": {
     "message": "Command response: {0}",
@@ -570,15 +588,17 @@
   "The response from Zowe CLI was not successful": "The response from Zowe CLI was not successful",
   "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
   "No data sets found": "No data sets found",
+  "Previous page": "Previous page",
+  "Next page": "Next page",
   "Retrieving response from MVS list API": "Retrieving response from MVS list API",
   "Cannot download, item invalid.": "Cannot download, item invalid.",
-  "Name (default)": "Name (default)",
   "Date Created": "Date Created",
   "Date Modified": "Date Modified",
   "User ID": "User ID",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
-  "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.": "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.",
-  "Cannot drop a member onto a sequential dataset.": "Cannot drop a member onto a sequential dataset.",
+  "Failed to move {0}: {1}": "Failed to move {0}: {1}",
+  "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.",
+  "Cannot drop a partitioned dataset or member into a sequential dataset.": "Cannot drop a partitioned dataset or member into a sequential dataset.",
   "Moving MVS files...": "Moving MVS files...",
   "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
   "No data set favorites found.": "No data set favorites found.",
@@ -681,6 +701,45 @@
   "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
+  "No search pattern applied. Search for a pattern and try again.": "No search pattern applied. Search for a pattern and try again.",
+  "Searching for \"{0}\"/The string to search data sets for.": {
+    "message": "Searching for \"{0}\"",
+    "comment": [
+      "The string to search data sets for."
+    ]
+  },
+  "Search Results for \"{0}\"/The string to search data sets for.": {
+    "message": "Search Results for \"{0}\"",
+    "comment": [
+      "The string to search data sets for."
+    ]
+  },
+  "Data Set Name": "Data Set Name",
+  "Position": "Position",
+  "Contents": "Contents",
+  "Open": "Open",
+  "Enter the text to search for.": "Enter the text to search for.",
+  "Search Options": "Search Options",
+  "Select search options": "Select search options",
+  "Case Sensitive": "Case Sensitive",
+  "Regex": "Regex",
+  "On": "On",
+  "Off": "Off",
+  "Edit Options (Case Sensitive: {0}, Regex: {1})/Case SensitiveRegex": {
+    "message": "Edit Options (Case Sensitive: {0}, Regex: {1})",
+    "comment": [
+      "Case Sensitive",
+      "Regex"
+    ]
+  },
+  "Perform the search with case sensitivity": "Perform the search with case sensitivity",
+  "Treat the search query as a regex": "Treat the search query as a regex",
+  "Are you sure you want to search {0} data sets and members?/The number of data sets that are about to be searched": {
+    "message": "Are you sure you want to search {0} data sets and members?",
+    "comment": [
+      "The number of data sets that are about to be searched"
+    ]
+  },
   "Failed to list datasets": "Failed to list datasets",
   "Failed to read {0}/File path": {
     "message": "Failed to read {0}",
@@ -750,19 +809,13 @@
       "Data Sets to delete"
     ]
   },
-  "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}/Data Sets to delete lengthData Sets to delete": {
-    "message": "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}",
-    "comment": [
-      "Data Sets to delete length",
-      "Data Sets to delete"
-    ]
-  },
   "Deleting items": "Deleting items",
-  "The following {0} item(s) were deleted: {1}/Data Sets deleted lengthData Sets deleted": {
-    "message": "The following {0} item(s) were deleted: {1}",
+  "The following {0} item(s) were deleted:\n{1}{2}/Data Sets deleted lengthData Sets deletedAdditional datasets count": {
+    "message": "The following {0} item(s) were deleted:\n{1}{2}",
     "comment": [
       "Data Sets deleted length",
-      "Data Sets deleted"
+      "Data Sets deleted",
+      "Additional datasets count"
     ]
   },
   "Name of member": "Name of member",
@@ -871,31 +924,6 @@
   "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
   "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",
   "Unable to copy data set.": "Unable to copy data set.",
-  "No search pattern applied. Search for a pattern and try again.": "No search pattern applied. Search for a pattern and try again.",
-  "Enter the text to search for.": "Enter the text to search for.",
-  "Operation Cancelled": "Operation Cancelled",
-  "Searching for \"{0}\"/The string to search data sets for.": {
-    "message": "Searching for \"{0}\"",
-    "comment": [
-      "The string to search data sets for."
-    ]
-  },
-  "Search Results for \"{0}\"/The string to search data sets for.": {
-    "message": "Search Results for \"{0}\"",
-    "comment": [
-      "The string to search data sets for."
-    ]
-  },
-  "Data Set Name": "Data Set Name",
-  "Position": "Position",
-  "Contents": "Contents",
-  "Open": "Open",
-  "Are you sure you want to search {0} data sets and members?/The number of data sets that are about to be searched": {
-    "message": "Are you sure you want to search {0} data sets and members?",
-    "comment": [
-      "The number of data sets that are about to be searched"
-    ]
-  },
   "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
     "message": "Failed to upload changes for {0}: {1}",
     "comment": [
@@ -951,12 +979,6 @@
     ]
   },
   "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.",
-  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}/Error message": {
-    "message": "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
-    "comment": [
-      "Error message"
-    ]
-  },
   "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.",
   "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.",
   "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.",
@@ -1000,6 +1022,11 @@
       "Profile name"
     ]
   },
+  "Auto Store: ": "Auto Store: ",
+  "Config File: ": "Config File: ",
+  "Global": "Global",
+  "Project": "Project",
+  "Secure Credentials Enabled: ": "Secure Credentials Enabled: ",
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
   "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",
@@ -1091,8 +1118,6 @@
   "Select the location of the config file to edit": "Select the location of the config file to edit",
   "Global: in the Zowe home directory": "Global: in the Zowe home directory",
   "Project: in the current working directory": "Project: in the current working directory",
-  "Enter the user name for the connection. Leave blank to not store.": "Enter the user name for the connection. Leave blank to not store.",
-  "Enter the password for the connection. Leave blank to not store.": "Enter the password for the connection. Leave blank to not store.",
   "Do you wish to apply this for all trees?": "Do you wish to apply this for all trees?",
   "Apply to all trees": "Apply to all trees",
   "Apply to current tree selected": "Apply to current tree selected",
@@ -1115,6 +1140,7 @@
   "Enter the volume serial on which the data set should be placed": "Enter the volume serial on which the data set should be placed",
   "Recent": "Recent",
   "Recent Filters": "Recent Filters",
+  "Recent Searches": "Recent Searches",
   "Options": "Options",
   "Disabled": "Disabled",
   "Your jobs": "Your jobs",

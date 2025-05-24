@@ -486,22 +486,9 @@ export namespace window {
         return undefined;
     }
 
-    export function createWebviewPanel(
-        viewType: string,
-        title: string,
-        showOptions: ViewColumn | { preserveFocus: boolean; viewColumn: ViewColumn },
-        options?: WebviewPanelOptions & WebviewOptions
-    ): WebviewPanel {
-        return undefined as any;
-    }
-
-    export function showQuickPick<T extends QuickPickItem>(
-        _items: readonly T[] | Thenable<readonly T[]>,
-        _options?: QuickPickOptions & { canPickMany: true },
-        _token?: CancellationToken
-    ): Thenable<T[] | undefined> {
-        return Promise.resolve(undefined);
-    }
+    const { window: mockWindow } = require("jest-mock-vscode").createVSCodeMock(jest);
+    export const showQuickPick = mockWindow.showQuickPick;
+    export const createWebviewPanel = mockWindow.createWebviewPanel;
 
     /**
      * Options to configure the behavior of the message.
@@ -554,13 +541,20 @@ export namespace commands {
         return undefined;
     }
 }
+
 export class Disposable {
     /**
      * Creates a new Disposable calling the provided function
      * on dispose.
      * @param callOnDispose Function that disposes something.
      */
-    constructor() {}
+    constructor(private callOnDispose?: Function) {}
+    /**
+     * Dispose this object.
+     */
+    public dispose(): any {
+        this.callOnDispose?.();
+    }
 }
 
 export function RelativePattern(_base: string, _pattern: string): {} {
@@ -907,10 +901,19 @@ export enum TreeItemCollapsibleState {
  * API to other extensions.
  */
 export class EventEmitter<T> {
+    private subscribers: Function[] = [];
     /**
      * The event listeners can subscribe to.
      */
-    event: Event<T>;
+    event: Event<T> = jest.fn().mockImplementation((listener) => {
+        this.subscribers.push(listener);
+        return new Disposable(() => {
+            const idx = this.subscribers.findIndex((v) => v === listener);
+            if (idx != -1) {
+                this.subscribers.splice(idx, 1);
+            }
+        });
+    });
 
     /**
      * Notify all subscribers of the [event](EventEmitter#event). Failure

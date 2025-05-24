@@ -11,5 +11,6 @@ jobs:
             pull-requests: write
         steps:
             - uses: zowe-actions/shared-actions/merge-by@main
+              continue-on-error: true
               with:
                 operation: "bump-dates"

@@ -119,6 +119,12 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
     addFavorite(favorite: IZoweTreeNode): void | Promise<void>;
 
     /**
+     * refresh favorites
+     * @param favorite Adds a favorite node
+     */
+    refreshFavorites?(): void | Promise<void>;
+
+    /**
      * Removes a favorite node
      * @param favorite Adds a favorite node
      */
@@ -156,8 +162,21 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * Change the state of an expandable node
      * @param element the node being flipped
      * @param isOpen the intended state of the the tree view provider, true or false
+     *
+     * @deprecated Use `onCollapsibleStateChange` instead.
      */
     flipState(element: IZoweTreeNode, isOpen: boolean): void;
+
+    /**
+     * Handle updates to a node when the collapsible state is changed by the user.
+     *
+     * @param element The node whose collapsible state is changing
+     * @param newState The new collapsible state of the node
+     *
+     * Note that the new collapsible state is not guaranteed to be set on the node when this function is called.
+     * The `newState` parameter contains the accurate collapsible state for the node.
+     */
+    onCollapsibleStateChange?(element: IZoweTreeNode, newState: vscode.TreeItemCollapsibleState): void | Promise<void>;
 
     /**
      * Rename the node. Begins a dialog.
@@ -369,4 +388,26 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * @param {ZosEncoding} encoding File encoding, user will be prompted if undefined
      */
     openWithEncoding?(node: IZoweTreeNode, encoding?: ZosEncoding): void | Promise<void>;
+
+    /**
+     * Adds a search keyword to the history
+     * @param element The search keyword to add
+     */
+    addSearchedKeywordHistory?(element: string): void;
+
+    /**
+     * Gets the search keyword history
+     */
+    getSearchedKeywordHistory?(): string[];
+
+    /**
+     * Removes a search keyword from the history
+     * @param element The search keyword to remove
+     */
+    removeSearchedKeywordHistory?(element: string): void;
+
+    /**
+     * Resets the search keyword history
+     */
+    resetSearchedKeywordHistory?(): void;
 }

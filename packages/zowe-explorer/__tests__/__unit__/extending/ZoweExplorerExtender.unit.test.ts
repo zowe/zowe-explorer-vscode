@@ -96,6 +96,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         const datasetTree = createDatasetTree(datasetSessionNode, blockMocks.altTypeProfile);
         ZoweExplorerExtender.createInstance(datasetTree, undefined, undefined);
         jest.spyOn(blockMocks.instTest.datasetProvider, "addSession");
+        jest.spyOn(blockMocks.instTest.datasetProvider, "refreshFavorites").mockImplementation();
         await blockMocks.instTest.reloadProfiles();
         expect(blockMocks.instTest.datasetProvider.addSession).toHaveBeenCalled();
     });
@@ -129,6 +130,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         ZoweExplorerExtender.createInstance(datasetTree, ussTree, jobsTree);
         jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({ ds: datasetTree, uss: ussTree, job: jobsTree });
         jest.spyOn(blockMocks.instTest.datasetProvider, "addSession").mockImplementation(DatasetTree.prototype.addSession);
+        jest.spyOn(blockMocks.instTest.datasetProvider, "refreshFavorites").mockImplementation();
         jest.spyOn(blockMocks.instTest.ussFileProvider, "addSession").mockImplementation(USSTree.prototype.addSession);
         jest.spyOn(blockMocks.instTest.jobsProvider, "addSession").mockImplementation(JobTree.prototype.addSession);
         const loadProfileSpy = jest.spyOn(ZoweTreeProvider.prototype as any, "loadProfileByPersistedProfile");
@@ -270,7 +272,7 @@ describe("ZoweExplorerExtender unit tests", () => {
             const addProfTypeToSchema = jest
                 .spyOn(imperative.ProfileInfo.prototype, "addProfileTypeToSchema")
                 .mockImplementation(addProfileTypeToSchemaMock as unknown as any);
-            await (blockMocks.instTest as any).updateSchema(profInfo, [
+            ProfilesUtils.updateSchema(profInfo, [
                 {
                     type: "test-type",
                     schema: {} as any,
@@ -306,7 +308,7 @@ describe("ZoweExplorerExtender unit tests", () => {
                 info: "Schema version is older than the installed version",
             });
             const warnSpy = jest.spyOn(ZoweLogger, "warn");
-            await (blockMocks.instTest as any).updateSchema(profInfo, [
+            ProfilesUtils.updateSchema(profInfo, [
                 {
                     type: "test-type",
                     schema: {} as any,

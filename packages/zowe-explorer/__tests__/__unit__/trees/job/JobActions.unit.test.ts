@@ -163,7 +163,12 @@ afterEach(() => {
 describe("Jobs Actions Unit Tests - Function setPrefix", () => {
     it("Checking that the prefix is set correctly on the job", async () => {
         const blockMocks = createGlobalMocks();
-        const node = new ZoweJobNode({ label: "job", collapsibleState: vscode.TreeItemCollapsibleState.None, session: blockMocks.session });
+        const node = new ZoweJobNode({
+            label: "job",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("*");
         await JobActions.setPrefix(node, blockMocks.testJobsTree);
@@ -402,6 +407,33 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(
             "Download single spool operation not implemented by extender. Please contact the extension developer(s)."
         );
+    });
+});
+describe("Zowe Jobs Commands", () => {
+    beforeEach(() => {
+        const mockActiveTextEditor = {
+            document: {
+                uri: vscode.Uri.parse("zowe-jobs://some-uri"),
+            },
+        } as unknown as vscode.TextEditor;
+
+        Object.defineProperty(vscode.window, "activeTextEditor", {
+            get: jest.fn(() => mockActiveTextEditor),
+            configurable: true,
+        });
+    });
+
+    it("should show an error message if no active editor", async () => {
+        const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(jest.fn());
+
+        Object.defineProperty(vscode.window, "activeTextEditor", {
+            get: jest.fn(() => undefined),
+            configurable: true,
+        });
+
+        await JobActions.loadMoreRecords(undefined as any);
+
+        expect(showErrorMessageSpy).toHaveBeenCalledWith("No document found");
     });
 });
 
@@ -1429,7 +1461,7 @@ describe("sortJobs function", () => {
         testtree.mSessionNodes[0].children = [...[globalMocks.mockJobArray[2], globalMocks.mockJobArray[1], globalMocks.mockJobArray[0]]];
         expected.mSessionNodes[0].children = [...[globalMocks.mockJobArray[1], globalMocks.mockJobArray[0], globalMocks.mockJobArray[2]]];
         const sortbyidspy = jest.spyOn(JobTree.prototype, "sortBy");
-        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(list-ordered) Job ID (default)" });
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({ label: "$(list-ordered) Job ID" });
         //act
         await JobActions.sortJobs(testtree.mSessionNodes[0], testtree);
         //asert
@@ -1498,7 +1530,12 @@ describe("sortJobs function", () => {
 
 describe("copyName function", () => {
     it("copies the job with format JobName(JobId)", async () => {
-        const node = new ZoweJobNode({ label: "JOBNAME(ID123456) - ACTIVE", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
+        const globalMocks = await createGlobalMocks();
+        const node = new ZoweJobNode({
+            label: "JOBNAME(ID123456) - ACTIVE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: globalMocks.imperativeProfile,
+        });
         node.job = {
             jobname: "JOBNAME",
             jobid: "ID123456",
@@ -1511,7 +1548,12 @@ describe("copyName function", () => {
     });
 
     it("copies a node's label for spools and nodes with missing job objects", async () => {
-        const node = new ZoweSpoolNode({ label: "JES2:JESMSGLG(2)", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = await createGlobalMocks();
+        const node = new ZoweSpoolNode({
+            label: "JES2:JESMSGLG(2)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.imperativeProfile,
+        });
         const writeTextSpy = jest.spyOn(vscode.env.clipboard, "writeText");
         await JobActions.copyName(node);
         expect(writeTextSpy).toHaveBeenCalledWith("JES2:JESMSGLG(2)");

@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
-import { Gui, IZoweJobTreeNode, Sorting, Types, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, Sorting, Types, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobTree } from "./JobTree";
 import { JobUtils } from "./JobUtils";
@@ -62,11 +62,15 @@ export class JobActions {
         ZoweLogger.trace("job.actions.deleteMultipleJobs called.");
         const deleteButton = vscode.l10n.t("Delete");
         const toJobname = (jobNode: IZoweJobTreeNode): string => `${jobNode.job.jobname}(${jobNode.job.jobid})`;
+        const jobNames = jobs.map(toJobname);
+        let displayedJobNames = jobNames.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
+        let additionalJobsCount = jobNames.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
         const message = vscode.l10n.t({
             message:
-                "Are you sure you want to delete the following {0} items?\nThis will permanently remove the following jobs from your system.\n\n{1}",
-            args: [jobs.length, jobs.map(toJobname).toString().replace(/(,)/g, "\n")],
-            comment: ["Jobs length", "Job names"],
+                "Are you sure you want to delete the following {0} items?\n" +
+                "This will permanently remove the following jobs from your system.\n\n{1}{2}",
+            args: [jobs.length, displayedJobNames, additionalJobsCount > 0 ? `\n...and ${additionalJobsCount} more` : ""],
+            comment: ["Jobs length", "Job names", "Additional jobs count"],
         });
         const deleteChoice = await Gui.warningMessage(message, {
             items: [deleteButton],
@@ -101,10 +105,12 @@ export class JobActions {
             })
             .filter((result) => result !== undefined);
         if (deletedJobs.length) {
+            displayedJobNames = deletedJobs.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).map(toJobname).join(", ");
+            additionalJobsCount = deletedJobs.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
             Gui.showMessage(
                 vscode.l10n.t({
-                    message: "The following jobs were deleted: {0}",
-                    args: [deletedJobs.map(toJobname).toString().replace(/(,)/g, ", ")],
+                    message: "The following jobs were deleted: {0}{1}",
+                    args: [displayedJobNames, additionalJobsCount > 0 ? `, ...and ${additionalJobsCount} more` : ""],
                     comment: ["Deleted jobs"],
                 })
             );
@@ -245,6 +251,28 @@ export class JobActions {
         );
         await JobFSProvider.instance.fetchSpoolAtUri(doc.uri);
         statusMsg.dispose();
+    }
+
+    private static isLoadingRecords = false;
+    public static async loadMoreRecords(uri): Promise<void> {
+        if (JobActions.isLoadingRecords) {
+            return;
+        }
+        JobActions.isLoadingRecords = true;
+        let finalUri = uri;
+        if (!finalUri) {
+            const activeTextEditor = vscode.window.activeTextEditor?.document;
+            if (!activeTextEditor) {
+                Gui.errorMessage(vscode.l10n.t("No document found"));
+                return;
+            }
+            finalUri = activeTextEditor.uri.with({ query: `startLine=${activeTextEditor.lineCount - 1}` });
+        }
+
+        if (finalUri.scheme === ZoweScheme.Jobs) {
+            await JobFSProvider.instance.fetchSpoolAtUri(finalUri, vscode.window.activeTextEditor);
+        }
+        JobActions.isLoadingRecords = false;
     }
 
     /**

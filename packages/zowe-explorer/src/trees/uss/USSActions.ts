@@ -81,7 +81,7 @@ export class USSActions {
                     await vscode.workspace.fs.createDirectory(uri);
                 }
                 if (isTopLevel) {
-                    await SharedActions.refreshAll(ussFileProvider);
+                    await SharedActions.refreshProvider(ussFileProvider);
                 } else {
                     ussFileProvider.refreshElement(node);
                 }
@@ -235,7 +235,11 @@ export class USSActions {
         vscode.env.clipboard.writeText(node.fullPath);
     }
 
-    public static async deleteUSSFilesPrompt(node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[], ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
+    public static async deleteUSSFilesPrompt(
+        node: IZoweUSSTreeNode,
+        nodeList: IZoweUSSTreeNode[],
+        ussFileProvider: Types.IZoweUSSTreeType
+    ): Promise<void> {
         ZoweLogger.trace("uss.actions.deleteUSSFilesPrompt called.");
         let selectedNodes;
         if (node || nodeList) {
@@ -243,20 +247,18 @@ export class USSActions {
         } else {
             selectedNodes = ussFileProvider.getTreeView().selection;
         }
-        selectedNodes = selectedNodes.filter(
-            (x) => SharedContext.isDocument(x) || SharedContext.isUssDirectory(x) || SharedContext.isBinary(x)
-        );
-        const fileNames = selectedNodes.reduce((label, currentVal) => {
-            return `${label}${currentVal.label.toString()}\n`;
-        }, "");
-
-        const deleteButton = vscode.l10n.t("Delete");
+        selectedNodes = selectedNodes.filter((x) => SharedContext.isDocument(x) || SharedContext.isUssDirectory(x) || SharedContext.isBinary(x));
+        const fileNames = selectedNodes.map(({ label }) => label.toString());
+        const displayedFileNames = fileNames.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
+        const additionalFilesCount = fileNames.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
         const message = vscode.l10n.t({
             message:
-                "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}",
-            args: [fileNames.toString()],
-            comment: ["File names"],
+                "Are you sure you want to delete the following item?\n" +
+                "This will permanently remove the following file or folder from your system.\n\n{0}{1}",
+            args: [displayedFileNames, additionalFilesCount > 0 ? `\n...and ${additionalFilesCount} more` : ""],
+            comment: ["File names", "Additional files count"],
         });
+        const deleteButton = vscode.l10n.t("Delete");
         let cancelled = false;
         await Gui.warningMessage(message, {
             items: [deleteButton],

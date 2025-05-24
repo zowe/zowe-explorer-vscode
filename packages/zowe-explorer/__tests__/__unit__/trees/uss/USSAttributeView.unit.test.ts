@@ -31,6 +31,11 @@ describe("AttributeView unit tests", () => {
         label: "example_node",
         collapsibleState: vscode.TreeItemCollapsibleState.None,
         parentPath: "/z/some",
+        profile: {
+            type: "sampleType",
+            message: "",
+            failNotFound: false,
+        },
     });
     const updateAttrsApiMock = jest.fn();
     const updateAttributesMock = jest.spyOn(node, "setAttributes").mockImplementation();
@@ -60,8 +65,6 @@ describe("AttributeView unit tests", () => {
         node.getParent = jest.fn().mockReturnValueOnce({ label: "parent node" } as IZoweUSSTreeNode);
         await (view as any).onDidReceiveMessage({ command: "refresh" });
         expect(treeProvider.refreshElement).toHaveBeenCalled();
-
-        expect(node.onUpdate).toHaveBeenCalledTimes(2);
     });
 
     it("dispatches node data to webview when 'ready' command is received", async () => {

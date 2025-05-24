@@ -14,8 +14,8 @@ import { DS_EXTENSION_MAP, IZoweDatasetTreeNode, Types } from "@zowe/zowe-explor
 import { Constants } from "../../configuration/Constants";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 export class DatasetUtils {
-    public static readonly DATASET_SORT_OPTS = [
-        `$(case-sensitive) ${vscode.l10n.t("Name (default)")}`,
+    public static DATASET_SORT_OPTS = [
+        `$(case-sensitive) ${vscode.l10n.t("Name")}`,
         `$(calendar) ${vscode.l10n.t("Date Created")}`,
         `$(calendar) ${vscode.l10n.t("Date Modified")}`,
         `$(account) ${vscode.l10n.t("User ID")}`,

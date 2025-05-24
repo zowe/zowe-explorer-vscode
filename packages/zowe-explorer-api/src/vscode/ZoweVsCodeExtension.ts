@@ -11,13 +11,16 @@
 
 import * as semver from "semver";
 import * as vscode from "vscode";
+import * as path from "path";
 import { ProfilesCache } from "../profiles/ProfilesCache";
-import { Login, Logout } from "@zowe/core-for-zowe-sdk";
+import { Login, Logout, ProfileConstants } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
 import { Gui } from "../globals/Gui";
 import type { PromptCredentialsOptions } from "./doc/PromptCredentials";
 import { Types } from "../Types";
 import type { BaseProfileAuthOptions } from "./doc/BaseProfileAuth";
+import { FileManagement } from "../utils";
+import { VscSettings } from "./doc/VscSettings";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -27,8 +30,12 @@ export class ZoweVsCodeExtension {
         return vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file");
     }
 
-    public static onProfileUpdatedEmitter: vscode.EventEmitter<imperative.IProfileLoaded> = new vscode.EventEmitter();
-    public static readonly onProfileUpdated = ZoweVsCodeExtension.onProfileUpdatedEmitter.event;
+    public static get onProfileUpdatedEmitter(): vscode.EventEmitter<imperative.IProfileLoaded> {
+        return this.getZoweExplorerApi().onProfileUpdatedEmitter;
+    }
+    public static get onProfileUpdated(): vscode.Event<imperative.IProfileLoaded> {
+        return ZoweVsCodeExtension.onProfileUpdatedEmitter.event;
+    }
 
     /**
      * @internal
@@ -141,10 +148,7 @@ export class ZoweVsCodeExtension {
      */
     public static async ssoLogin(opts: BaseProfileAuthOptions): Promise<boolean> {
         const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
-        const serviceProfile =
-            typeof opts.serviceProfile === "string"
-                ? await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, opts.serviceProfile)
-                : opts.serviceProfile;
+        const serviceProfile = await this.getServiceProfile(opts);
         const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
         if (baseProfile == null) {
             Gui.errorMessage(`Login failed: No base profile found to store SSO token for profile "${serviceProfile.name}"`);
@@ -224,6 +228,37 @@ export class ZoweVsCodeExtension {
     }
 
     /**
+     * Trigger a direct connection login process, not via API ML
+     *
+     * @param {imperative.IProfileLoaded} [serviceProfile] Instance of profile to be used for obtaining token
+     * @param {Types.IApiRegisterClient} [zeRegister] Instance of `IApiRegisterClient`
+     * @param {Types.IZoweNodeType} [node] Optional instance of `IZoweNodeType`
+     * @returns boolean value of successful login
+     */
+    public static async directConnectLogin(
+        serviceProfile: imperative.IProfileLoaded,
+        zeRegister: Types.IApiRegisterClient,
+        node?: Types.IZoweNodeType
+    ): Promise<boolean> {
+        const zeCommon = zeRegister.getCommonApi(serviceProfile);
+        let session: imperative.Session;
+        if (node) {
+            session = node.getSession();
+        } else {
+            session = zeCommon?.getSession();
+        }
+        const creds = await this.promptUserPass({ session: session.ISession, rePrompt: true });
+        if (!creds) {
+            return false;
+        }
+        session.ISession.user = creds[0];
+        session.ISession.password = creds[1];
+        await zeCommon?.login(session);
+        await this.profilesCache.updateCachedProfile(serviceProfile, node);
+        return true;
+    }
+
+    /**
      * Trigger a logout operation with the merged contents between the service profile and the base profile.
      *  If the connection details (host:port) do not match (service vs base), the token will be removed from the service profile.
      *  If there is no API registered for the profile type, this method defaults the logout behavior to that of the APIML.
@@ -248,11 +283,7 @@ export class ZoweVsCodeExtension {
      */
     public static async ssoLogout(opts: BaseProfileAuthOptions): Promise<boolean> {
         const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
-        const serviceProfile =
-            typeof opts.serviceProfile === "string"
-                ? await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, opts.serviceProfile)
-                : opts.serviceProfile;
-
+        const serviceProfile = await this.getServiceProfile(opts);
         const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
         if (!baseProfile) {
             Gui.errorMessage(`Logout failed: No base profile found to remove SSO token for profile "${serviceProfile.name}"`);
@@ -284,6 +315,138 @@ export class ZoweVsCodeExtension {
         serviceProfile.profile = { ...serviceProfile.profile, tokenType: undefined, tokenValue: undefined };
         await cache.updateCachedProfile(serviceProfile, opts.profileNode);
         return true;
+    }
+
+    /**
+     * Trigger a direct connection logout process, not via API ML
+     *
+     * @param {imperative.IProfileLoaded} [serviceProfile] Instance of profile to be used for retiring token
+     * @param {Types.IApiRegisterClient} [zeRegister] Instance of `IApiRegisterClient`
+     * @param {Types.IZoweNodeType} [node] Optional instance of `IZoweNodeType`
+     * @returns boolean value of successful logout
+     */
+    public static async directConnectLogout(
+        serviceProfile: imperative.IProfileLoaded,
+        zeRegister: Types.IApiRegisterClient,
+        node?: Types.IZoweNodeType
+    ): Promise<boolean> {
+        const zeCommon = zeRegister.getCommonApi(serviceProfile);
+        let session: imperative.Session;
+        if (node) {
+            session = node.getSession();
+        } else {
+            session = zeCommon?.getSession();
+        }
+        await zeCommon?.logout(session);
+        await this.profilesCache.updateCachedProfile(serviceProfile, node);
+        return true;
+    }
+
+    /**
+     * Prompt users through process of creating a Zowe team configuration file including Zowe Explorer registered types
+     * Upon successful completion, editor will open team configuration file.
+     *
+     * @returns void
+     */
+    public static async createTeamConfiguration(): Promise<void> {
+        let user = false;
+        let global = true;
+        let rootPath = FileManagement.getZoweDir();
+        const workspaceDir = ZoweVsCodeExtension.workspaceRoot;
+        if (workspaceDir != null) {
+            const choice = await this.getConfigLocationPrompt("create");
+            if (choice === undefined) {
+                Gui.infoMessage(`Operation cancelled`);
+                return;
+            }
+            if (choice === "project") {
+                rootPath = workspaceDir.uri.fsPath;
+                global = false;
+            }
+        }
+        // call check for existing and prompt here
+        const existingFile = await this.checkExistingConfig(rootPath);
+        if (existingFile === false) {
+            // handle prompt cancellation
+            return;
+        }
+        if (existingFile != null) {
+            user = existingFile.includes("user");
+        }
+        const config = await imperative.Config.load("zowe", {
+            homeDir: FileManagement.getZoweDir(),
+            projectDir: FileManagement.getFullPath(rootPath),
+        });
+        if (workspaceDir != null) {
+            config.api.layers.activate(user, global, rootPath);
+        }
+
+        const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = ZoweVsCodeExtension.profilesCache.getCoreProfileTypes();
+        knownCliConfig.push(...ZoweVsCodeExtension.profilesCache.getConfigArray());
+        knownCliConfig.push(ProfileConstants.BaseProfile);
+        config.setSchema(imperative.ConfigSchema.buildSchema(knownCliConfig));
+
+        // Note: IConfigBuilderOpts not exported
+        // const opts: IConfigBuilderOpts = {
+        const opts: any = {
+            // getSecureValue: this.promptForProp.bind(this),
+            populateProperties: true,
+        };
+
+        // Build new config and merge with existing layer
+        const impConfig: Partial<imperative.IImperativeConfig> = {
+            profiles: [...knownCliConfig],
+            baseProfile: ProfileConstants.BaseProfile,
+        };
+        const newConfig: imperative.IConfig = await imperative.ConfigBuilder.build(impConfig, global, opts);
+
+        // Create non secure profile if VS Code setting is false
+        this.createNonSecureProfile(newConfig);
+
+        config.api.layers.merge(newConfig);
+        await config.save(false);
+        let configName;
+        if (user) {
+            configName = config.userConfigName;
+        } else {
+            configName = config.configName;
+        }
+        await this.openConfigFile(path.join(rootPath, configName));
+    }
+
+    public static async openConfigFile(filePath: string): Promise<void> {
+        const document = await vscode.workspace.openTextDocument(filePath);
+        await Gui.showTextDocument(document, { preview: false });
+    }
+
+    public static async getConfigLayers(): Promise<imperative.IConfigLayer[]> {
+        const existingLayers: imperative.IConfigLayer[] = [];
+        const config = await imperative.Config.load("zowe", {
+            homeDir: FileManagement.getZoweDir(),
+            projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath,
+        });
+        const layers = config.layers;
+        layers.forEach((layer) => {
+            if (layer.exists) {
+                existingLayers.push(layer);
+            }
+        });
+        return existingLayers;
+    }
+
+    /**
+     * This method is intended to be used for authentication (login, logout) purposes
+     *
+     * Note: this method calls the `getServiceProfileForAuthPurposes()` which creates a new instance of the ProfileInfo APIs
+     *          Be aware that any non-saved updates will not be considered here.
+     * @param {BaseProfileAuthOptions} opts Object defining options for base profile authentication
+     * @returns The IProfileLoaded with tokenType and tokenValue
+     */
+    private static async getServiceProfile(opts: BaseProfileAuthOptions): Promise<imperative.IProfileLoaded> {
+        const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
+        return typeof opts.serviceProfile === "string"
+            ? await ZoweVsCodeExtension.getServiceProfileForAuthPurposes(cache, opts.serviceProfile)
+            : opts.serviceProfile;
     }
 
     /**
@@ -367,5 +530,64 @@ export class ZoweVsCodeExtension {
         });
         options.session.cert = response.cert;
         options.session.certKey = response.certKey;
+    }
+
+    private static async checkExistingConfig(filePath: string): Promise<string | false> {
+        const existingLayers = await this.getConfigLayers();
+        const foundLayer = existingLayers.find((layer) => layer.path.includes(filePath));
+        if (foundLayer == null) {
+            return null;
+        }
+        const createButton = "Create New";
+        const message = [
+            `A Team Configuration File already exists in this location:\n`,
+            `\n`,
+            `${foundLayer.path}\n`,
+            `\n`,
+            `Continuing may alter the existing file, would you like to proceed?`,
+        ].join("");
+        const response = await Gui.infoMessage(message, { items: [createButton], vsCodeOpts: { modal: true } });
+        if (response) {
+            return path.basename(foundLayer.path);
+        } else {
+            await this.openConfigFile(foundLayer.path);
+        }
+        return false;
+    }
+
+    private static async getConfigLocationPrompt(action: string): Promise<string> {
+        let placeHolderText: string;
+        if (action === "create") {
+            placeHolderText = "Select the location where the config file will be initialized";
+        } else {
+            placeHolderText = "Select the location of the config file to edit";
+        }
+        const quickPickOptions: vscode.QuickPickOptions = {
+            placeHolder: placeHolderText,
+            ignoreFocusOut: true,
+            canPickMany: false,
+        };
+        const globalText = "Global: in the Zowe home directory";
+        const projectText = "Project: in the current working directory";
+        const location = await Gui.showQuickPick([globalText, projectText], quickPickOptions);
+        // call check for existing and prompt here
+        switch (location) {
+            case globalText:
+                return "global";
+            case projectText:
+                return "project";
+        }
+    }
+
+    // Temporary solution for handling unsecure profiles until CLI team's work is made
+    // Remove secure properties and set autoStore to false when vscode setting is true
+    private static createNonSecureProfile(newConfig: imperative.IConfig): void {
+        const isSecureCredsEnabled: boolean = VscSettings.getDirectValue("zowe.security.secureCredentialsEnabled");
+        if (!isSecureCredsEnabled) {
+            for (const profile of Object.entries(newConfig.profiles)) {
+                delete newConfig.profiles[profile[0]].secure;
+            }
+            newConfig.autoStore = false;
+        }
     }
 }

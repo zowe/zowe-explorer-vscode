@@ -31,21 +31,22 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
     }
 
     public getSession(profile?: imperative.IProfileLoaded): FtpSession {
-        this.session = globals.SESSION_MAP.get(this.profile);
-        if (!this.session) {
-            const ftpProfile = (profile || this.profile)?.profile;
-            if (!ftpProfile) {
-                throw new ZoweFtpExtensionError("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.");
-            }
+        const ftpProfile = profile ?? this.profile;
+        if (ftpProfile == null) {
+            throw new ZoweFtpExtensionError("Internal error: AbstractFtpApi instance was not initialized with a valid Zowe profile.");
+        }
 
+        this.session = globals.SESSION_MAP.get(ftpProfile);
+        const loadedProfile = ftpProfile.profile;
+        if (this.session == null && loadedProfile != null) {
             this.session = new FtpSession({
-                hostname: ftpProfile.host,
-                port: ftpProfile.port,
-                user: ftpProfile.user,
-                password: ftpProfile.password,
-                rejectUnauthorized: ftpProfile.rejectUnauthorized,
+                hostname: loadedProfile.host,
+                port: loadedProfile.port,
+                user: loadedProfile.user,
+                password: loadedProfile.password,
+                rejectUnauthorized: loadedProfile.rejectUnauthorized,
             });
-            globals.SESSION_MAP.set(this.profile, this.session);
+            globals.SESSION_MAP.set(ftpProfile, this.session);
         }
         return this.session;
     }
@@ -62,7 +63,7 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
 
     public checkedProfile(): imperative.IProfileLoaded {
         if (!this.profile?.profile) {
-            throw new ZoweFtpExtensionError("Internal error: ZoweVscFtpRestApi instance was not initialized with a valid Zowe profile.");
+            throw new ZoweFtpExtensionError("Internal error: AbstractFtpApi instance was not initialized with a valid Zowe profile.");
         }
         return this.profile;
     }
@@ -95,11 +96,14 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
             try {
                 sessionStatus = await this.ftpClient(this.checkedProfile());
             } catch (e) {
-                const imperativeError = new imperative.ImperativeError({
-                    msg: "Rest API failure with HTTP(S) status 401 Authentication error.",
-                    errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-                });
-                throw imperativeError;
+                if (e instanceof Error && e.message.includes("PASS command failed")) {
+                    const imperativeError = new imperative.ImperativeError({
+                        msg: "Rest API failure with HTTP(S) status 401 Username or password are not valid or expired",
+                        errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+                    });
+                    throw imperativeError;
+                }
+                throw e;
             }
             if (sessionStatus) {
                 return "active";

@@ -17,6 +17,9 @@ import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerA
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import { Profiles } from "../../../../src/configuration/Profiles";
+import * as vscode from "vscode";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 const testProfile = createIProfile();
 
@@ -56,7 +59,7 @@ const testEntries = {
 
 describe("watch", () => {
     it("returns an empty Disposable object", () => {
-        expect(JobFSProvider.instance.watch(testUris.job, { recursive: false, excludes: [] })).toStrictEqual(new Disposable(() => {}));
+        expect(JobFSProvider.instance.watch(testUris.job, { recursive: false, excludes: [] })).toBeInstanceOf(Disposable);
     });
 });
 describe("stat", () => {
@@ -205,7 +208,223 @@ describe("createDirectory", () => {
     });
 });
 
+describe("JobFSProvider.supportSpoolPagination", () => {
+    const mockDoc = {
+        uri: vscode.Uri.parse("zowe://test"),
+    } as vscode.TextDocument;
+
+    const profInfo = { profile: "test" };
+
+    beforeEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    it("should return true when supportSpoolPagination is true", () => {
+        jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(profInfo);
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            supportSpoolPagination: () => true,
+        } as any);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.paginate.enabled") {
+                return true;
+            }
+        });
+
+        const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
+        expect(result).toBe(true);
+    });
+
+    it("should return false when supportSpoolPagination is false", () => {
+        jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(profInfo);
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            supportSpoolPagination: () => false,
+        } as any);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.paginate.enabled") {
+                return false;
+            }
+        });
+
+        const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
+        expect(result).toBe(false);
+    });
+    it("should return false when supportSpoolPagination is undefined", () => {
+        jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(profInfo);
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({} as any);
+
+        const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
+        expect(result).toBe(undefined);
+    });
+    it("should return false when getJesApi throws an error", () => {
+        jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(profInfo);
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockImplementation(() => {
+            throw new Error("Failed to get JES API");
+        });
+
+        const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
+        expect(result).toBe(false);
+    });
+});
+
 describe("fetchSpoolAtUri", () => {
+    const loadNamedProfileMock = jest.fn().mockReturnValue(testProfile);
+    beforeEach(() => {
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({ loadNamedProfile: loadNamedProfileMock } as any);
+    });
+    afterAll(() => {
+        jest.restoreAllMocks();
+    });
+
+    it("fetches spool contents and correctly applies recordRange parameters", async () => {
+        const lookupAsFileMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
+
+        const newData = "spool contents";
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.paginate.enabled") {
+                return true;
+            }
+            return false;
+        });
+        const mockJesApi = {
+            supportSpoolPagination: () => true,
+            downloadSingleSpool: jest.fn((opts) => {
+                expect(SettingsConfig.getDirectValue("zowe.jobs.paginate.enabled")).toBe(true);
+                expect(opts.recordRange).toBe("10-50");
+                opts.stream.write(newData);
+            }),
+        };
+
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+
+        const uriWithQuery = vscode.Uri.parse(testUris.spool.toString() + "?startLine=10&endLine=50");
+
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(uriWithQuery);
+
+        expect(mockJesApi.downloadSingleSpool).toHaveBeenCalled();
+        expect(entry.data.toString()).toStrictEqual(newData.toString());
+
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
+    it("fetches spool contents and correctly applies recordRange parameters", async () => {
+        const lookupAsFileMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
+
+        const newData = "spool contents";
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.paginate.enabled") {
+                return true;
+            }
+            if (key === "zowe.jobs.paginate.recordsToFetch") {
+                return 20;
+            }
+        });
+        const mockJesApi = {
+            supportSpoolPagination: () => true,
+            downloadSingleSpool: jest.fn((opts) => {
+                expect(SettingsConfig.getDirectValue("zowe.jobs.paginate.enabled")).toBe(true);
+                expect(opts.recordRange).toBe("19-38");
+                opts.stream.write(newData);
+            }),
+        };
+
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+
+        const uriWithQuery = vscode.Uri.parse(testUris.spool.toString() + "?startLine=19");
+
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(uriWithQuery);
+
+        expect(mockJesApi.downloadSingleSpool).toHaveBeenCalled();
+        expect(entry.data.toString()).toStrictEqual(newData.toString());
+
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
+    it("fetches spool contents when recordRange parameters is not supported", async () => {
+        const lookupAsFileMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
+
+        const newData = "spool contents";
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.paginate.enabled") {
+                return false;
+            }
+            return true;
+        });
+        const mockJesApi = {
+            supportSpoolPagination: () => false,
+            downloadSingleSpool: jest.fn((opts) => {
+                expect(SettingsConfig.getDirectValue("zowe.jobs.paginate.enabled")).toBe(false);
+                expect(opts.recordRange).toBeUndefined();
+                opts.stream.write(newData);
+            }),
+        };
+
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+
+        const uriWithQuery = vscode.Uri.parse(testUris.spool.toString() + "?startLine=10&endLine=50");
+
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(uriWithQuery);
+
+        expect(mockJesApi.downloadSingleSpool).toHaveBeenCalled();
+        expect(entry.data.toString()).toStrictEqual(newData.toString());
+
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
+    it("fetches default when recordRange parameters is not provided", async () => {
+        const defaultFetchSetting = 100;
+
+        const lookupAsFileMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, dsata: new Uint8Array() });
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.paginate.recordsToFetch") {
+                return defaultFetchSetting;
+            }
+            if (key === "zowe.jobs.paginate.enabled") {
+                return true;
+            }
+        });
+
+        const downloadMock = jest.fn((opts) => {
+            expect(SettingsConfig.getDirectValue("zowe.jobs.paginate.enabled")).toBe(true);
+            expect(opts.recordRange).toBe(`0-${defaultFetchSetting - 1}`);
+            opts.stream.write("test data");
+        });
+        const mockJesApi = {
+            downloadSingleSpool: downloadMock,
+            supportSpoolPagination: () => true,
+        };
+
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+
+        const uriWithQuery = vscode.Uri.parse(testUris.spool.toString());
+
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(uriWithQuery);
+        expect(downloadMock).toHaveBeenCalled();
+        expect(mockJesApi.downloadSingleSpool).toHaveBeenCalled();
+        expect(entry.data.toString()).toBe("test data");
+
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
     it("fetches the spool contents for a given URI - downloadSingleSpool", async () => {
         const lookupAsFileMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
@@ -262,6 +481,27 @@ describe("fetchSpoolAtUri", () => {
         lookupAsFileMock.mockRestore();
     });
 
+    it("fetches the spool contents for a given URI - downloadSingleSpool w/ profile encoding", async () => {
+        const lookupAsFileMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
+        loadNamedProfileMock.mockReturnValueOnce({ ...testProfile, profile: { ...testProfile.profile, encoding: "IBM-1147" } });
+        const newData = "spool contents";
+        const mockJesApi = {
+            downloadSingleSpool: jest.fn((opts) => {
+                opts.stream.write(newData);
+            }),
+        };
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(testUris.spool);
+        expect(mockJesApi.downloadSingleSpool).toHaveBeenCalledWith(
+            expect.objectContaining({ jobFile: testEntries.spool.spool, encoding: "IBM-1147", binary: false })
+        );
+        expect(entry.data.toString()).toStrictEqual(newData.toString());
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
     it("fetches the spool contents for a given URI - getSpoolContentById", async () => {
         const lookupAsFileMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
@@ -277,6 +517,27 @@ describe("fetchSpoolAtUri", () => {
         expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.spool);
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.spool);
         expect(mockJesApi.getSpoolContentById).toHaveBeenCalled();
+        expect(entry.data.toString()).toStrictEqual("spool contents");
+        jesApiMock.mockRestore();
+        lookupAsFileMock.mockRestore();
+    });
+
+    it("fetches the spool contents for a given URI - getSpoolContentById w/ encoding", async () => {
+        const lookupAsFileMock = jest
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array(), encoding: { kind: "other", codepage: "IBM-1147" } });
+        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce({ ...testEntries.job });
+        const mockJesApi = {
+            getSpoolContentById: jest.fn((opts) => {
+                return "spool contents";
+            }),
+        };
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(testUris.spool);
+        expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.spool);
+        expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.spool);
+        expect(mockJesApi.getSpoolContentById).toHaveBeenCalled();
+        expect(mockJesApi.getSpoolContentById.mock.calls[0][3]).toBe("IBM-1147");
         expect(entry.data.toString()).toStrictEqual("spool contents");
         jesApiMock.mockRestore();
         lookupAsFileMock.mockRestore();

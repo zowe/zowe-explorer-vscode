@@ -73,7 +73,7 @@ export class JobTableView {
         {
             field: "jobname",
             headerName: l10n.t("Name"),
-            sort: "asc",
+            initialSort: "asc",
         } as Table.ColumnOpts,
         {
             field: "class",

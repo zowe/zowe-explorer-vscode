@@ -65,7 +65,8 @@ describe("Test src/shared/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
         };
-        jest.replaceProperty(ZoweVsCodeExtension, "onProfileUpdated", jest.fn());
+        const onProfileUpdated = jest.fn().mockReturnValue(new vscode.Disposable(jest.fn()));
+        const mockOnProfileUpdated = new MockedProperty(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated", undefined, onProfileUpdated);
 
         const commands: IJestIt[] = [
             {
@@ -318,10 +319,15 @@ describe("Test src/shared/extension", () => {
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
         afterAll(() => {
+            mockOnProfileUpdated[Symbol.dispose]();
             jest.restoreAllMocks();
         });
 
         processSubscriptions(commands, test);
+        it("registers an onProfileUpdated event", () => {
+            expect(mockOnProfileUpdated.mock).toHaveBeenCalledTimes(1);
+            expect(onProfileUpdated).toHaveBeenCalledTimes(1);
+        });
     });
 
     describe("watchConfigProfile", () => {
@@ -439,9 +445,9 @@ describe("Test src/shared/extension", () => {
     describe("initSubscribers", () => {
         const spyCollapse = jest.fn().mockImplementation((fun) => fun({ element: "collapse" }));
         const spyExpand = jest.fn().mockImplementation((fun) => fun({ element: "expand" }));
-        const spyFlipState = jest.fn();
+        const spyOnCollapsibleStateChange = jest.fn();
         let context: any;
-        const provider: any = { getTreeView: () => treeView, flipState: spyFlipState };
+        const provider: any = { getTreeView: () => treeView, onCollapsibleStateChange: spyOnCollapsibleStateChange };
         const treeView = { onDidCollapseElement: spyCollapse, onDidExpandElement: spyExpand };
 
         beforeEach(() => {
@@ -457,8 +463,7 @@ describe("Test src/shared/extension", () => {
             expect(context.subscriptions).toContain(treeView);
             expect(spyCollapse).toHaveBeenCalled();
             expect(spyExpand).toHaveBeenCalled();
-            expect(spyFlipState).toHaveBeenCalledWith("collapse", false);
-            expect(spyFlipState).toHaveBeenCalledWith("expand", true);
+            expect(spyOnCollapsibleStateChange).toHaveBeenCalled();
         });
     });
 

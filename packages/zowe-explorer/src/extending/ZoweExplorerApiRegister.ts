@@ -22,6 +22,9 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
     public static ZoweExplorerApiRegisterInst: ZoweExplorerApiRegister;
     private static eventMap: Record<ZoweScheme | string, vscode.Event<vscode.FileChangeEvent[]>> = {};
 
+    public onProfileUpdatedEmitter: vscode.EventEmitter<imperative.IProfileLoaded> = new vscode.EventEmitter();
+    public readonly onProfileUpdated = this.onProfileUpdatedEmitter.event;
+
     /**
      * Access the singleton instance.
      * @returns {ZoweExplorerApiRegister} the ZoweExplorerApiRegister singleton instance

@@ -23,11 +23,17 @@ export class ProfilesCache {
     public profilesForValidation: Validation.IValidationProfile[] = [];
     public profilesValidationSetting: Validation.IValidationSetting[] = [];
     public allProfiles: imperative.IProfileLoaded[] = [];
+    /**
+     * @deprecated
+     * Use ProfilesCache.seesionProfileTypeConfigurations for Zowe Explorer VS Code session registered and Zowe core types list of meta-data.
+     * */
     public profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] = [];
+    public static sessionProfileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] = [];
     protected allTypes: string[] = [];
     protected allExternalTypes = new Set<string>();
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
+    protected overrideWithEnv = false;
 
     public constructor(protected log: imperative.Logger, protected cwd?: string) {
         this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
@@ -38,27 +44,48 @@ export class ProfilesCache {
         return require("@zowe/secrets-for-zowe-sdk").keyring;
     }
 
+    /**
+     * Adds profile type meta-data to array for future use with team configuration actions,
+     * ie. Zowe Explorer uses upon extender registration in VS Code.
+     *
+     * @param {imperative.ICommandProfileTypeConfiguration[]} extendermetadata Profile type meta-data used with Zowe team configurations
+     *
+     * @returns {void}
+     */
     public addToConfigArray(extendermetadata: imperative.ICommandProfileTypeConfiguration[]): void {
+        // Disabling deprecation warning in method as to not break extenders.
+        // Will need to continue updating array in case of use of the deprecated constant.
         extendermetadata?.forEach((item) => {
-            const index = this.profileTypeConfigurations.findIndex((ele) => ele.type == item.type);
+            const index = ProfilesCache.sessionProfileTypeConfigurations.findIndex((ele) => ele.type == item.type);
             if (index !== -1) {
-                this.profileTypeConfigurations[index] = item;
+                // eslint-disable-next-line deprecation/deprecation
+                ProfilesCache.sessionProfileTypeConfigurations[index] = this.profileTypeConfigurations[index] = item;
             } else {
+                // eslint-disable-next-line deprecation/deprecation
                 this.profileTypeConfigurations.push(item);
+                ProfilesCache.sessionProfileTypeConfigurations.push(item);
             }
         });
     }
 
+    /**
+     * Returns an array of Zowe Explorer registered profile types and core Zowe supported profile types meta-data ,
+     * used with Zowe team configuration actions.
+     *
+     * @returns {imperative.ICommandProfileTypeConfiguration[]}
+     */
     public getConfigArray(): imperative.ICommandProfileTypeConfiguration[] {
-        return this.profileTypeConfigurations;
+        return ProfilesCache.sessionProfileTypeConfigurations;
     }
 
     public async getProfileInfo(_envTheia = false): Promise<imperative.ProfileInfo> {
         const mProfileInfo = new imperative.ProfileInfo("zowe", {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            overrideWithEnv: this.overrideWithEnv,
             credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
         });
         await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd ?? undefined });
+        this.checkForEnvVarAndUpdate();
         return mProfileInfo;
     }
 
@@ -166,9 +193,9 @@ export class ProfilesCache {
     public async refresh(apiRegister?: IRegisterClient): Promise<void> {
         const allProfiles: imperative.IProfileLoaded[] = [];
         const mProfileInfo = await this.getProfileInfo();
-        const allTypes = this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []);
-        allTypes.push("ssh");
-        allTypes.push("base");
+        const allTypes = new Set(this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []));
+        allTypes.add("ssh");
+        allTypes.add("base");
         for (const type of allTypes) {
             const tmpAllProfiles: imperative.IProfileLoaded[] = [];
             // Step 1: Get all profiles for each registered type
@@ -193,13 +220,14 @@ export class ProfilesCache {
             }
         }
         this.allProfiles = allProfiles;
-        this.allTypes = allTypes;
+        this.allTypes = [...allTypes];
         for (const oldType of [...this.profilesByType.keys()].filter((type) => !allProfiles.some((prof) => prof.type === type))) {
             this.profilesByType.delete(oldType);
             this.defaultProfileByType.delete(oldType);
         }
         // check for proper merging of apiml tokens
         this.checkMergingConfigAllProfiles();
+        this.checkForEnvVarAndUpdate();
         this.profilesForValidation = [];
     }
 
@@ -397,7 +425,7 @@ export class ProfilesCache {
         return session;
     }
 
-    protected getCoreProfileTypes(): imperative.IProfileTypeConfiguration[] {
+    public getCoreProfileTypes(): imperative.IProfileTypeConfiguration[] {
         return [ZosmfProfile, ZosTsoProfile, ZosUssProfile];
     }
 
@@ -452,7 +480,7 @@ export class ProfilesCache {
         return parentProfile;
     }
 
-    private shouldRemoveTokenFromProfile(profile: imperative.IProfileLoaded, baseProfile: imperative.IProfileLoaded): boolean {
+    public shouldRemoveTokenFromProfile(profile: imperative.IProfileLoaded, baseProfile: imperative.IProfileLoaded): boolean {
         return ((baseProfile?.profile?.host || baseProfile?.profile?.port) &&
             profile?.profile?.host &&
             profile?.profile?.port &&
@@ -481,5 +509,24 @@ export class ProfilesCache {
         const mergedArgs = mProfileInfo.mergeArgsForProfile(prof);
         await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenValue", value: undefined, setSecure });
         await mProfileInfo.updateKnownProperty({ mergedArgs, property: "tokenType", value: undefined });
+    }
+
+    public checkForEnvVarAndUpdate(): void {
+        for (const profile of this.allProfiles) {
+            if (profile.profile.user?.startsWith("$")) {
+                const userEnvVar = profile.profile.user.match(/^\$(\w+)$/)?.[1];
+                if (!userEnvVar || !process.env[userEnvVar]) {
+                    continue;
+                }
+                profile.profile.user = process.env[userEnvVar];
+            }
+            if (profile.profile.password?.startsWith("$")) {
+                const passwordEnvVar = profile.profile.password.match(/^\$(\w+)$/)?.[1];
+                if (!passwordEnvVar || !process.env[passwordEnvVar]) {
+                    continue;
+                }
+                profile.profile.password = process.env[passwordEnvVar];
+            }
+        }
     }
 }

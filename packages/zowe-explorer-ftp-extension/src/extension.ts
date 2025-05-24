@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { AuthHandler, Gui, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { FtpUssApi } from "./ZoweExplorerFtpUssApi";
 import { FtpMvsApi } from "./ZoweExplorerFtpMvsApi";
 import { FtpJesApi } from "./ZoweExplorerFtpJesApi";
@@ -35,13 +35,16 @@ export function deactivate(_context: vscode.ExtensionContext): void {
 async function registerFtpApis(): Promise<boolean> {
     const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi("1.15.0");
     if (zoweExplorerApi) {
+        AuthHandler.enableLocksForType("zftp");
         zoweExplorerApi.registerUssApi(new FtpUssApi());
         zoweExplorerApi.registerMvsApi(new FtpMvsApi());
         zoweExplorerApi.registerJesApi(new FtpJesApi());
 
-        const schema = await CoreUtils.getProfileSchema();
+        const schemas = await CoreUtils.getProfileSchema();
+        // can open PR with the cli package to add version, this is quick fix with version from package-lock.
+        schemas[0].schema.version = "3.0.0";
         const pType = AbstractFtpApi.getProfileTypeName();
-        await zoweExplorerApi.getExplorerExtenderApi().initForZowe(pType, schema);
+        await zoweExplorerApi.getExplorerExtenderApi().initForZowe(pType, schemas);
         await zoweExplorerApi.getExplorerExtenderApi().reloadProfiles(pType);
 
         globals.LOGGER.logImperativeMessage("Zowe Explorer was modified for FTP support.", MessageSeverity.INFO);

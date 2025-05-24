@@ -18,6 +18,7 @@ import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { DatasetInit } from "../../../../src/trees/dataset/DatasetInit";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
+import { DatasetSearch } from "../../../../src/trees/dataset/DatasetSearch";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -58,7 +59,11 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.refreshAll",
-                mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [dsProvider] }],
+                mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] }],
+            },
+            {
+                name: "zowe.ds.refresh",
+                mock: [{ spy: jest.spyOn(SharedActions, "refreshProvider"), arg: [dsProvider] }],
             },
             {
                 name: "zowe.ds.refreshNode",
@@ -98,11 +103,11 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.pdsSearchFor",
-                mock: [{ spy: jest.spyOn(DatasetActions, "search"), arg: [test.context, test.value] }],
+                mock: [{ spy: jest.spyOn(DatasetSearch, "search"), arg: [test.context, test.value] }],
             },
             {
                 name: "zowe.ds.filteredDataSetsSearchFor",
-                mock: [{ spy: jest.spyOn(DatasetActions, "search"), arg: [test.context, test.value] }],
+                mock: [{ spy: jest.spyOn(DatasetSearch, "search"), arg: [test.context, test.value] }],
             },
             {
                 name: "zowe.ds.uploadDialog",
@@ -138,6 +143,7 @@ describe("Test src/dataset/extension", () => {
                 name: "zowe.ds.showAttributes",
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(SharedContext, "isVsam"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(SharedContext, "isPds"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
                     { spy: jest.spyOn(DatasetActions, "showAttributes"), arg: [test.value, dsProvider] },

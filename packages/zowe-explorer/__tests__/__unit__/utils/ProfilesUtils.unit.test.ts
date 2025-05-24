@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { AuthHandler, Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { AuthHandler, ErrorCorrelator, Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import {
     createAltTypeIProfile,
     createInstanceOfProfile,
@@ -33,6 +33,7 @@ import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { Definitions } from "../../../src/configuration/Definitions";
 import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
+import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -152,6 +153,18 @@ describe("ProfilesUtils unit tests", () => {
             expect(openConfigForMissingHostnameMock).toHaveBeenCalled();
         });
 
+        it("should handle bad hostname error", async () => {
+            const errorDetails = new imperative.ImperativeError({
+                msg: "protocol should not be included in hostname",
+            });
+            const scenario = "Task failed successfully";
+            const openConfigForMissingHostnameMock = jest.spyOn(AuthUtils, "openConfigForMissingHostname");
+            const errorCorrelatorGetInstanceMock = jest.spyOn(ErrorCorrelator, "getInstance");
+            await AuthUtils.errorHandling(errorDetails, { scenario });
+            expect(openConfigForMissingHostnameMock).not.toHaveBeenCalled();
+            expect(errorCorrelatorGetInstanceMock).toHaveBeenCalled();
+        });
+
         it("should handle error for invalid credentials and prompt for authentication - credentials entered", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
@@ -172,7 +185,9 @@ describe("ProfilesUtils unit tests", () => {
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
-                    getSecurePropsForProfile: () => [],
+                    getPropsForProfile: () => ["tokenValue"],
+                    loadNamedProfile: () => profile,
+                    shouldRemoveTokenFromProfile: () => jest.fn(),
                 },
                 configurable: true,
             });
@@ -201,7 +216,9 @@ describe("ProfilesUtils unit tests", () => {
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
-                    getSecurePropsForProfile: () => ["tokenValue"],
+                    getPropsForProfile: () => ["tokenValue"],
+                    loadNamedProfile: () => profile,
+                    shouldRemoveTokenFromProfile: () => jest.fn(),
                     ssoLogin: ssoLoginSpy,
                     promptCredentials: promptCredentialsSpy,
                 },
@@ -241,7 +258,9 @@ describe("ProfilesUtils unit tests", () => {
                     getProfileInfo: profileInfoMock,
                     getLoadedProfConfig: () => profile,
                     getDefaultProfile: () => ({}),
-                    getSecurePropsForProfile: () => [],
+                    getPropsForProfile: () => ["tokenValue"],
+                    loadNamedProfile: () => profile,
+                    shouldRemoveTokenFromProfile: () => jest.fn(),
                 },
                 configurable: true,
             });
@@ -393,6 +412,14 @@ describe("ProfilesUtils unit tests", () => {
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
             const mockNode = createDatasetSessionNode(createISession(), profile);
+            const mockTreeProvider = {
+                mSessionNodes: [mockNode],
+                flipState: jest.fn(),
+                refreshElement: jest.fn(),
+            } as any;
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+            jest.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+            jest.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
             await ProfilesUtils.promptCredentials(mockNode);
             expect(promptCredentialsProfilesMock).toHaveBeenCalledTimes(1);
             expect(promptCredentialsProfilesMock).toHaveBeenCalledWith(profile, true);
@@ -459,9 +486,12 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(),
                 configurable: true,
             });
-            await ProfilesUtils.promptCredentials(null as any);
-            expect(mockProfileInstance.getProfileInfo).toHaveBeenCalled();
-            expect(Gui.showMessage).toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
+            const promptCredentialsMock = jest.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValueOnce(undefined as any);
+            const dsNode = createDatasetSessionNode(createISession(), createIProfile());
+            await ProfilesUtils.promptCredentials(dsNode);
+            expect(Gui.showMessage).not.toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
+            expect(promptCredentialsMock).toHaveBeenCalledTimes(1);
+            promptCredentialsMock.mockRestore();
         });
 
         it("fires onProfilesUpdate event if secure credentials are enabled", async () => {
@@ -493,6 +523,7 @@ describe("ProfilesUtils unit tests", () => {
             await ProfilesUtils.promptCredentials({
                 getProfile: () => testConfig,
                 setProfileToChoice: jest.fn(),
+                getChildren: jest.fn().mockResolvedValue([]),
             } as any);
             expect(updCredsMock).toHaveBeenCalled();
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
@@ -715,8 +746,24 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             jest.spyOn(Constants.PROFILES_CACHE, "getLoadedProfConfig").mockResolvedValue({ type: "test" } as any);
-            jest.spyOn(Constants.PROFILES_CACHE, "getSecurePropsForProfile").mockResolvedValue([]);
+            jest.spyOn(Constants.PROFILES_CACHE, "getPropsForProfile").mockResolvedValue([]);
+            jest.spyOn(Constants.PROFILES_CACHE, "shouldRemoveTokenFromProfile").mockResolvedValue(false as never);
             await expect(AuthUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
+        });
+
+        it("should return false when token is marked for removal", async () => {
+            const mocks = createBlockMocks();
+            jest.spyOn(Constants.PROFILES_CACHE, "shouldRemoveTokenFromProfile").mockResolvedValue(true as never);
+
+            Object.defineProperty(mocks.profInstance, "getDefaultProfile", {
+                value: jest.fn().mockReturnValue({
+                    name: "baseProfile",
+                    type: "base",
+                }),
+                configurable: true,
+            });
+
+            await expect(AuthUtils.isUsingTokenAuth("testProfile")).resolves.toEqual(false);
         });
     });
 

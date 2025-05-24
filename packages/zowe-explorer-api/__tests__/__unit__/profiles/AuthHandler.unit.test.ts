@@ -36,10 +36,14 @@ describe("AuthHandler.enableLocksForType", () => {
 
 describe("AuthHandler.waitForUnlock", () => {
     it("calls Mutex.waitForUnlock if the profile lock is present", async () => {
+        // Used so that `setTimeout` can be invoked from 30sec timeout promise
+        jest.useFakeTimers();
         const mutex = new Mutex();
-        const waitForUnlockMock = jest.spyOn(mutex, "waitForUnlock");
+        const isLockedMock = jest.spyOn(mutex, "isLocked").mockReturnValueOnce(true);
+        const waitForUnlockMock = jest.spyOn(mutex, "waitForUnlock").mockResolvedValueOnce(undefined);
         (AuthHandler as any).profileLocks.set(TEST_PROFILE_NAME, mutex);
         await AuthHandler.waitForUnlock(TEST_PROFILE_NAME);
+        expect(isLockedMock).toHaveBeenCalled();
         expect(waitForUnlockMock).toHaveBeenCalled();
         (AuthHandler as any).profileLocks.clear();
     });
@@ -50,6 +54,23 @@ describe("AuthHandler.waitForUnlock", () => {
     });
 });
 
+describe("AuthHandler.unlockAllProfiles", () => {
+    it("unlocks all profiles in the AuthHandler.profileLocks map", () => {
+        const mutexAuthPrompt = new Mutex();
+        const mutexProfile = new Mutex();
+        const releaseAuthPromptMutex = jest.spyOn(mutexAuthPrompt, "release");
+        const releaseProfileMutex = jest.spyOn(mutexProfile, "release");
+        (AuthHandler as any).authPromptLocks.set(TEST_PROFILE_NAME, mutexAuthPrompt);
+        (AuthHandler as any).profileLocks.set(TEST_PROFILE_NAME, mutexProfile);
+
+        AuthHandler.unlockAllProfiles();
+        expect(releaseAuthPromptMutex).toHaveBeenCalledTimes(1);
+        expect(releaseProfileMutex).toHaveBeenCalledTimes(1);
+        (AuthHandler as any).authPromptLocks.clear();
+        (AuthHandler as any).profileLocks.clear();
+    });
+});
+
 describe("AuthHandler.isProfileLocked", () => {
     it("returns true if the profile is locked", async () => {
         await AuthHandler.lockProfile(TEST_PROFILE_NAME);
@@ -57,11 +78,11 @@ describe("AuthHandler.isProfileLocked", () => {
         AuthHandler.unlockProfile(TEST_PROFILE_NAME);
     });
 
-    it("returns false if the profile is not locked", async () => {
+    it("returns false if the profile is not locked", () => {
         expect(AuthHandler.isProfileLocked(TEST_PROFILE_NAME)).toBe(false);
     });
 
-    it("returns false if no mutex is present for the given profile", async () => {
+    it("returns false if no mutex is present for the given profile", () => {
         expect(AuthHandler.isProfileLocked("unused_lpar.zosmf")).toBe(false);
     });
 });
@@ -164,7 +185,7 @@ describe("AuthHandler.unlockProfile", () => {
         expect((AuthHandler as any).profileLocks.get(TEST_PROFILE_NAME)!.isLocked()).toBe(false);
     });
 
-    it("does nothing if there is no mutex in the profile map", async () => {
+    it("does nothing if there is no mutex in the profile map", () => {
         const releaseSpy = jest.spyOn(Mutex.prototype, "release").mockClear();
         AuthHandler.unlockProfile("unused_lpar.zosmf");
         expect(releaseSpy).not.toHaveBeenCalled();
@@ -199,5 +220,14 @@ describe("AuthHandler.unlockProfile", () => {
         AuthHandler.unlockProfile(TEST_PROFILE_NAME, true);
         expect(reloadActiveEditorMock).toHaveBeenCalledWith(TEST_PROFILE_NAME);
         expect(reloadWorkspaceMock).toHaveBeenCalledWith(TEST_PROFILE_NAME);
+    });
+});
+
+describe("AuthHandler.shouldHandleAuthError", () => {
+    it("returns true if a credential prompt was not yet shown to the user", async () => {
+        await expect(AuthHandler.shouldHandleAuthError(TEST_PROFILE_NAME)).resolves.toBe(true);
+    });
+    it("returns false if the user is currently responding to a credential prompt", async () => {
+        await expect(AuthHandler.shouldHandleAuthError(TEST_PROFILE_NAME)).resolves.toBe(false);
     });
 });

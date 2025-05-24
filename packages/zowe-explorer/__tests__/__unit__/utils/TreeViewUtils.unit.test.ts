@@ -20,9 +20,10 @@ import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { createUSSSessionNode } from "../../__mocks__/mockCreators/uss";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
+import { IconGenerator } from "../../../src/icons/IconGenerator";
 
 describe("TreeViewUtils Unit Tests", () => {
-    function createBlockMocks(): { [key: string]: any } {
+    function createGlobalMocks(): { [key: string]: any } {
         const newMocks = {
             session: createISession(),
             imperativeProfile: createIProfile(),
@@ -45,44 +46,69 @@ describe("TreeViewUtils Unit Tests", () => {
 
         return newMocks;
     }
-    it("refreshIconOnCollapse - generated listener function works as intended", () => {
-        const testTreeProvider = { mOnDidChangeTreeData: { fire: jest.fn() } } as any;
-        const listenerFn = TreeViewUtils.refreshIconOnCollapse(
-            [(node): boolean => (node.contextValue as any).includes(Constants.DS_PDS_CONTEXT) as boolean],
-            testTreeProvider
-        );
-        const element = { label: "somenode", contextValue: Constants.DS_PDS_CONTEXT } as any;
-        listenerFn({ element });
-        expect(testTreeProvider.mOnDidChangeTreeData.fire).toHaveBeenCalledWith(element);
-    });
     it("should remove session from treeView", async () => {
-        const blockMocks = createBlockMocks();
-        const originalLength = blockMocks.testDatasetTree.mSessionNodes.length;
-        await TreeViewUtils.removeSession(blockMocks.testDatasetTree, blockMocks.imperativeProfile.name);
-        expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength - 1);
+        const globalMocks = createGlobalMocks();
+        const originalLength = globalMocks.testDatasetTree.mSessionNodes.length;
+        await TreeViewUtils.removeSession(globalMocks.testDatasetTree, globalMocks.imperativeProfile.name);
+        expect(globalMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength - 1);
     });
     it("should not find session in treeView", async () => {
-        const blockMocks = createBlockMocks();
-        const originalLength = blockMocks.testDatasetTree.mSessionNodes.length;
-        await TreeViewUtils.removeSession(blockMocks.testDatasetTree, "fake");
-        expect(blockMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength);
+        const globalMocks = createGlobalMocks();
+        const originalLength = globalMocks.testDatasetTree.mSessionNodes.length;
+        await TreeViewUtils.removeSession(globalMocks.testDatasetTree, "fake");
+        expect(globalMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength);
     });
     it("should not run treeProvider.removeFileHistory when job is returned for type", async () => {
-        const blockMocks = createBlockMocks();
-        jest.spyOn(blockMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.Job);
-        await TreeViewUtils.removeSession(blockMocks.testDatasetTree, "SESTEST");
-        expect(blockMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(0);
+        const globalMocks = createGlobalMocks();
+        jest.spyOn(globalMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.Job);
+        await TreeViewUtils.removeSession(globalMocks.testDatasetTree, "SESTEST");
+        expect(globalMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(0);
     });
     it("should run treeProvider.removeFileHistory", async () => {
-        const blockMocks = createBlockMocks();
-        jest.spyOn(blockMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.USS);
-        jest.spyOn(blockMocks.testDatasetTree, "getFileHistory").mockReturnValue(["[SESTEST]: /u/test/test.txt"]);
-        await TreeViewUtils.removeSession(blockMocks.testDatasetTree, "SESTEST");
-        expect(blockMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(1);
+        const globalMocks = createGlobalMocks();
+        jest.spyOn(globalMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.USS);
+        jest.spyOn(globalMocks.testDatasetTree, "getFileHistory").mockReturnValue(["[SESTEST]: /u/test/test.txt"]);
+        await TreeViewUtils.removeSession(globalMocks.testDatasetTree, "SESTEST");
+        expect(globalMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(1);
+    });
+
+    describe("updateNodeIcon", () => {
+        it("should update the icon for a node", () => {
+            const globalMocks = createGlobalMocks();
+            const fireSpy = jest.spyOn(globalMocks.testDatasetTree.mOnDidChangeTreeData, "fire");
+            const node = new ZoweDatasetNode({
+                label: "TEST.NODE",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                contextOverride: Constants.DS_DS_CONTEXT,
+                profile: createIProfile(),
+                parentNode: createDatasetSessionNode(createISession(), createIProfile()),
+            });
+            TreeViewUtils.updateNodeIcon(node, globalMocks.testDatasetTree);
+            expect(fireSpy).toHaveBeenCalledWith(node);
+        });
+
+        it("should not update the icon for a node when the new icon is not found", () => {
+            const globalMocks = createGlobalMocks();
+            const fireSpy = jest.spyOn(globalMocks.testDatasetTree.mOnDidChangeTreeData, "fire");
+            const node = new ZoweDatasetNode({
+                label: "TEST.NODE",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                contextOverride: Constants.DS_DS_CONTEXT,
+                profile: createIProfile(),
+                parentNode: createDatasetSessionNode(createISession(), createIProfile()),
+            });
+            // the cast in the mock below (undefined as `any`) is necessary because `noExplicitReturns` is not enabled.
+            // it represents the scenario where `pop` is called on an empty icons array in the original function
+            const getIconByNodeMock = jest.spyOn(IconGenerator, "getIconByNode").mockReturnValue(undefined as any);
+            TreeViewUtils.updateNodeIcon(node, globalMocks.testDatasetTree);
+            expect(getIconByNodeMock).toHaveBeenCalledTimes(1);
+            expect(getIconByNodeMock).toHaveBeenCalledWith(node);
+            expect(fireSpy).not.toHaveBeenCalled();
+        });
     });
 
     describe("errorForUnsavedResource", () => {
-        function getBlockMocks() {
+        function getglobalMocks() {
             return {
                 errorMessage: jest.spyOn(Gui, "errorMessage").mockClear(),
                 profilesInstance: jest.spyOn(Profiles, "getInstance").mockReturnValue({
@@ -103,7 +129,7 @@ describe("TreeViewUtils Unit Tests", () => {
                 scheme: ZoweScheme.USS,
             });
             (ussNode.resourceUri as any).fsPath = ussNode.resourceUri.path;
-            const blockMocks = getBlockMocks();
+            const globalMocks = getglobalMocks();
 
             const textDocumentsMock = jest.replaceProperty(vscode.workspace, "textDocuments", [
                 {
@@ -114,7 +140,7 @@ describe("TreeViewUtils Unit Tests", () => {
             ]);
 
             expect(await TreeViewUtils.errorForUnsavedResource(ussNode)).toBe(true);
-            expect(blockMocks.errorMessage).toHaveBeenCalledWith(
+            expect(globalMocks.errorMessage).toHaveBeenCalledWith(
                 "Unable to rename testFile.txt because you have unsaved changes in this file. " + "Please save your work and try again.",
                 { vsCodeOpts: { modal: true } }
             );
@@ -134,7 +160,7 @@ describe("TreeViewUtils Unit Tests", () => {
                 scheme: ZoweScheme.USS,
             });
             (ussFolder.resourceUri as any).fsPath = ussFolder.resourceUri.path;
-            const blockMocks = getBlockMocks();
+            const globalMocks = getglobalMocks();
 
             const ussNode = new ZoweUSSNode({
                 label: "testFile.txt",
@@ -158,7 +184,7 @@ describe("TreeViewUtils Unit Tests", () => {
             ]);
 
             expect(await TreeViewUtils.errorForUnsavedResource(ussFolder)).toBe(true);
-            expect(blockMocks.errorMessage).toHaveBeenCalledWith(
+            expect(globalMocks.errorMessage).toHaveBeenCalledWith(
                 "Unable to rename folder because you have unsaved changes in this directory. " + "Please save your work and try again.",
                 { vsCodeOpts: { modal: true } }
             );
@@ -178,7 +204,7 @@ describe("TreeViewUtils Unit Tests", () => {
                 scheme: ZoweScheme.DS,
             });
             (ps.resourceUri as any).fsPath = ps.resourceUri.path;
-            const blockMocks = getBlockMocks();
+            const globalMocks = getglobalMocks();
 
             const textDocumentsMock = jest.replaceProperty(vscode.workspace, "textDocuments", [
                 {
@@ -189,7 +215,7 @@ describe("TreeViewUtils Unit Tests", () => {
             ]);
 
             expect(await TreeViewUtils.errorForUnsavedResource(ps)).toBe(true);
-            expect(blockMocks.errorMessage).toHaveBeenCalledWith(
+            expect(globalMocks.errorMessage).toHaveBeenCalledWith(
                 "Unable to rename TEST.PS because you have unsaved changes in this data set. " + "Please save your work and try again.",
                 { vsCodeOpts: { modal: true } }
             );
@@ -209,7 +235,7 @@ describe("TreeViewUtils Unit Tests", () => {
                 scheme: ZoweScheme.DS,
             });
             (ps.resourceUri as any).fsPath = ps.resourceUri.path;
-            const blockMocks = getBlockMocks();
+            const globalMocks = getglobalMocks();
 
             const textDocumentsMock = jest.replaceProperty(vscode.workspace, "textDocuments", [
                 {
@@ -220,7 +246,7 @@ describe("TreeViewUtils Unit Tests", () => {
             ]);
 
             expect(await TreeViewUtils.errorForUnsavedResource(ps)).toBe(false);
-            expect(blockMocks.errorMessage).not.toHaveBeenCalled();
+            expect(globalMocks.errorMessage).not.toHaveBeenCalled();
             textDocumentsMock.restore();
         });
 
@@ -250,7 +276,7 @@ describe("TreeViewUtils Unit Tests", () => {
                 scheme: ZoweScheme.DS,
             });
             (pdsMember.resourceUri as any).fsPath = pdsMember.resourceUri.path;
-            const blockMocks = getBlockMocks();
+            const globalMocks = getglobalMocks();
 
             const textDocumentsMock = jest.replaceProperty(vscode.workspace, "textDocuments", [
                 {
@@ -261,7 +287,7 @@ describe("TreeViewUtils Unit Tests", () => {
             ]);
 
             expect(await TreeViewUtils.errorForUnsavedResource(pds)).toBe(true);
-            expect(blockMocks.errorMessage).toHaveBeenCalledWith(
+            expect(globalMocks.errorMessage).toHaveBeenCalledWith(
                 "Unable to rename TEST.PDS because you have unsaved changes in this data set. " + "Please save your work and try again.",
                 { vsCodeOpts: { modal: true } }
             );

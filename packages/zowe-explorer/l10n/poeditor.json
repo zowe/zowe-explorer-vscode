@@ -12,7 +12,7 @@
     "Zowe Resources": ""
   },
   "zowe.zosconsole": {
-    "Zowe Explorer z/OS Console": ""
+    "z/OS Console": ""
   },
   "zowe.resources.name": {
     "Zowe Resources": ""
@@ -28,6 +28,9 @@
   },
   "zowe.profileManagement": {
     "Manage Profile": ""
+  },
+  "zowe.updateSchema": {
+    "Update Profile Configuration Schema": ""
   },
   "zowe.editHistory": {
     "Edit History": ""
@@ -170,6 +173,12 @@
   "uss.text": {
     "Toggle Text": ""
   },
+  "uss.filterBy": {
+    "Search by Directory": ""
+  },
+  "uss.cd": {
+    "Go Up One Level": ""
+  },
   "jobs.search": {
     "Search Jobs": ""
   },
@@ -206,6 +215,9 @@
   "configuration.title": {
     "Zowe Explorer": ""
   },
+  "zowe.ds.paginate.dataSetsPerPage": {
+    "Maximum number of data sets and PDS members to list per page. 0 disables pagination.": ""
+  },
   "zowe.ds.default.binary": {
     "Default values of Binary data set creation": ""
   },
@@ -224,6 +236,36 @@
   "zowe.ds.default.ps": {
     "Default values of Sequential data set creation": ""
   },
+  "zowe.ds.default.sort": {
+    "Default sort order of data set tree": ""
+  },
+  "zowe.ds.default.sort.method.name": {
+    "Sort by name": ""
+  },
+  "zowe.ds.default.sort.method.dateCreated": {
+    "Sort by date created": ""
+  },
+  "zowe.ds.default.sort.method.lastModified": {
+    "Sort by last modified": ""
+  },
+  "zowe.ds.default.sort.method.userId": {
+    "Sort by user ID": ""
+  },
+  "zowe.ds.default.sort.method.description": {
+    "Default method to sort datasets": ""
+  },
+  "zowe.ds.default.sort.direction.ascending": {
+    "Sort in ascending order": ""
+  },
+  "zowe.ds.default.sort.direction.descending": {
+    "Sort in descending order": ""
+  },
+  "zowe.ds.default.sort.direction.description": {
+    "Default direction to sort datasets": ""
+  },
+  "zowe.ds.default.sort.description": {
+    "Default sort order for datasets": ""
+  },
   "zowe.ds.history": {
     "Toggle if favorite files persist locally": ""
   },
@@ -238,6 +280,39 @@
   },
   "zowe.jobs.history": {
     "Toggle if Jobs favorite files persist locally": ""
+  },
+  "zowe.jobs.default.sort": {
+    "Default sort order of job tree": ""
+  },
+  "zowe.jobs.default.sort.method.id": {
+    "Sort by job ID": ""
+  },
+  "zowe.jobs.default.sort.method.dateSubmitted": {
+    "Sort by date submitted": ""
+  },
+  "zowe.jobs.default.sort.method.dateCompleted": {
+    "Sort by date completed": ""
+  },
+  "zowe.jobs.default.sort.method.name": {
+    "Sort by name": ""
+  },
+  "zowe.jobs.default.sort.method.returnCode": {
+    "Sort by return code": ""
+  },
+  "zowe.jobs.default.sort.method.description": {
+    "Default method to sort jobs": ""
+  },
+  "zowe.jobs.default.sort.direction.ascending": {
+    "Sort in ascending order": ""
+  },
+  "zowe.jobs.default.sort.direction.descending": {
+    "Sort in descending order": ""
+  },
+  "zowe.jobs.default.sort.direction.description": {
+    "Default direction to sort jobs": ""
+  },
+  "zowe.jobs.default.sort.description": {
+    "Default sort order for jobs": ""
   },
   "zowe.jobs.confirmSubmission": {
     "Require user confirmation before submitting a job": ""
@@ -312,7 +387,7 @@
     "Messages about catastraphic error events.": ""
   },
   "zowe.cliLoggerSetting.presented": {
-    "User has been asked to sync Zowe Explorer log setting with Zowe CL's environment variable.": ""
+    "User has been asked to sync Zowe Explorer log setting with Zowe CLI's environment variable.": ""
   },
   "zowe.commands.mvs.history": {
     "Toggle if MVS Commands persist locally": ""
@@ -335,11 +410,20 @@
   "zowe.pollInterval.info": {
     "Default interval (in milliseconds) when polling spool files.": ""
   },
+  "zowe.jobs.paginate.enabled": {
+    "Toggle to enable job spool pagination.": ""
+  },
+  "zowe.jobs.paginate.recordsToFetch": {
+    " Default number of records to fetch when polling spool files.": ""
+  },
   "zowe.security.checkForCustomCredentialManagers": {
     "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer": ""
   },
   "zowe.security.secureCredentialsEnabled": {
     "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.": ""
+  },
+  "zowe.openRecentMember": {
+    "Open Recent Member": ""
   },
   "issueTsoCmd": {
     "Issue TSO Command": ""
@@ -434,6 +518,15 @@
   "zowe.history.deprecationMsg": {
     "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.": ""
   },
+  "zowe.settings.overrideWithEnvironmentVariables": {
+    "Indicates if environment variables should override values stored in Zowe configuration profiles on disk.": ""
+  },
+  "zowe.settings.socketConnectTimeout": {
+    "The amount of time to wait for a connection to be initiated with the server, in milliseconds.": ""
+  },
+  "zowe.settings.requestTimeout": {
+    "The amount of time to wait for a REST request to complete, in milliseconds.": ""
+  },
   "Enter command here...": "",
   "Page Size:": "",
   "Page": "",
@@ -450,6 +543,7 @@
   "File History": "",
   "Sessions": "",
   "Encoding History": "",
+  "Search Keyword History": "",
   "Delete Selected": "",
   "Select an item before deleting": "",
   "Delete": "",
@@ -505,11 +599,11 @@
   "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "",
   "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.": "",
   "Create New": "",
-  "\"Update Credentials\" operation not supported when \"autoStore\" is false": "",
   "Connection Name": "",
   "Enter a name for the connection.": "",
   "Operation cancelled": "",
   "Credentials for {0} were successfully updated": "",
+  "User: ": "",
   "Zowe home directory is located at {0}": "",
   "Reading imperative.json failed. Will try to create file.": "",
   "Reading imperative.json credential manager.\n {0}": "",
@@ -520,6 +614,7 @@
   "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles.": "",
   "Convert existing profiles": "",
   "Tree item is not a Zowe Explorer item.": "",
+  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}": "",
   "Zowe Explorer": "",
   "Initialized logger for Zowe Explorer": "",
   "This log file can be found at {0}": "",
@@ -537,6 +632,17 @@
   "Select Certificate Key": "",
   "Required parameter 'host' must not be blank.": "",
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.": "",
+  "Auth Method: ": "",
+  "Token-based Authentication": "",
+  "Basic Authentication": "",
+  "Certificate Authentication": "",
+  "Unknown": "",
+  "Pattern: ": "",
+  "Path: ": "",
+  "Owner: ": "",
+  "JobId: ": "",
+  "Profile: ": "",
+  "Profile Type: ": "",
   "Use the search button to list USS files": "",
   "Invalid node": "",
   "Delete action was cancelled.": "",
@@ -549,8 +655,6 @@
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "",
   "Uploading USS files...": "",
   "Error uploading files": "",
-  "Profile auth error": "",
-  "Profile is not authenticated, please log in to continue": "",
   "Retrieving response from USS list API": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
@@ -564,6 +668,7 @@
   "This will remove all favorited USS items for profile {0}. Continue?": "",
   "Continue": "",
   "Prompting the user to choose a member from the filtered list": "",
+  "You are already at the root directory.": "",
   "Prompting the user for a USS path": "",
   "Select a filter": "",
   "No selection made. Operation cancelled.": "",
@@ -593,7 +698,6 @@
   "Uploading file to USS tree": "",
   "Upload action was cancelled.": "",
   "Uploading USS file": "",
-  "Are you sure you want to delete the following item?\nThis will permanently remove the following file or folder from your system.\n\n{0}": "",
   "Delete action was canceled.": "",
   "Copying file structure...": "",
   "The paste operation is not supported for this node.": "",
@@ -613,6 +717,7 @@
   "Current encoding is {0}": "",
   "Enter a codepage (e.g., 1047, IBM-1047)": "",
   "A search must be set for {0} before it can be added to a workspace.": "",
+  "(default)": "",
   "Confirm": "",
   "One or more items may be overwritten from this drop operation. Confirm or cancel?": "",
   "Team config file created, refreshing Zowe Explorer.": "",
@@ -629,12 +734,17 @@
   "You must enter a pattern.": "",
   "Prompting the user to choose a recent member for editing": "",
   "Select a recent member to open": "",
+  "Profile not found.": "",
   "No recent members found.": "",
+  "Update Zowe configuration schema": "",
+  "Choose the schema location(s) to update.": "",
+  "Update Global schema only": "",
+  "Update Global and Project level schemas": "",
   "Use the search button to display jobs": "",
   "No spool files found": "",
   "No jobs found": "",
   "Retrieving response from JES list API": "",
-  "Job ID (default)": "",
+  "Job ID": "",
   "Date Submitted": "",
   "Date Completed": "",
   "Job Name": "",
@@ -690,6 +800,7 @@
   "The following jobs were deleted: {0}{1}": "",
   "Download single spool operation not implemented by extender. Please contact the extension developer(s).": "",
   "No spool files found for {0}": "",
+  "No document found": "",
   "Modify Command": "",
   "Command response: {0}": "",
   "jobActions.modifyCommand.apiNonExisting": "",
@@ -707,15 +818,17 @@
   "The response from Zowe CLI was not successful": "",
   "{0} members failed to load due to invalid name errors for {1}": "",
   "No data sets found": "",
+  "Previous page": "",
+  "Next page": "",
   "Retrieving response from MVS list API": "",
   "Cannot download, item invalid.": "",
-  "Name (default)": "",
   "Date Created": "",
   "Date Modified": "",
   "User ID": "",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "",
-  "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.": "",
-  "Cannot drop a member onto a sequential dataset.": "",
+  "Failed to move {0}: {1}": "",
+  "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "",
+  "Cannot drop a partitioned dataset or member into a sequential dataset.": "",
   "Moving MVS files...": "",
   "Initializing profiles with data set favorites.": "",
   "No data set favorites found.": "",
@@ -747,6 +860,24 @@
   "Choose the setting location to save the data set template...": "",
   "Save as User setting": "",
   "Save as Workspace setting": "",
+  "No search pattern applied. Search for a pattern and try again.": "",
+  "Searching for \"{0}\"": "",
+  "Search Results for \"{0}\"": "",
+  "Data Set Name": "",
+  "Position": "",
+  "Contents": "",
+  "Open": "",
+  "Enter the text to search for.": "",
+  "Search Options": "",
+  "Select search options": "",
+  "Case Sensitive": "",
+  "Regex": "",
+  "On": "",
+  "Off": "",
+  "Edit Options (Case Sensitive: {0}, Regex: {1})": "",
+  "Perform the search with case sensitivity": "",
+  "Treat the search query as a regex": "",
+  "Are you sure you want to search {0} data sets and members?": "",
   "Failed to list datasets": "",
   "Failed to read {0}": "",
   "Saving data set...": "",
@@ -778,9 +909,8 @@
   "Uploading to data set": "",
   "No data sets selected for deletion, cancelling...": "",
   "Deleting data set(s): {0}": "",
-  "Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}": "",
   "Deleting items": "",
-  "The following {0} item(s) were deleted: {1}": "",
+  "The following {0} item(s) were deleted:\n{1}{2}": "",
   "Name of member": "",
   "Creating new data set member {0}": "",
   "Unable to create member.": "",
@@ -819,16 +949,6 @@
   "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "",
   "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "",
   "Unable to copy data set.": "",
-  "No search pattern applied. Search for a pattern and try again.": "",
-  "Enter the text to search for.": "",
-  "Operation Cancelled": "",
-  "Searching for \"{0}\"": "",
-  "Search Results for \"{0}\"": "",
-  "Data Set Name": "",
-  "Position": "",
-  "Contents": "",
-  "Open": "",
-  "Are you sure you want to search {0} data sets and members?": "",
   "Failed to upload changes for {0}: {1}": "",
   "Error encountered while activating and initializing logger": "",
   "Insufficient read permissions for {0} in local storage.": "",
@@ -853,7 +973,6 @@
   "Profile {0} is using token authentication. Choose a profile action.": "",
   "Profile {0} doesn't specify an authentication method. Choose a profile action.": "",
   "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "",
-  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}": "",
   "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "",
   "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "",
   "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "",
@@ -867,6 +986,11 @@
   "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "",
   "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.": "",
+  "Auto Store: ": "",
+  "Config File: ": "",
+  "Global": "",
+  "Project": "",
+  "Secure Credentials Enabled: ": "",
   "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "",
   "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "",
   "Choose \"Create new...\" to define or select a profile to add to the USS tree": "",
@@ -900,8 +1024,6 @@
   "Select the location of the config file to edit": "",
   "Global: in the Zowe home directory": "",
   "Project: in the current working directory": "",
-  "Enter the user name for the connection. Leave blank to not store.": "",
-  "Enter the password for the connection. Leave blank to not store.": "",
   "Do you wish to apply this for all trees?": "",
   "Apply to all trees": "",
   "Apply to current tree selected": "",
@@ -924,6 +1046,7 @@
   "Enter the volume serial on which the data set should be placed": "",
   "Recent": "",
   "Recent Filters": "",
+  "Recent Searches": "",
   "Options": "",
   "Disabled": "",
   "Your jobs": "",

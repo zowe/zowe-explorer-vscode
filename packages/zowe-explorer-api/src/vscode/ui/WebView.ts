@@ -43,6 +43,8 @@ export class WebView {
     public panel: WebviewPanel;
     public view: WebviewView;
 
+    private eventsRegistered: boolean = false;
+
     // Resource identifiers for the on-disk content and vscode-webview resource.
     protected uris: UriPair = {};
 
@@ -109,8 +111,9 @@ export class WebView {
                 title: this.title,
             });
             this.webviewContent = builtHtml;
-            if (opts?.onDidReceiveMessage) {
-                this.panel.webview.onDidReceiveMessage(async (message) => opts.onDidReceiveMessage(message));
+            if (opts?.onDidReceiveMessage && !this.eventsRegistered) {
+                this.disposables.push(this.panel.webview.onDidReceiveMessage(async (message) => opts.onDidReceiveMessage(message)));
+                this.eventsRegistered = true;
             }
             this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
             this.panel.webview.html = this.webviewContent;
@@ -140,8 +143,9 @@ export class WebView {
             title: this.title,
         });
         this.webviewContent = builtHtml;
-        if (this.webviewOpts?.onDidReceiveMessage) {
-            webviewView.webview.onDidReceiveMessage(async (message) => this.webviewOpts.onDidReceiveMessage(message));
+        if (this.webviewOpts?.onDidReceiveMessage && !this.eventsRegistered) {
+            this.disposables.push(webviewView.webview.onDidReceiveMessage(async (message) => this.webviewOpts.onDidReceiveMessage(message)));
+            this.eventsRegistered = true;
         }
         webviewView.onDidDispose(() => this.dispose(), null, this.disposables);
         webviewView.webview.html = this.webviewContent;
@@ -160,6 +164,7 @@ export class WebView {
         }
         this.disposables = [];
         this.panel = undefined;
+        this.eventsRegistered = false;
     }
 
     /**

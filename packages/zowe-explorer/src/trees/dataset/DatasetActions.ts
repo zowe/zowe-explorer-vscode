@@ -16,10 +16,8 @@ import {
     Gui,
     imperative,
     IZoweDatasetTreeNode,
+    NavigationTreeItem,
     Validation,
-    Table,
-    TableBuilder,
-    TableViewProvider,
     Types,
     FsAbstractUtils,
     ZoweScheme,
@@ -40,12 +38,7 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { Definitions } from "../../configuration/Definitions";
-
-interface ISearchOptions {
-    node: IZoweDatasetTreeNode;
-    pattern: string;
-    searchString: string;
-}
+import { TreeViewUtils } from "../../utils/TreeViewUtils";
 
 export class DatasetActions {
     public static typeEnum: zosfiles.CreateDataSetTypeEnum;
@@ -177,7 +170,7 @@ export class DatasetActions {
         }
         DatasetActions.newDSProperties?.forEach((property) => {
             Object.keys(propertiesFromDsType).forEach((typeProperty) => {
-                if (typeProperty === property.key) {
+                if (typeProperty === property.key && propertiesFromDsType[typeProperty] != null) {
                     if (property.value !== propertiesFromDsType[typeProperty].toString()) {
                         isMatch = false;
                         return;
@@ -207,13 +200,13 @@ export class DatasetActions {
         if (!propertiesFromDsType) {
             propertiesFromDsType = DatasetActions.getDefaultDsTypeProperties(type);
         }
+        const propertyKeys = Object.keys(propertiesFromDsType);
         DatasetActions.newDSProperties?.forEach((property) => {
-            Object.keys(propertiesFromDsType).forEach((typeProperty) => {
-                if (typeProperty === property.key) {
-                    property.value = propertiesFromDsType[typeProperty].toString();
-                    property.placeHolder = propertiesFromDsType[typeProperty];
-                }
-            });
+            const typeProperty = propertyKeys.find((prop) => prop === property.key);
+            if (typeProperty != null && propertiesFromDsType[typeProperty] != null) {
+                property.value = propertiesFromDsType[typeProperty].toString();
+                property.placeHolder = propertiesFromDsType[typeProperty];
+            }
         });
         return propertiesFromDsType;
     }
@@ -276,7 +269,15 @@ export class DatasetActions {
         datasetProvider: Types.IZoweDatasetTreeType,
         theFilter: any
     ): Promise<void> {
-        node.tooltip = node.pattern = theFilter.toUpperCase();
+        node.pattern = theFilter.toUpperCase();
+        const toolTipList: string[] = (node.tooltip as string).split("\n");
+        const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
+        if (patternIndex === -1) {
+            toolTipList.push(`${vscode.l10n.t("Pattern: ")}${node.pattern}`);
+        } else {
+            toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${node.pattern}`;
+        }
+        node.tooltip = toolTipList.join("\n");
         node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         const icon = IconGenerator.getIconByNode(node);
         if (icon) {
@@ -419,7 +420,7 @@ export class DatasetActions {
         }
 
         const theFilter = datasetProvider.createFilterString(newDSName, currSession);
-        currSession.tooltip = currSession.pattern = theFilter.toUpperCase();
+        currSession.pattern = theFilter.toUpperCase();
         datasetProvider.refresh();
         currSession.dirty = true;
         datasetProvider.refreshElement(currSession);
@@ -594,6 +595,9 @@ export class DatasetActions {
         let includedSelection = false;
         if (node) {
             for (const item of selectedNodes) {
+                if (item instanceof NavigationTreeItem) {
+                    continue;
+                }
                 if (
                     node.getLabel().toString() === item.getLabel().toString() &&
                     node.getParent().getLabel().toString() === item.getParent().getLabel().toString()
@@ -660,6 +664,9 @@ export class DatasetActions {
             return SharedContext.isDsMember(deletedNode) ? deletedNode.getParent() : ` ${deletedNode.getLabel().toString()}`;
         });
 
+        const displayedDatasetNames = nodesToDelete.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
+        const additionalDatasetsCount = nodesToDelete.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
+
         // Confirm that the user really wants to delete
         ZoweLogger.debug(
             vscode.l10n.t({
@@ -670,9 +677,11 @@ export class DatasetActions {
         );
         const deleteButton = vscode.l10n.t("Delete");
         const message = vscode.l10n.t({
-            message: `Are you sure you want to delete the following {0} item(s)?\nThis will permanently remove these data sets and/or members from your system.\n\n{1}`,
-            args: [nodesToDelete.length, nodesToDelete.toString().replace(/(,)/g, "\n")],
-            comment: ["Data Sets to delete length", "Data Sets to delete"],
+            message:
+                `Are you sure you want to delete the following {0} item(s)?\n` +
+                `This will permanently remove these data sets and/or members from your system.\n\n{1}{2}`,
+            args: [nodesToDelete.length, displayedDatasetNames, additionalDatasetsCount > 0 ? `\n...and ${additionalDatasetsCount} more` : ""],
+            comment: ["Data Sets to delete length", "Data Sets to delete", "Additional datasets count"],
         });
         await Gui.warningMessage(message, {
             items: [deleteButton],
@@ -724,11 +733,13 @@ export class DatasetActions {
         }
         if (nodesDeleted.length > 0) {
             nodesDeleted.sort((a, b) => a.localeCompare(b));
+            const displayedDeletedNames = nodesDeleted.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
+            const additionalDeletedCount = nodesDeleted.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
             Gui.showMessage(
                 vscode.l10n.t({
-                    message: "The following {0} item(s) were deleted: {1}",
-                    args: [nodesDeleted.length, nodesDeleted.toString().trim()],
-                    comment: ["Data Sets deleted length", "Data Sets deleted"],
+                    message: "The following {0} item(s) were deleted:\n{1}{2}",
+                    args: [nodesDeleted.length, displayedDeletedNames, additionalDeletedCount > 0 ? `\n...and ${additionalDeletedCount} more` : ""],
+                    comment: ["Data Sets deleted length", "Data Sets deleted", "Additional datasets count"],
                 })
             );
         }
@@ -738,6 +749,7 @@ export class DatasetActions {
         for (const member of memberParents) {
             datasetProvider.refreshElement(member);
         }
+        await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodes[0].getParent());
     }
 
     /**
@@ -767,10 +779,6 @@ export class DatasetActions {
             const label = parent.label as string;
             const profile = parent.getProfile();
             let replace: Definitions.ShouldReplace;
-            const memberUri = vscode.Uri.from({
-                scheme: ZoweScheme.DS,
-                path: path.posix.join(parent.resourceUri.path, name),
-            });
             try {
                 replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
                 if (replace !== "cancel") {
@@ -792,15 +800,18 @@ export class DatasetActions {
                 const newNode = new ZoweDatasetNode({
                     label: name,
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    contextOverride: Constants.DS_MEMBER_CONTEXT,
                     parentNode: parent,
                     profile: parent.getProfile(),
                 });
                 parent.children.push(newNode);
-                await vscode.workspace.fs.writeFile(memberUri, new Uint8Array());
+                await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
             }
 
             parent.dirty = true;
             datasetProvider.refreshElement(parent);
+
+            const memberUri = parent.children.find((ds) => ds.label === name)?.resourceUri;
 
             // Refresh corresponding tree parent to reflect addition
             const otherTreeParent = datasetProvider.findEquivalentNode(parent, SharedContext.isFavorite(parent));
@@ -808,7 +819,9 @@ export class DatasetActions {
                 datasetProvider.refreshElement(otherTreeParent);
             }
 
-            await vscode.commands.executeCommand("vscode.open", memberUri);
+            if (memberUri != null) {
+                await vscode.commands.executeCommand("vscode.open", memberUri);
+            }
             datasetProvider.refresh();
         }
     }
@@ -1738,6 +1751,7 @@ export class DatasetActions {
      */
     public static async copyPartitionedDatasets(clipboardContent, node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.copyPartitionedDatasets called.");
+
         const groupedContent = clipboardContent.reduce((result, current) => {
             const { dataSetName, memberName, ...rest } = current;
             let group = result.find((item: any) => item.dataSetName === dataSetName);
@@ -1745,7 +1759,10 @@ export class DatasetActions {
                 group = { ...rest, dataSetName, members: [] };
                 result.push(group);
             }
-            group.members.push(memberName);
+
+            if (memberName && memberName !== vscode.l10n.t("No data sets found")) {
+                group.members.push(memberName);
+            }
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return result;
         }, []);
@@ -1937,252 +1954,8 @@ export class DatasetActions {
     public static async copyName(node: IZoweDatasetTreeNode): Promise<void> {
         if (SharedContext.isDsMember(node) && node.getParent()) {
             await vscode.env.clipboard.writeText(`${node.getParent().label as string}(${node.label as string})`);
-        } else if (SharedContext.isDs(node) || SharedContext.isPds(node) || SharedContext.isMigrated(node)) {
+        } else if (SharedContext.isDs(node) || SharedContext.isPds(node) || SharedContext.isMigrated(node) || SharedContext.isVsam(node)) {
             await vscode.env.clipboard.writeText(node.label as string);
         }
-    }
-
-    public static async search(context: vscode.ExtensionContext, node: IZoweDatasetTreeNode): Promise<void> {
-        const isSessionNotFav = SharedContext.isSessionNotFav(node);
-        const generateFullUri = (isSessionNotFav && node.pattern != null) || SharedContext.isFavoriteSearch(node);
-        const pattern = isSessionNotFav ? node.pattern : (node.label as string);
-
-        // There may not be a pattern on a session node if there is no filter applied. Warn if this is the case.
-        if (!pattern) {
-            Gui.errorMessage(vscode.l10n.t("No search pattern applied. Search for a pattern and try again."));
-            return;
-        }
-
-        // Figure out what text we are looking for.
-        const searchString = await Gui.showInputBox({ prompt: vscode.l10n.t("Enter the text to search for.") });
-        if (!searchString) {
-            Gui.showMessage(vscode.l10n.t("Operation Cancelled"));
-            return;
-        }
-
-        // Perform the actual search.
-        const response: zosfiles.IZosFilesResponse = await Gui.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: vscode.l10n.t({ message: 'Searching for "{0}"', args: [searchString], comment: "The string to search data sets for." }),
-                cancellable: true,
-            },
-            async (progress, token) => {
-                return this.performSearch(progress, token, { node, pattern, searchString });
-            }
-        );
-
-        // Either the user cancelled the search, or a catastrophic error occurred and error handling has already been done.
-        if (response === undefined) {
-            return;
-        }
-
-        // Prepare a list of matches in a format the table expects
-        const matches = this.getSearchMatches(node, response, generateFullUri, searchString);
-
-        // Prepare the table for display to the user
-        const table = new TableBuilder(context)
-            .title(vscode.l10n.t({ message: 'Search Results for "{0}"', args: [searchString], comment: "The string to search data sets for." }))
-            .options({
-                autoSizeStrategy: { type: "fitCellContents" },
-                pagination: true,
-                rowSelection: "multiple",
-                selectEverything: true,
-                suppressRowClickSelection: true,
-            })
-            .isView()
-            .rows(...matches)
-            .columns(
-                ...[
-                    {
-                        field: "name",
-                        headerName: vscode.l10n.t("Data Set Name"),
-                        filter: true,
-                        sort: "asc",
-                    } as Table.ColumnOpts,
-                    {
-                        field: "position",
-                        headerName: vscode.l10n.t("Position"),
-                        filter: false,
-                    },
-                    {
-                        field: "contents",
-                        headerName: vscode.l10n.t("Contents"),
-                        filter: true,
-                    },
-                    {
-                        field: "actions",
-                        hide: true,
-                    },
-                ]
-            )
-            .addRowAction("all", {
-                title: vscode.l10n.t("Open"),
-                command: "open",
-                callback: {
-                    fn: DatasetActions.openSearchAtLocation,
-                    typ: "multi-row",
-                },
-                type: "secondary",
-            })
-            .build();
-
-        // Show the table to the user.
-        await TableViewProvider.getInstance().setTableView(table);
-    }
-
-    private static async openSearchAtLocation(this: void, _view: Table.View, data: Record<number, Table.RowData>): Promise<void> {
-        const childrenToOpen = Object.values(data);
-        if (childrenToOpen.length === 0) {
-            return;
-        }
-
-        for (const child of childrenToOpen) {
-            // Get the URI, look it up so the Filesystem provider is aware of it, then display the document to the user
-            const childUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: child.uri as string });
-            await DatasetFSProvider.instance.remoteLookupForResource(childUri);
-            void Gui.showTextDocument(childUri, { preview: false }).then(
-                (editor) => {
-                    // Highlight the searched for text so the user can easily find it
-                    const startPosition = new vscode.Position((child.line as number) - 1, (child.column as number) - 1);
-                    const endPosition = new vscode.Position(
-                        (child.line as number) - 1,
-                        (child.column as number) - 1 + (child.searchString as string).length
-                    );
-                    editor.selection = new vscode.Selection(startPosition, endPosition);
-                },
-                (err) => {
-                    Gui.errorMessage(err.message);
-                }
-            );
-        }
-    }
-
-    private static async continueSearchPrompt(this: void, dataSets: zosfiles.IDataSet[]): Promise<boolean> {
-        const MAX_DATASETS = 50;
-
-        // If there are 50 matches or under, do not prompt the user for confirmation to continue
-        if (dataSets.length <= MAX_DATASETS) {
-            return true;
-        }
-
-        // There are 51 or more results, which may take a long time. Make sure the user is prepared for that.
-        const resp = await Gui.infoMessage(
-            vscode.l10n.t({
-                message: "Are you sure you want to search {0} data sets and members?",
-                args: [dataSets.length.toString()],
-                comment: "The number of data sets that are about to be searched",
-            }),
-            {
-                items: [vscode.l10n.t("Continue")],
-                vsCodeOpts: { modal: true },
-            }
-        );
-
-        return resp === vscode.l10n.t("Continue");
-    }
-
-    private static async performSearch(progress: any, token: vscode.CancellationToken, options: ISearchOptions): Promise<zosfiles.ISearchResponse> {
-        const profile = options.node.getProfile();
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
-        let response: zosfiles.ISearchResponse;
-        if (token.isCancellationRequested) {
-            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
-            return;
-        }
-
-        // Prepare a hacky task object that updates the progress bar on the GUI.
-        // Pass that into the MVS API call.
-        let realPercentComplete = 0;
-        let realTotalEntries = 100;
-        const task: imperative.ITaskWithStatus = {
-            set percentComplete(value: number) {
-                realPercentComplete = value;
-                // eslint-disable-next-line no-magic-numbers
-                Gui.reportProgress(progress, realTotalEntries, Math.floor((value * realTotalEntries) / 100), "");
-            },
-            get percentComplete(): number {
-                return realPercentComplete;
-            },
-            statusMessage: "",
-            stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
-        };
-
-        try {
-            // Perform the actual search
-            response = await mvsApi.searchDataSets({
-                pattern: options.pattern,
-                searchString: options.searchString,
-                progressTask: task,
-                mainframeSearch: false,
-                continueSearch: function intercept(dataSets: zosfiles.IDataSet[]) {
-                    realTotalEntries = dataSets.length;
-                    return DatasetActions.continueSearchPrompt(dataSets);
-                },
-                abortSearch: function abort() {
-                    return token.isCancellationRequested;
-                },
-            });
-
-            // The user cancelled the search
-            if (response.success === false && response.commandResponse?.includes("cancelled")) {
-                return;
-            }
-
-            // If there is no API response and success is false, the search didn't even begin searching data sets, and stopped during listing.
-            // Return an error to the user since we have no useful data. Otherwise, display partial results.
-            if (response.success === false) {
-                ZoweLogger.error(response.errorMessage);
-                Gui.errorMessage(response.errorMessage);
-            }
-            return response.apiResponse != null ? response : undefined;
-        } catch (err) {
-            // Something catastrophic happened that was not handled (i.e. bad credentials).
-            await AuthUtils.errorHandling(err);
-            return;
-        }
-    }
-
-    private static getSearchMatches(
-        node: IZoweDatasetTreeNode,
-        response: any,
-        generateFullUri: boolean,
-        searchString: string
-    ): Record<string, any>[] {
-        const matches = response.apiResponse;
-        const newMatches: object[] = [];
-
-        // Take in the API response, and iterate through the list of matched data sets and members
-        for (const ds of matches) {
-            const dsn = ds.dsn as string;
-            const member = ds.member as string;
-            const extension = DatasetUtils.getExtension(ds.dsn);
-
-            let name: string = dsn;
-            let uri = generateFullUri ? path.posix.join(node.getSessionNode().resourceUri.path, dsn) : node.resourceUri.path;
-
-            if (member) {
-                uri = uri + "/" + member;
-                name = name + "(" + member + ")";
-            }
-
-            if (extension != null) {
-                uri += extension;
-            }
-
-            // The data set or member might have multiple matches itself. Display each one as a separate item.
-            for (const match of ds.matchList) {
-                newMatches.push({
-                    name,
-                    line: match.line as number,
-                    column: match.column as number,
-                    position: (match.line as number).toString() + ":" + (match.column as number).toString(),
-                    contents: match.contents,
-                    uri,
-                    searchString,
-                });
-            }
-        }
-        return newMatches;
     }
 }

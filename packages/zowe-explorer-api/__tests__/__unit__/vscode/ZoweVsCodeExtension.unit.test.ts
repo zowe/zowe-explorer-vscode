@@ -674,13 +674,40 @@ describe("ZoweVsCodeExtension", () => {
             await expect(fetchBaseProfileSpy.mock.results[0].value).resolves.toBeUndefined();
         });
     });
+    describe("onProfileUpdated", () => {
+        it("returns event defined on API register", () => {
+            const eventEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
+            const apiMock = jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                onProfileUpdatedEmitter: eventEmitter,
+                onProfileUpdated: eventEmitter.event,
+            } as any);
+            expect(ZoweVsCodeExtension.onProfileUpdated).toBe(ZoweVsCodeExtension.getZoweExplorerApi().onProfileUpdatedEmitter?.event);
+            apiMock.mockRestore();
+        });
+    });
+    describe("onProfileUpdatedEmitter", () => {
+        it("returns instance of an EventEmitter", () => {
+            const eventEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
+            const apiMock = jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                onProfileUpdatedEmitter: eventEmitter,
+                onProfileUpdated: eventEmitter.event,
+            } as any);
+            expect(ZoweVsCodeExtension.onProfileUpdatedEmitter).toBeInstanceOf(vscode.EventEmitter);
+            apiMock.mockRestore();
+        });
+    });
     describe("updateCredentials", () => {
         const promptCredsOptions: PromptCredentialsOptions.ComplexOptions = {
             sessionName: "test",
         };
+        const onProfileUpdatedEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
 
         it("should update user and password as secure fields", async () => {
             const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({
                     profile: {},
@@ -707,6 +734,10 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should update user and password as secure fields with rePrompt", async () => {
             const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({
                     profile: { user: "badUser", password: "badPassword" },
@@ -736,6 +767,10 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should update user and password as plain text if prompt accepted", async () => {
             const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({
                     profile: {},
@@ -763,6 +798,10 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should not update user and password as plain text if prompt cancelled", async () => {
             const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
             jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: jest.fn().mockReturnValue({
                     profile: {},
@@ -908,6 +947,73 @@ describe("ZoweVsCodeExtension", () => {
             await (ZoweVsCodeExtension as any).promptCertificate(options);
             expect(options.session.cert).toEqual("/test/cert/path");
             expect(options.session.certKey).toEqual("/test/key/path");
+        });
+    });
+    describe("Direct connect token authentication methods", () => {
+        let blockMocks: ReturnType<typeof createBlockMocks>;
+        const expectedSession = new imperative.Session({
+            hostname: "dummy",
+            password: "Password",
+            port: 1234,
+            tokenType: "jwtToken",
+            type: "token",
+            user: "Username",
+        });
+
+        function createBlockMocks() {
+            const vals = {
+                serviceProfile: {
+                    failNotFound: false,
+                    message: "",
+                    name: "service",
+                    type: "service",
+                    profile: {
+                        host: "dummy",
+                        port: 1234,
+                    },
+                },
+                promptSpy: jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass"),
+                testNode: undefined,
+                testRegister: {
+                    getCommonApi: () => ({
+                        login: jest.fn().mockReturnValue("tokenValue"),
+                        logout: jest.fn(),
+                        getSession: jest.fn().mockReturnValue(new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)))),
+                    }),
+                },
+            };
+            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                updateCachedProfile: jest.fn(),
+            });
+            vals.testNode = {
+                getSession: jest.fn().mockReturnValue(new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)))),
+            } as any;
+            return vals;
+        }
+        beforeEach(() => {
+            blockMocks = createBlockMocks();
+        });
+        it("directConnectLogin should obtain a JWT and return true using profile to get session", async () => {
+            blockMocks.promptSpy.mockResolvedValue(["user", "pass"]);
+            expect(await (ZoweVsCodeExtension as any).directConnectLogin(blockMocks.serviceProfile, blockMocks.testRegister)).toEqual(true);
+        });
+        it("directConnectLogin should obtain a JWT and return true using node to get session", async () => {
+            blockMocks.promptSpy.mockResolvedValue(["user", "pass"]);
+            expect(
+                await (ZoweVsCodeExtension as any).directConnectLogin(blockMocks.serviceProfile, blockMocks.testRegister, blockMocks.testNode)
+            ).toEqual(true);
+        });
+        it("directConnectLogin should not obtain a JWT and return false due to no credentials entered using profile to get session", async () => {
+            blockMocks.promptSpy.mockResolvedValue(undefined);
+            expect(await (ZoweVsCodeExtension as any).directConnectLogin(blockMocks.serviceProfile, blockMocks.testRegister)).toEqual(false);
+        });
+        it("directConnectLogout should retire JWT and return true using profile to get session", async () => {
+            expect(await (ZoweVsCodeExtension as any).directConnectLogout(blockMocks.serviceProfile, blockMocks.testRegister)).toEqual(true);
+        });
+        it("directConnectLogout should retire JWT and return true using node to get session", async () => {
+            expect(
+                await (ZoweVsCodeExtension as any).directConnectLogout(blockMocks.serviceProfile, blockMocks.testRegister, blockMocks.testNode)
+            ).toEqual(true);
         });
     });
 });

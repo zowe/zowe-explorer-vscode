@@ -22,6 +22,7 @@ import {
     Types,
     ZoweExplorerApiType,
     ZosEncoding,
+    Sorting,
 } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobFSProvider } from "./JobFSProvider";
@@ -111,8 +112,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             treeDataProvider: this,
             canSelectMany: true,
         });
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.treeView.onDidCollapseElement(TreeViewUtils.refreshIconOnCollapse([SharedContext.isJob, SharedContext.isJobsSession], this));
     }
 
     public rename(_node: IZoweJobTreeNode): void {
@@ -333,10 +332,14 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * Initialize the favorites and history information
      * @param log - Logger
      */
-    public async initializeJobsTree(log: imperative.Logger): Promise<void> {
-        ZoweLogger.trace("JobTree.initializeJobsTree called.");
+    public async initializeFavorites(log: imperative.Logger): Promise<void> {
+        ZoweLogger.trace("JobTree.initializeFavorites called.");
         this.log = log;
         ZoweLogger.debug(vscode.l10n.t("Initializing profiles with jobs favorites."));
+        await this.refreshFavorites();
+    }
+
+    public async refreshFavorites(): Promise<void> {
         const lines: string[] = this.mHistory.readFavorites();
         if (lines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No jobs favorites found."));
@@ -347,16 +350,16 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         for (const fav of favorites) {
             // The profile node used for grouping respective favorited items.
             // Create a node if it does not already exist in the Favorites array
-            const profileNodeInFavorites =
+            const favProfileNode =
                 this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? (await this.createProfileNodeForFavs(fav.profileName));
 
-            if (profileNodeInFavorites == null || fav.contextValue == null) {
+            if (favProfileNode == null || fav.contextValue == null || favProfileNode.children.some((child) => child.label === fav.label)) {
                 continue;
             }
 
-            // Initialize and attach favorited item nodes under their respective profile node in Favorrites
-            const favChildNodeForProfile = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, profileNodeInFavorites);
-            profileNodeInFavorites.children.push(favChildNodeForProfile);
+            // Initialize and attach favorited item nodes under their respective profile node in Favorites
+            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
+            favProfileNode.children.push(favChildNode);
         }
     }
 
@@ -826,8 +829,40 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 if (searchCriteria != null) {
                     node.filtered = true;
                     node.label = node.getProfileName();
-                    node.tooltip = node.description = searchCriteria;
+                    node.description = searchCriteria;
                     node.dirty = true;
+                    const toolTipList = (node.tooltip as string).split("\n");
+                    switch (true) {
+                        case searchCriteria.includes(vscode.l10n.t("Owner: ")): {
+                            const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
+                            if (jobIdIndex !== -1) {
+                                toolTipList.splice(jobIdIndex, 1);
+                            }
+
+                            const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
+                            if (searchCriteriaIndex === -1) {
+                                toolTipList.push(searchCriteria);
+                            } else {
+                                toolTipList[searchCriteriaIndex] = searchCriteria;
+                            }
+                            break;
+                        }
+                        case searchCriteria.includes(vscode.l10n.t("JobId: ")): {
+                            const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
+                            if (searchFilterIndex !== -1) {
+                                toolTipList.splice(searchFilterIndex, 1);
+                            }
+
+                            const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
+                            if (jobIdIndex === -1) {
+                                toolTipList.push(searchCriteria);
+                            } else {
+                                toolTipList[jobIdIndex] = searchCriteria;
+                            }
+                            break;
+                        }
+                    }
+                    node.tooltip = toolTipList.join("\n");
                     this.addSearchHistory(searchCriteria);
                     await TreeViewUtils.expandNode(node, this);
                 }
@@ -842,6 +877,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 }
                 node.dirty = true;
             }
+            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), node);
             this.refresh();
         }
     }
@@ -856,6 +892,18 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 setting.favorites = [];
                 setting.history = [];
                 await SettingsConfig.setDirectValue(JobTree.persistenceSchema, setting);
+            }
+        }
+        if (e.affectsConfiguration(Constants.SETTINGS_JOBS_DEFAULT_SORT)) {
+            const sortOpts = SharedUtils.getDefaultSortOptions(JobUtils.JOB_SORT_OPTS, Constants.SETTINGS_JOBS_DEFAULT_SORT, Sorting.JobSortOpts);
+            for (const sessionNode of this.mSessionNodes) {
+                sessionNode.sort = sortOpts;
+                this.sortBy(sessionNode);
+            }
+            this.refresh();
+            for (const favProfile of this.mFavorites) {
+                favProfile.sort = sortOpts;
+                this.sortBy(favProfile);
             }
         }
     }
@@ -1186,11 +1234,15 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
 
     public async openWithEncoding(node: IZoweJobTreeNode, encoding?: ZosEncoding): Promise<void> {
         encoding ??= await SharedUtils.promptForEncoding(node);
-        if (encoding !== undefined) {
-            // Set the encoding, fetch the new contents with the encoding, and open the spool file.
-            await node.setEncoding(encoding);
-            await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
-            await vscode.commands.executeCommand("vscode.open", node.resourceUri);
+        try {
+            if (encoding !== undefined) {
+                // Set the encoding, fetch the new contents with the encoding, and open the spool file.
+                await node.setEncoding(encoding);
+                await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
+                await vscode.commands.executeCommand("vscode.open", node.resourceUri);
+            }
+        } catch (err) {
+            await AuthUtils.errorHandling(err, { profile: node.getProfile() });
         }
     }
 }

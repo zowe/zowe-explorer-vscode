@@ -21,8 +21,9 @@ import * as l10n from "@vscode/l10n";
 export function App(): JSXInternal.Element {
   const [timestamp, setTimestamp] = useState<Date | undefined>();
   const [currentTab, setCurrentTab] = useState<{ [key: string]: string }>({});
+
   useEffect(() => {
-    window.addEventListener("message", (event) => {
+    const handleMessage = (event: MessageEvent) => {
       if (!isSecureOrigin(event.origin)) {
         return;
       }
@@ -41,9 +42,15 @@ export function App(): JSXInternal.Element {
           contents: contents,
         });
       }
-    });
+    };
+
+    window.addEventListener("message", handleMessage);
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "GET_LOCALIZATION" });
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
   }, []);
 
   return (

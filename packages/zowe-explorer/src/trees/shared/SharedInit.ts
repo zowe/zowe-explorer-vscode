@@ -22,6 +22,7 @@ import {
     ZoweScheme,
     ZoweVsCodeExtension,
     imperative,
+    AuthHandler,
 } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
@@ -103,6 +104,12 @@ export class SharedInit {
         );
 
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.updateSchema", async () => {
+                await SharedActions.updateSchemaCommand();
+            })
+        );
+
+        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.diff.useLocalContent", async (localUri) => {
                 if (localUri.scheme === ZoweScheme.USS) {
                     await UssFSProvider.instance.diffOverwrite(localUri);
@@ -130,6 +137,12 @@ export class SharedInit {
             })
         );
 
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.executeNavCallback", async (callback: () => void | PromiseLike<void>) => {
+                await callback();
+            })
+        );
+
         // Register functions & event listeners
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {
@@ -148,20 +161,7 @@ export class SharedInit {
         );
 
         context.subscriptions.push(
-            ZoweVsCodeExtension.onProfileUpdated(async (profile) => {
-                const providers = Object.values(SharedTreeProviders.providers);
-                for (const provider of providers) {
-                    try {
-                        const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
-                        node?.setProfileToChoice?.(profile);
-                    } catch (err) {
-                        if (err instanceof Error) {
-                            ZoweLogger.error(err.message);
-                        }
-                        return;
-                    }
-                }
-            })
+            ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => SharedUtils.handleProfileChange(providers, profile))
         );
 
         if (providers.ds || providers.uss) {
@@ -342,23 +342,23 @@ export class SharedInit {
 
         watchers.forEach((watcher) => {
             watcher.onDidCreate(
-                SharedUtils.debounce(() => {
+                SharedUtils.debounceAsync(async () => {
                     ZoweLogger.info(vscode.l10n.t("Team config file created, refreshing Zowe Explorer."));
-                    void SharedActions.refreshAll();
+                    await SharedActions.refreshAll();
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.CREATE);
                 }, 100) // eslint-disable-line no-magic-numbers
             );
             watcher.onDidDelete(
-                SharedUtils.debounce(() => {
+                SharedUtils.debounceAsync(async () => {
                     ZoweLogger.info(vscode.l10n.t("Team config file deleted, refreshing Zowe Explorer."));
-                    void SharedActions.refreshAll();
+                    await SharedActions.refreshAll();
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.DELETE);
                 }, 100) // eslint-disable-line no-magic-numbers
             );
             watcher.onDidChange(
-                SharedUtils.debounce(() => {
+                SharedUtils.debounceAsync(async () => {
                     ZoweLogger.info(vscode.l10n.t("Team config file updated, refreshing Zowe Explorer."));
-                    void SharedActions.refreshAll();
+                    await SharedActions.refreshAll();
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
                 }, 100) // eslint-disable-line no-magic-numbers
             );
@@ -367,6 +367,7 @@ export class SharedInit {
         try {
             const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
                 ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
+                AuthHandler.unlockAllProfiles();
                 await ProfilesUtils.readConfigFromDisk();
                 await SharedActions.refreshAll();
                 ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
@@ -397,11 +398,11 @@ export class SharedInit {
         const theTreeView = theProvider.getTreeView();
         context.subscriptions.push(theTreeView);
         context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (e) => SharedInit.setupRemoteWorkspaceFolders(e)));
-        theTreeView.onDidCollapseElement((e) => {
-            theProvider.flipState(e.element, false);
+        theTreeView.onDidCollapseElement(async (e) => {
+            await theProvider.onCollapsibleStateChange?.(e.element, vscode.TreeItemCollapsibleState.Collapsed);
         });
-        theTreeView.onDidExpandElement((e) => {
-            theProvider.flipState(e.element, true);
+        theTreeView.onDidExpandElement(async (e) => {
+            await theProvider.onCollapsibleStateChange?.(e.element, vscode.TreeItemCollapsibleState.Expanded);
         });
     }
 

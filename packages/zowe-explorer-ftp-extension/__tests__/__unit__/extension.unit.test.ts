@@ -11,7 +11,7 @@
 
 import * as extension from "../../src/extension";
 import * as vscode from "vscode";
-import { Gui } from "@zowe/zowe-explorer-api";
+import { AuthHandler, Gui } from "@zowe/zowe-explorer-api";
 import { ZoweVsCodeExtension } from "../../__mocks__/@zowe/zowe-explorer-api";
 
 describe("Extension Unit Tests - function registerFtpApis", () => {
@@ -34,6 +34,8 @@ describe("Extension Unit Tests - function registerFtpApis", () => {
             }),
         });
 
+        const enableLocksForTypeSpy = jest.spyOn(AuthHandler, "enableLocksForType");
+
         jest.spyOn(Gui, "showMessage").mockImplementation();
         expect(
             extension.activate({
@@ -44,6 +46,10 @@ describe("Extension Unit Tests - function registerFtpApis", () => {
         expect(registerUssApiMock).toHaveBeenCalledTimes(1);
         expect(registerMvsApiMock).toHaveBeenCalledTimes(1);
         expect(registerJesApiMock).toHaveBeenCalledTimes(1);
+
+        // Verify locks are enabled for FTP profile types
+        expect(enableLocksForTypeSpy).toHaveBeenCalledTimes(1);
+        expect(enableLocksForTypeSpy).toHaveBeenCalledWith("zftp");
     });
 
     it("should display error if zoweExplorerApi was not found", () => {

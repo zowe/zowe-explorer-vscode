@@ -16,10 +16,12 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static readonly COMMAND_COUNT = 106;
+    public static readonly COMMAND_COUNT = 113;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
+    public static readonly MAX_DISPLAYED_DELETE_NAMES = 10;
     public static readonly MS_PER_SEC = 1000;
+    public static readonly DEFAULT_ITEMS_PER_PAGE = 100;
     public static readonly STATUS_BAR_TIMEOUT_MS = 5000;
     public static readonly CONTEXT_PREFIX = "_";
     public static readonly FAV_SUFFIX = Constants.CONTEXT_PREFIX + "fav";
@@ -70,12 +72,16 @@ export class Constants {
     public static readonly SETTINGS_DS_DEFAULT_EXTENDED = "zowe.ds.default.extended";
     public static readonly SETTINGS_DS_DEFAULT_PS = "zowe.ds.default.ps";
     public static readonly SETTINGS_DS_TEMPLATES = "zowe.ds.templates";
+    public static readonly SETTINGS_DS_DEFAULT_SORT = "zowe.ds.default.sort";
+    public static readonly SETTINGS_JOBS_DEFAULT_SORT = "zowe.jobs.default.sort";
     public static readonly SETTINGS_COMMANDS_INTEGRATED_TERMINALS = "zowe.commands.useIntegratedTerminals";
     public static readonly SETTINGS_COMMANDS_ALWAYS_EDIT = "zowe.commands.alwaysEdit";
     public static readonly SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValidation";
     public static readonly SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
     public static readonly SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS = "zowe.security.checkForCustomCredentialManagers";
+    public static readonly SETTINGS_DATASETS_PER_PAGE = "zowe.ds.paginate.dataSetsPerPage";
     public static readonly LOGGER_SETTINGS = "zowe.logger";
+    public static readonly SETTINGS_OVERRIDE_WITH_ENV_VAR = "zowe.settings.overrideWithEnvironmentVariables";
     public static EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
     public static readonly ZOWE_CLI_SCM = "@zowe/cli";
     public static readonly MAX_DATASET_LENGTH = 44;
@@ -253,6 +259,7 @@ export class Constants {
         BLANK: { kind: vscode.QuickPickItemKind.Separator, label: "" },
         RECENT: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t("Recent") },
         RECENT_FILTERS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Recent Filters`) },
+        RECENT_SEARCHES: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Recent Searches`) },
         OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Options`) },
     };
     public static JOB_SUBMIT_DIALOG_OPTS = [
@@ -268,4 +275,13 @@ export class Constants {
         JOBS: "jobs-panel-tab",
         CMDS: "cmds-panel-tab",
     };
+}
+
+/**
+ * The result of the JWT token check in ZoweTreeProvider.checkJwtForProfile
+ */
+export enum JwtCheckResult {
+    TokenExpired = "TokenExpired",
+    TokenUnusedOrUnsupported = "TokenUnusedOrUnsupported",
+    TokenValid = "TokenValid",
 }

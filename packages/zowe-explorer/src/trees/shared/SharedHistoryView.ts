@@ -17,6 +17,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { JobTree } from "../job/JobTree";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
+import { DatasetTree } from "../dataset/DatasetTree";
 import * as fs from "fs";
 
 export class SharedHistoryView extends WebView {
@@ -37,6 +38,7 @@ export class SharedHistoryView extends WebView {
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
+        ZoweLogger.trace("HistoryView.onDidReceiveMessage called.");
         switch (message.command) {
             case "refresh":
                 await this.refreshView(message);
@@ -59,7 +61,7 @@ export class SharedHistoryView extends WebView {
                 this.showError(message);
                 break;
             case "update-selection":
-                this.updateSelection(message);
+                await this.updateSelection(message);
                 break;
             case "add-item":
                 await this.addItem(message);
@@ -93,21 +95,36 @@ export class SharedHistoryView extends WebView {
     }
 
     private getTreeProvider(type: string): Definitions.TreeProvider {
+        ZoweLogger.trace("HistoryView.getTreeProvider called.");
         return this.treeProviders[type === "jobs" ? "job" : type] as Definitions.TreeProvider;
     }
 
     private getHistoryData(type: string): Definitions.History {
+        ZoweLogger.trace("HistoryView.getHistoryData called.");
         const treeProvider = this.treeProviders[type] as Definitions.TreeProvider;
+        if (!treeProvider) {
+            ZoweLogger.error(`No tree provider found for type: ${type}`);
+            return {
+                search: [],
+                sessions: [],
+                fileHistory: [],
+                searchedKeywordHistory: [],
+                favorites: [],
+                encodingHistory: [],
+            };
+        }
         return {
             search: treeProvider.getSearchHistory(),
             sessions: treeProvider.getSessions(),
             fileHistory: treeProvider.getFileHistory(),
             favorites: treeProvider.getFavorites(),
+            searchedKeywordHistory: type === "ds" ? (treeProvider as DatasetTree).getSearchedKeywordHistory?.() ?? [] : [],
             encodingHistory: type === "uss" || type === "ds" ? this.fetchEncodingHistory() : [],
         };
     }
 
     private fetchEncodingHistory(): string[] {
+        ZoweLogger.trace("HistoryView.fetchEncodingHistory called.");
         return ZoweLocalStorage.getValue<string[]>(Definitions.LocalStorageKey.ENCODING_HISTORY) ?? [];
     }
 
@@ -116,9 +133,10 @@ export class SharedHistoryView extends WebView {
         Gui.errorMessage(message.attrs.errorMsg);
     }
 
-    private updateSelection(message): void {
+    private async updateSelection(message): Promise<void> {
         ZoweLogger.trace("HistoryView.updateSelection called.");
         this.currentSelection[message.attrs.type] = message.attrs.selection;
+        await this.refreshView(message);
     }
 
     private async addItem(message): Promise<void> {
@@ -168,6 +186,13 @@ export class SharedHistoryView extends WebView {
                     }
                 });
                 break;
+            case "searchedKeywordHistory":
+                Object.keys(message.attrs.selectedItems).forEach((selectedItem) => {
+                    if (message.attrs.selectedItems[selectedItem]) {
+                        (treeProvider as DatasetTree).removeSearchedKeywordHistory?.(selectedItem);
+                    }
+                });
+                break;
             default:
                 Gui.showMessage(vscode.l10n.t("action is not supported for this property type."));
                 break;
@@ -194,6 +219,9 @@ export class SharedHistoryView extends WebView {
                     break;
                 case "encodingHistory":
                     ZoweLocalStorage.setValue(Definitions.LocalStorageKey.ENCODING_HISTORY, []);
+                    break;
+                case "searchedKeywordHistory":
+                    (treeProvider as DatasetTree).resetSearchedKeywordHistory?.();
                     break;
                 default:
                     Gui.showMessage(vscode.l10n.t("action is not supported for this property type."));

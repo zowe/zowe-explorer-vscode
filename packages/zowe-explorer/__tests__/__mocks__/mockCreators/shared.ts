@@ -367,8 +367,10 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         }),
         convertV1ProfToConfig: jest.fn(),
         getLoadedProfConfig: jest.fn(),
-        getSecurePropsForProfile: jest.fn(),
+        shouldRemoveTokenFromProfile: jest.fn(),
+        getPropsForProfile: jest.fn(),
         showProfileInactiveMsg: jest.fn(),
+        getConfigLayers: jest.fn(),
     } as any;
 }
 
@@ -614,6 +616,7 @@ export function createTreeProviders() {
                 createMockNode("zosmf", Constants.DS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX),
                 createMockNode("zosmf2", Constants.DS_SESSION_CONTEXT + Constants.NO_VALIDATE_SUFFIX),
             ],
+            mFavorites: [],
             deleteSession: jest.fn(),
             removeSession: jest.fn(),
             refresh: jest.fn(),
@@ -626,6 +629,7 @@ export function createTreeProviders() {
                 createMockNode("zosmf", Constants.USS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX),
                 createMockNode("zosmf2", Constants.USS_SESSION_CONTEXT + Constants.NO_VALIDATE_SUFFIX),
             ],
+            mFavorites: [],
             deleteSession: jest.fn(),
             removeSession: jest.fn(),
             refresh: jest.fn(),
@@ -640,6 +644,7 @@ export function createTreeProviders() {
                 createMockNode("zosmf", Constants.JOBS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX),
                 createMockNode("zosmf2", Constants.JOBS_SESSION_CONTEXT + Constants.NO_VALIDATE_SUFFIX),
             ],
+            mFavorites: [],
             removeSession: jest.fn(),
             deleteSession: jest.fn(),
             refresh: jest.fn(),
