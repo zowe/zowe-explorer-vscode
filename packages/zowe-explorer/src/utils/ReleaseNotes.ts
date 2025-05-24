@@ -36,7 +36,7 @@ export class ReleaseNotes extends WebView {
         const currentVersion = ReleaseNotes.getExtensionVersion(context);
 
         // Get user setting for release notes display
-        const showSetting = SettingsConfig.getDirectValue<string>(Constants.SETTINGS_SHOW_RELEASE_NOTES, Constants.RELEASE_NOTES_OPTS.ALWAYS_SHOW);
+        const showSetting = SettingsConfig.getDirectValue<string>(Constants.SETTINGS_SHOW_RELEASE_NOTES, Constants.RELEASE_NOTES_OPTS_KEYS.ALWAYS);
 
         // Get last shown version from local storage
         const previousVersion = ZoweLocalStorage.getValue<string>(Definitions.LocalStorageKey.SHOW_RELEASE_NOTES_VERSION) ?? "";
@@ -46,9 +46,9 @@ export class ReleaseNotes extends WebView {
         // - "NEVER_SHOW": never show release notes
         // - "DISABLE_FOR_THIS_VERSION": only show if version changed
         let showReleaseNotes = true;
-        if (showSetting === Constants.RELEASE_NOTES_OPTS.NEVER_SHOW) {
+        if (showSetting === Constants.RELEASE_NOTES_OPTS_KEYS.NEVER) {
             showReleaseNotes = false;
-        } else if (showSetting === Constants.RELEASE_NOTES_OPTS.DISABLE_FOR_THIS_VERSION) {
+        } else if (showSetting === Constants.RELEASE_NOTES_OPTS_KEYS.DISABLE_FOR_THIS_VERSION) {
             showReleaseNotes = previousVersion !== currentVersion;
         } // else "ALWAYS_SHOW" or unknown, show
 
@@ -99,7 +99,7 @@ export class ReleaseNotes extends WebView {
         } else if (command === "selectVersion" && version) {
             this.version = version;
             await this.sendReleaseNotes();
-        } else if (Object.values(Constants.RELEASE_NOTES_OPTS).includes(command)) {
+        } else if (Object.values(Constants.RELEASE_NOTES_OPTS_KEYS).includes(command)) {
             SettingsConfig.setDirectValue(Constants.SETTINGS_SHOW_RELEASE_NOTES, command);
         }
     }
@@ -115,7 +115,7 @@ export class ReleaseNotes extends WebView {
             changelog: changelog,
             version: this.version,
             showReleaseNotesSetting: showReleaseNotesSetting,
-            dropdownOptions: Constants.RELEASE_NOTES_OPTS,
+            dropdownOptions: Constants.RELEASE_NOTES_OPTS_LABELS,
             versionOptions: versionOptions,
         });
     }

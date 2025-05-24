@@ -2031,8 +2031,13 @@
         },
         "zowe.settings.showReleaseNotes": {
           "type": "string",
-          "default": "%zowe.settings.alwaysShowReleaseNotes%",
+          "default": "Always show",
           "enum": [
+            "Always show",
+            "Disable for this version",
+            "Never show"
+          ],
+          "enumDescriptions": [
             "%zowe.settings.alwaysShowReleaseNotes%",
             "%zowe.settings.disableForThisVersion%",
             "%zowe.settings.neverShowReleaseNotes%"

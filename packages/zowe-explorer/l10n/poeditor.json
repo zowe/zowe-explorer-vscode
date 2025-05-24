@@ -534,13 +534,13 @@
     "Whether to show the Zowe Explorer release notes when VS Code starts.": ""
   },
   "zowe.settings.alwaysShowReleaseNotes": {
-    "Always show": ""
+    "Show release notes every time VS Code starts.": ""
   },
   "zowe.settings.disableForThisVersion": {
-    "Disable for this version": ""
+    "Don't show release notes for this version again. When you update to a newer minor version, the release notes will show once when VS Code starts.": ""
   },
   "zowe.settings.neverShowReleaseNotes": {
-    "Never show": ""
+    "Never show release notes when VS Code starts. You can use the command 'Zowe Explorer: Show Release Notes' to view them in your own time.": ""
   },
   "Enter command here...": "",
   "Page Size:": "",
@@ -552,8 +552,11 @@
   "What's New in Zowe Explorer {0}": "",
   "Here you can find the latest updates and features.": "",
   "When would you like release notes to show?": "",
+  "Which version would you like to show?": "",
   "Release Notes": "",
+  "Changelog": "",
   "Loading release notes...": "",
+  "Loading changelog...": "",
   "Data Sets": "",
   "Unix System Services (USS)": "",
   "Jobs": "",
@@ -598,9 +601,8 @@
   "Cancel": "",
   "Troubleshoot Error": "",
   "rename": "",
-  "{0} - {1}": "",
-  "Error reading changelog file.": "",
-  "No changelog entries found for version {0}.": "",
+  "No release notes found for this version.": "",
+  "No changelog entries found for this version.": "",
   "Zowe Explorer profiles are being set as unsecured.": "",
   "Zowe Explorer profiles are being set as secured.": "",
   "Custom credential manager failed to activate": "",
@@ -1051,7 +1053,6 @@
   "Apply to all trees": "",
   "Apply to current tree selected": "",
   "Edit History": "",
-  "ZE Release Notes": "",
   "Enter an allocation unit": "",
   "Enter the average block length (if allocation unit = BLK)": "",
   "Enter a block size": "",
