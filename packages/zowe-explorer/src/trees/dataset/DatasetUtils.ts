@@ -115,19 +115,25 @@ export class DatasetUtils {
 
         for (const child of children) {
             let extension;
+            const label = child.label as string;
             for (const [ext, matches] of DS_EXTENSION_MAP.entries()) {
-                if (matches.some((match) => (match instanceof RegExp ? match.test(child.label as string) : match === (child.label as string)))) {
+                if (ext === ".c") {
+                    // Special case for ".c" extension, skip the following logic
+                    // As it's not unique enough and would other match on anything containing "C"
+                    continue;
+                }
+                if (matches.some((match) => (match instanceof RegExp ? match.test(label) : label.includes(match)))) {
                     extension = ext;
                     break;
                 }
             }
 
             if (extension) {
-                extensionMap[child.label as string] = extension;
+                extensionMap[label] = extension.startsWith(".") ? extension.slice(1) : extension;
             } else {
                 const parentExtension = DatasetUtils.getExtension(node.label as string);
                 if (parentExtension) {
-                    extensionMap[child.label as string] = parentExtension;
+                    extensionMap[label] = parentExtension.startsWith(".") ? parentExtension.slice(1) : parentExtension;
                 }
             }
         }

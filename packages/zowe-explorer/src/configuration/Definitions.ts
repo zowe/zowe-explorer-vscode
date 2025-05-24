@@ -39,6 +39,7 @@ export namespace Definitions {
         caseSensitive?: boolean;
         regex?: boolean;
     };
+    export type DataSetDownloadOptions = {};
     export type FavoriteData = {
         profileName: string;
         label: string;
@@ -155,5 +156,6 @@ export namespace Definitions {
         SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated",
         V1_MIGRATION_STATUS = "zowe.v1MigrationStatus",
         DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
+        DOWNLOAD_OPTIONS = "zowe.downloadOptions",
     }
 }

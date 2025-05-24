@@ -509,8 +509,6 @@ export class DatasetActions {
 
     /**
      * Downloads all the members of a PDS
-     * TODO: Implement path history
-     * TODO: Figure out extensionMap on the downloadAllMembers API
      */
     public static async downloadAllMembers(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.downloadDataset called.");
@@ -522,62 +520,181 @@ export class DatasetActions {
             return;
         }
 
-        // Placeholder for history-related bits
-        const historyItems: vscode.QuickPickItem[] = []; // Add history items here
+        // Step 1: Show options quick pick
+        const optionItems: vscode.QuickPickItem[] = [
+            {
+                label: vscode.l10n.t("Overwrite"),
+                description: vscode.l10n.t("Overwrite existing files"),
+                picked: true,
+            },
+            {
+                label: vscode.l10n.t("Preserve Original Letter Case"),
+                description: vscode.l10n.t("Preserve original letter case of member names"),
+                picked: true,
+            },
+            {
+                label: vscode.l10n.t("Binary"),
+                description: vscode.l10n.t("Download members as binary files"),
+                picked: false,
+            },
+            {
+                label: vscode.l10n.t("Record"),
+                description: vscode.l10n.t("Download members as record files"),
+                picked: false,
+            },
+        ];
 
-        historyItems.push({ label: vscode.l10n.t("Enter a new file path...") });
+        const optionsQuickPick = Gui.createQuickPick();
+        optionsQuickPick.title = vscode.l10n.t("Download Options");
+        optionsQuickPick.placeholder = vscode.l10n.t("Select download options");
+        optionsQuickPick.ignoreFocusOut = true;
+        optionsQuickPick.canSelectMany = true;
+        optionsQuickPick.items = optionItems;
+        optionsQuickPick.selectedItems = optionItems.filter((item) => item.picked);
 
-        const quickPickOptions: vscode.QuickPickOptions = {
-            placeHolder: vscode.l10n.t("Select a download location or enter a new file path"),
-            ignoreFocusOut: true,
+        const selectedOptions: vscode.QuickPickItem[] = await new Promise((resolve) => {
+            optionsQuickPick.onDidAccept(() => {
+                resolve(Array.from(optionsQuickPick.selectedItems));
+                optionsQuickPick.hide();
+            });
+            optionsQuickPick.onDidHide(() => {
+                resolve([]);
+            });
+            optionsQuickPick.show();
+        });
+        optionsQuickPick.dispose();
+
+        if (!selectedOptions || selectedOptions.length === 0) {
+            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+            return;
+        }
+
+        // Step 2: Ask for download location
+        const dialogOptions: vscode.OpenDialogOptions = {
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            openLabel: vscode.l10n.t("Select Download Location"),
         };
 
-        const selectedOption = await Gui.showQuickPick(historyItems, quickPickOptions);
-        if (!selectedOption) {
+        const downloadPath = await Gui.showOpenDialog(dialogOptions);
+        if (!downloadPath || downloadPath.length === 0) {
             Gui.showMessage(vscode.l10n.t("Operation cancelled"));
             return;
         }
 
-        let selectedPath: string;
-        if (selectedOption.label === vscode.l10n.t("Enter a new file path...")) {
-            const options: vscode.OpenDialogOptions = {
-                canSelectFiles: false,
-                canSelectFolders: true,
-                canSelectMany: false,
-                openLabel: vscode.l10n.t("Select Download Location"),
-            };
-
-            const downloadPath = await Gui.showOpenDialog(options);
-            if (!downloadPath || downloadPath.length === 0) {
-                Gui.showMessage(vscode.l10n.t("Operation cancelled"));
-                return;
-            }
-
-            selectedPath = downloadPath[0].fsPath;
-            // Placeholder for adding the new path to history
-        } else {
-            selectedPath = selectedOption.label;
-        }
-
+        const selectedPath = downloadPath[0].fsPath;
         ZoweLogger.info(`Selected download path: ${selectedPath}`);
 
-        try {
-            const datasetName = node.label as string;
-            const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
-            const extensionMap = await DatasetUtils.getExtensionMap(node);
+        // Step 3: Map selected options to download options
+        const getOption = (label: string): boolean => selectedOptions.some((opt) => opt.label === vscode.l10n.t(label));
+        const overwrite = getOption("Overwrite");
+        const preserveOriginalLetterCase = getOption("Preserve Original Letter Case");
+        const binary = getOption("Binary");
+        const record = getOption("Record");
 
-            const downloadOptions: zosfiles.IDownloadOptions = {
-                directory: selectedPath,
-                maxConcurrentRequests,
-                extensionMap,
-                overwrite: true,
-            };
+        // Step 4: Show progress bar and report download progress
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: vscode.l10n.t("Downloading all members"),
+                cancellable: true,
+            },
+            async (progress) => {
+                let realPercentComplete = 0;
+                const children = await node.getChildren();
+                const realTotalEntries = children.length;
+                const task: imperative.ITaskWithStatus = {
+                    set percentComplete(value: number) {
+                        realPercentComplete = value;
+                        // eslint-disable-next-line no-magic-numbers
+                        Gui.reportProgress(progress, realTotalEntries, Math.floor((value * realTotalEntries) / 100), "");
+                    },
+                    get percentComplete(): number {
+                        return realPercentComplete;
+                    },
+                    statusMessage: "",
+                    stageName: 0, // TaskStage.IN_PROGRESS
+                };
 
-            await ZoweExplorerApiRegister.getMvsApi(profile).downloadAllMembers(datasetName, downloadOptions);
-            Gui.showMessage(vscode.l10n.t("Dataset downloaded successfully"));
-        } catch (e) {
-            await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
-        }
+                try {
+                    const datasetName = node.label as string;
+                    const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
+                    const extension = DatasetUtils.getExtension(datasetName);
+
+                    // Get all members
+                    const members = children.filter((child) => SharedContext.isDsMember(child));
+                    let completed = 0;
+                    let failed = 0;
+
+                    for (const memberNode of members) {
+                        const memberName = memberNode.label as string;
+                        // Build the local file path for this member
+                        const fileName = preserveOriginalLetterCase ? memberName : memberName.toUpperCase();
+                        const filePath = path.join(selectedPath, `${fileName}${extension ? extension : ""}`);
+
+                        // If overwrite, check and delete file if exists
+                        if (overwrite) {
+                            try {
+                                await vscode.workspace.fs.stat(vscode.Uri.file(filePath));
+                                try {
+                                    await vscode.workspace.fs.delete(vscode.Uri.file(filePath), { recursive: false, useTrash: false });
+                                } catch (deleteErr) {
+                                    failed++;
+                                    ZoweLogger.error(`Failed to delete existing file for overwrite: ${filePath} - ${deleteErr.message as string}`);
+                                    continue; // Skip download for this member
+                                }
+                            } catch {
+                                // File does not exist, nothing to delete
+                            }
+                        } else {
+                            // If not overwrite and file exists, skip
+                            try {
+                                await vscode.workspace.fs.stat(vscode.Uri.file(filePath));
+                                ZoweLogger.info(`File exists and overwrite is false, skipping: ${filePath}`);
+                                completed++;
+                                // eslint-disable-next-line no-magic-numbers
+                                task.percentComplete = (completed / realTotalEntries) * 100;
+                                continue;
+                            } catch {
+                                // File does not exist, continue
+                            }
+                        }
+                    }
+
+                    // Download the members
+                    try {
+                        const downloadOptions: zosfiles.IDownloadOptions = {
+                            directory: selectedPath,
+                            maxConcurrentRequests,
+                            extension,
+                            preserveOriginalLetterCase,
+                            binary,
+                            record,
+                            task,
+                        };
+
+                        await ZoweExplorerApiRegister.getMvsApi(profile).downloadAllMembers(datasetName, downloadOptions);
+                        completed++;
+                    } catch (downloadErr) {
+                        failed++;
+                    }
+
+                    // eslint-disable-next-line no-magic-numbers
+                    task.percentComplete = (completed / realTotalEntries) * 100;
+
+                    if (failed === 0) {
+                        Gui.showMessage(vscode.l10n.t("Dataset downloaded successfully"));
+                    } else {
+                        Gui.errorMessage(
+                            vscode.l10n.t({ message: "Downloaded with {0} failures", args: [failed], comment: ["Number of failed downloads"] })
+                        );
+                    }
+                } catch (e) {
+                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+                }
+            }
+        );
     }
 
     /**
