@@ -23,16 +23,7 @@ The default sort order of every data set or job can now be changed. For example,
 
 Click on `Edit in settings.json` and it will open the file with a place to enter in desired values. Specify the method and direction - IntelliSense will provide all possible values. For example:
 
-```json
-"zowe.ds.default.sort": {
-  "method": "LastModified",
-  "direction": "Descending"
-},
-"zowe.jobs.default.sort": {
-  "method": "DateCompleted",
-  "direction": "Descending"
-}
-```
+![3.2-default-sort-3](./images/3.2-default-sort-3.png)
 
 ### Case sensitive & regex searching
 
