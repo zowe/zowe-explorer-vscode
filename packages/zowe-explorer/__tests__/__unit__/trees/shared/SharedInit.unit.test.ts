@@ -32,9 +32,11 @@ import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvid
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
+import { ReleaseNotes } from "../../../../src/utils/ReleaseNotes";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
+jest.mock("../../../../src/utils/ReleaseNotes");
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
@@ -84,6 +86,10 @@ describe("Test src/shared/extension", () => {
             {
                 name: "zowe.editHistory",
                 mock: [{ spy: jest.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders] }],
+            },
+            {
+                name: "zowe.showReleaseNotes",
+                mock: [{ spy: jest.spyOn(ReleaseNotes, "show"), arg: [test.context, true] }],
             },
             {
                 name: "zowe.promptCredentials",
@@ -302,6 +308,11 @@ describe("Test src/shared/extension", () => {
         ];
 
         beforeAll(() => {
+            test.context.extension = {
+                packageJSON: {
+                    version: "2.3.4",
+                },
+            };
             const registerCommand = (cmd: string, fun: () => void) => {
                 return { [cmd]: fun };
             };
@@ -316,6 +327,7 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(core, "getZoweDir", { value: () => test.value });
             Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand.fun });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
+            Object.defineProperty(vscode.window, "registerWebviewPanelSerializer", { value: jest.fn() });
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
         afterAll(() => {

@@ -51,6 +51,10 @@ export default defineConfig({
                     src: "../../../node_modules/@vscode/codicons/dist/codicon.ttf",
                     dest: "codicons/",
                 },
+                {
+                    src: "release-notes/resources/*",
+                    dest: "resources/",
+                },
             ],
         }),
     ],
