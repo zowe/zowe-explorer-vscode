@@ -121,10 +121,10 @@ export class ReleaseNotes extends WebView {
     }
 
     public async getReleaseNotes(): Promise<string> {
-        const releaseNotesPath = this.context.asAbsolutePath(`src/webviews/dist/resources/release-notes-${this.version}.md`);
+        const releaseNotesPath = this.context.asAbsolutePath(`src/webviews/dist/resources/release-notes.md`);
         try {
-            const changelog = await fs.readFile(releaseNotesPath, { encoding: "utf8" });
-            return changelog;
+            const releaseNotes = await fs.readFile(releaseNotesPath, { encoding: "utf8" });
+            return this.extractCurrentVersionNotes(releaseNotes);
         } catch (error) {
             ZoweLogger.error(`[ReleaseNotes] Error reading release notes file: ${String(error)}`);
             return l10n.t("No release notes found for this version.");

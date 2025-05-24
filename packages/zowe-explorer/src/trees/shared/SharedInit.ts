@@ -337,7 +337,7 @@ export class SharedInit {
         }
 
         // Prevent VS Code from restoring selected the webview panels after restart
-        // This is a workaround for issue where the webview panels are restored properly when VS Code is closed & reopened
+        // This is a workaround for issue where the webview panels are not restored properly when VS Code is closed & reopened
         context.subscriptions.push(
             vscode.window.registerWebviewPanelSerializer("ZEAPIWebview", {
                 deserializeWebviewPanel(panel) {

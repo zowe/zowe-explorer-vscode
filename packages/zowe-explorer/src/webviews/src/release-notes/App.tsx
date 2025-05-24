@@ -92,8 +92,8 @@ export function App(): JSX.Element {
       </header>
       <div className="releaseNotesCard">
         <div className="releaseNotesDropdownsLabelsRow">
-          <div className="releaseNotesDropdownLabelText">{l10n.t("When would you like release notes to show?")}</div>
-          <div className="releaseNotesDropdownLabelText">{l10n.t("Which version would you like to show?")}</div>
+          <div className="releaseNotesDropdownLabelText">{l10n.t("Select when to show release notes")}</div>
+          <div className="releaseNotesDropdownLabelText">{l10n.t("Select the version to show release notes for")}</div>
         </div>
         <div className="releaseNotesDropdownsRow">
           <div className="releaseNotesDropdownCol">

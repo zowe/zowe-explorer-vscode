@@ -48,3 +48,5 @@ The USS tree can now be filtered by any selected directory. Right-click a direct
 Hovering over a data set, USS, or jobs profile now displays detailed connection information.
 
 ![3.2-hover-1](./images/3.2-hover-1.png)
+
+## `` <!-- KEEP THIS HERE AS IT MARKS END OF FILE -->
