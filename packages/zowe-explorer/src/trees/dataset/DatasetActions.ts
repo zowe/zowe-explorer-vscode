@@ -39,6 +39,7 @@ import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { Definitions } from "../../configuration/Definitions";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
+import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
 
 export class DatasetActions {
     public static typeEnum: zosfiles.CreateDataSetTypeEnum;
@@ -520,27 +521,29 @@ export class DatasetActions {
             return;
         }
 
+        const dataSetDownloadOptions: Definitions.DataSetDownloadOptions =
+            ZoweLocalStorage.getValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS) ?? {};
+
+        dataSetDownloadOptions.overwrite ??= true;
+        dataSetDownloadOptions.preserveCase ??= true;
+        dataSetDownloadOptions.binary ??= false;
+
         // Step 1: Show options quick pick
         const optionItems: vscode.QuickPickItem[] = [
             {
                 label: vscode.l10n.t("Overwrite"),
                 description: vscode.l10n.t("Overwrite existing files"),
-                picked: true,
+                picked: dataSetDownloadOptions.overwrite,
             },
             {
                 label: vscode.l10n.t("Preserve Original Letter Case"),
                 description: vscode.l10n.t("Preserve original letter case of member names"),
-                picked: true,
+                picked: dataSetDownloadOptions.preserveCase,
             },
             {
                 label: vscode.l10n.t("Binary"),
                 description: vscode.l10n.t("Download members as binary files"),
-                picked: false,
-            },
-            {
-                label: vscode.l10n.t("Record"),
-                description: vscode.l10n.t("Download members as record files"),
-                picked: false,
+                picked: dataSetDownloadOptions.binary,
             },
         ];
 
@@ -564,11 +567,6 @@ export class DatasetActions {
         });
         optionsQuickPick.dispose();
 
-        if (!selectedOptions || selectedOptions.length === 0) {
-            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
-            return;
-        }
-
         // Step 2: Ask for download location
         const dialogOptions: vscode.OpenDialogOptions = {
             canSelectFiles: false,
@@ -579,7 +577,7 @@ export class DatasetActions {
 
         const downloadPath = await Gui.showOpenDialog(dialogOptions);
         if (!downloadPath || downloadPath.length === 0) {
-            Gui.showMessage(vscode.l10n.t("Operation cancelled"));
+            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
             return;
         }
 
@@ -591,7 +589,11 @@ export class DatasetActions {
         const overwrite = getOption("Overwrite");
         const preserveOriginalLetterCase = getOption("Preserve Original Letter Case");
         const binary = getOption("Binary");
-        const record = getOption("Record");
+
+        dataSetDownloadOptions.overwrite = overwrite;
+        dataSetDownloadOptions.preserveCase = preserveOriginalLetterCase;
+        dataSetDownloadOptions.binary = binary;
+        await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_SEARCH_OPTIONS, dataSetDownloadOptions);
 
         // Step 4: Show progress bar and report download progress
         await Gui.withProgress(
@@ -630,10 +632,12 @@ export class DatasetActions {
                     for (const memberNode of members) {
                         const memberName = memberNode.label as string;
                         // Build the local file path for this member
+                        // preserveOriginalLetterCase option is not used in the downloadAllMembers API when directory is specified so handle it here
                         const fileName = preserveOriginalLetterCase ? memberName : memberName.toUpperCase();
                         const filePath = path.join(selectedPath, `${fileName}${extension ? extension : ""}`);
 
                         // If overwrite, check and delete file if exists
+                        // This exists because the downloadAllMembers API does not handle overwriting files
                         if (overwrite) {
                             try {
                                 await vscode.workspace.fs.stat(vscode.Uri.file(filePath));
@@ -668,20 +672,17 @@ export class DatasetActions {
                             directory: selectedPath,
                             maxConcurrentRequests,
                             extension,
-                            preserveOriginalLetterCase,
                             binary,
-                            record,
                             task,
                         };
 
                         await ZoweExplorerApiRegister.getMvsApi(profile).downloadAllMembers(datasetName, downloadOptions);
                         completed++;
+                        // eslint-disable-next-line no-magic-numbers
+                        task.percentComplete = (completed / realTotalEntries) * 100;
                     } catch (downloadErr) {
                         failed++;
                     }
-
-                    // eslint-disable-next-line no-magic-numbers
-                    task.percentComplete = (completed / realTotalEntries) * 100;
 
                     if (failed === 0) {
                         Gui.showMessage(vscode.l10n.t("Dataset downloaded successfully"));
