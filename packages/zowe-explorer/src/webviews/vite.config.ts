@@ -52,6 +52,14 @@ export default defineConfig({
                     dest: "codicons/",
                 },
                 {
+                    src: "../../../release-notes.md",
+                    dest: "resources/",
+                },
+                {
+                    src: "../../../resources/release-notes/*",
+                    dest: "resources/release-notes/",
+                },
+                {
                     src: "release-notes/resources/*",
                     dest: "resources/",
                 },

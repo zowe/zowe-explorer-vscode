@@ -20,7 +20,7 @@ import * as l10n from "@vscode/l10n";
 import "./style.css";
 
 export function App(): JSX.Element {
-  const RESOURCES_BASE = "webviews/dist/resources/images";
+  const RESOURCES_BASE = "webviews/dist/resources/release-notes";
   const [releaseNotes, setReleaseNotes] = useState<string | null>(null);
   const [changelog, setChangelog] = useState<string | null>(null);
   const [version, setVersion] = useState<string | null>(null);
@@ -75,7 +75,8 @@ export function App(): JSX.Element {
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "selectVersion", version: selectedVersion });
   };
 
-  const rewriteImageUrls = (markdown: string) => markdown.replace(/!\[([^\]]*)\]\(\.\/images\/([^)]+)\)/g, `![$1](${RESOURCES_BASE}/$2)`);
+  const rewriteImageUrls = (markdown: string) =>
+    markdown.replace(/!\[([^\]]*)\]\(\.\/resources\/release-notes\/([^)]+)\)/g, `![$1](${RESOURCES_BASE}/$2)`);
 
   const renderMarkdown = (markdown: string) => {
     const withResources = rewriteImageUrls(markdown);
