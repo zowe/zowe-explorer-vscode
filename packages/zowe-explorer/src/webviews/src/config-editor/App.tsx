@@ -8,7 +8,7 @@ const vscodeApi = acquireVsCodeApi();
 
 export function App() {
   const [localizationState] = useState(null);
-  const [configurations, setConfigurations] = useState<{ configPath: string; properties: any }[]>([]);
+  const [configurations, setConfigurations] = useState<{ configPath: string; properties: any; secure: string[] }[]>([]);
   const [selectedTab, setSelectedTab] = useState<number | null>(null);
   const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
   const [flattenedDefaults, setFlattenedDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
@@ -18,6 +18,7 @@ export function App() {
         value: string | Record<string, any>;
         path: string[];
         profile: string;
+        secure?: boolean;
       };
     };
   }>({});
@@ -47,6 +48,10 @@ export function App() {
   const [newLayerModalOpen, setNewLayerModalOpen] = useState(false);
   const [newLayerName, setNewLayerName] = useState("");
   const [newLayerPath, setNewLayerPath] = useState<string[] | null>(null);
+  const [isSecure, setIsSecure] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingKey, setEditingKey] = useState("");
+  const [editingValue, setEditingValue] = useState("");
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -140,7 +145,7 @@ export function App() {
       ...prev,
       [configPath]: {
         ...prev[configPath],
-        [fullKey]: { value: newProfileValue, path, profile: profileKey },
+        [fullKey]: { value: newProfileValue, path, profile: profileKey, secure: isSecure },
       },
     }));
 
@@ -148,6 +153,7 @@ export function App() {
     setNewProfileValue("");
     setNewProfileKeyPath(null);
     setNewProfileModalOpen(false);
+    setIsSecure(false);
   };
 
   const openAddProfileModalAtPath = (path: string[]) => {
@@ -182,22 +188,22 @@ export function App() {
     setNewKeyModalOpen(false);
   };
 
-  const handleDeleteProperty = (key: string) => {
-    const configPath = configurations[selectedTab!]!.configPath;
-    setPendingChanges((prevChanges) => {
-      const updatedChanges = { ...prevChanges };
-      if (updatedChanges[configPath]) {
-        delete updatedChanges[configPath][key];
-      }
-      return updatedChanges;
+  const handleDeleteProperty = (fullKey: string) => {
+    setPendingChanges((prev) => {
+      const configPath = configurations[selectedTab!]!.configPath;
+      const updatedKey = fullKey.replace("secure", "properties");
+      const newPendingChanges = { ...prev };
+      delete newPendingChanges[configPath]?.[updatedKey];
+      return newPendingChanges;
     });
-
-    if (flattenedConfig[key] && !(pendingChanges[configPath]?.[key] ?? false)) {
-      setDeletions((prev) => ({
+    setDeletions((prev) => {
+      const configPath = configurations[selectedTab!]!.configPath;
+      const updatedKey = fullKey.replace("secure", "properties");
+      return {
         ...prev,
-        [configPath]: [...(prev[configPath] ?? []), key],
-      }));
-    }
+        [configPath]: [...(prev[configPath] ?? []), updatedKey],
+      };
+    });
   };
 
   const handleDeleteDefaultsProperty = (key: string) => {
@@ -223,8 +229,8 @@ export function App() {
   const handleSave = () => {
     const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
       Object.keys(changesForPath).map((key) => {
-        const { value, path, profile } = changesForPath[key];
-        return { key, value, path, profile, configPath };
+        const { value, path, profile, secure } = changesForPath[key];
+        return { key, value, path, profile, configPath, secure };
       })
     );
 
@@ -267,8 +273,35 @@ export function App() {
         <input placeholder={l10n.t("New Key")} value={newProfileKey} onChange={(e) => setNewProfileKey((e.target as HTMLTextAreaElement).value)} />
         <input placeholder={l10n.t("Value")} value={newProfileValue} onChange={(e) => setNewProfileValue((e.target as HTMLTextAreaElement).value)} />
         <div className="modal-actions">
-          <button onClick={handleAddNewProfileKey}>{l10n.t("Add")}</button>
-          <button onClick={() => setNewProfileModalOpen(false)}>{l10n.t("Cancel")}</button>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {newProfileKeyPath && newProfileKeyPath.join(".").endsWith("properties") && (
+              <label
+                className="secure-checkbox-label"
+                style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", marginRight: 8 }}
+              >
+                Secure
+                <input
+                  type="checkbox"
+                  checked={isSecure}
+                  onChange={(e) => setIsSecure((e.target as HTMLInputElement).checked)}
+                  style={{ marginLeft: 4 }}
+                />
+              </label>
+            )}
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", flexGrow: 1 }}>
+            <button style={{ marginRight: 8 }} onClick={handleAddNewProfileKey}>
+              {l10n.t("Add")}
+            </button>
+            <button
+              onClick={() => {
+                setNewProfileModalOpen(false);
+                setIsSecure(false);
+              }}
+            >
+              {l10n.t("Cancel")}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -293,9 +326,13 @@ export function App() {
       ...baseObj,
       ...Object.fromEntries(
         Object.entries(pendingChanges[configPath] ?? {})
-          .filter(([key]) => {
+          .filter(([key, entry]) => {
             const keyParts = key.split(".");
-            return key.startsWith(fullPath) && keyParts.length === path.length + 1;
+            // if (entry.secure) {
+            //   console.log("Key: ", key);
+            //   console.log(pendingChanges[configPath][key]);
+            // }
+            return key.startsWith(fullPath) && keyParts.length === path.length + 1 && !entry.secure;
           })
           .map(([key, entry]) => [key.split(".").pop()!, entry.value])
       ),
@@ -305,6 +342,7 @@ export function App() {
       const currentPath = [...path, key];
       const fullKey = currentPath.join(".");
       const displayKey = key.split(".").pop();
+
       if ((deletions[configPath] ?? []).includes(fullKey)) return null;
       const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
       const isArray = Array.isArray(value);
@@ -334,16 +372,28 @@ export function App() {
         return (
           <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
             <span className="config-label" style={{ fontWeight: "bold" }}>
+              {"> "}
               {displayKey}
             </span>
             <div>
               {value.map((item: any, index: number) => (
                 <div className="list-item secure-item-container" key={index}>
                   {item}
-                  <button className="action-button" style={{ marginLeft: "8px" }}>
+                  <button
+                    className="action-button"
+                    style={{ marginLeft: "8px" }}
+                    onClick={() => {
+                      setEditModalOpen(true);
+                      setEditingKey(fullKey + "." + item);
+                    }}
+                  >
                     <span className="codicon codicon-edit"></span>
                   </button>
-                  <button className="action-button" style={{ marginLeft: "8px" }}>
+                  <button
+                    className="action-button"
+                    style={{ marginLeft: "8px" }}
+                    onClick={() => handleDeleteProperty(fullKey.replace("secure", "properties") + "." + item)}
+                  >
                     <span className="codicon codicon-trash"></span>
                   </button>
                 </div>
@@ -521,6 +571,39 @@ export function App() {
     </div>
   );
 
+  const handleSaveEdit = () => {
+    setEditModalOpen(false);
+    setPendingChanges((prev) => {
+      const configPath = configurations[selectedTab!]!.configPath;
+      const updatedKey = editingKey.replace("secure", "properties");
+      const profileKey = updatedKey.split(".")[0];
+      const value = editingValue;
+
+      return {
+        ...prev,
+        [configPath]: {
+          ...prev[configPath],
+          [updatedKey]: {
+            value,
+            profile: profileKey,
+            path: updatedKey.split("."),
+            configPath,
+            secure: true,
+          },
+        },
+      };
+    });
+    setDeletions((prev) => {
+      const configPath = configurations[selectedTab!]!.configPath;
+      return {
+        ...prev,
+        [configPath]: (prev[configPath] ?? []).filter((key) => key !== editingKey),
+      };
+    });
+    setEditingKey("");
+    setNewProfileValue("");
+  };
+
   const handleAddNewLayer = () => {
     if (!newLayerName.trim() || !newLayerPath) return;
 
@@ -555,6 +638,19 @@ export function App() {
         <div className="modal-actions">
           <button onClick={handleAddNewLayer}>{l10n.t("Add")}</button>
           <button onClick={() => setNewLayerModalOpen(false)}>{l10n.t("Cancel")}</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const editModal = editModalOpen && (
+    <div className="modal-backdrop">
+      <div className="modal">
+        <h3>{l10n.t("Edit value for " + editingKey)}</h3>
+        <input type="password" onChange={(e) => setEditingValue((e.target as HTMLTextAreaElement).value)} />
+        <div className="modal-actions">
+          <button onClick={handleSaveEdit}>{l10n.t("Save")}</button>
+          <button onClick={() => setEditModalOpen(false)}>{l10n.t("Cancel")}</button>
         </div>
       </div>
     </div>
@@ -610,6 +706,7 @@ export function App() {
       {profileModal}
       {newLayerModal}
       {saveModal}
+      {editModal}
     </div>
   );
 }
@@ -884,6 +981,16 @@ ul {
     background-size: contain;
     margin-top: 3px;
     color: var(--vscode-button-foreground);
+}
+
+.secure-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.secure-checkbox-label input[type="checkbox"] {
+  accent-color: var(--vscode-button-background);
 }
 `;
 

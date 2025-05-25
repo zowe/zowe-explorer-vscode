@@ -21,6 +21,7 @@ type ChangeEntry = {
     path: string[];
     profile?: string;
     configPath: string;
+    secure: boolean;
 };
 
 type LayerModifications = {
@@ -69,6 +70,14 @@ export class ConfigEditor extends WebView {
                         const schemaPath = path.join(path.dirname(configPath), layer.properties.$schema);
                         const schemaContent = fs.readFileSync(schemaPath, { encoding: "utf8" });
                         const schema = JSON.parse(schemaContent);
+                        for (const profileName in layer.properties.profiles) {
+                            if (layer.properties.profiles[profileName].secure) {
+                                const secureKeys = layer.properties.profiles[profileName].secure;
+                                layer.properties.profiles[profileName].properties = Object.fromEntries(
+                                    Object.entries(layer.properties.profiles[profileName].properties).filter(([key]) => !secureKeys.includes(key))
+                                );
+                            }
+                        }
                         allConfigs.push({
                             configPath,
                             properties: layer.properties,
@@ -173,7 +182,7 @@ export class ConfigEditor extends WebView {
 
         for (const change of changes) {
             try {
-                profInfo.getTeamConfig().set(`profiles.${change.key}`, change.value, { parseString: true /*secure: change.secure*/ });
+                profInfo.getTeamConfig().set(`profiles.${change.key}`, change.value, { parseString: true, secure: change.secure });
             } catch (err) {
                 // console.log(err);
             }
