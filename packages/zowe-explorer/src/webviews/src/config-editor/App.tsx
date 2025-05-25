@@ -189,19 +189,20 @@ export function App() {
   };
 
   const handleDeleteProperty = (fullKey: string) => {
+    console.log(fullKey);
     setPendingChanges((prev) => {
       const configPath = configurations[selectedTab!]!.configPath;
-      const updatedKey = fullKey.replace("secure", "properties");
       const newPendingChanges = { ...prev };
-      delete newPendingChanges[configPath]?.[updatedKey];
+      delete newPendingChanges[configPath]?.[fullKey];
+
       return newPendingChanges;
     });
     setDeletions((prev) => {
       const configPath = configurations[selectedTab!]!.configPath;
-      const updatedKey = fullKey.replace("secure", "properties");
+      console.log(fullKey);
       return {
         ...prev,
-        [configPath]: [...(prev[configPath] ?? []), updatedKey],
+        [configPath]: [...(prev[configPath] ?? []), fullKey],
       };
     });
   };
@@ -328,10 +329,28 @@ export function App() {
         Object.entries(pendingChanges[configPath] ?? {})
           .filter(([key, entry]) => {
             const keyParts = key.split(".");
-            // if (entry.secure) {
-            //   console.log("Key: ", key);
-            //   console.log(pendingChanges[configPath][key]);
-            // }
+            // Secure property handling
+            if (entry.secure) {
+              let securePath = cloneDeep(pendingChanges[configPath][key].path);
+              let property = securePath.pop();
+              securePath.pop();
+              securePath.push("secure");
+              let newSecureCreds = securePath.reduce((acc, key) => acc?.[key], baseObj);
+              if (newSecureCreds) {
+                if (!Array.isArray(newSecureCreds)) {
+                  newSecureCreds = [];
+                }
+                newSecureCreds.push(property);
+              } else {
+                const securePathObj = securePath.reduce((acc, key, idx) => {
+                  if (!acc[key]) {
+                    acc[key] = idx === securePath.length - 1 ? [] : {};
+                  }
+                  return acc[key];
+                }, baseObj);
+                securePathObj.push(property);
+              }
+            }
             return key.startsWith(fullPath) && keyParts.length === path.length + 1 && !entry.secure;
           })
           .map(([key, entry]) => [key.split(".").pop()!, entry.value])
