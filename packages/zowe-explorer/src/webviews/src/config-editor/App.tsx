@@ -52,6 +52,11 @@ export function App() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingKey, setEditingKey] = useState("");
   const [editingValue, setEditingValue] = useState("");
+  const [hiddenItems, setHiddenItems] = useState<{
+    [configPath: string]: {
+      [key: string]: { path: string };
+    };
+  }>({});
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -188,18 +193,28 @@ export function App() {
     setNewKeyModalOpen(false);
   };
 
-  const handleDeleteProperty = (fullKey: string) => {
-    console.log(fullKey);
+  const handleDeleteProperty = (fullKey: string, secure?: boolean) => {
+    const configPath = configurations[selectedTab!]!.configPath;
+
+    let index = fullKey.split(".").pop();
+    console.log(secure);
+    if (secure) {
+      setHiddenItems((prev) => ({
+        ...prev,
+        [configPath]: {
+          ...prev[configPath],
+          [index!]: { path: fullKey },
+        },
+      }));
+    }
+    console.log(hiddenItems);
     setPendingChanges((prev) => {
-      const configPath = configurations[selectedTab!]!.configPath;
       const newPendingChanges = { ...prev };
       delete newPendingChanges[configPath]?.[fullKey];
 
       return newPendingChanges;
     });
     setDeletions((prev) => {
-      const configPath = configurations[selectedTab!]!.configPath;
-      console.log(fullKey);
       return {
         ...prev,
         [configPath]: [...(prev[configPath] ?? []), fullKey],
@@ -254,6 +269,7 @@ export function App() {
       defaultsDeleteKeys: defaultsDeleteKeys,
     });
 
+    setHiddenItems({});
     setPendingChanges({});
     setDeletions({});
     setPendingDefaults({});
@@ -363,6 +379,7 @@ export function App() {
       const displayKey = key.split(".").pop();
 
       if ((deletions[configPath] ?? []).includes(fullKey)) return null;
+
       const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
       const isArray = Array.isArray(value);
       const pendingValue = (pendingChanges[configPath] ?? {})[fullKey]?.value ?? value;
@@ -388,6 +405,7 @@ export function App() {
           </div>
         );
       } else if (isArray) {
+        const tabsHiddenItems = hiddenItems[configurations[selectedTab!]!.configPath];
         return (
           <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
             <span className="config-label" style={{ fontWeight: "bold" }}>
@@ -395,28 +413,36 @@ export function App() {
               {displayKey}
             </span>
             <div>
-              {value.map((item: any, index: number) => (
-                <div className="list-item secure-item-container" key={index}>
-                  {item}
-                  <button
-                    className="action-button"
-                    style={{ marginLeft: "8px" }}
-                    onClick={() => {
-                      setEditModalOpen(true);
-                      setEditingKey(fullKey + "." + item);
-                    }}
-                  >
-                    <span className="codicon codicon-edit"></span>
-                  </button>
-                  <button
-                    className="action-button"
-                    style={{ marginLeft: "8px" }}
-                    onClick={() => handleDeleteProperty(fullKey.replace("secure", "properties") + "." + item)}
-                  >
-                    <span className="codicon codicon-trash"></span>
-                  </button>
-                </div>
-              ))}
+              {Array.from(new Set(value)).map((item: any, index: number) => {
+                if (
+                  tabsHiddenItems &&
+                  tabsHiddenItems[item] &&
+                  tabsHiddenItems[item].path.includes(currentPath.join(".").replace("secure", "properties") + "." + item)
+                )
+                  return;
+                return (
+                  <div className="list-item secure-item-container" key={index}>
+                    {item}
+                    <button
+                      className="action-button"
+                      style={{ marginLeft: "8px" }}
+                      onClick={() => {
+                        setEditModalOpen(true);
+                        setEditingKey(fullKey + "." + item);
+                      }}
+                    >
+                      <span className="codicon codicon-edit"></span>
+                    </button>
+                    <button
+                      className="action-button"
+                      style={{ marginLeft: "8px" }}
+                      onClick={() => handleDeleteProperty(fullKey.replace("secure", "properties") + "." + item, true)}
+                    >
+                      <span className="codicon codicon-trash"></span>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         );
@@ -598,7 +624,8 @@ export function App() {
       const profileKey = updatedKey.split(".")[0];
       const value = editingValue;
 
-      return {
+      // Create a new object with the updated value
+      const newPendingChanges = {
         ...prev,
         [configPath]: {
           ...prev[configPath],
@@ -611,6 +638,16 @@ export function App() {
           },
         },
       };
+
+      // Ensure that only one entry for the secure credential exists
+      // by deleting any existing secure entry that matches the updatedKey
+      for (const key in newPendingChanges[configPath]) {
+        if (key.includes("secure") && newPendingChanges[configPath][key].path.join(".") === updatedKey) {
+          delete newPendingChanges[configPath][key];
+        }
+      }
+
+      return newPendingChanges;
     });
     setDeletions((prev) => {
       const configPath = configurations[selectedTab!]!.configPath;
@@ -694,6 +731,7 @@ export function App() {
             title="Clear Pending Changes"
             onClick={() => {
               vscodeApi.postMessage({ command: "GET_PROFILES" });
+              setHiddenItems({});
               setPendingChanges({});
               setDeletions({});
               setPendingDefaults({});
