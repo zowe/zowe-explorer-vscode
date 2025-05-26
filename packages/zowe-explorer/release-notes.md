@@ -49,4 +49,64 @@ Hovering over a data set, USS, or jobs profile now displays detailed connection 
 
 ![3.2-hover-1](./resources/release-notes/3.2-hover-1.png)
 
+## `3.1.0`
+
+### Jobs table
+
+The jobs table is a panel that allows viewing filtered jobs more clearly and for performing bulk actions on jobs.
+
+- **Open the table:** Right-click a filtered jobs profile and select **Show as Table**.
+
+![3.1-jobs-table-1](./resources/release-notes/3.1-jobs-table-1.png)
+
+- **Features:** Reorder columns, filter & sort on columns, choose visible columns, and select multiple jobs for bulk cancel, delete or download.
+- **Row actions:** Right-click a job to:
+  - View JCL (opens as an unsaved editor file)
+  - Open the job in the jobs tree
+  - Copy job info as JSON
+
+![3.1-jobs-table-2](./resources/release-notes/3.1-jobs-table-2.png)
+
+### Search data sets
+
+Data sets can now be searched for a string, similar to ISPF's `SRCHFOR`.
+
+- **Search options:**
+
+  - Right-click a profile: **Search filtered data sets**
+  - Right-click a PDS: **Search PDS members**
+  - Also available for a PDS in the Favourites tree
+
+- **How it works:**
+  - Enter search string in the input field at the top.
+  - If searching more than 50 members, a prompt will appear to confirm or cancel.
+  - Progress is shown in the status bar.
+  - Results appear in the `Zowe Resources` panel, where files can be bulk opened.
+
+![3.1-search-1](./resources/release-notes/3.1-search-1.png)
+
+### Integrated terminal
+
+The integrated terminal connects to the mainframe via SSH for MVS, TSO, or USS commands. Multiple sessions are supported. Currently it is disabled by default due to being new and having some bugs.
+
+- **Enable:** Go to Zowe Explorer settings and check **Use Integrated Terminals**.
+- **Open:** Right-click a zosmf profile in Data Sets, USS, or Jobs and select an **Issue x Command** option.
+- **Behavior:** Each command opens a dedicated terminal panel (e.g., only MVS commands in the MVS terminal).
+
+### Global team config
+
+Zowe Explorer now auto-detects the global team config, regardless of the location of the currently opened VS Code working directory.
+
+### Add to workspace
+
+Add data sets, USS profiles or USS directories to a VS Code workspace to group resources from different locations. Right-click a data set, USS profile or USS directory and select **Add to workspace**.
+
+![3.1-workspace-1](./resources/release-notes/3.1-workspace-1.png)
+
+![3.1-workspace-2](./resources/release-notes/3.1-workspace-2.png)
+
+### Edit history
+
+Edit history allows viewing, deleting or adding a profile's search/filter history for data sets, USS and jobs. Right-click a profile and select **Edit History**.
+
 ## `` <!-- KEEP THIS HERE AS IT MARKS END OF FILE -->
