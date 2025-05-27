@@ -16,6 +16,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Fixed error message shown when creating a config file that already exists. [#3647](https://github.com/zowe/zowe-explorer-vscode/issues/3647)
 - Fixed an issue where using functions such as `ZoweVsCodeExtension.updateCredentials` caused extender log4js configurations to be overwritten. [#3587](https://github.com/zowe/zowe-explorer-vscode/issues/3587)
+- Fixed an issue to avoid prompting the user with the dialog of 'save credentials' or 'cancel' when credential manger is disabled and autoStore is set to false. [#3557](https://github.com/zowe/zowe-explorer-vscode/issues/3557)
 
 ## `3.2.0`
 
