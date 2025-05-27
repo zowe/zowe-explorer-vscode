@@ -6,7 +6,11 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Updated Zowe SDKs to `8.21.0` for technical currency. [#3668](https://github.com/zowe/zowe-explorer-vscode/pull/3668)
+
 ### Bug fixes
+
+- Fixed an issue where using functions such as `ZoweVsCodeExtension.updateCredentials` caused extender log4js configurations to be overwritten. [#3587](https://github.com/zowe/zowe-explorer-vscode/issues/3587)
 
 ## `3.2.0`
 
