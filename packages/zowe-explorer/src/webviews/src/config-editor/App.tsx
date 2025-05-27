@@ -4,6 +4,7 @@ import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
 import { isSecureOrigin } from "../utils";
 
+import "./App.css";
 const vscodeApi = acquireVsCodeApi();
 
 export function App() {
@@ -58,6 +59,7 @@ export function App() {
     };
   }>({});
 
+  // Invoked on webview load
   useEffect(() => {
     window.addEventListener("message", (event) => {
       if (!isSecureOrigin(event.origin)) {
@@ -90,6 +92,7 @@ export function App() {
     vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
   }, [localizationState]);
 
+  // Invoked when swapping tabs
   useEffect(() => {
     if (selectedTab !== null && configurations[selectedTab]) {
       const config = configurations[selectedTab].properties;
@@ -190,13 +193,6 @@ export function App() {
     setNewProfileKeyPath(null);
     setNewProfileModalOpen(false);
     setIsSecure(false);
-  };
-
-  const openAddProfileModalAtPath = (path: string[]) => {
-    setNewProfileKeyPath(path);
-    setNewProfileKey("");
-    setNewProfileValue("");
-    setNewProfileModalOpen(true);
   };
 
   const handleAddNewDefault = () => {
@@ -311,53 +307,6 @@ export function App() {
   const handleOpenRawJson = (configPath: string) => {
     vscodeApi.postMessage({ command: "OPEN_CONFIG_FILE", filePath: configPath });
   };
-
-  const profileModal = newProfileModalOpen && (
-    <div className="modal-backdrop">
-      <div className="modal">
-        <h3>{l10n.t("Add New Profile Property")}</h3>
-        <input placeholder={l10n.t("New Key")} value={newProfileKey} onChange={(e) => setNewProfileKey((e.target as HTMLTextAreaElement).value)} />
-        <input placeholder={l10n.t("Value")} value={newProfileValue} onChange={(e) => setNewProfileValue((e.target as HTMLTextAreaElement).value)} />
-        <div className="modal-actions">
-          <div style={{ display: "flex", alignItems: "center" }}>
-            {newProfileKeyPath && newProfileKeyPath.join(".").endsWith("properties") && (
-              <label
-                className="secure-checkbox-label"
-                style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", marginRight: 8 }}
-              >
-                Secure
-                <input
-                  type="checkbox"
-                  checked={isSecure}
-                  onChange={(e) => setIsSecure((e.target as HTMLInputElement).checked)}
-                  style={{ marginLeft: 4 }}
-                />
-              </label>
-            )}
-          </div>
-          <div style={{ display: "flex", justifyContent: "flex-end", flexGrow: 1 }}>
-            <button style={{ marginRight: 8 }} onClick={handleAddNewProfileKey}>
-              {l10n.t("Add")}
-            </button>
-            <button
-              onClick={() => {
-                setNewProfileModalOpen(false);
-                setIsSecure(false);
-              }}
-            >
-              {l10n.t("Cancel")}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const saveModal = saveModalOpen && (
-    <div className="modal-backdrop">
-      <div className="modal">Saving....</div>
-    </div>
-  );
 
   const handleTabChange = (index: number) => {
     setSelectedTab(index);
@@ -563,48 +512,12 @@ export function App() {
     });
   };
 
-  const tabs = (
-    <div className="tabs">
-      {configurations.map((config, index) => (
-        <div key={index} className={`tab ${selectedTab === index ? "active" : ""}`} onClick={() => handleTabChange(index)}>
-          {config.configPath}
-        </div>
-      ))}
-    </div>
-  );
-
-  const panels = (
-    <div className="panels">
-      {configurations.map((config, index) => (
-        <div key={index} className={`panel ${selectedTab === index ? "active" : ""}`}>
-          <div className="config-section">
-            <h2>
-              {l10n.t("Profiles")}
-              <button className="add-default-button" title={`Add key inside profiles`} onClick={() => openAddProfileModalAtPath([])}>
-                <span className="codicon codicon-add"></span>
-              </button>
-              <button className="add-default-button" title={`Add child object inside "profiles""`} onClick={() => openAddLayerModalAtPath([])}>
-                <span className="codicon codicon-bracket-dot"></span>
-              </button>
-            </h2>
-            {selectedTab === index && renderConfig(config.properties.profiles)}
-          </div>
-          <div className="config-section">
-            <div className="defaults-header">
-              <h2>
-                {l10n.t("Defaults")}
-                <button className="add-default-button" title={l10n.t("Add new default")} onClick={() => setNewKeyModalOpen(true)}>
-                  <span className="codicon codicon-add"></span>
-                </button>
-              </h2>
-            </div>
-
-            {selectedTab === index && renderDefaults(config.properties.defaults)}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  const openAddProfileModalAtPath = (path: string[]) => {
+    setNewProfileKeyPath(path);
+    setNewProfileKey("");
+    setNewProfileValue("");
+    setNewProfileModalOpen(true);
+  };
 
   const flattenKeys = (obj: { [key: string]: any }, parentKey: string = ""): { [key: string]: { value: string; path: string[] } } => {
     let result: { [key: string]: { value: string; path: string[] } } = {};
@@ -623,28 +536,6 @@ export function App() {
 
     return result;
   };
-
-  const modal = newKeyModalOpen && (
-    <div className="modal-backdrop">
-      <div className="modal">
-        <h3>{l10n.t("Add New Default")}</h3>
-        <input
-          placeholder={l10n.t("Type (e.g. ssh,tso,zosmf)")}
-          value={newKey}
-          onChange={(e) => setNewKey((e.target as HTMLTextAreaElement).value)}
-        />
-        <input
-          placeholder={l10n.t("Profile (e.g. ssh1,my_lpar)")}
-          value={newValue}
-          onChange={(e) => setNewValue((e.target as HTMLTextAreaElement).value)}
-        />
-        <div className="modal-actions">
-          <button onClick={handleAddNewDefault}>{l10n.t("Add")}</button>
-          <button onClick={() => setNewKeyModalOpen(false)}>{l10n.t("Cancel")}</button>
-        </div>
-      </div>
-    </div>
-  );
 
   const handleSaveEdit = () => {
     setEditModalOpen(false);
@@ -715,6 +606,118 @@ export function App() {
     setNewLayerName("");
     setNewLayerModalOpen(true);
   };
+
+  const modal = newKeyModalOpen && (
+    <div className="modal-backdrop">
+      <div className="modal">
+        <h3>{l10n.t("Add New Default")}</h3>
+        <input
+          placeholder={l10n.t("Type (e.g. ssh,tso,zosmf)")}
+          value={newKey}
+          onChange={(e) => setNewKey((e.target as HTMLTextAreaElement).value)}
+        />
+        <input
+          placeholder={l10n.t("Profile (e.g. ssh1,my_lpar)")}
+          value={newValue}
+          onChange={(e) => setNewValue((e.target as HTMLTextAreaElement).value)}
+        />
+        <div className="modal-actions">
+          <button onClick={handleAddNewDefault}>{l10n.t("Add")}</button>
+          <button onClick={() => setNewKeyModalOpen(false)}>{l10n.t("Cancel")}</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const profileModal = newProfileModalOpen && (
+    <div className="modal-backdrop">
+      <div className="modal">
+        <h3>{l10n.t("Add New Profile Property")}</h3>
+        <input placeholder={l10n.t("New Key")} value={newProfileKey} onChange={(e) => setNewProfileKey((e.target as HTMLTextAreaElement).value)} />
+        <input placeholder={l10n.t("Value")} value={newProfileValue} onChange={(e) => setNewProfileValue((e.target as HTMLTextAreaElement).value)} />
+        <div className="modal-actions">
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {newProfileKeyPath && newProfileKeyPath.join(".").endsWith("properties") && (
+              <label
+                className="secure-checkbox-label"
+                style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", marginRight: 8 }}
+              >
+                Secure
+                <input
+                  type="checkbox"
+                  checked={isSecure}
+                  onChange={(e) => setIsSecure((e.target as HTMLInputElement).checked)}
+                  style={{ marginLeft: 4 }}
+                />
+              </label>
+            )}
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", flexGrow: 1 }}>
+            <button style={{ marginRight: 8 }} onClick={handleAddNewProfileKey}>
+              {l10n.t("Add")}
+            </button>
+            <button
+              onClick={() => {
+                setNewProfileModalOpen(false);
+                setIsSecure(false);
+              }}
+            >
+              {l10n.t("Cancel")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const saveModal = saveModalOpen && (
+    <div className="modal-backdrop">
+      <div className="modal">Saving....</div>
+    </div>
+  );
+
+  const tabs = (
+    <div className="tabs">
+      {configurations.map((config, index) => (
+        <div key={index} className={`tab ${selectedTab === index ? "active" : ""}`} onClick={() => handleTabChange(index)}>
+          {config.configPath}
+        </div>
+      ))}
+    </div>
+  );
+
+  const panels = (
+    <div className="panels">
+      {configurations.map((config, index) => (
+        <div key={index} className={`panel ${selectedTab === index ? "active" : ""}`}>
+          <div className="config-section">
+            <h2>
+              {l10n.t("Profiles")}
+              <button className="add-default-button" title={`Add key inside profiles`} onClick={() => openAddProfileModalAtPath([])}>
+                <span className="codicon codicon-add"></span>
+              </button>
+              <button className="add-default-button" title={`Add child object inside "profiles""`} onClick={() => openAddLayerModalAtPath([])}>
+                <span className="codicon codicon-bracket-dot"></span>
+              </button>
+            </h2>
+            {selectedTab === index && renderConfig(config.properties.profiles)}
+          </div>
+          <div className="config-section">
+            <div className="defaults-header">
+              <h2>
+                {l10n.t("Defaults")}
+                <button className="add-default-button" title={l10n.t("Add new default")} onClick={() => setNewKeyModalOpen(true)}>
+                  <span className="codicon codicon-add"></span>
+                </button>
+              </h2>
+            </div>
+
+            {selectedTab === index && renderDefaults(config.properties.defaults)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   const newLayerModal = newLayerModalOpen && (
     <div className="modal-backdrop">
@@ -797,288 +800,3 @@ export function App() {
     </div>
   );
 }
-
-const styles = `
-  body {
-  font-size: 14px;
-  padding: 10px;
-  background-color: var(--vscode-editor-background);
-  color: var(--vscode-editor-foreground);
-  margin: 0;
-  font-family: var(--vscode-font-family, monospace);
-}
-
-.vscode-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.tabs {
-  display: flex;
-  border-bottom: 1px solid var(--vscode-editorWidget-border);
-  background-color: var(--vscode-editorWidget-background);
-  border-radius: 4px 4px 0 0;
-  overflow-x: auto;
-}
-
-.tab {
-  flex: 1;
-  padding: 8px 12px;
-  text-align: center;
-  cursor: pointer;
-  border: 1px solid transparent;
-  border-bottom: none;
-  border-right: 1px solid var(--vscode-editorWidget-border);
-  background-color: var(--vscode-editorWidget-background);
-  color: var(--vscode-editor-foreground);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: background-color 0.2s ease;
-}
-
-.tab:last-child {
-  border-right: none;
-}
-
-.tab:hover {
-  background-color: var(--vscode-editorWidget-hoverBackground);
-}
-
-.tab.active {
-  background-color: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
-  font-weight: bold;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
-
-.panels {
-  border: 1px solid var(--vscode-editorWidget-border);
-  border-top: none;
-  background-color: var(--vscode-editorWidget-background);
-  padding: 12px;
-  border-radius: 0 0 4px 4px;
-}
-
-.panel {
-  display: none;
-}
-
-.panel.active {
-  display: block;
-}
-
-.config-section {
-  margin-bottom: 24px;
-}
-
-.config-section h2 {
-  margin-top: 0;
-  font-size: 16px;
-  border-bottom: 1px solid var(--vscode-editorWidget-border);
-  padding-bottom: 4px;
-}
-
-.config-item {
-  margin: 6px 0;
-}
-
-.config-item.parent {
-  margin-top: 10px;
-}
-
-.config-label {
-  font-weight: 500;
-  display: inline-block;
-  margin-right: 8px;
-  color: var(--vscode-editor-foreground);
-}
-
-.config-input {
-  padding: 4px 6px;
-  font-family: monospace;
-  font-size: 13px;
-  color: var(--vscode-input-foreground);
-  background-color: var(--vscode-input-background);
-  border: 1px solid var(--vscode-input-border);
-  border-radius: 4px;
-}
-
-.config-item-container {
-  display: grid;
-  grid-template-columns: 150px 1fr auto;
-  gap: 8px;
-  align-items: center;
-  max-width: 500px;
-}
-
-.secure-item-container {
-  display: grid;
-  grid-template-columns: 100px 35px 35px;
-  align-items: center;
-  max-width: 200px;
-}
-
-.action-button {
-  font-size: 14px;
-  background-color: var(--vscode-button-background);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.action-button:hover {
-  background-color: var(--vscode-button-secondaryHoverBackground);
-}
-
-.add-default-button {
-  font-size: 16px;
-  color: var(--vscode-button-background);
-  padding: 1px 4px;
-  cursor: pointer;
-  background-color: var(--vscode-button-background);
-  border: none;
-  border-radius: 4px;
-  line-height: 1;
-  margin-left: 8px;
-  transition: background-color 0.2s ease;
-}
-
-.add-default-button:hover {
-  background-color: var(--vscode-button-secondaryHoverBackground);
-}
-
-.header-button {
-  padding: 8px 16px;
-  font-size: 14px;
-  background-color: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
-  border: none;
-  border-radius: 4px;
-  font-weight: bold;
-  align-self: flex-start;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  margin-left: 8px
-}
-
-.header-button:hover {
-  background-color: var(--vscode-button-secondaryHoverBackground);
-}
-
-h3 {
-  margin: 6px 0;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-ul {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.list-item {
-  line-height: 2;
-  padding-left: 3em;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.4);
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal {
-  background-color: var(--vscode-editor-background);
-  color: var(--vscode-editor-foreground);
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
-  min-width: 300px;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.modal input {
-  padding: 8px;
-  background-color: var(--vscode-input-background);
-  color: var(--vscode-input-foreground);
-  border: 1px solid var(--vscode-input-border);
-  border-radius: 4px;
-}
-
-.modal button {
-  padding: 8px 12px;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-  font-weight: 500;
-  background-color: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
-}
-
-.modal button:hover {
-  background-color: var(--vscode-button-hoverBackground);
-}
-
-.defaults-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.defaults-header h2 {
-  margin: 0;
-}
-
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.codicon {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    background-repeat: no-repeat;
-    background-size: contain;
-    margin-top: 3px;
-    color: var(--vscode-button-foreground);
-}
-
-.secure-checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.secure-checkbox-label input[type="checkbox"] {
-  accent-color: var(--vscode-button-background);
-}
-`;
-
-document.head.insertAdjacentHTML("beforeend", `<style>${styles}</style>`);
