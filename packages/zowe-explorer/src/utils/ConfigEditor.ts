@@ -58,6 +58,7 @@ export class ConfigEditor extends WebView {
             configPath: string;
             properties: any;
             schema?: any;
+            validDefaults?: string[];
             global: boolean;
             user: boolean;
         }[] = [];
@@ -70,6 +71,7 @@ export class ConfigEditor extends WebView {
                         const schemaPath = path.join(path.dirname(configPath), layer.properties.$schema);
                         const schemaContent = fs.readFileSync(schemaPath, { encoding: "utf8" });
                         const schema = JSON.parse(schemaContent);
+                        const validDefaults = Object.keys(schema.properties.defaults.properties) ?? undefined;
                         for (const profileName in layer.properties.profiles) {
                             if (layer.properties.profiles[profileName].secure) {
                                 const secureKeys = layer.properties.profiles[profileName].secure;
@@ -82,6 +84,7 @@ export class ConfigEditor extends WebView {
                             configPath,
                             properties: layer.properties,
                             schema,
+                            validDefaults,
                             global: layer.global,
                             user: layer.user,
                         });
@@ -94,7 +97,7 @@ export class ConfigEditor extends WebView {
                             user: layer.user,
                         });
                     }
-                } catch {
+                } catch (err) {
                     vscode.window.showErrorMessage(`Error reading or parsing file ${configPath}:`);
                 }
             }

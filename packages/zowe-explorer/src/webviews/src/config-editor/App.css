@@ -213,6 +213,25 @@ ul {
     color: var(--vscode-input-foreground);
     border: 1px solid var(--vscode-input-border);
     border-radius: 4px;
+    width: 100%;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: var(--vscode-input-foreground);
+    background-color: var(--vscode-input-background);
+    border: 1px solid var(--vscode-input-border);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.modal-input:focus {
+    outline: none;
+    border-color: var(--vscode-inputValidation-infoBorder);
+    box-shadow: 0 0 3px var(--vscode-inputValidation-infoBorder);
 }
 
 .modal button {
@@ -277,4 +296,36 @@ ul {
 
 .secure-checkbox-label input[type="checkbox"] {
     accent-color: var(--vscode-button-background);
+}
+
+.dropdown-container {
+    position: relative;
+}
+
+.dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--vscode-editorWidget-background);
+    border: 1px solid var(--vscode-input-border);
+    border-top: none;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+    border-radius: 0 0 4px 4px;
+    margin-top: -1px;
+    list-style: disc;
+    list-style-position: inside;
+    padding-left: 0;
+}
+
+.dropdown-item {
+    padding: 8px;
+    cursor: pointer;
+    color: var(--vscode-editor-foreground);
+}
+
+.dropdown-item:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
 }

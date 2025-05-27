@@ -58,6 +58,8 @@ export function App() {
       [key: string]: { path: string };
     };
   }>({});
+  const [validDefaults, setValidDefaults] = useState<{ [configPath: string]: string[] }>({});
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Invoked on webview load
   useEffect(() => {
@@ -68,6 +70,12 @@ export function App() {
       if (event.data.command === "CONFIGURATIONS") {
         const { contents } = event.data;
         setConfigurations(contents);
+
+        const newValidDefaults: { [configPath: string]: string[] } = {};
+        contents.forEach((config: any) => {
+          newValidDefaults[config.configPath] = config.validDefaults || [];
+        });
+        setValidDefaults(newValidDefaults);
 
         setSelectedTab((prevSelectedTab) => {
           if (prevSelectedTab !== null && prevSelectedTab < contents.length) {
@@ -607,19 +615,52 @@ export function App() {
     setNewLayerModalOpen(true);
   };
 
+  const typeOptions = selectedTab !== null ? validDefaults[configurations[selectedTab].configPath] || [] : [];
+
+  useEnhancedDatalist(newKeyModalOpen ? "type-input" : null, "type-options");
+
   const modal = newKeyModalOpen && (
     <div className="modal-backdrop">
       <div className="modal">
         <h3>{l10n.t("Add New Default")}</h3>
-        <input
-          placeholder={l10n.t("Type (e.g. ssh,tso,zosmf)")}
-          value={newKey}
-          onChange={(e) => setNewKey((e.target as HTMLTextAreaElement).value)}
-        />
+        <div className="dropdown-container">
+          <input
+            id="type-input"
+            value={newKey}
+            onChange={(e) => {
+              setNewKey((e.target as HTMLInputElement).value);
+              setShowDropdown(true);
+            }}
+            onFocus={() => setShowDropdown(true)}
+            onBlur={() => setTimeout(() => setShowDropdown(false), 100)}
+            className="modal-input"
+            placeholder={l10n.t("Type")}
+          />
+          {showDropdown && (
+            <ul className="dropdown-list">
+              {typeOptions
+                .filter((opt) => opt.toLowerCase().includes(newKey.toLowerCase()))
+                .map((option, index) => (
+                  <li
+                    key={index}
+                    className="dropdown-item"
+                    onMouseDown={() => {
+                      setNewKey(option);
+                      setShowDropdown(false);
+                    }}
+                  >
+                    {option}
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
+
         <input
           placeholder={l10n.t("Profile (e.g. ssh1,my_lpar)")}
           value={newValue}
-          onChange={(e) => setNewValue((e.target as HTMLTextAreaElement).value)}
+          onChange={(e) => setNewValue((e.target as HTMLInputElement).value)}
+          className="modal-input"
         />
         <div className="modal-actions">
           <button onClick={handleAddNewDefault}>{l10n.t("Add")}</button>
@@ -799,4 +840,83 @@ export function App() {
       {editModal}
     </div>
   );
+}
+
+// REF: https://codepen.io/iamsidd_j/pen/qBRWNQQ?editors=1010
+export function useEnhancedDatalist(inputId: string | null, datalistId: string) {
+  useEffect(() => {
+    if (!inputId) return;
+
+    const timeout = setTimeout(() => {
+      const input = document.getElementById(inputId) as HTMLInputElement | null;
+      const datalist = document.getElementById(datalistId) as HTMLDataListElement | null;
+      if (!input || !datalist) return;
+
+      const options = Array.from(datalist.options);
+      let currentFocus = -1;
+
+      const showOptions = () => {
+        datalist.style.display = "block";
+        input.style.borderRadius = "5px 5px 0 0";
+      };
+
+      const hideOptions = () => {
+        datalist.style.display = "none";
+        input.style.borderRadius = "5px";
+      };
+
+      const filterOptions = () => {
+        const text = input.value.toUpperCase();
+        currentFocus = -1;
+        options.forEach((option) => {
+          option.style.display = option.value.toUpperCase().includes(text) ? "block" : "none";
+        });
+      };
+
+      const addActive = (x: HTMLOptionElement[]) => {
+        removeActive(x);
+        if (currentFocus >= x.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = x.length - 1;
+        x[currentFocus].classList.add("active");
+      };
+
+      const removeActive = (x: HTMLOptionElement[]) => {
+        x.forEach((opt) => opt.classList.remove("active"));
+      };
+
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "ArrowDown") {
+          currentFocus++;
+          addActive(options as HTMLOptionElement[]);
+        } else if (e.key === "ArrowUp") {
+          currentFocus--;
+          addActive(options as HTMLOptionElement[]);
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          if (currentFocus > -1) {
+            (options[currentFocus] as HTMLOptionElement)?.click();
+          }
+        }
+      };
+
+      const onClick = (option: HTMLOptionElement) => {
+        input.value = option.value;
+        hideOptions();
+      };
+
+      input.addEventListener("focus", showOptions);
+      input.addEventListener("input", filterOptions);
+      input.addEventListener("keydown", onKeyDown);
+      options.forEach((opt) => opt.addEventListener("click", () => onClick(opt)));
+
+      return () => {
+        input.removeEventListener("focus", showOptions);
+        input.removeEventListener("input", filterOptions);
+        input.removeEventListener("keydown", onKeyDown);
+        options.forEach((opt) => opt.removeEventListener("click", () => onClick(opt)));
+      };
+    }, 0); // allow modal to render
+
+    return () => clearTimeout(timeout);
+  }, [inputId, datalistId]);
 }
