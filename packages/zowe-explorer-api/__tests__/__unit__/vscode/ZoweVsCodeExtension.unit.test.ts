@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import { Gui } from "../../../src/globals/Gui";
-import { PromptCredentialsOptions, ZoweVsCodeExtension, ProfilesCache, Types } from "../../../src";
+import { PromptCredentialsOptions, ZoweVsCodeExtension, ProfilesCache, Types, Profiles } from "../../../src";
 import { Login, Logout } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
 
@@ -713,6 +713,7 @@ describe("ZoweVsCodeExtension", () => {
                     profile: {},
                 }),
                 getProfileInfo: jest.fn().mockReturnValue({
+                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
                     isSecured: jest.fn().mockReturnValue(true),
                     updateProperty: mockUpdateProperty,
                 }),
@@ -743,6 +744,7 @@ describe("ZoweVsCodeExtension", () => {
                     profile: { user: "badUser", password: "badPassword" },
                 }),
                 getProfileInfo: jest.fn().mockReturnValue({
+                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
                     isSecured: jest.fn().mockReturnValue(true),
                     updateProperty: mockUpdateProperty,
                 }),
@@ -776,6 +778,7 @@ describe("ZoweVsCodeExtension", () => {
                     profile: {},
                 }),
                 getProfileInfo: jest.fn().mockReturnValue({
+                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
                     isSecured: jest.fn().mockReturnValue(false),
                     updateProperty: mockUpdateProperty,
                 }),
@@ -807,6 +810,7 @@ describe("ZoweVsCodeExtension", () => {
                     profile: {},
                 }),
                 getProfileInfo: jest.fn().mockReturnValue({
+                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
                     isSecured: jest.fn().mockReturnValue(false),
                     updateProperty: mockUpdateProperty,
                 }),
