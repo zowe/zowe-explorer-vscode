@@ -121,7 +121,7 @@ export class ReleaseNotes extends WebView {
     }
 
     public async getReleaseNotes(): Promise<string> {
-        const releaseNotesPath = this.context.asAbsolutePath(`src/webviews/dist/resources/release-notes.md`);
+        const releaseNotesPath = this.context.asAbsolutePath(`release-notes.md`);
         try {
             const releaseNotes = await fs.readFile(releaseNotesPath, { encoding: "utf8" });
             return this.extractCurrentVersionNotes(releaseNotes);
