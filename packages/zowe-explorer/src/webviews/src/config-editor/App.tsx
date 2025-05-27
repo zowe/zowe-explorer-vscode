@@ -154,6 +154,37 @@ export function App() {
       },
     }));
 
+    // Remove any deletions on the same path
+    setDeletions((prev) => {
+      const newDeletions = { ...prev };
+      const fullPath = path.join(".");
+      console.log("Deletions before:", newDeletions[configPath]);
+      if (newDeletions[configPath]) {
+        newDeletions[configPath] = newDeletions[configPath].filter((key) => key !== fullPath);
+      }
+      console.log("Deletions after:", newDeletions[configPath]);
+      return newDeletions;
+    });
+
+    // If a secure property is added to profile, remove it from the hidden items
+    if (isSecure) {
+      setHiddenItems((prev) => {
+        const newHiddenItems = { ...prev };
+        const fullPath = path.join(".").replace("secure", "properties");
+
+        const configHiddenItems = newHiddenItems[configPath];
+
+        if (configHiddenItems) {
+          // Create a new object with filtered entries
+          const filteredItems = Object.fromEntries(Object.entries(configHiddenItems).filter(([, value]) => value.path !== fullPath));
+
+          newHiddenItems[configPath] = filteredItems;
+        }
+
+        return newHiddenItems;
+      });
+    }
+
     setNewProfileKey("");
     setNewProfileValue("");
     setNewProfileKeyPath(null);
@@ -197,7 +228,6 @@ export function App() {
     const configPath = configurations[selectedTab!]!.configPath;
 
     let index = fullKey.split(".").pop();
-    console.log(secure);
     if (secure) {
       setHiddenItems((prev) => ({
         ...prev,
@@ -207,7 +237,6 @@ export function App() {
         },
       }));
     }
-    console.log(hiddenItems);
     setPendingChanges((prev) => {
       const newPendingChanges = { ...prev };
       delete newPendingChanges[configPath]?.[fullKey];
@@ -414,6 +443,7 @@ export function App() {
             </span>
             <div>
               {Array.from(new Set(value)).map((item: any, index: number) => {
+                // Logic to handle hidden items in secure properties
                 if (
                   tabsHiddenItems &&
                   tabsHiddenItems[item] &&
