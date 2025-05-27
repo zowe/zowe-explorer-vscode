@@ -42,6 +42,7 @@ Changelog:
 
 **Deployment**
 
+- [ ] I have tested new functionality with the FTP extension and profile verifying no extender profile type breakages introduced
 - [ ] I have added developer documentation (if applicable)
 - [ ] Documentation should be added to Zowe Docs
   - If you're an outside contributor, please post in the [#zowe-doc Slack channel](https://openmainframeproject.slack.com/archives/CC961JYMQ) to coordinate documentation.
