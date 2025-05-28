@@ -32,6 +32,11 @@ type LayerModifications = {
     defaultsDeleteKeys: ChangeEntry[];
 };
 
+export type schemaValidation = {
+    propertySchema: Record<string, string[]>;
+    validDefaults: string[];
+};
+
 type ArrayField = "changes" | "deletions" | "defaultsChanges" | "defaultsDeleteKeys";
 
 export class ConfigEditor extends WebView {
@@ -58,7 +63,7 @@ export class ConfigEditor extends WebView {
             configPath: string;
             properties: any;
             schema?: any;
-            validDefaults?: string[];
+            schemaValidation?: schemaValidation;
             global: boolean;
             user: boolean;
         }[] = [];
@@ -71,7 +76,7 @@ export class ConfigEditor extends WebView {
                         const schemaPath = path.join(path.dirname(configPath), layer.properties.$schema);
                         const schemaContent = fs.readFileSync(schemaPath, { encoding: "utf8" });
                         const schema = JSON.parse(schemaContent);
-                        const validDefaults = Object.keys(schema.properties.defaults.properties) ?? undefined;
+                        const schemaValidation = this.generateSchemaValidation(schema);
                         for (const profileName in layer.properties.profiles) {
                             if (layer.properties.profiles[profileName].secure) {
                                 const secureKeys = layer.properties.profiles[profileName].secure;
@@ -84,7 +89,7 @@ export class ConfigEditor extends WebView {
                             configPath,
                             properties: layer.properties,
                             schema,
-                            validDefaults,
+                            schemaValidation,
                             global: layer.global,
                             user: layer.user,
                         });
@@ -227,5 +232,24 @@ export class ConfigEditor extends WebView {
         addToGroup(data.defaultsDeleteKeys || [], "defaultsDeleteKeys");
 
         return Object.values(groups);
+    }
+
+    private generateSchemaValidation(schema: any): schemaValidation {
+        const propertySchema: Record<string, string[]> = {};
+        const allOf = schema.properties.profiles.patternProperties["^\\S*$"].allOf;
+
+        for (const rule of allOf) {
+            const profileType = rule?.if?.properties?.type?.const;
+            const properties = rule?.then?.properties?.properties?.properties;
+
+            if (profileType && properties) {
+                propertySchema[profileType] = Object.keys(properties);
+            }
+        }
+
+        return {
+            validDefaults: Object.keys(schema.properties.defaults.properties) ?? undefined,
+            propertySchema,
+        };
     }
 }

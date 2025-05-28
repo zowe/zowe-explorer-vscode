@@ -3,7 +3,7 @@ import path from "path";
 import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
 import { isSecureOrigin } from "../utils";
-
+import { schemaValidation } from "../../../utils/ConfigEditor";
 import "./App.css";
 const vscodeApi = acquireVsCodeApi();
 
@@ -58,9 +58,8 @@ export function App() {
       [key: string]: { path: string };
     };
   }>({});
-  const [validDefaults, setValidDefaults] = useState<{ [configPath: string]: string[] }>({});
   const [showDropdown, setShowDropdown] = useState(false);
-
+  const [schemaValidations, setSchemaValidations] = useState<{ [configPath: string]: schemaValidation | undefined }>({});
   // Invoked on webview load
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -70,12 +69,16 @@ export function App() {
       if (event.data.command === "CONFIGURATIONS") {
         const { contents } = event.data;
         setConfigurations(contents);
+        const newSchemaValidations: { [configPath: string]: schemaValidation | undefined } = {};
+        contents.forEach((config: any) => {
+          newSchemaValidations[config.configPath] = config.schemaValidation;
+        });
+        setSchemaValidations(newSchemaValidations);
 
         const newValidDefaults: { [configPath: string]: string[] } = {};
         contents.forEach((config: any) => {
-          newValidDefaults[config.configPath] = config.validDefaults || [];
+          newValidDefaults[config.configPath] = config.schemaValidation?.validDefaults || [];
         });
-        setValidDefaults(newValidDefaults);
 
         setSelectedTab((prevSelectedTab) => {
           if (prevSelectedTab !== null && prevSelectedTab < contents.length) {
@@ -169,11 +172,9 @@ export function App() {
     setDeletions((prev) => {
       const newDeletions = { ...prev };
       const fullPath = path.join(".");
-      console.log("Deletions before:", newDeletions[configPath]);
       if (newDeletions[configPath]) {
         newDeletions[configPath] = newDeletions[configPath].filter((key) => key !== fullPath);
       }
-      console.log("Deletions after:", newDeletions[configPath]);
       return newDeletions;
     });
 
@@ -615,7 +616,7 @@ export function App() {
     setNewLayerModalOpen(true);
   };
 
-  const typeOptions = selectedTab !== null ? validDefaults[configurations[selectedTab].configPath] || [] : [];
+  const typeOptions = selectedTab !== null ? schemaValidations[configurations[selectedTab].configPath]?.validDefaults || [] : [];
 
   useEnhancedDatalist(newKeyModalOpen ? "type-input" : null, "type-options");
 
@@ -664,18 +665,85 @@ export function App() {
         />
         <div className="modal-actions">
           <button onClick={handleAddNewDefault}>{l10n.t("Add")}</button>
-          <button onClick={() => setNewKeyModalOpen(false)}>{l10n.t("Cancel")}</button>
+          <button
+            onClick={() => {
+              setNewKeyModalOpen(false);
+              setNewKey("");
+              setNewValue("");
+            }}
+          >
+            {l10n.t("Cancel")}
+          </button>
         </div>
       </div>
     </div>
   );
 
+  const fetchTypeOptions = (path: string[]) => {
+    const configPath = configurations[selectedTab!]!.configPath;
+    const baseConfig = configurations[selectedTab!]!.properties;
+    const currentConfig = { ...baseConfig };
+
+    // TODO: INCLUDE PENDING CHANGES
+    let typePath = ["profiles"];
+    typePath.push(...path);
+    typePath.pop();
+    typePath.push("type");
+
+    // Traverse currentConfig to get the value at typePath
+    let valueAtPath = currentConfig;
+    for (const segment of typePath) {
+      valueAtPath = valueAtPath[segment];
+      if (valueAtPath === undefined) {
+        break;
+      }
+    }
+
+    return schemaValidations[configPath]?.propertySchema[valueAtPath] || [];
+  };
+
   const profileModal = newProfileModalOpen && (
     <div className="modal-backdrop">
       <div className="modal">
         <h3>{l10n.t("Add New Profile Property")}</h3>
-        <input placeholder={l10n.t("New Key")} value={newProfileKey} onChange={(e) => setNewProfileKey((e.target as HTMLTextAreaElement).value)} />
-        <input placeholder={l10n.t("Value")} value={newProfileValue} onChange={(e) => setNewProfileValue((e.target as HTMLTextAreaElement).value)} />
+        <div className="dropdown-container">
+          <input
+            id="profile-type-input"
+            value={newProfileKey}
+            onChange={(e) => {
+              setNewProfileKey((e.target as HTMLInputElement).value);
+              setShowDropdown(true);
+            }}
+            onFocus={() => setShowDropdown(true)}
+            onBlur={() => setTimeout(() => setShowDropdown(false), 100)}
+            className="modal-input"
+            placeholder={l10n.t("New Key")}
+          />
+          {showDropdown && (
+            <ul className="dropdown-list">
+              {fetchTypeOptions(newProfileKeyPath || [])
+                .filter((opt) => opt.toLowerCase().includes(newProfileKey.toLowerCase()))
+                .map((option, index) => (
+                  <li
+                    key={index}
+                    className="dropdown-item"
+                    onMouseDown={() => {
+                      setNewProfileKey(option);
+                      setShowDropdown(false);
+                    }}
+                  >
+                    {option}
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
+        <input
+          placeholder={l10n.t("Value")}
+          value={newProfileValue}
+          onChange={(e) => setNewProfileValue((e.target as HTMLInputElement).value)}
+          className="modal-input"
+        />
         <div className="modal-actions">
           <div style={{ display: "flex", alignItems: "center" }}>
             {newProfileKeyPath && newProfileKeyPath.join(".").endsWith("properties") && (
