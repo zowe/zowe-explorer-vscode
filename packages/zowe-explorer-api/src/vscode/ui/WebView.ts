@@ -26,6 +26,8 @@ export type WebViewOpts = {
     isView?: boolean;
     /** Allow evaluation of functions within the webview script code. */
     unsafeEval?: boolean;
+    /** Specifies the initial view column for the webview. */
+    viewColumn?: ViewColumn;
 };
 
 export type UriPair = {
