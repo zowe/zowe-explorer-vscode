@@ -17,6 +17,7 @@ import type { ZoweUSSNode } from "./ZoweUSSNode";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
+import { Profiles } from "../../configuration/Profiles";
 
 export class USSUtils {
     /**
@@ -85,7 +86,7 @@ export class USSUtils {
         if ((await node.getEncoding())?.kind === "binary" || (await node.getEncoding()) !== undefined) {
             return;
         }
-        const ussApi = ZoweExplorerApiRegister.getUssApi(profile ?? node.getProfile());
+        const ussApi = ZoweExplorerApiRegister.getUssApi(profile ?? Profiles.getInstance().loadNamedProfile(node.getProfileName()));
         if (ussApi.getTag != null) {
             const taggedEncoding = await ussApi.getTag(node.fullPath);
             if (taggedEncoding === "binary" || taggedEncoding === "mixed") {

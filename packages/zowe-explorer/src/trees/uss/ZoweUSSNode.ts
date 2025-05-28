@@ -709,7 +709,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from USS list API"),
             });
-            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getUssApi(prof), this.getSessionNode(), updated && this);
+            await AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getUssApi(prof), this.getSessionNode(), updated && this);
             return { success: false, commandResponse: null };
         }
     }

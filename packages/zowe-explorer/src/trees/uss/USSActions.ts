@@ -26,6 +26,7 @@ import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { Profiles } from "../../configuration/Profiles";
 
 export class USSActions {
     /**
@@ -74,7 +75,7 @@ export class USSActions {
                 const uri = node.resourceUri.with({
                     path: isTopLevel ? path.posix.join(node.resourceUri.path, filePath) : path.posix.join(node.resourceUri.path, name),
                 });
-                await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
+                await ZoweExplorerApiRegister.getUssApi(Profiles.getInstance().loadNamedProfile(node.getProfileName())).create(filePath, nodeType);
                 if (nodeType === "file") {
                     await vscode.workspace.fs.writeFile(uri, new Uint8Array());
                 } else {
@@ -101,7 +102,7 @@ export class USSActions {
                 if (err instanceof Error) {
                     await AuthUtils.errorHandling(err, {
                         apiType: ZoweExplorerApiType.Uss,
-                        profile: node.getProfile(),
+                        profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
                         scenario: vscode.l10n.t("Unable to create node:"),
                     });
                 }
@@ -121,7 +122,10 @@ export class USSActions {
             await node.getChildren();
             ussFileProvider.refreshElement(node);
         } catch (err) {
-            await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Uss, profile: node.getProfile() });
+            await AuthUtils.errorHandling(err, {
+                apiType: ZoweExplorerApiType.Uss,
+                profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
+            });
         }
     }
 
@@ -190,9 +194,14 @@ export class USSActions {
         try {
             const localFileName = path.parse(filePath).base;
             const ussName = `${node.fullPath}/${localFileName}`;
-            await ZoweExplorerApiRegister.getUssApi(node.getProfile()).putContent(filePath, ussName, { binary: true });
+            await ZoweExplorerApiRegister.getUssApi(Profiles.getInstance().loadNamedProfile(node.getProfileName())).putContent(filePath, ussName, {
+                binary: true,
+            });
         } catch (e) {
-            await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile: node.getProfile() });
+            await AuthUtils.errorHandling(e, {
+                apiType: ZoweExplorerApiType.Uss,
+                profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
+            });
         }
     }
 
@@ -201,7 +210,7 @@ export class USSActions {
         try {
             const localFileName = path.parse(doc.fileName).base;
             const ussName = `${node.fullPath}/${localFileName}`;
-            const prof = node.getProfile();
+            const prof = Profiles.getInstance().loadNamedProfile(node.getProfileName());
 
             const task: imperative.ITaskWithStatus = {
                 percentComplete: 0,
@@ -217,7 +226,10 @@ export class USSActions {
             }
             await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, options);
         } catch (e) {
-            await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile: node.getProfile() });
+            await AuthUtils.errorHandling(e, {
+                apiType: ZoweExplorerApiType.Uss,
+                profile: Profiles.getInstance().loadNamedProfile(node.getProfileName()),
+            });
         }
     }
 

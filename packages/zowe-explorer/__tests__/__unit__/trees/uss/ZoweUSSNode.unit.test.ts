@@ -70,7 +70,7 @@ function createGlobalMocks() {
         }),
         session: createISession(),
         profileOne: createIProfile(),
-        profileOps: null,
+        profileOps: createInstanceOfProfile(createIProfile()),
         response: createFileResponse({ etag: "123" }),
         ussApi: null,
         mockShowWarningMessage: jest.fn(),
@@ -91,7 +91,6 @@ function createGlobalMocks() {
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
 
     globalMocks.textDocumentsArray.push(globalMocks.mockTextDocument);
-    globalMocks.profileOps = createInstanceOfProfile(globalMocks.profileOne);
     Object.defineProperty(globalMocks.profileOps, "loadNamedProfile", {
         value: jest.fn(),
     });
@@ -146,12 +145,20 @@ function createGlobalMocks() {
     Object.defineProperty(globalMocks.Download, "ussFile", { value: globalMocks.ussFile, configurable: true });
     Object.defineProperty(zosfiles, "Delete", { value: globalMocks.Delete, configurable: true });
     Object.defineProperty(globalMocks.Delete, "ussFile", { value: globalMocks.ussFile, configurable: true });
+    Object.defineProperty(globalMocks.profileOps, "loadNamedProfile", {
+        value: jest.fn().mockReturnValue(globalMocks.profileOne),
+        configurable: true,
+    });
     Object.defineProperty(Profiles, "createInstance", {
         value: jest.fn(() => globalMocks.profileOps),
         configurable: true,
     });
     Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => globalMocks.profileOps),
+        value: jest.fn().mockResolvedValue(globalMocks.profileOps),
+        configurable: true,
+    });
+    Object.defineProperty(Constants, "PROFILES_CACHE", {
+        value: jest.fn().mockReturnValue(globalMocks.profileOps),
         configurable: true,
     });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
@@ -889,7 +896,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
     it("Tests that when List.fileList throws an error, node.getChildren() throws an error and the catch block is reached", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-
+        globalMocks.profileOps.loadNamedProfile.mockReturnValue(globalMocks.profileOne);
         // Populate node with children from previous search to ensure they are removed
         blockMocks.childNode.children = [createUSSNode(globalMocks.session, globalMocks.profileOne)];
         blockMocks.childNode.contextValue = Constants.USS_SESSION_CONTEXT;

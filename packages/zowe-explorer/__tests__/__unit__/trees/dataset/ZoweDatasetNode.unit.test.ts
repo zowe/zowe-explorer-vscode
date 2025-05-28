@@ -57,19 +57,19 @@ const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<
 function createGlobalMocks() {
     const newMocks = {
         imperativeProfile: createIProfile(),
-        profileInstance: null as any as Profiles,
+        profileInstance: createInstanceOfProfile(createIProfile()),
         getContentsSpy: null as any as jest.SpyInstance,
         mvsApi: null as any as ReturnType<typeof createMvsApi>,
         openTextDocument: jest.fn(),
     };
 
-    newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
     newMocks.mvsApi = createMvsApi(newMocks.imperativeProfile);
     newMocks.getContentsSpy = jest.spyOn(newMocks.mvsApi, "getContents");
     bindMvsApi(newMocks.mvsApi);
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
-    mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
+    newMocks.profileInstance.loadNamedProfile = jest.fn().mockReturnValue(newMocks.imperativeProfile);
+    Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockResolvedValue(newMocks.profileInstance), configurable: true });
+    Object.defineProperty(Constants, "PROFILES_CACHE", { value: jest.fn().mockResolvedValue(newMocks.profileInstance), configurable: true });
     Object.defineProperty(fs, "existsSync", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", {
         value: jest.fn(),
@@ -164,13 +164,6 @@ describe("ZoweDatasetNode Unit Tests", () => {
      * Checks that returning an unsuccessful response results in an error being thrown and caught
      *************************************************************************************************************/
     it("Checks that when List.dataSet/allMembers() throws an error, it returns an empty list", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
-                };
-            }),
-        });
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode({
             label: "root",
