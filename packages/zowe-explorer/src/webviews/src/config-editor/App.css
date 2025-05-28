@@ -315,7 +315,7 @@ ul {
     z-index: 1000;
     border-radius: 0 0 4px 4px;
     margin-top: -1px;
-    list-style: disc;
+    list-style: none;
     list-style-position: inside;
     padding-left: 0;
 }

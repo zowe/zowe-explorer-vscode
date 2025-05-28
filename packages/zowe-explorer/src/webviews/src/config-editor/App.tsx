@@ -679,27 +679,32 @@ export function App() {
     </div>
   );
 
+  // Get options for input key for profile dropdown
   const fetchTypeOptions = (path: string[]) => {
-    const configPath = configurations[selectedTab!]!.configPath;
-    const baseConfig = configurations[selectedTab!]!.properties;
+    const { configPath, properties: baseConfig } = configurations[selectedTab!]!;
     const currentConfig = { ...baseConfig };
 
-    // TODO: INCLUDE PENDING CHANGES
-    let typePath = ["profiles"];
-    typePath.push(...path);
-    typePath.pop();
-    typePath.push("type");
+    // Construct the type path: profiles.[...pathWithoutLastSegment].type
+    const typePath = ["profiles", ...path.slice(0, -1), "type"];
 
-    // Traverse currentConfig to get the value at typePath
-    let valueAtPath = currentConfig;
-    for (const segment of typePath) {
-      valueAtPath = valueAtPath[segment];
-      if (valueAtPath === undefined) {
-        break;
+    // Remove "profiles" prefix to match pendingChanges key format
+    const modifiedTypePath = typePath.slice(1).join(".");
+
+    // Check for pending type overwrite
+    const pendingTypeOverwrite = pendingChanges[configPath]?.[modifiedTypePath]?.value as string;
+
+    // Traverse currentConfig only if no pending overwrite
+    let resolvedType = pendingTypeOverwrite;
+    if (!resolvedType) {
+      let valueAtPath: any = currentConfig;
+      for (const segment of typePath) {
+        valueAtPath = valueAtPath?.[segment];
+        if (valueAtPath === undefined) break;
       }
+      resolvedType = valueAtPath;
     }
 
-    return schemaValidations[configPath]?.propertySchema[valueAtPath] || [];
+    return schemaValidations[configPath]?.propertySchema[resolvedType] || [];
   };
 
   const profileModal = newProfileModalOpen && (
