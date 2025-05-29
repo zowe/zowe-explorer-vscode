@@ -91,9 +91,6 @@ function createGlobalMocks() {
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
 
     globalMocks.textDocumentsArray.push(globalMocks.mockTextDocument);
-    Object.defineProperty(globalMocks.profileOps, "loadNamedProfile", {
-        value: jest.fn(),
-    });
     globalMocks.ussApi = ZoweExplorerApiRegister.getUssApi(globalMocks.profileOne);
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.profileOne);
     globalMocks.getUssApiMock.mockReturnValue(globalMocks.ussApi);
@@ -149,12 +146,10 @@ function createGlobalMocks() {
         value: jest.fn().mockReturnValue(globalMocks.profileOne),
         configurable: true,
     });
-    Object.defineProperty(Profiles, "createInstance", {
-        value: jest.fn(() => globalMocks.profileOps),
-        configurable: true,
-    });
     Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn().mockResolvedValue(globalMocks.profileOps),
+        value: jest.fn().mockImplementation(() => {
+            return globalMocks.profileOps;
+        }),
         configurable: true,
     });
     Object.defineProperty(Constants, "PROFILES_CACHE", {

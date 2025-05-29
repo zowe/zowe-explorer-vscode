@@ -164,6 +164,14 @@ describe("ZoweDatasetNode Unit Tests", () => {
      * Checks that returning an unsuccessful response results in an error being thrown and caught
      *************************************************************************************************************/
     it("Checks that when List.dataSet/allMembers() throws an error, it returns an empty list", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                };
+            }),
+            configurable: true,
+        });
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode({
             label: "root",
@@ -196,6 +204,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
                     loadNamedProfile: jest.fn().mockReturnValue(profileOne),
                 };
             }),
+            configurable: true,
         });
         // Creating a rootNode
         const rootNode = new ZoweDatasetNode({
