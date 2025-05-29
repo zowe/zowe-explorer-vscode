@@ -305,7 +305,6 @@ describe("AuthUtils", () => {
         it("should do nothing if there is no profile for the provided node", async () => {
             const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
             const initialSession = sessionNode.getSession();
-            // const initialProfile = sessionNode.getProfile();
             loadNamedProfileMock.mockReturnValue(() => {
                 throw new Error(`There is no such profile with name: ${serviceProfile.name}`);
             });
@@ -315,7 +314,6 @@ describe("AuthUtils", () => {
                 } as any);
             await AuthUtils.syncSessionNode(dummyFn, sessionNode);
             expect(sessionNode.getSession()).toEqual(initialSession);
-            // expect(sessionNode.getProfile()).toEqual(initialProfile);
         });
 
         it("handles an error if getCommonAPI function fails", async () => {

@@ -327,7 +327,6 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () =>
         expect(favSearchNode.collapsibleState).toEqual(expectedFavSearchNode.collapsibleState);
         expect(favSearchNode.contextValue).toEqual(expectedFavSearchNode.contextValue);
         expect(favSearchNode.getParent()).toBe(expectedFavSearchNode.getParent());
-        // expect(favSearchNode.getProfile()).toBe(expectedFavSearchNode.getProfile());
     });
 });
 
@@ -353,7 +352,6 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
         expect(createdFavProfileNode.collapsibleState).toEqual(expectedFavProfileNode.collapsibleState);
         expect(createdFavProfileNode.contextValue).toEqual(expectedFavProfileNode.contextValue);
         expect(createdFavProfileNode.getParent()).toEqual(expectedFavProfileNode.getParent());
-        // expect(createdFavProfileNode.getProfile()).toEqual(expectedFavProfileNode.getProfile());
     });
 
     it("Tests that profile grouping node is created correctly - global profile", async () => {
@@ -374,7 +372,6 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
         expect(createdFavProfileNode.collapsibleState).toEqual(expectedFavProfileNode.collapsibleState);
         expect(createdFavProfileNode.contextValue).toEqual(expectedFavProfileNode.contextValue);
         expect(createdFavProfileNode.getParent()).toEqual(expectedFavProfileNode.getParent());
-        // expect(createdFavProfileNode.getProfile()).toEqual(expectedFavProfileNode.getProfile());
         expect(isGlobalProfNodeMock).toHaveBeenCalled();
         isGlobalProfNodeMock.mockRestore();
     });
@@ -1659,7 +1656,6 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         expect(resultFavDirNode.label).toBe(expectedFavDirNode.label);
         expect(resultFavDirNode.collapsibleState).toBe(expectedFavDirNode.collapsibleState);
         expect(resultFavDirNode.getParent()).toBe(expectedFavDirNode.getParent());
-        // expect(resultFavDirNode.getProfile()).toBe(expectedFavDirNode.getProfile());
     });
     it("Tests that loaded profile/session from profile node in Favorites gets passed to child favorites without profile/session", async () => {
         const globalMocks = createGlobalMocks();
@@ -1692,7 +1688,6 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         expect(resultFavDirNode.label).toEqual(expectedFavDirNode.label);
         expect(resultFavDirNode.collapsibleState).toEqual(expectedFavDirNode.collapsibleState);
         expect(resultFavDirNode.contextValue).toEqual(expectedFavDirNode.contextValue);
-        // expect(resultFavDirNode.getProfile()).toEqual(expectedFavDirNode.getProfile());
     });
 });
 

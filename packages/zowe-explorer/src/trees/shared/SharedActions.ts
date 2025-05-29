@@ -275,7 +275,7 @@ export class SharedActions {
                 sessNode.dirty = true;
                 SharedActions.returnIconState(sessNode, treeProvider);
                 if (!isFavoritesFolder) {
-                    AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
+                    await AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getCommonApi(profile), sessNode);
                 }
                 treeProvider.refreshElement(sessNode);
             } else {
