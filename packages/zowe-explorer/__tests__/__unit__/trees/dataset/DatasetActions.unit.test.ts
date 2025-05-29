@@ -1016,6 +1016,7 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
             value: jest.fn(() => {
                 return {
                     validProfile: Validation.ValidationType.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(blockMocks.imperativeProfile),
                 };
             }),
         });
@@ -1923,6 +1924,7 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
                         status: "unverified",
                     }),
                     validProfile: Validation.ValidationType.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(blockMocks.imperativeProfile),
                 };
             }),
         });
@@ -2017,6 +2019,7 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
                         status: "unverified",
                     }),
                     validProfile: Validation.ValidationType.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(blockMocks.imperativeProfile),
                 };
             }),
         });
@@ -2119,6 +2122,7 @@ describe("Dataset Actions Unit Tests - Function showFileErrorDetails", () => {
                 return {
                     checkCurrentProfile: jest.fn(),
                     validProfile: Validation.ValidationType.INVALID,
+                    loadNamedProfile: jest.fn().mockReturnValue(blockMocks.imperativeProfile),
                 };
             }),
         });

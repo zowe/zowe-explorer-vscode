@@ -14,6 +14,7 @@ import type { IZoweJobTreeNode } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { ZoweSpoolNode } from "../trees/job/ZoweJobNode";
+import { Profiles } from "../configuration/Profiles";
 
 export class SpoolUtils {
     /**
@@ -27,7 +28,10 @@ export class SpoolUtils {
             return [];
         }
         let spools: zosjobs.IJobFile[] = [];
-        spools = await ZoweExplorerApiRegister.getJesApi(node.getProfile()).getSpoolFiles(node.job.jobname, node.job.jobid);
+        spools = await ZoweExplorerApiRegister.getJesApi(Profiles.getInstance().loadNamedProfile(node.getProfileName())).getSpoolFiles(
+            node.job.jobname,
+            node.job.jobid
+        );
         spools = spools
             // filter out all the objects which do not seem to be correct Job File Document types
             // see an issue #845 for the details

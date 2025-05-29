@@ -25,24 +25,22 @@ import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { ZoweJobNode, ZoweSpoolNode } from "../../../../src/trees/job/ZoweJobNode";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
-import { AuthUtils } from "../../../../src/utils/AuthUtils";
-import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { createIJobFile, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
+import { Profiles } from "../../../../src/configuration/Profiles";
 
 function createGlobalMocks() {
     const newMocks = {
         session: createISession(),
         profileOne: createIProfile(),
         mockGetInstance: jest.fn(),
-        mockProfileInstance: null,
+        mockProfileInstance: createInstanceOfProfile(createIProfile()),
         mockProfilesCache: null,
         createDirectory: jest.fn(),
     };
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.createDirectory);
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
-    newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
     Object.defineProperty(Constants, "PROFILES_CACHE", {
         value: newMocks.mockProfileInstance,
         configurable: true,
@@ -273,8 +271,10 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
     const binaryEncoding: ZosEncoding = { kind: "binary" };
     const textEncoding: ZosEncoding = { kind: "text" };
     const otherEncoding: ZosEncoding = { kind: "other", codepage: "IBM-1047" };
+    const globalMocks = createGlobalMocks();
 
     function createBlockMocks() {
+        const profile = createIProfile();
         const showInputBox = jest.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
         const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
         const localStorageGet = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
@@ -284,9 +284,11 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         const fetchEncodingForUri = jest.spyOn(UssFSProvider.instance, "fetchEncodingForUri").mockResolvedValue(undefined as any);
         const createDirectorySpy = jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation();
         const getEncodingForFileSpy = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValue({ kind: "binary" });
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(profile);
+        Object.defineProperty(Profiles, "getInstance", { value: jest.fn().mockReturnValue(globalMocks.mockProfileInstance), configurable: true });
 
         return {
-            profile: createIProfile(),
+            profile,
             session: createISession(),
             showInputBox,
             showQuickPick,

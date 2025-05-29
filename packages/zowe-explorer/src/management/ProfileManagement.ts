@@ -39,27 +39,27 @@ export class ProfileManagement {
         }
     }
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {
-        const profile = node.getProfile();
+        const profileName = node.getProfileName();
         let selected: vscode.QuickPickItem;
         switch (true) {
-            case AuthUtils.isProfileUsingBasicAuth(profile): {
-                ZoweLogger.debug(`Profile ${profile.name} is using basic authentication.`);
+            case AuthUtils.isProfileUsingBasicAuth(Profiles.getInstance().loadNamedProfile(profileName)): {
+                ZoweLogger.debug(`Profile ${profileName} is using basic authentication.`);
                 selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, node);
                 break;
             }
-            case await AuthUtils.isUsingTokenAuth(profile.name): {
-                ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
+            case await AuthUtils.isUsingTokenAuth(profileName): {
+                ZoweLogger.debug(`Profile ${profileName} is using token authentication.`);
                 selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_TOKEN, node);
                 break;
             }
             // will need a case for isUsingCertAuth
             default: {
-                ZoweLogger.debug(`Profile ${profile.name} authentication method is unkown.`);
+                ZoweLogger.debug(`Profile ${profileName} authentication method is unkown.`);
                 selected = await this.setupProfileManagementQp(null, node);
                 break;
             }
         }
-        await this.handleAuthSelection(selected, node, profile);
+        await this.handleAuthSelection(selected, node);
     }
     public static AuthQpLabels = {
         add: "add-credentials",
@@ -127,7 +127,7 @@ export class ProfileManagement {
         },
     };
     private static async setupProfileManagementQp(managementType: string, node: IZoweTreeNode): Promise<vscode.QuickPickItem> {
-        const profile = node.getProfile();
+        const profile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
         const qp = Gui.createQuickPick();
         let quickPickOptions: vscode.QuickPickItem[];
         const placeholders = this.getQpPlaceholders(profile);
@@ -156,18 +156,18 @@ export class ProfileManagement {
         qp.hide();
         return selectedItem;
     }
-    private static async handleAuthSelection(selected: vscode.QuickPickItem, node: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
+    private static async handleAuthSelection(selected: vscode.QuickPickItem, node: IZoweTreeNode): Promise<void> {
         switch (selected) {
             case this.basicAuthAddQpItems[this.AuthQpLabels.add]: {
                 await ProfilesUtils.promptCredentials(node);
                 break;
             }
             case this.editProfileQpItems[this.AuthQpLabels.edit]: {
-                await Profiles.getInstance().editSession(profile);
+                await Profiles.getInstance().editSession(Profiles.getInstance().loadNamedProfile(node.getProfileName()));
                 break;
             }
             case this.tokenAuthLoginQpItem[this.AuthQpLabels.login]: {
-                await Profiles.getInstance().ssoLogin(node, profile.name);
+                await Profiles.getInstance().ssoLogin(node, node.getProfileName());
                 break;
             }
             case this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]: {
@@ -227,7 +227,7 @@ export class ProfileManagement {
         return this.addFinalQpOptions(node, quickPickOptions);
     }
     private static tokenAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
-        const profile = node.getProfile();
+        const profile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.tokenAuthLoginQpItem);
         if (profile.profile.tokenValue) {
             quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
@@ -236,7 +236,7 @@ export class ProfileManagement {
         return this.addFinalQpOptions(node, quickPickOptions);
     }
     private static chooseAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
-        const profile = node.getProfile();
+        const profile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthAddQpItems);
         try {
             ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();

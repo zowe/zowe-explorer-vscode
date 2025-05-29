@@ -24,6 +24,7 @@ import { AuthUtils } from "../../utils/AuthUtils";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { DatasetUtils } from "./DatasetUtils";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
+import { Profiles } from "../../configuration/Profiles";
 
 interface ISearchOptions {
     node: IZoweDatasetTreeNode;
@@ -345,7 +346,7 @@ export class DatasetSearch {
     }
 
     private static async performSearch(progress: any, token: vscode.CancellationToken, options: ISearchOptions): Promise<zosfiles.ISearchResponse> {
-        const profile = options.node.getProfile();
+        const profile = Profiles.getInstance().loadNamedProfile(options.node.getProfileName());
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
         let response: zosfiles.ISearchResponse;
         if (token.isCancellationRequested) {

@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { Constants } from "../../../../src/configuration/Constants";
-import { createIProfile, createISession, createTreeView } from "../../../__mocks__/mockCreators/shared";
+import { createInstanceOfProfile, createIProfile, createISession, createTreeView } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
@@ -63,6 +63,10 @@ async function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "createTreeView", {
         value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+        configurable: true,
+    });
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn().mockReturnValue(createInstanceOfProfile(createIProfile())),
         configurable: true,
     });
 

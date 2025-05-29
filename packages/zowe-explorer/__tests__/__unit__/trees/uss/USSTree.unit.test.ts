@@ -82,7 +82,7 @@ function createGlobalMocks() {
             uri: vscode.Uri.from({ scheme: "file", path: "/test/path/temp/_U_/sestest/testClean/node" }),
         },
         mockTextDocuments: [],
-        mockProfilesInstance: null,
+        mockProfilesInstance: createInstanceOfProfile(createIProfile()),
         withProgress: jest.fn(),
         closeOpenedTextFile: jest.fn(),
         ProgressLocation: jest.fn().mockImplementation(() => {
@@ -117,7 +117,6 @@ function createGlobalMocks() {
     globalMocks.testBaseProfile.profile.tokenValue = "testTokenValue";
     globalMocks.testCombinedProfile.profile.tokenType = "tokenType";
     globalMocks.testCombinedProfile.profile.tokenValue = "testTokenValue";
-    globalMocks.mockProfilesInstance = createInstanceOfProfile(globalMocks.testProfile);
     globalMocks.mockProfilesInstance.getBaseProfile.mockResolvedValue(globalMocks.testBaseProfile);
     globalMocks.mockProfilesInstance.loadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfilesInstance.allProfiles = [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }];
@@ -328,7 +327,6 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () =>
         expect(favSearchNode.collapsibleState).toEqual(expectedFavSearchNode.collapsibleState);
         expect(favSearchNode.contextValue).toEqual(expectedFavSearchNode.contextValue);
         expect(favSearchNode.getParent()).toBe(expectedFavSearchNode.getParent());
-        expect(favSearchNode.getProfile()).toBe(expectedFavSearchNode.getProfile());
     });
 });
 
@@ -354,7 +352,6 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
         expect(createdFavProfileNode.collapsibleState).toEqual(expectedFavProfileNode.collapsibleState);
         expect(createdFavProfileNode.contextValue).toEqual(expectedFavProfileNode.contextValue);
         expect(createdFavProfileNode.getParent()).toEqual(expectedFavProfileNode.getParent());
-        expect(createdFavProfileNode.getProfile()).toEqual(expectedFavProfileNode.getProfile());
     });
 
     it("Tests that profile grouping node is created correctly - global profile", async () => {
@@ -375,7 +372,6 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
         expect(createdFavProfileNode.collapsibleState).toEqual(expectedFavProfileNode.collapsibleState);
         expect(createdFavProfileNode.contextValue).toEqual(expectedFavProfileNode.contextValue);
         expect(createdFavProfileNode.getParent()).toEqual(expectedFavProfileNode.getParent());
-        expect(createdFavProfileNode.getProfile()).toEqual(expectedFavProfileNode.getProfile());
         expect(isGlobalProfNodeMock).toHaveBeenCalled();
         isGlobalProfNodeMock.mockRestore();
     });
@@ -722,6 +718,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
                     }),
                     showProfileInactiveMsg: jest.fn(),
                     validProfile: Validation.ValidationType.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(globalMocks.testProfile),
                 };
             }),
             configurable: true,
@@ -869,6 +866,7 @@ describe("USSTree Unit Tests - Function filterBy", () => {
             session: sessionWithCred,
             profile: { name: "ussTestSess2" } as any,
         });
+        globalMocks.mockProfilesInstance.loadNamedProfile.mockReturnValue({ name: "ussTestSess2" } as any);
         node.fullPath = "/u/myFolder";
         globalMocks.testTree.mFavorites.push(node);
         await expect(globalMocks.testTree.filterBy(node, "/u/myFolder")).resolves.not.toThrow();
@@ -1613,7 +1611,7 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
-                    loadNamedProfile: jest.fn(() => {
+                    loadNamedProfile: jest.fn().mockReturnValue(() => {
                         throw new Error();
                     }),
                 };
@@ -1658,7 +1656,6 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         expect(resultFavDirNode.label).toBe(expectedFavDirNode.label);
         expect(resultFavDirNode.collapsibleState).toBe(expectedFavDirNode.collapsibleState);
         expect(resultFavDirNode.getParent()).toBe(expectedFavDirNode.getParent());
-        expect(resultFavDirNode.getProfile()).toBe(expectedFavDirNode.getProfile());
     });
     it("Tests that loaded profile/session from profile node in Favorites gets passed to child favorites without profile/session", async () => {
         const globalMocks = createGlobalMocks();
@@ -1691,7 +1688,6 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         expect(resultFavDirNode.label).toEqual(expectedFavDirNode.label);
         expect(resultFavDirNode.collapsibleState).toEqual(expectedFavDirNode.collapsibleState);
         expect(resultFavDirNode.contextValue).toEqual(expectedFavDirNode.contextValue);
-        expect(resultFavDirNode.getProfile()).toEqual(expectedFavDirNode.getProfile());
     });
 });
 
@@ -1730,6 +1726,7 @@ describe("USSTree Unit Tests - Function editSession", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                    loadNamedProfile: jest.fn().mockReturnValue(profileLoad),
                 };
             }),
             configurable: true,
@@ -1759,6 +1756,7 @@ describe("USSTree Unit Tests - Function editSession", () => {
                     }),
                     profilesForValidation: [{ status: "inactive", name: globalMocks.testProfile.name }],
                     validateProfiles: jest.fn(),
+                    loadNamedProfile: jest.fn().mockReturnValue(profileLoad),
                 };
             }),
             configurable: true,

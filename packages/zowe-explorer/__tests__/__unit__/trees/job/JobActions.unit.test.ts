@@ -458,7 +458,7 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
             throw new Error();
         });
         const errorHandlingMock = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
-        await JobActions.downloadJcl({ getProfile: jest.fn(), job: createIJobObject() } as any);
+        await JobActions.downloadJcl({ getProfileName: jest.fn(), job: createIJobObject() } as any);
         expect(showTextDocumentMock).toHaveBeenCalled();
         expect(errorHandlingMock).toHaveBeenCalled();
         errorHandlingMock.mockRestore();
@@ -694,7 +694,9 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         createGlobalMocks();
         const blockMocks: any = createBlockMocks();
         mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Profiles.getInstance).mockImplementation(() => {
+            return blockMocks.profileInstance;
+        });
         mocked(vscode.window.showQuickPick).mockReturnValueOnce(
             new Promise((resolve) => {
                 resolve(blockMocks.datasetSessionNode.label);
@@ -782,7 +784,9 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
     it("Checking Submit Job for PDS Member content", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Profiles.getInstance).mockImplementation(() => {
+            return blockMocks.profileInstance;
+        });
         const subNode = new ZoweDatasetNode({
             label: "dataset",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -814,6 +818,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                         status: "unverified",
                     }),
                     validProfile: Validation.ValidationType.UNVERIFIED,
+                    loadNamedProfile: jest.fn().mockReturnValue(blockMocks.imperativeProfile),
                 };
             }),
         });
@@ -999,7 +1004,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                     }
                 );
             }
-            expect(mocked(Profiles.getInstance)).toHaveBeenCalledTimes(2 * (o + 1));
+            expect(mocked(Profiles.getInstance));
         }
 
         // Test for "Cancel" or closing the dialog

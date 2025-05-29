@@ -19,6 +19,7 @@ import { Definitions } from "../configuration/Definitions";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { Constants } from "../configuration/Constants";
+import { Profiles } from "../configuration/Profiles";
 
 /**
  * Provides a class that manages submitting a command on the server
@@ -79,7 +80,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         if (node) {
             await this.checkCurrentProfile(node);
             if (!session) {
-                session = ZoweExplorerApiRegister.getMvsApi(node.getProfile()).getSession();
+                session = ZoweExplorerApiRegister.getMvsApi(Profiles.getInstance().loadNamedProfile(node.getProfileName())).getSession();
                 if (!session) {
                     return;
                 }
@@ -91,7 +92,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
                 return;
             }
         } else {
-            profile = node.getProfile();
+            profile = Profiles.getInstance().loadNamedProfile(node.getProfileName());
         }
         try {
             if (this.profileInstance.validProfile !== Validation.ValidationType.INVALID) {

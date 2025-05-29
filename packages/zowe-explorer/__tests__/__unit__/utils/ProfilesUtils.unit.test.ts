@@ -19,6 +19,7 @@ import {
     createInstanceOfProfile,
     createIProfile,
     createISession,
+    createMockNode,
     createValidIProfile,
 } from "../../__mocks__/mockCreators/shared";
 import { MockedProperty } from "../../__mocks__/mockUtils";
@@ -381,37 +382,27 @@ describe("ProfilesUtils unit tests", () => {
     });
 
     describe("promptCredentials", () => {
+        const mockProfile = createIProfile();
+        const mockProfileInstance = createInstanceOfProfile(mockProfile);
         const prof = {
             getAllProfiles: jest.fn().mockReturnValue([]),
             isSecured: jest.fn().mockReturnValue(true),
             readProfilesFromDisk: jest.fn(),
             getTeamConfig: () => ({ properties: { autoStore: true } }),
-        };
-        it("calls getProfileInfo", async () => {
-            const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
-            const getProfileInfoSpy = jest.spyOn(Profiles.prototype, "getProfileInfo");
-            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as imperative.ProfileInfo);
-            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
-                profile: prof,
-            } as unknown as imperative.IProfileLoaded);
-            Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
-            Object.defineProperty(vscode.window, "showInputBox", {
-                value: jest.fn().mockResolvedValue("emptyConfig"),
-                configurable: true,
-            });
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
-            await ProfilesUtils.promptCredentials(null as any);
-            expect(getProfileInfoSpy).toHaveBeenCalled();
+        } as unknown as imperative.ProfileInfo;
+        const mockNode = createMockNode(String(mockProfile.name), "");
+
+        afterEach(() => {
+            jest.clearAllMocks();
         });
 
         it("calls unlockProfile once credentials are provided", async () => {
-            const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
             const promptCredentialsProfilesMock = jest.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValueOnce(["someusername", "pw"]);
             const updateCachedProfileMock = jest.spyOn(mockProfileInstance, "updateCachedProfile").mockResolvedValueOnce(undefined);
             const profile = createIProfile();
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
-            const mockNode = createDatasetSessionNode(createISession(), profile);
+            const mockDSNode = createDatasetSessionNode(createISession(), profile);
             const mockTreeProvider = {
                 mSessionNodes: [mockNode],
                 flipState: jest.fn(),
@@ -420,21 +411,18 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
             jest.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
             jest.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
-            await ProfilesUtils.promptCredentials(mockNode);
+            await ProfilesUtils.promptCredentials(mockDSNode);
             expect(promptCredentialsProfilesMock).toHaveBeenCalledTimes(1);
             expect(promptCredentialsProfilesMock).toHaveBeenCalledWith(profile, true);
             expect(unlockProfileSpy).toHaveBeenCalledTimes(1);
             expect(unlockProfileSpy).toHaveBeenCalledWith(profile, true);
             expect(updateCachedProfileMock).toHaveBeenCalledTimes(1);
-            expect(updateCachedProfileMock).toHaveBeenCalledWith(profile, mockNode);
+            expect(updateCachedProfileMock).toHaveBeenCalledWith(profile, mockDSNode);
         });
 
         it("shows an error message if the profile input is undefined", async () => {
-            const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
-            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as imperative.ProfileInfo);
-            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
-                profile: prof,
-            } as unknown as imperative.IProfileLoaded);
+            Object.defineProperty(mockNode, "getProfileName", { value: jest.fn().mockReturnValue(mockProfile.name), configurable: true });
+            mockProfileInstance.loadNamedProfile.mockReturnValue(undefined);
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             Object.defineProperty(vscode.window, "showInputBox", {
                 value: jest.fn().mockResolvedValue(""),
@@ -446,11 +434,7 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("shows an info message if the profile credentials were updated", async () => {
-            const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
-            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as imperative.ProfileInfo);
-            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
-                profile: prof,
-            } as unknown as imperative.IProfileLoaded);
+            mockProfile.name = "testConfig";
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             Object.defineProperty(vscode.window, "showInputBox", {
                 value: jest.fn().mockResolvedValue("testConfig"),
@@ -460,13 +444,12 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn(),
                 configurable: true,
             });
-            jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
+            jest.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
             await ProfilesUtils.promptCredentials(null as any);
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
         });
 
         it("shows a message if Update Credentials operation is called when autoStore = false", async () => {
-            const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             Object.defineProperty(mockProfileInstance, "getProfileInfo", {
                 value: jest.fn(() => {
@@ -495,7 +478,16 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("fires onProfilesUpdate event if secure credentials are enabled", async () => {
-            const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
+            const testConfig = {
+                name: "testConfig",
+                profile: {
+                    type: "test-type",
+                    user: "user",
+                    password: "pass",
+                    base64EncodedAuth: "user-pass",
+                } as imperative.IProfile,
+            } as imperative.IProfileLoaded;
+            mockProfileInstance.loadNamedProfile.mockReturnValue(testConfig);
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as any);
             jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
@@ -510,18 +502,10 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             const secureCredsMock = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
-            const testConfig = {
-                name: "testConfig",
-                profile: {
-                    type: "test-type",
-                    user: "user",
-                    password: "pass",
-                    base64EncodedAuth: "user-pass",
-                } as imperative.IProfile,
-            } as imperative.IProfileLoaded;
+
             const updCredsMock = jest.spyOn(Constants.PROFILES_CACHE, "promptCredentials").mockResolvedValueOnce(["test", "test"]);
             await ProfilesUtils.promptCredentials({
-                getProfile: () => testConfig,
+                getProfileName: () => testConfig.name,
                 setProfileToChoice: jest.fn(),
                 getChildren: jest.fn().mockResolvedValue([]),
             } as any);

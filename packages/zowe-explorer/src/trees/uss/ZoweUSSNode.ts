@@ -559,11 +559,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 }
                 if (ussFileProvider) {
                     // Add document name to recently-opened files
-                    ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
+                    ussFileProvider.addFileHistory(`[${this.getProfileName()}]: ${this.fullPath}`);
                     ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
                 }
             } catch (err) {
-                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Uss, profile: this.getProfile() });
+                await AuthUtils.errorHandling(err, {
+                    apiType: ZoweExplorerApiType.Uss,
+                    profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
+                });
                 throw err;
             }
         }
@@ -604,7 +607,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Uss, profile: this.getProfile() });
+                await AuthUtils.errorHandling(err, {
+                    apiType: ZoweExplorerApiType.Uss,
+                    profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
+                });
             }
         }
     }
@@ -651,7 +657,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return;
         }
 
-        const prof = this.getProfile();
+        const prof = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         try {
             const fileTreeToPaste: USSFileStructure.UssFileTree = JSON.parse(clipboardContents);
             const api = ZoweExplorerApiRegister.getUssApi(this.profile);
@@ -679,7 +685,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         } catch (error) {
             await AuthUtils.errorHandling(error, {
                 apiType: ZoweExplorerApiType.Uss,
-                profile: this.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
                 scenario: vscode.l10n.t("Error uploading files"),
             });
         }
@@ -706,10 +712,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {
                 apiType: ZoweExplorerApiType.Uss,
-                profile: this.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
                 scenario: vscode.l10n.t("Retrieving response from USS list API"),
             });
-            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getUssApi(prof), this.getSessionNode(), updated && this);
+            await AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getUssApi(prof), this.getSessionNode(), updated && this);
             return { success: false, commandResponse: null };
         }
     }

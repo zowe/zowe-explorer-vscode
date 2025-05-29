@@ -287,13 +287,11 @@ export class AuthUtils {
         nodeToRefresh?: IZoweTreeNode
     ): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
-
-        const profileType = sessionNode.getProfile()?.type;
         const profileName = sessionNode.getProfileName();
 
         let profile: imperative.IProfileLoaded;
         try {
-            profile = Constants.PROFILES_CACHE.loadNamedProfile(profileName, profileType);
+            profile = Constants.PROFILES_CACHE.loadNamedProfile(profileName);
         } catch (e) {
             ZoweLogger.warn(e);
             return;

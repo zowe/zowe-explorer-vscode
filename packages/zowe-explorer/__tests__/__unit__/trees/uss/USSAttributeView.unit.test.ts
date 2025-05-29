@@ -20,6 +20,7 @@ import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerA
 import { MainframeInteraction } from "../../../../../zowe-explorer-api/src/extend";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import * as fs from "fs";
+import { Profiles } from "../../../../src/configuration/Profiles";
 
 jest.mock("fs");
 describe("AttributeView unit tests", () => {
@@ -41,6 +42,14 @@ describe("AttributeView unit tests", () => {
     const updateAttributesMock = jest.spyOn(node, "setAttributes").mockImplementation();
     const onUpdateMock = jest.fn();
     const onUpdateMocked = new MockedProperty(ZoweUSSNode.prototype, "onUpdate", undefined, onUpdateMock);
+    Object.defineProperty(Profiles, "getInstance", {
+        value: jest.fn(() => {
+            return {
+                loadNamedProfile: jest.fn().mockReturnValue(node.getProfile()),
+            };
+        }),
+        configurable: true,
+    });
 
     beforeAll(() => {
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({

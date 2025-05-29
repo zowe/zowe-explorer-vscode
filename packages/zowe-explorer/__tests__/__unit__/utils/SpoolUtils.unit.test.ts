@@ -45,22 +45,10 @@ describe("SpoolProvider Unit Tests", () => {
                 }),
                 profilesForValidation: [],
                 validateProfiles: jest.fn(),
+                loadNamedProfile: jest.fn().mockReturnValue({ name: "firstName" }),
             };
         }),
-    });
-    Object.defineProperty(Profiles, "getDefaultProfile", {
-        value: jest.fn(() => {
-            return {
-                name: "firstName",
-            };
-        }),
-    });
-    Object.defineProperty(Profiles, "loadNamedProfile", {
-        value: jest.fn(() => {
-            return {
-                name: "firstName",
-            };
-        }),
+        configurable: true,
     });
 
     afterEach(() => {
@@ -96,6 +84,16 @@ describe("SpoolProvider Unit Tests", () => {
             const profile = createIProfile();
             const session = createISessionWithoutCredentials();
             const newJobSession = createJobSessionNode(session, profile);
+            Object.defineProperty(Profiles, "getInstance", {
+                value: jest.fn().mockImplementation(() => {
+                    return {
+                        loadNamedProfile: jest.fn().mockImplementation(() => {
+                            return profile;
+                        }),
+                    };
+                }),
+                configurable: true,
+            });
 
             const jesApi = createJesApi(profile);
             bindJesApi(jesApi);

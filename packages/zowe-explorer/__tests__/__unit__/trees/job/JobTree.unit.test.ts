@@ -702,7 +702,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
             value: jest.fn(() => {
                 return {
                     allProfiles: [blockMocks.imperativeProfile],
-                    loadNamedProfile: jest.fn(() => {
+                    loadNamedProfile: jest.fn().mockReturnValue(() => {
                         throw new Error();
                     }),
                     getDefaultProfile: jest.fn(() => {

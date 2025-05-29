@@ -195,7 +195,10 @@ function createGlobalMocks(): { [key: string]: any } {
         }),
         configurable: true,
     });
-
+    Object.defineProperty(newMocks.mockProfileInstance, "loadNamedProfile", {
+        value: jest.fn().mockReturnValue(newMocks.testProfile),
+        configurable: true,
+    });
     Object.defineProperty(imperative, "Config", {
         value: () => newMocks.mockConfigInstance,
         configurable: true,
@@ -939,14 +942,14 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
     });
-    it("should show as unverified if using token auth and is logged out or has expired token", async () => {
+    it("should show as inactive if using token auth and is logged out", async () => {
         const globalMocks = createGlobalMocks();
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
-        const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
+        globalMocks.testProfile.profile.user = undefined;
+        globalMocks.testProfile.profile.password = undefined;
         jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
-        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
-        expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
     });
     it("should show as unverified if profiles fail to load", async () => {
         const globalMocks = await createGlobalMocks();
@@ -2218,10 +2221,10 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
 
         const flipStateSpy = jest.fn();
         const refreshElementSpy = jest.fn();
-        const getProfileSpy = jest.fn(() => ({ name: "test" }));
+        const getProfileSpy = jest.fn(() => "test");
 
         const mockTreeProvider = {
-            mSessionNodes: [{ getProfile: getProfileSpy }],
+            mSessionNodes: [{ getProfileName: getProfileSpy }],
             flipState: flipStateSpy,
             refreshElement: refreshElementSpy,
         } as any;
@@ -2283,6 +2286,7 @@ describe("Profiles Unit Tests - function enableValidation", () => {
     it("should enable validation for the profile on the current tree", () => {
         const globalMocks = createGlobalMocks();
         const enableValidationContextSpy = jest.spyOn(Profiles.getInstance(), "enableValidationContext");
+        jest.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(globalMocks.testProfile);
         jest.spyOn(SharedTreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
         expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT);
         expect(Profiles.getInstance().enableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);

@@ -887,7 +887,7 @@ describe("USS Action Unit Tests - function editAttributes", () => {
                 extensionPath: "/a/b/c",
             } as any,
             {} as IZoweTree<IZoweUSSTreeNode>,
-            { label: "some/node", getProfile: jest.fn() } as unknown as IZoweUSSTreeNode
+            { label: "some/node", getProfileName: jest.fn() } as unknown as IZoweUSSTreeNode
         );
         expect(view).toBeInstanceOf(USSAttributeView);
     });

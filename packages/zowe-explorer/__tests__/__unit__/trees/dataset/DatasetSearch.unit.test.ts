@@ -14,7 +14,7 @@ import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { Gui, Table, TableBuilder, TableViewProvider, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { DatasetSearch } from "../../../../src/trees/dataset/DatasetSearch";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
-import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
+import { createInstanceOfProfile, createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
@@ -27,6 +27,7 @@ import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { window } from "../../../__mocks__/vscode";
 import { Definitions } from "../../../../src/configuration/Definitions";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
+import { Profiles } from "../../../../src/configuration/Profiles";
 
 jest.mock("fs");
 jest.mock("vscode");
@@ -122,6 +123,7 @@ describe("Dataset Search Unit Tests - function search", () => {
         let continueSearchPromptSpy: jest.SpyInstance;
         let authErrorHandlingSpy: jest.SpyInstance;
         let loggerErrorSpy: jest.SpyInstance;
+        let profileSpy: jest.SpyInstance;
 
         const fakeMvsApi = {
             searchDataSets: searchDataSetsMock,
@@ -138,6 +140,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             continueSearchPromptSpy = jest.spyOn(DatasetSearch as any, "continueSearchPrompt");
             authErrorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
             loggerErrorSpy = jest.spyOn(ZoweLogger, "error").mockImplementation();
+            profileSpy = jest.spyOn(Profiles, "getInstance").mockReturnValue(createInstanceOfProfile(createIProfile()));
         });
 
         beforeEach(() => {

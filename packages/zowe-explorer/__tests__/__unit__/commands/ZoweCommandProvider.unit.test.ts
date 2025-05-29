@@ -56,6 +56,10 @@ describe("ZoweCommandProvider Unit Tests", () => {
                     error: jest.fn(),
                 },
             });
+            Object.defineProperty(profilesInstance, "loadNamedProfile", {
+                value: jest.fn().mockReturnValue(globalMocks.testProfile),
+                configurable: true,
+            });
             jest.spyOn(ZoweCommandProvider.prototype, "refresh").mockImplementationOnce(() => {});
             jest.spyOn(SharedContext, "isSessionNotFav").mockReturnValue(true);
         });
