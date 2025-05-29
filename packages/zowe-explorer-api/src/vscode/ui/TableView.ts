@@ -93,6 +93,7 @@ export namespace Table {
 
         // Locking and edit variables
         hide?: boolean;
+        initialHide?: boolean;
         lockVisible?: boolean;
         lockPosition?: boolean | Positions;
         suppressMovable?: boolean;

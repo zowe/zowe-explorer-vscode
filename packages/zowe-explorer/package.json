@@ -183,6 +183,11 @@
         }
       },
       {
+        "command": "zowe.ds.tableView",
+        "title": "%dsTableView%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.tableView",
         "title": "%jobsTableView%",
         "category": "Zowe Explorer"
@@ -967,6 +972,11 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
+          "command": "zowe.ds.tableView",
+          "group": "100_zowe_tableview"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.ds.pattern",
           "group": "inline@2"
         },
@@ -1473,6 +1483,10 @@
         },
         {
           "command": "zowe.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.tableView",
           "when": "never"
         },
         {

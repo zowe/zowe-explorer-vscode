@@ -167,21 +167,26 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public updateStats(item: any): void {
+        const dsStats: Partial<Types.DatasetStats> = {};
         if ("c4date" in item && "m4date" in item) {
             const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
-            this.setStats({
-                user: item.user,
-                createdDate: dayjs(item.c4date).toDate(),
-                modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
-            });
+            dsStats.user = item.user;
+            dsStats.createdDate = dayjs(item.c4date).toDate();
+            dsStats.modifiedDate = dayjs(`${m4date} ${mtime}:${msec}`).toDate();
         } else if ("id" in item || "changed" in item) {
             // missing keys from API response; check for FTP keys
-            this.setStats({
-                user: item.id,
-                createdDate: item.created ? dayjs(item.created).toDate() : undefined,
-                modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
-            });
+            dsStats.user = item.id;
+            dsStats.createdDate = item.created ? dayjs(item.created).toDate() : undefined;
+            dsStats.modifiedDate = item.changed ? dayjs(item.changed).toDate() : undefined;
         }
+
+        dsStats["lrecl"] = item.lrecl;
+        dsStats["migr"] = item.migr;
+        dsStats["recfm"] = item.recfm;
+        dsStats["vols"] = item.vols;
+        dsStats["vol"] = item.vol;
+
+        this.setStats(dsStats);
     }
 
     public getEncodingInMap(uriPath: string): ZosEncoding {

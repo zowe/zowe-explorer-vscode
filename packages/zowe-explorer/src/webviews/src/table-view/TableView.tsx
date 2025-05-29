@@ -106,7 +106,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
           setVisibleColumns(columns.map((c) => c.headerName ?? c.field));
           setTableData({ ...newData, rows, columns });
         } else {
-          setVisibleColumns(newData.columns.map((c) => c.headerName ?? c.field));
+          setVisibleColumns(newData.columns.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field));
           setTableData(newData);
         }
       }
