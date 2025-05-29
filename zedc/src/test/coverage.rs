@@ -20,6 +20,14 @@ pub fn run_coverage_check(
     verbose: bool,
     filter: Option<String>,
 ) -> Result<()> {
+    let repo_root_pathbuf = match util::find_dir_match(&["package.json"]) {
+        Ok(Some(d)) => d,
+        Ok(None) => anyhow::bail!("Could not find a repo folder containing package.json (used for resolving coverage paths)."),
+        Err(e) => anyhow::bail!("Error finding repo folder: {}", e),
+    };
+
+    std::env::set_current_dir(repo_root_pathbuf)?;
+
     // Get changed files and lines from git diff
     let (mut changed_lines, initial_total_lines_in_patch, repo_root_pathbuf) =
         get_changed_files_and_lines(verbose)?;
