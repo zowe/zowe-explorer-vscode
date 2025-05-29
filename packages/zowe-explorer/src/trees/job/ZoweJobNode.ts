@@ -153,7 +153,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     label: vscode.l10n.t("No spool files found"),
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
-                    profile: this.getProfile(),
+                    profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
                     contextOverride: Constants.INFORMATION_CONTEXT,
                 });
                 return (this.children = [noSpoolNode]);
@@ -206,7 +206,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     label: vscode.l10n.t("No jobs found"),
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
-                    profile: this.getProfile(),
+                    profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
                     contextOverride: Constants.INFORMATION_CONTEXT,
                 });
                 return (this.children = [noJobsNode]);
@@ -233,7 +233,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                         label: nodeTitle,
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         parentNode: this,
-                        profile: this.getProfile(),
+                        profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
                         job,
                     });
                     JobFSProvider.instance.createDirectory(jobNode.resourceUri, { job });
@@ -450,10 +450,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {
                 apiType: ZoweExplorerApiType.Jes,
-                profile: this.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
                 scenario: vscode.l10n.t("Retrieving response from JES list API"),
             });
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
+            await AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
             return;
         }
         return jobsInternal;
@@ -471,10 +471,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {
                 apiType: ZoweExplorerApiType.Jes,
-                profile: this.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
                 scenario: vscode.l10n.t("Retrieving response from JES list API"),
             });
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
+            await AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
             return;
         }
         return spools;

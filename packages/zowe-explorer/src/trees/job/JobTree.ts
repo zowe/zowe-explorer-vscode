@@ -474,7 +474,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 favorite.owner = session.ISession.user;
             }
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
-            if (favorite.getProfile() && favorite.getSession()) {
+            if (Profiles.getInstance().loadNamedProfile(favorite.getProfileName()) && favorite.getSession()) {
                 updatedFavsForProfile.push(favorite);
                 continue;
             }

@@ -1512,6 +1512,12 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
     });
 
     it("returns an empty list of items to paginator when an error is encountered", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn().mockImplementation(() => {
+                return createInstanceOfProfile(createIProfile());
+            }),
+            configurable: true,
+        });
         const sessionNode = new ZoweDatasetNode({
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,

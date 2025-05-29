@@ -353,7 +353,7 @@ export class DatasetActions {
             } else {
                 ZoweLogger.trace(`${selection?.toString()} was profile chosen to allocate a data set.`);
                 currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === selection.label) as IZoweDatasetTreeNode;
-                profile = currSession.getProfile();
+                profile = Profiles.getInstance().loadNamedProfile(currSession.getProfileName());
             }
             quickpick.dispose();
 
@@ -711,7 +711,7 @@ export class DatasetActions {
         );
         if (name) {
             const label = parent.label as string;
-            const profile = parent.getProfile();
+            const profile = Profiles.getInstance().loadNamedProfile(parent.getProfileName());
             let replace: Definitions.ShouldReplace;
             try {
                 replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
@@ -736,7 +736,7 @@ export class DatasetActions {
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     contextOverride: Constants.DS_MEMBER_CONTEXT,
                     parentNode: parent,
-                    profile: parent.getProfile(),
+                    profile: Profiles.getInstance().loadNamedProfile(parent.getProfileName()),
                 });
                 parent.children.push(newNode);
                 await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());

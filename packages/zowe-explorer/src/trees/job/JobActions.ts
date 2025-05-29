@@ -55,7 +55,10 @@ export class JobActions {
                 })
             );
         } catch (error) {
-            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: job.getProfile() });
+            await AuthUtils.errorHandling(error, {
+                apiType: ZoweExplorerApiType.Jes,
+                profile: Profiles.getInstance().loadNamedProfile(job.getProfileName()),
+            });
         }
     }
 
@@ -181,7 +184,7 @@ export class JobActions {
             });
             if (dirUri !== undefined) {
                 for (const job of jobs) {
-                    await ZoweExplorerApiRegister.getJesApi(job.getProfile()).downloadSpoolContent({
+                    await ZoweExplorerApiRegister.getJesApi(Profiles.getInstance().loadNamedProfile(job.getProfileName())).downloadSpoolContent({
                         jobid: job.job.jobid,
                         jobname: job.job.jobname,
                         outDir: dirUri[0].fsPath,
@@ -202,7 +205,7 @@ export class JobActions {
     public static async downloadSingleSpool(nodes: IZoweJobTreeNode[], binary?: boolean): Promise<void> {
         ZoweLogger.trace("job.actions.downloadSingleSpool called.");
         try {
-            if (ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool == null) {
+            if (ZoweExplorerApiRegister.getJesApi(Profiles.getInstance().loadNamedProfile(nodes[0].getProfileName())).downloadSingleSpool == null) {
                 throw Error(vscode.l10n.t("Download single spool operation not implemented by extender. Please contact the extension developer(s)."));
             }
             const dirUri = await Gui.showOpenDialog({
@@ -225,7 +228,9 @@ export class JobActions {
                         );
                     }
                     for (const spool of spools) {
-                        await ZoweExplorerApiRegister.getJesApi(nodes[0].getProfile()).downloadSingleSpool({
+                        await ZoweExplorerApiRegister.getJesApi(
+                            Profiles.getInstance().loadNamedProfile(nodes[0].getProfileName())
+                        ).downloadSingleSpool({
                             jobFile: spool,
                             binary,
                             outDir: dirUri[0].fsPath,
@@ -295,11 +300,16 @@ export class JobActions {
     public static async downloadJcl(job: ZoweJobNode): Promise<void> {
         ZoweLogger.trace("job.actions.downloadJcl called.");
         try {
-            const jobJcl = await ZoweExplorerApiRegister.getJesApi(job.getProfile()).getJclForJob(job.job);
+            const jobJcl = await ZoweExplorerApiRegister.getJesApi(Profiles.getInstance().loadNamedProfile(job.getProfileName())).getJclForJob(
+                job.job
+            );
             const jclDoc = await vscode.workspace.openTextDocument({ language: "jcl", content: jobJcl });
             await Gui.showTextDocument(jclDoc, { preview: false });
         } catch (error) {
-            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: job.getProfile() });
+            await AuthUtils.errorHandling(error, {
+                apiType: ZoweExplorerApiType.Jes,
+                profile: Profiles.getInstance().loadNamedProfile(job.getProfileName()),
+            });
         }
     }
 
@@ -316,7 +326,7 @@ export class JobActions {
             };
             const command = await Gui.showInputBox(options);
             if (command !== undefined) {
-                const profile = job.getProfile();
+                const profile = Profiles.getInstance().loadNamedProfile(job.getProfileName());
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
                     const response = await commandApi.issueMvsCommand(`f ${job.job.jobname},${command}`, profile.profile?.consoleName);
@@ -333,10 +343,14 @@ export class JobActions {
             if (error.toString().includes("non-existing")) {
                 ZoweLogger.error(error);
                 Gui.errorMessage(
-                    vscode.l10n.t("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") + job.getProfile().type
+                    vscode.l10n.t("jobActions.modifyCommand.apiNonExisting", "Not implemented yet for profile of type: ") +
+                        Profiles.getInstance().loadNamedProfile(job.getProfileName()).type
                 );
             } else {
-                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile: job.getProfile() });
+                await AuthUtils.errorHandling(error, {
+                    apiType: ZoweExplorerApiType.Command,
+                    profile: Profiles.getInstance().loadNamedProfile(job.getProfileName()),
+                });
             }
         }
     }
@@ -349,7 +363,7 @@ export class JobActions {
     public static async stopCommand(job: ZoweJobNode): Promise<void> {
         ZoweLogger.trace("job.actions.stopCommand called.");
         try {
-            const profile = job.getProfile();
+            const profile = Profiles.getInstance().loadNamedProfile(job.getProfileName());
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
             if (commandApi) {
                 const response = await commandApi.issueMvsCommand(`p ${job.job.jobname}`, profile.profile?.consoleName);
@@ -367,12 +381,15 @@ export class JobActions {
                 Gui.errorMessage(
                     vscode.l10n.t({
                         message: "Not implemented yet for profile of type: {0}",
-                        args: [job.getProfile().type],
+                        args: [Profiles.getInstance().loadNamedProfile(job.getProfileName()).type],
                         comment: ["Job profile type"],
                     })
                 );
             } else {
-                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile: job.getProfile() });
+                await AuthUtils.errorHandling(error, {
+                    apiType: ZoweExplorerApiType.Command,
+                    profile: Profiles.getInstance().loadNamedProfile(job.getProfileName()),
+                });
             }
         }
     }

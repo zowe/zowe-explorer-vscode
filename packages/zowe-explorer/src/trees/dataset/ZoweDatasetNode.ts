@@ -448,7 +448,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode: this,
                     contextOverride: Constants.DS_FILE_ERROR_MEMBER_CONTEXT,
-                    profile: this.getProfile(),
+                    profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
                 });
                 dsNode.command = { command: "zowe.placeholderCommand", title: "" };
                 dsNode.errorDetails = new imperative.ImperativeError({
@@ -709,7 +709,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         } catch (err) {
             const updated = await AuthUtils.errorHandling(err, {
                 apiType: ZoweExplorerApiType.Mvs,
-                profile: this.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
                 scenario: vscode.l10n.t("Retrieving response from MVS list API"),
             });
             await AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
@@ -765,7 +765,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // Sort patterns alphabetically for proper page traversal with patterns in descending alphabetical order
             dsPatterns.sort((a, b) => a.localeCompare(b));
         }
-        const profile = options?.profile ?? Profiles.getInstance().loadNamedProfile(this.getProfile().name);
+        const profile = options?.profile ?? Profiles.getInstance().loadNamedProfile(this.getProfileName());
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
         if (!mvsApi.getSession(profile)) {
             ZoweLogger.warn("[ZoweDatasetNode.listDatasets] Session undefined for profile " + profile.name);
@@ -813,7 +813,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         } catch (err) {
             const updated = await AuthUtils.errorHandling(err, {
                 apiType: ZoweExplorerApiType.Mvs,
-                profile: this.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
                 scenario: vscode.l10n.t("Retrieving response from MVS list API"),
             });
             await AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
@@ -866,7 +866,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public async listMembers(responses: IZosFilesResponse[], options?: Definitions.DatasetListOpts): Promise<void> {
-        const profile = options?.profile ?? Profiles.getInstance().loadNamedProfile(this.getProfile().name);
+        const profile = options?.profile ?? Profiles.getInstance().loadNamedProfile(this.getProfileName());
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
         if (!mvsApi.getSession(profile)) {
             ZoweLogger.warn("[ZoweDatasetNode.listMembers] Session undefined for profile " + profile.name);
@@ -981,7 +981,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {
                 apiType: ZoweExplorerApiType.Mvs,
-                profile: this.getProfile(),
+                profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
                 scenario: vscode.l10n.t("Retrieving response from MVS list API"),
             });
             await AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
@@ -1027,7 +1027,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     datasetProvider.addFileHistory(criteria);
                 }
             } catch (err) {
-                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: this.getProfile() });
+                await AuthUtils.errorHandling(err, {
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profile: Profiles.getInstance().loadNamedProfile(this.getProfileName()),
+                });
                 throw err;
             }
         }
