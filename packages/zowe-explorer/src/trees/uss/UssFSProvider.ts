@@ -32,6 +32,7 @@ import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { DeferredPromise } from "@zowe/imperative";
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
@@ -429,6 +430,25 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         let file: UssFile | UssDirectory;
+
+        // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
+        // If the extenderTypeReady map does not contain the profile, create a deferred promise for the profile.
+        const profileName = uri.path.split("/")[1];
+        const profileInfo = Profiles.getInstance();
+        const profile = profileInfo.allProfiles.find((prof) => prof.name === profileName);
+        if (profile && profile.type !== "zosmf" && !Profiles.extenderTypeReady.get(profileName)) {
+            const deferredPromise = new DeferredPromise<void>();
+            Profiles.extenderTypeReady.set(profileName, deferredPromise);
+        }
+        const profilePromise = Profiles.extenderTypeReady.get(profileName);
+        const promiseTimeout = 10000;
+        if (profilePromise) {
+            await Promise.race([
+                profilePromise.promise,
+                new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), promiseTimeout)),
+            ]);
+        }
+
         try {
             file = this._lookupAsFile(uri) as UssFile;
         } catch (err) {
