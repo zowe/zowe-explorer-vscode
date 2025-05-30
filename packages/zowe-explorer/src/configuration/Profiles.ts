@@ -1214,16 +1214,16 @@ export class Profiles extends ProfilesCache {
 
     public static extenderTypeReady = new Map();
 
-    public static _resolveTypePromise(extenderType: string): void {
+    public _resolveTypePromise(extenderType: string): void {
         const profInfo = Profiles.getInstance();
         const profilesWithExtenderType = profInfo.allProfiles.filter((profile) => profile.type === extenderType);
         for (const profile of profilesWithExtenderType) {
-            if (this.extenderTypeReady.has(profile.name)) {
-                this.extenderTypeReady.get(profile.name).resolve();
+            if (Profiles.extenderTypeReady.has(profile.name)) {
+                Profiles.extenderTypeReady.get(profile.name).resolve();
             } else {
                 // Prevent deadlocks by setting a resolved promise to avoid setting a new promise
-                this.extenderTypeReady.set(profile.name, new DeferredPromise());
-                this.extenderTypeReady.get(profile.name).resolve();
+                Profiles.extenderTypeReady.set(profile.name, new DeferredPromise());
+                Profiles.extenderTypeReady.get(profile.name).resolve();
             }
         }
     }
