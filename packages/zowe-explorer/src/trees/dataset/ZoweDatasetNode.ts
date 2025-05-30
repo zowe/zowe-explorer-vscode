@@ -180,6 +180,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             dsStats.modifiedDate = item.changed ? dayjs(item.changed).toDate() : undefined;
         }
 
+        dsStats["dsorg"] = item.dsorg;
         dsStats["lrecl"] = item.lrecl;
         dsStats["migr"] = item.migr;
         dsStats["recfm"] = item.recfm;
@@ -207,7 +208,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public setStats(stats: Partial<Types.DatasetStats>): void {
         const dsEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DsEntry | PdsEntry;
-        if (dsEntry == null || FsDatasetsUtils.isPdsEntry(dsEntry)) {
+        if (dsEntry == null) {
             return;
         }
 
@@ -216,7 +217,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public getStats(): Types.DatasetStats {
         const dsEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DsEntry | PdsEntry;
-        if (dsEntry == null || FsDatasetsUtils.isPdsEntry(dsEntry)) {
+        if (dsEntry == null) {
             return;
         }
 
