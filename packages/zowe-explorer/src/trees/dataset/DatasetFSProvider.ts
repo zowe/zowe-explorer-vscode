@@ -36,6 +36,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import * as dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { DeferredPromise, ProfileInfo } from "@zowe/imperative";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
@@ -71,6 +72,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         ZoweLogger.trace(`[DatasetFSProvider] stat called with ${uri.toString()}`);
         let isFetching = false;
+
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
             if (queryParams.has("conflict")) {
@@ -505,6 +507,26 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let ds: DsEntry | DirEntry;
         const urlQuery = new URLSearchParams(uri.query);
         const isConflict = urlQuery.has("conflict");
+
+        // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
+        // If the extenderTypeReady map does not contain the profile, create a deferred promise for the profile.
+        const profileName = uri.path.split("/")[1];
+        const profInfo = new ProfileInfo("zowe");
+        await profInfo.readProfilesFromDisk();
+
+        if (
+            !profInfo.getAllProfiles("zosmf").filter((profile) => profile.profName === profileName) &&
+            profInfo.getTeamConfig().api.profiles.exists(profileName) &&
+            !Profiles.extenderTypeReady.get(profileName)
+        ) {
+            const deferredPromise = new DeferredPromise<void>();
+            Profiles.extenderTypeReady.set(profileName, deferredPromise);
+        }
+        const profilePromise = Profiles.extenderTypeReady.get(profileName);
+        if (profilePromise) {
+            await profilePromise.promise;
+        }
+
         try {
             ds = this._lookupAsFile(uri) as DsEntry;
         } catch (err) {

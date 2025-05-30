@@ -1210,4 +1210,14 @@ export class Profiles extends ProfilesCache {
         };
         return [qpItemAll, qpItemCurrent];
     }
+
+    public static extenderTypeReady = new Map();
+
+    public static _resolveTypePromise(extenderType: string): void {
+        const profInfo = Profiles.getInstance();
+        const profilesWithExtenderType = profInfo.allProfiles.filter((profile) => profile.type === extenderType);
+        for (const profile of profilesWithExtenderType) {
+            this.extenderTypeReady.get(profile.name).resolve();
+        }
+    }
 }
