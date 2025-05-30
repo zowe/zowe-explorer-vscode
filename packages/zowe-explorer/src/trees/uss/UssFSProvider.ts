@@ -32,7 +32,7 @@ import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
-import { DeferredPromise, ProfileInfo } from "@zowe/imperative";
+import { DeferredPromise } from "@zowe/imperative";
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider

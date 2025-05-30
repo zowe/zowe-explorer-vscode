@@ -36,7 +36,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import * as dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
-import { DeferredPromise, ProfileInfo } from "@zowe/imperative";
+import { DeferredPromise } from "@zowe/imperative";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
