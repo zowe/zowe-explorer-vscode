@@ -26,7 +26,7 @@ export class DatasetTableView {
     //         },
     //     },
     // };
-    // These fields are typically included in dataset metadata.
+    // These fields are typically included in data set metadata.
     private static expectedFields = [
         {
             field: "dsname",
@@ -38,6 +38,10 @@ export class DatasetTableView {
             headerName: l10n.t("Member Name"),
             initialSort: "asc",
         } as Table.ColumnOpts,
+        {
+            field: "dsorg",
+            headerName: l10n.t("Data Set Organization"),
+        },
         {
             field: "createdDate",
             headerName: l10n.t("Creation Date"),
@@ -53,8 +57,7 @@ export class DatasetTableView {
         { field: "user", headerName: l10n.t("Last Modified By") },
     ];
 
-    private static showHide = this.expectedFields.map((f) => f.initialHide);
-
+    private static shouldShow: Record<string, boolean> = {};
     private static table: Table.Instance;
 
     private static buildTitle(profileNode: IZoweDatasetTreeNode): string {
@@ -89,7 +92,18 @@ export class DatasetTableView {
     private static mapDsNodeToRow(dsNode: IZoweDatasetTreeNode): Table.RowData {
         const dsStats = dsNode.getStats();
 
+        const fieldsToCheck = ["createdDate", "dsorg", "modifiedDate", "lrecl", "migr", "recfm", "user"];
+        fieldsToCheck.forEach((field) => {
+            this.shouldShow[field] ||= dsStats?.[field] != null;
+        });
+
+        this.shouldShow["volumes"] ||= dsStats?.["vols"] != null || dsStats?.["vol"] != null;
+        this.shouldShow["member"] ||= SharedContext.isDsMember(dsNode);
+        this.shouldShow["dsname"] ||= !SharedContext.isDsMember(dsNode);
+
         if (SharedContext.isDsMember(dsNode)) {
+            this.shouldShow["member"] = true;
+            this.shouldShow["dsname"] = false;
             return {
                 member: dsNode.label.toString(),
                 createdDate: dsStats?.createdDate?.toLocaleTimeString(),
@@ -100,12 +114,15 @@ export class DatasetTableView {
                 user: dsStats?.["user"],
             };
         } else {
+            this.shouldShow["dsname"] = true;
+            this.shouldShow["member"] = false;
             return {
                 dsname: dsNode.label.toString(),
+                dsorg: dsStats?.["dsorg"],
                 createdDate: dsStats?.createdDate?.toLocaleTimeString(),
                 modifiedDate: dsStats?.modifiedDate?.toLocaleTimeString(),
                 lrecl: dsStats?.["lrecl"],
-                migr: dsStats?.["migr"],
+                migr: dsStats?.["migr"] ?? "NO",
                 recfm: dsStats?.["recfm"],
                 volumes: dsStats?.["vols"] ?? dsStats?.["vol"],
             };
@@ -139,7 +156,7 @@ export class DatasetTableView {
                         ...this.expectedFields.map((field) => ({
                             filter: true,
                             ...field,
-                            initialHide: field.field === "member" && rows.some((r) => r["dsname"] != null),
+                            initialHide: this.shouldShow[field.field] === false,
                         })),
                         { field: "actions", hide: true },
                     ]
@@ -166,7 +183,7 @@ export class DatasetTableView {
             return;
         }
 
-        await this.cacheChildren(selectedNodes[0]);
+        this.cacheChildren(selectedNodes[0]);
         await TableViewProvider.getInstance().setTableView(await DatasetTableView.generateTable(context, selectedNodes[0]));
     }
 }
