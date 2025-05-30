@@ -32,6 +32,7 @@ import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { DeferredPromise, ProfileInfo } from "@zowe/imperative";
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
@@ -429,6 +430,26 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         let file: UssFile | UssDirectory;
+
+        // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
+        // If the extenderTypeReady map does not contain the profile, create a deferred promise for the profile.
+        const profileName = uri.path.split("/")[1];
+        const profileInfo = new ProfileInfo("zowe");
+        await profileInfo.readProfilesFromDisk();
+
+        if (
+            profileInfo.getAllProfiles("zosmf").filter((profile) => profile.profName === profileName).length <= 0 &&
+            profileInfo.getTeamConfig().api.profiles.exists(profileName) &&
+            !Profiles.extenderTypeReady.get(profileName)
+        ) {
+            const deferredPromise = new DeferredPromise<void>();
+            Profiles.extenderTypeReady.set(profileName, deferredPromise);
+        }
+        const profilePromise = Profiles.extenderTypeReady.get(profileName);
+        if (profilePromise) {
+            await profilePromise.promise;
+        }
+
         try {
             file = this._lookupAsFile(uri) as UssFile;
         } catch (err) {

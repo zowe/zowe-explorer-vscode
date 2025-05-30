@@ -515,7 +515,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         await profInfo.readProfilesFromDisk();
 
         if (
-            !profInfo.getAllProfiles("zosmf").filter((profile) => profile.profName === profileName) &&
+            profInfo.getAllProfiles("zosmf").filter((profile) => profile.profName === profileName).length <= 0 &&
             profInfo.getTeamConfig().api.profiles.exists(profileName) &&
             !Profiles.extenderTypeReady.get(profileName)
         ) {
