@@ -16,7 +16,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where an incorrect profile name is shown in the output for the "Issue Unix Command" function when an SSH profile is required to issue commands. [#3646](https://github.com/zowe/zowe-explorer-vscode/issues/3646)
 - Improved integrated terminal behavior to match standard terminal functionality. Now, users can smoothly maintain proper cursor position when typing and backspacing. [#3391](https://github.com/zowe/zowe-explorer-vscode/issues/3391)
 - Fixed an issue in the `Switch Authentication` method, where changing from token-based authentication to username and password authentication did not properly invalidate the token. [#3654](https://github.com/zowe/zowe-explorer-vscode/issues/3654)
-- Fixed an issue where an unhandled exception occurs when building profile hover information if the `autoStore` property is missing from the Zowe team configuration. [#3643](https://github.com/zowe/zowe-explorer-vscode/issues/3643)
+- Fixed an issue where an unhandled exception occurs when creating profile hover information if the `autoStore` property is missing from the Zowe team configuration. [#3643](https://github.com/zowe/zowe-explorer-vscode/issues/3643)
 
 ## `3.2.0`
 
