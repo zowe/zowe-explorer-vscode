@@ -36,6 +36,7 @@ import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { ZoweExplorerExtender } from "../extending/ZoweExplorerExtender";
 import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
+import { DeferredPromise } from "@zowe/imperative";
 
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
@@ -1217,7 +1218,13 @@ export class Profiles extends ProfilesCache {
         const profInfo = Profiles.getInstance();
         const profilesWithExtenderType = profInfo.allProfiles.filter((profile) => profile.type === extenderType);
         for (const profile of profilesWithExtenderType) {
-            this.extenderTypeReady.get(profile.name).resolve();
+            if (this.extenderTypeReady.has(profile.name)) {
+                this.extenderTypeReady.get(profile.name).resolve();
+            } else {
+                // Prevent deadlocks by setting a resolved promise to avoid setting a new promise
+                this.extenderTypeReady.set(profile.name, new DeferredPromise());
+                this.extenderTypeReady.get(profile.name).resolve();
+            }
         }
     }
 }
