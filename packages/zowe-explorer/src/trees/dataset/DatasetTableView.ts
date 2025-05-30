@@ -10,24 +10,26 @@
  */
 
 import { IZoweDatasetTreeNode, Table, TableBuilder, TableViewProvider } from "@zowe/zowe-explorer-api";
-import { ExtensionContext, l10n } from "vscode";
+import { commands, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
 import { SharedContext } from "../shared/SharedContext";
+import { SharedTreeProviders } from "../shared/SharedTreeProviders";
+import { posix } from "path";
 
 export class DatasetTableView {
-    private static cachedChildren: IZoweDatasetTreeNode[];
-    // private static contextOptions: Record<string, Table.ContextMenuOpts> = {
-    //     displayInTree: {
-    //         title: l10n.t("Display in Tree"),
-    //         command: "display-in-tree",
-    //         callback: {
-    //             fn: DatasetTableView.displayInTree,
-    //             typ: "single-row",
-    //         },
-    //     },
-    // };
+    private cachedChildren: IZoweDatasetTreeNode[];
+    private contextOptions: Record<string, Table.ContextMenuOpts> = {
+        displayInTree: {
+            title: l10n.t("Display in Tree"),
+            command: "display-in-tree",
+            callback: {
+                fn: DatasetTableView.displayInTree,
+                typ: "single-row",
+            },
+        },
+    };
     // These fields are typically included in data set metadata.
-    private static expectedFields = [
+    private expectedFields = [
         {
             field: "dsname",
             headerName: l10n.t("Data Set Name"),
@@ -56,24 +58,55 @@ export class DatasetTableView {
         { field: "volumes", headerName: l10n.t("Volumes") },
         { field: "user", headerName: l10n.t("Last Modified By") },
     ];
+    private rowActions: Record<string, Table.ActionOpts> = {
+        openInEditor: {
+            title: l10n.t("Open"),
+            command: "open",
+            callback: { fn: DatasetTableView.openInEditor, typ: "multi-row" },
+            condition: (rows: Table.RowData[]) => rows.every((r) => (r["dsorg"] as string)?.startsWith("PS")),
+        },
+    };
 
-    private static shouldShow: Record<string, boolean> = {};
-    private static table: Table.Instance;
+    private static async openInEditor(this: void, _view: Table.View, rows: Record<number, Table.RowData>): Promise<void> {
+        const allRows = Object.values(rows);
+        for (const row of allRows) {
+            await commands.executeCommand("vscode.open", Uri.parse(row.uri as string));
+        }
+    }
 
-    private static buildTitle(profileNode: IZoweDatasetTreeNode): string {
+    private static _instance: DatasetTableView;
+    private constructor() {}
+
+    private profileName: string = "";
+    private shouldShow: Record<string, boolean> = {};
+    private table: Table.Instance;
+
+    public static getInstance(): DatasetTableView {
+        if (!DatasetTableView._instance) {
+            DatasetTableView._instance = new DatasetTableView();
+        }
+
+        return DatasetTableView._instance;
+    }
+
+    private buildTitle(profileNode: IZoweDatasetTreeNode): string {
         if (profileNode.pattern) {
             return l10n.t({
-                message: `[${profileNode.label.toString()}]: {0}`,
+                message: `[${this.profileName}]: {0}`,
                 args: [profileNode.pattern],
                 comment: ["Data Set Search Pattern"],
             });
         }
 
-        return l10n.t(`[${profileNode.label.toString()}]: *`);
+        return l10n.t(`[${this.profileName}]: *`);
     }
 
-    private static cacheChildren(sessionNode: IZoweDatasetTreeNode): void {
+    private cacheChildren(sessionNode: IZoweDatasetTreeNode): void {
         this.cachedChildren = sessionNode.children.filter((child) => !SharedContext.isInformation(child));
+    }
+
+    private isDsMemberUri(uri: string): boolean {
+        return uri.split("/").length > 3;
     }
 
     /**
@@ -82,14 +115,23 @@ export class DatasetTableView {
      * @param data The selected job (row contents) to reveal in the tree view.
      */
     public static async displayInTree(this: void, _view: Table.View, data: Table.RowInfo): Promise<void> {
-        // TODO: Determine if PDS member or PDS/DS
-        // const child = DatasetTableView.cachedChildren.find((c) => data.row.jobid === c.job?.jobid);
-        // if (child) {
-        //     await SharedTreeProviders.ds.getTreeView().reveal(child, { expand: true });
-        // }
+        const datasetTable = DatasetTableView.getInstance();
+        const isDsMember = datasetTable.isDsMemberUri(data.row.uri as string);
+        if (isDsMember) {
+            // First find the parent data set
+            const parentUri = posix.resolve(data.row.uri as string, "..");
+            const parentDsNode = datasetTable.cachedChildren.find((child) => child.resourceUri?.toString() === parentUri);
+            if (parentDsNode) {
+                const child = parentDsNode.children?.find((c) => c.label === data.row.member);
+                await SharedTreeProviders.ds.getTreeView().reveal(child, { focus: true });
+            }
+        } else {
+            const dsNode = datasetTable.cachedChildren.find((child) => child.resourceUri?.toString() === data.row.uri);
+            await SharedTreeProviders.ds.getTreeView().reveal(dsNode, { expand: true });
+        }
     }
 
-    private static mapDsNodeToRow(dsNode: IZoweDatasetTreeNode): Table.RowData {
+    private mapDsNodeToRow(dsNode: IZoweDatasetTreeNode): Table.RowData {
         const dsStats = dsNode.getStats();
 
         const fieldsToCheck = ["createdDate", "dsorg", "modifiedDate", "lrecl", "migr", "recfm", "user"];
@@ -112,6 +154,7 @@ export class DatasetTableView {
                 migr: dsStats?.["migr"],
                 recfm: dsStats?.["recfm"],
                 user: dsStats?.["user"],
+                uri: dsNode.resourceUri?.toString(),
             };
         } else {
             this.shouldShow["dsname"] = true;
@@ -125,6 +168,7 @@ export class DatasetTableView {
                 migr: dsStats?.["migr"] ?? "NO",
                 recfm: dsStats?.["recfm"],
                 volumes: dsStats?.["vols"] ?? dsStats?.["vol"],
+                uri: dsNode.resourceUri?.toString(),
             };
         }
     }
@@ -134,8 +178,8 @@ export class DatasetTableView {
      * @param context The VS Code extension context (to provide to the table view)
      * @param profileNode The profile node selected for the "Show as Table" action
      */
-    private static async generateTable(context: ExtensionContext, profileNode: IZoweDatasetTreeNode): Promise<Table.Instance> {
-        const rows = DatasetTableView.cachedChildren.map((item) => this.mapDsNodeToRow(item));
+    private async generateTable(context: ExtensionContext, profileNode: IZoweDatasetTreeNode): Promise<Table.Instance> {
+        const rows = this.cachedChildren.map((item) => this.mapDsNodeToRow(item));
         if (this.table) {
             await this.table.setTitle(this.buildTitle(profileNode));
             await this.table.setContent(rows);
@@ -161,6 +205,8 @@ export class DatasetTableView {
                         { field: "actions", hide: true },
                     ]
                 )
+                .addContextOption("all", this.contextOptions.displayInTree)
+                .addRowAction("all", this.rowActions.openInEditor)
                 .build();
         }
 
@@ -174,7 +220,7 @@ export class DatasetTableView {
      * @param node The Job session node that was selected for the action
      * @param nodeList Passed to `SharedUtils.getSelectedNodeList` to get final list of selected nodes
      */
-    public static async handleCommand(context: ExtensionContext, node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[]): Promise<void> {
+    public async handleCommand(context: ExtensionContext, node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[]): Promise<void> {
         const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
         if (selectedNodes.length !== 1) {
             return;
@@ -183,7 +229,8 @@ export class DatasetTableView {
             return;
         }
 
+        this.profileName = selectedNodes[0].label.toString();
         this.cacheChildren(selectedNodes[0]);
-        await TableViewProvider.getInstance().setTableView(await DatasetTableView.generateTable(context, selectedNodes[0]));
+        await TableViewProvider.getInstance().setTableView(await this.generateTable(context, selectedNodes[0]));
     }
 }

@@ -206,7 +206,9 @@ export class DatasetInit {
         );
 
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.tableView", async (node, nodeList) => DatasetTableView.handleCommand(context, node, nodeList))
+            vscode.commands.registerCommand("zowe.ds.tableView", async (node, nodeList) =>
+                DatasetTableView.getInstance().handleCommand(context, node, nodeList)
+            )
         );
 
         SharedInit.initSubscribers(context, datasetProvider);
