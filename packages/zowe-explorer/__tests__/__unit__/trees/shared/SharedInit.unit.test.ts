@@ -89,7 +89,7 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.displayReleaseNotes",
-                mock: [{ spy: jest.spyOn(ReleaseNotes, "show"), arg: [test.context, true] }],
+                mock: [{ spy: jest.spyOn(ReleaseNotes, "display"), arg: [test.context, true] }],
             },
             {
                 name: "zowe.promptCredentials",
