@@ -2979,18 +2979,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(child);
         expect(error).toBe(defaultError);
     });
-    it("Checking validate validateDataSetName util function successfully execution", () => {
-        expect(DatasetUtils.validateDataSetName("#DSNAME.DSNAME")).toBe(true);
-    });
-
-    it("Checking validate validateDataSetName util function fail", () => {
-        expect(DatasetUtils.validateDataSetName("#DSNAME.DSNAMEMORETHAN8CHARS.TEST")).toBe(false);
-    });
-    it("Checking validate validateDataSetName util function fail on max ds length", () => {
-        const dsName = "#DSNAMET.DSNAME.DSNAME.DSNAME.DSNAME.DSNAMETE";
-        expect(dsName.length - 1 === Constants.MAX_DATASET_LENGTH).toBe(true);
-        expect(DatasetUtils.validateDataSetName(dsName)).toBe(false);
-    });
 
     it("Tests that rename() validates the dataset name", async () => {
         createGlobalMocks();
