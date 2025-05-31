@@ -89,6 +89,25 @@ export class DatasetUtils {
     }
 
     /**
+     * Extracts the data set name and member name from a string like 'DATA.SET(NAME)'.
+     * Returns an object with dataSetName and memberName properties.
+     */
+    public static extractDataSetAndMember(dsName: string): { dataSetName: string; memberName: string } {
+        ZoweLogger.trace("dataset.utils.extractDataSetAndMember called.");
+        const match = dsName.match(Constants.DS_HAS_MEMBER_REGEX_CHECK);
+        if (match) {
+            return {
+                dataSetName: match[1],
+                memberName: match[2],
+            };
+        }
+        return {
+            dataSetName: dsName,
+            memberName: "",
+        };
+    }
+
+    /**
      * Get the file extension for a Data Set (or data set member) based on its name or its PDS name.
      */
     public static getExtension(label: string): string | null {
