@@ -17,6 +17,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### Bug fixes
 
 - Fixed error message shown when creating a config file that already exists. [#3647](https://github.com/zowe/zowe-explorer-vscode/issues/3647)
+- Fixed an issue where using functions such as `ZoweVsCodeExtension.updateCredentials` caused extender log4js configurations to be overwritten. [#3587](https://github.com/zowe/zowe-explorer-vscode/issues/3587)
 
 ## `3.2.0`
 

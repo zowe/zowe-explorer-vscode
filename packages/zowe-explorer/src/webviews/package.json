@@ -34,7 +34,7 @@
   "devDependencies": {
     "@preact/preset-vite": "^2.10.1",
     "typescript": "^5.3.3",
-    "vite": "^6.2.5",
+    "vite": "^6.2.7",
     "vite-plugin-checker": "^0.9.1",
     "vite-plugin-static-copy": "^2.3.0"
   }
