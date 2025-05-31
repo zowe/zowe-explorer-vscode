@@ -230,7 +230,7 @@ async function createGlobalMocks() {
             "zowe.updateSecureCredentials",
             "zowe.manualPoll",
             "zowe.editHistory",
-            "zowe.showReleaseNotes",
+            "zowe.displayReleaseNotes",
             "zowe.promptCredentials",
             "zowe.profileManagement",
             "zowe.updateSchema",

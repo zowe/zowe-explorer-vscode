@@ -80,7 +80,7 @@ export class Constants {
     public static readonly SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
     public static readonly SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS = "zowe.security.checkForCustomCredentialManagers";
     public static readonly SETTINGS_DATASETS_PER_PAGE = "zowe.ds.paginate.dataSetsPerPage";
-    public static readonly SETTINGS_SHOW_RELEASE_NOTES = "zowe.settings.showReleaseNotes";
+    public static readonly SETTINGS_DISPLAY_RELEASE_NOTES = "zowe.settings.displayReleaseNotes";
     public static readonly LOGGER_SETTINGS = "zowe.logger";
     public static readonly SETTINGS_OVERRIDE_WITH_ENV_VAR = "zowe.settings.overrideWithEnvironmentVariables";
     public static EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
@@ -279,14 +279,14 @@ export class Constants {
         CMDS: "cmds-panel-tab",
     };
     public static readonly RELEASE_NOTES_OPTS_KEYS = {
-        ALWAYS: "Always show",
+        ALWAYS: "Always display",
         DISABLE_FOR_THIS_VERSION: "Disable for this version",
-        NEVER: "Never show",
+        NEVER: "Never display",
     };
     public static readonly RELEASE_NOTES_OPTS_LABELS = {
-        [Constants.RELEASE_NOTES_OPTS_KEYS.ALWAYS]: vscode.l10n.t("Always show"),
+        [Constants.RELEASE_NOTES_OPTS_KEYS.ALWAYS]: vscode.l10n.t("Always display"),
         [Constants.RELEASE_NOTES_OPTS_KEYS.DISABLE_FOR_THIS_VERSION]: vscode.l10n.t("Disable for this version"),
-        [Constants.RELEASE_NOTES_OPTS_KEYS.NEVER]: vscode.l10n.t("Never show"),
+        [Constants.RELEASE_NOTES_OPTS_KEYS.NEVER]: vscode.l10n.t("Never display"),
     };
 }
 

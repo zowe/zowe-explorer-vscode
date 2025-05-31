@@ -93,13 +93,13 @@ export class SharedInit {
         );
 
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.showReleaseNotes", () => {
-                ReleaseNotes.show(context, true); // Always show when command is run
+            vscode.commands.registerCommand("zowe.displayReleaseNotes", () => {
+                ReleaseNotes.display(context, true); // Always display when command is run
             })
         );
 
-        // Show release notes on activation
-        ReleaseNotes.show(context, false);
+        // Display release notes on activation
+        ReleaseNotes.display(context, false);
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {

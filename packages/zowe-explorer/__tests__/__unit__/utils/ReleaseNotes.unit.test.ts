@@ -83,42 +83,42 @@ describe("ReleaseNotes Webview", () => {
     });
 
     describe("Release notes display logic", () => {
-        it("should show release notes if setting is 'always'", () => {
+        it("should display release notes if setting is 'always'", () => {
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS_KEYS.ALWAYS);
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
 
-            ReleaseNotes.show(context, false);
+            ReleaseNotes.display(context, false);
             assignPanelToInstance();
             expect(ReleaseNotes.instance).toBeDefined();
         });
 
-        it("should not show release notes if setting is 'never'", () => {
+        it("should not display release notes if setting is 'never'", () => {
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS_KEYS.NEVER);
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
 
-            ReleaseNotes.show(context, false);
+            ReleaseNotes.display(context, false);
             expect(ReleaseNotes.instance).toBeUndefined();
         });
 
-        it("should only show release notes if version changed for 'disableForThisVersion'", () => {
+        it("should only display release notes if version changed for 'disableForThisVersion'", () => {
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS_KEYS.DISABLE_FOR_THIS_VERSION);
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
 
-            ReleaseNotes.show(context, false);
+            ReleaseNotes.display(context, false);
             assignPanelToInstance();
             expect(ReleaseNotes.instance).toBeDefined();
 
-            // If version is the same, should not show
+            // If version is the same, should not display
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.2");
             (ReleaseNotes as any).instance = undefined;
-            ReleaseNotes.show(context, false);
+            ReleaseNotes.display(context, false);
             expect(ReleaseNotes.instance).toBeUndefined();
         });
 
-        it("should always show release notes if force=true", () => {
+        it("should Always display release notes if force=true", () => {
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS_KEYS.NEVER);
 
-            ReleaseNotes.show(context, true);
+            ReleaseNotes.display(context, true);
             assignPanelToInstance();
             expect(ReleaseNotes.instance).toBeDefined();
         });
@@ -131,7 +131,7 @@ describe("ReleaseNotes Webview", () => {
             const revealSpy = jest.fn();
             (ReleaseNotes.instance as any).panel = { reveal: revealSpy, onDidDispose: jest.fn() };
 
-            ReleaseNotes.show(context, false);
+            ReleaseNotes.display(context, false);
 
             expect(revealSpy).toHaveBeenCalled();
         });
@@ -144,19 +144,19 @@ describe("ReleaseNotes Webview", () => {
             const rn = new ReleaseNotes(context, "3.2");
             await rn.onDidReceiveMessage({ command: Constants.RELEASE_NOTES_OPTS_KEYS.NEVER });
             expect(SettingsConfig.setDirectValue).toHaveBeenCalledWith(
-                Constants.SETTINGS_SHOW_RELEASE_NOTES,
+                Constants.SETTINGS_DISPLAY_RELEASE_NOTES,
                 Constants.RELEASE_NOTES_OPTS_KEYS.NEVER
             );
 
             await rn.onDidReceiveMessage({ command: Constants.RELEASE_NOTES_OPTS_KEYS.DISABLE_FOR_THIS_VERSION });
             expect(SettingsConfig.setDirectValue).toHaveBeenCalledWith(
-                Constants.SETTINGS_SHOW_RELEASE_NOTES,
+                Constants.SETTINGS_DISPLAY_RELEASE_NOTES,
                 Constants.RELEASE_NOTES_OPTS_KEYS.DISABLE_FOR_THIS_VERSION
             );
 
             await rn.onDidReceiveMessage({ command: Constants.RELEASE_NOTES_OPTS_KEYS.ALWAYS });
             expect(SettingsConfig.setDirectValue).toHaveBeenCalledWith(
-                Constants.SETTINGS_SHOW_RELEASE_NOTES,
+                Constants.SETTINGS_DISPLAY_RELEASE_NOTES,
                 Constants.RELEASE_NOTES_OPTS_KEYS.ALWAYS
             );
         });
@@ -182,7 +182,7 @@ describe("ReleaseNotes Webview", () => {
     describe("Notes extraction", () => {
         it("should extract all notes for 3.2.x versions", () => {
             const rn = new ReleaseNotes(context, "3.2");
-            const notes = rn.extractCurrentVersionNotes(changelog);
+            const notes = rn.extractCurrentVersionNotes(changelog, "release notes");
             expect(notes).toContain("Patch for 3.2.2");
             expect(notes).toContain("Patch for 3.2.1");
             expect(notes).toContain("Added feature");
@@ -192,8 +192,8 @@ describe("ReleaseNotes Webview", () => {
 
         it("should handle missing changelog entries gracefully", () => {
             const rn = new ReleaseNotes(context, "4.0");
-            const notes = rn.extractCurrentVersionNotes(changelog);
-            expect(notes).toContain("No changelog entries found for this version.");
+            const notes = rn.extractCurrentVersionNotes(changelog, "changelog");
+            expect(notes).toContain("No {0} entries found for this version.");
         });
 
         it("should return extracted notes when changelog file is read successfully", async () => {
@@ -217,8 +217,8 @@ describe("ReleaseNotes Webview", () => {
 
         it("should handle missing release notes entries gracefully", () => {
             const rn = new ReleaseNotes(context, "4.0");
-            const notes = rn.extractCurrentVersionNotes("## `3.2.0`\n- Added feature release\n\n## `3.1.0`\n- Old stuff release");
-            expect(notes).toContain("No changelog entries found for this version.");
+            const notes = rn.extractCurrentVersionNotes("## `3.2.0`\n- Added feature release\n\n## `3.1.0`\n- Old stuff release", "release notes");
+            expect(notes).toBe("No {0} entries found for this version.");
         });
     });
 
@@ -227,7 +227,7 @@ describe("ReleaseNotes Webview", () => {
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(Constants.RELEASE_NOTES_OPTS_KEYS.ALWAYS);
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
 
-            ReleaseNotes.show(context, false);
+            ReleaseNotes.display(context, false);
             assignPanelToInstance();
 
             const rn = new ReleaseNotes(context, "3.2");

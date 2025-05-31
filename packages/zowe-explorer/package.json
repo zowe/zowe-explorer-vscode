@@ -710,8 +710,8 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.showReleaseNotes",
-        "title": "%zowe.showReleaseNotes%",
+        "command": "zowe.displayReleaseNotes",
+        "title": "%zowe.displayReleaseNotes%",
         "category": "Zowe Explorer"
       }
     ],
@@ -1658,7 +1658,7 @@
           "group": "navigation"
         },
         {
-          "command": "zowe.showReleaseNotes",
+          "command": "zowe.displayReleaseNotes",
           "when": "true"
         }
       ]
@@ -2029,20 +2029,20 @@
           "description": "%zowe.settings.requestTimeout%",
           "scope": "window"
         },
-        "zowe.settings.showReleaseNotes": {
+        "zowe.settings.displayReleaseNotes": {
           "type": "string",
-          "default": "Always show",
+          "default": "Always display",
           "enum": [
-            "Always show",
+            "Always display",
             "Disable for this version",
-            "Never show"
+            "Never display"
           ],
           "enumDescriptions": [
-            "%zowe.settings.alwaysShowReleaseNotes%",
+            "%zowe.settings.alwaysDisplayReleaseNotes%",
             "%zowe.settings.disableForThisVersion%",
-            "%zowe.settings.neverShowReleaseNotes%"
+            "%zowe.settings.neverDisplayReleaseNotes%"
           ],
-          "description": "%zowe.settings.showReleaseNotes%",
+          "description": "%zowe.settings.displayReleaseNotes%",
           "scope": "window"
         }
       }

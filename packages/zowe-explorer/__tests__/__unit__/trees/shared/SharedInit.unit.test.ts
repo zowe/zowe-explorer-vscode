@@ -88,7 +88,7 @@ describe("Test src/shared/extension", () => {
                 mock: [{ spy: jest.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders] }],
             },
             {
-                name: "zowe.showReleaseNotes",
+                name: "zowe.displayReleaseNotes",
                 mock: [{ spy: jest.spyOn(ReleaseNotes, "show"), arg: [test.context, true] }],
             },
             {

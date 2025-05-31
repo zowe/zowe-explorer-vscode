@@ -24,7 +24,7 @@ export function App(): JSX.Element {
   const [releaseNotes, setReleaseNotes] = useState<string | null>(null);
   const [changelog, setChangelog] = useState<string | null>(null);
   const [version, setVersion] = useState<string | null>(null);
-  const [showOption, setShowOption] = useState<string>("");
+  const [displayOption, setDisplayOption] = useState<string>("");
   const [dropdownOptions, setDropdownOptions] = useState<Record<string, string>>({});
   const [versionOptions, setVersionOptions] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"releaseNotes" | "changelog">("releaseNotes");
@@ -39,7 +39,7 @@ export function App(): JSX.Element {
         return;
       }
 
-      const { releaseNotes, changelog, version, showReleaseNotesSetting, dropdownOptions, versionOptions } = event.data;
+      const { releaseNotes, changelog, version, displayReleaseNotesSetting, dropdownOptions, versionOptions } = event.data;
 
       if (releaseNotes !== undefined) {
         setReleaseNotes(releaseNotes);
@@ -50,8 +50,8 @@ export function App(): JSX.Element {
       if (version !== undefined) {
         setVersion(version);
       }
-      if (showReleaseNotesSetting !== undefined) {
-        setShowOption(showReleaseNotesSetting);
+      if (displayReleaseNotesSetting !== undefined) {
+        setDisplayOption(displayReleaseNotesSetting);
       }
       if (dropdownOptions !== undefined) {
         setDropdownOptions(dropdownOptions);
@@ -65,7 +65,7 @@ export function App(): JSX.Element {
 
   const handleDropdownChange = (event: JSX.TargetedEvent<HTMLSelectElement>) => {
     const selectedKey = event.currentTarget.value;
-    setShowOption(selectedKey);
+    setDisplayOption(selectedKey);
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedKey });
   };
 
@@ -89,16 +89,16 @@ export function App(): JSX.Element {
     <div className="releaseNotesRoot">
       <header className="heroBanner">
         <h1 className="heroTitle">{l10n.t("What's New in Zowe Explorer {0}", version ?? "")}</h1>
-        <p className="heroSubtitle">{l10n.t("Here you can find the latest updates and features.")}</p>
+        <p className="heroSubtitle">{l10n.t("You can find the latest updates and features here.")}</p>
       </header>
       <div className="releaseNotesCard">
         <div className="releaseNotesDropdownsLabelsRow">
-          <div className="releaseNotesDropdownLabelText">{l10n.t("Select when to show release notes")}</div>
-          <div className="releaseNotesDropdownLabelText">{l10n.t("Select the version to show release notes for")}</div>
+          <div className="releaseNotesDropdownLabelText">{l10n.t("Select when to display release notes")}</div>
+          <div className="releaseNotesDropdownLabelText">{l10n.t("Select the version to display release notes for")}</div>
         </div>
         <div className="releaseNotesDropdownsRow">
           <div className="releaseNotesDropdownCol">
-            <VSCodeDropdown value={showOption} onChange={handleDropdownChange} className="releaseNotesDropdown">
+            <VSCodeDropdown value={displayOption} onChange={handleDropdownChange} className="releaseNotesDropdown">
               {Object.entries(dropdownOptions).map(([key, label]) => (
                 <VSCodeOption value={key} key={key}>
                   {label}
