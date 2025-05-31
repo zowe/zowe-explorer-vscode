@@ -1089,9 +1089,8 @@ export class DatasetActions {
 
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            const notActiveEditorMsg = vscode.l10n.t("No editor with a document that could be zoomed is currently open.");
+            const notActiveEditorMsg = vscode.l10n.t("No active editor open. Please open a file and select text to open a data set.");
             Gui.warningMessage(notActiveEditorMsg);
-            ZoweLogger.error(notActiveEditorMsg);
             return;
         }
 
@@ -1100,7 +1099,7 @@ export class DatasetActions {
         const selectedText = doc.getText(selection);
         // Shouldn't happen but just in case
         if (!selectedText) {
-            Gui.errorMessage(vscode.l10n.t("No selection to open."));
+            Gui.warningMessage(vscode.l10n.t("No selection to open."));
             return;
         }
 
@@ -1109,11 +1108,11 @@ export class DatasetActions {
         const hasMember = ds.memberName && ds.memberName.length > 0;
         if (hasMember) {
             if (!DatasetUtils.validateMemberName(ds.memberName)) {
-                Gui.errorMessage(vscode.l10n.t("Selection is not a valid data set member name."));
+                Gui.warningMessage(vscode.l10n.t("Selection is not a valid data set member name."));
                 return;
             }
         } else if (!DatasetUtils.validateDataSetName(ds.dataSetName)) {
-            Gui.errorMessage(vscode.l10n.t("Selection is not a valid data set name."));
+            Gui.warningMessage(vscode.l10n.t("Selection is not a valid data set name."));
             return;
         }
 
@@ -1173,7 +1172,6 @@ export class DatasetActions {
                     ? vscode.l10n.t("Data set member {0} does not exist or cannot be opened in data set {1}.", ds.memberName, ds.dataSetName)
                     : vscode.l10n.t("Data set {0} does not exist or cannot be opened.", ds.dataSetName);
                 Gui.warningMessage(errorMessage);
-                ZoweLogger.warn(errorMessage);
             } else {
                 await AuthUtils.errorHandling(error, {
                     apiType: ZoweExplorerApiType.Mvs,
