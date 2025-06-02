@@ -443,10 +443,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profilePromise = Profiles.extenderTypeReady.get(profileName);
         const promiseTimeout = 10000;
         if (profilePromise) {
-            await Promise.race([
-                profilePromise.promise,
-                new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), promiseTimeout)),
-            ]);
+            let timeoutHandle: NodeJS.Timeout;
+            const timeoutPromise = new Promise<void>((_, reject) => {
+                timeoutHandle = setTimeout(() => reject(new Error("Timeout waiting for profile")), promiseTimeout);
+            });
+
+            await Promise.race([profilePromise.promise.finally(() => clearTimeout(timeoutHandle)), timeoutPromise]);
         }
 
         try {

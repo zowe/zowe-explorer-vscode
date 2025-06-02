@@ -447,6 +447,35 @@ describe("readFile", () => {
         _getInfoFromUriMock.mockRestore();
         _lookupAsFileMock.mockRestore();
     });
+
+    it("should properly await the profile deferred promise", async () => {
+        const profileName = testProfile.name;
+
+        const resolveProfile = jest.fn();
+        const profilePromise = {
+            promise: new Promise<void>((resolve) => {
+                resolveProfile.mockImplementation(resolve);
+                setTimeout(resolve, 50);
+            }),
+        };
+
+        Profiles.extenderTypeReady.set(profileName, profilePromise);
+        jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce({
+            ...testEntries.ps,
+            wasAccessed: true,
+            data: new Uint8Array([1, 2, 3]),
+        });
+        jest.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce({
+            profile: testProfile,
+            path: "/USER.DATA.PS",
+        });
+
+        const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
+
+        await DatasetFSProvider.instance.readFile(testUris.ps);
+
+        await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
+    });
 });
 
 describe("writeFile", () => {
