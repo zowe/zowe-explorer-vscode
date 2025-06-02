@@ -12,6 +12,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added a `zowe.settings.requestTimeout` setting to provide users with the ability to specify a timeout for REST requests. [#3631](https://github.com/zowe/zowe-explorer-vscode/pull/3631)
 - Updated Zowe SDKs to `8.20.0` for technical currency. [#3631](https://github.com/zowe/zowe-explorer-vscode/pull/3631)
 - Added support for asynchronous operations when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
+- Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 
 ### Bug fixes
 
