@@ -691,6 +691,37 @@ describe("readFile", () => {
         lookupAsFileMock.mockRestore();
         getInfoFromUriMock.mockRestore();
     });
+
+    it("should properly await the profile deferred promise", async () => {
+        jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValue(new Map([]));
+        const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
+        lookupAsFileMock.mockReturnValue(testEntries.file);
+        getInfoFromUriMock.mockReturnValue({
+            profile: testProfile,
+            path: "/aFile.txt",
+        });
+        jest.spyOn(UssFSProvider.instance, "fetchFileAtUri").mockResolvedValueOnce(undefined);
+        const resolveProfile = jest.fn();
+        const profilePromise = {
+            promise: new Promise<void>((resolve) => {
+                resolveProfile.mockImplementation(resolve);
+                setTimeout(resolve, 50);
+            }),
+        };
+
+        const promiseTimeout = 100;
+        await UssFSProvider.instance.readFile(
+            testUris.file.with({
+                query: "conflict=true",
+            })
+        );
+        await expect(
+            Promise.race([
+                profilePromise.promise,
+                new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), promiseTimeout)),
+            ])
+        ).resolves.toBeUndefined();
+    });
 });
 
 describe("writeFile", () => {

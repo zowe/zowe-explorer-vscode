@@ -57,7 +57,6 @@ import { FilterDescriptor } from "../../../src/management/FilterManagement";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../../src/trees/uss/USSTree";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
-import { DeferredPromise } from "@zowe/imperative";
 
 jest.mock("child_process");
 jest.mock("fs");
