@@ -156,6 +156,15 @@ export class ProfilesCache {
     }
 
     /**
+     * Returns the first profile matching the given profile name
+     * @param name The name of the profile to find
+     * @returns {IProfileLoaded} The first profile matching the given profile name, or `undefined` if not found.
+     */
+    public getProfileByName(name: string): imperative.IProfileLoaded {
+        return this.allProfiles.find((p) => p.name === name);
+    }
+
+    /**
      * Gets default Profile attributes from imperative
      *
      * @param {ProfileInfo} mProfileInfo
