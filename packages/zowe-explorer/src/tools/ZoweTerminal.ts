@@ -75,6 +75,8 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private pressedCtrlC = false;
     private chalk;
 
+    private mCols = -1;
+
     private writeEmitter = new vscode.EventEmitter<string>();
     protected write(text: string) {
         this.writeEmitter.fire(text);
@@ -84,19 +86,27 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.write(ZoweTerminal.Keys.NEW_LINE);
         this.writeCmd();
     }
-    protected clearLine() {
-        this.write(ZoweTerminal.Keys.CLEAR_LINE);
+    protected clearLine(lines = 1) {
+        while (lines--) {
+            this.write(ZoweTerminal.Keys.CLEAR_LINE);
+            if (lines > 0) {
+                this.write(ZoweTerminal.Keys.UP);
+            }
+        }
+    }
+    private getLine(cmd?: string): string {
+        return this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command;
     }
     protected writeCmd(cmd?: string) {
-        this.write(this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command);
+        this.write(this.getLine(cmd));
     }
-    protected refreshCmd() {
+    protected refreshCmd(lineOffset = 0) {
         this.command = this.sanitizeInput(this.command);
         this.pressedCtrlC = false;
         if (!this.charArrayCmd.length || this.charArrayCmd.join("") !== this.command) {
             this.charArrayCmd = Array.from(this.command);
         }
-        this.clearLine();
+        this.clearLine(Math.ceil((this.getLine(this.command).length + lineOffset) / this.mCols));
         this.writeCmd();
         if (this.charArrayCmd.length > this.cursorPosition) {
             const getPos = (char: string) => {
@@ -122,10 +132,12 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private closeEmitter = new vscode.EventEmitter<void>();
     public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
 
-    public open(_initialDimensions?: vscode.TerminalDimensions | undefined): void {
+    public open(initialDimensions?: vscode.TerminalDimensions | undefined): void {
+        this.mCols = initialDimensions?.columns ?? 80;
+
         this.writeLine(this.chalk.dim.italic(this.mMessage));
         if (this.command.length > 0) {
-            this.handleInput(ZoweTerminal.Keys.ENTER);
+            void this.handleInput(ZoweTerminal.Keys.ENTER);
         }
     }
 
@@ -180,7 +192,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             } else if (offset === 0) {
                 this.write(ZoweTerminal.Keys.DEL);
             }
-            this.refreshCmd();
+            this.refreshCmd(Math.abs(offset));
         }
     }
 

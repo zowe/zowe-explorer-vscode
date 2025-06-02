@@ -58,13 +58,18 @@ describe("ZoweTerminal Unit Tests", () => {
     it("should send the entered command to the callback function", async () => {
         const spyCb = jest.fn().mockImplementation(async (cmd: string) => Promise.resolve("Command: " + cmd));
         const iTerm = new ZoweTerminal("test", spyCb, { signal: { addEventListener: jest.fn() } } as any, { history: ["old"] });
-        iTerm.open();
+        iTerm.open({ columns: 20, rows: 10 });
 
         await iTerm.handleInput("testABC");
         await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
         expect(spyCb).toHaveBeenCalledWith("testABC");
         spyCb.mockClear();
+        await iTerm.handleInput("123456789-123456789-123456789");
+        await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
+        expect(spyCb).toHaveBeenCalledWith("123456789-123456789-123456789");
+        spyCb.mockClear();
 
+        await iTerm.handleInput(ZoweTerminal.Keys.UP); // testABC|
         await iTerm.handleInput(ZoweTerminal.Keys.HOME); // |testABC
         await iTerm.handleInput(ZoweTerminal.Keys.END); // testABC|
         await iTerm.handleInput(ZoweTerminal.Keys.CMD_LEFT); // |testABC
@@ -102,6 +107,6 @@ describe("ZoweTerminal Unit Tests", () => {
         await iTerm.handleInput(ZoweTerminal.Keys.CTRL_C); // close
         await iTerm.handleInput(ZoweTerminal.Keys.CTRL_D); // close
 
-        expect((iTerm as any).mHistory as string[]).toEqual(["old", "testABC", "test1🙏Hello"]);
+        expect((iTerm as any).mHistory as string[]).toEqual(["old", "testABC", "123456789-123456789-123456789", "test1🙏Hello"]);
     });
 });
