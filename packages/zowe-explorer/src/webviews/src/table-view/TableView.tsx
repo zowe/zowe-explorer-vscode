@@ -103,7 +103,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
             return { ...row, actions: "" };
           });
           const columns = [...(newData.columns ?? []), actionsColumn(newData, actionsCellRenderer, vscodeApi)];
-          setVisibleColumns(columns.map((c) => c.headerName ?? c.field));
+          setVisibleColumns(columns.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field));
           setTableData({ ...newData, rows, columns });
         } else {
           setVisibleColumns(newData.columns.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field));
