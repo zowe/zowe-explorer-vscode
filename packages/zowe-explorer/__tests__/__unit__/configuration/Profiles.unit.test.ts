@@ -57,6 +57,7 @@ import { FilterDescriptor } from "../../../src/management/FilterManagement";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../../src/trees/uss/USSTree";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
+import { DeferredPromise } from "@zowe/imperative";
 
 jest.mock("child_process");
 jest.mock("fs");
@@ -2644,5 +2645,57 @@ describe("Profiles unit tests - function showProfilesInactiveMsg", () => {
         expect(errorMsgSpy).toHaveBeenCalledWith(
             "Profile profName is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
         );
+    });
+});
+
+describe("Profiles unit tests - function _resolveTypePromise", () => {
+    it("should resolve each deferred promise of matching profile type", () => {
+        createGlobalMocks();
+        Object.defineProperty(Profiles.getInstance(), "allProfiles", {
+            value: [
+                { name: "sestest", type: "ssh" },
+                { name: "profile1", type: "zosmf" },
+                { name: "profile2", type: "ssh" },
+            ],
+            configurable: true,
+        });
+        const extenderTypeReadySpy = jest.spyOn(Profiles.extenderTypeReady, "get");
+        Profiles.getInstance()._resolveTypePromise("ssh");
+        expect(extenderTypeReadySpy).toHaveBeenCalledTimes(2);
+    });
+    it("should not resolve any deferred promise", () => {
+        createGlobalMocks();
+        Object.defineProperty(Profiles.getInstance(), "allProfiles", {
+            value: [
+                { name: "sestest", type: "zosmf" },
+                { name: "profile1", type: "zosmf" },
+                { name: "profile2", type: "zosmf" },
+            ],
+            configurable: true,
+        });
+        const extenderTypeReadySpy = jest.spyOn(Profiles.extenderTypeReady, "get");
+        Profiles.getInstance()._resolveTypePromise("ssh");
+        expect(extenderTypeReadySpy).toHaveBeenCalledTimes(0);
+    });
+    it("should resolve an existing promise without setting it", () => {
+        createGlobalMocks();
+        Object.defineProperty(Profiles.getInstance(), "allProfiles", {
+            value: [
+                { name: "sestest", type: "ssh" },
+                { name: "profile1", type: "zosmf" },
+                { name: "profile2", type: "ssh" },
+            ],
+            configurable: true,
+        });
+        jest.spyOn(Profiles.extenderTypeReady, "has").mockReturnValue(true);
+        const extenderTypeReadySetSpy = jest.spyOn(Profiles.extenderTypeReady, "set");
+        const extenderTypeReadyGetSpy = jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValue({
+            resolve: jest.fn(),
+            reject: jest.fn(),
+        });
+
+        Profiles.getInstance()._resolveTypePromise("ssh");
+        expect(extenderTypeReadySetSpy).toHaveBeenCalledTimes(0);
+        expect(extenderTypeReadyGetSpy).toHaveBeenCalledTimes(2);
     });
 });
