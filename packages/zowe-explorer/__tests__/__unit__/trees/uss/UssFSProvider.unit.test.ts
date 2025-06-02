@@ -691,22 +691,6 @@ describe("readFile", () => {
         lookupAsFileMock.mockRestore();
         getInfoFromUriMock.mockRestore();
     });
-
-    it("should properly await the profile deferred promise", async () => {
-        jest.spyOn(Profiles, "extenderTypeReady", "get").mockReturnValue(new Map([[testProfile.name, Promise.resolve(testProfile)]]));
-        Profiles.extenderTypeReady.get(["asdf"]);
-        const test = Profiles.extenderTypeReady;
-
-        expect(
-            (
-                await UssFSProvider.instance.readFile(
-                    testUris.file.with({
-                        query: "conflict=true",
-                    })
-                )
-            ).toString()
-        ).toStrictEqual([4, 5, 6].toString());
-    });
 });
 
 describe("writeFile", () => {

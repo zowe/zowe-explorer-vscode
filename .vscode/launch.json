@@ -97,6 +97,16 @@
       "outFiles": ["${workspaceFolder}/out/__tests__/**/*.js"],
       "preLaunchTask": "Build",
       "postDebugTask": "Posttest"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Jest: ZoweTreeProvider",
+      "program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
+      "args": ["Profiles", "--runInBand"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "cwd": "${workspaceFolder}/packages/zowe-explorer"
     }
   ]
 }
