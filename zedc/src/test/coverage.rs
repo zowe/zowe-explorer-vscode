@@ -307,15 +307,25 @@ fn parse_hunk_header(
                             // Process only if there are lines in the new hunk
                             for i in 0..count {
                                 let line_to_add = start_line + i;
-                                let mut is_empty_or_whitespace_line = false;
+                                let mut should_skip_line = false;
 
                                 if let Some(ref lines_vec) = current_file_content_lines {
                                     let line_index_to_check = line_to_add - 1;
                                     if line_index_to_check < lines_vec.len() {
-                                        if lines_vec[line_index_to_check].trim().is_empty() {
-                                            is_empty_or_whitespace_line = true;
+                                        let line_content_trimmed =
+                                            lines_vec[line_index_to_check].trim();
+                                        if line_content_trimmed.is_empty() {
+                                            should_skip_line = true;
                                             if verbose {
                                                 println!("Debug - Skipping empty/whitespace line {} in file {}", line_to_add, current_file);
+                                            }
+                                        } else if line_content_trimmed.starts_with("//") {
+                                            should_skip_line = true;
+                                            if verbose {
+                                                println!(
+                                                    "Debug - Skipping comment line {} in file {}",
+                                                    line_to_add, current_file
+                                                );
                                             }
                                         }
                                     } else if verbose {
@@ -325,9 +335,12 @@ fn parse_hunk_header(
                                     println!("Debug - Empty line check skipped for line {} in file {} (file content not available).", line_to_add, current_file);
                                 }
 
-                                if !is_empty_or_whitespace_line {
+                                if !should_skip_line {
                                     if verbose {
-                                        println!("Debug - Adding non-empty line {} from {} to changed_lines", line_to_add, current_file);
+                                        println!(
+                                            "Debug - Adding line {} from {} to changed_lines",
+                                            line_to_add, current_file
+                                        );
                                     }
                                     changed_lines
                                         .entry(current_file.to_string())
@@ -376,7 +389,15 @@ fn run_tests(filter: Option<String>) -> Result<(bool, Vec<String>, Vec<String>)>
     // If filter is provided, use --filter instead of -r
     match &filter {
         Some(pkg) => {
-            pnpm_test_cmd.args(["--filter", pkg, "test"]);
+            pnpm_test_cmd.args([
+                "--filter",
+                if pkg == "zowe-explorer" {
+                    "vscode-extension-for-zowe"
+                } else {
+                    pkg
+                },
+                "test",
+            ]);
         }
         None => {
             pnpm_test_cmd.args(["-r", "test"]);
