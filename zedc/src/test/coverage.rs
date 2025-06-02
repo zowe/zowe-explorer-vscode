@@ -57,7 +57,7 @@ pub fn run_coverage_check(
         let mut lines_to_remove = 0;
         let files_to_remove: Vec<String> = changed_lines
             .keys()
-            .filter(|file| !file.starts_with(&package_path))
+            .filter(|file| !file.starts_with(&package_path) || file.contains("__tests__"))
             .cloned()
             .collect();
 
@@ -67,7 +67,7 @@ pub fn run_coverage_check(
             }
         }
 
-        // Remove files not in the filtered package
+        // Remove files not in the filtered package or containing __tests__
         for file in files_to_remove {
             changed_lines.remove(&file);
         }
@@ -76,7 +76,7 @@ pub fn run_coverage_check(
 
         if verbose {
             println!(
-                "Debug - Filtered changed files to only include package '{}'. {} of {} lines remain.",
+                "Debug - Filtered changed files to only include package '{}' and exclude '__tests__'. {} of {} lines remain.",
                 pkg, filtered_total_lines, initial_total_lines_in_patch
             );
         }
@@ -89,6 +89,42 @@ pub fn run_coverage_check(
                     pkg
                 )
                 .yellow()
+            );
+            return Ok(());
+        }
+    } else {
+        // Exclude files containing __tests__ if no package filter is provided
+        let mut lines_to_remove = 0;
+        let files_to_remove: Vec<String> = changed_lines
+            .keys()
+            .filter(|file| file.contains("__tests__"))
+            .cloned()
+            .collect();
+
+        for file in &files_to_remove {
+            if let Some(lines) = changed_lines.get(file) {
+                lines_to_remove += lines.len();
+            }
+        }
+
+        // Remove files containing __tests__
+        for file in files_to_remove {
+            changed_lines.remove(&file);
+        }
+
+        filtered_total_lines = initial_total_lines_in_patch - lines_to_remove;
+
+        if verbose {
+            println!(
+                "Debug - Excluded '__tests__' files. {} of {} lines remain.",
+                filtered_total_lines, initial_total_lines_in_patch
+            );
+        }
+
+        if filtered_total_lines == 0 {
+            println!(
+                "{}",
+                "No changed lines found (excluding '__tests__') to check for coverage.".yellow()
             );
             return Ok(());
         }
