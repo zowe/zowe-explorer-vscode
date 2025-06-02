@@ -49,7 +49,7 @@ pub fn run_coverage_check(
     }
 
     // If filter is provided, filter the changed_lines to only include files from that package
-    let mut filtered_total_lines = initial_total_lines_in_patch;
+    let filtered_total_lines: usize;
     if let Some(pkg) = &filter {
         let package_path = format!("packages/{}/", pkg);
 
@@ -278,6 +278,99 @@ fn get_changed_files_and_lines(
     ))
 }
 
+/// Check if a line is inside a block comment
+fn is_line_in_block_comment(file_content_lines: &[String], line_index: usize) -> bool {
+    let mut in_block_comment = false;
+
+    // Check all lines up to and including the target line
+    for (idx, line) in file_content_lines.iter().enumerate() {
+        if idx > line_index {
+            break;
+        }
+
+        let mut chars = line.chars().peekable();
+        let mut in_string = false;
+        let mut escape_next = false;
+        let mut line_has_block_comment_close = false;
+        let mut line_has_block_comment_open = false;
+        let line_in_block_comment = in_block_comment;
+
+        while let Some(ch) = chars.next() {
+            if escape_next {
+                escape_next = false;
+                continue;
+            }
+
+            if ch == '\\' && in_string {
+                escape_next = true;
+                continue;
+            }
+
+            if ch == '"' && !in_block_comment {
+                in_string = !in_string;
+                continue;
+            }
+
+            if in_string {
+                continue;
+            }
+
+            if !in_block_comment && ch == '/' {
+                if let Some(&'*') = chars.peek() {
+                    chars.next(); // consume '*'
+                    in_block_comment = true;
+                    line_has_block_comment_open = true;
+                    continue;
+                }
+                if let Some(&'/') = chars.peek() {
+                    // Single line comment - rest of line is comment
+                    break;
+                }
+            }
+
+            if in_block_comment && ch == '*' {
+                if let Some(&'/') = chars.peek() {
+                    chars.next(); // consume '/'
+                    in_block_comment = false;
+                    line_has_block_comment_close = true;
+                    continue;
+                }
+            }
+        }
+
+        // If we're at the target line, return true if:
+        // 1. The line is within a block comment, OR
+        // 2. The line contains an opening /*, OR
+        // 3. The line contains a closing */
+        if idx == line_index
+            && (line_in_block_comment
+                || line_has_block_comment_open
+                || line_has_block_comment_close)
+        {
+            return true;
+        }
+    }
+
+    false
+}
+
+/// Check if a line is entirely a comment (single-line or block comment on same line)
+fn is_line_entirely_comment(line_content: &str) -> bool {
+    let trimmed = line_content.trim();
+
+    // Check for single-line comment
+    if trimmed.starts_with("//") {
+        return true;
+    }
+
+    // Check for single-line block comment
+    if trimmed.starts_with("/*") && trimmed.ends_with("*/") && trimmed.len() > 3 {
+        return true;
+    }
+
+    false
+}
+
 /// Parse a hunk header from git diff and extract line numbers
 fn parse_hunk_header(
     line: &str,
@@ -319,11 +412,24 @@ fn parse_hunk_header(
                                             if verbose {
                                                 println!("Debug - Skipping empty/whitespace line {} in file {}", line_to_add, current_file);
                                             }
-                                        } else if line_content_trimmed.starts_with("//") {
+                                        } else if is_line_entirely_comment(
+                                            &lines_vec[line_index_to_check],
+                                        ) {
                                             should_skip_line = true;
                                             if verbose {
                                                 println!(
-                                                    "Debug - Skipping comment line {} in file {}",
+                                                    "Debug - Skipping single-line comment line {} in file {}",
+                                                    line_to_add, current_file
+                                                );
+                                            }
+                                        } else if is_line_in_block_comment(
+                                            lines_vec,
+                                            line_index_to_check,
+                                        ) {
+                                            should_skip_line = true;
+                                            if verbose {
+                                                println!(
+                                                    "Debug - Skipping block comment line {} in file {}",
                                                     line_to_add, current_file
                                                 );
                                             }
