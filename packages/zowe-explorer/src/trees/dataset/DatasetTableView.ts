@@ -9,12 +9,15 @@
  *
  */
 
-import { IZoweDatasetTreeNode, Table, TableBuilder, TableViewProvider } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, Table, TableBuilder, TableViewProvider } from "@zowe/zowe-explorer-api";
 import { commands, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { posix } from "path";
+import { ProfileManagement } from "../../management/ProfileManagement";
+import { Definitions } from "../../configuration/Definitions";
+import { Profiles } from "../../configuration/Profiles";
 
 export class DatasetTableView {
     private cachedChildren: IZoweDatasetTreeNode[];
@@ -67,6 +70,11 @@ export class DatasetTableView {
         },
     };
 
+    private static readonly URI_SEGMENTS = {
+        MEMBER: 3,
+        DATASET: 2,
+    };
+
     private static async openInEditor(this: void, _view: Table.View, rows: Record<number, Table.RowData>): Promise<void> {
         const allRows = Object.values(rows);
         for (const row of allRows) {
@@ -77,7 +85,8 @@ export class DatasetTableView {
     private static _instance: DatasetTableView;
     private constructor() {}
 
-    private profileName: string = "";
+    private currentTableType: "dataSets" | "members" | null = null;
+    private resourceName: string = "";
     private shouldShow: Record<string, boolean> = {};
     private table: Table.Instance;
 
@@ -89,16 +98,19 @@ export class DatasetTableView {
         return DatasetTableView._instance;
     }
 
-    private buildTitle(profileNode: IZoweDatasetTreeNode): string {
-        if (profileNode.pattern) {
+    private buildTitle(node: IZoweDatasetTreeNode): string {
+        if (SharedContext.isPds(node)) {
+            return node.label.toString();
+        }
+        if (node.pattern) {
             return l10n.t({
-                message: `[${this.profileName}]: {0}`,
-                args: [profileNode.pattern],
+                message: `[${this.resourceName}]: {0}`,
+                args: [node.pattern],
                 comment: ["Data Set Search Pattern"],
             });
         }
 
-        return l10n.t(`[${this.profileName}]: *`);
+        return l10n.t("[{0}]: *", this.resourceName);
     }
 
     private cacheChildren(sessionNode: IZoweDatasetTreeNode): void {
@@ -106,7 +118,8 @@ export class DatasetTableView {
     }
 
     private isDsMemberUri(uri: string): boolean {
-        return uri.split("/").length > 3;
+        // zowe-ds:/<profile_name>/<data_set_name>/<member_name>
+        return uri.split("/").length > DatasetTableView.URI_SEGMENTS.MEMBER;
     }
 
     /**
@@ -144,8 +157,6 @@ export class DatasetTableView {
         this.shouldShow["dsname"] ||= !SharedContext.isDsMember(dsNode);
 
         if (SharedContext.isDsMember(dsNode)) {
-            this.shouldShow["member"] = true;
-            this.shouldShow["dsname"] = false;
             return {
                 member: dsNode.label.toString(),
                 createdDate: dsStats?.createdDate?.toLocaleTimeString(),
@@ -157,8 +168,6 @@ export class DatasetTableView {
                 uri: dsNode.resourceUri?.toString(),
             };
         } else {
-            this.shouldShow["dsname"] = true;
-            this.shouldShow["member"] = false;
             return {
                 dsname: dsNode.label.toString(),
                 dsorg: dsStats?.["dsorg"],
@@ -180,8 +189,25 @@ export class DatasetTableView {
      */
     private async generateTable(context: ExtensionContext, profileNode: IZoweDatasetTreeNode): Promise<Table.Instance> {
         const rows = this.cachedChildren.map((item) => this.mapDsNodeToRow(item));
-        if (this.table) {
+
+        // Determine the current table type
+        const previousTableType = this.currentTableType;
+        const currentNodeType = SharedContext.isPds(profileNode) ? "members" : "dataSets";
+        this.currentTableType = currentNodeType;
+
+        // Check if the table type has changed
+        const tableTypeChanged = previousTableType !== this.currentTableType;
+
+        if (this.table && !tableTypeChanged) {
             await this.table.setTitle(this.buildTitle(profileNode));
+            await this.table.setColumns([
+                ...this.expectedFields.map((field) => ({
+                    filter: true,
+                    ...field,
+                    initialHide: this.shouldShow[field.field] === false,
+                })),
+                { field: "actions", hide: true },
+            ]);
             await this.table.setContent(rows);
         } else {
             this.table = new TableBuilder(context)
@@ -221,16 +247,50 @@ export class DatasetTableView {
      * @param nodeList Passed to `SharedUtils.getSelectedNodeList` to get final list of selected nodes
      */
     public async handleCommand(context: ExtensionContext, node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[]): Promise<void> {
+        this.shouldShow = {};
         const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
+        if (selectedNodes.length === 0) {
+            const allProfiles = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
+
+            const resp = await Gui.showQuickPick(allProfiles, {
+                title: l10n.t("Select a profile to search for data sets"),
+                placeHolder: l10n.t("Select a profile"),
+                ignoreFocusOut: true,
+            });
+            if (resp == null) {
+                return;
+            }
+
+            const profile = Profiles.getInstance().getProfileByName(resp);
+            let profileNode = SharedTreeProviders.ds.mSessionNodes.find((s) => s.label.toString() === resp) as IZoweDatasetTreeNode;
+            if (profileNode == null) {
+                await SharedTreeProviders.ds.addSingleSession(profile);
+                profileNode = SharedTreeProviders.ds.mSessionNodes.find((s) => s.label.toString() === resp) as IZoweDatasetTreeNode;
+            }
+            selectedNodes.push(SharedTreeProviders.ds.mSessionNodes.find((s) => s.label.toString() === resp) as IZoweDatasetTreeNode);
+
+            await profileNode.getChildren();
+        }
+
         if (selectedNodes.length !== 1) {
             return;
         }
-        if (!SharedContext.isSession(selectedNodes[0])) {
+        const selectedNode = selectedNodes[0];
+        if (SharedContext.isSession(selectedNode)) {
+            if (selectedNode.pattern == null || selectedNode.pattern.length === 0) {
+                await SharedTreeProviders.ds.filterPrompt(selectedNode);
+            }
+            this.resourceName = selectedNodes[0].label.toString();
+            this.cacheChildren(selectedNodes[0]);
+        } else if (SharedContext.isPds(selectedNode)) {
+            this.resourceName = selectedNodes[0].label.toString();
+            this.cacheChildren(selectedNodes[0]);
+        } else {
+            Gui.infoMessage(l10n.t("This action is only supported for session and PDS nodes. Please select a session or PDS node."));
             return;
         }
 
-        this.profileName = selectedNodes[0].label.toString();
-        this.cacheChildren(selectedNodes[0]);
-        await TableViewProvider.getInstance().setTableView(await this.generateTable(context, selectedNodes[0]));
+        await TableViewProvider.getInstance().setTableView(await this.generateTable(context, selectedNode));
+        await commands.executeCommand("zowe-resources.focus");
     }
 }
