@@ -329,3 +329,7 @@ ul {
 .dropdown-item:hover {
     background-color: var(--vscode-button-secondaryHoverBackground);
 }
+
+.modal-open {
+    overflow: hidden;
+}

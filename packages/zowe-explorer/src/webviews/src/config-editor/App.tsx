@@ -113,6 +113,11 @@ export function App() {
     }
   }, [selectedTab, configurations]);
 
+  useEffect(() => {
+    const isModalOpen = newKeyModalOpen || newProfileModalOpen || saveModalOpen || newLayerModalOpen || editModalOpen;
+    document.body.classList.toggle("modal-open", isModalOpen);
+  }, [newKeyModalOpen, newProfileModalOpen, saveModalOpen, newLayerModalOpen, editModalOpen]);
+
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
     const path = flattenedConfig[key]?.path ?? key.split(".");
