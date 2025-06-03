@@ -692,8 +692,57 @@ describe("readFile", () => {
         getInfoFromUriMock.mockRestore();
     });
 
-    it("should properly await the profile deferred promise", async () => {
+    it("should properly await the profile deferred promise - no existing promise", async () => {
         jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValue(undefined);
+        const mockAllProfiles = [
+            { name: "sestest", type: "ssh" },
+            { name: "profile1", type: "zosmf" },
+            { name: "profile2", type: "zosmf" },
+        ];
+
+        // Create a mock instance of Profiles
+        const mockProfilesInstance = {
+            allProfiles: mockAllProfiles,
+        };
+
+        // Mock Profiles.getInstance to return the mock instance
+        jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfilesInstance as any);
+
+        const resolveProfile = jest.fn();
+        const profilePromise = {
+            promise: new Promise<void>((resolve) => {
+                resolveProfile.mockImplementation(resolve);
+                setTimeout(resolve, 50);
+            }),
+        };
+
+        Profiles.extenderTypeReady.set(testProfile.name, profilePromise);
+
+        const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
+        lookupAsFileMock.mockReturnValue(testEntries.file);
+
+        getInfoFromUriMock.mockReturnValue({
+            profile: testProfile,
+            path: "/aFile.txt",
+        });
+
+        jest.spyOn(UssFSProvider.instance as any, "fetchFileAtUri").mockReturnValueOnce({
+            profile: testProfile,
+            path: "/USER.DATA.PS",
+        });
+
+        const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
+
+        await UssFSProvider.instance.readFile(
+            testUris.file.with({
+                query: "conflict=true",
+            })
+        );
+
+        await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
+    });
+
+    it("should properly await the profile deferred promise - existing promise", async () => {
         const mockAllProfiles = [
             { name: "sestest", type: "ssh" },
             { name: "profile1", type: "zosmf" },
