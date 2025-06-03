@@ -17,7 +17,7 @@ describe("ZoweTerminal Unit Tests", () => {
     });
 
     it("should handle ctrl_c to cancel a running command", async () => {
-        const spyCb = jest.fn().mockImplementation(async (cmd: string) => Promise.resolve("test-output"));
+        const spyCb = jest.fn().mockImplementation(async (cmd: string) => Promise.resolve("Command: " + cmd));
         const signalSpy = jest.fn().mockImplementation((_event, cb) => cb());
         const iTerm = new ZoweTerminal("test", spyCb, { abort: jest.fn(), signal: { addEventListener: signalSpy } } as any, { history: ["old"] });
         (iTerm as any).command = "open";
@@ -32,8 +32,31 @@ describe("ZoweTerminal Unit Tests", () => {
         expect((iTerm as any).mHistory as string[]).toEqual(["old", "open"]);
     });
 
+    it("should handle special commands", async () => {
+        const spyCb = jest.fn().mockImplementation(async (cmd: string) => Promise.resolve("Command: " + cmd));
+        const iTerm = new ZoweTerminal("test", spyCb, { signal: { addEventListener: jest.fn() } } as any, { history: ["old"] });
+        iTerm.open();
+
+        await iTerm.handleInput(":async Asynchronous");
+        await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
+        expect(spyCb).toHaveBeenCalledWith("Asynchronous");
+        spyCb.mockClear();
+
+        await iTerm.handleInput(":forget Forgotten");
+        await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
+        expect(spyCb).toHaveBeenCalledWith("Forgotten");
+        spyCb.mockClear();
+
+        await iTerm.handleInput(":clear");
+        await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
+        await iTerm.handleInput(":exit");
+        await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
+
+        expect((iTerm as any).mHistory as string[]).toEqual(["old", "Asynchronous", "Forgotten", ":clear", ":exit"]);
+    });
+
     it("should send the entered command to the callback function", async () => {
-        const spyCb = jest.fn().mockImplementation(async (cmd: string) => Promise.resolve("test-output"));
+        const spyCb = jest.fn().mockImplementation(async (cmd: string) => Promise.resolve("Command: " + cmd));
         const iTerm = new ZoweTerminal("test", spyCb, { signal: { addEventListener: jest.fn() } } as any, { history: ["old"] });
         iTerm.open({ columns: 20, rows: 10 });
 
@@ -83,11 +106,7 @@ describe("ZoweTerminal Unit Tests", () => {
         await iTerm.handleInput(ZoweTerminal.Keys.CTRL_C); // Present the "(to exit ...)" message
         await iTerm.handleInput(ZoweTerminal.Keys.CTRL_C); // close
         await iTerm.handleInput(ZoweTerminal.Keys.CTRL_D); // close
-        await iTerm.handleInput(":clear");
-        await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
-        await iTerm.handleInput(":exit");
-        await iTerm.handleInput(ZoweTerminal.Keys.ENTER);
 
-        expect((iTerm as any).mHistory as string[]).toEqual(["old", "testABC", "123456789-123456789-123456789", "test1🙏Hello", ":clear", ":exit"]);
+        expect((iTerm as any).mHistory as string[]).toEqual(["old", "testABC", "123456789-123456789-123456789", "test1🙏Hello"]);
     });
 });
