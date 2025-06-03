@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { ZoweTreeNode } from "../../../src/tree/ZoweTreeNode";
 import { IZoweTreeNode } from "../../../src/tree/IZoweTreeNode";
 import * as imperative from "@zowe/imperative";
+import { ZoweNodeUtils } from "../../../src/tree/ZoweNodeUtils";
 
 describe("ZoweTreeNode", () => {
     const innerProfile = { user: "apple", password: "banana" };
@@ -41,7 +42,7 @@ describe("ZoweTreeNode", () => {
 
         return node;
     };
-
+    const getProfileSpy = jest.spyOn(ZoweNodeUtils, "getLatestProfile");
     it("getSession should return session of current node", () => {
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
         node.setSessionToChoice("mySession" as unknown as imperative.Session);
@@ -50,11 +51,14 @@ describe("ZoweTreeNode", () => {
 
     it("getSession should return session of parent node", () => {
         const parentNode = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, "parentSession");
+        getProfileSpy.mockImplementation();
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, parentNode);
         expect(node.getSession()).toBe("parentSession");
+        getProfileSpy.mockClear();
     });
 
     it("getProfile should return profile of current node", () => {
+        getProfileSpy.mockReturnValue(fakeProfile);
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
         node.setProfileToChoice(fakeProfile);
         expect(node.getProfile().name).toBe("amazingProfile");
@@ -63,18 +67,24 @@ describe("ZoweTreeNode", () => {
     it("getProfile should return profile of parent node", () => {
         const parentNode = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, "parentProfile");
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, parentNode);
+        getProfileSpy.mockReturnValue("parentProfile" as any);
         expect(node.getProfile()).toBe("parentProfile");
+        getProfileSpy.mockClear();
     });
 
     it("getProfileName should return profile name of current node", () => {
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, { name: "myProfile" });
+        getProfileSpy.mockReturnValue({ name: "myProfile" } as any);
         expect(node.getProfileName()).toBe("myProfile");
+        getProfileSpy.mockClear();
     });
 
     it("getProfileName should return profile name of parent node", () => {
         const parentNode = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, { name: "parentProfile" });
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, parentNode, undefined, undefined);
+        getProfileSpy.mockReturnValue({ name: "parentProfile" } as any);
         expect(node.getProfileName()).toBe("parentProfile");
+        getProfileSpy.mockClear();
     });
 
     it("getLabel should return label of current node", () => {
@@ -84,6 +94,7 @@ describe("ZoweTreeNode", () => {
 
     it("profile and session info should be undefined for empty node", () => {
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
+        getProfileSpy.mockReturnValue(undefined as any);
         expect(node.getSession()).toBeUndefined();
         expect(node.getProfile()).toBeUndefined();
         expect(node.getProfileName()).toBeUndefined();
@@ -93,14 +104,18 @@ describe("ZoweTreeNode", () => {
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, {
             ...fakeProfile,
         });
-        node.setProfileToChoice({ ...fakeProfile, profile: { host: "example.com", port: 443 } });
+        const prof = { ...fakeProfile, profile: { host: "example.com", port: 443 } };
+        getProfileSpy.mockReturnValue(prof as any);
+        node.setProfileToChoice(prof);
         expect(node.getProfile().profile?.port).toBeDefined();
+        getProfileSpy.mockClear();
     });
 
     it("setProfileToChoice should update profile for associated FSProvider entry", () => {
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined);
         node.resourceUri = vscode.Uri.file(__dirname);
         const prof = { ...fakeProfile, profile: { ...innerProfile } };
+        getProfileSpy.mockReturnValue(prof as any);
         const fsEntry = {
             metadata: {
                 profile: prof,
@@ -113,6 +128,7 @@ describe("ZoweTreeNode", () => {
         expect(node.getProfile().profile?.password).toBe("apple");
         expect(fsEntry.metadata.profile.profile?.user).toBe("banana");
         expect(fsEntry.metadata.profile.profile?.password).toBe("apple");
+        getProfileSpy.mockClear();
     });
 
     it("setProfileToChoice should update child nodes with the new profile", () => {
