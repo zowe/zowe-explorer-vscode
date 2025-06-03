@@ -449,7 +449,19 @@ describe("readFile", () => {
     });
 
     it("should properly await the profile deferred promise", async () => {
-        const profileName = testProfile.name;
+        const mockAllProfiles = [
+            { name: "sestest", type: "ssh" },
+            { name: "profile1", type: "zosmf" },
+            { name: "profile2", type: "zosmf" },
+        ];
+
+        // Create a mock instance of Profiles
+        const mockProfilesInstance = {
+            allProfiles: mockAllProfiles,
+        };
+
+        // Mock Profiles.getInstance to return the mock instance
+        jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfilesInstance as any);
 
         const resolveProfile = jest.fn();
         const profilePromise = {
@@ -459,7 +471,7 @@ describe("readFile", () => {
             }),
         };
 
-        Profiles.extenderTypeReady.set(profileName, profilePromise);
+        Profiles.extenderTypeReady.set(testProfile.name, profilePromise);
         jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce({
             ...testEntries.ps,
             wasAccessed: true,

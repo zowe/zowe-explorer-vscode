@@ -10,7 +10,18 @@
  */
 
 import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri, workspace } from "vscode";
-import { AuthHandler, BaseProvider, DirEntry, FileEntry, Gui, UssDirectory, UssFile, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
+import {
+    AuthHandler,
+    BaseProvider,
+    DirEntry,
+    FileEntry,
+    Gui,
+    imperative,
+    UssDirectory,
+    UssFile,
+    ZoweExplorerApiType,
+    ZoweScheme,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -693,7 +704,19 @@ describe("readFile", () => {
     });
 
     it("should properly await the profile deferred promise", async () => {
-        const profileName = testProfile.name;
+        const mockAllProfiles = [
+            { name: "sestest", type: "ssh" },
+            { name: "profile1", type: "zosmf" },
+            { name: "profile2", type: "zosmf" },
+        ];
+
+        // Create a mock instance of Profiles
+        const mockProfilesInstance = {
+            allProfiles: mockAllProfiles,
+        };
+
+        // Mock Profiles.getInstance to return the mock instance
+        jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfilesInstance as any);
 
         const resolveProfile = jest.fn();
         const profilePromise = {
@@ -703,13 +726,16 @@ describe("readFile", () => {
             }),
         };
 
-        Profiles.extenderTypeReady.set(profileName, profilePromise);
+        Profiles.extenderTypeReady.set(testProfile.name, profilePromise);
+
         const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
         lookupAsFileMock.mockReturnValue(testEntries.file);
+
         getInfoFromUriMock.mockReturnValue({
             profile: testProfile,
             path: "/aFile.txt",
         });
+
         jest.spyOn(UssFSProvider.instance as any, "fetchFileAtUri").mockReturnValueOnce({
             profile: testProfile,
             path: "/USER.DATA.PS",
