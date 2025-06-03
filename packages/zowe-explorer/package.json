@@ -184,12 +184,12 @@
       },
       {
         "command": "zowe.ds.tableView",
-        "title": "%dsTableView%",
+        "title": "%tableView%",
         "category": "Zowe Explorer"
       },
       {
         "command": "zowe.jobs.tableView",
-        "title": "%jobsTableView%",
+        "title": "%tableView%",
         "category": "Zowe Explorer"
       },
       {
