@@ -250,44 +250,66 @@ export class DatasetTableView {
         this.shouldShow = {};
         const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
         if (selectedNodes.length === 0) {
-            const allProfiles = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
-
-            const resp = await Gui.showQuickPick(allProfiles, {
-                title: l10n.t("Select a profile to search for data sets"),
-                placeHolder: l10n.t("Select a profile"),
-                ignoreFocusOut: true,
-            });
-            if (resp == null) {
+            selectedNodes.push(await this.selectAndAddProfile());
+            if (!selectedNodes[0]) {
                 return;
             }
-
-            const profile = Profiles.getInstance().getProfileByName(resp);
-            let profileNode = SharedTreeProviders.ds.mSessionNodes.find((s) => s.label.toString() === resp) as IZoweDatasetTreeNode;
-            if (profileNode == null) {
-                await SharedTreeProviders.ds.addSingleSession(profile);
-                profileNode = SharedTreeProviders.ds.mSessionNodes.find((s) => s.label.toString() === resp) as IZoweDatasetTreeNode;
-            }
-            selectedNodes.push(SharedTreeProviders.ds.mSessionNodes.find((s) => s.label.toString() === resp) as IZoweDatasetTreeNode);
-
-            await profileNode.getChildren();
         }
 
         if (selectedNodes.length !== 1) {
+            Gui.infoMessage(l10n.t("Please select a single profile or PDS."));
             return;
         }
+
         const selectedNode = selectedNodes[0];
+        if (!SharedContext.isSession(selectedNode) && !SharedContext.isPds(selectedNode)) {
+            Gui.infoMessage(l10n.t("This action is only supported for session and PDS nodes. Please select a session or PDS node."));
+            return;
+        }
+
+        await this.prepareAndDisplayTable(context, selectedNode);
+    }
+
+    // Helper method to select a profile and add it if not already added
+    private async selectAndAddProfile(): Promise<IZoweDatasetTreeNode | undefined> {
+        const allProfiles = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
+        if (allProfiles.length === 0) {
+            Gui.infoMessage(l10n.t("No profiles available."));
+            return undefined;
+        }
+
+        const resp = await Gui.showQuickPick(allProfiles, {
+            title: l10n.t("Select a profile to search for data sets"),
+            placeHolder: l10n.t("Select a profile"),
+            ignoreFocusOut: true,
+        });
+
+        if (resp == null) {
+            return undefined;
+        }
+
+        const profile = Profiles.getInstance().getProfileByName(resp);
+        let profileNode = SharedTreeProviders.ds.mSessionNodes.find((s) => s.label.toString() === resp) as IZoweDatasetTreeNode;
+        if (!profileNode) {
+            await SharedTreeProviders.ds.addSingleSession(profile);
+            profileNode = SharedTreeProviders.ds.mSessionNodes.find((s) => s.label.toString() === resp) as IZoweDatasetTreeNode;
+        }
+
+        await profileNode.getChildren();
+        return profileNode;
+    }
+
+    // Helper method to prepare and display the table
+    private async prepareAndDisplayTable(context: ExtensionContext, selectedNode: IZoweDatasetTreeNode): Promise<void> {
         if (SharedContext.isSession(selectedNode)) {
             if (selectedNode.pattern == null || selectedNode.pattern.length === 0) {
                 await SharedTreeProviders.ds.filterPrompt(selectedNode);
             }
-            this.resourceName = selectedNodes[0].label.toString();
-            this.cacheChildren(selectedNodes[0]);
+            this.resourceName = selectedNode.label.toString();
+            this.cacheChildren(selectedNode);
         } else if (SharedContext.isPds(selectedNode)) {
-            this.resourceName = selectedNodes[0].label.toString();
-            this.cacheChildren(selectedNodes[0]);
-        } else {
-            Gui.infoMessage(l10n.t("This action is only supported for session and PDS nodes. Please select a session or PDS node."));
-            return;
+            this.resourceName = selectedNode.label.toString();
+            this.cacheChildren(selectedNode);
         }
 
         await TableViewProvider.getInstance().setTableView(await this.generateTable(context, selectedNode));
