@@ -11,7 +11,8 @@
 
 import * as vscode from "vscode";
 import { MessageSeverity } from "../logger";
-import { IZoweTree, IZoweTreeNode } from "../tree";
+import { IZoweTree } from "../tree/IZoweTree";
+import { IZoweTreeNode } from "../tree/IZoweTreeNode";
 import { Constants } from "./Constants";
 import { GuiOptions } from "./GuiOptions";
 

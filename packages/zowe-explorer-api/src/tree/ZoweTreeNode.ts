@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "./IZoweTreeNode";
 import type { BaseProvider } from "../fs/BaseProvider";
+import { ZoweNodeUtils } from "./ZoweNodeUtils";
 
 /**
  * Common implementation of functions and methods associated with the
@@ -75,7 +76,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @returns {imperative.IProfileLoaded}
      */
     public getProfile(): imperative.IProfileLoaded {
-        return this.profile ?? this.getParent()?.getProfile();
+        return ZoweNodeUtils.getLatestProfile(this);
     }
 
     /**

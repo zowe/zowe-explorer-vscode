@@ -9,7 +9,7 @@
  *
  */
 
-import { Gui } from "../globals";
+import { Gui } from "../globals/Gui";
 import { commands } from "vscode";
 import Mustache = require("mustache");
 import { ImperativeError } from "@zowe/imperative";

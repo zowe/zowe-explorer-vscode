@@ -11,9 +11,9 @@
 
 import { realpathSync } from "fs";
 import { platform } from "os";
-import { Constants } from "../globals";
+import { Constants } from "../globals/Constants";
 import { ImperativeConfig, ConfigUtils } from "@zowe/imperative";
-import { IFileSystemEntry, ZoweScheme } from "../fs/types";
+import { IFileSystemEntry, ZoweScheme } from "../fs/types/abstract";
 import { window, workspace } from "vscode";
 
 export class FileManagement {
