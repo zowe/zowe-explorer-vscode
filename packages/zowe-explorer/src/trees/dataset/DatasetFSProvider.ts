@@ -512,7 +512,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // If the extenderTypeReady map does not contain the profile, create a deferred promise for the profile.
         const profileName = uri.path.split("/")[1];
         const profileInfo = Profiles.getInstance();
-        const profile = profileInfo?.allProfiles?.find((prof) => prof.name === profileName);
+        const profile = profileInfo.allProfiles.find((prof) => prof.name === profileName);
         if (profile && profile.type !== "zosmf" && !Profiles.extenderTypeReady.get(profileName)) {
             const deferredPromise = new DeferredPromise<void>();
             Profiles.extenderTypeReady.set(profileName, deferredPromise);
