@@ -695,7 +695,7 @@ describe("UssFSProvider", () => {
             getInfoFromUriMock.mockRestore();
         });
 
-        it("should properly await the profile deferred promise - no existing promise", async () => {
+        it("should properly await the profile deferred promise - existing promise", async () => {
             const mockAllProfiles = [
                 { name: "sestest", type: "ssh" },
                 { name: "profile1", type: "zosmf" },

@@ -456,7 +456,7 @@ describe("DatasetFSProvider", () => {
             _lookupAsFileMock.mockRestore();
         });
 
-        it("should properly await the profile deferred promise - no existing promise", async () => {
+        it("should properly await the profile deferred promise - existing promise", async () => {
             const mockAllProfiles = [
                 { name: "sestest", type: "ssh" },
                 { name: "profile1", type: "zosmf" },
@@ -497,7 +497,7 @@ describe("DatasetFSProvider", () => {
             await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
         });
 
-        it("should properly await the profile deferred promise - existing promise", async () => {
+        it("should properly await the profile deferred promise - no existing promise", async () => {
             jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(undefined);
             const mockAllProfiles = [
                 { name: "sestest", type: "ssh" },
