@@ -449,6 +449,7 @@ describe("readFile", () => {
     });
 
     it("should properly await the profile deferred promise", async () => {
+        jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValue(undefined);
         const mockAllProfiles = [
             { name: "sestest", type: "ssh" },
             { name: "profile1", type: "zosmf" },
