@@ -449,7 +449,6 @@ describe("readFile", () => {
     });
 
     it("should properly await the profile deferred promise - no existing promise", async () => {
-        // jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(undefined);
         const mockAllProfiles = [
             { name: "sestest", type: "ssh" },
             { name: "profile1", type: "zosmf" },
@@ -473,6 +472,47 @@ describe("readFile", () => {
         };
 
         Profiles.extenderTypeReady.set(testProfile.name, profilePromise);
+        jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce({
+            ...testEntries.ps,
+            wasAccessed: true,
+            data: new Uint8Array([1, 2, 3]),
+        });
+        jest.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce({
+            profile: testProfile,
+            path: "/USER.DATA.PS",
+        });
+
+        const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
+
+        await DatasetFSProvider.instance.readFile(testUris.ps);
+
+        await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
+    });
+
+    it("should properly await the profile deferred promise - existing promise", async () => {
+        jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(undefined);
+        const mockAllProfiles = [
+            { name: "sestest", type: "ssh" },
+            { name: "profile1", type: "zosmf" },
+            { name: "profile2", type: "zosmf" },
+        ];
+
+        // Create a mock instance of Profiles
+        const mockProfilesInstance = {
+            allProfiles: mockAllProfiles,
+        };
+
+        // Mock Profiles.getInstance to return the mock instance
+        jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfilesInstance as any);
+
+        const resolveProfile = jest.fn();
+        const profilePromise = {
+            promise: new Promise<void>((resolve) => {
+                resolveProfile.mockImplementation(resolve);
+                setTimeout(resolve, 50);
+            }),
+        };
+        jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
         jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce({
             ...testEntries.ps,
             wasAccessed: true,
