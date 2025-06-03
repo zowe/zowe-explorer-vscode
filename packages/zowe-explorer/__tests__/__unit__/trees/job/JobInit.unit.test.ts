@@ -188,6 +188,7 @@ describe("Test src/jobs/extension", () => {
                 }
             });
 
+
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
             await JobInit.initJobsProvider(test.context);
             await JobActions.loadMoreRecords({ scheme: ZoweScheme.Jobs });
