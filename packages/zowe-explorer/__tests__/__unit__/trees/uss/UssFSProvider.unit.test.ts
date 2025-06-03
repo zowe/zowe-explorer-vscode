@@ -10,18 +10,7 @@
  */
 
 import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri, workspace } from "vscode";
-import {
-    AuthHandler,
-    BaseProvider,
-    DirEntry,
-    FileEntry,
-    Gui,
-    imperative,
-    UssDirectory,
-    UssFile,
-    ZoweExplorerApiType,
-    ZoweScheme,
-} from "@zowe/zowe-explorer-api";
+import { AuthHandler, BaseProvider, DirEntry, FileEntry, Gui, UssDirectory, UssFile, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
