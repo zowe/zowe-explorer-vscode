@@ -873,7 +873,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         });
     };
 
-    const setupProfilesCheck = (globalMocks): void => {
+    const setupProfilesCheck = (globalMocks, autoStore: boolean = true): void => {
         jest.spyOn(Profiles.getInstance(), "getDefaultProfile").mockReturnValue({ name: "base" } as any);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => ({
@@ -891,6 +891,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
                         },
                     },
                 },
+                autoStore,
             }),
         } as any);
         jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue(globalMocks.testProfile);
@@ -902,6 +903,15 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         const globalMocks = createGlobalMocks();
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+        expect(promptCredentialsSpy).toHaveBeenCalledTimes(1);
+    });
+    it("should succeed without error when autoStore property is missing", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks, undefined);
         jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
