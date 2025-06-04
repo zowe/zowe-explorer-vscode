@@ -31,8 +31,6 @@ pub enum Commands {
     )]
     Coverage {
         #[arg(short, long)]
-        threshold: Option<u8>,
-        #[arg(short, long)]
         verbose: bool,
         #[arg(short, long, help = "Filter tests to a specific package")]
         filter: Option<String>,
@@ -66,12 +64,8 @@ pub async fn handle_cmd(
                 }
             };
         }
-        Commands::Coverage {
-            threshold,
-            verbose,
-            filter,
-        } => {
-            coverage::run_coverage_check(threshold, verbose, filter)?;
+        Commands::Coverage { verbose, filter } => {
+            coverage::run_coverage_check(verbose, filter)?;
         }
     }
 

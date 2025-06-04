@@ -15,11 +15,7 @@ use std::thread;
 use supports_hyperlinks::Stream;
 
 /// Run the coverage check command
-pub fn run_coverage_check(
-    threshold: Option<u8>,
-    verbose: bool,
-    filter: Option<String>,
-) -> Result<()> {
+pub fn run_coverage_check(verbose: bool, filter: Option<String>) -> Result<()> {
     let repo_root_pathbuf = match util::find_dir_match(&["package.json"]) {
         Ok(Some(d)) => d,
         Ok(None) => anyhow::bail!("Could not find a repo folder containing package.json (used for resolving coverage paths)."),
@@ -161,7 +157,6 @@ pub fn run_coverage_check(
         covered_lines_in_patch,
         filtered_total_lines,
         &uncovered_lines_details,
-        threshold,
         verbose,
         &filter,
     )
@@ -1019,7 +1014,6 @@ fn display_coverage_results(
     covered_lines_in_patch: usize,
     initial_total_lines_in_patch: usize,
     uncovered_lines_details: &HashMap<String, Vec<usize>>,
-    threshold: Option<u8>,
     verbose: bool,
     filter: &Option<String>,
 ) -> Result<()> {
@@ -1031,22 +1025,6 @@ fn display_coverage_results(
         return Ok(());
     }
 
-    let patch_coverage_percentage =
-        (covered_lines_in_patch as f64 / initial_total_lines_in_patch as f64) * 100.0;
-
-    let coverage_header = match filter {
-        Some(pkg) => format!(
-            "\nCoverage for package '{}': {:.2}% ({}/{} lines covered)",
-            pkg, patch_coverage_percentage, covered_lines_in_patch, initial_total_lines_in_patch
-        ),
-        None => format!(
-            "\nCoverage: {:.2}% ({}/{} lines covered)",
-            patch_coverage_percentage, covered_lines_in_patch, initial_total_lines_in_patch
-        ),
-    };
-
-    println!("{}", coverage_header.bold().blue());
-
     if verbose {
         println!(
             "Debug - Uncovered lines details map: {:?}",
@@ -1056,38 +1034,6 @@ fn display_coverage_results(
 
     // Display uncovered lines if any
     display_uncovered_lines(uncovered_lines_details);
-
-    // Check threshold if specified
-    if let Some(min_threshold) = threshold {
-        if patch_coverage_percentage < min_threshold as f64 {
-            let message = match filter {
-                Some(pkg) => format!(
-                    "Package '{}' coverage {:.2}% is below the threshold of {}%",
-                    pkg, patch_coverage_percentage, min_threshold
-                ),
-                None => format!(
-                    "Patch coverage {:.2}% is below the threshold of {}%",
-                    patch_coverage_percentage, min_threshold
-                ),
-            };
-
-            eprintln!("{}", message.red());
-            anyhow::bail!("Coverage threshold not met.");
-        } else {
-            let message = match filter {
-                Some(pkg) => format!(
-                    "Package '{}' coverage {:.2}% meets the threshold of {}%",
-                    pkg, patch_coverage_percentage, min_threshold
-                ),
-                None => format!(
-                    "Patch coverage {:.2}% meets the threshold of {}%",
-                    patch_coverage_percentage, min_threshold
-                ),
-            };
-
-            println!("{}", message.green());
-        }
-    }
 
     Ok(())
 }
