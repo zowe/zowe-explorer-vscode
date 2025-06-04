@@ -175,9 +175,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         const loadedProfile = Profiles.getInstance().loadNamedProfile(profile.name);
+
         let response: IZosFilesResponse;
         try {
+            //LOOK HERE, await profile based on profile.name from deferred promise in extenderTypeReady
+            if (profile.type !== "zosmf" && ussPath === "/u/users/jroell/TEST") {
+                if (!Profiles.extenderTypeReady.get(profile.name)) {
+                    Profiles.extenderTypeReady.set(profile.name, new DeferredPromise());
+                }
+                await Profiles.extenderTypeReady.get(profile.name).promise;
+            }
             response = await ZoweExplorerApiRegister.getUssApi(loadedProfile).fileList(ussPath);
+            response.apiResponse.items.unshift({ name: "TEST0", mode: "d" });
             // If request was successful, create directories for the path if it doesn't exist
             if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
                 await vscode.workspace.fs.createDirectory(uri.with({ query: "" }));

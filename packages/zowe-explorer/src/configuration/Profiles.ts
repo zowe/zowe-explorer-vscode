@@ -37,6 +37,7 @@ import { ZoweExplorerExtender } from "../extending/ZoweExplorerExtender";
 import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
 import { DeferredPromise } from "@zowe/imperative";
+import { SharedInit } from "../trees/shared/SharedInit";
 
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
@@ -1225,6 +1226,9 @@ export class Profiles extends ProfilesCache {
                 Profiles.extenderTypeReady.set(profile.name, new DeferredPromise());
                 Profiles.extenderTypeReady.get(profile.name).resolve();
             }
+            // setup remote workspace at that type.
         }
+        let meow = Profiles.extenderTypeReady;
+        void SharedInit.setupRemoteWorkspaceFolders(undefined, extenderType);
     }
 }
