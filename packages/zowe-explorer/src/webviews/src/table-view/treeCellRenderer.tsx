@@ -34,15 +34,39 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
     // Get VS Code API to send message for lazy loading
     const vscodeApi = PersistentVSCodeAPI.getVSCodeAPI();
 
+    // Handle the scenario where the user might have collapsed a node that's still loading children
     if (!isExpanded) {
-      // Expanding - request children from backend (lazy loading)
-      vscodeApi.postMessage({
-        command: "loadTreeChildren",
-        data: {
-          nodeId: nodeId,
-          parentRow: data,
-        },
-      });
+      // Expanding - check if children are already loaded before requesting
+      const existingChildren = [];
+      let currentIndex = props.node.rowIndex! + 1;
+
+      // Check if children already exist
+      while (currentIndex < props.api.getDisplayedRowCount()) {
+        const row = props.api.getDisplayedRowAtIndex(currentIndex);
+        if (row && row.data._tree?.parentId === nodeId) {
+          existingChildren.push(row.data);
+          currentIndex++;
+        } else {
+          break;
+        }
+      }
+
+      if (existingChildren.length > 0) {
+        // Children already exist, just update expanded state
+        console.log("[iconClickHandler] Children already loaded, just updating state");
+      } else {
+        // No children loaded yet - request from backend (lazy loading)
+        console.log("[iconClickHandler] Loading children from backend");
+        vscodeApi.postMessage({
+          command: "loadTreeChildren",
+          data: {
+            nodeId: nodeId,
+            parentRow: data,
+          },
+        });
+      }
+      // Update node to reflect new tree collapsible state
+      onToggleNode(nodeId);
     } else {
       // Collapsing - remove children and update state
       const childrenToRemove: any[] = [];
@@ -64,10 +88,10 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
           remove: childrenToRemove,
         });
       }
-    }
 
-    // Update the expanded state via the parent component
-    onToggleNode(nodeId);
+      // Update the expanded state via the parent component
+      onToggleNode(nodeId);
+    }
   };
 
   // Helper function to check if a node is a descendant of another node

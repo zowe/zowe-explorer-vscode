@@ -12,7 +12,7 @@ import { useContextMenu } from "./ContextMenu";
 import "./style.css";
 import { ActionsBar } from "./ActionsBar";
 import { actionsColumn } from "./actionsColumn";
-import { CheckboxSelectionCallbackParams, GridApi, HeaderCheckboxSelectionCallbackParams } from "ag-grid-community";
+import { CheckboxSelectionCallbackParams, HeaderCheckboxSelectionCallbackParams } from "ag-grid-community";
 import { GetLocaleTextParams } from "ag-grid-community";
 import * as l10n from "@vscode/l10n";
 import { TreeCellRenderer, CustomTreeCellRendererParams } from "./treeCellRenderer";
@@ -131,11 +131,23 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
     // Update the grid's row data to reflect the new expanded state
     if (gridRef.current?.api) {
-      const targetNode = (gridRef.current.api as GridApi).getRowNode(nodeIdToToggle);
+      // Find the row node based on the ID in the tree.
+      // TODO: this could potentially be optimized by caching the IDs and using getRowNode.
+      let targetNode: any = null;
+      gridRef.current.api.forEachNode((node: any) => {
+        if (node.data._tree?.id === nodeIdToToggle) {
+          targetNode = node;
+        }
+      });
+
       if (targetNode) {
         const updatedData = { ...targetNode.data, _tree: { ...targetNode.data._tree, isExpanded: !targetNode.data._tree.isExpanded } };
         targetNode.setData(updatedData);
-        gridRef.current.api.refreshCells();
+        // Refresh only the specific cell to avoid full grid refresh
+        gridRef.current.api.refreshCells({
+          rowNodes: [targetNode],
+          force: true,
+        });
       }
     }
   };
@@ -250,9 +262,11 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         if (gridRef.current?.api && children?.length > 0) {
           // Find the parent node in the grid
           let parentRowIndex = -1;
+          let parentDepth = 0;
           gridRef.current.api.forEachNode((node: any) => {
             if (node.data._tree?.id === parentNodeId) {
               parentRowIndex = node.rowIndex!;
+              parentDepth = node.data._tree?.depth ?? 0;
             }
           });
 
@@ -263,7 +277,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
               _tree: {
                 ...child._tree,
                 parentId: parentNodeId,
-                depth: (child._tree?.depth ?? 0) + 1,
+                depth: parentDepth + 1,
               },
             }));
 
