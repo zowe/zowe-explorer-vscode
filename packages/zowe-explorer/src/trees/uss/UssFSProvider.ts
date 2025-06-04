@@ -179,7 +179,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         let response: IZosFilesResponse;
         try {
             //LOOK HERE, await profile based on profile.name from deferred promise in extenderTypeReady
-            if (profile.type !== "zosmf" && ussPath === "/u/users/jroell/TEST") {
+            if (profile.type !== "zosmf") {
                 if (!Profiles.extenderTypeReady.get(profile.name)) {
                     Profiles.extenderTypeReady.set(profile.name, new DeferredPromise());
                 }

@@ -1215,7 +1215,7 @@ export class Profiles extends ProfilesCache {
 
     public static extenderTypeReady = new Map();
 
-    public _resolveTypePromise(extenderType: string): void {
+    public async _resolveTypePromise(extenderType: string): Promise<void> {
         const profInfo = Profiles.getInstance();
         const profilesWithExtenderType = profInfo.allProfiles.filter((profile) => profile.type === extenderType);
         for (const profile of profilesWithExtenderType) {
@@ -1229,6 +1229,6 @@ export class Profiles extends ProfilesCache {
             // setup remote workspace at that type.
         }
         // let meow = Profiles.extenderTypeReady;
-        void SharedInit.setupRemoteWorkspaceFolders(undefined, extenderType);
+        await SharedInit.setupRemoteWorkspaceFolders(undefined, extenderType);
     }
 }
