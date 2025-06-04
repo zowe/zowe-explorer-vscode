@@ -551,7 +551,7 @@ export class DatasetTableView {
                 // Extend the onMessageReceived method to handle lazy loading
                 this.table.onMessageReceived = async (message: any): Promise<void> => {
                     // Handle custom lazy loading messages
-                    if (message.command === "requestTreeChildren") {
+                    if (message.command === "loadTreeChildren") {
                         const { nodeId } = message.data;
 
                         if (this.currentDataSource.loadChildren) {

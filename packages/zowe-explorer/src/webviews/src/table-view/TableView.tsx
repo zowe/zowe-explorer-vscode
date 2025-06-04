@@ -12,12 +12,11 @@ import { useContextMenu } from "./ContextMenu";
 import "./style.css";
 import { ActionsBar } from "./ActionsBar";
 import { actionsColumn } from "./actionsColumn";
-import { CheckboxSelectionCallbackParams, HeaderCheckboxSelectionCallbackParams } from "ag-grid-community";
+import { CheckboxSelectionCallbackParams, GridApi, HeaderCheckboxSelectionCallbackParams } from "ag-grid-community";
 import { GetLocaleTextParams } from "ag-grid-community";
 import * as l10n from "@vscode/l10n";
 import { TreeCellRenderer, CustomTreeCellRendererParams } from "./treeCellRenderer";
-
-const vscodeApi = acquireVsCodeApi();
+import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 
 // Helper to generate unique enough IDs for tree nodes
 let treeNodeIdCounter = 0;
@@ -33,7 +32,7 @@ const processTreeData = (
   let flatData: Table.RowData[] = [];
   hierarchicalData.forEach((node: Table.RowData) => {
     const nodeId = node._tree?.id || generateTreeNodeId();
-    const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+    const hasChildren = node._tree?.hasChildren;
     const isExpanded = expansionDepth === -1 || currentDepth < expansionDepth;
 
     const processedNode: Table.RowData = {
@@ -96,7 +95,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     selectedRows: [],
     clickedRow: undefined as any,
     colDef: undefined as any,
-    vscodeApi,
+    vscodeApi: PersistentVSCodeAPI.getVSCodeAPI(),
   });
 
   // Capture the current state in a ref
@@ -132,10 +131,11 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
     // Update the grid's row data to reflect the new expanded state
     if (gridRef.current?.api) {
-      const targetNode = gridRef.current.api.getRowNode(nodeIdToToggle);
+      const targetNode = (gridRef.current.api as GridApi).getRowNode(nodeIdToToggle);
       if (targetNode) {
         const updatedData = { ...targetNode.data, _tree: { ...targetNode.data._tree, isExpanded: !targetNode.data._tree.isExpanded } };
         targetNode.setData(updatedData);
+        gridRef.current.api.refreshCells();
       }
     }
   };
@@ -181,7 +181,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
           const initializeExpansion = (nodes: Table.RowData[], depth: number = 0, expansionDepthTarget: number): Table.RowData[] => {
             return nodes.map((node) => {
               const nodeId = node._tree?.id || generateTreeNodeId(); // Assign ID if not present
-              const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+              const hasChildren = node._tree?.hasChildren;
               const isExpanded = expansionDepthTarget === -1 || depth < expansionDepthTarget;
               let processedChildren = node.children;
               if (hasChildren && Array.isArray(node.children)) {
@@ -235,7 +235,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         console.log("updating table data...", JSON.stringify(newData));
         if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
           // Add an extra column to the end of each row if row actions are present
-          const columns = [...(newColumns ?? []), actionsColumn(newData, actionsCellRenderer, vscodeApi)];
+          const columns = [...(newColumns ?? []), actionsColumn(newData, actionsCellRenderer, PersistentVSCodeAPI.getVSCodeAPI())];
           setVisibleColumns(columns.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field));
           setTableData({ ...newData, rows: displayRows, columns });
         } else {
@@ -278,8 +278,8 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     });
 
     // Once the listener is in place, send a "ready signal" to the TableView instance to handle new data.
-    vscodeApi.postMessage({ command: "ready" });
-    vscodeApi.postMessage({ command: "GET_LOCALIZATION" });
+    PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
+    PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "GET_LOCALIZATION" });
   }, [localization]);
 
   const localizationMap = [
@@ -325,10 +325,14 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         selectionCount={selectionCount}
         visibleColumns={visibleColumns}
         setVisibleColumns={setVisibleColumns}
-        vscodeApi={vscodeApi}
+        vscodeApi={PersistentVSCodeAPI.getVSCodeAPI()}
       />
       {tableData ? (
-        <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData, vscodeApi)} ref={gridRef} getLocaleText={getLocaleText} />
+        <AgGridReact
+          {...tableProps(contextMenu, setSelectionCount, tableData, PersistentVSCodeAPI.getVSCodeAPI())}
+          ref={gridRef}
+          getLocaleText={getLocaleText}
+        />
       ) : null}
     </div>
   );

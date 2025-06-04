@@ -1,5 +1,6 @@
 import type { GridApi, ICellRendererParams } from "ag-grid-community";
 import type { Table } from "@zowe/zowe-explorer-api";
+import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 
 export interface CustomTreeCellRendererParams extends ICellRendererParams {
   data: Table.RowData; // Make sure data is typed to our RowData with _tree... props
@@ -17,7 +18,8 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
 
   const indentationStyle = {
     paddingLeft: `${depth * 20}px`, // 20px per depth level
-    display: "inline-block",
+    display: "flex",
+    alignItems: "center",
   };
 
   const iconClickHandler = (e: MouseEvent) => {
@@ -30,7 +32,7 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
     console.log("[iconClickHandler] Toggling node:", nodeId, "Current expanded state:", isExpanded);
 
     // Get VS Code API to send message for lazy loading
-    const vscodeApi = (window as any).acquireVsCodeApi();
+    const vscodeApi = PersistentVSCodeAPI.getVSCodeAPI();
 
     if (!isExpanded) {
       // Expanding - request children from backend (lazy loading)
@@ -99,7 +101,7 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
 
   return (
     <div style={{ display: "flex", alignItems: "center" }}>
-      <span style={{ ...indentationStyle, display: "flex", alignItems: "center" }}>{icon}</span>
+      <span style={indentationStyle}>{icon}</span>
       {value}
     </div>
   );
