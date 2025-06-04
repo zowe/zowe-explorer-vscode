@@ -1228,7 +1228,7 @@ export class Profiles extends ProfilesCache {
             }
             // setup remote workspace at that type.
         }
-        let meow = Profiles.extenderTypeReady;
+        // let meow = Profiles.extenderTypeReady;
         void SharedInit.setupRemoteWorkspaceFolders(undefined, extenderType);
     }
 }
