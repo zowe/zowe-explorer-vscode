@@ -11087,10 +11087,10 @@ tapable@^1.0.0, tapable@^1.1.3:
   resolved "https://registry.npmjs.org/tapable/-/tapable-1.1.3.tgz"
   integrity sha512-4WK/bYZmj8xLr+HUCODHGF1ZFzsYffasLUgEiMBY4fgtltdO6B4WJtlSbPaDTLpYTcGVwM2qLnFTICEcNxs3kA==
 
-tar-fs@^2.0.0:
-  version "2.1.1"
-  resolved "https://registry.npmjs.org/tar-fs/-/tar-fs-2.1.1.tgz"
-  integrity sha512-V0r2Y9scmbDRLCNex/+hYzvp/zyYjvFbHPNgVTKfQvVrb6guiE/fxP+XblDNR011utopbkex2nM4dHNV6GDsng==
+tar-fs@^2.0.0, tar-fs@^2.1.3:
+  version "2.1.3"
+  resolved "https://registry.npmjs.org/tar-fs/-/tar-fs-2.1.3.tgz#fb3b8843a26b6f13a08e606f7922875eb1fbbf92"
+  integrity sha512-090nwYJDmlhwFwEW3QQl+vaNnxsO2yVsd45eTKRBzSzu+hlb1w2K9inVq5b0ngXuLVqQ4ApvsUHHnu/zQNkWAg==
   dependencies:
     chownr "^1.1.1"
     mkdirp-classic "^0.5.2"
