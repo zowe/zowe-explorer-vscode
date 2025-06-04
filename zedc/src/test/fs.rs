@@ -60,7 +60,7 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
     // Launch VS Code after installing the given extensions.
     let vsc_dir = match std::env::consts::OS {
         "macos" => vsc_bin_path.ancestors().nth(6).unwrap(),
-        _ => vsc_bin_path.parent().unwrap().parent().unwrap()
+        _ => vsc_bin_path.parent().unwrap().parent().unwrap(),
     };
     let sandbox_dir = vsc_dir.parent().unwrap().join("sandbox");
     let sandbox_str = sandbox_dir.to_str().unwrap();
@@ -70,16 +70,22 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
 
     if std::env::consts::OS == "macos" {
         match Command::new("open")
-            .args([vsc.to_str().unwrap(), "--args", "--disable-updates", sandbox_str])
+            .args([
+                vsc.to_str().unwrap(),
+                "--args",
+                "--disable-updates",
+                sandbox_str,
+            ])
             .env("ZOWE_CLI_HOME", zowe_dir.to_str().unwrap())
             .stdout(Stdio::null())
-            .spawn() {
-                Ok(_s) => {
-                    println!("🚀 Launched VS Code");
-                    Ok(())
-                }
-                Err(_) => todo!(),
+            .spawn()
+        {
+            Ok(_s) => {
+                println!("🚀 Launched VS Code");
+                Ok(())
             }
+            Err(_) => todo!(),
+        }
     } else {
         match Command::new(vsc)
             .arg("")
