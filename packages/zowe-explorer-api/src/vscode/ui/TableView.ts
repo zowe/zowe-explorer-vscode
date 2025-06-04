@@ -17,9 +17,21 @@ import { TableMediator } from "./utils/TableMediator";
 import * as vscode from "vscode";
 import * as fs from "fs";
 export namespace Table {
+    /* Tree node structure for hierarchical data */
+    export type TreeNodeData = {
+        id?: string;
+        parentId?: string;
+        depth?: number;
+        hasChildren?: boolean;
+        isExpanded?: boolean;
+    };
+
     /* The types of supported content for the table and how they are represented in callback functions. */
-    export type ContentTypes = string | number | boolean | string[];
-    export type RowData = Record<string | number, ContentTypes>;
+    export type ContentTypes = string | number | boolean | string[] | RowData[] | TreeNodeData | undefined;
+    export type RowData = Record<string | number, ContentTypes> & {
+        children?: RowData[];
+        _tree?: TreeNodeData;
+    };
     export type ColData = RowData;
 
     export type RowInfo = {
@@ -257,6 +269,12 @@ export namespace Table {
         suppressMenuHide?: boolean;
         /** Set to `true` to suppress column moving (fixed position for columns) */
         suppressMovableColumns?: boolean;
+        /** Enables custom tree mode support (custom cell renderer). */
+        customTreeMode?: boolean;
+        /** The 'field' of the column to be used for displaying the tree hierarchy in custom tree mode. */
+        customTreeColumnField?: string;
+        /** Initial depth of expansion for custom tree mode. 0 for all collapsed (default), -1 for all expanded. */
+        customTreeInitialExpansionDepth?: number;
     };
 
     export type ViewOpts = {

@@ -15,8 +15,47 @@ import { actionsColumn } from "./actionsColumn";
 import { CheckboxSelectionCallbackParams, HeaderCheckboxSelectionCallbackParams } from "ag-grid-community";
 import { GetLocaleTextParams } from "ag-grid-community";
 import * as l10n from "@vscode/l10n";
+import { TreeCellRenderer, CustomTreeCellRendererParams } from "./treeCellRenderer";
 
 const vscodeApi = acquireVsCodeApi();
+
+// Helper to generate unique enough IDs for tree nodes
+let treeNodeIdCounter = 0;
+const generateTreeNodeId = () => `tree_node_${treeNodeIdCounter++}`;
+
+// Processes hierarchical data for custom tree mode
+const processTreeData = (
+  hierarchicalData: Table.RowData[],
+  expansionDepth: number = 0,
+  parentId?: string,
+  currentDepth: number = 0
+): Table.RowData[] => {
+  let flatData: Table.RowData[] = [];
+  hierarchicalData.forEach((node: Table.RowData) => {
+    const nodeId = node._tree?.id || generateTreeNodeId();
+    const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+    const isExpanded = expansionDepth === -1 || currentDepth < expansionDepth;
+
+    const processedNode: Table.RowData = {
+      ...node,
+      _tree: {
+        id: nodeId,
+        parentId: parentId!,
+        depth: currentDepth,
+        hasChildren: hasChildren,
+        isExpanded: hasChildren && isExpanded,
+      },
+    };
+    delete processedNode.children;
+
+    flatData.push(processedNode);
+
+    if (hasChildren && isExpanded && Array.isArray(node.children)) {
+      flatData = flatData.concat(processTreeData(node.children, expansionDepth, nodeId, currentDepth + 1));
+    }
+  });
+  return flatData;
+};
 
 function isFirstColumn(params: CheckboxSelectionCallbackParams | HeaderCheckboxSelectionCallbackParams) {
   const displayedColumns = params.api.getAllDisplayedColumns();
@@ -27,6 +66,7 @@ function isFirstColumn(params: CheckboxSelectionCallbackParams | HeaderCheckboxS
 export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewProps) => {
   const [localization, setLocalizationContents] = useState<{ [key: string]: string }>({});
   const [tableData, setTableData] = useState<Table.ViewOpts | undefined>(data);
+  const [originalHierarchicalData, setOriginalHierarchicalData] = useState<Table.RowData[] | undefined>(undefined);
   const [theme, setTheme] = useState<string>(baseTheme ?? "ag-theme-quartz");
   const [selectionCount, setSelectionCount] = useState<number>(0);
   const gridRef = useRef<any>();
@@ -59,6 +99,30 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     vscodeApi,
   });
 
+  const handleToggleNode = (nodeIdToToggle: string | undefined) => {
+    if (!nodeIdToToggle || !originalHierarchicalData || !tableData?.options?.customTreeMode) return;
+
+    // Recursive function to find and toggle the node in the original hierarchical data
+    const toggleNodeState = (nodes: Table.RowData[]): Table.RowData[] => {
+      return nodes.map((node) => {
+        if (node._tree?.id === nodeIdToToggle) {
+          return { ...node, _tree: { ...node._tree, isExpanded: !node._tree.isExpanded } };
+        }
+        if (Array.isArray(node.children) && node.children.length > 0) {
+          return { ...node, children: toggleNodeState(node.children) };
+        }
+        return node;
+      });
+    };
+
+    const newOriginalData = toggleNodeState(originalHierarchicalData);
+    setOriginalHierarchicalData(newOriginalData);
+
+    // Re-flatten the data with the new expansion state
+    const newDisplayRows = processTreeData(newOriginalData, tableData.options.customTreeInitialExpansionDepth ?? 0);
+    setTableData((prevData) => (prevData ? { ...prevData, rows: newDisplayRows } : undefined));
+  };
+
   useEffect(() => {
     // Apply the dark version of the AG Grid theme if the user is using a dark or high-contrast theme in VS Code.
     const userTheme = getVsCodeTheme();
@@ -89,8 +153,59 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
       const response = event.data;
       if (response.command === "ondatachanged") {
-        // Update received from a VS Code extender; update table state
         const newData: Table.ViewOpts = response.data;
+
+        let displayRows = newData.rows;
+        if (newData.options?.customTreeMode && newData.options?.customTreeColumnField) {
+          treeNodeIdCounter = 0; // Reset counter for each new dataset
+          // Store original data and set initial expansion states for _tree.isExpanded on original data
+          const initializeExpansion = (nodes: Table.RowData[], depth: number = 0, expansionDepthTarget: number): Table.RowData[] => {
+            return nodes.map((node) => {
+              const nodeId = node._tree?.id || generateTreeNodeId(); // Assign ID if not present
+              const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+              const isExpanded = expansionDepthTarget === -1 || depth < expansionDepthTarget;
+              let processedChildren = node.children;
+              if (hasChildren && Array.isArray(node.children)) {
+                processedChildren = initializeExpansion(node.children, depth + 1, expansionDepthTarget);
+              }
+              return {
+                ...node,
+                _tree: {
+                  id: nodeId,
+                  parentId: node._tree?.parentId,
+                  depth: depth,
+                  hasChildren: hasChildren,
+                  isExpanded: hasChildren && isExpanded,
+                },
+                children: processedChildren,
+              };
+            });
+          };
+          const initialExpansionDepth = newData.options.customTreeInitialExpansionDepth ?? 0;
+          const preparedHierarchicalData = initializeExpansion(newData.rows || [], 0, initialExpansionDepth);
+          setOriginalHierarchicalData(preparedHierarchicalData);
+          displayRows = processTreeData(preparedHierarchicalData, initialExpansionDepth);
+        } else {
+          setOriginalHierarchicalData(undefined); // Clear if not in tree mode
+        }
+
+        let newColumns = newData.columns;
+        if (newData.options?.customTreeMode && newData.options?.customTreeColumnField) {
+          const treeColumnField = newData.options.customTreeColumnField;
+          newColumns = newData.columns?.map((col) => {
+            if (col.field === treeColumnField) {
+              return {
+                ...col,
+                cellRenderer: TreeCellRenderer,
+                cellRendererParams: {
+                  onToggleNode: handleToggleNode,
+                } as CustomTreeCellRendererParams,
+              };
+            }
+            return col;
+          });
+        }
+
         if (newData.options?.selectEverything) {
           (newData.options as any).defaultColDef = {
             headerCheckboxSelection: isFirstColumn,
@@ -99,15 +214,12 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         }
         if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
           // Add an extra column to the end of each row if row actions are present
-          const rows = newData.rows?.map((row: Table.RowData) => {
-            return { ...row, actions: "" };
-          });
-          const columns = [...(newData.columns ?? []), actionsColumn(newData, actionsCellRenderer, vscodeApi)];
+          const columns = [...(newColumns ?? []), actionsColumn(newData, actionsCellRenderer, vscodeApi)];
           setVisibleColumns(columns.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field));
-          setTableData({ ...newData, rows, columns });
+          setTableData({ ...newData, rows: displayRows, columns });
         } else {
-          setVisibleColumns(newData.columns.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field));
-          setTableData(newData);
+          setVisibleColumns(newColumns?.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field) ?? []);
+          setTableData({ ...newData, rows: displayRows, columns: newColumns });
         }
       }
     });
