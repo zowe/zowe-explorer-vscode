@@ -46,7 +46,7 @@ const processTreeData = (
         isExpanded: hasChildren && isExpanded,
       },
     };
-    delete processedNode.children;
+    //delete processedNode.children;
 
     flatData.push(processedNode);
 
@@ -99,8 +99,20 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     vscodeApi,
   });
 
+  // Capture the current state in a ref
+  const tableDataRef = useRef(tableData);
+  const originalHierarchicalDataRef = useRef(originalHierarchicalData);
+
+  useEffect(() => {
+    tableDataRef.current = tableData;
+    originalHierarchicalDataRef.current = originalHierarchicalData;
+  }, [tableData, originalHierarchicalData]);
+
+  // Updated handleToggleNode to use captured state
   const handleToggleNode = (nodeIdToToggle: string | undefined) => {
-    if (!nodeIdToToggle || !originalHierarchicalData || !tableData?.options?.customTreeMode) return;
+    if (!nodeIdToToggle || !originalHierarchicalDataRef.current || !tableDataRef.current?.options?.customTreeMode) {
+      return;
+    }
 
     // Recursive function to find and toggle the node in the original hierarchical data
     const toggleNodeState = (nodes: Table.RowData[]): Table.RowData[] => {
@@ -115,12 +127,8 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       });
     };
 
-    const newOriginalData = toggleNodeState(originalHierarchicalData);
+    const newOriginalData = toggleNodeState(originalHierarchicalDataRef.current!);
     setOriginalHierarchicalData(newOriginalData);
-
-    // Re-flatten the data with the new expansion state
-    const newDisplayRows = processTreeData(newOriginalData, tableData.options.customTreeInitialExpansionDepth ?? 0);
-    setTableData((prevData) => (prevData ? { ...prevData, rows: newDisplayRows } : undefined));
   };
 
   useEffect(() => {
@@ -135,6 +143,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
     // Set up event listener to handle data changes being sent to the webview.
     window.addEventListener("message", (event: any): void => {
+      console.trace("New message event received at ", new Date().toLocaleTimeString());
       if (!isSecureOrigin(event.origin)) {
         return;
       }
@@ -154,6 +163,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       const response = event.data;
       if (response.command === "ondatachanged") {
         const newData: Table.ViewOpts = response.data;
+        console.log("ondatachanged received at: ", new Date().toLocaleTimeString());
 
         let displayRows = newData.rows;
         if (newData.options?.customTreeMode && newData.options?.customTreeColumnField) {
@@ -191,6 +201,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
         let newColumns = newData.columns;
         if (newData.options?.customTreeMode && newData.options?.customTreeColumnField) {
+          console.log("customTreeMode:", newData.options?.customTreeMode);
           const treeColumnField = newData.options.customTreeColumnField;
           newColumns = newData.columns?.map((col) => {
             if (col.field === treeColumnField) {
@@ -198,7 +209,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
                 ...col,
                 cellRenderer: TreeCellRenderer,
                 cellRendererParams: {
-                  onToggleNode: handleToggleNode,
+                  onToggleNode: (nodeIdToToggle: string) => handleToggleNode(nodeIdToToggle),
                 } as CustomTreeCellRendererParams,
               };
             }
@@ -212,6 +223,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
             checkboxSelection: isFirstColumn,
           };
         }
+        console.log("updating table data...", JSON.stringify(newData));
         if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
           // Add an extra column to the end of each row if row actions are present
           const columns = [...(newColumns ?? []), actionsColumn(newData, actionsCellRenderer, vscodeApi)];

@@ -39,11 +39,6 @@ export class DatasetTableView {
             initialSort: "asc",
         } as Table.ColumnOpts,
         {
-            field: "member",
-            headerName: l10n.t("Member Name"),
-            initialSort: "asc",
-        } as Table.ColumnOpts,
-        {
             field: "dsorg",
             headerName: l10n.t("Data Set Organization"),
         },
@@ -71,7 +66,7 @@ export class DatasetTableView {
                     // Check if it's a sequential dataset (PS) or a PDS member
                     const dsorg = r["dsorg"] as string;
                     const hasTreeData = (r as any)._tree as Table.TreeNodeData;
-                    const isMember = hasTreeData?.parentId != null || r["member"];
+                    const isMember = hasTreeData?.parentId != null;
 
                     // Allow opening for PS datasets or PDS members
                     return dsorg?.startsWith("PS") || isMember;
@@ -187,12 +182,11 @@ export class DatasetTableView {
         });
 
         this.shouldShow["volumes"] ||= dsStats?.["vols"] != null || dsStats?.["vol"] != null;
-        this.shouldShow["member"] ||= SharedContext.isDsMember(dsNode);
-        this.shouldShow["dsname"] ||= !SharedContext.isDsMember(dsNode);
+        this.shouldShow["dsname"] = true;
 
         if (SharedContext.isDsMember(dsNode)) {
             return {
-                member: dsNode.label.toString(),
+                dsname: dsNode.label.toString(),
                 createdDate: dsStats?.createdDate?.toLocaleTimeString(),
                 modifiedDate: dsStats?.modifiedDate?.toLocaleTimeString(),
                 lrecl: dsStats?.["lrecl"],
@@ -233,8 +227,7 @@ export class DatasetTableView {
         });
 
         this.shouldShow["volumes"] ||= dsStats?.["vols"] != null || dsStats?.["vol"] != null;
-        this.shouldShow["member"] ||= SharedContext.isDsMember(dsNode);
-        this.shouldShow["dsname"] ||= !SharedContext.isDsMember(dsNode);
+        this.shouldShow["dsname"] ||= true;
 
         const baseRow = {
             uri: dsNode.resourceUri?.toString(),
@@ -249,8 +242,7 @@ export class DatasetTableView {
         if (SharedContext.isDsMember(dsNode)) {
             return {
                 ...baseRow,
-                member: dsNode.label.toString(),
-                dsname: "", // Empty for members, will be shown in tree hierarchy
+                dsname: dsNode.label.toString(),
                 dsorg: "",
                 volumes: "",
                 _tree: {
@@ -269,7 +261,6 @@ export class DatasetTableView {
                 ...baseRow,
                 dsname: dsNode.label.toString(),
                 dsorg: dsStats?.["dsorg"],
-                member: "",
                 migr: dsStats?.["migr"] ?? "NO",
                 volumes: dsStats?.["vols"] ?? dsStats?.["vol"],
                 _tree: {
@@ -279,6 +270,7 @@ export class DatasetTableView {
                     hasChildren: hasMembers,
                     isExpanded: false,
                 } as Table.TreeNodeData,
+                children: hasMembers ? dsNode.children.map((c) => this.mapDsNodeToRow(c)) : [],
             };
         }
     }

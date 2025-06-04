@@ -1,9 +1,10 @@
-import type { ICellRendererParams } from "ag-grid-community";
+import type { GridApi, ICellRendererParams } from "ag-grid-community";
 import type { Table } from "@zowe/zowe-explorer-api";
 
 export interface CustomTreeCellRendererParams extends ICellRendererParams {
   data: Table.RowData; // Make sure data is typed to our RowData with _tree... props
   onToggleNode: (nodeId: string | undefined) => void;
+  gridRef: GridApi;
 }
 
 export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRendererParams) => {
@@ -24,6 +25,23 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
     if (hasChildren) {
       onToggleNode(nodeId);
     }
+    console.log("[iconClickHandler]", JSON.stringify(props.data));
+    const nowExpanded = !isExpanded;
+    const newData = { ...data, _tree: { ...data._tree, isExpanded: nowExpanded } };
+    props.node.setData(newData);
+    const rowsToAdd = data.children;
+    console.trace("new rows to add:", JSON.stringify(rowsToAdd));
+    if (isExpanded) {
+      props.api.applyTransaction({
+        add: rowsToAdd,
+        addIndex: props.node.rowIndex! + 1,
+      });
+    } else {
+      props.api.applyTransaction({
+        remove: rowsToAdd,
+      });
+    }
+    props.api.refreshCells();
   };
 
   const icon = hasChildren ? (
@@ -37,9 +55,19 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
   ); // Placeholder for alignment if no children
 
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <span style={indentationStyle}>{icon}</span>
-      {value}
-    </div>
+    <>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <span style={{ ...indentationStyle, display: "flex", alignItems: "center" }}>{icon}</span>
+        {value}
+      </div>
+
+      {/* {hasChildren && isExpanded ? (
+        <span style={{ marginLeft: "10px" }}>
+          {data.children?.map((childNode: any) => (
+            <TreeCellRenderer {...props} key={childNode.id} data={childNode} value={childNode.name} onToggleNode={onToggleNode} />
+          ))}
+        </span>
+      ) : null} */}
+    </>
   );
 };

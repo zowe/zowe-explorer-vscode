@@ -75,4 +75,22 @@ export const tableProps = (
         vscodeApi.postMessage({ command: "ondisplaychanged", data: rows });
     },
     ...(tableData.options ?? {}),
+    postSortRows: tableData.options?.customTreeMode
+        ? (params) => {
+              let rowNodes = params.nodes;
+              for (let i = 0; i < rowNodes.length; i++) {
+                  const potentialChild = rowNodes[i];
+                  const parentId = potentialChild.data._tree._parentId;
+                  console.log("[postSortRows] potentialChild: ", JSON.stringify(potentialChild));
+                  if (parentId) {
+                      const parentIdx = rowNodes.findIndex((r) => r.data._tree.id === parentId);
+                      if (parentIdx !== -1) {
+                          // remove child from the list of rows
+                          rowNodes.splice(i, 1);
+                          rowNodes.splice(parentIdx + 1, 0, potentialChild);
+                      }
+                  }
+              }
+          }
+        : undefined,
 });
