@@ -22,26 +22,69 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
 
   const iconClickHandler = (e: MouseEvent) => {
     e.stopPropagation(); // Prevent row selection or other cell actions
-    if (hasChildren) {
-      onToggleNode(nodeId);
+
+    if (!hasChildren || !nodeId) {
+      return;
     }
-    console.log("[iconClickHandler]", JSON.stringify(props.data));
-    const nowExpanded = !isExpanded;
-    const newData = { ...data, _tree: { ...data._tree, isExpanded: nowExpanded } };
-    props.node.setData(newData);
-    const rowsToAdd = data.children;
-    console.trace("new rows to add:", JSON.stringify(rowsToAdd));
-    if (isExpanded) {
-      props.api.applyTransaction({
-        add: rowsToAdd,
-        addIndex: props.node.rowIndex! + 1,
+
+    console.log("[iconClickHandler] Toggling node:", nodeId, "Current expanded state:", isExpanded);
+
+    // Get VS Code API to send message for lazy loading
+    const vscodeApi = (window as any).acquireVsCodeApi();
+
+    if (!isExpanded) {
+      // Expanding - request children from backend (lazy loading)
+      vscodeApi.postMessage({
+        command: "loadTreeChildren",
+        data: {
+          nodeId: nodeId,
+          parentRow: data,
+        },
       });
     } else {
-      props.api.applyTransaction({
-        remove: rowsToAdd,
-      });
+      // Collapsing - remove children and update state
+      const childrenToRemove: any[] = [];
+      let currentIndex = props.node.rowIndex! + 1;
+
+      // Find all descendant rows (children, grandchildren, etc.)
+      while (currentIndex < props.api.getDisplayedRowCount()) {
+        const row = props.api.getDisplayedRowAtIndex(currentIndex);
+        if (row && row.data._tree?.parentId && isDescendantOf(row.data._tree.parentId, nodeId, props.api)) {
+          childrenToRemove.push(row.data);
+          currentIndex++;
+        } else {
+          break;
+        }
+      }
+
+      if (childrenToRemove.length > 0) {
+        props.api.applyTransaction({
+          remove: childrenToRemove,
+        });
+      }
     }
-    props.api.refreshCells();
+
+    // Update the expanded state via the parent component
+    onToggleNode(nodeId);
+  };
+
+  // Helper function to check if a node is a descendant of another node
+  const isDescendantOf = (childParentId: string, ancestorId: string, api: GridApi): boolean => {
+    if (childParentId === ancestorId) {
+      return true;
+    }
+
+    // Find the parent node and check recursively
+    api.forEachNode((node) => {
+      if (node.data._tree?.id === childParentId) {
+        const parentOfParent = node.data._tree?.parentId;
+        if (parentOfParent) {
+          return isDescendantOf(parentOfParent, ancestorId, api);
+        }
+      }
+    });
+
+    return false;
   };
 
   const icon = hasChildren ? (
@@ -52,22 +95,12 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
     )
   ) : (
     <span style={{ marginRight: "5px", width: "16px", display: "inline-block" }}></span>
-  ); // Placeholder for alignment if no children
+  );
 
   return (
-    <>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <span style={{ ...indentationStyle, display: "flex", alignItems: "center" }}>{icon}</span>
-        {value}
-      </div>
-
-      {/* {hasChildren && isExpanded ? (
-        <span style={{ marginLeft: "10px" }}>
-          {data.children?.map((childNode: any) => (
-            <TreeCellRenderer {...props} key={childNode.id} data={childNode} value={childNode.name} onToggleNode={onToggleNode} />
-          ))}
-        </span>
-      ) : null} */}
-    </>
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <span style={{ ...indentationStyle, display: "flex", alignItems: "center" }}>{icon}</span>
+      {value}
+    </div>
   );
 };

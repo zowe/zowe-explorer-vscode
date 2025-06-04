@@ -129,6 +129,15 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
     const newOriginalData = toggleNodeState(originalHierarchicalDataRef.current!);
     setOriginalHierarchicalData(newOriginalData);
+
+    // Update the grid's row data to reflect the new expanded state
+    if (gridRef.current?.api) {
+      const targetNode = gridRef.current.api.getRowNode(nodeIdToToggle);
+      if (targetNode) {
+        const updatedData = { ...targetNode.data, _tree: { ...targetNode.data._tree, isExpanded: !targetNode.data._tree.isExpanded } };
+        targetNode.setData(updatedData);
+      }
+    }
   };
 
   useEffect(() => {
@@ -232,6 +241,38 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         } else {
           setVisibleColumns(newColumns?.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field) ?? []);
           setTableData({ ...newData, rows: displayRows, columns: newColumns });
+        }
+      }
+
+      // Handle response with loaded children
+      if (response.command === "treeChildrenLoaded") {
+        const { parentNodeId, children } = response.data;
+        if (gridRef.current?.api && children?.length > 0) {
+          // Find the parent node in the grid
+          let parentRowIndex = -1;
+          gridRef.current.api.forEachNode((node: any) => {
+            if (node.data._tree?.id === parentNodeId) {
+              parentRowIndex = node.rowIndex!;
+            }
+          });
+
+          if (parentRowIndex !== -1) {
+            // Process children into tree structure
+            const processedChildren = children.map((child: Table.RowData) => ({
+              ...child,
+              _tree: {
+                ...child._tree,
+                parentId: parentNodeId,
+                depth: (child._tree?.depth ?? 0) + 1,
+              },
+            }));
+
+            // Add children using applyTransaction
+            gridRef.current.api.applyTransaction({
+              add: processedChildren,
+              addIndex: parentRowIndex + 1,
+            });
+          }
         }
       }
     });
