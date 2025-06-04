@@ -149,17 +149,11 @@ pub fn run_coverage_check(verbose: bool, filter: Option<String>) -> Result<()> {
 
     // Process coverage reports
     println!("{}", "\nProcessing coverage reports...".blue());
-    let (covered_lines_in_patch, uncovered_lines_details) =
+    let (_covered_lines_in_patch, uncovered_lines_details) =
         process_coverage_reports(&changed_lines, &repo_root_pathbuf, verbose, &filter)?;
 
     // Display results
-    display_coverage_results(
-        covered_lines_in_patch,
-        filtered_total_lines,
-        &uncovered_lines_details,
-        verbose,
-        &filter,
-    )
+    display_coverage_results(filtered_total_lines, &uncovered_lines_details, verbose)
 }
 
 /// Get the changed files and lines from git diff
@@ -476,12 +470,6 @@ fn run_tests(filter: Option<String>) -> Result<(bool, Vec<String>, Vec<String>)>
             .unwrap(),
     );
 
-    // Set the message based on whether we're filtering or not
-    let msg = match &filter {
-        Some(pkg) => format!("Executing pnpm --filter {} test...", pkg),
-        None => "Executing pnpm -r test...".to_string(),
-    };
-    pb.set_message(msg);
     pb.enable_steady_tick(std::time::Duration::from_millis(120));
 
     // Run pnpm test
@@ -490,17 +478,18 @@ fn run_tests(filter: Option<String>) -> Result<(bool, Vec<String>, Vec<String>)>
     // If filter is provided, use --filter instead of -r
     match &filter {
         Some(pkg) => {
-            pnpm_test_cmd.args([
-                "--filter",
-                if pkg == "zowe-explorer" {
-                    "vscode-extension-for-zowe"
-                } else {
-                    pkg
-                },
-                "test",
-            ]);
+            let pkg_actual_name = if pkg == "zowe-explorer" {
+                "vscode-extension-for-zowe"
+            } else {
+                pkg
+            };
+            let msg = format!("Executing pnpm --filter {} test...", pkg_actual_name);
+            pb.set_message(msg);
+            pnpm_test_cmd.args(["--filter", pkg_actual_name, "test"]);
         }
         None => {
+            let msg = "Executing pnpm -r test...".to_string();
+            pb.set_message(msg);
             pnpm_test_cmd.args(["-r", "test"]);
         }
     }
@@ -1011,11 +1000,9 @@ fn process_file_statements(
 
 /// Display coverage results
 fn display_coverage_results(
-    covered_lines_in_patch: usize,
     initial_total_lines_in_patch: usize,
     uncovered_lines_details: &HashMap<String, Vec<usize>>,
     verbose: bool,
-    filter: &Option<String>,
 ) -> Result<()> {
     if initial_total_lines_in_patch == 0 {
         println!(
