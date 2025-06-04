@@ -713,6 +713,7 @@ describe("ZoweVsCodeExtension", () => {
                     profile: {},
                 }),
                 getProfileInfo: jest.fn().mockReturnValue({
+                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
                     isSecured: jest.fn().mockReturnValue(true),
                     updateProperty: mockUpdateProperty,
                 }),
@@ -743,6 +744,7 @@ describe("ZoweVsCodeExtension", () => {
                     profile: { user: "badUser", password: "badPassword" },
                 }),
                 getProfileInfo: jest.fn().mockReturnValue({
+                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
                     isSecured: jest.fn().mockReturnValue(true),
                     updateProperty: mockUpdateProperty,
                 }),
@@ -776,6 +778,7 @@ describe("ZoweVsCodeExtension", () => {
                     profile: {},
                 }),
                 getProfileInfo: jest.fn().mockReturnValue({
+                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
                     isSecured: jest.fn().mockReturnValue(false),
                     updateProperty: mockUpdateProperty,
                 }),
@@ -807,6 +810,7 @@ describe("ZoweVsCodeExtension", () => {
                     profile: {},
                 }),
                 getProfileInfo: jest.fn().mockReturnValue({
+                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
                     isSecured: jest.fn().mockReturnValue(false),
                     updateProperty: mockUpdateProperty,
                 }),
