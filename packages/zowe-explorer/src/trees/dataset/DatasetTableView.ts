@@ -47,7 +47,7 @@ interface IDatasetDataSource {
     /**
      * Fetches dataset information based on the source's specific implementation
      */
-    fetchDatasets(): Promise<IDatasetInfo[]>;
+    fetchDatasets(): IDatasetInfo[] | PromiseLike<IDatasetInfo[]>;
 
     /**
      * Gets the title for the table view
@@ -69,13 +69,13 @@ interface IDatasetDataSource {
  * Tree-based data source that uses existing tree nodes
  */
 class TreeDataSource implements IDatasetDataSource {
-    constructor(private profileNode: IZoweDatasetTreeNode, private cachedChildren: IZoweDatasetTreeNode[]) {}
+    public constructor(private profileNode: IZoweDatasetTreeNode, private cachedChildren: IZoweDatasetTreeNode[]) {}
 
-    async fetchDatasets(): Promise<IDatasetInfo[]> {
+    public fetchDatasets(): IDatasetInfo[] {
         return this.cachedChildren.map((dsNode) => this.mapNodeToInfo(dsNode));
     }
 
-    getTitle(): string {
+    public getTitle(): string {
         if (SharedContext.isPds(this.profileNode)) {
             return this.profileNode.label.toString();
         }
@@ -90,11 +90,11 @@ class TreeDataSource implements IDatasetDataSource {
         return l10n.t("[{0}]: *", this.profileNode.label.toString());
     }
 
-    supportsHierarchy(): boolean {
+    public supportsHierarchy(): boolean {
         return SharedContext.isSession(this.profileNode) && this.cachedChildren.some((child) => SharedContext.isPds(child));
     }
 
-    async loadChildren(parentId: string): Promise<IDatasetInfo[]> {
+    public async loadChildren(parentId: string): Promise<IDatasetInfo[]> {
         const pdsNode = this.cachedChildren.find((child) => {
             const childId = child.resourceUri?.toString() || child.label.toString();
             return childId === parentId && SharedContext.isPds(child);
@@ -137,9 +137,9 @@ class TreeDataSource implements IDatasetDataSource {
  * API-based data source that directly queries the MVS API with a pattern
  */
 class PatternDataSource implements IDatasetDataSource {
-    constructor(private profile: imperative.IProfileLoaded, private pattern: string) {}
+    public constructor(private profile: imperative.IProfileLoaded, private pattern: string) {}
 
-    async fetchDatasets(): Promise<IDatasetInfo[]> {
+    public async fetchDatasets(): Promise<IDatasetInfo[]> {
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(this.profile);
         const datasets: IDatasetInfo[] = [];
 
@@ -155,10 +155,10 @@ class PatternDataSource implements IDatasetDataSource {
         try {
             const datasetResponses = [];
             if (mvsApi.dataSetsMatchingPattern) {
-                datasetResponses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+                datasetResponses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns, { attributes: true }));
             } else {
                 for (const dsp of dsPatterns) {
-                    datasetResponses.push(await mvsApi.dataSet(dsp));
+                    datasetResponses.push(await mvsApi.dataSet(dsp, { attributes: true }));
                 }
             }
 
@@ -179,7 +179,7 @@ class PatternDataSource implements IDatasetDataSource {
                         recfm: ds.recfm,
                         volumes: ds.vols || ds.vol,
                         user: ds.user,
-                        uri: `zowe-ds:/${this.profile.name}/${ds.dsname}`,
+                        uri: `zowe-ds:/${this.profile.name}/${ds.dsname as string}`,
                         isMember: false,
                         isDirectory: ds.dsorg?.startsWith("PO"),
                     });
@@ -193,7 +193,7 @@ class PatternDataSource implements IDatasetDataSource {
         return datasets;
     }
 
-    getTitle(): string {
+    public getTitle(): string {
         return l10n.t({
             message: `[${this.profile.name}]: {0}`,
             args: [this.pattern],
@@ -201,11 +201,11 @@ class PatternDataSource implements IDatasetDataSource {
         });
     }
 
-    supportsHierarchy(): boolean {
+    public supportsHierarchy(): boolean {
         return true; // API results can include PDS that support lazy loading
     }
 
-    async loadChildren(parentId: string): Promise<IDatasetInfo[]> {
+    public async loadChildren(parentId: string): Promise<IDatasetInfo[]> {
         // Extract dataset name from URI
         const datasetName = parentId.split("/").pop();
         if (!datasetName) {
@@ -229,7 +229,7 @@ class PatternDataSource implements IDatasetDataSource {
                     recfm: member.recfm,
                     volumes: "",
                     user: member.user,
-                    uri: `zowe-ds:/${this.profile.name}/${datasetName}/${member.member}`,
+                    uri: `zowe-ds:/${this.profile.name}/${datasetName}/${member.member as string}`,
                     isMember: true,
                     isDirectory: false,
                     parentId: parentId,
@@ -549,7 +549,7 @@ export class DatasetTableView {
                 const originalOnMessageReceived = this.table.onMessageReceived.bind(this.table);
 
                 // Extend the onMessageReceived method to handle lazy loading
-                this.table.onMessageReceived = async (message: any) => {
+                this.table.onMessageReceived = async (message: any): Promise<void> => {
                     // Handle custom lazy loading messages
                     if (message.command === "requestTreeChildren") {
                         const { nodeId } = message.data;
