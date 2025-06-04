@@ -66,7 +66,16 @@ export class DatasetTableView {
             title: l10n.t("Open"),
             command: "open",
             callback: { fn: DatasetTableView.openInEditor, typ: "multi-row" },
-            condition: (rows: Table.RowData[]) => rows.every((r) => (r["dsorg"] as string)?.startsWith("PS")),
+            condition: (rows: Table.RowData[]) =>
+                rows.every((r) => {
+                    // Check if it's a sequential dataset (PS) or a PDS member
+                    const dsorg = r["dsorg"] as string;
+                    const hasTreeData = (r as any)._tree as Table.TreeNodeData;
+                    const isMember = hasTreeData?.parentId != null || r["member"];
+
+                    // Allow opening for PS datasets or PDS members
+                    return dsorg?.startsWith("PS") || isMember;
+                }),
         },
     };
 
@@ -129,18 +138,43 @@ export class DatasetTableView {
      */
     public static async displayInTree(this: void, _view: Table.View, data: Table.RowInfo): Promise<void> {
         const datasetTable = DatasetTableView.getInstance();
-        const isDsMember = datasetTable.isDsMemberUri(data.row.uri as string);
+
+        // Check if this is a tree node with parent-child relationship
+        const treeData = (data.row as any)._tree as Table.TreeNodeData;
+        const isDsMember = datasetTable.isDsMemberUri(data.row.uri as string) || treeData?.parentId != null;
+
         if (isDsMember) {
-            // First find the parent data set
-            const parentUri = posix.resolve(data.row.uri as string, "..");
-            const parentDsNode = datasetTable.cachedChildren.find((child) => child.resourceUri?.toString() === parentUri);
+            // For tree structure, find parent using tree data or URI resolution
+            let parentDsNode: IZoweDatasetTreeNode | undefined;
+
+            if (treeData?.parentId) {
+                // Find parent using tree structure
+                parentDsNode = datasetTable.cachedChildren.find(
+                    (child) => (child.resourceUri?.toString() || child.label.toString()) === treeData.parentId
+                );
+            } else {
+                // Fallback to URI resolution for backward compatibility
+                const parentUri = posix.resolve(data.row.uri as string, "..");
+                parentDsNode = datasetTable.cachedChildren.find((child) => child.resourceUri?.toString() === parentUri);
+            }
+
             if (parentDsNode) {
-                const child = parentDsNode.children?.find((c) => c.label === data.row.member);
-                await SharedTreeProviders.ds.getTreeView().reveal(child, { focus: true });
+                const memberName = (data.row.member as string) || (data.row.uri as string)?.split("/").pop(); // Extract member name from URI
+                const child = parentDsNode.children?.find((c) => c.label === memberName);
+                if (child) {
+                    await SharedTreeProviders.ds.getTreeView().reveal(child, { focus: true });
+                }
             }
         } else {
-            const dsNode = datasetTable.cachedChildren.find((child) => child.resourceUri?.toString() === data.row.uri);
-            await SharedTreeProviders.ds.getTreeView().reveal(dsNode, { expand: true });
+            // For dataset nodes, find directly in cached children
+            const dsNode = datasetTable.cachedChildren.find((child) => {
+                const childId = child.resourceUri?.toString() || child.label.toString();
+                const rowId = treeData?.id || data.row.uri;
+                return childId === rowId || child.resourceUri?.toString() === data.row.uri;
+            });
+            if (dsNode) {
+                await SharedTreeProviders.ds.getTreeView().reveal(dsNode, { expand: true });
+            }
         }
     }
 
@@ -183,12 +217,128 @@ export class DatasetTableView {
     }
 
     /**
+     * Maps dataset nodes to table rows with hierarchical tree data structure.
+     * This creates a parent-child relationship where PDS nodes are parents and their members are children.
+     * @param dsNode The dataset node to map
+     * @param parentId Optional parent ID for hierarchical structure
+     * @returns The row data with tree structure information
+     */
+    private mapDsNodeToRowWithTree(dsNode: IZoweDatasetTreeNode, parentId?: string): Table.RowData {
+        const dsStats = dsNode.getStats();
+        const nodeId = dsNode.resourceUri?.toString() || dsNode.label.toString();
+
+        const fieldsToCheck = ["createdDate", "dsorg", "modifiedDate", "lrecl", "migr", "recfm", "user"];
+        fieldsToCheck.forEach((field) => {
+            this.shouldShow[field] ||= dsStats?.[field] != null;
+        });
+
+        this.shouldShow["volumes"] ||= dsStats?.["vols"] != null || dsStats?.["vol"] != null;
+        this.shouldShow["member"] ||= SharedContext.isDsMember(dsNode);
+        this.shouldShow["dsname"] ||= !SharedContext.isDsMember(dsNode);
+
+        const baseRow = {
+            uri: dsNode.resourceUri?.toString(),
+            createdDate: dsStats?.createdDate?.toLocaleTimeString(),
+            modifiedDate: dsStats?.modifiedDate?.toLocaleTimeString(),
+            lrecl: dsStats?.["lrecl"],
+            migr: dsStats?.["migr"],
+            recfm: dsStats?.["recfm"],
+            user: dsStats?.["user"],
+        };
+
+        if (SharedContext.isDsMember(dsNode)) {
+            return {
+                ...baseRow,
+                member: dsNode.label.toString(),
+                dsname: "", // Empty for members, will be shown in tree hierarchy
+                dsorg: "",
+                volumes: "",
+                _tree: {
+                    id: nodeId,
+                    parentId: parentId,
+                    depth: 1,
+                    hasChildren: false,
+                    isExpanded: false,
+                } as Table.TreeNodeData,
+            };
+        } else {
+            const isPds = SharedContext.isPds(dsNode);
+            const hasMembers = isPds && dsNode.children && dsNode.children.length > 0;
+
+            return {
+                ...baseRow,
+                dsname: dsNode.label.toString(),
+                dsorg: dsStats?.["dsorg"],
+                member: "",
+                migr: dsStats?.["migr"] ?? "NO",
+                volumes: dsStats?.["vols"] ?? dsStats?.["vol"],
+                _tree: {
+                    id: nodeId,
+                    parentId: undefined,
+                    depth: 0,
+                    hasChildren: hasMembers,
+                    isExpanded: false,
+                } as Table.TreeNodeData,
+            };
+        }
+    }
+
+    /**
+     * Generates hierarchical table rows including PDS and their members.
+     * @returns Array of table rows with tree structure
+     */
+    private generateHierarchicalRows(): Table.RowData[] {
+        const rows: Table.RowData[] = [];
+
+        for (const dsNode of this.cachedChildren) {
+            // Create the parent dataset/PDS node
+            const parentRow = this.mapDsNodeToRowWithTree(dsNode);
+
+            // If it's a PDS with members, add the members as children
+            if (SharedContext.isPds(dsNode) && dsNode.children && dsNode.children.length > 0) {
+                const parentId = dsNode.resourceUri?.toString() || dsNode.label.toString();
+                const memberRows: Table.RowData[] = [];
+
+                for (const memberNode of dsNode.children) {
+                    if (!SharedContext.isInformation(memberNode)) {
+                        const memberRow = this.mapDsNodeToRowWithTree(memberNode, parentId);
+                        memberRows.push(memberRow);
+                    }
+                }
+
+                // Add children to the parent row
+                parentRow.children = memberRows;
+            }
+
+            rows.push(parentRow);
+        }
+
+        return rows;
+    }
+
+    /**
      * Generates a table given the list of children and the profile node that was selected.
      * @param context The VS Code extension context (to provide to the table view)
      * @param profileNode The profile node selected for the "Show as Table" action
      */
     private async generateTable(context: ExtensionContext, profileNode: IZoweDatasetTreeNode): Promise<Table.Instance> {
-        const rows = this.cachedChildren.map((item) => this.mapDsNodeToRow(item));
+        // Determine if we should use tree mode (when viewing session nodes that may contain PDS)
+        const useTreeMode = SharedContext.isSession(profileNode) && this.cachedChildren.some((child) => SharedContext.isPds(child));
+
+        let rows: Table.RowData[];
+        if (useTreeMode) {
+            // Load children for PDS nodes to get their members
+            await Promise.all(
+                this.cachedChildren.map(async (child) => {
+                    if (SharedContext.isPds(child)) {
+                        await child.getChildren();
+                    }
+                })
+            );
+            rows = this.generateHierarchicalRows();
+        } else {
+            rows = this.cachedChildren.map((item) => this.mapDsNodeToRow(item));
+        }
 
         // Determine the current table type
         const previousTableType = this.currentTableType;
@@ -198,39 +348,49 @@ export class DatasetTableView {
         // Check if the table type has changed
         const tableTypeChanged = previousTableType !== this.currentTableType;
 
+        // Prepare column definitions
+        const columnDefs = this.expectedFields.map((field) => ({
+            filter: true,
+            ...field,
+            initialHide: this.shouldShow[field.field] === false,
+            // Set the tree column for dataset name when using tree mode
+            ...(useTreeMode && field.field === "dsname"
+                ? {
+                      cellRenderer: "TreeCellRenderer",
+                  }
+                : {}),
+        }));
+
+        const tableOptions = {
+            autoSizeStrategy: { type: "fitCellContents" } as const,
+            pagination: true,
+            rowSelection: "multiple" as const,
+            selectEverything: true,
+            suppressRowClickSelection: true,
+            // Enable custom tree mode when needed
+            ...(useTreeMode
+                ? {
+                      customTreeMode: true,
+                      customTreeColumnField: "dsname",
+                      customTreeInitialExpansionDepth: 0, // Start with all PDS collapsed
+                  }
+                : {}),
+        };
+
         if (this.table && !tableTypeChanged) {
             await this.table.setTitle(this.buildTitle(profileNode));
-            await this.table.setColumns([
-                ...this.expectedFields.map((field) => ({
-                    filter: true,
-                    ...field,
-                    initialHide: this.shouldShow[field.field] === false,
-                })),
-                { field: "actions", hide: true },
-            ]);
+            await this.table.setColumns([...columnDefs, { field: "actions", hide: true }]);
             await this.table.setContent(rows);
+            if (useTreeMode) {
+                await this.table.setOptions(tableOptions);
+            }
         } else {
             this.table = new TableBuilder(context)
-                .options({
-                    autoSizeStrategy: { type: "fitCellContents" },
-                    pagination: true,
-                    rowSelection: "multiple",
-                    selectEverything: true,
-                    suppressRowClickSelection: true,
-                })
+                .options(tableOptions)
                 .isView()
                 .title(this.buildTitle(profileNode))
                 .addRows(rows)
-                .columns(
-                    ...[
-                        ...this.expectedFields.map((field) => ({
-                            filter: true,
-                            ...field,
-                            initialHide: this.shouldShow[field.field] === false,
-                        })),
-                        { field: "actions", hide: true },
-                    ]
-                )
+                .columns(...[...columnDefs, { field: "actions", hide: true }])
                 .addContextOption("all", this.contextOptions.displayInTree)
                 .addRowAction("all", this.rowActions.openInEditor)
                 .build();
