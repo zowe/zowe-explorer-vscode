@@ -211,6 +211,10 @@ export class DatasetInit {
             )
         );
 
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.listDataSets", async () => DatasetTableView.getInstance().handlePatternSearch(context))
+        );
+
         SharedInit.initSubscribers(context, datasetProvider);
         return datasetProvider;
     }

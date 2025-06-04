@@ -188,6 +188,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.listDataSets",
+        "title": "%listDataSets%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.tableView",
         "title": "%tableView%",
         "category": "Zowe Explorer"

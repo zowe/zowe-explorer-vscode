@@ -14,13 +14,237 @@ import { commands, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
-import { posix } from "path";
 import { ProfileManagement } from "../../management/ProfileManagement";
 import { Definitions } from "../../configuration/Definitions";
 import { Profiles } from "../../configuration/Profiles";
+import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { AuthUtils } from "../../utils/AuthUtils";
+import * as imperative from "@zowe/imperative";
+
+/**
+ * Interface representing the data structure for dataset information
+ */
+interface IDatasetInfo {
+    name: string;
+    dsorg?: string;
+    createdDate?: Date;
+    modifiedDate?: Date;
+    lrecl?: string | number;
+    migr?: string;
+    recfm?: string;
+    volumes?: string;
+    user?: string;
+    uri?: string;
+    isMember?: boolean;
+    isDirectory?: boolean;
+    parentId?: string;
+}
+
+/**
+ * Interface for different data sources that can provide dataset information
+ */
+interface IDatasetDataSource {
+    /**
+     * Fetches dataset information based on the source's specific implementation
+     */
+    fetchDatasets(): Promise<IDatasetInfo[]>;
+
+    /**
+     * Gets the title for the table view
+     */
+    getTitle(): string;
+
+    /**
+     * Supports hierarchical tree structure (PDS)
+     */
+    supportsHierarchy(): boolean;
+
+    /**
+     * Loads children for a specific parent (PDS)
+     */
+    loadChildren?(parentId: string): Promise<IDatasetInfo[]>;
+}
+
+/**
+ * Tree-based data source that uses existing tree nodes
+ */
+class TreeDataSource implements IDatasetDataSource {
+    constructor(private profileNode: IZoweDatasetTreeNode, private cachedChildren: IZoweDatasetTreeNode[]) {}
+
+    async fetchDatasets(): Promise<IDatasetInfo[]> {
+        return this.cachedChildren.map((dsNode) => this.mapNodeToInfo(dsNode));
+    }
+
+    getTitle(): string {
+        if (SharedContext.isPds(this.profileNode)) {
+            return this.profileNode.label.toString();
+        }
+        if (this.profileNode.pattern) {
+            return l10n.t({
+                message: `[${this.profileNode.label.toString()}]: {0}`,
+                args: [this.profileNode.pattern],
+                comment: ["Data Set Search Pattern"],
+            });
+        }
+
+        return l10n.t("[{0}]: *", this.profileNode.label.toString());
+    }
+
+    supportsHierarchy(): boolean {
+        return SharedContext.isSession(this.profileNode) && this.cachedChildren.some((child) => SharedContext.isPds(child));
+    }
+
+    async loadChildren(parentId: string): Promise<IDatasetInfo[]> {
+        const pdsNode = this.cachedChildren.find((child) => {
+            const childId = child.resourceUri?.toString() || child.label.toString();
+            return childId === parentId && SharedContext.isPds(child);
+        });
+
+        if (pdsNode && SharedContext.isPds(pdsNode)) {
+            await pdsNode.getChildren();
+            return (
+                pdsNode.children
+                    ?.filter((memberNode) => !SharedContext.isInformation(memberNode))
+                    .map((memberNode) => this.mapNodeToInfo(memberNode, parentId)) || []
+            );
+        }
+
+        return [];
+    }
+
+    private mapNodeToInfo(dsNode: IZoweDatasetTreeNode, parentId?: string): IDatasetInfo {
+        const dsStats = dsNode.getStats();
+
+        return {
+            name: dsNode.label.toString(),
+            dsorg: dsStats?.["dsorg"],
+            createdDate: dsStats?.createdDate,
+            modifiedDate: dsStats?.modifiedDate,
+            lrecl: dsStats?.["lrecl"],
+            migr: dsStats?.["migr"] ?? (SharedContext.isDsMember(dsNode) ? undefined : "NO"),
+            recfm: dsStats?.["recfm"],
+            volumes: dsStats?.["vols"] ?? dsStats?.["vol"],
+            user: dsStats?.["user"],
+            uri: dsNode.resourceUri?.toString(),
+            isMember: SharedContext.isDsMember(dsNode),
+            isDirectory: SharedContext.isPds(dsNode),
+            parentId,
+        };
+    }
+}
+
+/**
+ * API-based data source that directly queries the MVS API with a pattern
+ */
+class PatternDataSource implements IDatasetDataSource {
+    constructor(private profile: imperative.IProfileLoaded, private pattern: string) {}
+
+    async fetchDatasets(): Promise<IDatasetInfo[]> {
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(this.profile);
+        const datasets: IDatasetInfo[] = [];
+
+        const dsPatterns = [
+            ...new Set(
+                this.pattern
+                    .toUpperCase()
+                    .split(",")
+                    .map((p: string) => p.trim())
+            ),
+        ];
+
+        try {
+            const datasetResponses = [];
+            if (mvsApi.dataSetsMatchingPattern) {
+                datasetResponses.push(await mvsApi.dataSetsMatchingPattern(dsPatterns));
+            } else {
+                for (const dsp of dsPatterns) {
+                    datasetResponses.push(await mvsApi.dataSet(dsp));
+                }
+            }
+
+            for (const resp of datasetResponses) {
+                for (const ds of resp.apiResponse?.items ?? resp.apiResponse ?? []) {
+                    if (ds.dsorg === "VS") {
+                        // Skip VSAM datasets for now
+                        continue;
+                    }
+
+                    datasets.push({
+                        name: ds.dsname,
+                        dsorg: ds.dsorg,
+                        createdDate: ds.createdDate ? new Date(ds.createdDate) : undefined,
+                        modifiedDate: ds.modifiedDate ? new Date(ds.modifiedDate) : undefined,
+                        lrecl: ds.lrecl,
+                        migr: ds.migr === "yes" ? "YES" : "NO",
+                        recfm: ds.recfm,
+                        volumes: ds.vols || ds.vol,
+                        user: ds.user,
+                        uri: `zowe-ds:/${this.profile.name}/${ds.dsname}`,
+                        isMember: false,
+                        isDirectory: ds.dsorg?.startsWith("PO"),
+                    });
+                }
+            }
+        } catch (err) {
+            await AuthUtils.handleProfileAuthOnError(err, this.profile);
+            throw err;
+        }
+
+        return datasets;
+    }
+
+    getTitle(): string {
+        return l10n.t({
+            message: `[${this.profile.name}]: {0}`,
+            args: [this.pattern],
+            comment: ["Data Set Search Pattern"],
+        });
+    }
+
+    supportsHierarchy(): boolean {
+        return true; // API results can include PDS that support lazy loading
+    }
+
+    async loadChildren(parentId: string): Promise<IDatasetInfo[]> {
+        // Extract dataset name from URI
+        const datasetName = parentId.split("/").pop();
+        if (!datasetName) {
+            return [];
+        }
+
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(this.profile);
+
+        try {
+            const membersResp = await mvsApi.allMembers(datasetName);
+            const members: IDatasetInfo[] = [];
+
+            for (const member of membersResp.apiResponse?.items || []) {
+                members.push({
+                    name: member.member,
+                    dsorg: "",
+                    createdDate: member.createdDate ? new Date(member.createdDate) : undefined,
+                    modifiedDate: member.modifiedDate ? new Date(member.modifiedDate) : undefined,
+                    lrecl: member.lrecl,
+                    migr: undefined,
+                    recfm: member.recfm,
+                    volumes: "",
+                    user: member.user,
+                    uri: `zowe-ds:/${this.profile.name}/${datasetName}/${member.member}`,
+                    isMember: true,
+                    isDirectory: false,
+                    parentId: parentId,
+                });
+            }
+
+            return members;
+        } catch (err) {
+            await AuthUtils.handleProfileAuthOnError(err, this.profile);
+            return [];
+        }
+    }
+}
 
 export class DatasetTableView {
-    private cachedChildren: IZoweDatasetTreeNode[];
     private contextOptions: Record<string, Table.ContextMenuOpts> = {
         displayInTree: {
             title: l10n.t("Display in Tree"),
@@ -31,6 +255,7 @@ export class DatasetTableView {
             },
         },
     };
+
     // These fields are typically included in data set metadata.
     private expectedFields = [
         {
@@ -56,6 +281,7 @@ export class DatasetTableView {
         { field: "volumes", headerName: l10n.t("Volumes") },
         { field: "user", headerName: l10n.t("Last Modified By") },
     ];
+
     private rowActions: Record<string, Table.ActionOpts> = {
         openInEditor: {
             title: l10n.t("Open"),
@@ -90,9 +316,9 @@ export class DatasetTableView {
     private constructor() {}
 
     private currentTableType: "dataSets" | "members" | null = null;
-    private resourceName: string = "";
     private shouldShow: Record<string, boolean> = {};
     private table: Table.Instance;
+    private currentDataSource: IDatasetDataSource;
 
     public static getInstance(): DatasetTableView {
         if (!DatasetTableView._instance) {
@@ -100,25 +326,6 @@ export class DatasetTableView {
         }
 
         return DatasetTableView._instance;
-    }
-
-    private buildTitle(node: IZoweDatasetTreeNode): string {
-        if (SharedContext.isPds(node)) {
-            return node.label.toString();
-        }
-        if (node.pattern) {
-            return l10n.t({
-                message: `[${this.resourceName}]: {0}`,
-                args: [node.pattern],
-                comment: ["Data Set Search Pattern"],
-            });
-        }
-
-        return l10n.t("[{0}]: *", this.resourceName);
-    }
-
-    private cacheChildren(sessionNode: IZoweDatasetTreeNode): void {
-        this.cachedChildren = sessionNode.children.filter((child) => !SharedContext.isInformation(child));
     }
 
     private isDsMemberUri(uri: string): boolean {
@@ -139,205 +346,154 @@ export class DatasetTableView {
         const isDsMember = datasetTable.isDsMemberUri(data.row.uri as string) || treeData?.parentId != null;
 
         if (isDsMember) {
-            // For tree structure, find parent using tree data or URI resolution
-            let parentDsNode: IZoweDatasetTreeNode | undefined;
+            // For members, we need to find or create the PDS node in the tree
+            const uri = data.row.uri as string;
+            const uriParts = uri.split("/");
+            const profileName = uriParts[1];
+            const datasetName = uriParts[2];
+            const memberName = uriParts[3];
 
-            if (treeData?.parentId) {
-                // Find parent using tree structure
-                parentDsNode = datasetTable.cachedChildren.find(
-                    (child) => (child.resourceUri?.toString() || child.label.toString()) === treeData.parentId
-                );
-            } else {
-                // Fallback to URI resolution for backward compatibility
-                const parentUri = posix.resolve(data.row.uri as string, "..");
-                parentDsNode = datasetTable.cachedChildren.find((child) => child.resourceUri?.toString() === parentUri);
-            }
+            // Find the profile node
+            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
 
-            if (parentDsNode) {
-                const memberName = (data.row.member as string) || (data.row.uri as string)?.split("/").pop(); // Extract member name from URI
-                const child = parentDsNode.children?.find((c) => c.label === memberName);
-                if (child) {
-                    await SharedTreeProviders.ds.getTreeView().reveal(child, { focus: true });
+            if (profileNode) {
+                // Load children if not already loaded
+                await profileNode.getChildren();
+
+                // Find the PDS node
+                const pdsNode = profileNode.children?.find((child) => child.label.toString() === datasetName);
+
+                if (pdsNode) {
+                    // Load PDS members if not already loaded
+                    await pdsNode.getChildren();
+
+                    // Find the member node
+                    const memberNode = pdsNode.children?.find((child) => child.label.toString() === memberName);
+
+                    if (memberNode) {
+                        await SharedTreeProviders.ds.getTreeView().reveal(memberNode, { focus: true });
+                        return;
+                    }
                 }
             }
         } else {
-            // For dataset nodes, find directly in cached children
-            const dsNode = datasetTable.cachedChildren.find((child) => {
-                const childId = child.resourceUri?.toString() || child.label.toString();
-                const rowId = treeData?.id || data.row.uri;
-                return childId === rowId || child.resourceUri?.toString() === data.row.uri;
-            });
-            if (dsNode) {
-                await SharedTreeProviders.ds.getTreeView().reveal(dsNode, { expand: true });
+            // For dataset nodes, try to find in tree or expand session
+            const uri = data.row.uri as string;
+            const uriParts = uri.split("/");
+            const profileName = uriParts[1];
+            const datasetName = uriParts[2];
+
+            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+
+            if (profileNode) {
+                await profileNode.getChildren();
+                const dsNode = profileNode.children?.find((child) => child.label.toString() === datasetName);
+
+                if (dsNode) {
+                    await SharedTreeProviders.ds.getTreeView().reveal(dsNode, { expand: true });
+                }
             }
         }
     }
 
-    private mapDsNodeToRow(dsNode: IZoweDatasetTreeNode): Table.RowData {
-        const dsStats = dsNode.getStats();
-
+    private mapDatasetInfoToRow(info: IDatasetInfo): Table.RowData {
         const fieldsToCheck = ["createdDate", "dsorg", "modifiedDate", "lrecl", "migr", "recfm", "user"];
         fieldsToCheck.forEach((field) => {
-            this.shouldShow[field] ||= dsStats?.[field] != null;
+            this.shouldShow[field] ||= (info as any)[field] != null;
         });
 
-        this.shouldShow["volumes"] ||= dsStats?.["vols"] != null || dsStats?.["vol"] != null;
+        this.shouldShow["volumes"] ||= info.volumes != null;
         this.shouldShow["dsname"] = true;
 
-        if (SharedContext.isDsMember(dsNode)) {
-            return {
-                dsname: dsNode.label.toString(),
-                createdDate: dsStats?.createdDate?.toLocaleTimeString(),
-                modifiedDate: dsStats?.modifiedDate?.toLocaleTimeString(),
-                lrecl: dsStats?.["lrecl"],
-                migr: dsStats?.["migr"],
-                recfm: dsStats?.["recfm"],
-                user: dsStats?.["user"],
-                uri: dsNode.resourceUri?.toString(),
-            };
-        } else {
-            return {
-                dsname: dsNode.label.toString(),
-                dsorg: dsStats?.["dsorg"],
-                createdDate: dsStats?.createdDate?.toLocaleTimeString(),
-                modifiedDate: dsStats?.modifiedDate?.toLocaleTimeString(),
-                lrecl: dsStats?.["lrecl"],
-                migr: dsStats?.["migr"] ?? "NO",
-                recfm: dsStats?.["recfm"],
-                volumes: dsStats?.["vols"] ?? dsStats?.["vol"],
-                uri: dsNode.resourceUri?.toString(),
-            };
-        }
+        return {
+            dsname: info.name,
+            dsorg: info.dsorg || "",
+            createdDate: info.createdDate?.toLocaleTimeString(),
+            modifiedDate: info.modifiedDate?.toLocaleTimeString(),
+            lrecl: info.lrecl,
+            migr: info.migr,
+            recfm: info.recfm,
+            volumes: info.volumes,
+            uri: info.uri,
+        };
     }
 
     /**
-     * Maps dataset nodes to table rows with hierarchical tree data structure.
-     * This creates a parent-child relationship where PDS nodes are parents and their members are children.
-     * @param dsNode The dataset node to map
-     * @param parentId Optional parent ID for hierarchical structure
-     * @returns The row data with tree structure information
+     * Maps dataset info to table rows with hierarchical tree data structure.
      */
-    private mapDsNodeToRowWithTree(dsNode: IZoweDatasetTreeNode, parentId?: string): Table.RowData {
-        const dsStats = dsNode.getStats();
-        const nodeId = dsNode.resourceUri?.toString() || dsNode.label.toString();
-
+    private mapDatasetInfoToRowWithTree(info: IDatasetInfo): Table.RowData {
         const fieldsToCheck = ["createdDate", "dsorg", "modifiedDate", "lrecl", "migr", "recfm", "user"];
         fieldsToCheck.forEach((field) => {
-            this.shouldShow[field] ||= dsStats?.[field] != null;
+            this.shouldShow[field] ||= (info as any)[field] != null;
         });
 
-        this.shouldShow["volumes"] ||= dsStats?.["vols"] != null || dsStats?.["vol"] != null;
+        this.shouldShow["volumes"] ||= info.volumes != null;
         this.shouldShow["dsname"] ||= true;
 
+        const nodeId = info.uri || info.name;
+
         const baseRow = {
-            uri: dsNode.resourceUri?.toString(),
-            createdDate: dsStats?.createdDate?.toLocaleTimeString(),
-            modifiedDate: dsStats?.modifiedDate?.toLocaleTimeString(),
-            lrecl: dsStats?.["lrecl"],
-            migr: dsStats?.["migr"],
-            recfm: dsStats?.["recfm"],
-            user: dsStats?.["user"],
+            dsname: info.name,
+            dsorg: info.dsorg || "",
+            createdDate: info.createdDate?.toLocaleTimeString(),
+            modifiedDate: info.modifiedDate?.toLocaleTimeString(),
+            lrecl: info.lrecl,
+            migr: info.migr,
+            recfm: info.recfm,
+            volumes: info.volumes,
+            uri: info.uri,
         };
 
-        if (SharedContext.isDsMember(dsNode)) {
+        if (info.isMember) {
             return {
                 ...baseRow,
-                dsname: dsNode.label.toString(),
                 dsorg: "",
                 volumes: "",
                 _tree: {
                     id: nodeId,
-                    parentId: parentId,
+                    parentId: info.parentId,
                     depth: 1,
                     hasChildren: false,
                     isExpanded: false,
                 } as Table.TreeNodeData,
             };
         } else {
-            const isPds = SharedContext.isPds(dsNode);
-            const hasMembers = isPds && dsNode.children && dsNode.children.length > 0;
-
             return {
                 ...baseRow,
-                dsname: dsNode.label.toString(),
-                dsorg: dsStats?.["dsorg"],
-                migr: dsStats?.["migr"] ?? "NO",
-                volumes: dsStats?.["vols"] ?? dsStats?.["vol"],
                 _tree: {
                     id: nodeId,
                     parentId: undefined,
                     depth: 0,
-                    hasChildren: hasMembers,
+                    hasChildren: info.isDirectory,
                     isExpanded: false,
                 } as Table.TreeNodeData,
-                children: hasMembers ? dsNode.children.map((c) => this.mapDsNodeToRow(c)) : [],
             };
         }
     }
 
     /**
-     * Generates hierarchical table rows including PDS and their members.
-     * @returns Array of table rows with tree structure
+     * Generates table rows from the current data source
      */
-    private generateHierarchicalRows(): Table.RowData[] {
-        const rows: Table.RowData[] = [];
+    private async generateRows(useTreeMode: boolean): Promise<Table.RowData[]> {
+        const datasets = await this.currentDataSource.fetchDatasets();
 
-        for (const dsNode of this.cachedChildren) {
-            // Create the parent dataset/PDS node
-            const parentRow = this.mapDsNodeToRowWithTree(dsNode);
-
-            // If it's a PDS with members, add the members as children
-            if (SharedContext.isPds(dsNode) && dsNode.children && dsNode.children.length > 0) {
-                const parentId = dsNode.resourceUri?.toString() || dsNode.label.toString();
-                const memberRows: Table.RowData[] = [];
-
-                for (const memberNode of dsNode.children) {
-                    if (!SharedContext.isInformation(memberNode)) {
-                        const memberRow = this.mapDsNodeToRowWithTree(memberNode, parentId);
-                        memberRows.push(memberRow);
-                    }
-                }
-
-                // Add children to the parent row
-                parentRow.children = memberRows;
-            }
-
-            rows.push(parentRow);
+        if (useTreeMode) {
+            return datasets.map((info) => this.mapDatasetInfoToRowWithTree(info));
+        } else {
+            return datasets.map((info) => this.mapDatasetInfoToRow(info));
         }
-
-        return rows;
     }
 
     /**
-     * Generates a table given the list of children and the profile node that was selected.
-     * @param context The VS Code extension context (to provide to the table view)
-     * @param profileNode The profile node selected for the "Show as Table" action
+     * Generates a table given the data source
      */
-    private async generateTable(context: ExtensionContext, profileNode: IZoweDatasetTreeNode): Promise<Table.Instance> {
-        // Determine if we should use tree mode (when viewing session nodes that may contain PDS)
-        const useTreeMode = SharedContext.isSession(profileNode) && this.cachedChildren.some((child) => SharedContext.isPds(child));
-
-        let rows: Table.RowData[];
-        if (useTreeMode) {
-            // Load children for PDS nodes to get their members
-            await Promise.all(
-                this.cachedChildren.map(async (child) => {
-                    if (SharedContext.isPds(child)) {
-                        await child.getChildren();
-                    }
-                })
-            );
-            rows = this.generateHierarchicalRows();
-        } else {
-            rows = this.cachedChildren.map((item) => this.mapDsNodeToRow(item));
-        }
+    private async generateTable(context: ExtensionContext): Promise<Table.Instance> {
+        const useTreeMode = this.currentDataSource.supportsHierarchy();
+        const rows = await this.generateRows(useTreeMode);
 
         // Determine the current table type
         const previousTableType = this.currentTableType;
-        const currentNodeType = SharedContext.isPds(profileNode) ? "members" : "dataSets";
-        this.currentTableType = currentNodeType;
-
-        // Check if the table type has changed
+        this.currentTableType = "dataSets"; // For now, always consider it as datasets
         const tableTypeChanged = previousTableType !== this.currentTableType;
 
         // Prepare column definitions
@@ -370,7 +526,7 @@ export class DatasetTableView {
         };
 
         if (this.table && !tableTypeChanged) {
-            await this.table.setTitle(this.buildTitle(profileNode));
+            await this.table.setTitle(this.currentDataSource.getTitle());
             await this.table.setColumns([...columnDefs, { field: "actions", hide: true }]);
             await this.table.setContent(rows);
             if (useTreeMode) {
@@ -380,23 +536,51 @@ export class DatasetTableView {
             this.table = new TableBuilder(context)
                 .options(tableOptions)
                 .isView()
-                .title(this.buildTitle(profileNode))
+                .title(this.currentDataSource.getTitle())
                 .addRows(rows)
                 .columns(...[...columnDefs, { field: "actions", hide: true }])
                 .addContextOption("all", this.contextOptions.displayInTree)
                 .addRowAction("all", this.rowActions.openInEditor)
                 .build();
+
+            // Set up message handler for lazy loading if using tree mode
+            if (useTreeMode) {
+                // Store reference to original onMessageReceived method
+                const originalOnMessageReceived = this.table.onMessageReceived.bind(this.table);
+
+                // Extend the onMessageReceived method to handle lazy loading
+                this.table.onMessageReceived = async (message: any) => {
+                    // Handle custom lazy loading messages
+                    if (message.command === "requestTreeChildren") {
+                        const { nodeId } = message.data;
+
+                        if (this.currentDataSource.loadChildren) {
+                            const memberRows = await this.currentDataSource.loadChildren(nodeId);
+                            const tableRows = memberRows.map((info) => this.mapDatasetInfoToRowWithTree(info));
+
+                            // Send the loaded children back to the webview
+                            await ((this.table as any).panel ?? (this.table as any).view).webview.postMessage({
+                                command: "treeChildrenLoaded",
+                                data: {
+                                    parentNodeId: nodeId,
+                                    children: tableRows,
+                                },
+                            });
+                            return;
+                        }
+                    }
+
+                    // Call the original message handler for all other messages
+                    await originalOnMessageReceived(message);
+                };
+            }
         }
 
         return this.table;
     }
 
     /**
-     * Command handler for the Jobs table view. Called when the action "Show as Table" is selected on a Job session node.
-     *
-     * @param context The VS Code extension context (to provide to the table view)
-     * @param node The Job session node that was selected for the action
-     * @param nodeList Passed to `SharedUtils.getSelectedNodeList` to get final list of selected nodes
+     * Command handler for the Dataset table view from tree nodes.
      */
     public async handleCommand(context: ExtensionContext, node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[]): Promise<void> {
         this.shouldShow = {};
@@ -420,6 +604,57 @@ export class DatasetTableView {
         }
 
         await this.prepareAndDisplayTable(context, selectedNode);
+    }
+
+    /**
+     * Command handler for pattern-based dataset searching from Command Palette.
+     */
+    public async handlePatternSearch(context: ExtensionContext): Promise<void> {
+        this.shouldShow = {};
+
+        // Get available profiles
+        const allProfiles = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
+        if (allProfiles.length === 0) {
+            Gui.infoMessage(l10n.t("No profiles available."));
+            return;
+        }
+
+        // Let user select a profile
+        const selectedProfileName = await Gui.showQuickPick(allProfiles, {
+            title: l10n.t("Select a profile to search for data sets"),
+            placeHolder: l10n.t("Select a profile"),
+            ignoreFocusOut: true,
+        });
+
+        if (!selectedProfileName) {
+            return;
+        }
+
+        // Get the pattern from user
+        const pattern = await Gui.showInputBox({
+            title: l10n.t("Enter Dataset Pattern"),
+            placeHolder: l10n.t("e.g., USER.*, PUBLIC.DATA.*, etc."),
+            prompt: l10n.t("Enter a dataset pattern to search for"),
+            ignoreFocusOut: true,
+        });
+
+        if (!pattern) {
+            return;
+        }
+
+        // Load the profile
+        const profile = Profiles.getInstance().getProfileByName(selectedProfileName);
+        if (!profile) {
+            Gui.errorMessage(l10n.t("Profile {0} not found.", selectedProfileName));
+            return;
+        }
+
+        // Create the pattern-based data source
+        this.currentDataSource = new PatternDataSource(profile, pattern);
+
+        // Generate and display the table
+        await TableViewProvider.getInstance().setTableView(await this.generateTable(context));
+        await commands.executeCommand("zowe-resources.focus");
     }
 
     // Helper method to select a profile and add it if not already added
@@ -451,20 +686,24 @@ export class DatasetTableView {
         return profileNode;
     }
 
-    // Helper method to prepare and display the table
+    // Helper method to prepare and display the table from tree nodes
     private async prepareAndDisplayTable(context: ExtensionContext, selectedNode: IZoweDatasetTreeNode): Promise<void> {
         if (SharedContext.isSession(selectedNode)) {
             if (selectedNode.pattern == null || selectedNode.pattern.length === 0) {
                 await SharedTreeProviders.ds.filterPrompt(selectedNode);
             }
-            this.resourceName = selectedNode.label.toString();
-            this.cacheChildren(selectedNode);
+            this.currentDataSource = new TreeDataSource(
+                selectedNode,
+                selectedNode.children.filter((child) => !SharedContext.isInformation(child))
+            );
         } else if (SharedContext.isPds(selectedNode)) {
-            this.resourceName = selectedNode.label.toString();
-            this.cacheChildren(selectedNode);
+            this.currentDataSource = new TreeDataSource(
+                selectedNode,
+                selectedNode.children?.filter((child) => !SharedContext.isInformation(child)) || []
+            );
         }
 
-        await TableViewProvider.getInstance().setTableView(await this.generateTable(context, selectedNode));
+        await TableViewProvider.getInstance().setTableView(await this.generateTable(context));
         await commands.executeCommand("zowe-resources.focus");
     }
 }

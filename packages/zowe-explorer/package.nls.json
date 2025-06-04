@@ -36,6 +36,7 @@
   "issueMvsCmd": "Issue MVS Command",
   "uploadDialog": "Upload Member...",
   "pattern": "Search Data Sets",
+  "listDataSets": "List Data Sets",
   "startPolling": "Start Polling",
   "stopPolling": "Stop Polling",
   "refreshNode": "Pull from Mainframe",
