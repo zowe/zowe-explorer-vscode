@@ -509,9 +509,11 @@ export class DatasetTableView {
                 : {}),
         }));
 
-        const tableOptions = {
+        const tableOptions: Table.GridProperties = {
             autoSizeStrategy: { type: "fitCellContents" } as const,
             pagination: true,
+            paginationPageSize: 1000,
+            paginationPageSizeSelector: [10, 25, 50, 100, 500, 1000],
             rowSelection: "multiple" as const,
             selectEverything: true,
             suppressRowClickSelection: true,
