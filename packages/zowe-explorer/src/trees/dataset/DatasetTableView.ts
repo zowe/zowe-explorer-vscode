@@ -351,7 +351,7 @@ export class DatasetTableView {
         if (isDsMember) {
             // For members, we need to find or create the PDS node in the tree
             const uri = data.row.uri as string;
-            const uriParts = uri.split("/");
+            const uriParts = uri.substring(uri.indexOf("/") + 1).split("/");
             const [profileName, datasetName, memberName] = uriParts;
 
             // Find the profile node
@@ -380,9 +380,8 @@ export class DatasetTableView {
         } else {
             // For dataset nodes, try to find in tree or expand session
             const uri = data.row.uri as string;
-            const uriParts = uri.split("/");
-            const profileName = uriParts[1];
-            const datasetName = uriParts[2];
+            const uriParts = uri.substring(uri.indexOf("/") + 1).split("/");
+            const [profileName, datasetName] = uriParts;
 
             const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
 
