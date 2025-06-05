@@ -156,7 +156,7 @@ export class Profiles extends ProfilesCache {
         if (node !== undefined) {
             const toolTipList = (node.tooltip as string)?.split("\n") ?? [];
 
-            const autoStoreValue = (await this.getProfileInfo()).getTeamConfig().properties.autoStore;
+            const autoStoreValue = (await this.getProfileInfo()).getTeamConfig().properties.autoStore ?? true;
             const autoStoreIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auto Store: ")));
             if (autoStoreIndex === -1) {
                 toolTipList.push(`${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()}`);
@@ -1046,7 +1046,7 @@ export class Profiles extends ProfilesCache {
 
         try {
             this.clearFilterFromAllTrees(node);
-            let logoutOk = true;
+            let logoutOk: boolean;
             const zeRegister = ZoweExplorerApiRegister.getInstance();
 
             // this will handle extenders

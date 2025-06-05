@@ -3996,7 +3996,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
     it("handle moving of pds to different profiles dropping on seq - should throw error", async () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
-        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
         const blockMocks = createBlockMocks();
         const datasetSession = blockMocks.datasetSessionNode;
 
