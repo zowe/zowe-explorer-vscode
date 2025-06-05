@@ -1151,12 +1151,7 @@ export class DatasetActions {
             return;
         }
 
-        let datasetUri: vscode.Uri;
-        if (hasMember) {
-            datasetUri = vscode.Uri.parse(`${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}/${ds.memberName.toUpperCase()}`);
-        } else {
-            datasetUri = vscode.Uri.parse(`${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}`);
-        }
+        const datasetUri = vscode.Uri.parse(hasMember ? `${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}/${ds.memberName.toUpperCase()}` : `${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}`);
 
         try {
             await vscode.workspace.fs.readFile(datasetUri);
