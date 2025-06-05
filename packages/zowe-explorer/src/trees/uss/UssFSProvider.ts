@@ -186,6 +186,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 await Profiles.extenderTypeReady.get(profile.name).promise;
             }
             response = await ZoweExplorerApiRegister.getUssApi(loadedProfile).fileList(ussPath);
+
             // If request was successful, create directories for the path if it doesn't exist
             if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
                 await vscode.workspace.fs.createDirectory(uri.with({ query: "" }));
@@ -452,8 +453,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const promiseTimeout = 10000;
         if (profilePromise) {
             let timeoutHandle: NodeJS.Timeout;
-            const timeoutPromise = new Promise<void>((_, reject) => {
-                timeoutHandle = setTimeout(() => reject(new Error("Timeout waiting for profile")), promiseTimeout);
+            const timeoutPromise = new Promise<void>((resolve, _) => {
+                timeoutHandle = setTimeout(() => resolve(), promiseTimeout);
             });
 
             await Promise.race([profilePromise.promise.finally(() => clearTimeout(timeoutHandle)), timeoutPromise]);
