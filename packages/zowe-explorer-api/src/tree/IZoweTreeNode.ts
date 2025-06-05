@@ -179,7 +179,7 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * * `null` = user selected z/OS default codepage
      * * `undefined` = user did not specify
      */
-    encoding?: string;
+    encoding?: ZosEncoding;
 
     /**
      * Use Dataset-specific tree node for children.
@@ -273,7 +273,7 @@ export interface IZoweUSSTreeNode extends IZoweTreeNode {
      * * `null` = user selected z/OS default codepage
      * * `undefined` = user did not specify
      */
-    encoding?: string;
+    encoding?: ZosEncoding;
 
     /**
      * @deprecated Please use `getEncodingInMap` and `updateEncodingInMap` instead.
