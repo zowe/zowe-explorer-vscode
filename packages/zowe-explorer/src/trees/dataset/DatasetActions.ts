@@ -1089,8 +1089,9 @@ export class DatasetActions {
 
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            const notActiveEditorMsg = vscode.l10n.t("No active editor open. Please open a file and select text to open a data set.");
-            Gui.warningMessage(notActiveEditorMsg);
+            Gui.warningMessage(
+                vscode.l10n.t("No active editor open. Please open a file and select text to open a data set.")
+            );
             return;
         }
 
