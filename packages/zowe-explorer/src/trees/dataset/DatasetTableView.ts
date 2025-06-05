@@ -245,6 +245,9 @@ class PatternDataSource implements IDatasetDataSource {
 }
 
 export class DatasetTableView {
+    // Justification: Table page size options are not considered magic numbers
+    // eslint-disable-next-line no-magic-numbers
+    private PAGE_SIZE_OPTIONS = [10, 25, 50, 100, 500, 1000];
     private contextOptions: Record<string, Table.ContextMenuOpts> = {
         displayInTree: {
             title: l10n.t("Display in Tree"),
@@ -349,9 +352,7 @@ export class DatasetTableView {
             // For members, we need to find or create the PDS node in the tree
             const uri = data.row.uri as string;
             const uriParts = uri.split("/");
-            const profileName = uriParts[1];
-            const datasetName = uriParts[2];
-            const memberName = uriParts[3];
+            const [profileName, datasetName, memberName] = uriParts;
 
             // Find the profile node
             const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
@@ -513,7 +514,7 @@ export class DatasetTableView {
             autoSizeStrategy: { type: "fitCellContents" } as const,
             pagination: true,
             paginationPageSize: 1000,
-            paginationPageSizeSelector: [10, 25, 50, 100, 500, 1000],
+            paginationPageSizeSelector: this.PAGE_SIZE_OPTIONS,
             rowSelection: "multiple" as const,
             selectEverything: true,
             suppressRowClickSelection: true,
