@@ -1226,9 +1226,8 @@ export class Profiles extends ProfilesCache {
                 Profiles.extenderTypeReady.set(profile.name, new DeferredPromise());
                 Profiles.extenderTypeReady.get(profile.name).resolve();
             }
-            // setup remote workspace at that type.
         }
-        // let meow = Profiles.extenderTypeReady;
+
         await SharedInit.setupRemoteWorkspaceFolders(undefined, extenderType);
     }
 }
