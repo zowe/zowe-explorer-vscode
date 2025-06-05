@@ -1668,6 +1668,7 @@ describe("UssFSProvider", () => {
                         success: true,
                         apiResponse: { items: [] },
                     }),
+                    a,
                 } as any;
 
                 const getUssApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(ussApiMock);
