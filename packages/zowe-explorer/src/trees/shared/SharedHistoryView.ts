@@ -27,8 +27,7 @@ export class SharedHistoryView extends WebView {
     private currentSelection: { [type: string]: string };
 
     public constructor(context: ExtensionContext, treeProviders: Definitions.IZoweProviders, cmdProviders?: Definitions.IZoweCommandProviders) {
-        const label = "Edit History";
-        super(label, "edit-history", context, {
+        super(Constants.SHARED_HISTORY_PANEL_TITLE, "edit-history", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
             retainContext: true,
         });
