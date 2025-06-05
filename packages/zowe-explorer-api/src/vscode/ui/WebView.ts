@@ -29,7 +29,7 @@ export type WebViewOpts = {
     /** Which ViewColumn to open the webview. */
     viewColumn?: ViewColumn;
     /** Optional icon path (string or Uri) for the webview tab. */
-    iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
+    iconPath?: WebviewPanel["iconPath"];
 };
 
 export type UriPair = {

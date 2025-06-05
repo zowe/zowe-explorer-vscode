@@ -42,7 +42,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { LoggerUtils } from "../../utils/LoggerUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import { DatasetFSProvider } from "../dataset/DatasetFSProvider";
-import { Definitions } from "../../configuration/Definitions";
+import type { Definitions } from "../../configuration/Definitions";
 import { SharedUtils } from "./SharedUtils";
 import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";

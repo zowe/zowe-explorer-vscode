@@ -10,7 +10,7 @@
  */
 
 import { WebView } from "@zowe/zowe-explorer-api";
-import { ExtensionContext, l10n, ViewColumn } from "vscode";
+import { ExtensionContext, l10n, ViewColumn, Uri } from "vscode";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import * as fs from "fs/promises";
 import { SettingsConfig } from "../configuration/SettingsConfig";
@@ -83,8 +83,8 @@ export class ReleaseNotes extends WebView {
             retainContext: true,
             viewColumn: ViewColumn.Active,
             iconPath: {
-                light: context.asAbsolutePath("resources/zowe-icon-color.png"),
-                dark: context.asAbsolutePath("resources/zowe.svg"),
+                light: Uri.file(context.asAbsolutePath("resources/zowe-icon-color.png")),
+                dark: Uri.file(context.asAbsolutePath("resources/zowe.svg")),
             },
         });
         this.version = version;
