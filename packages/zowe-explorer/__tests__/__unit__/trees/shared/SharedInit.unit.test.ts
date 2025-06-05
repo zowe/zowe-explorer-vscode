@@ -327,7 +327,6 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(core, "getZoweDir", { value: () => test.value });
             Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand.fun });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
-            Object.defineProperty(vscode.window, "registerWebviewPanelSerializer", { value: jest.fn() });
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
         afterAll(() => {

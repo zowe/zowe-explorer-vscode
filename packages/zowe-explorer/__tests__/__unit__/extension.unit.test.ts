@@ -389,7 +389,6 @@ async function createGlobalMocks() {
         value: globalMocks.mockPromptUserWithNoConfigs,
         configurable: true,
     });
-    Object.defineProperty(vscode.window, "registerWebviewPanelSerializer", { value: jest.fn() });
 
     // Create a mocked extension context
     const mockExtensionCreator = jest.fn(

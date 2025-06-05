@@ -31,7 +31,7 @@ export class ReleaseNotes extends WebView {
         return majorMinorVersion ? majorMinorVersion[0] : extensionVersion;
     }
 
-    public static shoulddisplayReleaseNotes(context: ExtensionContext): { version: string; displayReleaseNotes: boolean } {
+    public static shouldDisplayReleaseNotes(context: ExtensionContext): { version: string; displayReleaseNotes: boolean } {
         // Get extension version (major.minor)
         const currentVersion = ReleaseNotes.getExtensionVersion(context);
 
@@ -64,7 +64,7 @@ export class ReleaseNotes extends WebView {
     }
 
     public static display(context: ExtensionContext, force = false): void {
-        const { version, displayReleaseNotes } = ReleaseNotes.shoulddisplayReleaseNotes(context);
+        const { version, displayReleaseNotes } = ReleaseNotes.shouldDisplayReleaseNotes(context);
         if (force || displayReleaseNotes) {
             if (ReleaseNotes.instance) {
                 ReleaseNotes.instance.panel?.reveal();
@@ -159,19 +159,20 @@ export class ReleaseNotes extends WebView {
         const changelogPath = this.context.asAbsolutePath("CHANGELOG.md");
         try {
             const changelog = await fs.readFile(changelogPath, { encoding: "utf8" });
-            // Match all ## `x.y.z` and extract x.y
-            const regex = /^## `(\d+\.\d+)\.\d+`/gm;
+            // Filter lines that start with '##' to improve efficiency
+            const lines = changelog.split("\n").filter((line) => line.startsWith("##"));
+            const regex = /^## `(\d+\.\d+)\.\d+`/;
             const versions = new Set<string>();
-            let match;
-            while ((match = regex.exec(changelog)) !== null) {
-                versions.add(match[1]);
+            for (const line of lines) {
+                const match = regex.exec(line);
+                if (match) {
+                    versions.add(match[1]);
+                }
             }
-            if (!versions.has(this.version)) {
-                versions.add(this.version);
-            }
-            if (!versions.has(this.extensionVersion)) {
-                versions.add(this.extensionVersion);
-            }
+
+            versions.add(this.version);
+            versions.add(this.extensionVersion);
+
             // Sort descending
             return Array.from(versions).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
         } catch (error) {
