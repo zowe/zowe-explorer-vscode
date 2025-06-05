@@ -1157,7 +1157,7 @@ export class DatasetActions {
             await vscode.workspace.fs.readFile(datasetUri);
             await vscode.commands.executeCommand("vscode.open", datasetUri, {
                 preview: false,
-                viewColumn: vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined,
+                viewColumn: vscode.window.activeTextEditor?.viewColumn,
             });
         } catch (error) {
             if (error instanceof vscode.FileSystemError) {
