@@ -1117,12 +1117,9 @@ export class DatasetActions {
             return;
         }
 
-        let sessProfileName: string = "";
         const profiles = Profiles.getInstance();
         const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
-        if (doc.uri && FsAbstractUtils.getInfoForUri(doc.uri)?.profileName) {
-            sessProfileName = FsAbstractUtils.getInfoForUri(doc.uri).profileName;
-        }
+        let sessProfileName = doc.uri ? FsAbstractUtils.getInfoForUri(doc.uri)?.profileName : "";
 
         // If no profile name or not loaded, prompt user to select one
         if (!sessProfileName || !profiles.allProfiles.some((p) => p.name === sessProfileName)) {
