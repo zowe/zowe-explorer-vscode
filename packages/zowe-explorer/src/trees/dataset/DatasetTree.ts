@@ -135,17 +135,26 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
             const children = await sourceNode.getChildren();
             for (const childNode of children) {
-                // move members within the folder to the destination
-                await this.crossLparMove(
-                    childNode,
-                    sourceUri.with({
-                        path: path.posix.join(sourceUri.path, childNode.getLabel() as string),
-                    }),
-                    destUri.with({
-                        path: path.posix.join(destUri.path, childNode.getLabel() as string),
-                    }),
-                    true
-                );
+                try {
+                    // Set encoding for binary or text
+                    let encoding: ZosEncoding | undefined;
+                    if (SharedContext.isBinary(childNode)) {
+                        encoding = { kind: "binary" };
+                    } else {
+                        encoding = await childNode.getEncoding?.() ?? { kind: "text" };
+                    }
+                    childNode.setEncoding?.(encoding);
+
+                    await this.crossLparMove(
+                        childNode,
+                        sourceUri.with({ path: path.posix.join(sourceUri.path, childNode.getLabel() as string) }),
+                        destUri.with({ path: path.posix.join(destUri.path, childNode.getLabel() as string) }),
+                        true
+                    );
+                } catch (err) {
+                    // Log and continue with next member
+                    Gui.errorMessage(`Failed to move member ${childNode.getLabel()}: ${err.message}`);
+                }
             }
             await vscode.workspace.fs.delete(sourceUri, { recursive: true });
         } else {
@@ -154,13 +163,20 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 if (entry == null) {
                     if (sourceNode.contextValue === Constants.DS_MEMBER_CONTEXT) {
                         dsname = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
-                        await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
+                        // Detect binary and set allocation attributes
+                        const allocAttrs = SharedContext.isBinary(sourceNode)
+                            ? { recordFormat: "U", lrecl: 0, blksize: 32760 }
+                            : {};
+                        await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, allocAttrs as any);
                     } else {
                         dsname = sourceNode.getLabel() as string;
+                        const allocAttrs = SharedContext.isBinary(sourceNode)
+                            ? { recfm: "U", lrecl: 0, blksize: 32760 }
+                            : {};
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
                             zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
                             dsname,
-                            {}
+                            allocAttrs
                         );
                     }
                 }
@@ -175,24 +191,32 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (SharedContext.isBinary(sourceNode)) {
                 sourceNode.setEncoding({ kind: "binary" });
             }
+            // Get encoding from the source node if available
+            const encoding = (sourceNode as any).encoding || (SharedContext.isBinary(sourceNode) ? { kind: "binary" } : undefined);
+
             // read the contents from the source LPAR
-            const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
+            const contents = await DatasetFSProvider.instance.readFile(
+                sourceNode.resourceUri,
+                encoding ? { encoding } : undefined
+            );
             let writeSucceeded = false;
             //write the contents to the destination LPAR ONLY if write successful
             try {
-                // Set encoding for the destination if binary
-                if (SharedContext.isBinary(sourceNode)) {
+                // Set encoding for the destination if binary or encoding is set
+                if (encoding) {
                     const destNode = this.draggedNodes?.[destUri.path];
                     if (destNode && destNode.setEncoding) {
-                        destNode.setEncoding({ kind: "binary" });
+                        destNode.setEncoding(encoding);
                     }
                 }
                 await DatasetFSProvider.instance.writeFile(
-                    destUri.with({
-                        query: "forceUpload=true",
-                    }),
+                    destUri.with({ query: "forceUpload=true" }),
                     contents,
-                    { create: true, overwrite: true }
+                    {
+                        create: true,
+                        overwrite: true,
+                        encoding
+                    }
                 );
                 writeSucceeded = true;
             } catch (err) {
@@ -1620,7 +1644,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
     /**
      * Presents a dialog to the user with options and methods for sorting PDS members.
-     * @param node The node that was interacted with (via icon or right-click -> "Sort PDS members...")
+     * @param node The session whose PDS members should be sorted, or a PDS whose children should be sorted
      */
     public async sortPdsMembersDialog(node: IZoweDatasetTreeNode): Promise<void> {
         const isSession = SharedContext.isSession(node);

@@ -60,7 +60,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     public watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
-        return new vscode.Disposable(() => {});
+        return new vscode.Disposable(() => { });
     }
 
     /**
@@ -396,10 +396,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profInfo =
             parent !== this.root
                 ? new DsEntryMetadata({
-                      profile: parent.metadata.profile,
-                      // we can strip profile name from path because its not involved in API calls
-                      path: path.posix.join(parent.metadata.path, basename),
-                  })
+                    profile: parent.metadata.profile,
+                    // we can strip profile name from path because its not involved in API calls
+                    path: path.posix.join(parent.metadata.path, basename),
+                })
                 : this._getInfoFromUri(uri);
 
         if (FsAbstractUtils.isFilterEntry(parent)) {
@@ -434,7 +434,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const bufBuilder = new BufferBuilder();
         const metadata = dsEntry?.metadata ?? this._getInfoFromUri(uri);
         const profile = Profiles.getInstance().loadNamedProfile(metadata.profile.name);
-        const profileEncoding = dsEntry?.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
         try {
             // Wait for any ongoing authentication process to complete
             await AuthHandler.waitForUnlock(metadata.profile);
@@ -446,9 +445,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 return null;
             }
 
+            const encoding: ZosEncoding | undefined =
+                dsEntry?.encoding
+                    ? dsEntry.encoding
+                    : profile.profile?.encoding
+                        ? { kind: "other", codepage: profile.profile.encoding }
+                        : undefined;
+
             const resp = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(metadata.dsName, {
-                binary: dsEntry?.encoding?.kind === "binary",
-                encoding: dsEntry?.encoding?.kind === "other" ? dsEntry?.encoding.codepage : profileEncoding,
+                binary: encoding?.kind === "binary",
+                encoding: encoding?.kind === "other" ? encoding.codepage : undefined,
                 responseTimeout: profile.profile?.responseTimeout,
                 returnEtag: true,
                 stream: bufBuilder,
@@ -501,7 +507,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @param uri The URI pointing to a valid data set on the remote system
      * @returns The data set's contents as an array of bytes
      */
-    public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
+    public async readFile(uri: vscode.Uri, options?: { encoding?: ZosEncoding }): Promise<Uint8Array> {
         let ds: DsEntry | DirEntry;
         const urlQuery = new URLSearchParams(uri.query);
         const isConflict = urlQuery.has("conflict");
@@ -530,6 +536,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         if (ds && ds.metadata?.profile == null) {
             throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
+        }
+
+        // If an encoding is provided, set it on the entry (only for DsEntry)
+        if (ds && options?.encoding && !("entries" in ds)) {
+            (ds as DsEntry).encoding = options.encoding;
         }
 
         // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
@@ -572,10 +583,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
+            const encoding: ZosEncoding | undefined =
+                entry.encoding
+                    ? entry.encoding
+                    : profile.profile?.encoding
+                        ? { kind: "other", codepage: profile.profile.encoding }
+                        : undefined;
+
             resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
-                binary: entry.encoding?.kind === "binary",
-                encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+                binary: encoding?.kind === "binary",
+                encoding: encoding?.kind === "other" ? encoding.codepage : undefined,
                 etag: forceUpload ? undefined : entry.etag,
                 returnEtag: true,
             });
@@ -595,7 +612,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * - `create` - Creates the data set if it does not exist
      * - `overwrite` - Overwrites the content if the data set exists
      */
-    public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
+    public async writeFile(
+        uri: vscode.Uri,
+        content: Uint8Array,
+        options: { readonly create: boolean; readonly overwrite: boolean; encoding?: ZosEncoding }
+    ): Promise<void> {
         const basename = path.posix.basename(uri.path);
         const parent = this._lookupParentDirectory(uri);
         let entry = parent.entries.get(basename);
@@ -621,9 +642,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry.data = content;
                 const profInfo = parent.metadata
                     ? new DsEntryMetadata({
-                          profile: parent.metadata.profile,
-                          path: path.posix.join(parent.metadata.path, basename),
-                      })
+                        profile: parent.metadata.profile,
+                        path: path.posix.join(parent.metadata.path, basename),
+                    })
                     : this._getInfoFromUri(uri);
                 entry.metadata = profInfo;
 
@@ -645,6 +666,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     entry.size = content.byteLength;
                     entry.inDiffView = true;
                     return;
+                }
+
+                // If an encoding is provided, set it on the entry
+                if (options.encoding) {
+                    entry.encoding = options.encoding;
                 }
 
                 if (entry.wasAccessed || content.length > 0) {

@@ -12,6 +12,7 @@
 import type { Types } from "../..";
 import { DirEntry, EntryMetadata, FileEntry } from "./abstract";
 import { IProfileLoaded } from "@zowe/imperative";
+import { ZosEncoding } from "../../tree/IZoweTreeNode";
 
 interface DsEntryProps {
     stats: Types.DatasetStats;
@@ -33,7 +34,7 @@ export const DS_EXTENSION_MAP: Map<string, (string | RegExp)[]> = new Map([
 
 export class DsEntry extends FileEntry implements DsEntryProps {
     public metadata: DsEntryMetadata;
-
+    public encoding?: ZosEncoding;
     public constructor(name: string, public isMember: boolean = false) {
         super(name);
     }
