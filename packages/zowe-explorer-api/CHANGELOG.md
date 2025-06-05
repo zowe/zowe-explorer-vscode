@@ -13,11 +13,24 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Updated Zowe SDKs to `8.20.0` for technical currency. [#3631](https://github.com/zowe/zowe-explorer-vscode/pull/3631)
 - Added new option `viewColumn` to `WebViewOpts` to allow extenders to specify the column in which the webview should be displayed. [#3657](https://github.com/zowe/zowe-explorer-vscode/pull/3657)
 - Add new option `iconPath` to `WebViewOpts` to allow extenders to specify the light and dark icon paths for the webview. [#3657](https://github.com/zowe/zowe-explorer-vscode/pull/3657)
+- Added support for asynchronous operations when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
+- Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 
 ### Bug fixes
 
+- BugFix: Resolved a bug where extenders adding `ssh` or `base` to `allTypes` on `ProfileCache` will result in duplicate nodes when adding a profile of that type in Zowe Explorer. [#3625](https://github.com/zowe/zowe-explorer-vscode/pull/3625)
 - Fixed error message shown when creating a config file that already exists. [#3647](https://github.com/zowe/zowe-explorer-vscode/issues/3647)
+
+## `3.2.1`
+
+### New features and enhancements
+
+- Updated Zowe SDKs to `8.21.0` for technical currency. [#3668](https://github.com/zowe/zowe-explorer-vscode/pull/3668)
+
+### Bug fixes
+
 - Fixed an issue where using functions such as `ZoweVsCodeExtension.updateCredentials` caused extender log4js configurations to be overwritten. [#3587](https://github.com/zowe/zowe-explorer-vscode/issues/3587)
+- Fixed an issue to avoid prompting the user with the dialog of 'Save credentials' or 'Cancel' when the credential manager is disabled and the `autoStore` setting is set to False. [#3557](https://github.com/zowe/zowe-explorer-vscode/issues/3557)
 
 ## `3.2.0`
 
