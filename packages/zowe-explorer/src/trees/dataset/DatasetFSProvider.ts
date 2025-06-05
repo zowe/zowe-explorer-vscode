@@ -517,12 +517,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const deferredPromise = new DeferredPromise<void>();
             Profiles.extenderTypeReady.set(profileName, deferredPromise);
         }
+
         const profilePromise = Profiles.extenderTypeReady.get(profileName);
         const promiseTimeout = 10000;
         if (profilePromise) {
             let timeoutHandle: NodeJS.Timeout;
-            const timeoutPromise = new Promise<void>((_, reject) => {
-                timeoutHandle = setTimeout(() => reject(new Error("Timeout waiting for profile")), promiseTimeout);
+            const timeoutPromise = new Promise<void>((resolve, _) => {
+                timeoutHandle = setTimeout(() => resolve(), promiseTimeout);
             });
 
             await Promise.race([profilePromise.promise.finally(() => clearTimeout(timeoutHandle)), timeoutPromise]);

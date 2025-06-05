@@ -178,13 +178,25 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         let response: IZosFilesResponse;
         try {
+            const profilePromise = Profiles.extenderTypeReady.get(profile.name);
             //LOOK HERE, await profile based on profile.name from deferred promise in extenderTypeReady
             if (profile.type !== "zosmf") {
                 if (!Profiles.extenderTypeReady.get(profile.name)) {
                     Profiles.extenderTypeReady.set(profile.name, new DeferredPromise());
                 }
-                await Profiles.extenderTypeReady.get(profile.name).promise;
+                await profilePromise.promise;
             }
+
+            const promiseTimeout = 10000;
+            if (profilePromise) {
+                let timeoutHandle: NodeJS.Timeout;
+                const timeoutPromise = new Promise<void>((resolve, _) => {
+                    timeoutHandle = setTimeout(() => resolve(), promiseTimeout);
+                });
+
+                await Promise.race([profilePromise.promise.finally(() => clearTimeout(timeoutHandle)), timeoutPromise]);
+            }
+
             response = await ZoweExplorerApiRegister.getUssApi(loadedProfile).fileList(ussPath);
 
             // If request was successful, create directories for the path if it doesn't exist
@@ -449,6 +461,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             const deferredPromise = new DeferredPromise<void>();
             Profiles.extenderTypeReady.set(profileName, deferredPromise);
         }
+
         const profilePromise = Profiles.extenderTypeReady.get(profileName);
         const promiseTimeout = 10000;
         if (profilePromise) {
