@@ -262,6 +262,7 @@ async function createGlobalMocks() {
             "zowe.revealOutputChannel",
             "zowe.troubleshootError",
             "zowe.placeholderCommand",
+            "zowe.setupRemoteWorkspaceFolders",
         ],
     };
 
