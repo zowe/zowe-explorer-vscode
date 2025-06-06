@@ -7,6 +7,7 @@
   "zowe.resources.name": "Zowe Resources",
   "zosconsole": "z/OS Console",
   "zowe.placeholderCommand": "Placeholder",
+  "zowe.setupRemoteWorkspaceFolders": "Setup Remote Workspace Folders",
   "zowe.promptCredentials": "Update Credentials",
   "zowe.profileManagement": "Manage Profile",
   "zowe.updateSchema": "Update Profile Configuration Schema",

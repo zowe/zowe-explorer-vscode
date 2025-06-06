@@ -705,6 +705,10 @@
         "enablement": "false"
       },
       {
+        "command": "zowe.setupRemoteWorkspaceFolders",
+        "title": "%zowe.setupRemoteWorkspaceFolders%"
+      },
+      {
         "command": "zowe.openRecentMember",
         "title": "%zowe.openRecentMember%",
         "category": "Zowe Explorer"
@@ -1645,6 +1649,10 @@
         },
         {
           "command": "zowe.deleteProfile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.setupRemoteWorkspaceFolders",
           "when": "never"
         },
         {
