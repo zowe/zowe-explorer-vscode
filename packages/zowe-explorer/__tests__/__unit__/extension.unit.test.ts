@@ -165,6 +165,7 @@ async function createGlobalMocks() {
             "zowe.ds.editDataSet",
             "zowe.ds.editMember",
             "zowe.ds.submitJcl",
+            "zowe.ds.zoom",
             "zowe.ds.submitMember",
             "zowe.ds.showAttributes",
             "zowe.ds.renameDataSet",

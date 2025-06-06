@@ -16,7 +16,7 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static readonly COMMAND_COUNT = 113;
+    public static readonly COMMAND_COUNT = 114;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
     public static readonly MAX_DISPLAYED_DELETE_NAMES = 10;
@@ -88,6 +88,7 @@ export class Constants {
     public static readonly MAX_MEMBER_LENGTH = 8;
     public static DS_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7}(\.[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7})*$/;
     public static MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
+    public static DS_HAS_MEMBER_REGEX_CHECK = /^([^(]+)\(([^)]+)\)$/;
     public static ACTIVATED = false;
     public static readonly JOBS_MAX_PREFIX = 8;
     public static PROFILES_CACHE: Profiles;

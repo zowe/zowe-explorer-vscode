@@ -43,6 +43,8 @@ import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
+import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
+import { ProfileManagement } from "../../../../src/management/ProfileManagement";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -3002,5 +3004,251 @@ describe("Dataset Actions Unit Tests - function copyName", () => {
         });
         await DatasetActions.copyName(vsam);
         expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("A.VSAM");
+    });
+});
+
+describe("Dataset Actions Unit Tests - Function zoom", () => {
+    function createBlockMocks() {
+        const session = createISessionWithoutCredentials();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const testDatasetTree = createDatasetTree(datasetSessionNode, createTreeView());
+        const mvsApi = createMvsApi(imperativeProfile);
+        bindMvsApi(mvsApi);
+
+        // Simulate a text editor with a selection
+        const selection = { start: 0, end: 10, isEmpty: false };
+        const document = {
+            getText: jest.fn(),
+            uri: vscode.Uri.parse("file:///fake/file"),
+        };
+        const editor = {
+            document,
+            selection,
+            viewColumn: 1,
+        };
+
+        return {
+            session,
+            imperativeProfile,
+            datasetSessionNode,
+            profileInstance,
+            testDatasetTree,
+            mvsApi,
+            document,
+            editor,
+        };
+    }
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it("should show a warning if no active editor", async () => {
+        createGlobalMocks();
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: undefined, configurable: true });
+        const warningSpy = jest.spyOn(Gui, "warningMessage");
+
+        await DatasetActions.zoom();
+
+        expect(warningSpy).toHaveBeenCalledWith("No active editor open. Please open a file and select text to open a data set.");
+    });
+
+    it("should show a warning if no selection is made", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        blockMocks.document.getText.mockReturnValue("");
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
+        const errorSpy = jest.spyOn(Gui, "warningMessage");
+
+        await DatasetActions.zoom();
+
+        expect(errorSpy).toHaveBeenCalledWith("No selection to open.");
+    });
+
+    it("should show a warning if selection is not a valid dataset name", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        blockMocks.document.getText.mockReturnValue("INVALID@DATASET");
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
+        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "INVALID@DATASET", memberName: "" });
+        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(false);
+        const errorSpy = jest.spyOn(Gui, "warningMessage");
+
+        await DatasetActions.zoom();
+
+        expect(errorSpy).toHaveBeenCalledWith("Selection is not a valid data set name.");
+    });
+
+    it("should show a warning if selection is not a valid member name", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        blockMocks.document.getText.mockReturnValue("MY.DATASET(INVALID@MEM)");
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
+        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "INVALID@MEM" });
+        jest.spyOn(DatasetUtils, "validateMemberName").mockReturnValue(false);
+        const errorSpy = jest.spyOn(Gui, "warningMessage");
+
+        await DatasetActions.zoom();
+
+        expect(errorSpy).toHaveBeenCalledWith("Selection is not a valid data set member name.");
+    });
+
+    it("should show a message if no profiles are available", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        blockMocks.document.getText.mockReturnValue("MY.DATASET");
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
+        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "" });
+        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(true);
+
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue([]),
+            configurable: true,
+        });
+        const showMsgSpy = jest.spyOn(Gui, "showMessage");
+
+        await DatasetActions.zoom();
+
+        expect(showMsgSpy).toHaveBeenCalledWith("No profiles available");
+    });
+
+    it("should cancel if user does not select a profile", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        blockMocks.document.getText.mockReturnValue("MY.DATASET");
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
+        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "" });
+        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(true);
+
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue(["prof1", "prof2"]),
+            configurable: true,
+        });
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce(undefined);
+        const infoMsgSpy = jest.spyOn(Gui, "infoMessage");
+
+        await DatasetActions.zoom();
+
+        expect(infoMsgSpy).toHaveBeenCalledWith(DatasetActions.localizedStrings.opCancelled);
+    });
+
+    it("should show an error if profile is invalid", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        blockMocks.document.getText.mockReturnValue("MY.DATASET");
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
+        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "" });
+        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(true);
+
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue(["prof1"]),
+            configurable: true,
+        });
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            allProfiles: [{ name: "prof1" }],
+            loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
+            checkCurrentProfile: jest.fn(),
+            validProfile: Validation.ValidationType.INVALID,
+        } as any);
+
+        const errorMsgSpy = jest.spyOn(Gui, "errorMessage");
+
+        await DatasetActions.zoom();
+
+        expect(errorMsgSpy).toHaveBeenCalledWith(DatasetActions.localizedStrings.profileInvalid);
+    });
+
+    it("should show a warning if dataset/member does not exist (FileSystemError)", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        blockMocks.document.getText.mockReturnValue("MY.DATASET(MEMBER1)");
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
+        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "MEMBER1" });
+        jest.spyOn(DatasetUtils, "validateMemberName").mockReturnValue(true);
+
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue(["prof1"]),
+            configurable: true,
+        });
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            allProfiles: [{ name: "prof1" }],
+            loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
+            checkCurrentProfile: jest.fn(),
+            validProfile: Validation.ValidationType.UNVERIFIED,
+        } as any);
+
+        jest.spyOn(vscode.workspace.fs, "readFile").mockRejectedValueOnce(new vscode.FileSystemError("not found"));
+        const warningSpy = jest.spyOn(Gui, "warningMessage");
+
+        await DatasetActions.zoom();
+
+        expect(warningSpy).toHaveBeenCalledWith("Data set member {0} does not exist or cannot be opened in data set {1}.");
+    });
+
+    it("should call AuthUtils.errorHandling on other errors", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        blockMocks.document.getText.mockReturnValue("MY.DATASET");
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
+        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "" });
+        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(true);
+
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue(["prof1"]),
+            configurable: true,
+        });
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            allProfiles: [{ name: "prof1" }],
+            loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
+            checkCurrentProfile: jest.fn(),
+            validProfile: Validation.ValidationType.UNVERIFIED,
+        } as any);
+
+        const testError = new Error("Some error");
+        jest.spyOn(vscode.workspace.fs, "readFile").mockRejectedValueOnce(testError);
+        const authUtilsSpy = jest.spyOn(AuthUtils, "errorHandling").mockResolvedValue(undefined);
+
+        await DatasetActions.zoom();
+
+        expect(authUtilsSpy).toHaveBeenCalledWith(
+            testError,
+            expect.objectContaining({
+                apiType: ZoweExplorerApiType.Mvs,
+                profile: { name: "prof1" },
+                scenario: "Opening data set failed.",
+            })
+        );
+    });
+
+    it("should open the dataset/member if all is valid", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        blockMocks.document.getText.mockReturnValue("MY.DATASET(MEMBER1)");
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
+        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "MEMBER1" });
+        jest.spyOn(DatasetUtils, "validateMemberName").mockReturnValue(true);
+
+        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+            value: jest.fn().mockReturnValue(["prof1"]),
+            configurable: true,
+        });
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            allProfiles: [{ name: "prof1" }],
+            loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
+            checkCurrentProfile: jest.fn(),
+            validProfile: Validation.ValidationType.UNVERIFIED,
+        } as any);
+
+        jest.spyOn(vscode.workspace.fs, "readFile").mockResolvedValueOnce(Buffer.from("data"));
+        const execCmdSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+
+        await DatasetActions.zoom();
+
+        expect(execCmdSpy).toHaveBeenCalledWith("vscode.open", expect.anything(), {
+            preview: false,
+            viewColumn: 1,
+        });
     });
 });
