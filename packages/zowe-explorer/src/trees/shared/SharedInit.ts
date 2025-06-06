@@ -322,6 +322,11 @@ export class SharedInit {
                     // This command does nothing, its here to let us disable individual items in the tree view
                 })
             );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.setupRemoteWorkspaceFolders", async (profileType?: string) => {
+                    await this.setupRemoteWorkspaceFolders(undefined, profileType);
+                })
+            );
             // initialize the Constants.filesToCompare array during initialization
             LocalFileManagement.resetCompareSelection();
         }

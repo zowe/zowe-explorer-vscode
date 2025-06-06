@@ -37,7 +37,6 @@ import { ZoweExplorerExtender } from "../extending/ZoweExplorerExtender";
 import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
 import { DeferredPromise } from "@zowe/imperative";
-import { SharedInit } from "../trees/shared/SharedInit";
 
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
@@ -1227,7 +1226,6 @@ export class Profiles extends ProfilesCache {
                 Profiles.extenderTypeReady.get(profile.name).resolve();
             }
         }
-
-        await SharedInit.setupRemoteWorkspaceFolders(undefined, extenderType);
+        await vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", extenderType);
     }
 }
