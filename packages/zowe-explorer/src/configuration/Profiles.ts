@@ -27,6 +27,7 @@ import {
     IRegisterClient,
     Types,
     AuthHandler,
+    ZoweExplorerZosmf,
 } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./SettingsConfig";
 import { Constants } from "./Constants";
@@ -100,15 +101,33 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
-        const usingBasicAuth = theProfile.profile.user && theProfile.profile.password;
-        const usingCertAuth = theProfile.profile.certFile && theProfile.profile.certKeyFile;
+        let usingBasicAuth = theProfile.profile.user && theProfile.profile.password;
+        let usingCertAuth = theProfile.profile.certFile && theProfile.profile.certKeyFile;
         let usingTokenAuth: boolean;
-        try {
-            usingTokenAuth = await AuthUtils.isUsingTokenAuth(theProfile.name);
-        } catch (err) {
-            ZoweLogger.error(err);
-            ZoweExplorerExtender.showZoweConfigError(err.message);
-            return profileStatus;
+        if (theProfile.profile.authOrder) {
+            let givenAuthOrder: imperative.SessConstants.AUTH_TYPE_CHOICES[];
+            if (node && node.getSession()) {
+                const tempSession = node.getSession().ISession;
+                imperative.AuthOrder.addCredsToSession(tempSession, ZoweExplorerZosmf.CommonApi.getCommandArgs(theProfile));
+                givenAuthOrder = tempSession.authTypeOrder;
+            } else {
+                givenAuthOrder = theProfile.profile.authOrder.split(",");
+            }
+            usingBasicAuth = givenAuthOrder.includes(imperative.SessConstants.AUTH_TYPE_BASIC);
+            usingCertAuth = givenAuthOrder.includes(imperative.SessConstants.AUTH_TYPE_CERT_PEM);
+            usingTokenAuth =
+                givenAuthOrder.includes(imperative.SessConstants.AUTH_TYPE_TOKEN) ||
+                givenAuthOrder.includes(imperative.SessConstants.AUTH_TYPE_BEARER);
+        } else {
+            usingCertAuth = theProfile.profile.certFile && theProfile.profile.certKeyFile;
+            usingBasicAuth = theProfile.profile.user && theProfile.profile.password;
+            try {
+                usingTokenAuth = await AuthUtils.isUsingTokenAuth(theProfile.name);
+            } catch (err) {
+                ZoweLogger.error(err);
+                ZoweExplorerExtender.showZoweConfigError(err.message);
+                return profileStatus;
+            }
         }
 
         if (usingTokenAuth && !theProfile.profile.tokenValue) {
@@ -187,6 +206,9 @@ export class Profiles extends ProfilesCache {
 
         // Profile should have enough information to allow validation
         profileStatus = await this.getProfileSetting(theProfile);
+        if (theProfile.profile.authOrder) {
+            profileStatus.status = "active";
+        }
 
         switch (profileStatus.status) {
             case "unverified":

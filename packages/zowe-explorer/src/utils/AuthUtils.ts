@@ -11,7 +11,16 @@
 
 import * as util from "util";
 import * as vscode from "vscode";
-import { imperative, Gui, MainframeInteraction, IZoweTreeNode, ErrorCorrelator, ZoweExplorerApiType, AuthHandler } from "@zowe/zowe-explorer-api";
+import {
+    imperative,
+    Gui,
+    MainframeInteraction,
+    IZoweTreeNode,
+    ErrorCorrelator,
+    ZoweExplorerApiType,
+    AuthHandler,
+    ZoweExplorerZosmf,
+} from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
@@ -154,13 +163,23 @@ export class AuthUtils {
     }
 
     public static async updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
-        const usingBasicAuth = profile.profile.user && profile.profile.password;
-        const usingCertAuth = profile.profile.certFile && profile.profile.certKeyFile;
+        let usingBasicAuth = profile.profile.user && profile.profile.password;
+        let usingCertAuth = profile.profile.certFile && profile.profile.certKeyFile;
         let usingTokenAuth: boolean;
-        try {
-            usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
-        } catch (err) {
-            ZoweLogger.error(err);
+        if (profile.profile.authOrder) {
+            const tempSession = sessionNode.getSession().ISession;
+            imperative.AuthOrder.addCredsToSession(tempSession, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
+            usingBasicAuth = tempSession.authTypeOrder.includes(imperative.SessConstants.AUTH_TYPE_BASIC);
+            usingCertAuth = tempSession.authTypeOrder.includes(imperative.SessConstants.AUTH_TYPE_CERT_PEM);
+            usingTokenAuth =
+                tempSession.authTypeOrder.includes(imperative.SessConstants.AUTH_TYPE_TOKEN) ||
+                tempSession.authTypeOrder.includes(imperative.SessConstants.AUTH_TYPE_BEARER);
+        } else {
+            try {
+                usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
+            } catch (err) {
+                ZoweLogger.error(err);
+            }
         }
         const toolTipList = sessionNode.tooltip === "" ? [] : (sessionNode.tooltip as string).split("\n");
 

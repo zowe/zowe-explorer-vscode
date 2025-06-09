@@ -426,7 +426,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         if (!parentNode.getProfile() || !parentNode.getSession()) {
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                await Profiles.getInstance().checkCurrentProfile(profile);
+                await Profiles.getInstance().checkCurrentProfile(profile, parentNode);
                 if (Profiles.getInstance().validProfile === Validation.ValidationType.VALID || !SharedContext.isValidationEnabled(parentNode)) {
                     session = ZoweExplorerApiRegister.getJesApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);

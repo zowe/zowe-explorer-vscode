@@ -1144,7 +1144,7 @@ export class DatasetActions {
         let sessProfile: imperative.IProfileLoaded;
         const profiles = Profiles.getInstance();
         const nodeProfile = node.getProfile();
-        await profiles.checkCurrentProfile(nodeProfile);
+        await profiles.checkCurrentProfile(nodeProfile, node);
 
         const datasetName = SharedContext.isDsMember(node) ? node.getParent().getLabel().toString() : node.getLabel().toString();
         const ownsJob = datasetName.split(".")[0] === nodeProfile.profile?.user?.toUpperCase();
@@ -1398,7 +1398,7 @@ export class DatasetActions {
      */
     public static async hMigrateDataSet(datasetProvider: Types.IZoweDatasetTreeType, node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("dataset.actions.hMigrateDataSet called.");
-        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        await Profiles.getInstance().checkCurrentProfile(node.getProfile(), node);
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             const nodelabels = await DatasetUtils.getNodeLabels(node);
             const dataSetName = nodelabels[0].dataSetName;
@@ -1431,7 +1431,7 @@ export class DatasetActions {
      */
     public static async hRecallDataSet(datasetProvider: Types.IZoweDatasetTreeType, node: ZoweDatasetNode): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("dataset.actions.hRecallDataSet called.");
-        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        await Profiles.getInstance().checkCurrentProfile(node.getProfile(), node);
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             const nodelabels = await DatasetUtils.getNodeLabels(node);
             const dataSetName = nodelabels[0].dataSetName;
@@ -1464,7 +1464,7 @@ export class DatasetActions {
      */
     public static async showFileErrorDetails(node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.showFileErrorDetails called.");
-        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        await Profiles.getInstance().checkCurrentProfile(node.getProfile(), node);
         if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
             Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
         } else {
