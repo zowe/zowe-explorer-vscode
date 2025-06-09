@@ -2669,7 +2669,7 @@ describe("Profiles unit tests - function _resolveTypePromise", () => {
             configurable: true,
         });
         const extenderTypeReadySpy = jest.spyOn(Profiles.extenderTypeReady, "get");
-        Profiles.getInstance()._resolveTypePromise("ssh");
+        Profiles.getInstance().resolveTypePromise("ssh");
         expect(extenderTypeReadySpy).toHaveBeenCalledTimes(2);
     });
     it("should not resolve any deferred promise", () => {
@@ -2683,7 +2683,7 @@ describe("Profiles unit tests - function _resolveTypePromise", () => {
             configurable: true,
         });
         const extenderTypeReadySpy = jest.spyOn(Profiles.extenderTypeReady, "get");
-        Profiles.getInstance()._resolveTypePromise("ssh");
+        Profiles.getInstance().resolveTypePromise("ssh");
         expect(extenderTypeReadySpy).toHaveBeenCalledTimes(0);
     });
     it("should resolve an existing promise without setting it", () => {
@@ -2703,7 +2703,7 @@ describe("Profiles unit tests - function _resolveTypePromise", () => {
             reject: jest.fn(),
         });
 
-        Profiles.getInstance()._resolveTypePromise("ssh");
+        Profiles.getInstance().resolveTypePromise("ssh");
         expect(extenderTypeReadySetSpy).toHaveBeenCalledTimes(0);
         expect(extenderTypeReadyGetSpy).toHaveBeenCalledTimes(2);
     });

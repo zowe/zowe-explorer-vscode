@@ -28,6 +28,7 @@ import {
     FileEntry,
     ZoweExplorerApiType,
     AuthHandler,
+    DeferredPromise,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -36,7 +37,6 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import * as dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
-import { DeferredPromise } from "@zowe/imperative";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
@@ -512,21 +512,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // If the extenderTypeReady map does not contain the profile, create a deferred promise for the profile.
         const profileName = uri.path.split("/")[1];
         const profileInfo = Profiles.getInstance();
-        const profile = profileInfo.allProfiles.find((prof) => prof.name === profileName);
-        if (profile && profile.type !== "zosmf" && !Profiles.extenderTypeReady.get(profileName)) {
-            const deferredPromise = new DeferredPromise<void>();
-            Profiles.extenderTypeReady.set(profileName, deferredPromise);
-        }
-        const profilePromise = Profiles.extenderTypeReady.get(profileName);
-        const promiseTimeout = 10000;
-        if (profilePromise) {
-            let timeoutHandle: NodeJS.Timeout;
-            const timeoutPromise = new Promise<void>((_, reject) => {
-                timeoutHandle = setTimeout(() => reject(new Error("Timeout waiting for profile")), promiseTimeout);
-            });
 
-            await Promise.race([profilePromise.promise.finally(() => clearTimeout(timeoutHandle)), timeoutPromise]);
-        }
+        const getCallback = (getName: string): any => {
+            return Profiles.extenderTypeReady.get(getName);
+        };
+        const setCallback = (setName: string, setPromise: DeferredPromise<void>): void => {
+            Profiles.extenderTypeReady.set(setName, setPromise);
+        };
+
+        await this.awaitExtenderType(profileInfo, profileName, getCallback, setCallback);
 
         try {
             ds = this._lookupAsFile(uri) as DsEntry;
