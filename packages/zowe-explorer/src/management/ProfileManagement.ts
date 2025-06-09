@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, ZoweExplorerZosmf, imperative } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweLogger } from "../tools/ZoweLogger";
@@ -40,24 +40,32 @@ export class ProfileManagement {
     }
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
+        let usingBasicAuth = profile.profile.user && profile.profile.password;
+        let usingTokenAuth: boolean;
+        if (profile.profile.authOrder) {
+            let givenAuthOrder: imperative.SessConstants.AUTH_TYPE_CHOICES[];
+            const tempSession = node.getSession().ISession;
+            imperative.AuthOrder.addCredsToSession(tempSession, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
+            givenAuthOrder = tempSession.authTypeOrder;
+
+            usingBasicAuth = givenAuthOrder.includes(imperative.SessConstants.AUTH_TYPE_BASIC);
+            usingTokenAuth =
+                givenAuthOrder.includes(imperative.SessConstants.AUTH_TYPE_TOKEN) ||
+                givenAuthOrder.includes(imperative.SessConstants.AUTH_TYPE_BEARER);
+        } else {
+            usingBasicAuth = AuthUtils.isProfileUsingBasicAuth(profile);
+            usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
+        }
         let selected: vscode.QuickPickItem;
-        switch (true) {
-            case AuthUtils.isProfileUsingBasicAuth(profile): {
-                ZoweLogger.debug(`Profile ${profile.name} is using basic authentication.`);
-                selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, node);
-                break;
-            }
-            case await AuthUtils.isUsingTokenAuth(profile.name): {
-                ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
-                selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_TOKEN, node);
-                break;
-            }
-            // will need a case for isUsingCertAuth
-            default: {
-                ZoweLogger.debug(`Profile ${profile.name} authentication method is unkown.`);
-                selected = await this.setupProfileManagementQp(null, node);
-                break;
-            }
+        if (usingBasicAuth) {
+            ZoweLogger.debug(`Profile ${profile.name} is using basic authentication.`);
+            selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, node);
+        } else if (usingTokenAuth) {
+            ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
+            selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_TOKEN, node);
+        } else {
+            ZoweLogger.debug(`Profile ${profile.name} authentication method is unkown.`);
+            selected = await this.setupProfileManagementQp(null, node);
         }
         await this.handleAuthSelection(selected, node, profile);
     }

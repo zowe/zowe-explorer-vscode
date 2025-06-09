@@ -353,11 +353,6 @@ export class AuthUtils {
      */
     public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
         const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
-        const shouldRemoveToken = Constants.PROFILES_CACHE.shouldRemoveTokenFromProfile(
-            Constants.PROFILES_CACHE.loadNamedProfile(profileName),
-            baseProfile
-        );
-        if (shouldRemoveToken) return false;
         const props = await Constants.PROFILES_CACHE.getPropsForProfile(profileName, false);
         const baseProps = await Constants.PROFILES_CACHE.getPropsForProfile(baseProfile?.name, false);
         return AuthHandler.isUsingTokenAuth(props, baseProps);

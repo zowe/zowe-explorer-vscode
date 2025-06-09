@@ -225,8 +225,6 @@ export class ProfilesCache {
             this.profilesByType.delete(oldType);
             this.defaultProfileByType.delete(oldType);
         }
-        // check for proper merging of apiml tokens
-        this.checkMergingConfigAllProfiles();
         this.checkForEnvVarAndUpdate();
         this.profilesForValidation = [];
     }
@@ -292,7 +290,6 @@ export class ProfilesCache {
             for (const prof of profilesForType) {
                 const profAttr = this.getMergedAttrs(mProfileInfo, prof);
                 let profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
-                profile = this.checkMergingConfigSingleProfile(profile);
                 profByType.push(profile);
             }
         }
@@ -427,24 +424,6 @@ export class ProfilesCache {
 
     public getCoreProfileTypes(): imperative.IProfileTypeConfiguration[] {
         return [ZosmfProfile, ZosTsoProfile, ZosUssProfile];
-    }
-
-    // used by refresh to check correct merging of allProfiles
-    protected checkMergingConfigAllProfiles(): void {
-        for (const profs of this.profilesByType.values()) {
-            profs.forEach((profile) => {
-                this.checkMergingConfigSingleProfile(profile);
-            });
-        }
-    }
-
-    // check correct merging of a single profile
-    protected checkMergingConfigSingleProfile(profile: imperative.IProfileLoaded): imperative.IProfileLoaded {
-        const baseProfile = this.defaultProfileByType.get("base");
-        if (this.shouldRemoveTokenFromProfile(profile, baseProfile)) {
-            profile.profile.tokenType = profile.profile.tokenValue = undefined;
-        }
-        return profile;
     }
 
     protected getMergedAttrs(mProfileInfo: imperative.ProfileInfo, profAttrs: imperative.IProfAttrs): imperative.IProfile {
