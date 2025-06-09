@@ -321,9 +321,11 @@ export namespace Table {
             columns: [],
             title: "",
         };
+        private onDidReceiveMessageEmitter: EventEmitter<object> = new EventEmitter();
         private onTableDataReceivedEmitter: EventEmitter<Partial<ViewOpts>> = new EventEmitter();
         private onTableDisplayChangedEmitter: EventEmitter<RowData | RowData[]> = new EventEmitter();
         private onTableDataEditedEmitter: EventEmitter<EditEvent> = new EventEmitter();
+        public onDidReceiveMessage: Event<object> = this.onDidReceiveMessageEmitter.event;
         public onTableDisplayChanged: Event<RowData | RowData[]> = this.onTableDisplayChangedEmitter.event;
         public onTableDataReceived: Event<Partial<ViewOpts>> = this.onTableDataReceivedEmitter.event;
         public onTableDataEdited: Event<EditEvent> = this.onTableDataEditedEmitter.event;
@@ -356,6 +358,7 @@ export namespace Table {
          * @param message The message received from the webview
          */
         public async onMessageReceived(message: any): Promise<void> {
+            this.onDidReceiveMessageEmitter.fire(message);
             if (!("command" in message)) {
                 return;
             }
