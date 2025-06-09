@@ -1089,9 +1089,7 @@ export class DatasetActions {
 
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            Gui.warningMessage(
-                vscode.l10n.t("No active editor open. Please open a file and select text to open a data set.")
-            );
+            Gui.warningMessage(vscode.l10n.t("No active editor open. Please open a file and select text to open a data set."));
             return;
         }
 
@@ -1151,7 +1149,11 @@ export class DatasetActions {
             return;
         }
 
-        const datasetUri = vscode.Uri.parse(hasMember ? `${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}/${ds.memberName.toUpperCase()}` : `${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}`);
+        const datasetUri = vscode.Uri.parse(
+            hasMember
+                ? `${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}/${ds.memberName.toUpperCase()}`
+                : `${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}`
+        );
 
         try {
             await vscode.workspace.fs.readFile(datasetUri);
