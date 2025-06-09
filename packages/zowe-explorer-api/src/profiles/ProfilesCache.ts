@@ -289,7 +289,7 @@ export class ProfilesCache {
         if (profilesForType && profilesForType.length > 0) {
             for (const prof of profilesForType) {
                 const profAttr = this.getMergedAttrs(mProfileInfo, prof);
-                let profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
+                const profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
                 profByType.push(profile);
             }
         }

@@ -101,8 +101,8 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
-        let usingBasicAuth = theProfile.profile.user && theProfile.profile.password;
-        let usingCertAuth = theProfile.profile.certFile && theProfile.profile.certKeyFile;
+        let usingBasicAuth: boolean;
+        let usingCertAuth: boolean;
         let usingTokenAuth: boolean;
         if (theProfile.profile.authOrder) {
             let givenAuthOrder: imperative.SessConstants.AUTH_TYPE_CHOICES[];

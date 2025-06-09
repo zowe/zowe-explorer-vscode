@@ -40,7 +40,7 @@ export class ProfileManagement {
     }
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
-        let usingBasicAuth = profile.profile.user && profile.profile.password;
+        let usingBasicAuth: boolean;
         let usingTokenAuth: boolean;
         if (profile.profile.authOrder) {
             let givenAuthOrder: imperative.SessConstants.AUTH_TYPE_CHOICES[];
