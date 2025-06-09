@@ -68,55 +68,92 @@ interface IDatasetDataSource {
 /**
  * Tree-based data source that uses existing tree nodes
  */
-class TreeDataSource implements IDatasetDataSource {
-    public constructor(private profileNode: IZoweDatasetTreeNode, private cachedChildren: IZoweDatasetTreeNode[]) {}
+export class TreeDataSource implements IDatasetDataSource {
+    public constructor(private treeNode: IZoweDatasetTreeNode, private cachedChildren: IZoweDatasetTreeNode[]) {}
 
+    /**
+     * Fetches dataset information based on the cached children tree nodes.
+     *
+     * @returns {IDatasetInfo[]} An array of dataset information objects, each representing a dataset.
+     */
     public fetchDatasets(): IDatasetInfo[] {
         return this.cachedChildren.map((dsNode) => this.mapNodeToInfo(dsNode));
     }
 
+    /**
+     * Retrieves the title for the dataset table view based on the tree node context.
+     *
+     * @returns {string} A formatted string representing the title of the table view.
+     *
+     * - If the tree node represents a PDS, it includes the profile name and the dataset label.
+     * - If the tree node has a search pattern, it includes the profile name and the search pattern.
+     * - Otherwise, it includes only the profile name with a wildcard.
+     */
     public getTitle(): string {
-        if (SharedContext.isPds(this.profileNode)) {
-            return this.profileNode.label.toString();
+        if (SharedContext.isPds(this.treeNode)) {
+            return `[${this.treeNode.getProfileName()}]: ${this.treeNode.label?.toString()}`;
         }
-        if (this.profileNode.pattern) {
+        if (this.treeNode.pattern) {
             return l10n.t({
-                message: `[${this.profileNode.label.toString()}]: {0}`,
-                args: [this.profileNode.pattern],
+                message: `[${this.treeNode.getProfileName()}]: {0}`,
+                args: [this.treeNode.pattern],
                 comment: ["Data Set Search Pattern"],
             });
         }
 
-        return l10n.t("[{0}]: *", this.profileNode.label.toString());
+        return l10n.t("[{0}]: *", this.treeNode.getProfileName());
     }
 
+    /**
+     * Determines whether the data source supports a hierarchical tree structure.
+     *
+     * The function checks if the tree node represents a session and if any of its cached children
+     * are PDS nodes.
+     *
+     * @returns {boolean} Returns `true` if the tree node is a session and at least one of its children
+     * is a PDS, indicating support for hierarchical tree structure. Returns `false` otherwise.
+     */
     public supportsHierarchy(): boolean {
-        return SharedContext.isSession(this.profileNode) && this.cachedChildren.some((child) => SharedContext.isPds(child));
+        return SharedContext.isSession(this.treeNode) && this.cachedChildren.some((child) => SharedContext.isPds(child));
     }
 
+    /**
+     * Loads children for a specific parent (PDS) based on the cached children tree nodes.
+     *
+     * @param parentId The ID of the parent dataset.
+     * @returns {IDatasetInfo[]} An array of dataset information objects, each representing a dataset.
+     */
     public async loadChildren(parentId: string): Promise<IDatasetInfo[]> {
+        const parentUri = Uri.parse(parentId);
         const pdsNode = this.cachedChildren.find((child) => {
-            const childId = child.resourceUri?.toString() || child.label.toString();
-            return childId === parentId && SharedContext.isPds(child);
+            return child.resourceUri.path === parentUri.path && SharedContext.isPds(child);
         });
 
-        if (pdsNode && SharedContext.isPds(pdsNode)) {
-            await pdsNode.getChildren();
+        if (pdsNode) {
+            const children = await pdsNode.getChildren();
             return (
-                pdsNode.children
+                children
                     ?.filter((memberNode) => !SharedContext.isInformation(memberNode))
-                    .map((memberNode) => this.mapNodeToInfo(memberNode, parentId)) || []
+                    .map((memberNode) => this.mapNodeToInfo(memberNode, parentId)) ?? []
             );
         }
 
         return [];
     }
 
+    /**
+     * Maps a dataset tree node to a dataset information object.
+     *
+     * @param dsNode The dataset tree node to be mapped.
+     * @param parentId An optional parent ID for hierarchical context.
+     *
+     * @returns {IDatasetInfo} An object containing the dataset information.
+     */
     private mapNodeToInfo(dsNode: IZoweDatasetTreeNode, parentId?: string): IDatasetInfo {
         const dsStats = dsNode.getStats();
 
         return {
-            name: dsNode.label.toString(),
+            name: dsNode.label?.toString(),
             dsorg: dsStats?.["dsorg"],
             createdDate: dsStats?.createdDate,
             modifiedDate: dsStats?.modifiedDate,
@@ -136,7 +173,7 @@ class TreeDataSource implements IDatasetDataSource {
 /**
  * API-based data source that directly queries the MVS API with a pattern
  */
-class PatternDataSource implements IDatasetDataSource {
+export class PatternDataSource implements IDatasetDataSource {
     public constructor(private profile: imperative.IProfileLoaded, private pattern: string) {}
 
     public async fetchDatasets(): Promise<IDatasetInfo[]> {
