@@ -357,8 +357,8 @@ export class DatasetTableView {
 
     private currentTableType: "dataSets" | "members" | null = null;
     private shouldShow: Record<string, boolean> = {};
-    private table: Table.Instance;
-    private currentDataSource: IDataSetSource;
+    private table: Table.Instance = null;
+    private currentDataSource: IDataSetSource = null;
 
     public static getInstance(): DatasetTableView {
         if (!DatasetTableView._instance) {
@@ -582,14 +582,21 @@ export class DatasetTableView {
                 .addRowAction("all", this.rowActions.openInEditor)
                 .build();
 
+            this.table.onDisposed((e) => {
+                this.shouldShow = {};
+                this.currentTableType = null;
+                this.currentDataSource = null;
+                this.table = null;
+            });
+
             // Set up message handler for lazy loading if using tree mode
             if (useTreeMode) {
-                // Store reference to original onMessageReceived method
-                const originalOnMessageReceived = this.table.onMessageReceived.bind(this.table);
-
-                // Extend the onMessageReceived method to handle lazy loading
-                this.table.onMessageReceived = async (message: any): Promise<void> => {
-                    // Handle custom lazy loading messages
+                // Subscribe to the onDidReceiveMessage event to handle "external" lazy loading command
+                this.table.onDidReceiveMessage(async (message: Record<string, any>) => {
+                    if (!("command" in message)) {
+                        return;
+                    }
+                    // Handle custom lazy loading of PDS members
                     if (message.command === "loadTreeChildren") {
                         const { nodeId } = message.data;
 
@@ -608,10 +615,7 @@ export class DatasetTableView {
                             return;
                         }
                     }
-
-                    // Call the original message handler for all other messages
-                    await originalOnMessageReceived(message);
-                };
+                });
             }
         }
 
