@@ -235,6 +235,11 @@ describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
         expect(nodeList).toEqual(selectedNodes);
     });
 
+    it("returns an empty array when neither node or nodeList are valid", () => {
+        const nodeList = SharedUtils.getSelectedNodeList(null as any, null as any);
+        expect(nodeList).toEqual([]);
+    });
+
     function createTestNode() {
         const node = new ZoweDatasetNode({ label: "testLabel", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
         return node;
