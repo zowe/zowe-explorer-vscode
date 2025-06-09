@@ -10,7 +10,7 @@
  */
 
 import { Gui, IZoweDatasetTreeNode, Table, TableBuilder, TableViewProvider } from "@zowe/zowe-explorer-api";
-import { commands, ExtensionContext, l10n, Uri } from "vscode";
+import { commands, Event, EventEmitter, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
@@ -63,6 +63,20 @@ interface IDataSetSource {
      * Loads children for a specific parent (PDS)
      */
     loadChildren?(parentId: string): Promise<IDataSetInfo[]>;
+}
+
+type DataSetTableType = "dataSets" | "members" | null;
+
+enum DataSetTableEventType {
+    Created = 1,
+    Modified,
+    Disposed
+}
+
+interface IDataSetTableEvent {
+    source: IDataSetSource;
+    tableType: DataSetTableType;
+    eventType: DataSetTableEventType;
 }
 
 /**
@@ -352,10 +366,15 @@ export class DatasetTableView {
         }
     }
 
+    private onDataSetTableChangedEmitter: EventEmitter<IDataSetTableEvent>;
+    public onDataSetTableChanged: Event<IDataSetTableEvent>;
     private static _instance: DatasetTableView;
-    private constructor() {}
+    private constructor() {
+        this.onDataSetTableChangedEmitter = new EventEmitter<IDataSetTableEvent>();
+        this.onDataSetTableChanged = this.onDataSetTableChangedEmitter.event;
+    }
 
-    private currentTableType: "dataSets" | "members" | null = null;
+    private currentTableType: DataSetTableType = null;
     private shouldShow: Record<string, boolean> = {};
     private table: Table.Instance = null;
     private currentDataSource: IDataSetSource = null;
@@ -587,6 +606,18 @@ export class DatasetTableView {
                 this.currentTableType = null;
                 this.currentDataSource = null;
                 this.table = null;
+
+                this.onDataSetTableChangedEmitter.fire({
+                    source: this.currentDataSource,
+                    tableType: "dataSets",
+                    eventType: DataSetTableEventType.Disposed,
+                });
+            });
+
+            this.onDataSetTableChangedEmitter.fire({
+                source: this.currentDataSource,
+                tableType: "dataSets",
+                eventType: DataSetTableEventType.Created,
             });
 
             // Set up message handler for lazy loading if using tree mode
