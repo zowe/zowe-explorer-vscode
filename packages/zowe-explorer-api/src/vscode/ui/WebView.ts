@@ -13,7 +13,7 @@ import * as fs from "fs";
 import Mustache = require("mustache");
 import HTMLTemplate from "./utils/HTMLTemplate";
 import { Types } from "../../Types";
-import { Disposable, ExtensionContext, Uri, ViewColumn, WebviewPanel, WebviewView, window } from "vscode";
+import { Disposable, Event, EventEmitter, ExtensionContext, Uri, ViewColumn, WebviewPanel, WebviewView, window } from "vscode";
 import { join as joinPath } from "path";
 import { randomUUID } from "crypto";
 
@@ -44,6 +44,8 @@ export class WebView {
     public view: WebviewView;
 
     private eventsRegistered: boolean = false;
+    private onDisposedEmitter: EventEmitter<void>;
+    public onDisposed: Event<void>;
 
     // Resource identifiers for the on-disk content and vscode-webview resource.
     protected uris: UriPair = {};
@@ -74,6 +76,8 @@ export class WebView {
         this.title = title;
 
         this.webviewOpts = opts;
+        this.onDisposedEmitter = new EventEmitter<void>();
+        this.onDisposed = this.onDisposedEmitter.event;
 
         const codiconPath = joinPath(context.extensionPath, "src", "webviews", "dist", "codicons", "codicon.css");
         const cssPath = joinPath(context.extensionPath, "src", "webviews", "dist", "style", "style.css");
@@ -162,6 +166,7 @@ export class WebView {
         for (const disp of this.disposables) {
             disp.dispose();
         }
+        this.onDisposedEmitter.fire();
         this.disposables = [];
         this.panel = undefined;
         this.eventsRegistered = false;
