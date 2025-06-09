@@ -16,6 +16,7 @@ import { FsAbstractUtils } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZosEncoding } from "../tree";
 import { ErrorCorrelator, ZoweExplorerApiType } from "../utils/ErrorCorrelator";
+import { DeferredPromise } from "../utils";
 
 export class BaseProvider {
     // eslint-disable-next-line no-magic-numbers
@@ -486,5 +487,26 @@ export class BaseProvider {
             }),
             silent ?? false
         );
+    }
+    protected async awaitExtenderType(
+        profileInfo: any, //Profiles
+        profileName: string,
+        getCallback: (getName: string) => any,
+        setCallback: (setName: string, setPromise: DeferredPromise<void>) => void
+    ): Promise<void> {
+        const profile = profileInfo.allProfiles.find((prof) => prof.name === profileName);
+        if (profile && profile.type !== "zosmf" && !getCallback(profileName)) {
+            const deferredPromise = new DeferredPromise<void>();
+            setCallback(profileName, deferredPromise);
+        }
+        const profilePromise = getCallback(profileName);
+        const promiseTimeout = 10000;
+        if (profilePromise) {
+            let timeoutHandle: NodeJS.Timeout;
+            const timeoutPromise = new Promise<void>((_, reject) => {
+                timeoutHandle = setTimeout(() => reject(new Error("Timeout waiting for profile")), promiseTimeout);
+            });
+            await Promise.race([profilePromise.promise.finally(() => clearTimeout(timeoutHandle)), timeoutPromise]);
+        }
     }
 }

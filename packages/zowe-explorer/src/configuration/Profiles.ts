@@ -27,6 +27,7 @@ import {
     IRegisterClient,
     Types,
     AuthHandler,
+    DeferredPromise,
 } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./SettingsConfig";
 import { Constants } from "./Constants";
@@ -36,7 +37,6 @@ import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { ZoweExplorerExtender } from "../extending/ZoweExplorerExtender";
 import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
-import { DeferredPromise } from "@zowe/imperative";
 
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
@@ -1214,7 +1214,7 @@ export class Profiles extends ProfilesCache {
 
     public static extenderTypeReady = new Map();
 
-    public _resolveTypePromise(extenderType: string): void {
+    public resolveTypePromise(extenderType: string): void {
         const profInfo = Profiles.getInstance();
         const profilesWithExtenderType = profInfo.allProfiles.filter((profile) => profile.type === extenderType);
         for (const profile of profilesWithExtenderType) {

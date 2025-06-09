@@ -146,7 +146,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
-                    _resolveTypePromise: jest.fn(),
+                    resolveTypePromise: jest.fn(),
                 };
             }),
         });
