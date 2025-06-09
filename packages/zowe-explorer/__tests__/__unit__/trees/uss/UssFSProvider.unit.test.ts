@@ -1654,6 +1654,15 @@ describe("UssFSProvider", () => {
             });
 
             it("makes API calls when profile is not locked", async () => {
+                const resolveProfile = jest.fn();
+                const profilePromise = {
+                    promise: new Promise<void>((resolve) => {
+                        resolveProfile.mockImplementation(resolve);
+                        setTimeout(resolve, 50);
+                    }),
+                };
+                jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
+
                 isProfileLockedMock.mockReturnValueOnce(false);
                 const ussApiMock = {
                     fileList: jest.fn().mockResolvedValueOnce({
