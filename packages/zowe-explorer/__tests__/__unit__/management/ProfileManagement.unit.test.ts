@@ -128,6 +128,7 @@ describe("ProfileManagement unit tests", () => {
 
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockBasicAuthProfile.name as string} is using basic authentication.`;
+            Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(false), configurable: true });
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockBasicAuthProfile);
             return globalMocks;
         }
