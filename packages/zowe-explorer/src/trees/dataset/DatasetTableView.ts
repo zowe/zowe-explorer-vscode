@@ -24,7 +24,7 @@ import * as imperative from "@zowe/imperative";
 /**
  * Interface representing the data structure for dataset information
  */
-interface IDatasetInfo {
+interface IDataSetInfo {
     name: string;
     dsorg?: string;
     createdDate?: Date;
@@ -43,11 +43,11 @@ interface IDatasetInfo {
 /**
  * Interface for different data sources that can provide dataset information
  */
-interface IDatasetDataSource {
+interface IDataSetSource {
     /**
      * Fetches dataset information based on the source's specific implementation
      */
-    fetchDatasets(): IDatasetInfo[] | PromiseLike<IDatasetInfo[]>;
+    fetchDataSets(): IDataSetInfo[] | PromiseLike<IDataSetInfo[]>;
 
     /**
      * Gets the title for the table view
@@ -62,21 +62,21 @@ interface IDatasetDataSource {
     /**
      * Loads children for a specific parent (PDS)
      */
-    loadChildren?(parentId: string): Promise<IDatasetInfo[]>;
+    loadChildren?(parentId: string): Promise<IDataSetInfo[]>;
 }
 
 /**
  * Tree-based data source that uses existing tree nodes
  */
-export class TreeDataSource implements IDatasetDataSource {
+export class TreeDataSource implements IDataSetSource {
     public constructor(private treeNode: IZoweDatasetTreeNode, private cachedChildren: IZoweDatasetTreeNode[]) {}
 
     /**
      * Fetches dataset information based on the cached children tree nodes.
      *
-     * @returns {IDatasetInfo[]} An array of dataset information objects, each representing a dataset.
+     * @returns {IDataSetInfo[]} An array of dataset information objects, each representing a dataset.
      */
-    public fetchDatasets(): IDatasetInfo[] {
+    public fetchDataSets(): IDataSetInfo[] {
         return this.cachedChildren.map((dsNode) => this.mapNodeToInfo(dsNode));
     }
 
@@ -121,9 +121,9 @@ export class TreeDataSource implements IDatasetDataSource {
      * Loads children for a specific parent (PDS) based on the cached children tree nodes.
      *
      * @param parentId The ID of the parent dataset.
-     * @returns {IDatasetInfo[]} An array of dataset information objects, each representing a dataset.
+     * @returns {IDataSetInfo[]} An array of dataset information objects, each representing a dataset.
      */
-    public async loadChildren(parentId: string): Promise<IDatasetInfo[]> {
+    public async loadChildren(parentId: string): Promise<IDataSetInfo[]> {
         const parentUri = Uri.parse(parentId);
         const pdsNode = this.cachedChildren.find((child) => {
             return child.resourceUri.path === parentUri.path && SharedContext.isPds(child);
@@ -147,9 +147,9 @@ export class TreeDataSource implements IDatasetDataSource {
      * @param dsNode The dataset tree node to be mapped.
      * @param parentId An optional parent ID for hierarchical context.
      *
-     * @returns {IDatasetInfo} An object containing the dataset information.
+     * @returns {IDataSetInfo} An object containing the dataset information.
      */
-    private mapNodeToInfo(dsNode: IZoweDatasetTreeNode, parentId?: string): IDatasetInfo {
+    private mapNodeToInfo(dsNode: IZoweDatasetTreeNode, parentId?: string): IDataSetInfo {
         const dsStats = dsNode.getStats();
 
         return {
@@ -173,12 +173,12 @@ export class TreeDataSource implements IDatasetDataSource {
 /**
  * API-based data source that directly queries the MVS API with a pattern
  */
-export class PatternDataSource implements IDatasetDataSource {
+export class PatternDataSource implements IDataSetSource {
     public constructor(private profile: imperative.IProfileLoaded, private pattern: string) {}
 
-    public async fetchDatasets(): Promise<IDatasetInfo[]> {
+    public async fetchDataSets(): Promise<IDataSetInfo[]> {
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(this.profile);
-        const datasets: IDatasetInfo[] = [];
+        const dataSets: IDataSetInfo[] = [];
 
         const dsPatterns = [
             ...new Set(
@@ -202,11 +202,11 @@ export class PatternDataSource implements IDatasetDataSource {
             for (const resp of datasetResponses) {
                 for (const ds of resp.apiResponse?.items ?? resp.apiResponse ?? []) {
                     if (ds.dsorg === "VS") {
-                        // Skip VSAM datasets for now
+                        // Skip VSAM data sets for now
                         continue;
                     }
 
-                    datasets.push({
+                    dataSets.push({
                         name: ds.dsname,
                         dsorg: ds.dsorg,
                         createdDate: ds.createdDate ? new Date(ds.createdDate) : undefined,
@@ -227,7 +227,7 @@ export class PatternDataSource implements IDatasetDataSource {
             throw err;
         }
 
-        return datasets;
+        return dataSets;
     }
 
     public getTitle(): string {
@@ -242,7 +242,7 @@ export class PatternDataSource implements IDatasetDataSource {
         return true; // API results can include PDS that support lazy loading
     }
 
-    public async loadChildren(parentId: string): Promise<IDatasetInfo[]> {
+    public async loadChildren(parentId: string): Promise<IDataSetInfo[]> {
         // Extract dataset name from URI
         const datasetName = parentId.split("/").pop();
         if (!datasetName) {
@@ -253,7 +253,7 @@ export class PatternDataSource implements IDatasetDataSource {
 
         try {
             const membersResp = await mvsApi.allMembers(datasetName);
-            const members: IDatasetInfo[] = [];
+            const members: IDataSetInfo[] = [];
 
             for (const member of membersResp.apiResponse?.items || []) {
                 members.push({
@@ -334,7 +334,7 @@ export class DatasetTableView {
                     const hasTreeData = (r as any)._tree as Table.TreeNodeData;
                     const isMember = hasTreeData?.parentId != null;
 
-                    // Allow opening for PS datasets or PDS members
+                    // Allow opening for PS data sets or PDS members
                     return dsorg?.startsWith("PS") || isMember;
                 }),
         },
@@ -358,7 +358,7 @@ export class DatasetTableView {
     private currentTableType: "dataSets" | "members" | null = null;
     private shouldShow: Record<string, boolean> = {};
     private table: Table.Instance;
-    private currentDataSource: IDatasetDataSource;
+    private currentDataSource: IDataSetSource;
 
     public static getInstance(): DatasetTableView {
         if (!DatasetTableView._instance) {
@@ -433,7 +433,7 @@ export class DatasetTableView {
         }
     }
 
-    private mapDatasetInfoToRow(info: IDatasetInfo): Table.RowData {
+    private mapDatasetInfoToRow(info: IDataSetInfo): Table.RowData {
         const fieldsToCheck = ["createdDate", "dsorg", "modifiedDate", "lrecl", "migr", "recfm", "user"];
         fieldsToCheck.forEach((field) => {
             this.shouldShow[field] ||= (info as any)[field] != null;
@@ -458,7 +458,7 @@ export class DatasetTableView {
     /**
      * Maps dataset info to table rows with hierarchical tree data structure.
      */
-    private mapDatasetInfoToRowWithTree(info: IDatasetInfo): Table.RowData {
+    private mapDatasetInfoToRowWithTree(info: IDataSetInfo): Table.RowData {
         const fieldsToCheck = ["createdDate", "dsorg", "modifiedDate", "lrecl", "migr", "recfm", "user"];
         fieldsToCheck.forEach((field) => {
             this.shouldShow[field] ||= (info as any)[field] != null;
@@ -512,12 +512,12 @@ export class DatasetTableView {
      * Generates table rows from the current data source
      */
     private async generateRows(useTreeMode: boolean): Promise<Table.RowData[]> {
-        const datasets = await this.currentDataSource.fetchDatasets();
+        const dataSets = await this.currentDataSource.fetchDataSets();
 
         if (useTreeMode) {
-            return datasets.map((info) => this.mapDatasetInfoToRowWithTree(info));
+            return dataSets.map((info) => this.mapDatasetInfoToRowWithTree(info));
         } else {
-            return datasets.map((info) => this.mapDatasetInfoToRow(info));
+            return dataSets.map((info) => this.mapDatasetInfoToRow(info));
         }
     }
 
@@ -530,7 +530,7 @@ export class DatasetTableView {
 
         // Determine the current table type
         const previousTableType = this.currentTableType;
-        this.currentTableType = "dataSets"; // For now, always consider it as datasets
+        this.currentTableType = "dataSets"; // For now, always consider it as dataSets
         const tableTypeChanged = previousTableType !== this.currentTableType;
 
         // Prepare column definitions

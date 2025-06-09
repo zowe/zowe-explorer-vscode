@@ -1,10 +1,22 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
 import { TreeItemCollapsibleState } from "vscode";
-import { DatasetTableView, TreeDataSource } from "../../../../src/trees/dataset/DatasetTableView";
+import { PatternDataSource, TreeDataSource } from "../../../../src/trees/dataset/DatasetTableView";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import { Constants } from "../../../../src/configuration/Constants";
 import { Types } from "@zowe/zowe-explorer-api";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 
 describe("TreeDataSource", () => {
     describe("fetchDatasets", () => {
@@ -262,6 +274,33 @@ describe("TreeDataSource", () => {
             const children = await treeDataSource.loadChildren(parentId);
             expect(getChildrenMock).not.toHaveBeenCalledTimes(1);
             expect(children).toEqual([]);
+        });
+    });
+});
+
+xdescribe("PatternDataSource", () => {
+    describe("fetchDatasets", () => {
+        xit("returns datasets matching the pattern", async () => {
+            // const patternDataSource = new PatternDataSource(createIProfile(), "TEST.*");
+            // const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi")
+            //     .mockImplementation({
+            //         dataSetsMatchingPattern: jest.fn()
+            //             .mockReturnValue([
+            //             createdDate: ds.createdDate ? new Date(ds.createdDate) : undefined,
+            //             modifiedDate: ds.modifiedDate ? new Date(ds.modifiedDate) : undefined,
+            //             recfm: ds.recfm,
+            //             volumes: ds.vols || ds.vol,
+            //             user: ds.user,
+            //             uri: `zowe-ds:/${this.profile.name}/${ds.dsname as string}`,
+            //             isMember: false,
+            //             isDirectory: ds.dsorg?.startsWith("PO"),
+            //                 { dsname: "TEST.A", dsorg: "PO", migr: "NO" },
+            //                 { dsname: "TEST.B", dsorg: "PS", lrecl: 80, migr: "NO" },
+            //                 { dsname: "TEST.C", dsorg: "PO", migr: "NO" },
+            //                 { dsname: "TEST.D", dsorg: "PS", lrecl: 80, migr: "NO" }
+            //             ])
+            //     });
+            // const datasets = await patternDataSource.fetchDatasets();
         });
     });
 });
