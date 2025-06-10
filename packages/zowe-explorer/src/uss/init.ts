@@ -79,7 +79,7 @@ export async function initUSSProvider(context: vscode.ExtensionContext): Promise
     context.subscriptions.push(
         vscode.commands.registerCommand("zowe.uss.refreshDirectory", async (node, nodeList) => {
             let selectedNodes = getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-            selectedNodes = selectedNodes.filter((x) => contextuals.isUssDirectory(x));
+            selectedNodes = selectedNodes.filter((x) => contextuals.isUssDirectory(x) || contextuals.isUssSession(x));
             for (const item of selectedNodes) {
                 await ussActions.refreshDirectory(item, ussFileProvider);
             }

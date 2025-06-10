@@ -10,6 +10,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. [#3516](https://github.com/zowe/zowe-explorer-vscode/issues/3516)
 - Updated dependencies for technical currency purposes. [#3577](https://github.com/zowe/zowe-explorer-vscode/pull/3577)
 - Fixed an issue where searching for the root directory (`/`) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. [#3605](https://github.com/zowe/zowe-explorer-vscode/pull/3605)
+- Fixed an issue where clicking the refresh icon beside a profile in the Unix System Services (USS) view had no effect. [#3693](https://github.com/zowe/zowe-explorer-vscode/issues/3693)
 
 ## `2.18.1`
 
