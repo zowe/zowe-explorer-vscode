@@ -1080,6 +1080,104 @@ export class DatasetActions {
     }
 
     /**
+     * Attempts to open a data set from the selection of text made in the editor
+     * Works the same as ZOOM command in TSO/ISPF
+     *
+     */
+    public static async zoom(): Promise<void> {
+        ZoweLogger.trace("dataset.actions.zoom called.");
+
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            Gui.warningMessage(vscode.l10n.t("No active editor open. Please open a file and select text to open a data set."));
+            return;
+        }
+
+        const doc = editor.document;
+        const selection = editor.selection;
+        const selectedText = doc.getText(selection);
+        // Shouldn't happen but just in case
+        if (!selectedText) {
+            Gui.warningMessage(vscode.l10n.t("No selection to open."));
+            return;
+        }
+
+        // If selected text is not a valid data set name or data set(member name)
+        const ds = DatasetUtils.extractDataSetAndMember(selectedText);
+        const hasMember = ds.memberName && ds.memberName.length > 0;
+        if (hasMember) {
+            if (!DatasetUtils.validateMemberName(ds.memberName)) {
+                Gui.warningMessage(vscode.l10n.t("Selection is not a valid data set member name."));
+                return;
+            }
+        } else if (!DatasetUtils.validateDataSetName(ds.dataSetName)) {
+            Gui.warningMessage(vscode.l10n.t("Selection is not a valid data set name."));
+            return;
+        }
+
+        const profiles = Profiles.getInstance();
+        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
+        let sessProfileName = doc.uri ? FsAbstractUtils.getInfoForUri(doc.uri)?.profileName : "";
+
+        // If no profile name or not loaded, prompt user to select one
+        if (!sessProfileName || !profiles.allProfiles.some((p) => p.name === sessProfileName)) {
+            if (profileNamesList.length > 1) {
+                const quickPickOptions: vscode.QuickPickOptions = {
+                    placeHolder: vscode.l10n.t("Select the profile to use to open the data set"),
+                    ignoreFocusOut: true,
+                    canPickMany: false,
+                };
+                sessProfileName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
+                if (!sessProfileName) {
+                    Gui.infoMessage(DatasetActions.localizedStrings.opCancelled);
+                    return;
+                }
+            } else if (profileNamesList.length > 0) {
+                sessProfileName = profileNamesList[0];
+            } else {
+                Gui.showMessage(vscode.l10n.t("No profiles available"));
+                return;
+            }
+        }
+
+        // Get the profile from the session name
+        const sessProfile = profiles.loadNamedProfile(sessProfileName);
+
+        await Profiles.getInstance().checkCurrentProfile(sessProfile);
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        const datasetUri = vscode.Uri.parse(
+            hasMember
+                ? `${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}/${ds.memberName.toUpperCase()}`
+                : `${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}`
+        );
+
+        try {
+            await vscode.workspace.fs.readFile(datasetUri);
+            await vscode.commands.executeCommand("vscode.open", datasetUri, {
+                preview: false,
+                viewColumn: vscode.window.activeTextEditor?.viewColumn,
+            });
+        } catch (error) {
+            if (error instanceof vscode.FileSystemError) {
+                const errorMessage = hasMember
+                    ? vscode.l10n.t("Data set member {0} does not exist or cannot be opened in data set {1}.", ds.memberName, ds.dataSetName)
+                    : vscode.l10n.t("Data set {0} does not exist or cannot be opened.", ds.dataSetName);
+                Gui.warningMessage(errorMessage);
+            } else {
+                await AuthUtils.errorHandling(error, {
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profile: sessProfile,
+                    scenario: vscode.l10n.t("Opening data set failed."),
+                });
+            }
+        }
+    }
+
+    /**
      * Shows a confirmation dialog (if needed) when submitting a job.
      *
      * @param nodeOrFileName The node/member that is being submitted, or the filename to submit
