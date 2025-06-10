@@ -145,17 +145,18 @@ impl EnvironmentStatus {
             "VSCODE_EXTENSIONS",
             "ZOWE_CLI_HOME",
             "ZOWE_OPT_USER",
-            "ZOWE_OPT_PASS",
+            "ZOWE_OPT_PASSWORD",
         ];
 
         for var in relevant_vars {
             if let Ok(value) = std::env::var(var) {
                 // Mask sensitive values
-                let display_value = if var.contains("PASS") || var.contains("PAT") {
-                    "********".to_string()
-                } else {
-                    value
-                };
+                let display_value =
+                    if var.contains("USER") || var.contains("PASS") || var.contains("PAT") {
+                        "********".to_string()
+                    } else {
+                        value
+                    };
                 self.env_vars.push((var.to_string(), display_value));
             }
         }
