@@ -1419,4 +1419,23 @@ describe("ProfilesUtils unit tests", () => {
             expect(disableCredMgmtSpy).toHaveBeenCalled();
         });
     });
+
+    describe("demonstrateUncoveredCode", () => {
+        it("should return the covered branch message", () => {
+            const result = ProfilesUtils.demonstrateUncoveredCode(true);
+            expect(result).toBe("This branch is covered.");
+        });
+    });
+
+    describe("demonstrateMultipleUncoveredLines", () => {
+        it("should return the 'greater than 10' message", () => {
+            const result = ProfilesUtils.demonstrateMultipleUncoveredLines(11);
+            expect(result).toBe("Value is greater than 10.");
+        });
+
+        it("should return the 'greater than 0' message", () => {
+            const result = ProfilesUtils.demonstrateMultipleUncoveredLines(1);
+            expect(result).toBe("Value is greater than 0.");
+        });
+    });
 });
