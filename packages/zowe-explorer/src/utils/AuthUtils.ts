@@ -343,18 +343,4 @@ export class AuthUtils {
         const baseProps = await Constants.PROFILES_CACHE.getPropsForProfile(baseProfile?.name, false);
         return AuthHandler.isUsingTokenAuth(props, baseProps);
     }
-
-    /**
-     * This is a new function to demonstrate the test coverage command
-     * with multiple uncovered lines in a different file.
-     */
-    public static demonstrateUncoveredLinesInAnotherFile(value: string): string {
-        if (value === "a") {
-            return "Value is a.";
-        } else if (value === "b") {
-            return "Value is b.";
-        } else {
-            return "Value is something else.";
-        }
-    }
 }

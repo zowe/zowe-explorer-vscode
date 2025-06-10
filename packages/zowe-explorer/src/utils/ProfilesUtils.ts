@@ -733,33 +733,4 @@ export class ProfilesUtils {
         }, []);
         Gui.infoMessage(responseMsg.join(""), { vsCodeOpts: { modal: true } });
     }
-
-    /**
-     * This is a new function to demonstrate the test coverage command.
-     * It contains a branch that is not covered by any tests.
-     */
-    public static demonstrateUncoveredCode(value: boolean): string {
-        if (value) {
-            return "This branch is covered.";
-        } else {
-            return "This branch is not covered.";
-        }
-    }
-
-    /**
-     * This is a new function to demonstrate the test coverage command
-     * with multiple uncovered lines.
-     * It contains multiple branches that are not covered by any tests.
-     */
-    public static demonstrateMultipleUncoveredLines(value: number): string {
-        if (value > 10) {
-            return "Value is greater than 10.";
-        } else if (value > 5) {
-            return "Value is greater than 5.";
-        } else if (value > 0) {
-            return "Value is greater than 0.";
-        } else {
-            return "Value is 0 or less.";
-        }
-    }
 }
