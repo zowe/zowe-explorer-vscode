@@ -725,7 +725,7 @@ export class DatasetTableView {
         // Load the profile
         const profile = Profiles.getInstance().getProfileByName(selectedProfileName);
         if (!profile) {
-            Gui.errorMessage(l10n.t("Profile {0} not found.", selectedProfileName));
+            Gui.errorMessage(l10n.t({ message: "Profile {0} not found.", args: [selectedProfileName], comment: ["Name of the selected profile"] }));
             return;
         }
 
