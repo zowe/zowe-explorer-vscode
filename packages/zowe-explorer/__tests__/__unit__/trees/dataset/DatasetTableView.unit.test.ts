@@ -1210,4 +1210,107 @@ describe("DatasetTableView", () => {
             }
         });
     });
+
+    describe("canOpenInEditor", () => {
+        it("should return true for all PS (sequential) datasets", () => {
+            const condition = (DatasetTableView as any).canOpenInEditor;
+
+            const rows: Table.RowData[] = [
+                { dsorg: "PS", uri: "zowe-ds:/profile/TEST.PS1" },
+                { dsorg: "PS-L", uri: "zowe-ds:/profile/TEST.PS2" },
+            ];
+
+            expect(condition(rows)).toBe(true);
+        });
+
+        it("should return true for all PDS members", () => {
+            const condition = (DatasetTableView as any).canOpenInEditor;
+
+            const rows: Table.RowData[] = [
+                {
+                    uri: "zowe-ds:/profile/TEST.PDS/MEM1",
+                    _tree: { parentId: "zowe-ds:/profile/TEST.PDS", id: "zowe-ds:/profile/TEST.PDS/MEM1" },
+                },
+                {
+                    uri: "zowe-ds:/profile/TEST.PDS/MEM2",
+                    _tree: { parentId: "zowe-ds:/profile/TEST.PDS", id: "zowe-ds:/profile/TEST.PDS/MEM2" },
+                },
+            ];
+
+            expect(condition(rows)).toBe(true);
+        });
+
+        it("should return true for mixed PS datasets and PDS members", () => {
+            const condition = (DatasetTableView as any).canOpenInEditor;
+
+            const rows: Table.RowData[] = [
+                { dsorg: "PS", uri: "zowe-ds:/profile/TEST.PS" },
+                {
+                    uri: "zowe-ds:/profile/TEST.PDS/MEM1",
+                    _tree: { parentId: "zowe-ds:/profile/TEST.PDS", id: "zowe-ds:/profile/TEST.PDS/MEM1" },
+                },
+            ];
+
+            expect(condition(rows)).toBe(true);
+        });
+
+        it("should return false for PO (PDS) datasets without member context", () => {
+            const condition = (DatasetTableView as any).canOpenInEditor;
+
+            const rows: Table.RowData[] = [{ dsorg: "PO", uri: "zowe-ds:/profile/TEST.PDS" }];
+
+            expect(condition(rows)).toBe(false);
+        });
+
+        it("should return false when at least one row doesn't meet criteria", () => {
+            const condition = (DatasetTableView as any).canOpenInEditor;
+
+            const rows: Table.RowData[] = [
+                { dsorg: "PS", uri: "zowe-ds:/profile/TEST.PS" },
+                { dsorg: "PO", uri: "zowe-ds:/profile/TEST.PDS" }, // This one fails the condition
+            ];
+
+            expect(condition(rows)).toBe(false);
+        });
+
+        it("should return false for VSAM datasets", () => {
+            const condition = (DatasetTableView as any).canOpenInEditor;
+
+            const rows: Table.RowData[] = [{ dsorg: "VS", uri: "zowe-ds:/profile/TEST.VSAM" }];
+
+            expect(condition(rows)).toBe(false);
+        });
+
+        it("should handle undefined dsorg gracefully", () => {
+            const condition = (DatasetTableView as any).canOpenInEditor;
+
+            const rows: Table.RowData[] = [
+                { uri: "zowe-ds:/profile/TEST.UNKNOWN" }, // No dsorg property
+            ];
+
+            expect(condition(rows)).toBe(false);
+        });
+
+        it("should handle empty rows array", () => {
+            const condition = (DatasetTableView as any).canOpenInEditor;
+
+            const rows: Table.RowData[] = [];
+
+            expect(condition(rows)).toBe(true); // every() returns true for empty arrays
+        });
+
+        it("should return true for PDS member with undefined dsorg", () => {
+            const condition = (DatasetTableView as any).canOpenInEditor;
+
+            const rows: Table.RowData[] = [
+                {
+                    dsorg: undefined,
+                    uri: "zowe-ds:/profile/TEST.PDS/MEM1",
+                    _tree: { parentId: "zowe-ds:/profile/TEST.PDS", id: "zowe-ds:/profile/TEST.PDS/MEM1" },
+                },
+            ];
+
+            expect(condition(rows)).toBe(true);
+        });
+    });
 });
