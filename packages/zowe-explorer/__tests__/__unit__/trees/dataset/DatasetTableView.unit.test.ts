@@ -17,6 +17,8 @@ import { Constants } from "../../../../src/configuration/Constants";
 import { Types } from "@zowe/zowe-explorer-api";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import * as imperative from "@zowe/imperative";
 
 describe("TreeDataSource", () => {
     describe("fetchDatasets", () => {
@@ -57,7 +59,7 @@ describe("TreeDataSource", () => {
                 });
             dsProfileNode.children = dsNodes;
             const treeDataSource = new TreeDataSource(dsProfileNode, dsProfileNode.children);
-            const result = treeDataSource.fetchDatasets();
+            const result = treeDataSource.fetchDataSets();
             expect(result).toEqual(
                 dataSets.map((ds) => {
                     const stats: Record<string, any> = { ...ds.stats };
@@ -76,6 +78,41 @@ describe("TreeDataSource", () => {
             );
             expect(getStatsMock).toHaveBeenCalledTimes(dsNodes.length);
             getStatsMock.mockRestore();
+        });
+
+        it("returns an empty array for a nonexistent parentId", async () => {
+            const profile = createIProfile();
+            const profileNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: TreeItemCollapsibleState.Expanded,
+                contextOverride: Constants.DS_SESSION_CONTEXT,
+                profile,
+                session: createISession(),
+            });
+            profileNode.pattern = "TEST.*";
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: TreeItemCollapsibleState.Collapsed,
+                contextOverride: Constants.DS_PDS_CONTEXT,
+                profile,
+            });
+            const newChildren = [
+                new ZoweDatasetNode({
+                    label: "MEM1",
+                    collapsibleState: TreeItemCollapsibleState.None,
+                    profile,
+                    parentNode: pdsNode,
+                }),
+            ];
+            profileNode.children = [pdsNode];
+            const getChildrenMock = jest.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
+                return Promise.resolve(newChildren);
+            });
+            const treeDataSource = new TreeDataSource(profileNode, profileNode.children);
+            const parentId = `zowe-ds:/wrongProfile/${pdsNode.label?.toString()}`;
+            const children = await treeDataSource.loadChildren(parentId);
+            expect(getChildrenMock).not.toHaveBeenCalledTimes(1);
+            expect(children).toEqual([]);
         });
     });
 
@@ -278,29 +315,155 @@ describe("TreeDataSource", () => {
     });
 });
 
-xdescribe("PatternDataSource", () => {
-    describe("fetchDatasets", () => {
-        xit("returns datasets matching the pattern", async () => {
-            // const patternDataSource = new PatternDataSource(createIProfile(), "TEST.*");
-            // const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi")
-            //     .mockImplementation({
-            //         dataSetsMatchingPattern: jest.fn()
-            //             .mockReturnValue([
-            //             createdDate: ds.createdDate ? new Date(ds.createdDate) : undefined,
-            //             modifiedDate: ds.modifiedDate ? new Date(ds.modifiedDate) : undefined,
-            //             recfm: ds.recfm,
-            //             volumes: ds.vols || ds.vol,
-            //             user: ds.user,
-            //             uri: `zowe-ds:/${this.profile.name}/${ds.dsname as string}`,
-            //             isMember: false,
-            //             isDirectory: ds.dsorg?.startsWith("PO"),
-            //                 { dsname: "TEST.A", dsorg: "PO", migr: "NO" },
-            //                 { dsname: "TEST.B", dsorg: "PS", lrecl: 80, migr: "NO" },
-            //                 { dsname: "TEST.C", dsorg: "PO", migr: "NO" },
-            //                 { dsname: "TEST.D", dsorg: "PS", lrecl: 80, migr: "NO" }
-            //             ])
-            //     });
-            // const datasets = await patternDataSource.fetchDatasets();
+describe("PatternDataSource", () => {
+    let profile: imperative.IProfileLoaded;
+    let getMvsApiMock: jest.SpyInstance;
+    let authUtilsMock: jest.SpyInstance;
+
+    beforeEach(() => {
+        profile = createIProfile();
+        getMvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi");
+        authUtilsMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation(jest.fn());
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    describe("fetchDataSets", () => {
+        it("should use dataSetsMatchingPattern when available", async () => {
+            const mvsApiMock = {
+                dataSetsMatchingPattern: jest.fn().mockResolvedValue({
+                    apiResponse: {
+                        items: [
+                            { dsname: "TEST.A", dsorg: "PO", migr: "no" },
+                            { dsname: "TEST.B", dsorg: "PS", lrecl: 80, migr: "no" },
+                        ],
+                    },
+                }),
+            };
+            getMvsApiMock.mockReturnValue(mvsApiMock as any);
+            const patternDataSource = new PatternDataSource(profile, "TEST.*");
+            const datasets = await patternDataSource.fetchDataSets();
+
+            expect(getMvsApiMock).toHaveBeenCalledWith(profile);
+            expect(mvsApiMock.dataSetsMatchingPattern).toHaveBeenCalledWith(["TEST.*"], { attributes: true });
+            expect(datasets).toHaveLength(2);
+            expect(datasets[0].name).toBe("TEST.A");
+            expect(datasets[0].isDirectory).toBe(true);
+            expect(datasets[1].name).toBe("TEST.B");
+            expect(datasets[1].isDirectory).toBe(false);
+        });
+
+        it("should use dataSet as a fallback", async () => {
+            const mvsApiMock = {
+                // dataSetsMatchingPattern is undefined
+                dataSet: jest
+                    .fn()
+                    .mockResolvedValueOnce({ apiResponse: [{ dsname: "TEST.A", dsorg: "PO", migr: "no" }] })
+                    .mockResolvedValueOnce({ apiResponse: [{ dsname: "TEST.B", dsorg: "PS", lrecl: 80, migr: "no" }] }),
+            };
+            getMvsApiMock.mockReturnValue(mvsApiMock as any);
+            const patternDataSource = new PatternDataSource(profile, "TEST.A, TEST.B");
+            const datasets = await patternDataSource.fetchDataSets();
+
+            expect(getMvsApiMock).toHaveBeenCalledWith(profile);
+            expect(mvsApiMock.dataSet).toHaveBeenCalledTimes(2);
+            expect(mvsApiMock.dataSet).toHaveBeenCalledWith("TEST.A", { attributes: true });
+            expect(mvsApiMock.dataSet).toHaveBeenCalledWith("TEST.B", { attributes: true });
+            expect(datasets).toHaveLength(2);
+        });
+
+        it("should skip VSAM datasets", async () => {
+            const mvsApiMock = {
+                dataSetsMatchingPattern: jest.fn().mockResolvedValue({
+                    apiResponse: {
+                        items: [
+                            { dsname: "TEST.VSAM", dsorg: "VS" },
+                            { dsname: "TEST.PS", dsorg: "PS" },
+                        ],
+                    },
+                }),
+            };
+            getMvsApiMock.mockReturnValue(mvsApiMock as any);
+            const patternDataSource = new PatternDataSource(profile, "TEST.*");
+            const datasets = await patternDataSource.fetchDataSets();
+            expect(datasets).toHaveLength(1);
+            expect(datasets[0].name).toBe("TEST.PS");
+        });
+
+        it("should handle API errors", async () => {
+            const error = new Error("API Error");
+            const mvsApiMock = {
+                dataSetsMatchingPattern: jest.fn().mockRejectedValue(error),
+            };
+            getMvsApiMock.mockReturnValue(mvsApiMock as any);
+            const patternDataSource = new PatternDataSource(profile, "TEST.*");
+
+            await expect(patternDataSource.fetchDataSets()).rejects.toThrow("API Error");
+            expect(authUtilsMock).toHaveBeenCalledWith(error, profile);
+        });
+    });
+
+    describe("getTitle", () => {
+        it("should return a formatted title", () => {
+            const patternDataSource = new PatternDataSource(profile, "MY.PATTERN.*");
+            expect(patternDataSource.getTitle()).toBe(`[${profile.name}]: MY.PATTERN.*`);
+        });
+    });
+
+    describe("supportsHierarchy", () => {
+        it("should return true", () => {
+            const patternDataSource = new PatternDataSource(profile, "TEST.*");
+            expect(patternDataSource.supportsHierarchy()).toBe(true);
+        });
+    });
+
+    describe("loadChildren", () => {
+        it("should load members of a PDS", async () => {
+            const mvsApiMock = {
+                allMembers: jest.fn().mockResolvedValue({
+                    apiResponse: {
+                        items: [
+                            { member: "MEM1", user: "USER1" },
+                            { member: "MEM2", user: "USER2" },
+                        ],
+                    },
+                }),
+            };
+            getMvsApiMock.mockReturnValue(mvsApiMock as any);
+
+            const patternDataSource = new PatternDataSource(profile, "TEST.PDS");
+            const parentId = `zowe-ds:/${profile.name}/TEST.PDS`;
+            const children = await patternDataSource.loadChildren(parentId);
+
+            expect(mvsApiMock.allMembers).toHaveBeenCalledWith("TEST.PDS");
+            expect(children).toHaveLength(2);
+            expect(children[0].name).toBe("MEM1");
+            expect(children[0].isMember).toBe(true);
+            expect(children[0].parentId).toBe(parentId);
+            expect(children[1].name).toBe("MEM2");
+        });
+
+        it("should return empty array for invalid parentId", async () => {
+            const patternDataSource = new PatternDataSource(profile, "TEST.PDS");
+            const children = await patternDataSource.loadChildren("invalid-uri");
+            expect(children).toEqual([]);
+        });
+
+        it("should handle API errors and return empty array", async () => {
+            const error = new Error("API Error");
+            const mvsApiMock = {
+                allMembers: jest.fn().mockRejectedValue(error),
+            };
+            getMvsApiMock.mockReturnValue(mvsApiMock as any);
+
+            const patternDataSource = new PatternDataSource(profile, "TEST.PDS");
+            const parentId = `zowe-ds:/${profile.name}/TEST.PDS`;
+            const children = await patternDataSource.loadChildren(parentId);
+
+            expect(children).toEqual([]);
+            expect(authUtilsMock).toHaveBeenCalledWith(error, profile);
         });
     });
 });
