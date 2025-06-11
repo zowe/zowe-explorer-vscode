@@ -70,7 +70,7 @@ type DataSetTableType = "dataSets" | "members" | null;
 enum DataSetTableEventType {
     Created = 1,
     Modified,
-    Disposed
+    Disposed,
 }
 
 interface IDataSetTableEvent {
@@ -258,7 +258,13 @@ export class PatternDataSource implements IDataSetSource {
 
     public async loadChildren(parentId: string): Promise<IDataSetInfo[]> {
         // Extract dataset name from URI
-        const datasetName = parentId.split("/").pop();
+        const segments = parentId.split("/");
+        if (segments.length < 3) {
+            // Invalid URI, format must be zowe-ds:/<profile_name>/<data_set_name>
+            return [];
+        }
+
+        const datasetName = segments.pop();
         if (!datasetName) {
             return [];
         }
