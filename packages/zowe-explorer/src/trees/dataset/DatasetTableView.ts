@@ -347,16 +347,7 @@ export class DatasetTableView {
             title: l10n.t("Open"),
             command: "open",
             callback: { fn: DatasetTableView.openInEditor, typ: "multi-row" },
-            condition: (rows: Table.RowData[]) =>
-                rows.every((r) => {
-                    // Check if it's a sequential dataset (PS) or a PDS member
-                    const dsorg = r["dsorg"] as string;
-                    const hasTreeData = (r as any)._tree as Table.TreeNodeData;
-                    const isMember = hasTreeData?.parentId != null;
-
-                    // Allow opening for PS data sets or PDS members
-                    return dsorg?.startsWith("PS") || isMember;
-                }),
+            condition: (rows: Table.RowData[]) => DatasetTableView.canOpenInEditor(rows),
         },
     };
 
@@ -370,6 +361,24 @@ export class DatasetTableView {
         for (const row of allRows) {
             await commands.executeCommand("vscode.open", Uri.parse(row.uri as string));
         }
+    }
+
+    /**
+     * Determines whether the selected rows can be opened in the editor.
+     * Allows opening for sequential datasets (PS) or PDS members.
+     * @param rows The selected rows to check
+     * @returns True if all rows can be opened, false otherwise
+     */
+    private static canOpenInEditor(rows: Table.RowData[]): boolean {
+        return rows.every((r) => {
+            // Check if it's a sequential dataset (PS) or a PDS member
+            const dsorg = r["dsorg"] as string;
+            const hasTreeData = (r as any)._tree as Table.TreeNodeData;
+            const isMember = hasTreeData?.parentId != null;
+
+            // Allow opening for PS data sets or PDS members
+            return dsorg?.startsWith("PS") || isMember;
+        });
     }
 
     private onDataSetTableChangedEmitter: EventEmitter<IDataSetTableEvent>;
