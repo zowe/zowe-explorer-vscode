@@ -448,12 +448,15 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 }, []);
             }
         } catch (error) {
-            const updated = await AuthUtils.errorHandling(error, {
-                apiType: ZoweExplorerApiType.Jes,
-                profile: this.getProfile(),
-                scenario: vscode.l10n.t("Retrieving response from JES list API"),
-            });
-            AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
+            const jobs: IZoweJobTreeNode = this.children.find((job) => (job.label as string).includes(this._searchId));
+            if (jobs === undefined) {
+                const updated = await AuthUtils.errorHandling(error, {
+                    apiType: ZoweExplorerApiType.Jes,
+                    profile: this.getProfile(),
+                    scenario: vscode.l10n.t("Retrieving response from JES list API"),
+                });
+                AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
+            }
             return;
         }
         return jobsInternal;
