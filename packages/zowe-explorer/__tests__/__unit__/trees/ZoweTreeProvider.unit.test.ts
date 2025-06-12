@@ -19,6 +19,8 @@ import {
     createFileResponse,
     createInstanceOfProfileInfo,
     createGetConfigMock,
+    createInstanceOfProfile,
+    createInstanceOfProfilesCache,
 } from "../../__mocks__/mockCreators/shared";
 import { Constants, JwtCheckResult } from "../../../src/configuration/Constants";
 import { Profiles } from "../../../src/configuration/Profiles";
@@ -50,7 +52,6 @@ async function createGlobalMocks() {
     });
     const profile = createIProfile();
     const globalMocks = {
-        mockLoadNamedProfile: jest.fn(),
         mockDefaultProfile: jest.fn(),
         withProgress: jest.fn(),
         createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
@@ -93,7 +94,7 @@ async function createGlobalMocks() {
             };
         }),
         mockProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
+        mockProfilesCache: createInstanceOfProfilesCache(),
         FileSystemProvider: {
             createDirectory: jest.fn(),
         },
@@ -117,7 +118,7 @@ async function createGlobalMocks() {
             getDefaultProfile: globalMocks.mockDefaultProfile,
             validProfile: Validation.ValidationType.VALID,
             validateProfiles: jest.fn(),
-            loadNamedProfile: globalMocks.mockLoadNamedProfile,
+            loadNamedProfile: jest.fn().mockReturnValue(globalMocks.testProfile),
             getBaseProfile: jest.fn(() => {
                 return globalMocks.testProfile;
             }),
@@ -141,9 +142,7 @@ async function createGlobalMocks() {
             ssoLogin: globalMocks.mockSsoLogin,
             ssoLogout: globalMocks.mockSsoLogout,
             getProfileInfo: () => globalMocks.mockProfileInfo,
-            fetchAllProfiles: jest.fn(() => {
-                return [{ name: "profile1" }, { name: "profile2" }, { name: "base" }];
-            }),
+            fetchAllProfiles: () => [{ name: "profile1" }, { name: "profile2" }, { name: "base" }],
             fetchAllProfilesByType: jest.fn(() => {
                 return [{ name: "profile1" }];
             }),
@@ -169,6 +168,7 @@ async function createGlobalMocks() {
         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         parentNode: globalMocks.testUSSTree.mSessionNodes[0],
         session: globalMocks.testSession,
+        profile: globalMocks.testProfile,
     });
     globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
@@ -838,5 +838,24 @@ describe("Tree Provider Unit Tests - function setStatusInSession", () => {
         const getIconByIdMock = jest.spyOn(IconGenerator, "getIconById").mockClear().mockImplementation();
         (treeProvider as any).setStatusForSession(null, Validation.ValidationType.VALID);
         expect(getIconByIdMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("Tree Provider unit tests, function getProfile", () => {
+    it("Tests that getProfile returns the correct info when called on a non-root node", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        // Creating child of session node
+        // const sampleChild: ZoweUSSNode = new ZoweUSSNode({
+        //     label: "/u/myUser/zowe1",
+        //     collapsibleState: vscode.TreeItemCollapsibleState.None,
+        //     parentNode: globalMocks.testUSSTree.mSessionNodes[1],
+        //     session: globalMocks.testSession,
+        // });
+        Object.defineProperty(Profiles.getInstance, "loadNamedProfile", {
+            value: jest.fn().mockReturnValue(globalMocks.testProfile),
+            configurable: true,
+        });
+        expect(globalMocks.testUSSNode.getProfile()).toBe(globalMocks.testProfile);
     });
 });
