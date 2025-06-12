@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum, Sorting } from "@zowe/zowe-explorer-api";
+import { imperative, Validation, PersistenceSchemaEnum, Sorting } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweTreeProvider } from "../../../src/trees/ZoweTreeProvider";
 import {
@@ -19,7 +19,6 @@ import {
     createFileResponse,
     createInstanceOfProfileInfo,
     createGetConfigMock,
-    createInstanceOfProfile,
     createInstanceOfProfilesCache,
 } from "../../__mocks__/mockCreators/shared";
 import { Constants, JwtCheckResult } from "../../../src/configuration/Constants";
@@ -52,6 +51,7 @@ async function createGlobalMocks() {
     });
     const profile = createIProfile();
     const globalMocks = {
+        mockLoadNamedProfile: jest.fn(),
         mockDefaultProfile: jest.fn(),
         withProgress: jest.fn(),
         createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
@@ -112,13 +112,15 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: globalMocks.isUsingTokenAuth, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
+    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue({
+            mockLoadNamedProfile: jest.fn(),
             allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
             getDefaultProfile: globalMocks.mockDefaultProfile,
             validProfile: Validation.ValidationType.VALID,
             validateProfiles: jest.fn(),
-            loadNamedProfile: jest.fn().mockReturnValue(globalMocks.testProfile),
+            loadNamedProfile: globalMocks.mockLoadNamedProfile,
             getBaseProfile: jest.fn(() => {
                 return globalMocks.testProfile;
             }),
@@ -170,7 +172,7 @@ async function createGlobalMocks() {
         session: globalMocks.testSession,
         profile: globalMocks.testProfile,
     });
-    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
+
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockEditSession.mockReturnValue(globalMocks.testProfile);
 
@@ -842,20 +844,15 @@ describe("Tree Provider Unit Tests - function setStatusInSession", () => {
 });
 
 describe("Tree Provider unit tests, function getProfile", () => {
-    it("Tests that getProfile returns the correct info when called on a non-root node", async () => {
+    it("Tests that getProfile returns the correct info when called on a non-updated node", async () => {
         const globalMocks = await createGlobalMocks();
-
-        // Creating child of session node
-        // const sampleChild: ZoweUSSNode = new ZoweUSSNode({
-        //     label: "/u/myUser/zowe1",
-        //     collapsibleState: vscode.TreeItemCollapsibleState.None,
-        //     parentNode: globalMocks.testUSSTree.mSessionNodes[1],
-        //     session: globalMocks.testSession,
-        // });
-        Object.defineProperty(Profiles.getInstance, "loadNamedProfile", {
-            value: jest.fn().mockReturnValue(globalMocks.testProfile),
-            configurable: true,
-        });
         expect(globalMocks.testUSSNode.getProfile()).toBe(globalMocks.testProfile);
+    });
+    it("Tests that getProfile returns the correct info when called on an updated node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const updatedProf = globalMocks.testProfile;
+        updatedProf.profile.password = "newpass";
+        globalMocks.mockLoadNamedProfile.mockReturnValue(updatedProf);
+        expect(globalMocks.testUSSNode.getProfile()).toBe(updatedProf);
     });
 });
