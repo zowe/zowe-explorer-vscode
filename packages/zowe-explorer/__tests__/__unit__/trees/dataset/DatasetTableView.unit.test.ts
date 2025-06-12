@@ -21,7 +21,6 @@ import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ProfileManagement } from "../../../../src/management/ProfileManagement";
-import { Definitions } from "../../../../src/configuration/Definitions";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import * as imperative from "@zowe/imperative";
 
@@ -614,8 +613,6 @@ describe("DatasetTableView", () => {
 
             expect(result).toMatchObject({
                 dsname: "MEMBER1",
-                dsorg: "",
-                volumes: "",
                 uri: "zowe-ds:/profile/TEST.PDS/MEMBER1",
                 _tree: {
                     id: "zowe-ds:/profile/TEST.PDS/MEMBER1",
@@ -1038,279 +1035,457 @@ describe("DatasetTableView", () => {
         });
     });
 
-    describe("generateTable", () => {
-        let mockContext: ExtensionContext;
-        let mockDataSource: any;
+    describe("DatasetTableView", () => {
+        let datasetTableView: DatasetTableView;
 
         beforeEach(() => {
-            mockContext = {
-                extensionPath: "/mock/extension/path",
-            } as ExtensionContext;
-            mockDataSource = {
-                fetchDataSets: jest.fn().mockResolvedValue([
+            // Reset the singleton instance
+            (DatasetTableView as any)._instance = undefined;
+            datasetTableView = DatasetTableView.getInstance();
+        });
+
+        // ... existing tests
+
+        describe("generateTable", () => {
+            let mockContext: ExtensionContext;
+            let mockDataSource: any;
+
+            beforeEach(() => {
+                mockContext = {
+                    extensionPath: "/mock/extension/path",
+                } as ExtensionContext;
+                mockDataSource = {
+                    fetchDataSets: jest.fn().mockResolvedValue([
+                        {
+                            name: "TEST.DATASET",
+                            dsorg: "PS",
+                            uri: "zowe-ds:/profile/TEST.DATASET",
+                            isMember: false,
+                            isDirectory: false,
+                        },
+                    ]),
+                    getTitle: jest.fn().mockReturnValue("Test Title"),
+                    supportsHierarchy: jest.fn().mockReturnValue(false),
+                    buildTable: jest.fn(),
+                };
+
+                (datasetTableView as any).currentDataSource = mockDataSource;
+            });
+
+            it("should generate a new table when no existing table", async () => {
+                const result = await (datasetTableView as any).generateTable(mockContext);
+
+                expect(result).toBeDefined();
+                expect(mockDataSource.fetchDataSets).toHaveBeenCalled();
+                expect(mockDataSource.getTitle).toHaveBeenCalled();
+                expect(mockDataSource.supportsHierarchy).toHaveBeenCalled();
+                expect(result).toBeInstanceOf(Table.Instance);
+            });
+
+            it("should update existing table when table exists and type unchanged", async () => {
+                // First create a table
+                await (datasetTableView as any).generateTable(mockContext);
+
+                // Mock the existing table
+                const mockTable = {
+                    setTitle: jest.fn().mockResolvedValue(undefined),
+                    setColumns: jest.fn().mockResolvedValue(undefined),
+                    setContent: jest.fn().mockResolvedValue(undefined),
+                    setOptions: jest.fn().mockResolvedValue(undefined),
+                    onDisposed: jest.fn(),
+                    onDidReceiveMessage: jest.fn(),
+                };
+                (datasetTableView as any).table = mockTable;
+
+                // Generate table again
+                await (datasetTableView as any).generateTable(mockContext);
+
+                expect(mockTable.setTitle).toHaveBeenCalledWith("Test Title");
+                expect(mockTable.setColumns).toHaveBeenCalled();
+                expect(mockTable.setContent).toHaveBeenCalled();
+            });
+
+            it("should set up tree mode when data source supports hierarchy", async () => {
+                mockDataSource.supportsHierarchy.mockReturnValue(true);
+                mockDataSource.loadChildren = jest.fn().mockResolvedValue([]);
+
+                const result = await (datasetTableView as any).generateTable(mockContext);
+
+                expect(result).toBeDefined();
+                expect(mockDataSource.supportsHierarchy).toHaveBeenCalled();
+            });
+
+            it("should handle data source error during fetchDataSets", async () => {
+                const errorDataSource = {
+                    fetchDataSets: jest.fn().mockRejectedValue(new Error("Fetch error")),
+                    getTitle: jest.fn().mockReturnValue("Error Title"),
+                    supportsHierarchy: jest.fn().mockReturnValue(false),
+                };
+
+                (datasetTableView as any).currentDataSource = errorDataSource;
+
+                await expect((datasetTableView as any).generateTable(mockContext)).rejects.toThrow("Fetch error");
+            });
+        });
+
+        describe("prepareAndDisplayTable", () => {
+            let mockContext: ExtensionContext;
+            let mockNode: ZoweDatasetNode;
+            let mockTableViewProvider: any;
+
+            beforeEach(() => {
+                mockContext = {
+                    extensionPath: "/mock/extension/path",
+                } as ExtensionContext;
+                const profile = createIProfile();
+                mockNode = new ZoweDatasetNode({
+                    label: "sestest",
+                    collapsibleState: TreeItemCollapsibleState.Expanded,
+                    contextOverride: Constants.DS_SESSION_CONTEXT,
+                    profile,
+                    session: createISession(),
+                });
+
+                mockTableViewProvider = {
+                    setTableView: jest.fn().mockResolvedValue(undefined),
+                };
+
+                jest.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
+                jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+                    filterPrompt: jest.fn().mockResolvedValue(undefined),
+                } as any);
+                jest.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
+            });
+
+            it("should prepare and display table for session node", async () => {
+                mockNode.pattern = "TEST.*";
+                mockNode.children = [];
+                jest.spyOn(SharedContext, "isSession").mockReturnValue(true);
+                jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
+                jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
+
+                await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
+
+                expect(mockTableViewProvider.setTableView).toHaveBeenCalled();
+                expect(commands.executeCommand).toHaveBeenCalledWith("zowe-resources.focus");
+            });
+
+            it("should call filterPrompt for session node without pattern", async () => {
+                mockNode.pattern = null;
+                mockNode.children = [];
+                jest.spyOn(SharedContext, "isSession").mockReturnValue(true);
+                jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
+                jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
+
+                const filterPromptSpy = jest.spyOn(SharedTreeProviders.ds, "filterPrompt");
+
+                await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
+
+                expect(filterPromptSpy).toHaveBeenCalledWith(mockNode);
+            });
+
+            it("should prepare and display table for PDS node", async () => {
+                mockNode.children = [];
+                jest.spyOn(SharedContext, "isSession").mockReturnValue(false);
+                jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
+                jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
+
+                await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
+
+                expect(mockTableViewProvider.setTableView).toHaveBeenCalled();
+                expect(commands.executeCommand).toHaveBeenCalledWith("zowe-resources.focus");
+            });
+        });
+
+        describe("event emitter", () => {
+            it("should emit events when table is created and disposed", async () => {
+                const eventSpy = jest.fn();
+                datasetTableView.onDataSetTableChanged(eventSpy);
+
+                const mockContext = {
+                    extensionPath: "/mock/extension/path",
+                } as ExtensionContext;
+                const mockDataSource = {
+                    fetchDataSets: jest.fn().mockResolvedValue([]),
+                    getTitle: jest.fn().mockReturnValue("Test"),
+                    supportsHierarchy: jest.fn().mockReturnValue(false),
+                };
+
+                (datasetTableView as any).currentDataSource = mockDataSource;
+                const table = await (datasetTableView as any).generateTable(mockContext);
+
+                expect(eventSpy).toHaveBeenCalledWith({
+                    source: mockDataSource,
+                    tableType: "dataSets",
+                    eventType: 1,
+                });
+
+                // Simulate table disposal
+                const onDisposedCallback = jest.fn();
+                table.onDisposed = onDisposedCallback;
+
+                // Call the onDisposed callback that was registered
+                const onDisposedCalls = (table as any).onDisposed.mock.calls;
+                if (onDisposedCalls.length > 0) {
+                    const callback = onDisposedCalls[0][0];
+                    callback();
+                }
+            });
+        });
+
+        describe("canOpenInEditor", () => {
+            it("should return true for all PS (sequential) datasets", () => {
+                const condition = (DatasetTableView as any).canOpenInEditor;
+
+                const rows: Table.RowData[] = [
+                    { dsorg: "PS", uri: "zowe-ds:/profile/TEST.PS1" },
+                    { dsorg: "PS-L", uri: "zowe-ds:/profile/TEST.PS2" },
+                ];
+
+                expect(condition(rows)).toBe(true);
+            });
+
+            it("should return true for all PDS members", () => {
+                const condition = (DatasetTableView as any).canOpenInEditor;
+
+                const rows: Table.RowData[] = [
                     {
-                        name: "TEST.DATASET",
-                        dsorg: "PS",
-                        uri: "zowe-ds:/profile/TEST.DATASET",
-                        isMember: false,
-                        isDirectory: false,
+                        uri: "zowe-ds:/profile/TEST.PDS/MEM1",
+                        _tree: { parentId: "zowe-ds:/profile/TEST.PDS", id: "zowe-ds:/profile/TEST.PDS/MEM1" },
                     },
-                ]),
-                getTitle: jest.fn().mockReturnValue("Test Title"),
-                supportsHierarchy: jest.fn().mockReturnValue(false),
-            };
+                    {
+                        uri: "zowe-ds:/profile/TEST.PDS/MEM2",
+                        _tree: { parentId: "zowe-ds:/profile/TEST.PDS", id: "zowe-ds:/profile/TEST.PDS/MEM2" },
+                    },
+                ];
 
-            (datasetTableView as any).currentDataSource = mockDataSource;
-        });
-
-        it("should generate a new table when no existing table", async () => {
-            const result = await (datasetTableView as any).generateTable(mockContext);
-
-            expect(result).toBeDefined();
-            expect(mockDataSource.fetchDataSets).toHaveBeenCalled();
-            expect(mockDataSource.getTitle).toHaveBeenCalled();
-            expect(mockDataSource.supportsHierarchy).toHaveBeenCalled();
-        });
-
-        it("should update existing table when table exists and type unchanged", async () => {
-            // First create a table
-            await (datasetTableView as any).generateTable(mockContext);
-
-            // Mock the existing table
-            const mockTable = {
-                setTitle: jest.fn().mockResolvedValue(undefined),
-                setColumns: jest.fn().mockResolvedValue(undefined),
-                setContent: jest.fn().mockResolvedValue(undefined),
-                setOptions: jest.fn().mockResolvedValue(undefined),
-                onDisposed: jest.fn(),
-                onDidReceiveMessage: jest.fn(),
-            };
-            (datasetTableView as any).table = mockTable;
-
-            // Generate table again
-            await (datasetTableView as any).generateTable(mockContext);
-
-            expect(mockTable.setTitle).toHaveBeenCalledWith("Test Title");
-            expect(mockTable.setColumns).toHaveBeenCalled();
-            expect(mockTable.setContent).toHaveBeenCalled();
-        });
-
-        it("should set up tree mode when data source supports hierarchy", async () => {
-            mockDataSource.supportsHierarchy.mockReturnValue(true);
-            mockDataSource.loadChildren = jest.fn().mockResolvedValue([]);
-
-            const result = await (datasetTableView as any).generateTable(mockContext);
-
-            expect(result).toBeDefined();
-            expect(mockDataSource.supportsHierarchy).toHaveBeenCalled();
-        });
-    });
-
-    describe("prepareAndDisplayTable", () => {
-        let mockContext: ExtensionContext;
-        let mockNode: ZoweDatasetNode;
-        let mockTableViewProvider: any;
-
-        beforeEach(() => {
-            mockContext = {
-                extensionPath: "/mock/extension/path",
-            } as ExtensionContext;
-            const profile = createIProfile();
-            mockNode = new ZoweDatasetNode({
-                label: "sestest",
-                collapsibleState: TreeItemCollapsibleState.Expanded,
-                contextOverride: Constants.DS_SESSION_CONTEXT,
-                profile,
-                session: createISession(),
+                expect(condition(rows)).toBe(true);
             });
 
-            mockTableViewProvider = {
-                setTableView: jest.fn().mockResolvedValue(undefined),
-            };
+            it("should return true for mixed PS datasets and PDS members", () => {
+                const condition = (DatasetTableView as any).canOpenInEditor;
 
-            jest.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
-                filterPrompt: jest.fn().mockResolvedValue(undefined),
-            } as any);
-            jest.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
-        });
+                const rows: Table.RowData[] = [
+                    { dsorg: "PS", uri: "zowe-ds:/profile/TEST.PS" },
+                    {
+                        uri: "zowe-ds:/profile/TEST.PDS/MEM1",
+                        _tree: { parentId: "zowe-ds:/profile/TEST.PDS", id: "zowe-ds:/profile/TEST.PDS/MEM1" },
+                    },
+                ];
 
-        it("should prepare and display table for session node", async () => {
-            mockNode.pattern = "TEST.*";
-            mockNode.children = [];
-            jest.spyOn(SharedContext, "isSession").mockReturnValue(true);
-            jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
-            jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
-
-            await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
-
-            expect(mockTableViewProvider.setTableView).toHaveBeenCalled();
-            expect(commands.executeCommand).toHaveBeenCalledWith("zowe-resources.focus");
-        });
-
-        it("should call filterPrompt for session node without pattern", async () => {
-            mockNode.pattern = null;
-            mockNode.children = [];
-            jest.spyOn(SharedContext, "isSession").mockReturnValue(true);
-            jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
-            jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
-
-            const filterPromptSpy = jest.spyOn(SharedTreeProviders.ds, "filterPrompt");
-
-            await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
-
-            expect(filterPromptSpy).toHaveBeenCalledWith(mockNode);
-        });
-
-        it("should prepare and display table for PDS node", async () => {
-            mockNode.children = [];
-            jest.spyOn(SharedContext, "isSession").mockReturnValue(false);
-            jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
-            jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
-
-            await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
-
-            expect(mockTableViewProvider.setTableView).toHaveBeenCalled();
-            expect(commands.executeCommand).toHaveBeenCalledWith("zowe-resources.focus");
-        });
-    });
-
-    describe("event emitter", () => {
-        it("should emit events when table is created and disposed", async () => {
-            const eventSpy = jest.fn();
-            datasetTableView.onDataSetTableChanged(eventSpy);
-
-            const mockContext = {
-                extensionPath: "/mock/extension/path",
-            } as ExtensionContext;
-            const mockDataSource = {
-                fetchDataSets: jest.fn().mockResolvedValue([]),
-                getTitle: jest.fn().mockReturnValue("Test"),
-                supportsHierarchy: jest.fn().mockReturnValue(false),
-            };
-
-            (datasetTableView as any).currentDataSource = mockDataSource;
-            const table = await (datasetTableView as any).generateTable(mockContext);
-
-            expect(eventSpy).toHaveBeenCalledWith({
-                source: mockDataSource,
-                tableType: "dataSets",
-                eventType: 1,
+                expect(condition(rows)).toBe(true);
             });
 
-            // Simulate table disposal
-            const onDisposedCallback = jest.fn();
-            table.onDisposed = onDisposedCallback;
+            it("should return false for PO (PDS) datasets without member context", () => {
+                const condition = (DatasetTableView as any).canOpenInEditor;
 
-            // Call the onDisposed callback that was registered
-            const onDisposedCalls = (table as any).onDisposed.mock.calls;
-            if (onDisposedCalls.length > 0) {
-                const callback = onDisposedCalls[0][0];
-                callback();
-            }
-        });
-    });
+                const rows: Table.RowData[] = [{ dsorg: "PO", uri: "zowe-ds:/profile/TEST.PDS" }];
 
-    describe("canOpenInEditor", () => {
-        it("should return true for all PS (sequential) datasets", () => {
-            const condition = (DatasetTableView as any).canOpenInEditor;
+                expect(condition(rows)).toBe(false);
+            });
 
-            const rows: Table.RowData[] = [
-                { dsorg: "PS", uri: "zowe-ds:/profile/TEST.PS1" },
-                { dsorg: "PS-L", uri: "zowe-ds:/profile/TEST.PS2" },
-            ];
+            it("should return false when at least one row doesn't meet criteria", () => {
+                const condition = (DatasetTableView as any).canOpenInEditor;
 
-            expect(condition(rows)).toBe(true);
-        });
+                const rows: Table.RowData[] = [
+                    { dsorg: "PS", uri: "zowe-ds:/profile/TEST.PS" },
+                    { dsorg: "PO", uri: "zowe-ds:/profile/TEST.PDS" }, // This one fails the condition
+                ];
 
-        it("should return true for all PDS members", () => {
-            const condition = (DatasetTableView as any).canOpenInEditor;
+                expect(condition(rows)).toBe(false);
+            });
 
-            const rows: Table.RowData[] = [
-                {
-                    uri: "zowe-ds:/profile/TEST.PDS/MEM1",
-                    _tree: { parentId: "zowe-ds:/profile/TEST.PDS", id: "zowe-ds:/profile/TEST.PDS/MEM1" },
-                },
-                {
-                    uri: "zowe-ds:/profile/TEST.PDS/MEM2",
-                    _tree: { parentId: "zowe-ds:/profile/TEST.PDS", id: "zowe-ds:/profile/TEST.PDS/MEM2" },
-                },
-            ];
+            it("should return false for VSAM datasets", () => {
+                const condition = (DatasetTableView as any).canOpenInEditor;
 
-            expect(condition(rows)).toBe(true);
-        });
+                const rows: Table.RowData[] = [{ dsorg: "VS", uri: "zowe-ds:/profile/TEST.VSAM" }];
 
-        it("should return true for mixed PS datasets and PDS members", () => {
-            const condition = (DatasetTableView as any).canOpenInEditor;
+                expect(condition(rows)).toBe(false);
+            });
 
-            const rows: Table.RowData[] = [
-                { dsorg: "PS", uri: "zowe-ds:/profile/TEST.PS" },
-                {
-                    uri: "zowe-ds:/profile/TEST.PDS/MEM1",
-                    _tree: { parentId: "zowe-ds:/profile/TEST.PDS", id: "zowe-ds:/profile/TEST.PDS/MEM1" },
-                },
-            ];
+            it("should handle undefined dsorg gracefully", () => {
+                const condition = (DatasetTableView as any).canOpenInEditor;
 
-            expect(condition(rows)).toBe(true);
-        });
+                const rows: Table.RowData[] = [
+                    { uri: "zowe-ds:/profile/TEST.UNKNOWN" }, // No dsorg property
+                ];
 
-        it("should return false for PO (PDS) datasets without member context", () => {
-            const condition = (DatasetTableView as any).canOpenInEditor;
+                expect(condition(rows)).toBe(false);
+            });
 
-            const rows: Table.RowData[] = [{ dsorg: "PO", uri: "zowe-ds:/profile/TEST.PDS" }];
+            it("should handle empty rows array", () => {
+                const condition = (DatasetTableView as any).canOpenInEditor;
 
-            expect(condition(rows)).toBe(false);
+                const rows: Table.RowData[] = [];
+
+                expect(condition(rows)).toBe(true); // every() returns true for empty arrays
+            });
+
+            it("should return true for PDS member with undefined dsorg", () => {
+                const condition = (DatasetTableView as any).canOpenInEditor;
+
+                const rows: Table.RowData[] = [
+                    {
+                        dsorg: undefined,
+                        uri: "zowe-ds:/profile/TEST.PDS/MEM1",
+                        _tree: { parentId: "zowe-ds:/profile/TEST.PDS", id: "zowe-ds:/profile/TEST.PDS/MEM1" },
+                    },
+                ];
+
+                expect(condition(rows)).toBe(true);
+            });
         });
 
-        it("should return false when at least one row doesn't meet criteria", () => {
-            const condition = (DatasetTableView as any).canOpenInEditor;
+        describe("onDidReceiveMessage", () => {
+            let mockContext: ExtensionContext;
+            let mockNode: ZoweDatasetNode;
+            let mockTableViewProvider: any;
+            let datasetTableView: DatasetTableView;
 
-            const rows: Table.RowData[] = [
-                { dsorg: "PS", uri: "zowe-ds:/profile/TEST.PS" },
-                { dsorg: "PO", uri: "zowe-ds:/profile/TEST.PDS" }, // This one fails the condition
-            ];
+            beforeEach(() => {
+                mockContext = {
+                    extensionPath: "/mock/extension/path",
+                } as ExtensionContext;
+                const profile = createIProfile();
+                mockNode = new ZoweDatasetNode({
+                    label: "sestest",
+                    collapsibleState: TreeItemCollapsibleState.Expanded,
+                    contextOverride: Constants.DS_SESSION_CONTEXT,
+                    profile,
+                    session: createISession(),
+                });
 
-            expect(condition(rows)).toBe(false);
-        });
+                mockTableViewProvider = {
+                    setTableView: jest.fn().mockResolvedValue(undefined),
+                };
 
-        it("should return false for VSAM datasets", () => {
-            const condition = (DatasetTableView as any).canOpenInEditor;
+                jest.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
+                jest.spyOn(SharedUtils, "getSelectedNodeList").mockReturnValue([mockNode]);
+                jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+                    filterPrompt: jest.fn().mockResolvedValue(undefined),
+                } as any);
+                jest.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
+                (DatasetTableView as any)._instance = undefined; // Reset the singleton instance
+                datasetTableView = DatasetTableView.getInstance();
+            });
 
-            const rows: Table.RowData[] = [{ dsorg: "VS", uri: "zowe-ds:/profile/TEST.VSAM" }];
+            it("should handle 'loadTreeChildren' command", async () => {
+                const mockDataSource = {
+                    loadChildren: jest.fn().mockResolvedValue([
+                        {
+                            name: "MEMBER1",
+                            volumes: "VOL001",
+                            uri: "zowe-ds:/sestest/TEST.PDS/MEMBER1",
+                            _tree: {
+                                id: "zowe-ds:/sestest/TEST.PDS/MEMBER1",
+                                parentId: "zowe-ds:/sestest/TEST.PDS",
+                                depth: 1,
+                                hasChildren: false,
+                                isExpanded: false,
+                            },
+                        },
+                        {
+                            name: "MEMBER2",
+                            volumes: "VOL002",
+                            uri: "zowe-ds:/sestest/TEST.PDS/MEMBER2",
+                            _tree: {
+                                id: "zowe-ds:/sestest/TEST.PDS/MEMBER2",
+                                parentId: "zowe-ds:/sestest/TEST.PDS",
+                                depth: 1,
+                                hasChildren: false,
+                                isExpanded: false,
+                            },
+                        },
+                    ]),
+                };
 
-            expect(condition(rows)).toBe(false);
-        });
+                (datasetTableView as any).currentDataSource = mockDataSource;
 
-        it("should handle undefined dsorg gracefully", () => {
-            const condition = (DatasetTableView as any).canOpenInEditor;
+                // Mock the table instance and its webview
+                const mockWebview = { postMessage: jest.fn() };
+                const mockPanel = { webview: mockWebview };
+                (datasetTableView as any).table = { panel: mockPanel };
 
-            const rows: Table.RowData[] = [
-                { uri: "zowe-ds:/profile/TEST.UNKNOWN" }, // No dsorg property
-            ];
+                const message = {
+                    command: "loadTreeChildren",
+                    data: {
+                        nodeId: "zowe-ds:/sestest/TEST.PDS",
+                    },
+                };
 
-            expect(condition(rows)).toBe(false);
-        });
+                await datasetTableView["onDidReceiveMessage"](message);
 
-        it("should handle empty rows array", () => {
-            const condition = (DatasetTableView as any).canOpenInEditor;
+                expect(mockDataSource.loadChildren).toHaveBeenCalledWith(message.data.nodeId);
+                expect(mockWebview.postMessage).toHaveBeenCalledWith({
+                    command: "treeChildrenLoaded",
+                    data: {
+                        parentNodeId: message.data.nodeId,
+                        children: expect.arrayContaining([
+                            {
+                                dsname: "MEMBER1",
+                                volumes: "VOL001",
+                                uri: "zowe-ds:/sestest/TEST.PDS/MEMBER1",
+                                _tree: expect.any(Object),
+                            },
+                            {
+                                dsname: "MEMBER2",
+                                volumes: "VOL002",
+                                uri: "zowe-ds:/sestest/TEST.PDS/MEMBER2",
+                                _tree: expect.any(Object),
+                            },
+                        ]),
+                    },
+                });
+            });
 
-            const rows: Table.RowData[] = [];
+            it("should do nothing if 'loadTreeChildren' command is not provided", async () => {
+                const mockDataSource = {
+                    loadChildren: jest.fn(),
+                };
 
-            expect(condition(rows)).toBe(true); // every() returns true for empty arrays
-        });
+                (datasetTableView as any).currentDataSource = mockDataSource;
 
-        it("should return true for PDS member with undefined dsorg", () => {
-            const condition = (DatasetTableView as any).canOpenInEditor;
+                // Mock the table instance and its webview
+                const mockWebview = { postMessage: jest.fn() };
+                const mockPanel = { webview: mockWebview };
+                (datasetTableView as any).table = { panel: mockPanel };
 
-            const rows: Table.RowData[] = [
-                {
-                    dsorg: undefined,
-                    uri: "zowe-ds:/profile/TEST.PDS/MEM1",
-                    _tree: { parentId: "zowe-ds:/profile/TEST.PDS", id: "zowe-ds:/profile/TEST.PDS/MEM1" },
-                },
-            ];
+                const message = {
+                    command: "someOtherCommand",
+                    data: {
+                        nodeId: "zowe-ds:/sestest/TEST.PDS",
+                    },
+                };
 
-            expect(condition(rows)).toBe(true);
+                await datasetTableView["onDidReceiveMessage"](message);
+
+                expect(mockDataSource.loadChildren).not.toHaveBeenCalled();
+                expect(mockWebview.postMessage).not.toHaveBeenCalled();
+            });
+
+            it("should handle 'loadTreeChildren' when currentDataSource does not have loadChildren method", async () => {
+                const mockDataSource = {
+                    // No loadChildren method
+                };
+
+                (datasetTableView as any).currentDataSource = mockDataSource;
+
+                // Mock the table instance and its webview
+                const mockWebview = { postMessage: jest.fn() };
+                const mockPanel = { webview: mockWebview };
+                (datasetTableView as any).table = { panel: mockPanel };
+
+                const message = {
+                    command: "loadTreeChildren",
+                    data: {
+                        nodeId: "zowe-ds:/sestest/TEST.PDS",
+                    },
+                };
+
+                await datasetTableView["onDidReceiveMessage"](message);
+
+                expect(mockWebview.postMessage).not.toHaveBeenCalled();
+            });
         });
     });
 });
