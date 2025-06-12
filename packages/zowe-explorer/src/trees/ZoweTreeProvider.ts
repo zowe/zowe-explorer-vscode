@@ -54,6 +54,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         return element.getParent() as T;
     }
 
+    public getProfile(): imperative.IProfileLoaded {
+        return Profiles.getInstance().loadNamedProfile(this.getProfile().name);
+    }
+
     /**
      * Selects a specific item in the tree view
      *
