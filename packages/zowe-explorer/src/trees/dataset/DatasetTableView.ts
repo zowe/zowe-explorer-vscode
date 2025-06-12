@@ -505,7 +505,7 @@ export class DatasetTableView {
 
         const baseRow = {
             dsname: info.name,
-            dsorg: info.dsorg || "",
+            dsorg: info.dsorg,
             createdDate: info.createdDate?.toLocaleTimeString(),
             modifiedDate: info.modifiedDate?.toLocaleTimeString(),
             lrecl: info.lrecl,
@@ -518,8 +518,6 @@ export class DatasetTableView {
         if (info.isMember) {
             return {
                 ...baseRow,
-                dsorg: "",
-                volumes: "",
                 _tree: {
                     id: nodeId,
                     parentId: info.parentId,
@@ -638,34 +636,36 @@ export class DatasetTableView {
             // Set up message handler for lazy loading if using tree mode
             if (useTreeMode) {
                 // Subscribe to the onDidReceiveMessage event to handle "external" lazy loading command
-                this.table.onDidReceiveMessage(async (message: Record<string, any>) => {
-                    if (!("command" in message)) {
-                        return;
-                    }
-                    // Handle custom lazy loading of PDS members
-                    if (message.command === "loadTreeChildren") {
-                        const { nodeId } = message.data;
-
-                        if (this.currentDataSource.loadChildren) {
-                            const memberRows = await this.currentDataSource.loadChildren(nodeId);
-                            const tableRows = memberRows.map((info) => this.mapDatasetInfoToRowWithTree(info));
-
-                            // Send the loaded children back to the webview
-                            await ((this.table as any).panel ?? (this.table as any).view).webview.postMessage({
-                                command: "treeChildrenLoaded",
-                                data: {
-                                    parentNodeId: nodeId,
-                                    children: tableRows,
-                                },
-                            });
-                            return;
-                        }
-                    }
-                });
+                this.table.onDidReceiveMessage((e) => this.onDidReceiveMessage(e));
             }
         }
 
         return this.table;
+    }
+
+    private async onDidReceiveMessage(message: Record<string, any>): Promise<any> {
+        if (!("command" in message)) {
+            return;
+        }
+        // Handle custom lazy loading of PDS members
+        if (message.command === "loadTreeChildren") {
+            const { nodeId } = message.data;
+
+            if (this.currentDataSource.loadChildren) {
+                const memberRows = await this.currentDataSource.loadChildren(nodeId);
+                const tableRows = memberRows.map((info) => this.mapDatasetInfoToRowWithTree(info));
+
+                // Send the loaded children back to the webview
+                await ((this.table as any).panel ?? (this.table as any).view).webview.postMessage({
+                    command: "treeChildrenLoaded",
+                    data: {
+                        parentNodeId: nodeId,
+                        children: tableRows,
+                    },
+                });
+                return;
+            }
+        }
     }
 
     /**
