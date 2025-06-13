@@ -76,15 +76,16 @@ export namespace Table {
     export type Action = {
         title: string;
         command: string;
+        condition?: Conditional;
         type?: ActionKind;
-        /** Stringified function will be called from within the webview container. */
-        condition?: string;
         callback: Callback;
     };
     export type ContextMenuOption = Omit<Action, "type"> & { dataType?: CallbackTypes };
 
     // Helper types to allow passing function properties to builder/view functions.
-    export type ActionOpts = Omit<Action, "condition"> & { condition?: Conditional };
+
+    /** @deprecated Use `Action` type instead. */
+    export type ActionOpts = Action;
     export type ContextMenuOpts = Omit<ContextMenuOption, "condition"> & { condition?: Conditional };
 
     // -- Misc types --
@@ -364,6 +365,20 @@ export namespace Table {
             switch (message.command) {
                 // "ontableedited" command: The table's contents were updated by the user from within the webview.
                 // Fires for editable columns only.
+                case "check-condition-for-action":
+                    // Run the condition function for the given row action command
+                    {
+                        const allActions = Object.values(this.data.actions).flat();
+                        const action = allActions.find((act) => act.command === message.data.actionId);
+                        if (action && action.condition) {
+                            (this.panel ?? this.view).webview.postMessage({
+                                command: "condition-for-action-result",
+                                requestId: message.requestId,
+                                result: action.condition,
+                            });
+                        }
+                    }
+                    return;
                 case "ontableedited":
                     this.onTableDataEditedEmitter.fire(message.data);
                     return;
@@ -463,12 +478,12 @@ export namespace Table {
          *
          * @returns Whether the webview successfully received the new action(s)
          */
-        public addAction(index: number | "all", ...actions: ActionOpts[]): Promise<boolean> {
+        public addAction(index: number | "all", ...actions: Action[]): Promise<boolean> {
             if (this.data.actions[index]) {
                 const existingActions = this.data.actions[index];
-                this.data.actions[index] = [...existingActions, ...actions.map((action) => ({ ...action, condition: action.condition?.toString() }))];
+                this.data.actions[index] = [...existingActions, ...actions];
             } else {
-                this.data.actions[index] = actions.map((action) => ({ ...action, condition: action.condition?.toString() }));
+                this.data.actions[index] = actions;
             }
             return this.updateWebview();
         }
@@ -483,9 +498,9 @@ export namespace Table {
         public addContextOption(id: number | "all", ...options: ContextMenuOpts[]): Promise<boolean> {
             if (this.data.contextOpts[id]) {
                 const existingOpts = this.data.contextOpts[id];
-                this.data.contextOpts[id] = [...existingOpts, ...options.map((option) => ({ ...option, condition: option.condition?.toString() }))];
+                this.data.contextOpts[id] = [...existingOpts, ...options];
             } else {
-                this.data.contextOpts[id] = options.map((option) => ({ ...option, condition: option.condition?.toString() }));
+                this.data.contextOpts[id] = options;
             }
             return this.updateWebview();
         }

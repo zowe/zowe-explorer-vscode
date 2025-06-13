@@ -142,10 +142,9 @@ export class TableBuilder {
      */
     public addContextOption(index: number | "all", option: Table.ContextMenuOpts): this {
         if (this.data.contextOpts[index]) {
-            const opts = this.data.contextOpts[index];
-            this.data.contextOpts[index] = [...opts, { ...option, condition: option.condition?.toString() }];
+            this.data.contextOpts[index].push(option);
         } else {
-            this.data.contextOpts[index] = [{ ...option, condition: option.condition?.toString() }];
+            this.data.contextOpts[index] = [option];
         }
         return this;
     }
@@ -169,9 +168,9 @@ export class TableBuilder {
      */
     public addRowAction(index: number | "all", action: Table.ActionOpts): this {
         if (this.data.actions[index]) {
-            this.data.actions[index].push({ ...action, condition: action.condition?.toString() });
+            this.data.actions[index].push(action);
         } else {
-            this.data.actions[index] = [{ ...action, condition: action.condition?.toString() }];
+            this.data.actions[index] = [action];
         }
         return this;
     }

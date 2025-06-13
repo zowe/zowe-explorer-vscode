@@ -2,10 +2,10 @@ import { Dispatch, Ref, useState } from "preact/hooks";
 import type { Table } from "@zowe/zowe-explorer-api";
 import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import { GridApi } from "ag-grid-community";
-import { wrapFn } from "./types";
 import { FocusableItem, Menu, MenuGroup, MenuItem } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
 import * as l10n from "@vscode/l10n";
+import { messageHandler } from "src/MessageHandler";
 
 interface ActionsProps {
   actions: Table.Action[];
@@ -84,26 +84,25 @@ export const ActionsBar = (props: ActionsProps) => {
           {props.selectionCount === 0 ? l10n.t("No") : props.selectionCount}
           &nbsp;{props.selectionCount > 1 || props.selectionCount === 0 ? l10n.t("items") : l10n.t("item")} {l10n.t("selected")}
         </p>
-        {props.actions.map((action, i) => {
+        {props.actions.map(async (action, i) => {
           // Wrap function to properly handle named parameters
           const selectedNodes = props.gridRef.current?.api?.getSelectedNodes();
-          const selectedRows = selectedNodes?.map((n) => n.data) ?? [];
-          const cond = action.condition ? new Function(wrapFn(action.condition)) : undefined;
+          const selectedRows = selectedNodes?.map((n: any) => n.data) ?? [];
+          const val = action.callback.typ === "multi-row" ? selectedRows : { index: selectedNodes?.[0].rowIndex, row: selectedRows?.[0] };
           // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
-          const val = action.callback.typ === "multi-row" ? selectedRows : { index: selectedNodes?.[0]?.rowIndex, row: selectedRows?.[0] };
 
           let shouldEnable = false;
-          const condFn = cond != null ? cond() : () => true;
           switch (action.callback.typ) {
             case "single-row":
-              shouldEnable = props.selectionCount !== 0 && props.selectionCount === 1 && condFn(val);
+              shouldEnable = props.selectionCount !== 0 && props.selectionCount === 1;
               break;
             case "multi-row":
-              shouldEnable = props.selectionCount !== 0 && props.selectionCount >= 1 && condFn(val);
+              shouldEnable = props.selectionCount !== 0 && props.selectionCount >= 1;
               break;
             case "cell":
               return null;
           }
+          shouldEnable &&= await messageHandler.request<boolean>(action.command, { val });
 
           return (
             <VSCodeButton

@@ -860,7 +860,8 @@ export class DatasetTableView {
     }
 
     private async onDidReceiveMessage(message: Record<string, any>): Promise<any> {
-        if (!("command" in message)) {
+        const { command, requestId } = message;
+        if (!command) {
             return;
         }
         // Handle custom lazy loading of PDS members
@@ -874,6 +875,7 @@ export class DatasetTableView {
                 // Send the loaded children back to the webview
                 await ((this.table as any).panel ?? (this.table as any).view).webview.postMessage({
                     command: "treeChildrenLoaded",
+                    requestId,
                     data: {
                         parentNodeId: nodeId,
                         children: tableRows,
