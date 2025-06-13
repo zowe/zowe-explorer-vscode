@@ -404,3 +404,7 @@ export class EventOperator {
         };
     }
 }
+
+export class DeferredPromise {
+    public resolve(value: any): void {}
+}
