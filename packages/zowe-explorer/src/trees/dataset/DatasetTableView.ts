@@ -38,6 +38,13 @@ interface IDataSetInfo {
     isMember?: boolean;
     isDirectory?: boolean;
     parentId?: string;
+    // Member-specific properties
+    vers?: number;
+    mod?: number;
+    cnorc?: number;
+    inorc?: number;
+    mnorc?: number;
+    sclm?: string;
 }
 
 /**
@@ -185,10 +192,66 @@ export class TreeDataSource implements IDataSetSource {
 }
 
 /**
+ * Helper function to build member information from API response
+ */
+function buildMemberInfo(member: any, parentUri: string, profileName?: string): IDataSetInfo {
+    // Parse c4date and m4date with mtime if available
+    let createdDate: Date | undefined;
+    let modifiedDate: Date | undefined;
+
+    if (member.c4date) {
+        createdDate = new Date(member.c4date);
+    }
+
+    if (member.m4date) {
+        modifiedDate = new Date(member.m4date);
+        // Add time component if available
+        if (member.mtime) {
+            const [hours, minutes] = member.mtime.split(":");
+            modifiedDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+
+            // Add seconds component if available
+            if (member.msec) {
+                modifiedDate.setSeconds(parseInt(member.msec, 10));
+            }
+        }
+    }
+
+    // Extract dataset name from parentUri
+    let datasetName: string;
+    if (profileName) {
+        // For PatternDataSource: parentUri is the simple dataset name
+        datasetName = parentUri;
+    } else {
+        // For PDSMembersDataSource: parentUri might be a full URI, extract dataset name
+        datasetName = parentUri.includes("/") ? parentUri.split("/").pop() : parentUri;
+    }
+
+    const memberUri = profileName ? `zowe-ds:/${profileName}/${datasetName}/${member.member as string}` : `${parentUri}/${member.member as string}`;
+
+    return {
+        name: member.member,
+        createdDate,
+        modifiedDate,
+        user: member.user,
+        uri: memberUri,
+        isMember: true,
+        isDirectory: false,
+        parentId: parentUri,
+        vers: member.vers,
+        mod: member.mod,
+        cnorc: member.cnorc,
+        inorc: member.inorc,
+        mnorc: member.mnorc,
+        sclm: member.sclm,
+    };
+}
+
+/**
  * API-based data source that directly queries the MVS API with a pattern
  */
 export class PatternDataSource implements IDataSetSource {
-    public constructor(private profile: imperative.IProfileLoaded, private pattern: string) {}
+    public constructor(public profile: imperative.IProfileLoaded, private pattern: string) {}
 
     public async fetchDataSets(): Promise<IDataSetInfo[]> {
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(this.profile);
@@ -276,21 +339,7 @@ export class PatternDataSource implements IDataSetSource {
             const members: IDataSetInfo[] = [];
 
             for (const member of membersResp.apiResponse?.items || []) {
-                members.push({
-                    name: member.member,
-                    dsorg: "",
-                    createdDate: member.createdDate ? new Date(member.createdDate) : undefined,
-                    modifiedDate: member.modifiedDate ? new Date(member.modifiedDate) : undefined,
-                    lrecl: member.lrecl,
-                    migr: undefined,
-                    recfm: member.recfm,
-                    volumes: "",
-                    user: member.user,
-                    uri: `zowe-ds:/${this.profile.name}/${datasetName}/${member.member as string}`,
-                    isMember: true,
-                    isDirectory: false,
-                    parentId: parentId,
-                });
+                members.push(buildMemberInfo(member, parentId, this.profile.name));
             }
 
             return members;
@@ -298,6 +347,62 @@ export class PatternDataSource implements IDataSetSource {
             await AuthUtils.handleProfileAuthOnError(err, this.profile);
             return [];
         }
+    }
+}
+
+/**
+ * Data source for PDS members view
+ */
+export class PDSMembersDataSource implements IDataSetSource {
+    public constructor(
+        private parentDataSource: IDataSetSource,
+        private pdsName: string,
+        private pdsUri: string,
+        private profile?: imperative.IProfileLoaded
+    ) {}
+
+    public async fetchDataSets(): Promise<IDataSetInfo[]> {
+        if (this.parentDataSource.loadChildren) {
+            return await this.parentDataSource.loadChildren(this.pdsUri);
+        }
+
+        // Fallback to API if parent data source doesn't support loading children
+        if (this.profile) {
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(this.profile);
+            try {
+                const membersResp = await mvsApi.allMembers(this.pdsName);
+                const members: IDataSetInfo[] = [];
+
+                for (const member of membersResp.apiResponse?.items || []) {
+                    members.push(buildMemberInfo(member, this.pdsUri));
+                }
+
+                return members;
+            } catch (err) {
+                if (this.profile) {
+                    await AuthUtils.handleProfileAuthOnError(err, this.profile);
+                }
+                return [];
+            }
+        }
+
+        return [];
+    }
+
+    public getTitle(): string {
+        return l10n.t({
+            message: "Members of {0}",
+            args: [this.pdsName],
+            comment: ["PDS member list title"],
+        });
+    }
+
+    public supportsHierarchy(): boolean {
+        return false; // Members don't have children
+    }
+
+    public getParentDataSource(): IDataSetSource {
+        return this.parentDataSource;
     }
 }
 
@@ -340,6 +445,13 @@ export class DatasetTableView {
         { field: "recfm", headerName: l10n.t("Record Format") },
         { field: "volumes", headerName: l10n.t("Volumes") },
         { field: "user", headerName: l10n.t("Last Modified By") },
+        // Member-specific fields
+        { field: "vers", headerName: l10n.t("Version") },
+        { field: "mod", headerName: l10n.t("Modification Level") },
+        { field: "cnorc", headerName: l10n.t("Current Records") },
+        { field: "inorc", headerName: l10n.t("Initial Records") },
+        { field: "mnorc", headerName: l10n.t("Modified Records") },
+        { field: "sclm", headerName: l10n.t("SCLM") },
     ];
 
     private rowActions: Record<string, Table.ActionOpts> = {
@@ -348,6 +460,18 @@ export class DatasetTableView {
             command: "open",
             callback: { fn: DatasetTableView.openInEditor, typ: "multi-row" },
             condition: (rows: Table.RowData[]) => DatasetTableView.canOpenInEditor(rows),
+        },
+        focusPDS: {
+            title: l10n.t("Focus"),
+            command: "focus",
+            callback: { fn: this.focusOnPDS.bind(this), typ: "single-row" },
+            condition: (rows: Table.RowData[]) => DatasetTableView.canFocusOnPDS(rows),
+        },
+        goBack: {
+            title: l10n.t("Back"),
+            command: "back",
+            callback: { fn: this.goBack.bind(this), typ: "single-row" },
+            condition: () => this.currentTableType === "members",
         },
     };
 
@@ -381,6 +505,78 @@ export class DatasetTableView {
         });
     }
 
+    /**
+     * Determines whether the selected rows can be focused (only PDS datasets).
+     * @param rows The selected rows to check
+     * @returns True if a single PDS is selected, false otherwise
+     */
+    private static canFocusOnPDS(rows: Table.RowData[]): boolean {
+        if (rows.length !== 1) {
+            return false;
+        }
+
+        const row = rows[0];
+        const dsorg = row["dsorg"] as string;
+        const hasTreeData = (row as any)._tree as Table.TreeNodeData;
+        const isMember = hasTreeData?.parentId != null;
+
+        // Only allow focus for PDS datasets (not members)
+        return dsorg?.startsWith("PO") && !isMember;
+    }
+
+    /**
+     * Focus on a selected PDS to show its members
+     */
+    private async focusOnPDS(this: DatasetTableView, _view: Table.View, data: Table.RowInfo): Promise<void> {
+        const row = data.row;
+        const pdsName = row.dsname as string;
+        const pdsUri = row.uri as string;
+
+        // Extract profile from current data source if it's a PatternDataSource
+        let profile: imperative.IProfileLoaded | undefined;
+        if (this.currentDataSource instanceof PatternDataSource) {
+            profile = this.currentDataSource.profile;
+        }
+
+        // Store current table state before navigating
+        this.previousTableData = {
+            dataSource: this.currentDataSource,
+            tableType: this.currentTableType,
+            shouldShow: { ...this.shouldShow },
+            table: this.table,
+        };
+
+        // Create a new data source for PDS members
+        const membersDataSource = new PDSMembersDataSource(this.currentDataSource, pdsName, pdsUri, profile);
+
+        // Update current state
+        this.currentDataSource = membersDataSource;
+        this.shouldShow = {}; // Reset for members view
+
+        // Generate and display the members table (this will create a new table)
+        this.table = await this.generateTable(this.context);
+        await TableViewProvider.getInstance().setTableView(this.table);
+    }
+
+    /**
+     * Go back to the previous data source view
+     */
+    private async goBack(this: DatasetTableView, _view: Table.View, _data: Table.RowInfo): Promise<void> {
+        if (this.previousTableData) {
+            // Restore previous table state
+            this.currentDataSource = this.previousTableData.dataSource;
+            this.currentTableType = this.previousTableData.tableType;
+            this.shouldShow = this.previousTableData.shouldShow;
+            this.table = this.previousTableData.table;
+
+            // Clear navigation state
+            this.previousTableData = null;
+
+            // Restore the previous table view
+            await TableViewProvider.getInstance().setTableView(this.table);
+        }
+    }
+
     private onDataSetTableChangedEmitter: EventEmitter<IDataSetTableEvent>;
     public onDataSetTableChanged: Event<IDataSetTableEvent>;
     private static _instance: DatasetTableView;
@@ -393,6 +589,15 @@ export class DatasetTableView {
     private shouldShow: Record<string, boolean> = {};
     private table: Table.Instance = null;
     private currentDataSource: IDataSetSource = null;
+    private context: ExtensionContext = null;
+
+    // Store previous table state for navigation
+    private previousTableData: {
+        dataSource: IDataSetSource;
+        tableType: DataSetTableType;
+        shouldShow: Record<string, boolean>;
+        table: Table.Instance;
+    } = null;
 
     public static getInstance(): DatasetTableView {
         if (!DatasetTableView._instance) {
@@ -473,19 +678,32 @@ export class DatasetTableView {
             this.shouldShow[field] ||= (info as any)[field] != null;
         });
 
+        // Member-specific fields
+        const memberFieldsToCheck = ["vers", "mod", "cnorc", "inorc", "mnorc", "sclm"];
+        memberFieldsToCheck.forEach((field) => {
+            this.shouldShow[field] ||= (info as any)[field] != null;
+        });
+
         this.shouldShow["volumes"] ||= info.volumes != null;
         this.shouldShow["dsname"] = true;
 
         return {
             dsname: info.name,
             dsorg: info.dsorg || "",
-            createdDate: info.createdDate?.toLocaleTimeString(),
-            modifiedDate: info.modifiedDate?.toLocaleTimeString(),
+            createdDate: info.createdDate?.toLocaleDateString(),
+            modifiedDate: info.modifiedDate?.toLocaleString(),
             lrecl: info.lrecl,
             migr: info.migr,
             recfm: info.recfm,
             volumes: info.volumes,
+            user: info.user,
             uri: info.uri,
+            vers: info.vers,
+            mod: info.mod,
+            cnorc: info.cnorc,
+            inorc: info.inorc,
+            mnorc: info.mnorc,
+            sclm: info.sclm,
         };
     }
 
@@ -498,6 +716,11 @@ export class DatasetTableView {
             this.shouldShow[field] ||= (info as any)[field] != null;
         });
 
+        const memberFieldsToCheck = ["vers", "mod", "cnorc", "inorc", "mnorc", "sclm"];
+        memberFieldsToCheck.forEach((field) => {
+            this.shouldShow[field] ||= (info as any)[field] != null;
+        });
+
         this.shouldShow["volumes"] ||= info.volumes != null;
         this.shouldShow["dsname"] ||= true;
 
@@ -506,13 +729,20 @@ export class DatasetTableView {
         const baseRow = {
             dsname: info.name,
             dsorg: info.dsorg,
-            createdDate: info.createdDate?.toLocaleTimeString(),
-            modifiedDate: info.modifiedDate?.toLocaleTimeString(),
+            createdDate: info.createdDate?.toLocaleDateString(),
+            modifiedDate: info.modifiedDate?.toLocaleString(),
             lrecl: info.lrecl,
             migr: info.migr,
             recfm: info.recfm,
             volumes: info.volumes,
+            user: info.user,
             uri: info.uri,
+            vers: info.vers,
+            mod: info.mod,
+            cnorc: info.cnorc,
+            inorc: info.inorc,
+            mnorc: info.mnorc,
+            sclm: info.sclm,
         };
 
         if (info.isMember) {
@@ -557,12 +787,17 @@ export class DatasetTableView {
      * Generates a table given the data source
      */
     private async generateTable(context: ExtensionContext): Promise<Table.Instance> {
+        this.context = context; // Store context for navigation actions
         const useTreeMode = this.currentDataSource.supportsHierarchy();
         const rows = await this.generateRows(useTreeMode);
 
         // Determine the current table type
         const previousTableType = this.currentTableType;
-        this.currentTableType = "dataSets"; // For now, always consider it as dataSets
+        if (this.currentDataSource instanceof PDSMembersDataSource) {
+            this.currentTableType = "members";
+        } else {
+            this.currentTableType = "dataSets";
+        }
         const tableTypeChanged = previousTableType !== this.currentTableType;
 
         // Prepare column definitions
@@ -612,13 +847,12 @@ export class DatasetTableView {
                 .columns(...[...columnDefs, { field: "actions", hide: true }])
                 .addContextOption("all", this.contextOptions.displayInTree)
                 .addRowAction("all", this.rowActions.openInEditor)
+                .addRowAction("all", this.rowActions.focusPDS)
+                .addRowAction("all", this.rowActions.goBack)
                 .build();
 
             this.table.onDisposed((e) => {
-                this.shouldShow = {};
-                this.currentTableType = null;
-                this.currentDataSource = null;
-                this.table = null;
+                this.dispose();
 
                 this.onDataSetTableChangedEmitter.fire({
                     source: this.currentDataSource,
@@ -629,7 +863,7 @@ export class DatasetTableView {
 
             this.onDataSetTableChangedEmitter.fire({
                 source: this.currentDataSource,
-                tableType: "dataSets",
+                tableType: this.currentTableType,
                 eventType: DataSetTableEventType.Created,
             });
 
@@ -794,5 +1028,14 @@ export class DatasetTableView {
 
         await TableViewProvider.getInstance().setTableView(await this.generateTable(context));
         await commands.executeCommand("zowe-resources.focus");
+    }
+
+    public dispose(): void {
+        this.shouldShow = {};
+        this.currentTableType = null;
+        this.currentDataSource = null;
+        this.previousTableData = null;
+        this.table = null;
+        this.context = null;
     }
 }
