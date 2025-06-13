@@ -358,7 +358,6 @@ export namespace Table {
          * @param message The message received from the webview
          */
         public async onMessageReceived(message: any): Promise<void> {
-            this.onDidReceiveMessageEmitter.fire(message);
             if (!("command" in message)) {
                 return;
             }
@@ -424,6 +423,7 @@ export namespace Table {
                         break;
                 }
             }
+            this.onDidReceiveMessageEmitter.fire(message);
         }
 
         /**

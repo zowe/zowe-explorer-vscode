@@ -459,13 +459,29 @@ export class DatasetTableView {
             title: l10n.t("Open"),
             command: "open",
             callback: { fn: DatasetTableView.openInEditor, typ: "multi-row" },
-            condition: (rows: Table.RowData[]) => DatasetTableView.canOpenInEditor(rows),
+            condition: (rows: Table.RowData[]) =>
+                rows.every((r) => {
+                    // Check if it's a sequential dataset (PS) or a PDS member
+                    const dsorg = r["dsorg"] as string;
+                    const hasTreeData = (r as any)._tree as Table.TreeNodeData;
+                    const isMember = hasTreeData?.parentId != null;
+
+                    // Allow opening for PS data sets or PDS members
+                    return dsorg?.startsWith("PS") || isMember;
+                }),
         },
         focusPDS: {
             title: l10n.t("Focus"),
             command: "focus",
             callback: { fn: this.focusOnPDS.bind(this), typ: "single-row" },
-            condition: (rows: Table.RowData[]) => DatasetTableView.canFocusOnPDS(rows),
+            condition: (elem: { index: number; row: Table.RowData[] }) => {
+                const dsorg = elem.row["dsorg"] as string;
+                const hasTreeData = (elem.row as any)._tree as Table.TreeNodeData;
+                const isMember = hasTreeData?.parentId != null;
+
+                // Only allow focus for PDS datasets (not members)
+                return dsorg?.startsWith("PO") && !isMember;
+            },
         },
         goBack: {
             title: l10n.t("Back"),
@@ -485,43 +501,6 @@ export class DatasetTableView {
         for (const row of allRows) {
             await commands.executeCommand("vscode.open", Uri.parse(row.uri as string));
         }
-    }
-
-    /**
-     * Determines whether the selected rows can be opened in the editor.
-     * Allows opening for sequential datasets (PS) or PDS members.
-     * @param rows The selected rows to check
-     * @returns True if all rows can be opened, false otherwise
-     */
-    private static canOpenInEditor(rows: Table.RowData[]): boolean {
-        return rows.every((r) => {
-            // Check if it's a sequential dataset (PS) or a PDS member
-            const dsorg = r["dsorg"] as string;
-            const hasTreeData = (r as any)._tree as Table.TreeNodeData;
-            const isMember = hasTreeData?.parentId != null;
-
-            // Allow opening for PS data sets or PDS members
-            return dsorg?.startsWith("PS") || isMember;
-        });
-    }
-
-    /**
-     * Determines whether the selected rows can be focused (only PDS datasets).
-     * @param rows The selected rows to check
-     * @returns True if a single PDS is selected, false otherwise
-     */
-    private static canFocusOnPDS(rows: Table.RowData[]): boolean {
-        if (rows.length !== 1) {
-            return false;
-        }
-
-        const row = rows[0];
-        const dsorg = row["dsorg"] as string;
-        const hasTreeData = (row as any)._tree as Table.TreeNodeData;
-        const isMember = hasTreeData?.parentId != null;
-
-        // Only allow focus for PDS datasets (not members)
-        return dsorg?.startsWith("PO") && !isMember;
     }
 
     /**
@@ -846,9 +825,7 @@ export class DatasetTableView {
                 .addRows(rows)
                 .columns(...[...columnDefs, { field: "actions", hide: true }])
                 .addContextOption("all", this.contextOptions.displayInTree)
-                .addRowAction("all", this.rowActions.openInEditor)
-                .addRowAction("all", this.rowActions.focusPDS)
-                .addRowAction("all", this.rowActions.goBack)
+                .rowActions({ all: Object.values(this.rowActions) })
                 .build();
 
             this.table.onDisposed((e) => {

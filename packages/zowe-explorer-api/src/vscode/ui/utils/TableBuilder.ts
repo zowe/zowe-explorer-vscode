@@ -169,8 +169,7 @@ export class TableBuilder {
      */
     public addRowAction(index: number | "all", action: Table.ActionOpts): this {
         if (this.data.actions[index]) {
-            const actionList = this.data.actions[index];
-            this.data.actions[index] = [...actionList, { ...action, condition: action.condition?.toString() }];
+            this.data.actions[index].push({ ...action, condition: action.condition?.toString() });
         } else {
             this.data.actions[index] = [{ ...action, condition: action.condition?.toString() }];
         }
