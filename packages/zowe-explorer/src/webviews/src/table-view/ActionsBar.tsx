@@ -84,46 +84,55 @@ export const ActionsBar = (props: ActionsProps) => {
           {props.selectionCount === 0 ? l10n.t("No") : props.selectionCount}
           &nbsp;{props.selectionCount > 1 || props.selectionCount === 0 ? l10n.t("items") : l10n.t("item")} {l10n.t("selected")}
         </p>
-        {props.actions
-          .filter((action) => (props.itemCount > 1 ? action.callback.typ === "multi-row" : action.callback.typ.endsWith("row")))
-          .map((action, i) => {
-            // Wrap function to properly handle named parameters
-            const selectedRows = props.gridRef.current?.api?.getSelectedRows() ?? 0;
-            const cond = action.condition ? new Function(wrapFn(action.condition)) : undefined;
-            // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
-            let shouldDisable = props.selectionCount === 0;
-            if (cond != null) {
-              shouldDisable ||= !cond()(action.callback.typ === "multi-row" ? selectedRows : selectedRows[0]);
-            }
+        {props.actions.map((action, i) => {
+          // Wrap function to properly handle named parameters
+          const selectedNodes = props.gridRef.current?.api?.getSelectedNodes();
+          const selectedRows = selectedNodes?.map((n) => n.data) ?? [];
+          const cond = action.condition ? new Function(wrapFn(action.condition)) : undefined;
+          // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
+          const val = action.callback.typ === "multi-row" ? selectedRows : { index: selectedNodes?.[0]?.rowIndex, row: selectedRows?.[0] };
 
-            return (
-              <VSCodeButton
-                disabled={shouldDisable}
-                key={`${action.command}-action-bar-${i}`}
-                appearance={action.type}
-                style={{ fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}
-                onClick={(_event: any) => {
-                  const selectedNodes = (props.gridRef.current.api as GridApi).getSelectedNodes();
-                  if (selectedNodes.length === 0) {
-                    return;
-                  }
+          let shouldEnable = false;
+          const condFn = cond != null ? cond() : () => true;
+          switch (action.callback.typ) {
+            case "single-row":
+              shouldEnable = props.selectionCount !== 0 && props.selectionCount === 1 && condFn(val);
+              break;
+            case "multi-row":
+              shouldEnable = props.selectionCount !== 0 && props.selectionCount >= 1 && condFn(val);
+              break;
+            case "cell":
+              return null;
+          }
 
-                  props.vscodeApi.postMessage({
-                    command: action.command,
-                    data: {
-                      row: action.callback.typ === "single-row" ? selectedNodes[0].data : undefined,
-                      rows:
-                        action.callback.typ === "multi-row"
-                          ? selectedNodes.reduce((all, row) => ({ ...all, [row.rowIndex!]: row.data }), {})
-                          : undefined,
-                    },
-                  });
-                }}
-              >
-                {action.title}
-              </VSCodeButton>
-            );
-          })}
+          return (
+            <VSCodeButton
+              disabled={!shouldEnable}
+              key={`${action.command}-action-bar-${i}`}
+              appearance={action.type}
+              style={{ fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}
+              onClick={(_event: any) => {
+                const selectedNodes = (props.gridRef.current.api as GridApi).getSelectedNodes();
+                if (selectedNodes.length === 0) {
+                  return;
+                }
+
+                props.vscodeApi.postMessage({
+                  command: action.command,
+                  data: {
+                    row: action.callback.typ === "single-row" ? selectedNodes[0].data : undefined,
+                    rows:
+                      action.callback.typ === "multi-row"
+                        ? selectedNodes.reduce((all, row) => ({ ...all, [row.rowIndex!]: row.data }), {})
+                        : undefined,
+                  },
+                });
+              }}
+            >
+              {action.title}
+            </VSCodeButton>
+          );
+        })}
         <div
           id="colsToggleBtn"
           style={{

@@ -459,7 +459,8 @@ export class DatasetTableView {
             title: l10n.t("Open"),
             command: "open",
             callback: { fn: DatasetTableView.openInEditor, typ: "multi-row" },
-            condition: (rows: Table.RowData[]) =>
+            type: "primary",
+            condition: (rows: Table.RowData[]): boolean =>
                 rows.every((r) => {
                     // Check if it's a sequential dataset (PS) or a PDS member
                     const dsorg = r["dsorg"] as string;
@@ -473,8 +474,9 @@ export class DatasetTableView {
         focusPDS: {
             title: l10n.t("Focus"),
             command: "focus",
+            type: "secondary",
             callback: { fn: this.focusOnPDS.bind(this), typ: "single-row" },
-            condition: (elem: { index: number; row: Table.RowData[] }) => {
+            condition: (elem: { index: number; row: Table.RowData[] }): boolean => {
                 const dsorg = elem.row["dsorg"] as string;
                 const hasTreeData = (elem.row as any)._tree as Table.TreeNodeData;
                 const isMember = hasTreeData?.parentId != null;
@@ -483,12 +485,13 @@ export class DatasetTableView {
                 return dsorg?.startsWith("PO") && !isMember;
             },
         },
-        goBack: {
-            title: l10n.t("Back"),
-            command: "back",
-            callback: { fn: this.goBack.bind(this), typ: "single-row" },
-            condition: () => this.currentTableType === "members",
-        },
+        // goBack: {
+        //     title: l10n.t("Back"),
+        //     type: "primary",
+        //     command: "back",
+        //     callback: { fn: this.goBack.bind(this), typ: "single-row" },
+        //     condition: (elem: { index: number; row: Table.RowData[] }): boolean => this.currentTableType === "members",
+        // },
     };
 
     private static readonly URI_SEGMENTS = {
@@ -825,7 +828,9 @@ export class DatasetTableView {
                 .addRows(rows)
                 .columns(...[...columnDefs, { field: "actions", hide: true }])
                 .addContextOption("all", this.contextOptions.displayInTree)
-                .rowActions({ all: Object.values(this.rowActions) })
+                .addRowAction("all", this.rowActions.openInEditor)
+                .addRowAction("all", this.rowActions.focusPDS)
+                //.addRowAction("all", this.rowActions.goBack)
                 .build();
 
             this.table.onDisposed((e) => {
