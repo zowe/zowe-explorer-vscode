@@ -12,7 +12,7 @@
 import { Duplex } from "stream";
 import { IProfileLoaded } from "@zowe/imperative";
 import * as vscode from "vscode";
-import { ZosEncoding } from "../../tree";
+import { ZosEncoding } from "../../tree/IZoweTreeNode";
 import { ZoweExplorerApiType } from "../../utils/ErrorCorrelator";
 
 export enum ZoweScheme {

@@ -135,17 +135,26 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
             const children = await sourceNode.getChildren();
             for (const childNode of children) {
-                // move members within the folder to the destination
-                await this.crossLparMove(
-                    childNode,
-                    sourceUri.with({
-                        path: path.posix.join(sourceUri.path, childNode.getLabel() as string),
-                    }),
-                    destUri.with({
-                        path: path.posix.join(destUri.path, childNode.getLabel() as string),
-                    }),
-                    true
-                );
+                try {
+                    // Set encoding for binary or text
+                    let encoding: ZosEncoding | undefined;
+                    if (SharedContext.isBinary(childNode)) {
+                        encoding = { kind: "binary" };
+                    } else {
+                        encoding = await childNode.getEncoding?.() ?? { kind: "text" };
+                    }
+                    childNode.setEncoding?.(encoding);
+
+                    await this.crossLparMove(
+                        childNode,
+                        sourceUri.with({ path: path.posix.join(sourceUri.path, childNode.getLabel() as string) }),
+                        destUri.with({ path: path.posix.join(destUri.path, childNode.getLabel() as string) }),
+                        true
+                    );
+                } catch (err) {
+                    // Log and continue with next member
+                    Gui.errorMessage(`Failed to move member ${childNode.getLabel()}: ${err.message}`);
+                }
             }
             await vscode.workspace.fs.delete(sourceUri, { recursive: true });
         } else {
@@ -154,13 +163,20 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 if (entry == null) {
                     if (sourceNode.contextValue === Constants.DS_MEMBER_CONTEXT) {
                         dsname = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
-                        await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
+                        // Detect binary and set allocation attributes
+                        const allocAttrs = SharedContext.isBinary(sourceNode)
+                            ? { recordFormat: "U", lrecl: 0, blksize: 32760 }
+                            : {};
+                        await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, allocAttrs as any);
                     } else {
                         dsname = sourceNode.getLabel() as string;
+                        const allocAttrs = SharedContext.isBinary(sourceNode)
+                            ? { recfm: "U", lrecl: 0, blksize: 32760 }
+                            : {};
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
                             zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
                             dsname,
-                            {}
+                            allocAttrs
                         );
                     }
                 }
@@ -171,17 +187,38 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     return;
                 }
             }
+            // Check if the node is binary and set encoding accordingly
+            if (SharedContext.isBinary(sourceNode)) {
+                sourceNode.setEncoding({ kind: "binary" });
+            }
+            // Get encoding from the source node if available
+            const encoding = (sourceNode as any).encoding || (SharedContext.isBinary(sourceNode) ? { kind: "binary" } : undefined);
+
             // read the contents from the source LPAR
-            const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
-            //write the contents to the destination LPAR
+            const contents = await DatasetFSProvider.instance.readFile(
+                sourceNode.resourceUri,
+                encoding ? { encoding } : undefined
+            );
+            let writeSucceeded = false;
+            //write the contents to the destination LPAR ONLY if write successful
             try {
+                // Set encoding for the destination if binary or encoding is set
+                if (encoding) {
+                    const destNode = this.draggedNodes?.[destUri.path];
+                    if (destNode && destNode.setEncoding) {
+                        destNode.setEncoding(encoding);
+                    }
+                }
                 await DatasetFSProvider.instance.writeFile(
-                    destUri.with({
-                        query: "forceUpload=true",
-                    }),
+                    destUri.with({ query: "forceUpload=true" }),
                     contents,
-                    { create: true, overwrite: true }
+                    {
+                        create: true,
+                        overwrite: true,
+                        encoding
+                    }
                 );
+                writeSucceeded = true;
             } catch (err) {
                 // If the write fails, we cannot move to the next file
                 if (err instanceof Error) {
@@ -190,8 +227,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 return;
             }
 
-            if (!recursiveCall) {
-                // Delete any files from the selection on the source LPAR
+            if (!recursiveCall && writeSucceeded) {
+                // Only delete the source if the write succeeded
                 await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
             }
         }
@@ -1607,7 +1644,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
     /**
      * Presents a dialog to the user with options and methods for sorting PDS members.
-     * @param node The node that was interacted with (via icon or right-click -> "Sort PDS members...")
+     * @param node The session whose PDS members should be sorted, or a PDS whose children should be sorted
      */
     public async sortPdsMembersDialog(node: IZoweDatasetTreeNode): Promise<void> {
         const isSession = SharedContext.isSession(node);
@@ -1620,15 +1657,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                  message: "all PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              })
+                message: "all PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            })
             : vscode.l10n.t({
-                  message: "the PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              });
+                message: "the PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            });
         const selection = await Gui.showQuickPick(
             DatasetUtils.DATASET_SORT_OPTS.map((opt, i) => ({
                 label: sortOpts.method === i ? `${opt} $(check)` : opt,
@@ -1690,10 +1727,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         node.filter = newFilter;
         node.description = newFilter
             ? vscode.l10n.t({
-                  message: "Filter: {0}",
-                  args: [newFilter.value],
-                  comment: ["Filter value"],
-              })
+                message: "Filter: {0}",
+                args: [newFilter.value],
+                comment: ["Filter value"],
+            })
             : null;
         this.nodeDataChanged(node);
 
@@ -1754,15 +1791,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                  message: "all PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              })
+                message: "all PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            })
             : vscode.l10n.t({
-                  message: "the PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              });
+                message: "the PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            });
         const clearFilter = isSession
             ? `$(clear-all) ${vscode.l10n.t("Clear filter for profile")}`
             : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;
