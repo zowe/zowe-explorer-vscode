@@ -182,6 +182,12 @@
   "uss.cd": {
     "Go Up One Level": ""
   },
+  "uss.back": {
+    "Back": ""
+  },
+  "uss.forward": {
+    "Forward": ""
+  },
   "jobs.search": {
     "Search Jobs": ""
   },
@@ -672,6 +678,8 @@
   "Continue": "",
   "Prompting the user to choose a member from the filtered list": "",
   "You are already at the root directory.": "",
+  "No previous path in history.": "",
+  "No next path in history.": "",
   "Prompting the user for a USS path": "",
   "Select a filter": "",
   "No selection made. Operation cancelled.": "",
