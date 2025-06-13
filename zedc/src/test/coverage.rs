@@ -792,18 +792,20 @@ fn check_file_coverage(
     verbose: bool,
 ) {
     let changed_file_rel_path_from_repo_root = file_from_diff;
-    let paths_to_check_in_coverage_map =
-        generate_paths_to_check(changed_file_rel_path_from_repo_root, repo_root_pathbuf);
 
     if verbose {
         println!(
-            "Debug - Paths to check in coverage map for {}: {:?}",
-            changed_file_rel_path_from_repo_root, paths_to_check_in_coverage_map
+            "Debug - Attempting to find coverage for {}",
+            changed_file_rel_path_from_repo_root
         );
     }
 
-    let (file_coverage_data, matched_coverage_path) =
-        find_coverage_data(package_coverage_data, &paths_to_check_in_coverage_map);
+    let (file_coverage_data, matched_coverage_path) = find_coverage_data(
+        package_coverage_data,
+        changed_file_rel_path_from_repo_root,
+        repo_root_pathbuf,
+        verbose,
+    );
 
     match file_coverage_data {
         Some(file_cov) => {
@@ -830,6 +832,14 @@ fn check_file_coverage(
                     "Warning: No coverage data found for changed file {}. Lines from this file considered uncovered.",
                     changed_file_rel_path_from_repo_root
                 );
+                if let Some(map) = package_coverage_data.as_object() {
+                    let keys: Vec<&String> = map.keys().collect();
+                    println!("Debug - Coverage map top-level keys: {:?}", keys);
+                    if let Some(coverage_map) = map.get("coverageMap").and_then(|m| m.as_object()) {
+                        let nested_keys: Vec<&String> = coverage_map.keys().collect();
+                        println!("Debug - 'coverageMap' nested keys: {:?}", nested_keys);
+                    }
+                }
             }
             // All lines in this diff for this file are considered uncovered
             for line_num in lines_in_diff {
@@ -848,67 +858,46 @@ fn check_file_coverage(
     }
 }
 
-/// Generate all possible paths to check in coverage map
-fn generate_paths_to_check(path: &str, repo_root_pathbuf: &PathBuf) -> Vec<String> {
-    let mut paths_to_check = Vec::new();
-    let abs_path_from_repo_root = repo_root_pathbuf.join(path);
+/// Find the coverage data for a file
+fn find_coverage_data<'a>(
+    package_coverage_data: &'a serde_json::Value,
+    changed_file_rel_path: &str,
+    repo_root: &PathBuf,
+    verbose: bool,
+) -> (Option<&'a serde_json::Value>, String) {
+    let coverage_map = package_coverage_data
+        .get("coverageMap")
+        .and_then(|v| v.as_object())
+        .or_else(|| package_coverage_data.as_object());
 
-    if let Some(abs_path_str) = abs_path_from_repo_root.to_str() {
-        paths_to_check.push(abs_path_str.to_string());
-        paths_to_check.push(abs_path_str.replace('\\', "/"));
+    // Construct a normalized, absolute path for the file from the git diff.
+    let mut changed_file_abs_path = repo_root.clone();
+    for component in changed_file_rel_path.split('/') {
+        changed_file_abs_path.push(component);
+    }
 
-        #[cfg(windows)]
-        if abs_path_str.len() > 1 && abs_path_str.chars().nth(1) == Some(':') {
-            if let Some(first_char) = abs_path_str.chars().next() {
-                if first_char.is_ascii_uppercase() {
-                    let mut lower_drive_abs_path_chars = abs_path_str.chars();
-                    let drive_letter_lower = lower_drive_abs_path_chars
-                        .next()
-                        .unwrap()
-                        .to_lowercase()
-                        .to_string();
-                    let rest_of_path: String = lower_drive_abs_path_chars.collect();
-                    let path_with_lower_drive = format!("{}{}", drive_letter_lower, rest_of_path);
+    if let Some(map) = coverage_map {
+        for file_cov_data in map.values() {
+            if let Some(path_from_report_str) = file_cov_data.get("path").and_then(|p| p.as_str()) {
+                let report_path = PathBuf::from(path_from_report_str);
 
-                    paths_to_check.push(path_with_lower_drive.clone());
-                    paths_to_check.push(path_with_lower_drive.replace('\\', "/"));
+                // Compare the path from the report with the one we constructed.
+                // PathBuf's equality handles OS-specific details.
+                if report_path == changed_file_abs_path {
+                    return (Some(file_cov_data), path_from_report_str.to_string());
                 }
             }
         }
     }
 
-    paths_to_check
-}
-
-/// Find the coverage data for a file
-fn find_coverage_data<'a>(
-    package_coverage_data: &'a serde_json::Value,
-    paths_to_check: &[String],
-) -> (Option<&'a serde_json::Value>, String) {
-    let mut file_coverage_data = None;
-    let mut matched_coverage_path = String::new();
-
-    if let Some(coverage_map_obj) = package_coverage_data.as_object() {
-        // Istanbul often nests coverageMap
-        for path_to_check in paths_to_check {
-            if let Some(data) = coverage_map_obj.get(path_to_check) {
-                file_coverage_data = Some(data);
-                matched_coverage_path = path_to_check.clone();
-                break;
-            }
-        }
-    } else {
-        // Fallback if the top-level is the coverage map (less common for Istanbul)
-        for path_to_check in paths_to_check {
-            if let Some(data) = package_coverage_data.get(path_to_check) {
-                file_coverage_data = Some(data);
-                matched_coverage_path = path_to_check.clone();
-                break;
-            }
-        }
+    if verbose {
+        println!(
+            "Debug - Failed to find coverage. Constructed path for comparison: {:?}",
+            changed_file_abs_path
+        );
     }
 
-    (file_coverage_data, matched_coverage_path)
+    (None, String::new())
 }
 
 /// Process statements in a file's coverage data
@@ -923,56 +912,82 @@ fn process_file_statements(
 ) {
     let statement_map = file_cov.get("statementMap").and_then(|sm| sm.as_object());
     let s_map = file_cov.get("s").and_then(|s| s.as_object());
+    let branch_map = file_cov.get("branchMap").and_then(|bm| bm.as_object());
+    let b_map = file_cov.get("b").and_then(|b| b.as_object());
+
+    let mut executable_lines = std::collections::HashSet::new();
+    if let Some(stmt_map) = statement_map {
+        for stmt_data in stmt_map.values() {
+            if let (Some(start_line), Some(end_line)) = (
+                stmt_data
+                    .get("start")
+                    .and_then(|l| l.get("line"))
+                    .and_then(|l| l.as_u64()),
+                stmt_data
+                    .get("end")
+                    .and_then(|l| l.get("line"))
+                    .and_then(|l| l.as_u64()),
+            ) {
+                for line in start_line..=end_line {
+                    executable_lines.insert(line as usize);
+                }
+            }
+        }
+    }
+
+    let mut uncovered_lines = std::collections::HashSet::new();
 
     if let (Some(stmt_map), Some(s)) = (statement_map, s_map) {
-        for &line_num in lines_in_diff {
-            let mut line_covered = false;
-
-            for (stmt_idx, stmt_data) in stmt_map {
-                // Check start line
-                if let Some(loc) = stmt_data.get("start").and_then(|loc| loc.get("line")) {
-                    if loc.as_u64() == Some(line_num as u64) {
-                        // Check if this statement index is covered in 's'
-                        if let Some(count) = s.get(stmt_idx).and_then(|c| c.as_u64()) {
-                            if count > 0 {
-                                line_covered = true;
-                                if verbose {
-                                    println!(
-                                        "Debug - Line {} in {} is COVERED (statement {})",
-                                        line_num, changed_file_rel_path, stmt_idx
-                                    );
-                                }
-                                break; // Line is covered by this statement
-                            }
-                        }
-                    }
-                }
-
-                // Also check "end" line for multi-line statements
-                if let Some(loc) = stmt_data.get("end").and_then(|loc| loc.get("line")) {
-                    if loc.as_u64() == Some(line_num as u64) {
-                        if let Some(count) = s.get(stmt_idx).and_then(|c| c.as_u64()) {
-                            if count > 0 {
-                                line_covered = true;
-                                if verbose {
-                                    println!(
-                                        "Debug - Line {} in {} is COVERED (by end of statement {})",
-                                        line_num, changed_file_rel_path, stmt_idx
-                                    );
-                                }
-                                break;
-                            }
+        for (stmt_idx, stmt_data) in stmt_map {
+            if let Some(count) = s.get(stmt_idx).and_then(|c| c.as_u64()) {
+                if count == 0 {
+                    if let (Some(start_line), Some(end_line)) = (
+                        stmt_data
+                            .get("start")
+                            .and_then(|l| l.get("line"))
+                            .and_then(|l| l.as_u64()),
+                        stmt_data
+                            .get("end")
+                            .and_then(|l| l.get("line"))
+                            .and_then(|l| l.as_u64()),
+                    ) {
+                        for line in start_line..=end_line {
+                            uncovered_lines.insert(line as usize);
                         }
                     }
                 }
             }
+        }
+    }
 
-            if line_covered {
-                *covered_lines_in_patch += 1;
-            } else {
+    if let (Some(br_map), Some(b)) = (branch_map, b_map) {
+        for (branch_idx, branch_data) in br_map {
+            // Check if branch is intentionally skipped
+            if branch_data.get("skip").and_then(|s| s.as_bool()) == Some(true) {
+                continue;
+            }
+
+            if let Some(branch_counts) = b.get(branch_idx).and_then(|bc| bc.as_array()) {
+                // If any branch path has a count of 0, the branch is not fully covered.
+                if branch_counts.iter().any(|count| count.as_u64() == Some(0)) {
+                    // The line where the branch is defined should be marked as uncovered.
+                    if let Some(line) = branch_data.get("line").and_then(|l| l.as_u64()) {
+                        uncovered_lines.insert(line as usize);
+                    }
+                }
+            }
+        }
+    }
+
+    for &line_num in lines_in_diff {
+        let is_executable = executable_lines.contains(&line_num);
+        let is_uncovered = uncovered_lines.contains(&line_num);
+
+        if is_executable {
+            if is_uncovered {
                 if verbose {
                     println!(
-                        "Debug - Line {} in {} is NOT COVERED",
+                        "Debug - Line {} in {} is NOT COVERED (uncovered executable code)",
                         line_num, changed_file_rel_path
                     );
                 }
@@ -980,20 +995,21 @@ fn process_file_statements(
                     .entry(file_from_diff.to_string())
                     .or_default()
                     .push(line_num);
+            } else {
+                if verbose {
+                    println!(
+                        "Debug - Line {} in {} is COVERED",
+                        line_num, changed_file_rel_path
+                    );
+                }
+                *covered_lines_in_patch += 1;
             }
-        }
-    } else {
-        if verbose {
+        } else if verbose && is_uncovered {
+            // This is for verbose logging of non-executable but uncovered lines like 'else {'
             println!(
-                "Debug - Missing 'statementMap' or 's'. All lines for this file in diff considered uncovered."
+                "Debug - Line {} in {} is part of an uncovered block, but not executable. Ignoring.",
+                line_num, changed_file_rel_path
             );
-        }
-        // All lines for this file in the diff are considered uncovered if maps are missing
-        for &line_num in lines_in_diff {
-            uncovered_lines_details
-                .entry(file_from_diff.to_string())
-                .or_default()
-                .push(line_num);
         }
     }
 }
