@@ -46,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
             job: () => JobInit.initJobsProvider(context),
         },
         async () => {
-            await SharedInit.setupRemoteWorkspaceFolders();
+            await SharedInit.setupRemoteWorkspaceFolders(undefined, "zosmf");
         }
     );
     SharedInit.registerCommonCommands(context, providers);
