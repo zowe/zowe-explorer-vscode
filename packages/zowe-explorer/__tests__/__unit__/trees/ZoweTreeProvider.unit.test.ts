@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum, Sorting } from "@zowe/zowe-explorer-api";
+import { imperative, Validation, PersistenceSchemaEnum, Sorting } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweTreeProvider } from "../../../src/trees/ZoweTreeProvider";
 import {
@@ -19,6 +19,7 @@ import {
     createFileResponse,
     createInstanceOfProfileInfo,
     createGetConfigMock,
+    createInstanceOfProfilesCache,
 } from "../../__mocks__/mockCreators/shared";
 import { Constants, JwtCheckResult } from "../../../src/configuration/Constants";
 import { Profiles } from "../../../src/configuration/Profiles";
@@ -93,7 +94,7 @@ async function createGlobalMocks() {
             };
         }),
         mockProfileInfo: createInstanceOfProfileInfo(),
-        mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
+        mockProfilesCache: createInstanceOfProfilesCache(),
         FileSystemProvider: {
             createDirectory: jest.fn(),
         },
@@ -111,8 +112,10 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: globalMocks.isUsingTokenAuth, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
+    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue({
+            mockLoadNamedProfile: jest.fn(),
             allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
             getDefaultProfile: globalMocks.mockDefaultProfile,
             validProfile: Validation.ValidationType.VALID,
@@ -141,9 +144,7 @@ async function createGlobalMocks() {
             ssoLogin: globalMocks.mockSsoLogin,
             ssoLogout: globalMocks.mockSsoLogout,
             getProfileInfo: () => globalMocks.mockProfileInfo,
-            fetchAllProfiles: jest.fn(() => {
-                return [{ name: "profile1" }, { name: "profile2" }, { name: "base" }];
-            }),
+            fetchAllProfiles: () => [{ name: "profile1" }, { name: "profile2" }, { name: "base" }],
             fetchAllProfilesByType: jest.fn(() => {
                 return [{ name: "profile1" }];
             }),
@@ -169,8 +170,9 @@ async function createGlobalMocks() {
         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         parentNode: globalMocks.testUSSTree.mSessionNodes[0],
         session: globalMocks.testSession,
+        profile: globalMocks.testProfile,
     });
-    globalMocks.mockLoadNamedProfile.mockReturnValue(globalMocks.testProfile);
+
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockEditSession.mockReturnValue(globalMocks.testProfile);
 
@@ -838,5 +840,19 @@ describe("Tree Provider Unit Tests - function setStatusInSession", () => {
         const getIconByIdMock = jest.spyOn(IconGenerator, "getIconById").mockClear().mockImplementation();
         (treeProvider as any).setStatusForSession(null, Validation.ValidationType.VALID);
         expect(getIconByIdMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("Tree Provider unit tests, function getProfile", () => {
+    it("Tests that getProfile returns the correct info when called on a non-updated node", async () => {
+        const globalMocks = await createGlobalMocks();
+        expect(globalMocks.testUSSNode.getProfile()).toBe(globalMocks.testProfile);
+    });
+    it("Tests that getProfile returns the correct info when called on an updated node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const updatedProf = globalMocks.testProfile;
+        updatedProf.profile.password = "newpass";
+        globalMocks.mockLoadNamedProfile.mockReturnValue(updatedProf);
+        expect(globalMocks.testUSSNode.getProfile()).toBe(updatedProf);
     });
 });
