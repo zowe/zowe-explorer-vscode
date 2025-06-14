@@ -420,6 +420,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.zoom",
+        "title": "%zoom%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.submitMember",
         "title": "%submitMember%",
         "category": "Zowe Explorer"
@@ -721,6 +726,11 @@
           "when": "editorFocus && focusedView != 'workbench.panel.output'",
           "command": "zowe.ds.submitJcl",
           "group": "000_zowe_dsMainframeInteraction@1"
+        },
+        {
+          "when": "editorHasSelection && editorFocus",
+          "command": "zowe.ds.zoom",
+          "group": "000_zowe_dsMainframeInteraction@2"
         }
       ],
       "explorer/context": [

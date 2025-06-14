@@ -89,6 +89,7 @@ export class Constants {
     public static readonly MAX_MEMBER_LENGTH = 8;
     public static DS_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7}(\.[a-zA-Z#@$][a-zA-Z0-9#@$-]{0,7})*$/;
     public static MEMBER_NAME_REGEX_CHECK = /^[a-zA-Z#@$][a-zA-Z0-9#@$]{0,7}$/;
+    public static DS_HAS_MEMBER_REGEX_CHECK = /^([^(]+)\(([^)]+)\)$/;
     public static ACTIVATED = false;
     public static readonly JOBS_MAX_PREFIX = 8;
     public static PROFILES_CACHE: Profiles;

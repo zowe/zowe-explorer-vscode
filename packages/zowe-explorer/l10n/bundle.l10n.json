@@ -877,6 +877,14 @@
     ]
   },
   "Job submission failed.": "Job submission failed.",
+  "No active editor open. Please open a file and select text to open a data set.": "No active editor open. Please open a file and select text to open a data set.",
+  "No selection to open.": "No selection to open.",
+  "Selection is not a valid data set member name.": "Selection is not a valid data set member name.",
+  "Selection is not a valid data set name.": "Selection is not a valid data set name.",
+  "Select the profile to use to open the data set": "Select the profile to use to open the data set",
+  "Data set member {0} does not exist or cannot be opened in data set {1}.": "Data set member {0} does not exist or cannot be opened in data set {1}.",
+  "Data set {0} does not exist or cannot be opened.": "Data set {0} does not exist or cannot be opened.",
+  "Opening data set failed.": "Opening data set failed.",
   "Are you sure you want to submit the following job?\n\n{0}/JCL name": {
     "message": "Are you sure you want to submit the following job?\n\n{0}",
     "comment": [
