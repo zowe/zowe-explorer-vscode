@@ -16,9 +16,6 @@ import { Then, When } from "@cucumber/cucumber";
 //
 When("a user navigates to VS Code Settings", async function () {
     const wb = await browser.getWorkbench();
-    // Wait for the Release Notes webview to appear before opening the settings editor
-    await browser.waitUntil(async () => (await wb.getWebviewByTitle("Release Notes")) != null);
-    await wb.getEditorView().closeAllEditors();
     this.settingsEditor = await wb.openSettings();
     await this.settingsEditor.wait();
 });
