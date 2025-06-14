@@ -35,28 +35,15 @@ export class ReleaseNotes extends WebView {
         // Get extension version (major.minor)
         const currentVersion = ReleaseNotes.getExtensionVersion(context);
 
-        // Get user setting for release notes display
-        const displaySetting = SettingsConfig.getDirectValue<string>(
-            Constants.SETTINGS_DISPLAY_RELEASE_NOTES,
-            Constants.RELEASE_NOTES_OPTS_KEYS.ALWAYS
-        );
-
-        // Get last displayn version from local storage
+        // Default: true (show after update)
+        const showAfterUpdate = SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_DISPLAY_RELEASE_NOTES, true);
         const previousVersion = ZoweLocalStorage.getValue<string>(Definitions.LocalStorageKey.DISPLAY_RELEASE_NOTES_VERSION) ?? "";
 
-        // Logic:
-        // - "ALWAYS_DISPLAY" (default): Always display release notes
-        // - "NEVER_DISPLAY": Never display release notes
-        // - "DISABLE_FOR_THIS_VERSION": only display if version changed
-        let displayReleaseNotes = true;
-        if (displaySetting === Constants.RELEASE_NOTES_OPTS_KEYS.NEVER) {
-            displayReleaseNotes = false;
-        } else if (displaySetting === Constants.RELEASE_NOTES_OPTS_KEYS.DISABLE_FOR_THIS_VERSION) {
-            displayReleaseNotes = previousVersion !== currentVersion;
-        } // else "ALWAYS_DISPLAY" or unknown, display
+        // Only show if enabled and version changed
+        const displayReleaseNotes = showAfterUpdate && previousVersion !== currentVersion;
 
-        // Update last displayed version in local storage if version changed and displaying notes
-        if (displayReleaseNotes && previousVersion !== currentVersion) {
+        // Update last displayed version in local storage if displaying notes
+        if (displayReleaseNotes) {
             ZoweLocalStorage.setValue(Definitions.LocalStorageKey.DISPLAY_RELEASE_NOTES_VERSION, currentVersion);
         }
 
@@ -96,30 +83,29 @@ export class ReleaseNotes extends WebView {
             return;
         }
 
-        const { command, version } = message as { command: string; version?: string };
+        const { command, checked, version } = message as { command: string; checked?: boolean; version?: string };
         if (command === "ready") {
             await this.sendReleaseNotes();
         } else if (command === "selectVersion" && version) {
             this.version = version;
             await this.sendReleaseNotes();
-        } else if (Object.values(Constants.RELEASE_NOTES_OPTS_KEYS).includes(command)) {
-            SettingsConfig.setDirectValue(Constants.SETTINGS_DISPLAY_RELEASE_NOTES, command);
+        } else if (command === "toggleDisplayAfterUpdate" && typeof checked === "boolean") {
+            SettingsConfig.setDirectValue(Constants.SETTINGS_DISPLAY_RELEASE_NOTES, checked);
         }
     }
 
     public async sendReleaseNotes(): Promise<boolean> {
         const releaseNotes = await this.getReleaseNotes();
         const changelog = await this.getChangelog();
-        const displayReleaseNotesSetting = SettingsConfig.getDirectValue(Constants.SETTINGS_DISPLAY_RELEASE_NOTES);
+        const displayAfterUpdate = SettingsConfig.getDirectValue(Constants.SETTINGS_DISPLAY_RELEASE_NOTES, true);
         const versionOptions = await this.getAllMajorMinorVersions();
 
         return this.panel.webview.postMessage({
-            releaseNotes: releaseNotes,
-            changelog: changelog,
+            releaseNotes,
+            changelog,
             version: this.version,
-            displayReleaseNotesSetting: displayReleaseNotesSetting,
-            dropdownOptions: Constants.RELEASE_NOTES_OPTS_LABELS,
-            versionOptions: versionOptions,
+            displayAfterUpdate,
+            versionOptions,
         });
     }
 

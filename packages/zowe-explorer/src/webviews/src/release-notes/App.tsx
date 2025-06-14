@@ -12,7 +12,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { JSX } from "preact";
 import { isSecureOrigin } from "../utils";
-import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeDropdown, VSCodeOption, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react";
 import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
@@ -24,7 +24,7 @@ export function App(): JSX.Element {
   const [releaseNotes, setReleaseNotes] = useState<string | null>(null);
   const [changelog, setChangelog] = useState<string | null>(null);
   const [version, setVersion] = useState<string | null>(null);
-  const [displayOption, setDisplayOption] = useState<string>("");
+  const [displayAfterUpdate, setDisplayAfterUpdate] = useState<boolean>(true);
   const [dropdownOptions, setDropdownOptions] = useState<Record<string, string>>({});
   const [versionOptions, setVersionOptions] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"releaseNotes" | "changelog">("releaseNotes");
@@ -39,7 +39,7 @@ export function App(): JSX.Element {
         return;
       }
 
-      const { releaseNotes, changelog, version, displayReleaseNotesSetting, dropdownOptions, versionOptions } = event.data;
+      const { releaseNotes, changelog, version, showAfterUpdate, versionOptions } = event.data;
 
       if (releaseNotes !== undefined) {
         setReleaseNotes(releaseNotes);
@@ -50,8 +50,8 @@ export function App(): JSX.Element {
       if (version !== undefined) {
         setVersion(version);
       }
-      if (displayReleaseNotesSetting !== undefined) {
-        setDisplayOption(displayReleaseNotesSetting);
+      if (showAfterUpdate !== undefined) {
+        setDisplayAfterUpdate(showAfterUpdate);
       }
       if (dropdownOptions !== undefined) {
         setDropdownOptions(dropdownOptions);
@@ -63,10 +63,10 @@ export function App(): JSX.Element {
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
   }, []);
 
-  const handleDropdownChange = (event: JSX.TargetedEvent<HTMLSelectElement>) => {
-    const selectedKey = event.currentTarget.value;
-    setDisplayOption(selectedKey);
-    PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: selectedKey });
+  const handleDisplayAfterUpdateChange = (event: JSX.TargetedEvent<HTMLInputElement>) => {
+    const checked = event.currentTarget.checked;
+    setDisplayAfterUpdate(checked);
+    PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "toggleDisplayAfterUpdate", checked });
   };
 
   const handleVersionChange = (event: JSX.TargetedEvent<HTMLSelectElement>) => {
@@ -93,18 +93,14 @@ export function App(): JSX.Element {
       </header>
       <div className="releaseNotesCard">
         <div className="releaseNotesDropdownsLabelsRow">
-          <div className="releaseNotesDropdownLabelText">{l10n.t("Select when to display release notes")}</div>
+          <div className="releaseNotesDropdownLabelText"></div>
           <div className="releaseNotesDropdownLabelText">{l10n.t("Select the version to display release notes for")}</div>
         </div>
         <div className="releaseNotesDropdownsRow">
           <div className="releaseNotesDropdownCol">
-            <VSCodeDropdown value={displayOption} onChange={handleDropdownChange} className="releaseNotesDropdown">
-              {Object.entries(dropdownOptions).map(([key, label]) => (
-                <VSCodeOption value={key} key={key}>
-                  {label}
-                </VSCodeOption>
-              ))}
-            </VSCodeDropdown>
+            <VSCodeCheckbox checked={displayAfterUpdate} onChange={handleDisplayAfterUpdateChange}>
+              <span className="releaseNotesDropdownLabelText">{l10n.t("Display release notes after an update")}</span>
+            </VSCodeCheckbox>
           </div>
           <div className="releaseNotesDropdownCol">
             <VSCodeDropdown value={version ?? ""} onChange={handleVersionChange} className="releaseNotesDropdown">

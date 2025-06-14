@@ -279,16 +279,6 @@ export class Constants {
         JOBS: "jobs-panel-tab",
         CMDS: "cmds-panel-tab",
     };
-    public static readonly RELEASE_NOTES_OPTS_KEYS = {
-        ALWAYS: "Always display",
-        DISABLE_FOR_THIS_VERSION: "Disable for this version",
-        NEVER: "Never display",
-    };
-    public static readonly RELEASE_NOTES_OPTS_LABELS = {
-        [Constants.RELEASE_NOTES_OPTS_KEYS.ALWAYS]: vscode.l10n.t("Always display"),
-        [Constants.RELEASE_NOTES_OPTS_KEYS.DISABLE_FOR_THIS_VERSION]: vscode.l10n.t("Disable for this version"),
-        [Constants.RELEASE_NOTES_OPTS_KEYS.NEVER]: vscode.l10n.t("Never display"),
-    };
 }
 
 /**
