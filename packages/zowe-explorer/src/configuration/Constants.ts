@@ -16,7 +16,7 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static readonly COMMAND_COUNT = 114;
+    public static readonly COMMAND_COUNT = 115;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
     public static readonly MAX_DISPLAYED_DELETE_NAMES = 10;
@@ -80,6 +80,7 @@ export class Constants {
     public static readonly SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
     public static readonly SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS = "zowe.security.checkForCustomCredentialManagers";
     public static readonly SETTINGS_DATASETS_PER_PAGE = "zowe.ds.paginate.dataSetsPerPage";
+    public static readonly SETTINGS_DISPLAY_RELEASE_NOTES = "zowe.settings.displayReleaseNotes";
     public static readonly LOGGER_SETTINGS = "zowe.logger";
     public static readonly SETTINGS_OVERRIDE_WITH_ENV_VAR = "zowe.settings.overrideWithEnvironmentVariables";
     public static EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
@@ -96,6 +97,8 @@ export class Constants {
     public static readonly WORKSPACE_UTIL_MAX_EMPTY_WINDOWS_IN_THE_ROW = 3;
     public static readonly WORKSPACE_UTIL_FILE_SAVE_INTERVAL = 200;
     public static readonly WORKSPACE_UTIL_FILE_SAVE_MAX_ITERATION_COUNT = 25;
+    public static readonly SHARED_HISTORY_PANEL_TITLE = vscode.l10n.t("Edit History");
+    public static readonly RELEASE_NOTES_PANEL_TITLE = vscode.l10n.t("Release Notes");
     public static configurationDictionary: { [k: string]: string } = {
         "Zowe-Default-Datasets-Binary": Constants.SETTINGS_DS_DEFAULT_BINARY,
         "Zowe-Default-Datasets-C": Constants.SETTINGS_DS_DEFAULT_C,

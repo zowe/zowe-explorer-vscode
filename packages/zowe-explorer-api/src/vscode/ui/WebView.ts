@@ -26,6 +26,10 @@ export type WebViewOpts = {
     isView?: boolean;
     /** Allow evaluation of functions within the webview script code. */
     unsafeEval?: boolean;
+    /** Which ViewColumn to open the webview. */
+    viewColumn?: ViewColumn;
+    /** Optional icon path (string or Uri) for the webview tab. */
+    iconPath?: WebviewPanel["iconPath"];
 };
 
 export type UriPair = {
@@ -89,11 +93,25 @@ export class WebView {
         };
 
         if (!(opts?.isView ?? false)) {
-            this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, ViewColumn.Beside, {
+            this.panel = window.createWebviewPanel("ZEAPIWebview", this.title, opts?.viewColumn ?? ViewColumn.Beside, {
                 enableScripts: true,
                 localResourceRoots: [this.uris.disk.build, this.uris.disk.codicons],
                 retainContextWhenHidden: opts?.retainContext ?? false,
             });
+
+            // Set the iconPath if provided
+            if (opts?.iconPath) {
+                if (typeof opts.iconPath === "string") {
+                    this.panel.iconPath = Uri.file(opts.iconPath);
+                } else if ("light" in opts.iconPath && "dark" in opts.iconPath) {
+                    this.panel.iconPath = {
+                        light: typeof opts.iconPath.light === "string" ? Uri.file(opts.iconPath.light) : opts.iconPath.light,
+                        dark: typeof opts.iconPath.dark === "string" ? Uri.file(opts.iconPath.dark) : opts.iconPath.dark,
+                    };
+                } else {
+                    this.panel.iconPath = opts.iconPath;
+                }
+            }
 
             // Associate URI resources with webview
             this.uris.resource = {
@@ -156,7 +174,7 @@ export class WebView {
     /**
      * Disposes of the webview instance
      */
-    protected dispose(): void {
+    public dispose(): void {
         this.panel?.dispose();
 
         for (const disp of this.disposables) {
