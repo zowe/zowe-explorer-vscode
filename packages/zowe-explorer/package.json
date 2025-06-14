@@ -2040,18 +2040,8 @@
           "scope": "window"
         },
         "zowe.settings.displayReleaseNotes": {
-          "type": "string",
-          "default": "Always display",
-          "enum": [
-            "Always display",
-            "Disable for this version",
-            "Never display"
-          ],
-          "enumDescriptions": [
-            "%zowe.settings.alwaysDisplayReleaseNotes%",
-            "%zowe.settings.disableForThisVersion%",
-            "%zowe.settings.neverDisplayReleaseNotes%"
-          ],
+          "type": "boolean",
+          "default": true,
           "description": "%zowe.settings.displayReleaseNotes%",
           "scope": "window"
         }

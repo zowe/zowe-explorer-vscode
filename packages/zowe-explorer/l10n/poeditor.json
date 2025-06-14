@@ -534,16 +534,7 @@
     "The amount of time to wait for a REST request to complete, in milliseconds.": ""
   },
   "zowe.settings.displayReleaseNotes": {
-    "Whether to display the Zowe Explorer release notes when VS Code starts.": ""
-  },
-  "zowe.settings.alwaysDisplayReleaseNotes": {
-    "Display release notes every time VS Code starts.": ""
-  },
-  "zowe.settings.disableForThisVersion": {
-    "Don't display release notes for this version again. When you update to a newer minor version, the release notes display once when VS Code starts.": ""
-  },
-  "zowe.settings.neverDisplayReleaseNotes": {
-    "Never display release notes when VS Code starts. You can use the command 'Zowe Explorer: Display Release Notes' to view them in your own time.": ""
+    "Should display the Zowe Explorer release notes after an update.": ""
   },
   "Enter command here...": "",
   "Page Size:": "",
@@ -554,8 +545,8 @@
   "selected": "",
   "What's New in Zowe Explorer {0}": "",
   "You can find the latest updates and features here.": "",
-  "Select when to display release notes": "",
   "Select the version to display release notes for": "",
+  "Display release notes after an update": "",
   "Release Notes": "",
   "Changelog": "",
   "Loading release notes...": "",
@@ -1092,9 +1083,6 @@
   "All jobs": "",
   "Ascending": "",
   "Descending": "",
-  "Always display": "",
-  "Disable for this version": "",
-  "Never display": "",
   "Unable to perform this operation due to the following problem.": "",
   "Response From Service": "",
   "Diagnostic Information": "",
