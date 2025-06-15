@@ -496,6 +496,16 @@ describe("ProfilesUtils unit tests", () => {
 
         it("fires onProfilesUpdate event if secure credentials are enabled", async () => {
             const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
+            (mockProfileInstance as any).allProfiles = [
+                {
+                    name: "testConfig",
+                    type: "test-type",
+                    profile: {
+                        port: 456,
+                        host: "example.host",
+                    },
+                },
+            ];
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as any);
             jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
@@ -512,8 +522,8 @@ describe("ProfilesUtils unit tests", () => {
             const secureCredsMock = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             const testConfig = {
                 name: "testConfig",
+                type: "test-type",
                 profile: {
-                    type: "test-type",
                     user: "user",
                     password: "pass",
                     base64EncodedAuth: "user-pass",
