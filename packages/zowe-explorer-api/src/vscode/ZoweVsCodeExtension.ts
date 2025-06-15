@@ -76,10 +76,7 @@ export class ZoweVsCodeExtension {
      * @param options Set of options to use when prompting for credentials
      * @returns Instance of imperative.IProfileLoaded containing information about the updated profile
      */
-    public static async updateCredentials(
-        options: PromptCredentialsOptions.ComplexOptions,
-        apiRegister: Types.IApiRegisterClient
-    ): Promise<imperative.IProfileLoaded> {
+    public static async updateCredentials(options: PromptCredentialsOptions.ComplexOptions): Promise<imperative.IProfileLoaded> {
         const cache = options.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const profInfo = await cache.getProfileInfo();
         const setSecure = options.secure ?? profInfo.isSecured();
@@ -111,7 +108,7 @@ export class ZoweVsCodeExtension {
                 await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure });
                 await profInfo.updateProperty({ ...upd, property: "password", value: creds[1], setSecure });
             }
-            await cache.updateCachedProfile(loadProfile, undefined, apiRegister);
+            cache.updateCachedProfile(loadProfile, undefined);
             ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(loadProfile);
 
             return loadProfile;
@@ -223,7 +220,7 @@ export class ZoweVsCodeExtension {
 
         await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
         serviceProfile.profile = { ...serviceProfile.profile, ...updBaseProfile };
-        await cache.updateCachedProfile(serviceProfile, opts.profileNode);
+        cache.updateCachedProfile(serviceProfile, opts.profileNode);
         return true;
     }
 
@@ -254,7 +251,7 @@ export class ZoweVsCodeExtension {
         session.ISession.user = creds[0];
         session.ISession.password = creds[1];
         await zeCommon?.login(session);
-        await this.profilesCache.updateCachedProfile(serviceProfile, node);
+        this.profilesCache.updateCachedProfile(serviceProfile, node);
         return true;
     }
 
@@ -313,7 +310,7 @@ export class ZoweVsCodeExtension {
             !serviceProfile.name.startsWith(baseProfile.name + ".");
         await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
         serviceProfile.profile = { ...serviceProfile.profile, tokenType: undefined, tokenValue: undefined };
-        await cache.updateCachedProfile(serviceProfile, opts.profileNode);
+        cache.updateCachedProfile(serviceProfile, opts.profileNode);
         return true;
     }
 
@@ -338,7 +335,7 @@ export class ZoweVsCodeExtension {
             session = zeCommon?.getSession();
         }
         await zeCommon?.logout(session);
-        await this.profilesCache.updateCachedProfile(serviceProfile, node);
+        this.profilesCache.updateCachedProfile(serviceProfile, node);
         return true;
     }
 
