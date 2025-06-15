@@ -1158,20 +1158,20 @@ export class DatasetActions {
                 : `${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}`
         );
 
-        // If selected text is a PDS
-        if (!hasMember) {
-            const lookup = await DatasetFSProvider.instance.remoteLookupForResource(datasetUri);
-            if (lookup && lookup instanceof PdsEntry) {
-                const datasetTree = SharedTreeProviders.ds as DatasetTree;
-                const successful = await datasetTree.focusOnDsInTree(ds.dataSetName, sessProfile);
-                if (!successful) {
-                    Gui.warningMessage(vscode.l10n.t("PDS {0} could not be found.", ds.dataSetName));
-                }
-                return;
-            }
-        }
-
         try {
+            // If selected text is a PDS
+            if (!hasMember) {
+                const lookup = await DatasetFSProvider.instance.remoteLookupForResource(datasetUri);
+                if (lookup && lookup instanceof PdsEntry) {
+                    const datasetTree = SharedTreeProviders.ds as DatasetTree;
+                    const successful = await datasetTree.focusOnDsInTree(ds.dataSetName, sessProfile);
+                    if (!successful) {
+                        Gui.warningMessage(vscode.l10n.t("PDS {0} could not be found.", ds.dataSetName));
+                    }
+                    return;
+                }
+            }
+
             await vscode.workspace.fs.readFile(datasetUri);
             await vscode.commands.executeCommand("vscode.open", datasetUri, {
                 preview: false,
