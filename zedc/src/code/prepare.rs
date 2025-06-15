@@ -82,7 +82,11 @@ fn code_cli_binary(dir: &Path) -> PathBuf {
 /// * `vsc_path` - The path where the archive should be extracted into
 ///
 #[allow(unused_variables)]
-async fn extract_code_zip(file: &std::fs::File, zip_path: &Path, vsc_path: &Path) -> anyhow::Result<()> {
+async fn extract_code_zip(
+    file: &std::fs::File,
+    zip_path: &Path,
+    vsc_path: &Path,
+) -> anyhow::Result<()> {
     cfg_if::cfg_if! {
         if #[cfg(target_os = "macos")] {
             match Command::new("unzip")
@@ -230,7 +234,7 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
 
     progress_bar.finish();
     println!("📤 Unpacking VS Code archive...");
-    
+
     // If the VS Code folder exists for the latest version, remove its contents before downloading
     if vsc_path.exists() {
         tokio::fs::remove_dir_all(&vsc_path).await?;

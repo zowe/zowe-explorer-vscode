@@ -4,9 +4,13 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
-- Updated Zowe SDKs to `8.21.0` for technical currency. [#3668](https://github.com/zowe/zowe-explorer-vscode/pull/3668)
-
 ### Bug fixes
+
+## `3.2.1`
+
+### New features and enhancements
+
+- Updated Zowe SDKs to `8.21.0` for technical currency. [#3668](https://github.com/zowe/zowe-explorer-vscode/pull/3668)
 
 ## `3.2.0`
 
