@@ -495,8 +495,8 @@ export class BaseProvider {
         profileName: string,
         promiseMap: Map<string, DeferredPromise<void>>
     ): Promise<void> {
-        const profile = profileInfo.allProfiles.find((prof) => prof.name === profileName);
-        if (profile && profile.type !== "zosmf" && !promiseMap.get(profileName)) {
+        const profAttrs = await profileInfo.getProfileFromConfig(profileName);
+        if (profAttrs && profAttrs.profType !== "zosmf" && !promiseMap.get(profileName)) {
             const deferredPromise = new DeferredPromise<void>();
             promiseMap.set(profileName, deferredPromise);
         }
