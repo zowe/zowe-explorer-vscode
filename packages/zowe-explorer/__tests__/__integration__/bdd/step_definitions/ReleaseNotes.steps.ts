@@ -21,4 +21,5 @@ When(/a user runs (.*) command/, async function (cmdName: string) {
 Then(/the (.*) webview is displayed/, async function (title: string) {
     const wb = await browser.getWorkbench();
     await browser.waitUntil(async () => (await wb.getWebviewByTitle(title)) != null);
+    await wb.getEditorView().closeAllEditors();
 });
