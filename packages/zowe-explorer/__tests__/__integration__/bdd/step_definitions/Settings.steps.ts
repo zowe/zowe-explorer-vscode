@@ -16,7 +16,6 @@ import { Then, When } from "@cucumber/cucumber";
 //
 When("a user navigates to VS Code Settings", async function () {
     const wb = await browser.getWorkbench();
-    await wb.getEditorView().closeAllEditors();
     this.settingsEditor = await wb.openSettings();
     await this.settingsEditor.wait();
 });
