@@ -28,7 +28,6 @@ import {
     FileEntry,
     ZoweExplorerApiType,
     AuthHandler,
-    DeferredPromise,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -512,22 +511,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // If the extenderTypeReady map does not contain the profile, create a deferred promise for the profile.
         const profileName = uri.path.split("/")[1];
         const profileInfo = Profiles.getInstance();
-        const profile = profileInfo.allProfiles.find((prof) => prof.name === profileName);
-        if (profile && profile.type !== "zosmf" && !Profiles.extenderTypeReady.get(profileName)) {
-            const deferredPromise = new DeferredPromise<void>();
-            Profiles.extenderTypeReady.set(profileName, deferredPromise);
-        }
-
-        const profilePromise = Profiles.extenderTypeReady.get(profileName);
-        const promiseTimeout = 10000;
-        if (profilePromise) {
-            let timeoutHandle: NodeJS.Timeout;
-            const timeoutPromise = new Promise<void>((resolve, _) => {
-                timeoutHandle = setTimeout(() => resolve(), promiseTimeout);
-            });
-
-            await Promise.race([profilePromise.promise.finally(() => clearTimeout(timeoutHandle)), timeoutPromise]);
-        }
+        await this.awaitExtenderType(profileInfo, profileName, Profiles.extenderTypeReady);
 
         try {
             ds = this._lookupAsFile(uri) as DsEntry;
