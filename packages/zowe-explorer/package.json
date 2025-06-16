@@ -169,6 +169,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.configEditor",
+        "title": "Edit Zowe Config Files",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.updateSchema",
         "title": "%zowe.updateSchema%",
         "category": "Zowe Explorer"
