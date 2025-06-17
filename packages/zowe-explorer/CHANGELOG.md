@@ -9,7 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added hostname validation to prevent encountering a VSCode Proxy bug that occurs when attempting to connect to a z/OSMF server with the protocol specified as part of the hostname. [#3364](https://github.com/zowe/zowe-explorer-vscode/issues/3364)
 - Added a `zowe.settings.socketConnectTimeout` setting to provide users with the ability to specify a connection timeout for REST requests. [#3379](https://github.com/zowe/zowe-explorer-vscode/issues/3379)
 - Added a `zowe.settings.requestTimeout` setting to provide users with the ability to specify a request timeout for REST requests. [#3631](https://github.com/zowe/zowe-explorer-vscode/pull/3631)
-- Updated Zowe SDKs to `8.21.0` for technical currency. [#3668](https://github.com/zowe/zowe-explorer-vscode/pull/3668)
+- Added the ability to open a data set from text selected in an Editor tab. [#3679](https://github.com/zowe/zowe-explorer-vscode/issues/3679)
 - Added support for asynchronous operations when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 
@@ -17,8 +17,18 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Fixed an issue where an incorrect profile name is shown in the output for the "Issue Unix Command" function when an SSH profile is required to issue commands. [#3646](https://github.com/zowe/zowe-explorer-vscode/issues/3646)
 - Improved integrated terminal behavior to match standard terminal functionality. Now, users can smoothly maintain proper cursor position when typing and backspacing. [#3391](https://github.com/zowe/zowe-explorer-vscode/issues/3391)
-- Fixed an issue in the `Switch Authentication` method, where changing from token-based authentication to username and password authentication did not properly invalidate the token. [#3654](https://github.com/zowe/zowe-explorer-vscode/issues/3654)
-- BugFix: Fixed an issue where cancelling multiple commands in rapid succession could render the terminal unusable. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
+- Fixed an issue where cancelling multiple commands in rapid succession could render the terminal unusable. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
+- Fixed an issue where clicking the refresh icon beside a profile in the Unix System Services (USS) view had no effect. [#3693](https://github.com/zowe/zowe-explorer-vscode/issues/3693)
+
+## `3.2.1`
+
+### New features and enhancements
+
+- Updated Zowe SDKs to `8.21.0` for technical currency. [#3668](https://github.com/zowe/zowe-explorer-vscode/pull/3668)
+
+### Bug fixes
+
+- Fixed an issue in the `Switch Authentication` action, where changing from token-based authentication to username and password authentication did not properly invalidate the token. [#3654](https://github.com/zowe/zowe-explorer-vscode/issues/3654)
 - Fixed an issue where an unhandled exception occurs when creating profile hover information if the `autoStore` property is missing from the Zowe team configuration. [#3643](https://github.com/zowe/zowe-explorer-vscode/issues/3643)
 
 ## `3.2.0`

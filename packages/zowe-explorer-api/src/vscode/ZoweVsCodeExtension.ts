@@ -101,7 +101,8 @@ export class ZoweVsCodeExtension {
             loadProfile.profile.password = loadSession.password = creds[1];
 
             let shouldSave = true;
-            if (!setSecure) {
+            const autoStoreValue = (await this.profilesCache.getProfileInfo()).getTeamConfig().properties.autoStore;
+            if (!setSecure && autoStoreValue) {
                 shouldSave = await ZoweVsCodeExtension.saveCredentials(loadProfile);
             }
 

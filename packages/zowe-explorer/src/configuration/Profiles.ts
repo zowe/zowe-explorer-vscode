@@ -1046,7 +1046,7 @@ export class Profiles extends ProfilesCache {
 
         try {
             this.clearFilterFromAllTrees(node);
-            let logoutOk = true;
+            let logoutOk: boolean;
             const zeRegister = ZoweExplorerApiRegister.getInstance();
 
             // this will handle extenders
