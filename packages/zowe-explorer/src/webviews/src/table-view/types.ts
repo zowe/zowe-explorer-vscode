@@ -12,6 +12,7 @@
 import type { Table } from "@zowe/zowe-explorer-api";
 import { AgGridReactProps } from "ag-grid-react";
 import { JSXInternal } from "preact/src/jsx";
+import type { MessageHandler } from "../MessageHandler";
 
 export type ContextMenuState = {
     open: boolean;
@@ -33,7 +34,7 @@ export const tableProps = (
     contextMenu: ContextMenuState,
     setSelectionCount: React.Dispatch<number>,
     tableData: Table.ViewOpts,
-    vscodeApi: any
+    messageHandler: MessageHandler
 ): Partial<AgGridReactProps> => ({
     enableCellTextSelection: true,
     ensureDomOrder: true,
@@ -50,21 +51,18 @@ export const tableProps = (
     onCellContextMenu: contextMenu.callback,
     onCellValueChanged: tableData.columns?.some((col) => col.editable)
         ? (event) => {
-              vscodeApi.postMessage({
-                  command: "ontableedit",
-                  data: {
-                      rowIndex: event.rowIndex,
-                      field: event.colDef.field,
-                      value: event.value,
-                      oldValue: event.oldValue,
-                  },
+              messageHandler.send("ontableedit", {
+                  rowIndex: event.rowIndex,
+                  field: event.colDef.field,
+                  value: event.value,
+                  oldValue: event.oldValue,
               });
           }
         : undefined,
     onFilterChanged: (event) => {
         const rows: Table.RowData[] = [];
         event.api.forEachNodeAfterFilterAndSort((row, _i) => rows.push(row.data));
-        vscodeApi.postMessage({ command: "ondisplaychanged", data: rows });
+        messageHandler.send("ondisplaychanged", rows);
     },
     onSelectionChanged: (event) => {
         setSelectionCount(event.api.getSelectedRows().length);
@@ -72,7 +70,7 @@ export const tableProps = (
     onSortChanged: (event) => {
         const rows: Table.RowData[] = [];
         event.api.forEachNodeAfterFilterAndSort((row, _i) => rows.push(row.data));
-        vscodeApi.postMessage({ command: "ondisplaychanged", data: rows });
+        messageHandler.send("ondisplaychanged", rows);
     },
     ...(tableData.options ?? {}),
     postSortRows: tableData.options?.customTreeMode

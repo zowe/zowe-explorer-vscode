@@ -1,6 +1,6 @@
 import type { GridApi, ICellRendererParams } from "ag-grid-community";
 import type { Table } from "@zowe/zowe-explorer-api";
-import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
+import { messageHandler } from "../MessageHandler";
 
 export interface CustomTreeCellRendererParams extends ICellRendererParams {
   data: Table.RowData; // Make sure data is typed to our RowData with _tree... props
@@ -31,9 +31,6 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
 
     console.log("[iconClickHandler] Toggling node:", nodeId, "Current expanded state:", isExpanded);
 
-    // Get VS Code API to send message for lazy loading
-    const vscodeApi = PersistentVSCodeAPI.getVSCodeAPI();
-
     // Handle the scenario where the user might have collapsed a node that's still loading children
     if (!isExpanded) {
       // Expanding - check if children are already loaded before requesting
@@ -57,12 +54,9 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
       } else {
         // No children loaded yet - request from backend (lazy loading)
         console.log("[iconClickHandler] Loading children from backend");
-        vscodeApi.postMessage({
-          command: "loadTreeChildren",
-          data: {
-            nodeId: nodeId,
-            parentRow: data,
-          },
+        messageHandler.send("loadTreeChildren", {
+          nodeId: nodeId,
+          parentRow: data,
         });
       }
       // Update node to reflect new tree collapsible state

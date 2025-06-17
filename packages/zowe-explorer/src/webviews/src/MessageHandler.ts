@@ -1,7 +1,7 @@
 import { v4 } from "uuid";
 import { Messenger, type MessageHandlerData } from "./Messenger";
 
-class MessageHandler {
+export class MessageHandler {
     private static instance: MessageHandler;
     private static listeners: { [commandId: string]: Function } = {};
 

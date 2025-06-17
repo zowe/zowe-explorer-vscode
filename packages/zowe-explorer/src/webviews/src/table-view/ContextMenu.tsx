@@ -4,6 +4,7 @@ import { CellContextMenuEvent, ColDef } from "ag-grid-community";
 import { ControlledMenu, MenuItem } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
 import { wrapFn } from "./types";
+import { messageHandler } from "../MessageHandler";
 
 type MousePt = { x: number; y: number };
 
@@ -13,7 +14,6 @@ export type ContextMenuProps = {
   clickedRow: Table.RowData;
   options: Table.ContextMenuOption[];
   colDef: ColDef;
-  vscodeApi: any;
 };
 
 /**
@@ -89,7 +89,7 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
           setOpen(false);
         }}
       >
-        {ContextMenu(gridRefs.current, contextMenu.options, contextMenu.vscodeApi)}
+        {ContextMenu(gridRefs.current, contextMenu.options)}
       </ControlledMenu>
     ) : null,
   };
@@ -98,10 +98,9 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
 export type ContextMenuElemProps = {
   anchor: MousePt;
   menuItems: Table.ContextMenuOption[];
-  vscodeApi: any;
 };
 
-export const ContextMenu = (gridRefs: any, menuItems: Table.ContextMenuOption[], vscodeApi: any) => {
+export const ContextMenu = (gridRefs: any, menuItems: Table.ContextMenuOption[]) => {
   return menuItems
     ?.filter((item) => {
       if (item.condition == null) {
@@ -117,16 +116,13 @@ export const ContextMenu = (gridRefs: any, menuItems: Table.ContextMenuOption[],
       <MenuItem
         key={`${item.command}-ctx-menu-${i}`}
         onClick={(_e: any) => {
-          vscodeApi.postMessage({
-            command: item.command,
-            data: {
-              rowIndex: gridRefs.rowIndex,
-              row: { ...gridRefs.clickedRow, actions: undefined },
-              field: gridRefs.field,
-              cell: gridRefs.colDef.valueFormatter
-                ? gridRefs.colDef.valueFormatter({ value: gridRefs.clickedRow[gridRefs.field] })
-                : gridRefs.clickedRow[gridRefs.field],
-            },
+          messageHandler.send(item.command, {
+            rowIndex: gridRefs.rowIndex,
+            row: { ...gridRefs.clickedRow, actions: undefined },
+            field: gridRefs.field,
+            cell: gridRefs.colDef.valueFormatter
+              ? gridRefs.colDef.valueFormatter({ value: gridRefs.clickedRow[gridRefs.field] })
+              : gridRefs.clickedRow[gridRefs.field],
           });
         }}
         style={{ borderBottom: "var(--vscode-menu-border)" }}

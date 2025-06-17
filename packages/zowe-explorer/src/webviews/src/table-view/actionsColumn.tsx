@@ -1,8 +1,13 @@
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { TableViewProps, wrapFn } from "./types";
 import { Table } from "@zowe/zowe-explorer-api";
+import type { MessageHandler } from "../MessageHandler";
 
-export const actionsColumn = (newData: Table.ViewOpts, actionsCellRenderer: TableViewProps["actionsCellRenderer"], vscodeApi: any) => ({
+export const actionsColumn = (
+  newData: Table.ViewOpts,
+  actionsCellRenderer: TableViewProps["actionsCellRenderer"],
+  messageHandler: MessageHandler
+) => ({
   ...(newData.columns.find((col) => col.field === "actions") ?? {}),
   // Prevent cells from being selectable
   cellStyle: { border: "none", outline: "none" },
@@ -41,18 +46,15 @@ export const actionsColumn = (newData: Table.ViewOpts, actionsCellRenderer: Tabl
                 key={`${action.command}-row-${params.rowIndex ?? 0}-action-${i}`}
                 appearance={action.type}
                 onClick={(_e: any) =>
-                  vscodeApi.postMessage({
-                    command: action.command,
-                    data: {
-                      rowIndex: params.node.rowIndex,
-                      row: { ...params.data, actions: undefined },
-                      field: params.colDef.field,
-                      cell: params.colDef.valueFormatter
-                        ? params.colDef.valueFormatter({
-                            value: params.data[params.colDef.field],
-                          })
-                        : params.data[params.colDef.field],
-                    },
+                  messageHandler.send(action.command, {
+                    rowIndex: params.node.rowIndex,
+                    row: { ...params.data, actions: undefined },
+                    field: params.colDef.field,
+                    cell: params.colDef.valueFormatter
+                      ? params.colDef.valueFormatter({
+                          value: params.data[params.colDef.field],
+                        })
+                      : params.data[params.colDef.field],
                   })
                 }
                 style={{ marginRight: "0.25em", width: "fit-content" }}

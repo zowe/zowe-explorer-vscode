@@ -5,7 +5,7 @@ import { GridApi } from "ag-grid-community";
 import { FocusableItem, Menu, MenuGroup, MenuItem } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
 import * as l10n from "@vscode/l10n";
-import { messageHandler } from "src/MessageHandler";
+import { messageHandler } from "../MessageHandler";
 
 interface ActionsProps {
   actions: Table.Action[];
@@ -16,7 +16,6 @@ interface ActionsProps {
   columns: string[];
   visibleColumns: string[];
   setVisibleColumns: Dispatch<string[]>;
-  vscodeApi: any;
 }
 
 export const ActionsBar = (props: ActionsProps) => {
@@ -116,15 +115,10 @@ export const ActionsBar = (props: ActionsProps) => {
                   return;
                 }
 
-                props.vscodeApi.postMessage({
-                  command: action.command,
-                  data: {
-                    row: action.callback.typ === "single-row" ? selectedNodes[0].data : undefined,
-                    rows:
-                      action.callback.typ === "multi-row"
-                        ? selectedNodes.reduce((all, row) => ({ ...all, [row.rowIndex!]: row.data }), {})
-                        : undefined,
-                  },
+                messageHandler.send(action.command, {
+                  row: action.callback.typ === "single-row" ? selectedNodes[0].data : undefined,
+                  rows:
+                    action.callback.typ === "multi-row" ? selectedNodes.reduce((all, row) => ({ ...all, [row.rowIndex!]: row.data }), {}) : undefined,
                 });
               }}
             >

@@ -16,7 +16,7 @@ import { CheckboxSelectionCallbackParams, HeaderCheckboxSelectionCallbackParams 
 import { GetLocaleTextParams } from "ag-grid-community";
 import * as l10n from "@vscode/l10n";
 import { TreeCellRenderer, CustomTreeCellRendererParams } from "./treeCellRenderer";
-import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
+import { messageHandler } from "../MessageHandler";
 
 // Helper to generate unique enough IDs for tree nodes
 let treeNodeIdCounter = 0;
@@ -95,7 +95,6 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     selectedRows: [],
     clickedRow: undefined as any,
     colDef: undefined as any,
-    vscodeApi: PersistentVSCodeAPI.getVSCodeAPI(),
   });
 
   // Capture the current state in a ref
@@ -162,7 +161,130 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     // Disable the event listener for the context menu in the active iframe to prevent VS Code from showing its right-click menu.
     window.addEventListener("contextmenu", (e) => e.preventDefault(), true);
 
-    // Set up event listener to handle data changes being sent to the webview.
+    // Set up MessageHandler listeners for handling data changes being sent to the webview.
+    const setupMessageHandlers = async () => {
+      try {
+        // Request localization data
+        const localizationData = await messageHandler.request<{ contents: { [key: string]: string } }>("GET_LOCALIZATION");
+        setLocalizationContents(localizationData.contents);
+        l10n.config({
+          contents: localizationData.contents,
+        });
+      } catch (error) {
+        messageHandler.send("error", "Failed to get localization data: " + error);
+      }
+    };
+
+    const handleDataChanged = (newData: Table.ViewOpts) => {
+      console.log("ondatachanged received at: ", new Date().toLocaleTimeString());
+
+      let displayRows = newData.rows;
+      if (newData.options?.customTreeMode && newData.options?.customTreeColumnField) {
+        treeNodeIdCounter = 0; // Reset counter for each new dataset
+        // Store original data and set initial expansion states for _tree.isExpanded on original data
+        const initializeExpansion = (nodes: Table.RowData[], depth: number = 0, expansionDepthTarget: number): Table.RowData[] => {
+          return nodes.map((node) => {
+            const nodeId = node._tree?.id || generateTreeNodeId(); // Assign ID if not present
+            const hasChildren = node._tree?.hasChildren;
+            const isExpanded = expansionDepthTarget === -1 || depth < expansionDepthTarget;
+            let processedChildren = node.children;
+            if (hasChildren && Array.isArray(node.children)) {
+              processedChildren = initializeExpansion(node.children, depth + 1, expansionDepthTarget);
+            }
+            return {
+              ...node,
+              _tree: {
+                id: nodeId,
+                parentId: node._tree?.parentId,
+                depth: depth,
+                hasChildren: hasChildren,
+                isExpanded: hasChildren && isExpanded,
+              },
+              children: processedChildren,
+            };
+          });
+        };
+        const initialExpansionDepth = newData.options.customTreeInitialExpansionDepth ?? 0;
+        const preparedHierarchicalData = initializeExpansion(newData.rows || [], 0, initialExpansionDepth);
+        setOriginalHierarchicalData(preparedHierarchicalData);
+        displayRows = processTreeData(preparedHierarchicalData, initialExpansionDepth);
+      } else {
+        setOriginalHierarchicalData(undefined); // Clear if not in tree mode
+      }
+
+      let newColumns = newData.columns;
+      if (newData.options?.customTreeMode && newData.options?.customTreeColumnField) {
+        console.log("customTreeMode:", newData.options?.customTreeMode);
+        const treeColumnField = newData.options.customTreeColumnField;
+        newColumns = newData.columns?.map((col) => {
+          if (col.field === treeColumnField) {
+            return {
+              ...col,
+              cellRenderer: TreeCellRenderer,
+              cellRendererParams: {
+                onToggleNode: (nodeIdToToggle: string) => handleToggleNode(nodeIdToToggle),
+              } as CustomTreeCellRendererParams,
+            };
+          }
+          return col;
+        });
+      }
+
+      if (newData.options?.selectEverything) {
+        (newData.options as any).defaultColDef = {
+          headerCheckboxSelection: isFirstColumn,
+          checkboxSelection: isFirstColumn,
+        };
+      }
+      console.log("updating table data...", JSON.stringify(newData));
+      if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
+        // Add an extra column to the end of each row if row actions are present
+        const columns = [...(newColumns ?? []), actionsColumn(newData, actionsCellRenderer, messageHandler)];
+        setVisibleColumns(columns.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field));
+        setTableData({ ...newData, rows: displayRows, columns });
+      } else {
+        setVisibleColumns(newColumns?.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field) ?? []);
+        setTableData({ ...newData, rows: displayRows, columns: newColumns });
+      }
+    };
+
+    // Set up listener for tree children loaded
+    const handleTreeChildrenLoaded = (data: { parentNodeId: string; children: Table.RowData[] }) => {
+      const { parentNodeId, children } = data;
+      if (gridRef.current?.api && children?.length > 0) {
+        // Find the parent node in the grid
+        let parentRowIndex = -1;
+        let parentDepth = 0;
+        gridRef.current.api.forEachNode((node: any) => {
+          if (node.data._tree?.id === parentNodeId) {
+            parentRowIndex = node.rowIndex!;
+            parentDepth = node.data._tree?.depth ?? 0;
+          }
+        });
+
+        if (parentRowIndex !== -1) {
+          // Process children into tree structure
+          const processedChildren = children.map((child: Table.RowData) => ({
+            ...child,
+            _tree: {
+              ...child._tree,
+              parentId: parentNodeId,
+              depth: parentDepth + 1,
+            },
+          }));
+
+          // Add children using applyTransaction
+          gridRef.current.api.applyTransaction({
+            add: processedChildren,
+            addIndex: parentRowIndex + 1,
+          });
+        }
+      }
+    };
+
+    // Set up the message listeners using a more modern approach
+    // Note: We'll use the existing window event listener temporarily until MessageHandler supports
+    // command-based message handling properly
     window.addEventListener("message", (event: any): void => {
       console.trace("New message event received at ", new Date().toLocaleTimeString());
       if (!isSecureOrigin(event.origin)) {
@@ -183,117 +305,18 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
       const response = event.data;
       if (response.command === "ondatachanged") {
-        const newData: Table.ViewOpts = response.data;
-        console.log("ondatachanged received at: ", new Date().toLocaleTimeString());
-
-        let displayRows = newData.rows;
-        if (newData.options?.customTreeMode && newData.options?.customTreeColumnField) {
-          treeNodeIdCounter = 0; // Reset counter for each new dataset
-          // Store original data and set initial expansion states for _tree.isExpanded on original data
-          const initializeExpansion = (nodes: Table.RowData[], depth: number = 0, expansionDepthTarget: number): Table.RowData[] => {
-            return nodes.map((node) => {
-              const nodeId = node._tree?.id || generateTreeNodeId(); // Assign ID if not present
-              const hasChildren = node._tree?.hasChildren;
-              const isExpanded = expansionDepthTarget === -1 || depth < expansionDepthTarget;
-              let processedChildren = node.children;
-              if (hasChildren && Array.isArray(node.children)) {
-                processedChildren = initializeExpansion(node.children, depth + 1, expansionDepthTarget);
-              }
-              return {
-                ...node,
-                _tree: {
-                  id: nodeId,
-                  parentId: node._tree?.parentId,
-                  depth: depth,
-                  hasChildren: hasChildren,
-                  isExpanded: hasChildren && isExpanded,
-                },
-                children: processedChildren,
-              };
-            });
-          };
-          const initialExpansionDepth = newData.options.customTreeInitialExpansionDepth ?? 0;
-          const preparedHierarchicalData = initializeExpansion(newData.rows || [], 0, initialExpansionDepth);
-          setOriginalHierarchicalData(preparedHierarchicalData);
-          displayRows = processTreeData(preparedHierarchicalData, initialExpansionDepth);
-        } else {
-          setOriginalHierarchicalData(undefined); // Clear if not in tree mode
-        }
-
-        let newColumns = newData.columns;
-        if (newData.options?.customTreeMode && newData.options?.customTreeColumnField) {
-          console.log("customTreeMode:", newData.options?.customTreeMode);
-          const treeColumnField = newData.options.customTreeColumnField;
-          newColumns = newData.columns?.map((col) => {
-            if (col.field === treeColumnField) {
-              return {
-                ...col,
-                cellRenderer: TreeCellRenderer,
-                cellRendererParams: {
-                  onToggleNode: (nodeIdToToggle: string) => handleToggleNode(nodeIdToToggle),
-                } as CustomTreeCellRendererParams,
-              };
-            }
-            return col;
-          });
-        }
-
-        if (newData.options?.selectEverything) {
-          (newData.options as any).defaultColDef = {
-            headerCheckboxSelection: isFirstColumn,
-            checkboxSelection: isFirstColumn,
-          };
-        }
-        console.log("updating table data...", JSON.stringify(newData));
-        if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
-          // Add an extra column to the end of each row if row actions are present
-          const columns = [...(newColumns ?? []), actionsColumn(newData, actionsCellRenderer, PersistentVSCodeAPI.getVSCodeAPI())];
-          setVisibleColumns(columns.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field));
-          setTableData({ ...newData, rows: displayRows, columns });
-        } else {
-          setVisibleColumns(newColumns?.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field) ?? []);
-          setTableData({ ...newData, rows: displayRows, columns: newColumns });
-        }
+        handleDataChanged(response.data);
       }
 
       // Handle response with loaded children
       if (response.command === "treeChildrenLoaded") {
-        const { parentNodeId, children } = response.data;
-        if (gridRef.current?.api && children?.length > 0) {
-          // Find the parent node in the grid
-          let parentRowIndex = -1;
-          let parentDepth = 0;
-          gridRef.current.api.forEachNode((node: any) => {
-            if (node.data._tree?.id === parentNodeId) {
-              parentRowIndex = node.rowIndex!;
-              parentDepth = node.data._tree?.depth ?? 0;
-            }
-          });
-
-          if (parentRowIndex !== -1) {
-            // Process children into tree structure
-            const processedChildren = children.map((child: Table.RowData) => ({
-              ...child,
-              _tree: {
-                ...child._tree,
-                parentId: parentNodeId,
-                depth: parentDepth + 1,
-              },
-            }));
-
-            // Add children using applyTransaction
-            gridRef.current.api.applyTransaction({
-              add: processedChildren,
-              addIndex: parentRowIndex + 1,
-            });
-          }
-        }
+        handleTreeChildrenLoaded(response.data);
       }
     });
 
     // Once the listener is in place, send a "ready signal" to the TableView instance to handle new data.
-    PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
-    PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "GET_LOCALIZATION" });
+    messageHandler.send("ready");
+    setupMessageHandlers();
   }, [localization]);
 
   const localizationMap = [
@@ -339,14 +362,9 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         selectionCount={selectionCount}
         visibleColumns={visibleColumns}
         setVisibleColumns={setVisibleColumns}
-        vscodeApi={PersistentVSCodeAPI.getVSCodeAPI()}
       />
       {tableData ? (
-        <AgGridReact
-          {...tableProps(contextMenu, setSelectionCount, tableData, PersistentVSCodeAPI.getVSCodeAPI())}
-          ref={gridRef}
-          getLocaleText={getLocaleText}
-        />
+        <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData, messageHandler)} ref={gridRef} getLocaleText={getLocaleText} />
       ) : null}
     </div>
   );
