@@ -495,8 +495,8 @@ describe("Table.View", () => {
 
             // case 1: Adding a context menu option with conditional to all rows
             const contextOpt = {
-                title: "Add to cart",
-                command: "add-to-cart",
+                title: "Add to favorites",
+                command: "add-to-favorites",
                 callback: {
                     typ: "single-row",
                     fn: (_data) => {},
@@ -505,7 +505,7 @@ describe("Table.View", () => {
             } as Table.ContextMenuOpts;
             await view.addContextOption("all", contextOpt);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
-            expect((view as any).data.contextOpts["all"]).toStrictEqual([{ ...contextOpt, condition: contextOpt.condition?.toString() }]);
+            expect((view as any).data.contextOpts["all"]).toStrictEqual([contextOpt]);
 
             // case 2: Adding a context menu option with conditional to one row
             const singleRowContextOpt = {
@@ -519,9 +519,7 @@ describe("Table.View", () => {
             } as Table.ContextMenuOpts;
             await view.addContextOption(1, singleRowContextOpt);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
-            expect((view as any).data.contextOpts[1]).toStrictEqual([
-                { ...singleRowContextOpt, condition: singleRowContextOpt.condition?.toString() },
-            ]);
+            expect((view as any).data.contextOpts[1]).toStrictEqual([singleRowContextOpt]);
             globalMocks.updateWebviewMock.mockRestore();
         });
 
@@ -533,8 +531,8 @@ describe("Table.View", () => {
 
             // case 1: Adding a context menu option without conditional to all rows
             const contextOpt = {
-                title: "Remove from cart",
-                command: "rm-from-cart",
+                title: "Remove from favorites",
+                command: "rm-from-favorites",
                 callback: {
                     typ: "single-row",
                     fn: (_data) => {},
@@ -542,12 +540,12 @@ describe("Table.View", () => {
             } as Table.ContextMenuOpts;
             await view.addContextOption("all", contextOpt);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
-            expect((view as any).data.contextOpts["all"]).toStrictEqual([{ ...contextOpt, condition: contextOpt.condition?.toString() }]);
+            expect((view as any).data.contextOpts["all"]).toStrictEqual([contextOpt]);
 
             // case 2: Adding a context menu option without conditional to one row
             const singleRowContextOpt = {
-                title: "Add to wishlist",
-                command: "add-to-wishlist",
+                title: "Add to history",
+                command: "add-to-history",
                 callback: {
                     typ: "single-row",
                     fn: (_data) => {},
@@ -555,9 +553,7 @@ describe("Table.View", () => {
             } as Table.ContextMenuOpts;
             await view.addContextOption(1, singleRowContextOpt);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
-            expect((view as any).data.contextOpts[1]).toStrictEqual([
-                { ...singleRowContextOpt, condition: singleRowContextOpt.condition?.toString() },
-            ]);
+            expect((view as any).data.contextOpts[1]).toStrictEqual([singleRowContextOpt]);
             globalMocks.updateWebviewMock.mockRestore();
         });
     });
@@ -571,8 +567,8 @@ describe("Table.View", () => {
 
             // case 1: Adding an action to all rows
             const action = {
-                title: "Add to wishlist",
-                command: "add-to-wishlist",
+                title: "Add to history",
+                command: "add-to-history",
                 callback: {
                     typ: "single-row",
                     fn: (_data) => {},
@@ -581,7 +577,7 @@ describe("Table.View", () => {
             } as Table.ContextMenuOpts;
             await view.addAction("all", action);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
-            expect((view as any).data.actions["all"]).toStrictEqual([{ ...action, condition: action.condition?.toString() }]);
+            expect((view as any).data.actions["all"]).toStrictEqual([action]);
 
             // case 2: Adding an action to one row
             const singleRowAction = {
@@ -595,7 +591,7 @@ describe("Table.View", () => {
             } as Table.ContextMenuOpts;
             await view.addAction(2, singleRowAction);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
-            expect((view as any).data.actions[2]).toStrictEqual([{ ...singleRowAction, condition: singleRowAction.condition?.toString() }]);
+            expect((view as any).data.actions[2]).toStrictEqual([singleRowAction]);
             globalMocks.updateWebviewMock.mockRestore();
         });
 
@@ -607,8 +603,8 @@ describe("Table.View", () => {
 
             // case 1: Adding an action without conditional to all rows
             const action = {
-                title: "Remove from wishlist",
-                command: "rm-from-wishlist",
+                title: "Remove from history",
+                command: "rm-from-history",
                 callback: {
                     typ: "single-row",
                     fn: (_data) => {},
@@ -616,7 +612,7 @@ describe("Table.View", () => {
             } as Table.ContextMenuOpts;
             await view.addAction("all", action);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
-            expect((view as any).data.actions["all"]).toStrictEqual([{ ...action, condition: action.condition?.toString() }]);
+            expect((view as any).data.actions["all"]).toStrictEqual([action]);
 
             // case 2: Adding an action without conditional to one row
             const singleRowAction = {
@@ -629,7 +625,7 @@ describe("Table.View", () => {
             } as Table.ContextMenuOpts;
             await view.addAction(2, singleRowAction);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
-            expect((view as any).data.actions[2]).toStrictEqual([{ ...singleRowAction, condition: singleRowAction.condition?.toString() }]);
+            expect((view as any).data.actions[2]).toStrictEqual([singleRowAction]);
             globalMocks.updateWebviewMock.mockRestore();
         });
     });
@@ -660,6 +656,246 @@ describe("Table.View", () => {
             expect((view as any).data.rows.length).toBe(0);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             globalMocks.updateWebviewMock.mockRestore();
+        });
+    });
+
+    describe("async condition checking", () => {
+        it("handles check-condition-for-action with sync function condition", async () => {
+            const globalMocks = createGlobalMocks();
+            const conditionFn = jest.fn().mockReturnValue(true);
+            const action = {
+                title: "Test Action",
+                command: "test-action",
+                condition: conditionFn,
+                callback: { typ: "single-row", fn: jest.fn() },
+            } as Table.Action;
+
+            const data = {
+                title: "Table w/ conditional actions",
+                actions: { all: [action] },
+                contextOpts: { all: [] },
+                columns: [{ field: "name" }, { field: "value" }],
+                rows: [{ name: "test", value: 123 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "check-condition-for-action",
+                requestId: "test-request-123",
+                data: {
+                    actionId: "test-action",
+                    row: { name: "test", value: 123 },
+                    rowIndex: 0,
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(conditionFn).toHaveBeenCalledWith({ name: "test", value: 123 });
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "condition-for-action-result",
+                requestId: "test-request-123",
+                result: true,
+            });
+        });
+
+        it("handles check-condition-for-action with async function condition", async () => {
+            const globalMocks = createGlobalMocks();
+            const conditionFn = jest.fn().mockResolvedValue(false);
+            const action = {
+                title: "Async Action",
+                command: "async-action",
+                condition: conditionFn,
+                callback: { typ: "single-row", fn: jest.fn() },
+            } as Table.Action;
+
+            const data = {
+                title: "Table w/ async conditional actions",
+                actions: { all: [action] },
+                contextOpts: { all: [] },
+                rows: [{ name: "test", value: 456 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "check-condition-for-action",
+                requestId: "async-test-456",
+                data: {
+                    actionId: "async-action",
+                    row: { name: "test", value: 456 },
+                    rowIndex: 0,
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(conditionFn).toHaveBeenCalledWith({ name: "test", value: 456 });
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "condition-for-action-result",
+                requestId: "async-test-456",
+                result: false,
+            });
+        });
+
+        it("handles check-condition-for-action with string condition", async () => {
+            const globalMocks = createGlobalMocks();
+            const action = {
+                title: "String Condition Action",
+                command: "string-condition",
+                condition: "(data) => data.value > 100",
+                callback: { typ: "single-row", fn: jest.fn() },
+            } as Table.Action;
+
+            const data = {
+                title: "Table w/ string conditional actions",
+                actions: { all: [action] },
+                contextOpts: { all: [] },
+                rows: [{ name: "test", value: 456 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "check-condition-for-action",
+                requestId: "string-test-789",
+                data: {
+                    actionId: "string-condition",
+                    row: { name: "test", value: 456 },
+                    rowIndex: 0,
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "condition-for-action-result",
+                requestId: "string-test-789",
+                result: true,
+            });
+        });
+
+        it("handles check-condition-for-action with context menu option", async () => {
+            const globalMocks = createGlobalMocks();
+            const conditionFn = jest.fn().mockReturnValue(true);
+            const contextOpt = {
+                title: "Context Action",
+                command: "context-action",
+                condition: conditionFn,
+                callback: { typ: "single-row", fn: jest.fn() },
+            } as Table.ContextMenuOption;
+
+            const data = {
+                title: "Table w/ conditional context menu",
+                actions: { all: [] },
+                contextOpts: { all: [contextOpt] },
+                rows: [{ name: "test", value: 789 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "check-condition-for-action",
+                requestId: "context-test-789",
+                data: {
+                    actionId: "context-action",
+                    row: { name: "test", value: 789 },
+                    rowIndex: 0,
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(conditionFn).toHaveBeenCalledWith({ name: "test", value: 789 });
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "condition-for-action-result",
+                requestId: "context-test-789",
+                result: true,
+            });
+        });
+
+        it("handles check-condition-for-action when action not found", async () => {
+            const globalMocks = createGlobalMocks();
+            const data = {
+                title: "Table w/ no actions",
+                actions: { all: [] },
+                contextOpts: { all: [] },
+                rows: [{ name: "test", value: 123 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "check-condition-for-action",
+                requestId: "not-found-test",
+                data: {
+                    actionId: "non-existent-action",
+                    row: { name: "test", value: 123 },
+                    rowIndex: 0,
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "condition-for-action-result",
+                requestId: "not-found-test",
+                result: false,
+            });
+        });
+
+        it("handles check-condition-for-action when condition throws error", async () => {
+            const globalMocks = createGlobalMocks();
+            const conditionFn = jest.fn().mockImplementation(() => {
+                throw new Error("Test condition error");
+            });
+            const action = {
+                title: "Error Action",
+                command: "error-action",
+                condition: conditionFn,
+                callback: { typ: "single-row", fn: jest.fn() },
+            } as Table.Action;
+
+            const data = {
+                title: "Table w/ error conditional actions",
+                actions: { all: [action] },
+                contextOpts: { all: [] },
+                rows: [{ name: "test", value: 123 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "check-condition-for-action",
+                requestId: "error-test",
+                data: {
+                    actionId: "error-action",
+                    row: { name: "test", value: 123 },
+                    rowIndex: 0,
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "condition-for-action-result",
+                requestId: "error-test",
+                result: false,
+                error: "Test condition error",
+            });
         });
     });
 });

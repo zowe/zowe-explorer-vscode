@@ -1,10 +1,9 @@
 import type { Table } from "@zowe/zowe-explorer-api";
 import { useCallback, useRef, useState } from "preact/hooks";
 import { CellContextMenuEvent, ColDef } from "ag-grid-community";
-import { ControlledMenu, MenuItem } from "@szhsin/react-menu";
+import { ControlledMenu } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
-import { wrapFn } from "./types";
-import { messageHandler } from "../MessageHandler";
+import { ContextMenuItem } from "./ContextMenuItem";
 
 type MousePt = { x: number; y: number };
 
@@ -101,33 +100,7 @@ export type ContextMenuElemProps = {
 };
 
 export const ContextMenu = (gridRefs: any, menuItems: Table.ContextMenuOption[]) => {
-  return menuItems
-    ?.filter((item) => {
-      if (item.condition == null) {
-        return true;
-      }
-
-      // Wrap function to properly handle named parameters
-      const cond = new Function(wrapFn(item.condition));
-      // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
-      return cond()(gridRefs.clickedRow);
-    })
-    .map((item, i) => (
-      <MenuItem
-        key={`${item.command}-ctx-menu-${i}`}
-        onClick={(_e: any) => {
-          messageHandler.send(item.command, {
-            rowIndex: gridRefs.rowIndex,
-            row: { ...gridRefs.clickedRow, actions: undefined },
-            field: gridRefs.field,
-            cell: gridRefs.colDef.valueFormatter
-              ? gridRefs.colDef.valueFormatter({ value: gridRefs.clickedRow[gridRefs.field] })
-              : gridRefs.clickedRow[gridRefs.field],
-          });
-        }}
-        style={{ borderBottom: "var(--vscode-menu-border)" }}
-      >
-        {item.title}
-      </MenuItem>
-    ));
+  return menuItems?.map((item, i) => (
+    <ContextMenuItem key={`${item.command}-ctx-menu-${i}`} item={item} gridRefs={gridRefs} keyPrefix={`${item.command}-ctx-menu-${i}`} />
+  ));
 };

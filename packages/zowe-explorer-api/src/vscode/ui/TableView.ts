@@ -69,7 +69,7 @@ export namespace Table {
     export type Callback = SingleRowCallback | MultiRowCallback | CellCallback;
 
     /** Conditional callback function - whether an action or option should be rendered. */
-    export type Conditional = (data: RowData[] | RowData | ContentTypes) => boolean;
+    export type Conditional = ((data: RowData[] | RowData | ContentTypes) => boolean | Promise<boolean>) | string;
 
     // Defines the supported actions and related types.
     export type ActionKind = "primary" | "secondary" | "icon";
@@ -369,12 +369,61 @@ export namespace Table {
                     // Run the condition function for the given row action command
                     {
                         const allActions = Object.values(this.data.actions).flat();
-                        const action = allActions.find((act) => act.command === message.data.actionId);
-                        if (action && action.condition) {
+                        const allContextOpts = Object.values(this.data.contextOpts).flat();
+                        const action = [...allActions, ...allContextOpts].find((act) => act.command === message.data.actionId);
+
+                        try {
+                            let result = false;
+
+                            if (action && action.condition) {
+                                // Determine what data to pass to the condition function based on the callback type
+                                let conditionData: RowData[] | RowData | ContentTypes;
+
+                                // Default to single row data if available
+                                if (message.data.row) {
+                                    conditionData = message.data.row;
+                                } else if (message.data.rows) {
+                                    conditionData = message.data.rows;
+                                } else if (message.data.cell !== undefined) {
+                                    conditionData = message.data.cell;
+                                } else {
+                                    // Fallback to all table data if no specific data provided
+                                    conditionData = this.data.rows;
+                                }
+
+                                // Execute the condition function
+                                let conditionResult: boolean | Promise<boolean>;
+
+                                if (typeof action.condition === "string") {
+                                    // String-based condition - evaluate as JavaScript function
+                                    try {
+                                        const condFn = new Function("data", `return (${action.condition})(data);`);
+                                        conditionResult = condFn(conditionData);
+                                    } catch (error) {
+                                        console.warn(`Failed to evaluate string condition for action ${action.command}:`, error);
+                                        conditionResult = false;
+                                    }
+                                } else {
+                                    // Function-based condition
+                                    conditionResult = action.condition(conditionData);
+                                }
+
+                                // Handle both synchronous and asynchronous condition functions
+                                result = await Promise.resolve(conditionResult);
+                            }
+
                             (this.panel ?? this.view).webview.postMessage({
                                 command: "condition-for-action-result",
                                 requestId: message.requestId,
-                                result: action.condition,
+                                result,
+                            });
+                        } catch (error) {
+                            // If condition evaluation fails, default to false (hide the action)
+                            (this.panel ?? this.view).webview.postMessage({
+                                command: "condition-for-action-result",
+                                requestId: message.requestId,
+                                result: false,
+                                error: error instanceof Error ? error.message : String(error),
                             });
                         }
                     }

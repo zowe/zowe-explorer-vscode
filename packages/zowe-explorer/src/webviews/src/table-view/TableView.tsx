@@ -239,7 +239,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       console.log("updating table data...", JSON.stringify(newData));
       if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
         // Add an extra column to the end of each row if row actions are present
-        const columns = [...(newColumns ?? []), actionsColumn(newData, actionsCellRenderer, messageHandler)];
+        const columns = [...(newColumns ?? []), actionsColumn(newData, actionsCellRenderer)];
         setVisibleColumns(columns.filter((c) => !c.initialHide).map((c) => c.headerName ?? c.field));
         setTableData({ ...newData, rows: displayRows, columns });
       } else {
