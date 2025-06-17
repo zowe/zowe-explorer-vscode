@@ -80,8 +80,6 @@ export const tableProps = (
               // Get the current sort model from the grid
               const sortModel = api.getColumnState().filter((col) => col.sort != null);
 
-              console.log("[postSortRows] Active sort model:", sortModel.map((s) => `${s.colId}:${s.sort}`).join(", "));
-
               // Build a map of parent->children for easier lookups
               const parentChildrenMap = new Map<string, any[]>();
               const childNodes: any[] = [];
@@ -100,8 +98,6 @@ export const tableProps = (
                       parentNodes.push(node);
                   }
               }
-
-              console.log(`[postSortRows] Found ${parentNodes.length} parent nodes and ${childNodes.length} child nodes`);
 
               // Create a sorting function based on the current sort model
               const applyTableSort = (nodes: any[]) => {
@@ -168,12 +164,8 @@ export const tableProps = (
                       // Apply the same sorting logic to children that was applied to parents
                       const sortedChildren = applyTableSort(children);
                       rowNodes.push(...sortedChildren);
-
-                      console.log(`[postSortRows] Sorted ${sortedChildren.length} children under parent: ${parentNode.data.dsname}`);
                   }
               }
-
-              console.log(`[postSortRows] Final row count: ${rowNodes.length}`);
           }
         : undefined,
 });

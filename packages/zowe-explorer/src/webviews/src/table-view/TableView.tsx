@@ -178,7 +178,6 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     };
 
     const handleDataChanged = (newData: Table.ViewOpts) => {
-      console.log("ondatachanged received at: ", new Date().toLocaleTimeString());
 
       let displayRows = newData.rows;
       if (newData.options?.customTreeMode && newData.options?.customTreeColumnField) {

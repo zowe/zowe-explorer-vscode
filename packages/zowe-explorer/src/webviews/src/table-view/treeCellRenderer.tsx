@@ -29,8 +29,6 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
       return;
     }
 
-    console.log("[iconClickHandler] Toggling node:", nodeId, "Current expanded state:", isExpanded);
-
     // Handle the scenario where the user might have collapsed a node that's still loading children
     if (!isExpanded) {
       // Expanding - check if children are already loaded before requesting
@@ -50,10 +48,8 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
 
       if (existingChildren.length > 0) {
         // Children already exist, just update expanded state
-        console.log("[iconClickHandler] Children already loaded, just updating state");
       } else {
         // No children loaded yet - request from backend (lazy loading)
-        console.log("[iconClickHandler] Loading children from backend");
         messageHandler.send("loadTreeChildren", {
           nodeId: nodeId,
           parentRow: data,
