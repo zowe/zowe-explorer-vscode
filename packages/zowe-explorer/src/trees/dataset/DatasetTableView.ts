@@ -503,7 +503,7 @@ export class DatasetTableView {
     private static async openInEditor(this: void, _view: Table.View, rows: Record<number, Table.RowData>): Promise<void> {
         const allRows = Object.values(rows);
         for (const row of allRows) {
-            await commands.executeCommand("vscode.open", Uri.parse(row.uri as string));
+            await commands.executeCommand("vscode.open", Uri.parse(row.uri as string), { preview: false });
         }
     }
 
