@@ -78,6 +78,7 @@ export namespace Table {
         command: string;
         condition?: Conditional;
         type?: ActionKind;
+        noSelectionRequired?: boolean;
         callback: Callback;
     };
     export type ContextMenuOption = Omit<Action, "type"> & { dataType?: CallbackTypes };
@@ -362,7 +363,8 @@ export namespace Table {
             if (!("command" in message)) {
                 return;
             }
-            switch (message.command) {
+            const { command, requestId, payload } = message;
+            switch (command) {
                 // "ontableedited" command: The table's contents were updated by the user from within the webview.
                 // Fires for editable columns only.
                 case "check-condition-for-action":
@@ -370,7 +372,7 @@ export namespace Table {
                     {
                         const allActions = Object.values(this.data.actions).flat();
                         const allContextOpts = Object.values(this.data.contextOpts).flat();
-                        const action = [...allActions, ...allContextOpts].find((act) => act.command === message.data.actionId);
+                        const action = [...allActions, ...allContextOpts].find((act) => act.command === payload.actionId);
 
                         try {
                             let result = false;
@@ -380,12 +382,12 @@ export namespace Table {
                                 let conditionData: RowData[] | RowData | ContentTypes;
 
                                 // Default to single row data if available
-                                if (message.data.row) {
-                                    conditionData = message.data.row;
-                                } else if (message.data.rows) {
-                                    conditionData = message.data.rows;
-                                } else if (message.data.cell !== undefined) {
-                                    conditionData = message.data.cell;
+                                if (payload.row) {
+                                    conditionData = payload.row;
+                                } else if (payload.rows) {
+                                    conditionData = payload.rows;
+                                } else if (payload.cell !== undefined) {
+                                    conditionData = payload.cell;
                                 } else {
                                     // Fallback to all table data if no specific data provided
                                     conditionData = this.data.rows;
@@ -414,26 +416,25 @@ export namespace Table {
 
                             (this.panel ?? this.view).webview.postMessage({
                                 command: "condition-for-action-result",
-                                requestId: message.requestId,
-                                result,
+                                requestId,
+                                payload: result,
                             });
                         } catch (error) {
                             // If condition evaluation fails, default to false (hide the action)
                             (this.panel ?? this.view).webview.postMessage({
                                 command: "condition-for-action-result",
-                                requestId: message.requestId,
-                                result: false,
+                                requestId,
                                 error: error instanceof Error ? error.message : String(error),
                             });
                         }
                     }
                     return;
                 case "ontableedited":
-                    this.onTableDataEditedEmitter.fire(message.data);
+                    this.onTableDataEditedEmitter.fire(payload);
                     return;
                 // "ondisplaychanged" command: The table's layout was updated by the user from within the webview.
                 case "ondisplaychanged":
-                    this.onTableDisplayChangedEmitter.fire(message.data);
+                    this.onTableDisplayChangedEmitter.fire(payload);
                     return;
                 // "ready" command: The table view has attached its message listener and is ready to receive data.
                 case "ready":
@@ -441,21 +442,28 @@ export namespace Table {
                     return;
                 // "copy" command: Copy the data for the row that was right-clicked.
                 case "copy":
-                    await env.clipboard.writeText(JSON.stringify(message.data.row));
+                    await env.clipboard.writeText(JSON.stringify(payload.row));
                     return;
                 case "copy-cell":
-                    await env.clipboard.writeText(message.data.cell);
+                    await env.clipboard.writeText(payload.cell);
                     return;
                 case "GET_LOCALIZATION": {
                     const filePath = vscode.l10n.uri?.fsPath + "";
                     fs.readFile(filePath, "utf8", (err, data) => {
                         if (err) {
                             // File doesn't exist, fallback to English strings
+                            // Still need to notify the webview that no localization data was found
+                            (this.panel ?? this.view).webview.postMessage({
+                                command: "GET_LOCALIZATION",
+                                requestId: message.requestId,
+                            });
                             return;
                         }
+
                         (this.panel ?? this.view).webview.postMessage({
                             command: "GET_LOCALIZATION",
-                            contents: data,
+                            requestId: message.requestId,
+                            payload: data,
                         });
                     });
                     return;
@@ -464,7 +472,7 @@ export namespace Table {
                     break;
             }
 
-            const row: number = message.rowIndex ?? 0;
+            const row: number = payload.rowIndex ?? 0;
             const matchingActionable = [
                 ...(this.data.actions[row] ?? []),
                 ...this.data.actions.all,
@@ -474,13 +482,13 @@ export namespace Table {
             if (matchingActionable != null) {
                 switch (matchingActionable.callback.typ) {
                     case "single-row":
-                        await matchingActionable.callback.fn(this, { index: message.data.rowIndex, row: message.data.row });
+                        await matchingActionable.callback.fn(this, { index: payload.rowIndex, row: payload.row });
                         break;
                     case "multi-row":
-                        await matchingActionable.callback.fn(this, message.data.rows);
+                        await matchingActionable.callback.fn(this, payload.rows);
                         break;
                     case "cell":
-                        await matchingActionable.callback.fn(this, message.data.cell);
+                        await matchingActionable.callback.fn(this, payload.cell);
                         break;
                     // TODO: Support column callbacks? (if there's enough interest)
                     default:
@@ -497,9 +505,35 @@ export namespace Table {
          * @returns Whether the webview received the update that was sent
          */
         private async updateWebview(): Promise<boolean> {
+            // Prepare data to send to the webview, excluding the condition property
+            const webviewData: ViewOpts = {
+                ...this.data,
+                actions: Object.fromEntries(
+                    Object.entries(this.data.actions).map(([key, actions]) => [
+                        key,
+                        actions.map((action) => ({
+                            title: action.title,
+                            command: action.command,
+                            type: action.type,
+                            callback: action.callback,
+                        })),
+                    ])
+                ) as Record<number | "all", Action[]>,
+                contextOpts: Object.fromEntries(
+                    Object.entries(this.data.contextOpts).map(([key, options]) => [
+                        key,
+                        options.map((option) => ({
+                            title: option.title,
+                            command: option.command,
+                            callback: option.callback,
+                        })),
+                    ])
+                ) as any,
+            };
+
             const result = await (this.panel ?? this.view).webview.postMessage({
                 command: "ondatachanged",
-                data: this.data,
+                data: webviewData,
             });
 
             if (result) {
@@ -541,7 +575,7 @@ export namespace Table {
          * Add one or more context menu options to the given row.
          *
          * @param id The row index or column ID where the action should be displayed
-         * @param actions The actions to add to the given row
+         * @param options The context menu options to add to the given row
          * @returns Whether the webview successfully received the new context menu option(s)
          */
         public addContextOption(id: number | "all", ...options: ContextMenuOpts[]): Promise<boolean> {

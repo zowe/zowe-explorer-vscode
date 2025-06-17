@@ -485,13 +485,14 @@ export class DatasetTableView {
                 return dsorg?.startsWith("PO") && !isMember;
             },
         },
-        // goBack: {
-        //     title: l10n.t("Back"),
-        //     type: "primary",
-        //     command: "back",
-        //     callback: { fn: this.goBack.bind(this), typ: "single-row" },
-        //     condition: (elem: { index: number; row: Table.RowData[] }): boolean => this.currentTableType === "members",
-        // },
+        goBack: {
+            title: l10n.t("Back"),
+            type: "primary",
+            command: "back",
+            callback: { fn: this.goBack.bind(this), typ: "multi-row" },
+            condition: () => this.currentTableType === "members",
+            noSelectionRequired: true,
+        },
     };
 
     private static readonly URI_SEGMENTS = {
@@ -533,6 +534,7 @@ export class DatasetTableView {
 
         // Update current state
         this.currentDataSource = membersDataSource;
+        this.currentTableType = "members";
         this.shouldShow = {}; // Reset for members view
 
         // Generate and display the members table (this will create a new table)
@@ -830,7 +832,7 @@ export class DatasetTableView {
                 .addContextOption("all", this.contextOptions.displayInTree)
                 .addRowAction("all", this.rowActions.openInEditor)
                 .addRowAction("all", this.rowActions.focusPDS)
-                //.addRowAction("all", this.rowActions.goBack)
+                .addRowAction("all", this.rowActions.goBack)
                 .build();
 
             this.table.onDisposed((e) => {
@@ -866,7 +868,7 @@ export class DatasetTableView {
         }
         // Handle custom lazy loading of PDS members
         if (message.command === "loadTreeChildren") {
-            const { nodeId } = message.data;
+            const { nodeId } = message.payload;
 
             if (this.currentDataSource.loadChildren) {
                 const memberRows = await this.currentDataSource.loadChildren(nodeId);
@@ -1016,9 +1018,6 @@ export class DatasetTableView {
 
     public dispose(): void {
         this.shouldShow = {};
-        this.currentTableType = null;
-        this.currentDataSource = null;
-        this.previousTableData = null;
         this.table = null;
         this.context = null;
     }

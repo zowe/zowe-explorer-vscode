@@ -165,11 +165,13 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     const setupMessageHandlers = async () => {
       try {
         // Request localization data
-        const localizationData = await messageHandler.request<{ contents: { [key: string]: string } }>("GET_LOCALIZATION");
-        setLocalizationContents(localizationData.contents);
-        l10n.config({
-          contents: localizationData.contents,
-        });
+        const localizationData = await messageHandler.request<Record<string, string>>("GET_LOCALIZATION");
+        if (localizationData) {
+          setLocalizationContents(localizationData);
+          l10n.config({
+            contents: localizationData,
+          });
+        }
       } catch (error) {
         messageHandler.send("error", "Failed to get localization data: " + error);
       }
@@ -236,7 +238,6 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
           checkboxSelection: isFirstColumn,
         };
       }
-      console.log("updating table data...", JSON.stringify(newData));
       if (Object.keys(newData.actions).length > 1 || newData.actions.all?.length > 0) {
         // Add an extra column to the end of each row if row actions are present
         const columns = [...(newColumns ?? []), actionsColumn(newData, actionsCellRenderer)];
@@ -286,21 +287,12 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     // Note: We'll use the existing window event listener temporarily until MessageHandler supports
     // command-based message handling properly
     window.addEventListener("message", (event: any): void => {
-      console.trace("New message event received at ", new Date().toLocaleTimeString());
       if (!isSecureOrigin(event.origin)) {
         return;
       }
 
       if (!("data" in event)) {
         return;
-      }
-
-      if (event.data.command === "GET_LOCALIZATION") {
-        const { contents } = event.data;
-        setLocalizationContents(contents);
-        l10n.config({
-          contents: contents,
-        });
       }
 
       const response = event.data;
@@ -363,9 +355,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         visibleColumns={visibleColumns}
         setVisibleColumns={setVisibleColumns}
       />
-      {tableData ? (
-        <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData, messageHandler)} ref={gridRef} getLocaleText={getLocaleText} />
-      ) : null}
+      {tableData ? <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData)} ref={gridRef} getLocaleText={getLocaleText} /> : null}
     </div>
   );
 };
