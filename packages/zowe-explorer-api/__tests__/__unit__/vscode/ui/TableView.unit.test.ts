@@ -206,7 +206,7 @@ describe("Table.View", () => {
             const view = new Table.View(globalMocks.context as any, { title: "Stable Table of Cables" } as any);
             globalMocks.updateWebviewMock.mockResolvedValueOnce(true);
             const cols = [
-                { field: "apple", valueFormatter: (data: { value: Table.ContentTypes }) => `${data.value.toString()} apples` },
+                { field: "apple", valueFormatter: (data: { value: Table.ContentTypes }) => `${data.value?.toString()} apples` },
                 { field: "banana", comparator: (_valueA, _valueB, _nodeA, _nodeB, _isDescending) => -1, colSpan: (_params) => 2 },
                 { field: "orange", rowSpan: (_params) => 2 },
             ];
@@ -716,6 +716,7 @@ describe("Table.View", () => {
                 title: "Table w/ async conditional actions",
                 actions: { all: [action] },
                 contextOpts: { all: [] },
+                columns: [{ field: "name" }, { field: "value" }],
                 rows: [{ name: "test", value: 456 }],
             };
             const view = new Table.View(globalMocks.context as any, false, data);
@@ -756,6 +757,7 @@ describe("Table.View", () => {
                 title: "Table w/ string conditional actions",
                 actions: { all: [action] },
                 contextOpts: { all: [] },
+                columns: [{ field: "name" }, { field: "value" }],
                 rows: [{ name: "test", value: 456 }],
             };
             const view = new Table.View(globalMocks.context as any, false, data);
@@ -796,6 +798,7 @@ describe("Table.View", () => {
                 title: "Table w/ conditional context menu",
                 actions: { all: [] },
                 contextOpts: { all: [contextOpt] },
+                columns: [{ field: "name" }, { field: "value" }],
                 rows: [{ name: "test", value: 789 }],
             };
             const view = new Table.View(globalMocks.context as any, false, data);
@@ -829,6 +832,7 @@ describe("Table.View", () => {
                 title: "Table w/ no actions",
                 actions: { all: [] },
                 contextOpts: { all: [] },
+                columns: [{ field: "name" }, { field: "value" }],
                 rows: [{ name: "test", value: 123 }],
             };
             const view = new Table.View(globalMocks.context as any, false, data);
@@ -871,6 +875,7 @@ describe("Table.View", () => {
                 title: "Table w/ error conditional actions",
                 actions: { all: [action] },
                 contextOpts: { all: [] },
+                columns: [{ field: "name" }, { field: "value" }],
                 rows: [{ name: "test", value: 123 }],
             };
             const view = new Table.View(globalMocks.context as any, false, data);

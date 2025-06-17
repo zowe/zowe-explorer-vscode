@@ -5,6 +5,7 @@ import { GridApi } from "ag-grid-community";
 import { FocusableItem, Menu, MenuGroup, MenuItem } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
 import * as l10n from "@vscode/l10n";
+import { evaluateActionState, sendActionCommand, ActionEvaluationContext } from "./ActionUtils";
 import { messageHandler } from "../MessageHandler";
 
 interface ActionsProps {
@@ -20,36 +21,36 @@ interface ActionsProps {
 
 export const ActionsBar = (props: ActionsProps) => {
   const [searchFilter, setSearchFilter] = useState<string>("");
-  const [actionsEnabled, setActionsEnabled] = useState<boolean[]>(props.actions.map(() => true));
+  const [visibleActions, setVisibleActions] = useState<Table.Action[]>([]);
+  const [actionsEnabled, setActionsEnabled] = useState<boolean[]>([]);
 
   useEffect(() => {
-    const checkActions = async () => {
+    const checkActionsVisibilityAndState = async () => {
       const selectedNodes = props.gridRef.current?.api?.getSelectedNodes();
       const selectedRows = selectedNodes?.map((n: any) => n.data) ?? [];
-      const newActionsEnabled = await Promise.all(
-        props.actions.map(async (action) => {
-          const val = action.callback.typ === "multi-row" ? selectedRows : { index: selectedNodes?.[0]?.rowIndex, row: selectedRows?.[0] };
 
-          let shouldEnable = false;
-          switch (action.callback.typ) {
-            case "single-row":
-              shouldEnable = action.noSelectionRequired || (props.selectionCount !== 0 && props.selectionCount === 1);
-              break;
-            case "multi-row":
-              shouldEnable = action.noSelectionRequired || (props.selectionCount !== 0 && props.selectionCount >= 1);
-              break;
-            case "cell":
-              return false;
-          }
+      const visibleActionsList: Table.Action[] = [];
+      const enabledStates: boolean[] = [];
 
-          shouldEnable &&= await messageHandler.request<boolean>("check-condition-for-action", { actionId: action.command, row: val });
-          return shouldEnable;
-        })
-      );
-      setActionsEnabled(newActionsEnabled);
+      const context: ActionEvaluationContext = {
+        selectedNodes,
+        selectedRows,
+      };
+
+      for (const action of props.actions) {
+        const { isVisible, isEnabled } = await evaluateActionState(action, context, props.selectionCount);
+
+        if (isVisible) {
+          visibleActionsList.push(action);
+          enabledStates.push(isEnabled);
+        }
+      }
+
+      setVisibleActions(visibleActionsList);
+      setActionsEnabled(enabledStates);
     };
 
-    checkActions();
+    checkActionsVisibilityAndState();
   }, [props.actions, props.gridRef, props.selectionCount, props.itemCount]);
 
   const columnDropdownItems = (visibleColumns: string[]) =>
@@ -114,7 +115,7 @@ export const ActionsBar = (props: ActionsProps) => {
           {props.selectionCount === 0 ? l10n.t("No") : props.selectionCount}
           &nbsp;{props.selectionCount > 1 || props.selectionCount === 0 ? l10n.t("items") : l10n.t("item")} {l10n.t("selected")}
         </p>
-        {props.actions.map((action, i) => {
+        {visibleActions.map((action, i) => {
           return (
             <VSCodeButton
               disabled={!actionsEnabled[i]}
@@ -127,11 +128,10 @@ export const ActionsBar = (props: ActionsProps) => {
                   return;
                 }
 
-                messageHandler.send(action.command, {
-                  row: action.callback.typ === "single-row" ? selectedNodes[0].data : undefined,
-                  rows:
-                    action.callback.typ === "multi-row" ? selectedNodes.reduce((all, row) => ({ ...all, [row.rowIndex!]: row.data }), {}) : undefined,
-                });
+                const context: ActionEvaluationContext = {
+                  selectedNodes,
+                };
+                sendActionCommand(action, context);
               }}
             >
               {action.title}

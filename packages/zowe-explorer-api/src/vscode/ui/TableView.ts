@@ -76,7 +76,10 @@ export namespace Table {
     export type Action = {
         title: string;
         command: string;
+        /** A function that's invoked with row data. It should return `true` if the action can be used on the given row(s). */
         condition?: Conditional;
+        /** A function that's invoked with row data. It should return `true` if the action must be hidden from the UI. */
+        hideCondition?: Conditional;
         type?: ActionKind;
         noSelectionRequired?: boolean;
         callback: Callback;
@@ -87,7 +90,10 @@ export namespace Table {
 
     /** @deprecated Use `Action` type instead. */
     export type ActionOpts = Action;
-    export type ContextMenuOpts = Omit<ContextMenuOption, "condition"> & { condition?: Conditional };
+    export type ContextMenuOpts = Omit<ContextMenuOption, "condition" | "hideCondition"> & {
+        condition?: Conditional;
+        hideCondition?: Conditional;
+    };
 
     // -- Misc types --
     /** Value formatter callback. Expects the exact display value to be returned. */
@@ -353,6 +359,45 @@ export namespace Table {
             }
         }
 
+        private async evaluateCondition(
+            condition: Conditional,
+            conditionData: RowData[] | RowData | ContentTypes,
+            actionCommand: string,
+            defaultValue: boolean
+        ): Promise<boolean> {
+            try {
+                let conditionResult: boolean | Promise<boolean>;
+
+                if (typeof condition === "string") {
+                    try {
+                        const condFn = new Function("data", `return (${condition})(data);`);
+                        conditionResult = condFn(conditionData);
+                    } catch (error) {
+                        console.warn(`Failed to evaluate string condition for action ${actionCommand}:`, error);
+                        return defaultValue;
+                    }
+                } else {
+                    conditionResult = condition(conditionData);
+                }
+
+                return await Promise.resolve(conditionResult);
+            } catch (error) {
+                console.warn(`Failed to evaluate condition for action ${actionCommand}:`, error);
+                return defaultValue;
+            }
+        }
+
+        private getConditionData(payload: any): RowData[] | RowData | ContentTypes {
+            if (payload.row) {
+                return payload.row;
+            } else if (payload.rows) {
+                return payload.rows;
+            } else if (payload.cell !== undefined) {
+                return payload.cell;
+            }
+            return this.data.rows;
+        }
+
         /**
          * (Receiver) message handler for the table view.
          * Used to dispatch client-side updates of the table to subscribers when the table's display has changed.
@@ -365,70 +410,50 @@ export namespace Table {
             }
             const { command, requestId, payload } = message;
             switch (command) {
-                // "ontableedited" command: The table's contents were updated by the user from within the webview.
-                // Fires for editable columns only.
+                // "check-condition-for-action" command: Check if the given action ID (command) should be usable.
                 case "check-condition-for-action":
-                    // Run the condition function for the given row action command
                     {
                         const allActions = Object.values(this.data.actions).flat();
                         const allContextOpts = Object.values(this.data.contextOpts).flat();
                         const action = [...allActions, ...allContextOpts].find((act) => act.command === payload.actionId);
 
-                        try {
-                            let result = false;
-
-                            if (action && action.condition) {
-                                // Determine what data to pass to the condition function based on the callback type
-                                let conditionData: RowData[] | RowData | ContentTypes;
-
-                                // Default to single row data if available
-                                if (payload.row) {
-                                    conditionData = payload.row;
-                                } else if (payload.rows) {
-                                    conditionData = payload.rows;
-                                } else if (payload.cell !== undefined) {
-                                    conditionData = payload.cell;
-                                } else {
-                                    // Fallback to all table data if no specific data provided
-                                    conditionData = this.data.rows;
-                                }
-
-                                // Execute the condition function
-                                let conditionResult: boolean | Promise<boolean>;
-
-                                if (typeof action.condition === "string") {
-                                    // String-based condition - evaluate as JavaScript function
-                                    try {
-                                        const condFn = new Function("data", `return (${action.condition})(data);`);
-                                        conditionResult = condFn(conditionData);
-                                    } catch (error) {
-                                        console.warn(`Failed to evaluate string condition for action ${action.command}:`, error);
-                                        conditionResult = false;
-                                    }
-                                } else {
-                                    // Function-based condition
-                                    conditionResult = action.condition(conditionData);
-                                }
-
-                                // Handle both synchronous and asynchronous condition functions
-                                result = await Promise.resolve(conditionResult);
-                            }
-
-                            (this.panel ?? this.view).webview.postMessage({
-                                command: "condition-for-action-result",
-                                requestId,
-                                payload: result,
-                            });
-                        } catch (error) {
-                            // If condition evaluation fails, default to false (hide the action)
-                            (this.panel ?? this.view).webview.postMessage({
-                                command: "condition-for-action-result",
-                                requestId,
-                                error: error instanceof Error ? error.message : String(error),
-                            });
+                        let result = false;
+                        if (action?.condition) {
+                            const conditionData = this.getConditionData(payload);
+                            result = await this.evaluateCondition(action.condition, conditionData, action.command, false);
                         }
+
+                        (this.panel ?? this.view).webview.postMessage({
+                            command: "condition-for-action-result",
+                            requestId,
+                            payload: result,
+                        });
                     }
                     return;
+                // "check-hide-condition-for-action" command: Check if the given action ID (command) should be hidden.
+                case "check-hide-condition-for-action":
+                    {
+                        const allActions = Object.values(this.data.actions).flat();
+                        const allContextOpts = Object.values(this.data.contextOpts).flat();
+                        const action = [...allActions, ...allContextOpts].find((act) => act.command === payload.actionId);
+
+                        // Default: without any hide condition or in the event of an error, it should not hide the action
+                        let result = false;
+                        if (action?.hideCondition) {
+                            const conditionData = this.getConditionData(payload);
+                            const shouldHide = await this.evaluateCondition(action.hideCondition, conditionData, action.command, false);
+                            result = shouldHide;
+                        }
+
+                        (this.panel ?? this.view).webview.postMessage({
+                            command: "hide-condition-for-action-result",
+                            requestId,
+                            payload: result,
+                        });
+                    }
+                    return;
+                // "ontableedited" command: The table's contents were updated by the user from within the webview.
+                // Fires for editable columns only.
                 case "ontableedited":
                     this.onTableDataEditedEmitter.fire(payload);
                     return;
@@ -505,7 +530,7 @@ export namespace Table {
          * @returns Whether the webview received the update that was sent
          */
         private async updateWebview(): Promise<boolean> {
-            // Prepare data to send to the webview, excluding the condition property
+            // Prepare data to send to the webview, excluding the condition property as it cannot always be serialized/passable
             const webviewData: ViewOpts = {
                 ...this.data,
                 actions: Object.fromEntries(
@@ -515,6 +540,7 @@ export namespace Table {
                             title: action.title,
                             command: action.command,
                             type: action.type,
+                            noSelectionRequired: action.noSelectionRequired,
                             callback: action.callback,
                         })),
                     ])
@@ -525,6 +551,7 @@ export namespace Table {
                         options.map((option) => ({
                             title: option.title,
                             command: option.command,
+                            dataType: option.dataType,
                             callback: option.callback,
                         })),
                     ])

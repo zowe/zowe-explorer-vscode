@@ -490,7 +490,7 @@ export class DatasetTableView {
             type: "primary",
             command: "back",
             callback: { fn: this.goBack.bind(this), typ: "multi-row" },
-            condition: () => this.currentTableType === "members",
+            hideCondition: () => this.currentTableType !== "members",
             noSelectionRequired: true,
         },
     };
