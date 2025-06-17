@@ -18,6 +18,7 @@ import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 
 const testProfile = createIProfile();
 
@@ -77,9 +78,10 @@ describe("UssFSProvider", () => {
         mockedProperty = new MockedProperty(Profiles, "getInstance", {
             value: jest.fn().mockReturnValue({
                 loadNamedProfile: jest.fn().mockReturnValue(testProfile),
-                allProfiles: [],
+                getProfileFromConfig: jest.fn(),
             } as any),
         });
+        jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
     });
 
     afterAll(() => {
@@ -696,15 +698,9 @@ describe("UssFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - existing promise", async () => {
-            const mockAllProfiles = [
-                { name: "sestest", type: "ssh" },
-                { name: "profile1", type: "zosmf" },
-                { name: "profile2", type: "zosmf" },
-            ];
-
             // Create a mock instance of Profiles
             const mockProfilesInstance = {
-                allProfiles: mockAllProfiles,
+                getProfileFromConfig: jest.fn().mockResolvedValueOnce({ profName: testProfile.name, profType: testProfile.type }),
             };
 
             // Mock Profiles.getInstance to return the mock instance
@@ -718,7 +714,7 @@ describe("UssFSProvider", () => {
                 }),
             };
 
-            Profiles.extenderTypeReady.set(testProfile.name, profilePromise);
+            (ProfilesUtils as any).extenderTypeReady.set(testProfile.type, profilePromise);
 
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
             lookupAsFileMock.mockReturnValue(testEntries.file);
@@ -745,16 +741,11 @@ describe("UssFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - no existing promise", async () => {
-            jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(undefined);
-            const mockAllProfiles = [
-                { name: "sestest", type: "ssh" },
-                { name: "profile1", type: "zosmf" },
-                { name: "profile2", type: "zosmf" },
-            ];
+            jest.spyOn((ProfilesUtils as any).extenderTypeReady, "get").mockReturnValueOnce(undefined);
 
             // Create a mock instance of Profiles
             const mockProfilesInstance = {
-                allProfiles: mockAllProfiles,
+                getProfileFromConfig: jest.fn().mockResolvedValueOnce({ profName: testProfile.name, profType: testProfile.type }),
             };
 
             // Mock Profiles.getInstance to return the mock instance
@@ -767,7 +758,7 @@ describe("UssFSProvider", () => {
                     setTimeout(resolve, 50);
                 }),
             };
-            jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
+            jest.spyOn((ProfilesUtils as any).extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
             lookupAsFileMock.mockReturnValue(testEntries.file);
 
@@ -1661,7 +1652,7 @@ describe("UssFSProvider", () => {
                         setTimeout(resolve, 50);
                     }),
                 };
-                jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
+                jest.spyOn((ProfilesUtils as any).extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
 
                 isProfileLockedMock.mockReturnValueOnce(false);
                 const ussApiMock = {

@@ -27,7 +27,6 @@ import {
     IRegisterClient,
     Types,
     AuthHandler,
-    DeferredPromise,
 } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./SettingsConfig";
 import { Constants } from "./Constants";
@@ -1210,21 +1209,5 @@ export class Profiles extends ProfilesCache {
             description: vscode.l10n.t("Apply to current tree selected"),
         };
         return [qpItemAll, qpItemCurrent];
-    }
-
-    public static extenderTypeReady = new Map();
-
-    public resolveTypePromise(extenderType: string): void {
-        const profInfo = Profiles.getInstance();
-        const profilesWithExtenderType = profInfo.allProfiles.filter((profile) => profile.type === extenderType);
-        for (const profile of profilesWithExtenderType) {
-            if (Profiles.extenderTypeReady.has(profile.name)) {
-                Profiles.extenderTypeReady.get(profile.name).resolve();
-            } else {
-                // Prevent deadlocks by setting a resolved promise to avoid setting a new promise
-                Profiles.extenderTypeReady.set(profile.name, new DeferredPromise());
-                Profiles.extenderTypeReady.get(profile.name).resolve();
-            }
-        }
     }
 }

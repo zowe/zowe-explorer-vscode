@@ -32,6 +32,7 @@ import { Profiles } from "../../../../src/configuration/Profiles";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import * as path from "path";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 const dayjs = require("dayjs");
 
 const testProfile = createIProfile();
@@ -83,9 +84,10 @@ describe("DatasetFSProvider", () => {
         mockedProperty = new MockedProperty(Profiles, "getInstance", {
             value: jest.fn().mockReturnValue({
                 loadNamedProfile: jest.fn().mockReturnValue(testProfile),
-                allProfiles: [],
+                getProfileFromConfig: jest.fn(),
             } as any),
         });
+        jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
     });
 
     afterAll(() => {
@@ -457,15 +459,9 @@ describe("DatasetFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - existing promise", async () => {
-            const mockAllProfiles = [
-                { name: "sestest", type: "ssh" },
-                { name: "profile1", type: "zosmf" },
-                { name: "profile2", type: "zosmf" },
-            ];
-
             // Create a mock instance of Profiles
             const mockProfilesInstance = {
-                allProfiles: mockAllProfiles,
+                getProfileFromConfig: jest.fn().mockResolvedValueOnce({ profName: testProfile.name, profType: testProfile.type }),
             };
 
             // Mock Profiles.getInstance to return the mock instance
@@ -479,7 +475,7 @@ describe("DatasetFSProvider", () => {
                 }),
             };
 
-            Profiles.extenderTypeReady.set(testProfile.name, profilePromise);
+            (ProfilesUtils as any).extenderTypeReady.set(testProfile.type, profilePromise);
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce({
                 ...testEntries.ps,
                 wasAccessed: true,
@@ -498,16 +494,11 @@ describe("DatasetFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - no existing promise", async () => {
-            jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(undefined);
-            const mockAllProfiles = [
-                { name: "sestest", type: "ssh" },
-                { name: "profile1", type: "zosmf" },
-                { name: "profile2", type: "zosmf" },
-            ];
+            jest.spyOn((ProfilesUtils as any).extenderTypeReady, "get").mockReturnValueOnce(undefined);
 
             // Create a mock instance of Profiles
             const mockProfilesInstance = {
-                allProfiles: mockAllProfiles,
+                getProfileFromConfig: jest.fn().mockResolvedValueOnce({ profName: testProfile.name, profType: testProfile.type }),
             };
 
             // Mock Profiles.getInstance to return the mock instance
@@ -520,7 +511,7 @@ describe("DatasetFSProvider", () => {
                     setTimeout(resolve, 50);
                 }),
             };
-            jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
+            jest.spyOn((ProfilesUtils as any).extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce({
                 ...testEntries.ps,
                 wasAccessed: true,

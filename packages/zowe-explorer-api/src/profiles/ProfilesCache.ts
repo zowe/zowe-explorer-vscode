@@ -97,13 +97,15 @@ export class ProfilesCache {
      *
      * @returns {IProfileLoaded}
      */
-    public loadNamedProfile(name: string, type?: string): imperative.IProfileLoaded {
+    public loadNamedProfile(name: string, type?: string, optional = false): imperative.IProfileLoaded {
         for (const profile of this.allProfiles) {
             if (profile.name === name && (!type || profile.type === type)) {
                 return profile;
             }
         }
-        throw new Error(`Zowe Explorer Profiles Cache error: Could not find profile named: ${name}.`);
+        if (!optional) {
+            throw new Error(`Zowe Explorer Profiles Cache error: Could not find profile named: ${name}.`);
+        }
     }
 
     /**

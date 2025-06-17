@@ -1419,4 +1419,18 @@ describe("ProfilesUtils unit tests", () => {
             expect(disableCredMgmtSpy).toHaveBeenCalled();
         });
     });
+
+    describe("Profiles unit tests - function resolveTypePromise", () => {
+        it("should resolve deferred promise for matching profile type", () => {
+            const mockResolve = jest.spyOn(imperative.DeferredPromise.prototype, "resolve").mockReturnValueOnce();
+            (ProfilesUtils as any).resolveTypePromise("zftp");
+            expect(mockResolve).toHaveBeenCalledTimes(1);
+        });
+        it("should resolve an existing promise without setting it", () => {
+            const mockResolve = jest.fn();
+            (ProfilesUtils as any).extenderTypeReady.set("zftp", { resolve: mockResolve });
+            (ProfilesUtils as any).resolveTypePromise("zftp");
+            expect(mockResolve).toHaveBeenCalledTimes(1);
+        });
+    });
 });
