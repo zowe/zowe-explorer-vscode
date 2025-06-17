@@ -12,7 +12,7 @@
 import type { Table } from "@zowe/zowe-explorer-api";
 import { AgGridReactProps } from "ag-grid-react";
 import { JSXInternal } from "preact/src/jsx";
-import type { MessageHandler } from "../MessageHandler";
+import { messageHandler } from "../MessageHandler";
 
 export type ContextMenuState = {
     open: boolean;
@@ -33,8 +33,7 @@ export type TableViewProps = {
 export const tableProps = (
     contextMenu: ContextMenuState,
     setSelectionCount: React.Dispatch<number>,
-    tableData: Table.ViewOpts,
-    messageHandler: MessageHandler
+    tableData: Table.ViewOpts
 ): Partial<AgGridReactProps> => ({
     enableCellTextSelection: true,
     ensureDomOrder: true,

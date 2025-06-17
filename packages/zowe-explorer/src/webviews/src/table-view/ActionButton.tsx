@@ -81,7 +81,7 @@ export const ActionButton = ({ action, params, keyPrefix }: ActionButtonProps) =
         opacity: isEvaluating ? 0.6 : 1,
       }}
     >
-      {isEvaluating ? "..." : action.title}
+      {action.title}
     </VSCodeButton>
   );
 };
