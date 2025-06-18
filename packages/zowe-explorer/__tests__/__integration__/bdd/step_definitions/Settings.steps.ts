@@ -10,6 +10,7 @@
  */
 
 import { Then, When } from "@cucumber/cucumber";
+import { SettingsEditor } from "wdio-vscode-service";
 
 //
 // Scenario: User can locate Zowe Explorer settings
@@ -20,6 +21,19 @@ When("a user navigates to VS Code Settings", async function () {
     await this.settingsEditor.wait();
 });
 Then("the user can access the Zowe Explorer settings section", async function () {
-    const zeSettings = await this.settingsEditor.findSetting("Secure Credentials Enabled", "Zowe", "Security");
-    await expect(zeSettings).toBeDefined();
+    const settingsEditor = (await this.settingsEditor) as SettingsEditor;
+    const settingsTableOfContents = await (await settingsEditor.elem).$("div[aria-label='Settings'][role='navigation']");
+
+    const extensionsGroup = await settingsTableOfContents.$("div[aria-label='Extensions, group']");
+    await extensionsGroup.click();
+
+    const zeGroup = await settingsTableOfContents.$(
+        ".monaco-list > .monaco-scrollable-element > .monaco-list-rows > div[aria-label='Zowe Explorer, group']"
+    );
+    await zeGroup.click();
+
+    const monacoList = await $(".settings-tree-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows");
+    await expect(monacoList).toExist();
+    const zeHeader = await monacoList.$("div[aria-label='Zowe Explorer']");
+    await expect(zeHeader).toExist();
 });
