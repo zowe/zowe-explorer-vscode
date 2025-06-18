@@ -417,7 +417,7 @@ export namespace Table {
                         const allContextOpts = Object.values(this.data.contextOpts).flat();
                         const action = [...allActions, ...allContextOpts].find((act) => act.command === payload.actionId);
 
-                        let result = false;
+                        let result = true;
                         if (action?.condition) {
                             const conditionData = this.getConditionData(payload);
                             result = await this.evaluateCondition(action.condition, conditionData, action.command, false);

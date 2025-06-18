@@ -217,17 +217,7 @@ function buildMemberInfo(member: any, parentUri: string, profileName?: string): 
         }
     }
 
-    // Extract dataset name from parentUri
-    let datasetName: string;
-    if (profileName) {
-        // For PatternDataSource: parentUri is the simple dataset name
-        datasetName = parentUri;
-    } else {
-        // For PDSMembersDataSource: parentUri might be a full URI, extract dataset name
-        datasetName = parentUri.includes("/") ? parentUri.split("/").pop() : parentUri;
-    }
-
-    const memberUri = profileName ? `zowe-ds:/${profileName}/${datasetName}/${member.member as string}` : `${parentUri}/${member.member as string}`;
+    const memberUri = `${parentUri}/${member.member as string}`;
 
     return {
         name: member.member,
@@ -467,8 +457,8 @@ export class DatasetTableView {
                     const hasTreeData = (r as any)._tree as Table.TreeNodeData;
                     const isMember = hasTreeData?.parentId != null;
 
-                    // Allow opening for PS data sets or PDS members
-                    return dsorg?.startsWith("PS") || isMember;
+                    // Allow opening for PS data sets or PDS members, whether in focused mode or as tree view
+                    return this.currentTableType === "members" || dsorg?.startsWith("PS") || isMember;
                 }),
         },
         focusPDS: {
@@ -477,7 +467,7 @@ export class DatasetTableView {
             type: "secondary",
             callback: { fn: this.focusOnPDS.bind(this), typ: "single-row" },
             condition: (elem: { index: number; row: Table.RowData[] }): boolean => {
-                const dsorg = elem.row["dsorg"] as string;
+                const dsorg = elem.row?.["dsorg"] as string;
                 const hasTreeData = (elem.row as any)._tree as Table.TreeNodeData;
                 const isMember = hasTreeData?.parentId != null;
 
@@ -551,6 +541,7 @@ export class DatasetTableView {
             this.currentDataSource = this.previousTableData.dataSource;
             this.currentTableType = this.previousTableData.tableType;
             this.shouldShow = this.previousTableData.shouldShow;
+
             this.table = this.previousTableData.table;
 
             // Clear navigation state
@@ -1018,7 +1009,6 @@ export class DatasetTableView {
 
     public dispose(): void {
         this.shouldShow = {};
-        this.table = null;
         this.context = null;
     }
 }

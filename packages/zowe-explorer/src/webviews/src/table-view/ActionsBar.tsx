@@ -6,7 +6,6 @@ import { FocusableItem, Menu, MenuGroup, MenuItem } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
 import * as l10n from "@vscode/l10n";
 import { evaluateActionState, sendActionCommand, ActionEvaluationContext } from "./ActionUtils";
-import { messageHandler } from "../MessageHandler";
 
 interface ActionsProps {
   actions: Table.Action[];
@@ -38,12 +37,12 @@ export const ActionsBar = (props: ActionsProps) => {
       };
 
       for (const action of props.actions) {
-        const { isVisible, isEnabled } = await evaluateActionState(action, context, props.selectionCount);
+        const { shouldShow, isEnabled } = await evaluateActionState(action, context, props.selectionCount);
 
-        if (isVisible) {
+        if (shouldShow) {
           visibleActionsList.push(action);
-          enabledStates.push(isEnabled);
         }
+        enabledStates.push(isEnabled);
       }
 
       setVisibleActions(visibleActionsList);

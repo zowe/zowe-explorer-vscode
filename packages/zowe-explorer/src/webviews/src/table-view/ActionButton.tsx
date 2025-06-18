@@ -24,8 +24,8 @@ export const ActionButton = ({ action, params, keyPrefix }: ActionButtonProps) =
           rowIndex: params.node.rowIndex,
         };
 
-        const { isVisible, isEnabled } = await evaluateActionState(action, context);
-        setIsVisible(isVisible);
+        const { shouldShow, isEnabled } = await evaluateActionState(action, context);
+        setIsVisible(shouldShow);
         setIsEnabled(isEnabled);
       } finally {
         setIsEvaluating(false);

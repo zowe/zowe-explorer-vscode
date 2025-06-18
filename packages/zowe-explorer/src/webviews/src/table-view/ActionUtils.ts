@@ -1,3 +1,14 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
 import type { Table } from "@zowe/zowe-explorer-api";
 import { messageHandler } from "../MessageHandler";
 
@@ -19,7 +30,7 @@ export interface ActionEvaluationContext {
  * Result of action evaluation
  */
 export interface ActionEvaluationResult {
-    isVisible: boolean;
+    shouldShow: boolean;
     isEnabled: boolean;
 }
 
@@ -35,34 +46,29 @@ export async function evaluateActionState(
     context: ActionEvaluationContext,
     selectionCount: number = 0
 ): Promise<ActionEvaluationResult> {
-    let isVisible = true;
+    let shouldShow = true;
     let isEnabled = true;
 
-    // Evaluate hide condition
-    if (action.hideCondition) {
-        try {
-            const evaluationData = prepareEvaluationData(action, context);
-            const shouldHide = await messageHandler.request<boolean>("check-hide-condition-for-action", {
-                actionId: action.command,
-                row: evaluationData.row,
-                rowIndex: evaluationData.rowIndex,
-            });
-            isVisible = !shouldHide;
-        } catch (error) {
-            console.warn(`Failed to evaluate hide condition for action ${action.command}:`, error);
-            isVisible = false;
-        }
+    try {
+        const evaluationData = prepareEvaluationData(action, context);
+        shouldShow = !(await messageHandler.request<boolean>("check-hide-condition-for-action", {
+            actionId: action.command,
+            row: evaluationData.row,
+            rowIndex: evaluationData.rowIndex,
+        }));
+    } catch (error) {
+        console.warn(`Failed to evaluate hide condition for action ${action.command}:`, error);
     }
 
     // Only evaluate enabled condition if action is visible
-    if (isVisible) {
+    if (shouldShow) {
         // First check selection requirements
         switch (action.callback.typ) {
             case "single-row":
                 isEnabled = action.noSelectionRequired || (selectionCount !== 0 && selectionCount === 1);
                 break;
             case "multi-row":
-                isEnabled = action.noSelectionRequired || (selectionCount !== 0 && selectionCount >= 1);
+                isEnabled = action.noSelectionRequired || selectionCount > 0;
                 break;
             case "cell":
                 isEnabled = false;
@@ -72,7 +78,7 @@ export async function evaluateActionState(
         }
 
         // Then check custom condition if enabled and condition exists
-        if (isEnabled && action.condition) {
+        if (isEnabled) {
             try {
                 const evaluationData = prepareEvaluationData(action, context);
                 const conditionResult = await messageHandler.request<boolean>("check-condition-for-action", {
@@ -88,7 +94,7 @@ export async function evaluateActionState(
         }
     }
 
-    return { isVisible, isEnabled };
+    return { shouldShow, isEnabled };
 }
 
 /**
