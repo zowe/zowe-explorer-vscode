@@ -26,9 +26,20 @@ Then("the user can access the Zowe Explorer settings section", async function ()
 
     const extensionsGroup = await settingsTableOfContents.$("div[aria-label='Extensions, group']");
     await extensionsGroup.click();
+    // Scroll to the end of the list to find Zowe Explorer group in Extensions section
+    await browser.keys("End");
 
-    const zeGroup = await settingsTableOfContents.$(
-        ".monaco-list > .monaco-scrollable-element > .monaco-list-rows > div[aria-label='Zowe Explorer, group']"
+    let zeGroup: WebdriverIO.Element;
+    // Wait for the list to update
+    await browser.waitUntil(
+        async () => {
+            zeGroup = await settingsTableOfContents.$(
+                ".monaco-list > .monaco-scrollable-element > .monaco-list-rows > div[aria-label='Zowe Explorer, group']"
+            );
+            return await zeGroup.isExisting();
+        },
+        { timeout: 10000 }
     );
-    await expect(zeGroup).toExist();
+    await expect(zeGroup).toBeClickable();
+    await zeGroup.click();
 });
