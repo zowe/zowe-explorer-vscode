@@ -55,6 +55,7 @@ import { IconUtils } from "../../../../src/icons/IconUtils";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
+import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 
 jest.mock("fs");
 jest.mock("util");
@@ -4146,6 +4147,10 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
             [blockMocks.draggedNode.resourceUri.path]: blockMocks.draggedNode,
         });
+
+        jest.spyOn(DatasetActions, "getDsAttributes").mockResolvedValueOnce({} as any);
+        jest.spyOn(blockMocks.draggedNode, "getEncoding").mockReturnValue({} as any);
+
         const createDataSetMock = jest.fn();
         const createDataSetMemberMock = jest.fn();
         jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({

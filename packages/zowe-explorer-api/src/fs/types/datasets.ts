@@ -12,7 +12,6 @@
 import type { Types } from "../..";
 import { DirEntry, EntryMetadata, FileEntry } from "./abstract";
 import { IProfileLoaded } from "@zowe/imperative";
-import { ZosEncoding } from "../../tree/IZoweTreeNode";
 
 interface DsEntryProps {
     stats: Types.DatasetStats;

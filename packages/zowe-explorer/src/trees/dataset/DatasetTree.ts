@@ -46,6 +46,7 @@ import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { DataSetTemplates } from "./DatasetTemplates";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import { DatasetActions } from "./DatasetActions";
 
 /**
  * A tree that contains nodes of sessions and data sets
@@ -112,7 +113,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         recursiveCall?: boolean
     ): Promise<void> {
         const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
-        let dsname = destUri.path.substring(destinationInfo.slashAfterProfilePos);
+        let dsname: string = destUri.path.substring(destinationInfo.slashAfterProfilePos);
+        const sourceAttributes = await DatasetActions.getDsAttributes(sourceNode);
         if (SharedContext.isPds(sourceNode)) {
             if (!DatasetFSProvider.instance.exists(destUri)) {
                 // create a PDS on remote
@@ -121,7 +123,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
                         zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
                         dsname,
-                        {}
+                        sourceAttributes
                     );
                 } catch (err) {
                     //error
@@ -132,6 +134,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
                 // create directory entry in local
                 DatasetFSProvider.instance.createDirectory(destUri);
+            } else {
+                Gui.warningMessage(vscode.l10n.t("Data set may not have enough space left: {0}", dsname));
             }
             const children = await sourceNode.getChildren();
             for (const childNode of children) {
@@ -158,37 +162,33 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
             await vscode.workspace.fs.delete(sourceUri, { recursive: true });
         } else {
+            let encoding: ZosEncoding;
             try {
+                encoding = await sourceNode.getEncoding();
                 const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
                 if (entry == null) {
-                    if (sourceNode.contextValue === Constants.DS_MEMBER_CONTEXT) {
+                    if (SharedContext.isDsMember(sourceNode)) {
                         dsname = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
-                        // Detect binary and set allocation attributes
-                        const allocAttrs = SharedContext.isBinary(sourceNode) ? { recordFormat: "U", lrecl: 0, blksize: 32760 } : {};
-                        await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, allocAttrs as any);
+                        await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {
+                            binary: encoding?.kind === "binary",
+                        });
                     } else {
                         dsname = sourceNode.getLabel() as string;
-                        const allocAttrs = SharedContext.isBinary(sourceNode) ? { recfm: "U", lrecl: 0, blksize: 32760 } : {};
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
                             zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
                             dsname,
-                            allocAttrs
+                            sourceAttributes
                         );
                     }
                 }
             } catch (err) {
                 //file might already exist. Ignore the error and try to write it to lpar
+                console.log(err);
                 if (err.errorCode.toString() === "404" || err.errorCode.toString() === "500") {
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                     return;
                 }
             }
-            // Check if the node is binary and set encoding accordingly
-            if (SharedContext.isBinary(sourceNode)) {
-                sourceNode.setEncoding({ kind: "binary" });
-            }
-            // Get encoding from the source node if available
-            const encoding = (sourceNode as any).encoding || (SharedContext.isBinary(sourceNode) ? { kind: "binary" } : undefined);
 
             // read the contents from the source LPAR
             const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri, encoding ? { encoding } : undefined);
