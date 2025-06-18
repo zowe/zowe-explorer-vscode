@@ -738,7 +738,7 @@ export class ProfilesUtils {
 
     public static async awaitExtenderType(profileName: string, profInfo: ProfilesCache): Promise<void> {
         const profAttrs = await profInfo.getProfileFromConfig(profileName);
-        if (profAttrs && profAttrs.profType !== "zosmf" && !ProfilesUtils.extenderTypeReady.get(profAttrs.profType)) {
+        if (profAttrs && profAttrs.profType !== "zosmf" && !ProfilesUtils.extenderTypeReady.has(profAttrs.profType)) {
             const deferredPromise = new imperative.DeferredPromise<void>();
             ProfilesUtils.extenderTypeReady.set(profAttrs.profType, deferredPromise);
         }
