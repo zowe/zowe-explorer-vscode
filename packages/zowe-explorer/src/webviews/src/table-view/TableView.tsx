@@ -178,7 +178,6 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     };
 
     const handleDataChanged = (newData: Table.ViewOpts) => {
-
       let displayRows = newData.rows;
       if (newData.options?.customTreeMode && newData.options?.customTreeColumnField) {
         treeNodeIdCounter = 0; // Reset counter for each new dataset

@@ -14,8 +14,11 @@ import { Event, EventEmitter, ExtensionContext, env } from "vscode";
 import { randomUUID } from "crypto";
 import { diff } from "deep-object-diff";
 import { TableMediator } from "./utils/TableMediator";
+import type { IZoweTreeNode } from "../../tree";
+import type * as imperative from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as fs from "fs";
+import { Logger } from "@zowe/imperative";
 export namespace Table {
     /* Tree node structure for hierarchical data */
     export type TreeNodeData = {
@@ -90,12 +93,122 @@ export namespace Table {
 
     /** @deprecated Use `Action` type instead. */
     export type ActionOpts = Action;
-    export type ContextMenuOpts = Omit<ContextMenuOption, "condition" | "hideCondition"> & {
-        condition?: Conditional;
-        hideCondition?: Conditional;
-    };
+    /** @deprecated Use `ContextMenuOption` type instead. */
+    export type ContextMenuOpts = ContextMenuOption;
+
+    // Context namespace for table extensibility
+    export namespace Context {
+        /**
+         * Table identifiers for built-in Zowe Explorer tables
+         */
+        export enum Identifiers {
+            DATA_SETS = "data-sets",
+            DATA_SET_MEMBERS = "data-set-members",
+            JOBS = "jobs",
+            SEARCH_RESULTS = "search-results",
+        }
+
+        /**
+         * Base interface for table context information passed to action providers
+         */
+        export interface IBaseData {
+            /** The type of table being displayed */
+            tableId: string;
+            /** Additional properties specific to the table implementation */
+            [key: string]: any;
+        }
+
+        /**
+         * Context information for dataset-related tables
+         */
+        export interface DataSet extends IBaseData {
+            /** The current table type (datasets or members) */
+            tableType: "dataSets" | "members" | null;
+            /** The data source being used by the table */
+            dataSource: any; // This would ideally be IDataSetSource but it's in the main package
+            /** Profile information if available */
+            profile?: imperative.IProfileLoaded;
+            /** Profile name if available */
+            profileName?: string;
+            /** Tree node if the table is derived from a tree node */
+            treeNode?: IZoweTreeNode;
+        }
+
+        /**
+         * Context information for job-related tables
+         */
+        export interface Job extends IBaseData {
+            /** Profile information if available */
+            profile?: imperative.IProfileLoaded;
+            /** Profile name if available */
+            profileName?: string;
+            /** Tree node if the table is derived from a tree node */
+            treeNode?: IZoweTreeNode;
+        }
+
+        /**
+         * Context information for search result tables
+         */
+        export interface Search extends IBaseData {
+            /** The search query that generated these results */
+            searchQuery?: string;
+            /** The type of search performed */
+            searchType?: "data-set" | "member";
+            /** Profile information if available */
+            profile?: imperative.IProfileLoaded;
+            /** Profile name if available */
+            profileName?: string;
+        }
+
+        // Type Guard Functions
+
+        /**
+         * Type guard to check if context is a Dataset context
+         */
+        export function isDataSet(context: IBaseData | undefined): context is Dataset {
+            return context != null && "tableType" in context && "dataSource" in context;
+        }
+
+        /**
+         * Type guard to check if context is a Job context
+         */
+        export function isJob(context: IBaseData | undefined): context is Job {
+            return context != null && context.tableId === Identifiers.JOBS;
+        }
+
+        /**
+         * Type guard to check if context is a Search context
+         */
+        export function isSearch(context: IBaseData | undefined): context is Search {
+            return context != null && context.tableId === Identifiers.SEARCH_RESULTS && "searchQuery" in context;
+        }
+
+        // Helper Functions
+
+        /**
+         * Utility function to safely get dataset context with type checking
+         */
+        export function getDataset(context: IBaseData | undefined): Dataset | undefined {
+            return isDataSet(context) ? context : undefined;
+        }
+
+        /**
+         * Utility function to safely get job context with type checking
+         */
+        export function getJob(context: IBaseData | undefined): Job | undefined {
+            return isJob(context) ? context : undefined;
+        }
+
+        /**
+         * Utility function to safely get search context with type checking
+         */
+        export function getSearch(context: IBaseData | undefined): Search | undefined {
+            return isSearch(context) ? context : undefined;
+        }
+    }
 
     // -- Misc types --
+
     /** Value formatter callback. Expects the exact display value to be returned. */
     export type ValueFormatter = (data: { value: ContentTypes }) => string;
     export type Positions = "left" | "right";
@@ -370,10 +483,13 @@ export namespace Table {
 
                 if (typeof condition === "string") {
                     try {
+                        // Reason for no-implied-eval: Need to keep support for string conditions to prevent breaking changes
+                        // However, they are not recommended and should be avoided if possible
+                        // eslint-disable-next-line @typescript-eslint/no-implied-eval
                         const condFn = new Function("data", `return (${condition})(data);`);
                         conditionResult = condFn(conditionData);
                     } catch (error) {
-                        console.warn(`Failed to evaluate string condition for action ${actionCommand}:`, error);
+                        Logger.getImperativeLogger().warn(`Failed to evaluate string condition for action ${actionCommand}:`, error);
                         return defaultValue;
                     }
                 } else {
@@ -382,18 +498,18 @@ export namespace Table {
 
                 return await Promise.resolve(conditionResult);
             } catch (error) {
-                console.warn(`Failed to evaluate condition for action ${actionCommand}:`, error);
+                Logger.getImperativeLogger().warn(`Failed to evaluate condition for action ${actionCommand}:`, error);
                 return defaultValue;
             }
         }
 
         private getConditionData(payload: any): RowData[] | RowData | ContentTypes {
             if (payload.row) {
-                return payload.row;
+                return payload.row as RowData;
             } else if (payload.rows) {
-                return payload.rows;
+                return payload.rows as RowData[];
             } else if (payload.cell !== undefined) {
-                return payload.cell;
+                return payload.cell as ContentTypes;
             }
             return this.data.rows;
         }
@@ -605,7 +721,7 @@ export namespace Table {
          * @param options The context menu options to add to the given row
          * @returns Whether the webview successfully received the new context menu option(s)
          */
-        public addContextOption(id: number | "all", ...options: ContextMenuOpts[]): Promise<boolean> {
+        public addContextOption(id: number | "all", ...options: ContextMenuOption[]): Promise<boolean> {
             if (this.data.contextOpts[id]) {
                 const existingOpts = this.data.contextOpts[id];
                 this.data.contextOpts[id] = [...existingOpts, ...options];

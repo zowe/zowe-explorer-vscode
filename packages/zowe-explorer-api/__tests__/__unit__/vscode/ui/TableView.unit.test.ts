@@ -502,7 +502,7 @@ describe("Table.View", () => {
                     fn: (_data) => {},
                 },
                 condition: (_data) => true,
-            } as Table.ContextMenuOpts;
+            } as Table.ContextMenuOption;
             await view.addContextOption("all", contextOpt);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.contextOpts["all"]).toStrictEqual([contextOpt]);
@@ -516,7 +516,7 @@ describe("Table.View", () => {
                     fn: (_data) => {},
                 },
                 condition: (_data) => true,
-            } as Table.ContextMenuOpts;
+            } as Table.ContextMenuOption;
             await view.addContextOption(1, singleRowContextOpt);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.contextOpts[1]).toStrictEqual([singleRowContextOpt]);
@@ -537,7 +537,7 @@ describe("Table.View", () => {
                     typ: "single-row",
                     fn: (_data) => {},
                 },
-            } as Table.ContextMenuOpts;
+            } as Table.ContextMenuOption;
             await view.addContextOption("all", contextOpt);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.contextOpts["all"]).toStrictEqual([contextOpt]);
@@ -550,7 +550,7 @@ describe("Table.View", () => {
                     typ: "single-row",
                     fn: (_data) => {},
                 },
-            } as Table.ContextMenuOpts;
+            } as Table.ContextMenuOption;
             await view.addContextOption(1, singleRowContextOpt);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.contextOpts[1]).toStrictEqual([singleRowContextOpt]);
@@ -574,7 +574,7 @@ describe("Table.View", () => {
                     fn: (_data) => {},
                 },
                 condition: (_data) => true,
-            } as Table.ContextMenuOpts;
+            } as Table.ContextMenuOption;
             await view.addAction("all", action);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.actions["all"]).toStrictEqual([action]);
@@ -588,7 +588,7 @@ describe("Table.View", () => {
                     fn: (_data) => {},
                 },
                 condition: (_data) => true,
-            } as Table.ContextMenuOpts;
+            } as Table.ContextMenuOption;
             await view.addAction(2, singleRowAction);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.actions[2]).toStrictEqual([singleRowAction]);
@@ -609,7 +609,7 @@ describe("Table.View", () => {
                     typ: "single-row",
                     fn: (_data) => {},
                 },
-            } as Table.ContextMenuOpts;
+            } as Table.ContextMenuOption;
             await view.addAction("all", action);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.actions["all"]).toStrictEqual([action]);
@@ -622,7 +622,7 @@ describe("Table.View", () => {
                     typ: "single-row",
                     fn: (_data) => {},
                 },
-            } as Table.ContextMenuOpts;
+            } as Table.ContextMenuOption;
             await view.addAction(2, singleRowAction);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.actions[2]).toStrictEqual([singleRowAction]);

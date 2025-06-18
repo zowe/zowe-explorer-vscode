@@ -9,7 +9,7 @@
  *
  */
 
-import { Gui, IZoweDatasetTreeNode, Table, TableBuilder, TableViewProvider } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweDatasetTreeNode, Table, TableBuilder, TableViewProvider, TableProviderRegistry } from "@zowe/zowe-explorer-api";
 import { commands, Event, EventEmitter, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
 import { SharedContext } from "../shared/SharedContext";
@@ -90,7 +90,7 @@ interface IDataSetTableEvent {
  * Tree-based data source that uses existing tree nodes
  */
 export class TreeDataSource implements IDataSetSource {
-    public constructor(private treeNode: IZoweDatasetTreeNode, private cachedChildren: IZoweDatasetTreeNode[]) {}
+    public constructor(public treeNode: IZoweDatasetTreeNode, private cachedChildren: IZoweDatasetTreeNode[]) {}
 
     /**
      * Fetches dataset information based on the cached children tree nodes.
@@ -574,6 +574,10 @@ export class DatasetTableView {
         table: Table.Instance;
     } = null;
 
+    // Static table identifiers for this table view
+    private static readonly TABLE_ID_DATASETS = Table.Context.Identifiers.DATA_SETS;
+    private static readonly TABLE_ID_MEMBERS = Table.Context.Identifiers.DATA_SET_MEMBERS;
+
     public static getInstance(): DatasetTableView {
         if (!DatasetTableView._instance) {
             DatasetTableView._instance = new DatasetTableView();
@@ -766,13 +770,8 @@ export class DatasetTableView {
         const useTreeMode = this.currentDataSource.supportsHierarchy();
         const rows = await this.generateRows(useTreeMode);
 
-        // Determine the current table type
+        // Determine the current table type and ID
         const previousTableType = this.currentTableType;
-        if (this.currentDataSource instanceof PDSMembersDataSource) {
-            this.currentTableType = "members";
-        } else {
-            this.currentTableType = "dataSets";
-        }
         const tableTypeChanged = previousTableType !== this.currentTableType;
 
         // Prepare column definitions
@@ -806,6 +805,13 @@ export class DatasetTableView {
                 : {}),
         };
 
+        // Get additional actions and context menu items from registered providers
+        const registry = TableProviderRegistry.getInstance();
+        const tableContext = this.buildTableContext();
+
+        const additionalActions = await registry.getActions(tableContext);
+        const additionalContextItems = await registry.getContextMenuItems(tableContext);
+
         if (this.table && !tableTypeChanged) {
             await this.table.setTitle(this.currentDataSource.getTitle());
             await this.table.setColumns([...columnDefs, { field: "actions", hide: true }]);
@@ -814,7 +820,7 @@ export class DatasetTableView {
                 await this.table.setOptions(tableOptions);
             }
         } else {
-            this.table = new TableBuilder(context)
+            const tableBuilder = new TableBuilder(context)
                 .options(tableOptions)
                 .isView()
                 .title(this.currentDataSource.getTitle())
@@ -823,8 +829,19 @@ export class DatasetTableView {
                 .addContextOption("all", this.contextOptions.displayInTree)
                 .addRowAction("all", this.rowActions.openInEditor)
                 .addRowAction("all", this.rowActions.focusPDS)
-                .addRowAction("all", this.rowActions.goBack)
-                .build();
+                .addRowAction("all", this.rowActions.goBack);
+
+            // Add additional actions from registered providers
+            for (const action of additionalActions) {
+                tableBuilder.addRowAction("all", action);
+            }
+
+            // Add additional context menu items from registered providers
+            for (const contextItem of additionalContextItems) {
+                tableBuilder.addContextOption("all", contextItem);
+            }
+
+            this.table = tableBuilder.build();
 
             this.table.onDisposed((e) => {
                 this.dispose();
@@ -850,6 +867,32 @@ export class DatasetTableView {
         }
 
         return this.table;
+    }
+
+    /**
+     * Builds context information to pass to table action providers
+     */
+    private buildTableContext(): Table.Context.DataSet {
+        const context: Table.Context.DataSet = {
+            tableId: this.currentTableType === "members" ? DatasetTableView.TABLE_ID_MEMBERS : DatasetTableView.TABLE_ID_DATASETS,
+            tableType: this.currentTableType,
+            dataSource: this.currentDataSource,
+        };
+
+        // Add profile information if available
+        if (this.currentDataSource instanceof PatternDataSource) {
+            context.profile = this.currentDataSource.profile;
+            context.profileName = this.currentDataSource.profile.name;
+        } else if (this.currentDataSource instanceof TreeDataSource) {
+            // Extract profile from tree node if possible
+            const treeNode = this.currentDataSource.treeNode;
+            if (treeNode) {
+                context.profileName = treeNode.getProfileName?.() || treeNode.getProfile()?.name;
+                context.treeNode = treeNode;
+            }
+        }
+
+        return context;
     }
 
     private async onDidReceiveMessage(message: Record<string, any>): Promise<any> {

@@ -141,7 +141,7 @@ describe("TableBuilder", () => {
             const globalMocks = createGlobalMocks();
             const builder = new TableBuilder(globalMocks.context as any);
             const newCols: Table.ColumnOpts[] = [
-                { field: "cat", valueFormatter: (data: { value: Table.ContentTypes }) => `val: ${data.value.toString()}` },
+                { field: "cat", valueFormatter: (data: { value: Table.ContentTypes }) => `val: ${data.value?.toString()}` },
                 { field: "doge", filter: true, comparator: (_valueA, _valueB, _nodeA, _nodeB, _isDescending) => -1, colSpan: (_params) => 2 },
                 { field: "parrot", sort: "asc", rowSpan: (_params) => 2 },
             ];
@@ -173,7 +173,7 @@ describe("TableBuilder", () => {
                         condition: (_data) => true,
                     },
                 ],
-            } as Record<number | "all", Table.ContextMenuOpts[]>;
+            } as Record<number | "all", Table.ContextMenuOption[]>;
 
             const addCtxOptSpy = jest.spyOn(builder, "addContextOption");
             const builderCtxOpts = builder.contextOptions(ctxOpts);
@@ -191,11 +191,11 @@ describe("TableBuilder", () => {
                 title: "Delete",
                 command: "delete",
                 callback: {
-                    typ: "row",
-                    fn: (_row: Table.RowData) => {},
+                    typ: "cell",
+                    fn: (_view: Table.View, _cell: Table.ContentTypes) => {},
                 },
                 condition: (_data) => true,
-            } as Table.ContextMenuOpts;
+            } as Table.ContextMenuOption;
 
             // case 0: adding context option w/ conditional to "all" rows, index previously existed
             const builderCtxOpts = builder.addContextOption("all", ctxOpt);
@@ -220,10 +220,10 @@ describe("TableBuilder", () => {
                 title: "Add",
                 command: "add",
                 callback: {
-                    typ: "row",
-                    fn: (_row: Table.RowData) => {},
+                    typ: "cell",
+                    fn: (_view: Table.View, _cell: Table.ContentTypes) => {},
                 },
-            } as Table.ContextMenuOpts;
+            } as Table.ContextMenuOption;
 
             // case 0: adding context option w/ condition to "all" rows, index previously existed
             const builderCtxOpts = builder.addContextOption("all", ctxOptNoCond);
@@ -253,7 +253,7 @@ describe("TableBuilder", () => {
                     fn: (_cell: Table.ContentTypes) => {},
                 },
                 condition: (_data) => true,
-            } as Table.ActionOpts;
+            } as Table.Action;
             const builderAction = builder.addRowAction("all", rowAction);
             expect(builderAction).toBeInstanceOf(TableBuilder);
             expect((builderAction as any).data.actions).toStrictEqual({
@@ -282,7 +282,7 @@ describe("TableBuilder", () => {
                         },
                         condition: (_data) => true,
                     },
-                ] as Table.ActionOpts[],
+                ] as Table.Action[],
                 all: [
                     {
                         title: "Recall",
@@ -293,7 +293,7 @@ describe("TableBuilder", () => {
                         },
                         condition: (_data) => true,
                     },
-                ] as Table.ActionOpts[],
+                ] as Table.Action[],
             };
             const rowActionSpy = jest.spyOn(builder, "addRowAction");
             const builderAction = builder.rowActions(rowActions);

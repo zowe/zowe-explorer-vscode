@@ -126,7 +126,7 @@ export class TableBuilder {
      * @param actions the record of indices to {@link Table.Action} arrays to use for the table
      * @returns The same {@link TableBuilder} instance with the row actions added
      */
-    public contextOptions(opts: Record<number | "all", Table.ContextMenuOpts[]>): this {
+    public contextOptions(opts: Record<number | "all", Table.ContextMenuOption[]>): this {
         for (const [key, optsForKey] of Object.entries(opts)) {
             for (const opt of optsForKey) {
                 this.addContextOption(key as number | "all", opt);
@@ -140,7 +140,7 @@ export class TableBuilder {
      * @param index The row index to add an option to (or "all" for all rows)
      * @returns The same {@link TableBuilder} instance with the context menu option added
      */
-    public addContextOption(index: number | "all", option: Table.ContextMenuOpts): this {
+    public addContextOption(index: number | "all", option: Table.ContextMenuOption): this {
         if (this.data.contextOpts[index]) {
             this.data.contextOpts[index].push(option);
         } else {
@@ -154,7 +154,7 @@ export class TableBuilder {
      * @param actions the record of indices to {@link Table.Action} arrays to use for the table
      * @returns The same {@link TableBuilder} instance with the row actions added
      */
-    public rowActions(actions: Record<number | "all", Table.ActionOpts[]>): this {
+    public rowActions(actions: Record<number | "all", Table.Action[]>): this {
         for (const key of Object.keys(actions)) {
             this.addRowAction(key as number | "all", actions[key]);
         }
@@ -166,7 +166,7 @@ export class TableBuilder {
      * @param index The column index to add an action to
      * @returns The same {@link TableBuilder} instance with the row action added
      */
-    public addRowAction(index: number | "all", action: Table.ActionOpts): this {
+    public addRowAction(index: number | "all", action: Table.Action): this {
         if (this.data.actions[index]) {
             this.data.actions[index].push(action);
         } else {

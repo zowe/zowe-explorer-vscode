@@ -25,6 +25,8 @@ import {
     ZoweVsCodeExtension,
     ErrorCorrelator,
     ILocalStorageAccess,
+    TableProviderRegistry,
+    TableActionProvider,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
@@ -237,5 +239,25 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         await this.ussFileProvider?.refreshFavorites();
         await this.jobsProvider?.addSession({ profileType });
         await this.jobsProvider?.refreshFavorites();
+    }
+
+    /**
+     * Register a table action provider for a specific table
+     * @param tableId The table identifier to register for
+     * @param provider The action provider implementation
+     */
+    public registerTableActionProvider(tableId: string, provider: TableActionProvider): void {
+        const registry = TableProviderRegistry.getInstance();
+        registry.registerProvider(tableId, provider);
+    }
+
+    /**
+     * Get the table provider registry instance for advanced usage.
+     * Most extenders should use registerTableActionProvider instead.
+     *
+     * @returns The singleton table provider registry instance
+     */
+    public getTableProviderRegistry(): TableProviderRegistry {
+        return TableProviderRegistry.getInstance();
     }
 }
