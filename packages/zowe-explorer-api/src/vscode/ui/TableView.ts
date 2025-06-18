@@ -19,6 +19,7 @@ import type * as imperative from "@zowe/imperative";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import { Logger } from "@zowe/imperative";
+import type { IDataSetSource } from "../../dataset";
 export namespace Table {
     /* Tree node structure for hierarchical data */
     export type TreeNodeData = {
@@ -119,13 +120,13 @@ export namespace Table {
         }
 
         /**
-         * Context information for dataset-related tables
+         * Context information for data set-related tables
          */
         export interface DataSet extends IBaseData {
-            /** The current table type (datasets or members) */
+            /** The current table type (data sets or members) */
             tableType: "dataSets" | "members" | null;
             /** The data source being used by the table */
-            dataSource: any; // This would ideally be IDataSetSource but it's in the main package
+            dataSource: IDataSetSource;
             /** Profile information if available */
             profile?: imperative.IProfileLoaded;
             /** Profile name if available */
@@ -165,7 +166,7 @@ export namespace Table {
         /**
          * Type guard to check if context is a Dataset context
          */
-        export function isDataSet(context: IBaseData | undefined): context is Dataset {
+        export function isDataSet(context: IBaseData | undefined): context is DataSet {
             return context != null && "tableType" in context && "dataSource" in context;
         }
 
@@ -188,7 +189,7 @@ export namespace Table {
         /**
          * Utility function to safely get dataset context with type checking
          */
-        export function getDataset(context: IBaseData | undefined): Dataset | undefined {
+        export function getDataset(context: IBaseData | undefined): DataSet | undefined {
             return isDataSet(context) ? context : undefined;
         }
 
