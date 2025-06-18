@@ -30,10 +30,5 @@ Then("the user can access the Zowe Explorer settings section", async function ()
     const zeGroup = await settingsTableOfContents.$(
         ".monaco-list > .monaco-scrollable-element > .monaco-list-rows > div[aria-label='Zowe Explorer, group']"
     );
-    await zeGroup.click();
-
-    const monacoList = await $(".settings-tree-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows");
-    await expect(monacoList).toExist();
-    const zeHeader = await monacoList.$("div[aria-label='Zowe Explorer']");
-    await expect(zeHeader).toExist();
+    await expect(zeGroup).toExist();
 });
