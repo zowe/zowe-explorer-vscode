@@ -697,7 +697,6 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
         const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
-        const profileLoadedMock = globalMocks.mockProfileInstance.loadNamedProfile;
         globalMocks.mockProfileInstance.getDefaultProfile.mockReturnValue(blockMocks.imperativeProfile);
         globalMocks.mockProfileInstance.getBaseProfile.mockReturnValue(blockMocks.imperativeProfile);
         globalMocks.mockProfileInstance.getProfileInfo.mockReturnValue(createInstanceOfProfileInfo());
