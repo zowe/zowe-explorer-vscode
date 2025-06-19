@@ -642,7 +642,6 @@ describe("TsoCommandHandler unit testing", () => {
         jest.spyOn(mockMvsApi, "getSession").mockReturnValue(session);
 
         showQuickPick.mockReturnValueOnce("firstName");
-        const originalGetCommandApi = apiRegisterInstance.getCommandApi;
         const testError = new Error("getCommandApi failed");
         apiRegisterInstance.getCommandApi = jest.fn().mockImplementation(() => {
             throw testError;
@@ -653,7 +652,6 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toContain(testError.message);
-        apiRegisterInstance.getCommandApi = originalGetCommandApi;
     });
 
     it("tests the issueTsoCommand function no profiles error", async () => {
@@ -677,39 +675,5 @@ describe("TsoCommandHandler unit testing", () => {
         });
         await getTsoActions().issueTsoCommand();
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
-    });
-
-    it("returns startResponse message when IKJ56482I error occurs", async () => {
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    getDefaultProfile: jest.fn(() => ({
-                        name: "firstName",
-                        profile: {
-                            user: "firstName",
-                            password: "12345",
-                            account: "FAKE.ACCOUNT",
-                            logonProcedure: "BADPROC",
-                        },
-                        type: "tso",
-                    })),
-                };
-            }),
-        });
-
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-
-        jest.spyOn(mockCommandApi, "issueTsoCommandWithParms").mockReturnValue({
-            commandResponse: "test",
-            startResponse: {
-                messages: "IKJ56482I THE PROCEDURE NAME BADPROC HAS NOT BEEN DEFINED FOR USE",
-            },
-        } as any);
-
-        const result = await getTsoActions().runCommand(profileOne, "/command");
-        expect(result).toContain("IKJ56482I");
     });
 });

@@ -144,11 +144,6 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             command = command.substring(1);
         }
         const response = await ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(command, this.tsoParams);
-        const startMsgs = response?.startResponse?.messages?.trim();
-
-        if (startMsgs?.includes("IKJ56482I")) {
-            return startMsgs;
-        }
         return response.commandResponse;
     }
 

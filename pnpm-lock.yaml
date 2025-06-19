@@ -9,6 +9,7 @@ overrides:
   tar-fs@3: ^3.0.9
   ws: ^8.17.1
   undici: ^5.29.0
+  '@zowe/zos-tso-for-zowe-sdk': file:../zowe-cli/packages/zostso
 
 importers:
 
@@ -278,8 +279,8 @@ importers:
         specifier: ^8.21.0
         version: 8.21.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0)
       '@zowe/zos-tso-for-zowe-sdk':
-        specifier: ^8.21.0
-        version: 8.21.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0)
+        specifier: file:/Users/pujalgandhi/Documents/ZOWE/zowe-cli/packages/zostso
+        version: file:../zowe-cli/packages/zostso(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0)
       '@zowe/zos-uss-for-zowe-sdk':
         specifier: ^8.21.0
         version: 8.21.0(@zowe/imperative@8.21.0)
@@ -3991,18 +3992,6 @@ packages:
       '@zowe/zos-files-for-zowe-sdk': 8.21.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0)
     dev: false
 
-  /@zowe/zos-tso-for-zowe-sdk@8.21.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0):
-    resolution: {integrity: sha512-AhDNs4UAunyzDEobJ/QIxBtlLTlyiL4xCu0ZU39XRyfwodJnBlY+sp5jhxC2H0uKOfdYBVbL1wx7BtxP4XZQNQ==}
-    engines: {node: '>=18.12.0'}
-    peerDependencies:
-      '@zowe/core-for-zowe-sdk': ^8.0.0
-      '@zowe/imperative': ^8.0.0
-    dependencies:
-      '@zowe/core-for-zowe-sdk': 8.21.0(@zowe/imperative@8.21.0)
-      '@zowe/imperative': 8.21.0
-      '@zowe/zosmf-for-zowe-sdk': 8.21.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0)
-    dev: false
-
   /@zowe/zos-uss-for-zowe-sdk@8.21.0(@zowe/imperative@8.21.0):
     resolution: {integrity: sha512-QirT/K8t51W1DvnHMcM+mRltkpRGG0xf3/VNXJ0e8kD7jeFRl8orjqJMOVcxMeu16fLRc2j8qe/syqNcocBj2w==}
     engines: {node: '>=18.12.0'}
@@ -4011,6 +4000,17 @@ packages:
     dependencies:
       '@zowe/imperative': 8.21.0
       ssh2: 1.16.0
+    dev: false
+
+  /@zowe/zosmf-for-zowe-sdk@8.16.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0):
+    resolution: {integrity: sha512-IiFpPy5vp3wafIKwrsot6YCD8DDD7vMWuIXuwUHRfiz9ljRqUcNG4IE8aBtFvE11lczvSAbKAtPfsXFig5snJQ==}
+    engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@zowe/core-for-zowe-sdk': ^8.0.0
+      '@zowe/imperative': ^8.0.0
+    dependencies:
+      '@zowe/core-for-zowe-sdk': 8.21.0(@zowe/imperative@8.21.0)
+      '@zowe/imperative': 8.21.0
     dev: false
 
   /@zowe/zosmf-for-zowe-sdk@8.21.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0):
@@ -13403,4 +13403,18 @@ packages:
     dependencies:
       ftp4: 0.3.13
       q: 1.4.1
+    dev: false
+
+  file:../zowe-cli/packages/zostso(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0):
+    resolution: {directory: ../zowe-cli/packages/zostso, type: directory}
+    id: file:../zowe-cli/packages/zostso
+    name: '@zowe/zos-tso-for-zowe-sdk'
+    engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@zowe/core-for-zowe-sdk': ^8.0.0
+      '@zowe/imperative': ^8.0.0
+    dependencies:
+      '@zowe/core-for-zowe-sdk': 8.21.0(@zowe/imperative@8.21.0)
+      '@zowe/imperative': 8.21.0
+      '@zowe/zosmf-for-zowe-sdk': 8.16.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0)
     dev: false
