@@ -62,8 +62,7 @@
       "tar-fs@2": "^2.1.3",
       "tar-fs@3": "^3.0.9",
       "ws": "^8.17.1",
-      "undici": "^5.29.0",
-      "@zowe/zos-tso-for-zowe-sdk": "file:../zowe-cli/packages/zostso"
+      "undici": "^5.29.0"
     }
   },
   "scripts": {
