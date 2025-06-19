@@ -94,7 +94,9 @@ export class ProfilesCache {
      *
      * @param {string} name Name of Profile
      * @param {string} type Type of Profile, optional
+     * @param {boolean} optional Whether or not to throw an error if profile is not found
      *
+     * @throws {Error} Throws an error if profile is not found (unless optional is true)
      * @returns {IProfileLoaded}
      */
     public loadNamedProfile(name: string, type?: string, optional = false): imperative.IProfileLoaded {
