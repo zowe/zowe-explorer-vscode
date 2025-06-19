@@ -15,7 +15,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed unexpected behavior occuring with TSO commands. An accurate response is returned when an invalid logonProc is used, and ZE now does not ignore default TSO profile when there are multiple TSO profiles. [#2528](https://github.com/zowe/zowe-explorer-vscode/issues/2528)
+- Fixed unexpected behavior occuring with TSO commands. ZE now does not ignore default TSO profile when there are multiple TSO profiles. [#2528](https://github.com/zowe/zowe-explorer-vscode/issues/2528)
 - Fixed an issue where an incorrect profile name is shown in the output for the "Issue Unix Command" function when an SSH profile is required to issue commands. [#3646](https://github.com/zowe/zowe-explorer-vscode/issues/3646)
 - Improved integrated terminal behavior to match standard terminal functionality. Now, users can smoothly maintain proper cursor position when typing and backspacing. [#3391](https://github.com/zowe/zowe-explorer-vscode/issues/3391)
 - Fixed an issue where cancelling multiple commands in rapid succession could render the terminal unusable. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
