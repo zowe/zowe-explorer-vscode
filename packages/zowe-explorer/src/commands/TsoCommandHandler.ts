@@ -144,6 +144,11 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             command = command.substring(1);
         }
         const response = await ZoweExplorerApiRegister.getCommandApi(profile).issueTsoCommandWithParms(command, this.tsoParams);
+        const startMsgs = response?.startResponse?.messages?.trim();
+
+        if (startMsgs?.includes("IKJ56482I")) {
+            return startMsgs;
+        }
         return response.commandResponse;
     }
 
@@ -160,14 +165,19 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         // Keys in the IStartTsoParms interface
         // TODO(zFernand0): Request the CLI squad that all interfaces are also exported as values that we can iterate
         const iStartTso = ["account", "characterSet", "codePage", "columns", "logonProcedure", "regionSize", "rows"];
-        const profiles = profileInfo.getAllProfiles("tso");
+        const defProfile = profileInfo.getDefaultProfile("tso");
         let tsoProfile: imperative.IProfileLoaded;
-        if (profiles.length > 0) {
-            tsoProfile = await this.selectServiceProfile(profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p)));
-            if (tsoProfile != null) {
-                const prof = profileInfo.mergeArgsForProfile(tsoProfile.profile as imperative.IProfAttrs);
-                iStartTso.forEach((p) => (tsoProfile.profile[p] = prof.knownArgs.find((a) => a.argName === p)?.argValue));
+        if (defProfile) {
+            tsoProfile = imperative.ProfileInfo.profAttrsToProfLoaded(defProfile);
+        } else {
+            const profiles = profileInfo.getAllProfiles("tso");
+            if (profiles.length > 0) {
+                tsoProfile = await this.selectServiceProfile(profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p)));
             }
+        }
+        if (tsoProfile != null) {
+            const prof = profileInfo.mergeArgsForProfile(tsoProfile.profile as imperative.IProfAttrs);
+            iStartTso.forEach((p) => (tsoProfile.profile[p] = prof.knownArgs.find((a) => a.argName === p)?.argValue));
         }
         if (tsoProfile) {
             tsoParms = {
