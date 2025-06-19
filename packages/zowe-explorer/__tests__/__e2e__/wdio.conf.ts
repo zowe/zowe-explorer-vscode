@@ -104,6 +104,7 @@ export const config: Options.Testrunner = {
                 userSettings: {
                     "editor.fontSize": 14,
                     "extensions.ignoreRecommendations": true,
+                    "zowe.settings.displayReleaseNotes": false,
                 },
             },
         },
