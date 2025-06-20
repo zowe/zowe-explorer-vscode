@@ -33,7 +33,6 @@ export const DS_EXTENSION_MAP: Map<string, (string | RegExp)[]> = new Map([
 
 export class DsEntry extends FileEntry implements DsEntryProps {
     public metadata: DsEntryMetadata;
-
     public constructor(name: string, public isMember: boolean = false) {
         super(name);
     }

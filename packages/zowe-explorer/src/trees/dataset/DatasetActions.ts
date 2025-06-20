@@ -896,48 +896,7 @@ export class DatasetActions {
                     comment: ["Label"],
                 })
             );
-            let attributes: any;
-            try {
-                const nodeProfile = node.getProfile();
-                if (SharedContext.isDsMember(node)) {
-                    const dsName = node.getParent().getLabel() as string;
-                    attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).allMembers(dsName.toUpperCase(), {
-                        attributes: true,
-                        pattern: label.toUpperCase(),
-                        responseTimeout: nodeProfile?.profile?.responseTimeout,
-                    });
-                } else {
-                    attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).dataSet(label, {
-                        attributes: true,
-                        responseTimeout: nodeProfile?.profile?.responseTimeout,
-                    });
-                }
-                attributes = attributes.apiResponse.items;
-                if (SharedContext.isDs(node)) {
-                    attributes = attributes.filter((dataSet) => {
-                        return dataSet.dsname.toUpperCase() === label.toUpperCase();
-                    });
-                }
-                if (attributes.length === 0) {
-                    throw new Error(
-                        vscode.l10n.t({
-                            message: "No matching names found for query: {0}",
-                            args: [label],
-                            comment: ["Label"],
-                        })
-                    );
-                }
-            } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
-                        apiType: ZoweExplorerApiType.Mvs,
-                        profile: node.getProfile(),
-                        scenario: vscode.l10n.t("Unable to list attributes."),
-                    });
-                }
-                throw err;
-            }
-
+            const attributes = await DatasetActions.getDsAttributes(node);
             const attributesMessage = vscode.l10n.t("Attributes");
             const webviewHTML = `<!DOCTYPE html>
         <html lang="en">
@@ -947,15 +906,15 @@ export class DatasetActions {
         </head>
         <body>
         <table style="margin-top: 2em; border-spacing: 2em 0">
-        ${Object.keys(attributes[0]).reduce(
+        ${Object.keys(attributes).reduce(
             (html, key) =>
                 html.concat(`
                 <tr>
                     <td align="left" style="color: var(--vscode-editorLink-activeForeground); font-weight: bold">${key}:</td>
                     <td align="right" style="color: ${
-                        isNaN(attributes[0][key]) ? "var(--vscode-settings-textInputForeground)" : "var(--vscode-problemsWarningIcon-foreground)"
+                        isNaN(attributes[key]) ? "var(--vscode-settings-textInputForeground)" : "var(--vscode-problemsWarningIcon-foreground)"
                         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                    }">${attributes[0][key]}</td>
+                    }">${attributes[key]}</td>
                 </tr>
         `),
             ""
@@ -970,6 +929,53 @@ export class DatasetActions {
             });
             panel.webview.html = webviewHTML;
         }
+    }
+    public static async getDsAttributes(node: IZoweDatasetTreeNode): Promise<zosfiles.ICreateDataSetOptions> {
+        let attributes: zosfiles.ICreateDataSetOptions;
+        const label = node.label as string;
+        try {
+            let zosAttributes: zosfiles.IZosFilesResponse;
+            const nodeProfile = node.getProfile();
+            if (SharedContext.isDsMember(node)) {
+                const dsName = node.getParent().getLabel() as string;
+                zosAttributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).allMembers(dsName.toUpperCase(), {
+                    attributes: true,
+                    pattern: label.toUpperCase(),
+                    responseTimeout: nodeProfile?.profile?.responseTimeout,
+                });
+            } else {
+                zosAttributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).dataSet(label, {
+                    attributes: true,
+                    responseTimeout: nodeProfile?.profile?.responseTimeout,
+                });
+            }
+            let dsList = zosAttributes.apiResponse.items;
+            if (SharedContext.isDs(node)) {
+                dsList = zosAttributes.apiResponse.items.filter((dataSet: any) => {
+                    return dataSet.dsname.toUpperCase() === label.toUpperCase();
+                });
+            }
+            if (dsList.length === 0) {
+                throw new Error(
+                    vscode.l10n.t({
+                        message: "No matching names found for query: {0}",
+                        args: [label],
+                        comment: ["Label"],
+                    })
+                );
+            }
+            attributes = dsList[0];
+        } catch (err) {
+            if (err instanceof Error) {
+                await AuthUtils.errorHandling(err, {
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profile: node.getProfile(),
+                    scenario: vscode.l10n.t("Unable to list attributes."),
+                });
+            }
+            throw err;
+        }
+        return attributes;
     }
 
     /**
