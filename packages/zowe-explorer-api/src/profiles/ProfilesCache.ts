@@ -129,7 +129,11 @@ export class ProfilesCache {
         }
     }
 
-    public updateCachedProfile(profileLoaded: imperative.IProfileLoaded, profileNode?: Types.IZoweNodeType): void {
+    public updateCachedProfile(
+        profileLoaded: imperative.IProfileLoaded,
+        profileNode?: Types.IZoweNodeType,
+        zeRegister?: Types.IApiRegisterClient
+    ): void {
         // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
         const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
         this.allProfiles[profIndex].profile = profileLoaded.profile;

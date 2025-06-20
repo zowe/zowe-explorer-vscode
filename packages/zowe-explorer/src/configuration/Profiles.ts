@@ -584,15 +584,18 @@ export class Profiles extends ProfilesCache {
             ZoweExplorerExtender.showZoweConfigError(err.message);
             return;
         }
-        const promptInfo = await ZoweVsCodeExtension.updateCredentials({
-            profile: typeof profile === "string" ? undefined : profile,
-            sessionName: typeof profile === "string" ? profile : undefined,
-            rePrompt,
-            secure: mProfileInfo.isSecured(),
-            userInputBoxOptions,
-            passwordInputBoxOptions,
-            zeProfiles: this,
-        });
+        const promptInfo = await ZoweVsCodeExtension.updateCredentials(
+            {
+                profile: typeof profile === "string" ? undefined : profile,
+                sessionName: typeof profile === "string" ? profile : undefined,
+                rePrompt,
+                secure: mProfileInfo.isSecured(),
+                userInputBoxOptions,
+                passwordInputBoxOptions,
+                zeProfiles: this,
+            },
+            ZoweExplorerApiRegister.getInstance()
+        );
         if (!promptInfo) {
             return; // See https://github.com/zowe/zowe-explorer-vscode/issues/1827
         }

@@ -76,7 +76,10 @@ export class ZoweVsCodeExtension {
      * @param options Set of options to use when prompting for credentials
      * @returns Instance of imperative.IProfileLoaded containing information about the updated profile
      */
-    public static async updateCredentials(options: PromptCredentialsOptions.ComplexOptions): Promise<imperative.IProfileLoaded> {
+    public static async updateCredentials(
+        options: PromptCredentialsOptions.ComplexOptions,
+        apiRegister: Types.IApiRegisterClient
+    ): Promise<imperative.IProfileLoaded> {
         const cache = options.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const profInfo = await cache.getProfileInfo();
         const setSecure = options.secure ?? profInfo.isSecured();
@@ -109,7 +112,7 @@ export class ZoweVsCodeExtension {
                 await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure });
                 await profInfo.updateProperty({ ...upd, property: "password", value: creds[1], setSecure });
             }
-            cache.updateCachedProfile(loadProfile, undefined);
+            cache.updateCachedProfile(loadProfile, undefined, apiRegister);
             ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(loadProfile);
 
             return loadProfile;
