@@ -428,6 +428,9 @@
   "zowe.openRecentMember": {
     "Open Recent Member": ""
   },
+  "zowe.displayReleaseNotes": {
+    "Display Release Notes": ""
+  },
   "issueTsoCmd": {
     "Issue TSO Command": ""
   },
@@ -530,6 +533,9 @@
   "zowe.settings.requestTimeout": {
     "The amount of time to wait for a REST request to complete, in milliseconds.": ""
   },
+  "zowe.settings.displayReleaseNotes": {
+    "Should display the Zowe Explorer release notes after an update.": ""
+  },
   "Enter command here...": "",
   "Page Size:": "",
   "Page": "",
@@ -537,6 +543,14 @@
   "items": "",
   "item": "",
   "selected": "",
+  "What's New in Zowe Explorer {0}": "",
+  "You can find the latest updates and features here.": "",
+  "Select the version to display release notes for": "",
+  "Display release notes after an update": "",
+  "Release Notes": "",
+  "Changelog": "",
+  "Loading release notes...": "",
+  "Loading changelog...": "",
   "Data Sets": "",
   "Unix System Services (USS)": "",
   "Jobs": "",
@@ -581,6 +595,9 @@
   "Cancel": "",
   "Troubleshoot Error": "",
   "rename": "",
+  "No release notes found for this version.": "",
+  "No changelog entries found for this version.": "",
+  "No {0} entries found for this version.": "",
   "Zowe Explorer profiles are being set as unsecured.": "",
   "Zowe Explorer profiles are being set as secured.": "",
   "Custom credential manager failed to activate": "",
@@ -659,6 +676,15 @@
   "Uploading USS files...": "",
   "Error uploading files": "",
   "Retrieving response from USS list API": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Failed to move {0}": "",
+  "Profile does not exist for this file.": "",
+  "Saving USS file...": "",
+  "Failed to rename {0}": "",
+  "Failed to delete {0}": "",
+  "No error details given": "",
+  "Error fetching destination {0} for paste action: {1}": "",
+  "Failed to copy {0} to {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -685,15 +711,6 @@
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
   "Pulling from Mainframe...": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Failed to move {0}": "",
-  "Profile does not exist for this file.": "",
-  "Saving USS file...": "",
-  "Failed to rename {0}": "",
-  "Failed to delete {0}": "",
-  "No error details given": "",
-  "Error fetching destination {0} for paste action: {1}": "",
-  "Failed to copy {0} to {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
@@ -1038,6 +1055,7 @@
   "Do you wish to apply this for all trees?": "",
   "Apply to all trees": "",
   "Apply to current tree selected": "",
+  "Edit History": "",
   "Enter an allocation unit": "",
   "Enter the average block length (if allocation unit = BLK)": "",
   "Enter a block size": "",

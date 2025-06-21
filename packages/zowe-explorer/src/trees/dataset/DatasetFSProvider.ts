@@ -36,6 +36,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import * as dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { ProfilesUtils } from "../../utils/ProfilesUtils";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
@@ -71,6 +72,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         ZoweLogger.trace(`[DatasetFSProvider] stat called with ${uri.toString()}`);
         let isFetching = false;
+
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
             if (queryParams.has("conflict")) {
@@ -505,11 +507,17 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let ds: DsEntry | DirEntry;
         const urlQuery = new URLSearchParams(uri.query);
         const isConflict = urlQuery.has("conflict");
+
+        // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
+        // If the extenderTypeReady map does not contain the profile, create a deferred promise for the profile.
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
+        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
+
         try {
             ds = this._lookupAsFile(uri) as DsEntry;
         } catch (err) {
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
-                const uriInfo = this._getInfoFromUri(uri);
+                const metadata = this._getInfoFromUri(uri);
                 this._handleError(err, {
                     additionalContext: vscode.l10n.t({
                         message: "Failed to read {0}",
@@ -517,12 +525,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         comment: ["File path"],
                     }),
                     apiType: ZoweExplorerApiType.Mvs,
-                    profileType: uriInfo.profile?.type,
+                    profileType: metadata.profile?.type,
                     retry: {
                         fn: this.readFile.bind(this),
                         args: [uri],
                     },
-                    templateArgs: { profileName: uriInfo.profile?.name ?? "" },
+                    templateArgs: { profileName: metadata.profile?.name ?? "" },
                 });
                 throw err;
             }
