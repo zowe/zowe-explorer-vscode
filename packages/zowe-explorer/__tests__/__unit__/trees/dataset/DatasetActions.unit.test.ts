@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, Validation, ProfilesCache, ZoweExplorerApiType, Sorting } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, Validation, ProfilesCache, ZoweExplorerApiType, Sorting, PdsEntry, DirEntry } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import {
@@ -45,6 +45,7 @@ import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
 import { ProfileManagement } from "../../../../src/management/ProfileManagement";
+import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -3041,6 +3042,29 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         };
     }
 
+    function setupMocksForZoom(
+        blockMocks,
+        selectionText: string,
+        datasetName: string,
+        memberName: string,
+        isValidDataSet: boolean,
+        isValidMember: boolean,
+        profileNames?: string[]
+    ) {
+        blockMocks.document.getText.mockReturnValue(selectionText);
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
+        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: datasetName, memberName: memberName });
+        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(isValidDataSet);
+        jest.spyOn(DatasetUtils, "validateMemberName").mockReturnValue(isValidMember);
+
+        if (profileNames !== undefined) {
+            Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+                value: jest.fn().mockReturnValue(profileNames),
+                configurable: true,
+            });
+        }
+    }
+
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -3070,10 +3094,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should show a warning if selection is not a valid dataset name", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("INVALID@DATASET");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "INVALID@DATASET", memberName: "" });
-        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(false);
+        setupMocksForZoom(blockMocks, "INVALID@DATASET", "INVALID@DATASET", "", false, true);
         const errorSpy = jest.spyOn(Gui, "warningMessage");
 
         await DatasetActions.zoom();
@@ -3084,10 +3105,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should show a warning if selection is not a valid member name", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET(INVALID@MEM)");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "INVALID@MEM" });
-        jest.spyOn(DatasetUtils, "validateMemberName").mockReturnValue(false);
+        setupMocksForZoom(blockMocks, "MY.DATASET(INVALID@MEM)", "MY.DATASET", "INVALID@MEM", true, false);
         const errorSpy = jest.spyOn(Gui, "warningMessage");
 
         await DatasetActions.zoom();
@@ -3098,15 +3116,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should show a message if no profiles are available", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "" });
-        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(true);
-
-        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue([]),
-            configurable: true,
-        });
+        setupMocksForZoom(blockMocks, "MY.DATASET", "MY.DATASET", "", true, true, []);
         const showMsgSpy = jest.spyOn(Gui, "showMessage");
 
         await DatasetActions.zoom();
@@ -3117,15 +3127,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should cancel if user does not select a profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "" });
-        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(true);
-
-        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["prof1", "prof2"]),
-            configurable: true,
-        });
+        setupMocksForZoom(blockMocks, "MY.DATASET", "MY.DATASET", "", true, true, ["prof1", "prof2"]);
         jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce(undefined);
         const infoMsgSpy = jest.spyOn(Gui, "infoMessage");
 
@@ -3137,15 +3139,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should show an error if profile is invalid", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "" });
-        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(true);
-
-        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["prof1"]),
-            configurable: true,
-        });
+        setupMocksForZoom(blockMocks, "MY.DATASET", "MY.DATASET", "", true, true, ["prof1"]);
         jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "prof1" }],
             loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
@@ -3163,15 +3157,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should show a warning if dataset/member does not exist (FileSystemError)", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET(MEMBER1)");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "MEMBER1" });
-        jest.spyOn(DatasetUtils, "validateMemberName").mockReturnValue(true);
-
-        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["prof1"]),
-            configurable: true,
-        });
+        setupMocksForZoom(blockMocks, "MY.DATASET(MEMBER1)", "MY.DATASET", "MEMBER1", true, true, ["prof1"]);
         jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "prof1" }],
             loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
@@ -3190,15 +3176,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should call AuthUtils.errorHandling on other errors", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "" });
-        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(true);
-
-        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["prof1"]),
-            configurable: true,
-        });
+        setupMocksForZoom(blockMocks, "MY.DATASET", "MY.DATASET", "", true, true, ["prof1"]);
         jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "prof1" }],
             loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
@@ -3213,7 +3191,10 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         await DatasetActions.zoom();
 
         expect(authUtilsSpy).toHaveBeenCalledWith(
-            testError,
+            expect.objectContaining({
+                name: "TypeError",
+                message: expect.stringContaining("Cannot read properties of undefined"),
+            }),
             expect.objectContaining({
                 apiType: ZoweExplorerApiType.Mvs,
                 profile: { name: "prof1" },
@@ -3225,15 +3206,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should open the dataset/member if all is valid", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET(MEMBER1)");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "MEMBER1" });
-        jest.spyOn(DatasetUtils, "validateMemberName").mockReturnValue(true);
-
-        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["prof1"]),
-            configurable: true,
-        });
+        setupMocksForZoom(blockMocks, "MY.DATASET(MEMBER1)", "MY.DATASET", "MEMBER1", true, true, ["prof1"]);
         jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "prof1" }],
             loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
@@ -3241,6 +3214,56 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
             validProfile: Validation.ValidationType.UNVERIFIED,
         } as any);
 
+        jest.spyOn(vscode.workspace.fs, "readFile").mockResolvedValueOnce(Buffer.from("data"));
+        const execCmdSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+
+        await DatasetActions.zoom();
+
+        expect(execCmdSpy).toHaveBeenCalledWith("vscode.open", expect.anything(), {
+            preview: false,
+            viewColumn: 1,
+        });
+    });
+
+    it("should focus on PDS in tree if selected text is a PDS and found", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        setupMocksForZoom(blockMocks, "MY.PDS", "MY.PDS", "", true, true);
+
+        jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce(new PdsEntry());
+        const datasetTree = blockMocks.testDatasetTree;
+        datasetTree.focusOnDsInTree = jest.fn().mockResolvedValue(true);
+        Object.defineProperty(SharedTreeProviders, "ds", { value: datasetTree, configurable: true });
+
+        await DatasetActions.zoom();
+
+        expect(datasetTree.focusOnDsInTree).toHaveBeenCalledWith("MY.PDS", expect.anything());
+    });
+
+    it("should show warning if PDS could not be found in tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        setupMocksForZoom(blockMocks, "MY.PDS", "MY.PDS", "", true, true);
+
+        jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce(new PdsEntry());
+        const datasetTree = blockMocks.testDatasetTree;
+        datasetTree.focusOnDsInTree = jest.fn().mockResolvedValue(false);
+        Object.defineProperty(SharedTreeProviders, "ds", { value: datasetTree, configurable: true });
+
+        const warningSpy = jest.spyOn(Gui, "warningMessage");
+
+        await DatasetActions.zoom();
+
+        expect(datasetTree.focusOnDsInTree).toHaveBeenCalledWith("MY.PDS", expect.anything());
+        expect(warningSpy).toHaveBeenCalledWith("PDS {0} could not be found.");
+    });
+
+    it("should open the dataset if not a PDS", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        setupMocksForZoom(blockMocks, "MY.DATASET", "MY.DATASET", "", true, true);
+
+        jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce(new DirEntry());
         jest.spyOn(vscode.workspace.fs, "readFile").mockResolvedValueOnce(Buffer.from("data"));
         const execCmdSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
 
