@@ -350,3 +350,11 @@ ul {
     height: 1.5rem;
     width: 1.5rem;
 }
+.centeredContainerStyle {
+    display: "flex";
+    justify-content: "center";
+    align-items: "center";
+    height: "100vh";
+    width: "100vw";
+    background: "#f9f9f9";
+}

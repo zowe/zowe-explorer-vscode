@@ -5,6 +5,7 @@ import { cloneDeep } from "es-toolkit";
 import { isSecureOrigin } from "../utils";
 import { schemaValidation } from "../../../utils/ConfigEditor";
 import "./App.css";
+import { VSCodeButton, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 const vscodeApi = acquireVsCodeApi();
 
 export function App() {
@@ -60,6 +61,7 @@ export function App() {
   }>({});
   const [showDropdown, setShowDropdown] = useState(false);
   const [schemaValidations, setSchemaValidations] = useState<{ [configPath: string]: schemaValidation | undefined }>({});
+  const [selectedProfileKey, setSelectedProfileKey] = useState<string | null>(null);
   // Invoked on webview load
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -324,6 +326,43 @@ export function App() {
 
   const handleTabChange = (index: number) => {
     setSelectedTab(index);
+  };
+
+  const renderProfiles = (profilesObj: any) => {
+    if (!profilesObj || typeof profilesObj !== "object") return null;
+
+    return (
+      <div style={{ display: "flex", gap: "2rem" }}>
+        <div style={{ width: "250px", paddingRight: "1rem" }}>
+          {Object.keys(profilesObj).map((profileKey) => (
+            <div
+              key={profileKey}
+              className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""}`}
+              style={{
+                cursor: "pointer",
+                margin: "8px 0",
+                padding: "8px",
+                border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "1px solid #ccc",
+                backgroundColor: selectedProfileKey === profileKey ? "var(--vscode-button-hoverBackground)" : "transparent",
+              }}
+              onClick={() => setSelectedProfileKey(profileKey)}
+            >
+              <strong>{profileKey}</strong>
+            </div>
+          ))}
+        </div>
+
+        {/* Profile Details */}
+        <div style={{ flexGrow: 1 }}>
+          {selectedProfileKey && (
+            <div>
+              {/* <h3>Profile: {selectedProfileKey}</h3> */}
+              {renderConfig(profilesObj[selectedProfileKey], ["profiles", selectedProfileKey])}
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   const renderConfig = (obj: any, path: string[] = []) => {
@@ -823,28 +862,8 @@ export function App() {
       {configurations.map((config, index) => (
         <div key={index} className={`panel ${selectedTab === index ? "active" : ""}`}>
           <div className="config-section">
-            <h2>
-              {l10n.t("Profiles")}
-              <button className="add-default-button" title={`Add key inside profiles`} onClick={() => openAddProfileModalAtPath([])}>
-                <span className="codicon codicon-add"></span>
-              </button>
-              <button className="add-default-button" title={`Add child object inside "profiles""`} onClick={() => openAddLayerModalAtPath([])}>
-                <span className="codicon codicon-bracket-dot"></span>
-              </button>
-            </h2>
-            {selectedTab === index && renderConfig(config.properties.profiles)}
-          </div>
-          <div className="config-section">
-            <div className="defaults-header">
-              <h2>
-                {l10n.t("Defaults")}
-                <button className="add-default-button" title={l10n.t("Add new default")} onClick={() => setNewKeyModalOpen(true)}>
-                  <span className="codicon codicon-add"></span>
-                </button>
-              </h2>
-            </div>
-
-            {selectedTab === index && renderDefaults(config.properties.defaults)}
+            <h2>{l10n.t("Profiles")}</h2>
+            {selectedTab === index && renderProfiles(config.properties.profiles)}
           </div>
         </div>
       ))}
