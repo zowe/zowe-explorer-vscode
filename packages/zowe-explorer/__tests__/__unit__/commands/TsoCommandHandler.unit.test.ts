@@ -710,7 +710,46 @@ describe("TsoCommandHandler unit testing", () => {
 
         const result = await (handler as any).getTsoParams();
 
-        console.log(result);
         expect(result.account).toEqual("/d iplinfo");
+    });
+    it("getTsoParams: does not use default tso profile if not present", async () => {
+        const getTsoActions = () => {
+            const tsoActions = TsoCommandHandler.getInstance();
+            return tsoActions;
+        };
+        const allProfiles = [
+            {
+                name: "firstName",
+                profile: {
+                    user: "firstName",
+                    password: "12345",
+                    account: "FAKE.ACCOUNT",
+                    logonProcedure: "BADPROC",
+                },
+                type: "tso",
+            },
+        ];
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: allProfiles,
+                    defaultProfile: undefined,
+                };
+            }),
+        });
+        const handler = getTsoActions();
+
+        const mockProfileInfo = {
+            getDefaultProfile: jest.fn().mockReturnValue(undefined),
+            getAllProfiles: jest.fn().mockReturnValue(allProfiles),
+        };
+        const mockProfileInstance = {
+            getProfileInfo: jest.fn().mockResolvedValue(mockProfileInfo),
+        };
+        (handler as any).profileInstance = mockProfileInstance;
+
+        const result = await (handler as any).getTsoParams();
+
+        expect(result.account).toEqual("fake");
     });
 });

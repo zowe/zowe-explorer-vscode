@@ -226,6 +226,9 @@ export class ProfileInfo {
     public mergeArgsForProfile(): any {
         return;
     }
+    public getAllProfiles(): any {
+        return;
+    }
 }
 
 export class ConfigUtils {
