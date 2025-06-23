@@ -145,7 +145,6 @@ describe("TsoCommandHandler unit testing", () => {
     afterEach(() => {
         (TsoCommandHandler as any).instance = undefined;
         jest.clearAllMocks();
-        // jest.restoreAllMocks();
     });
 
     const apiRegisterInstance = ZoweExplorerApiRegister.getInstance();
@@ -675,5 +674,43 @@ describe("TsoCommandHandler unit testing", () => {
         });
         await getTsoActions().issueTsoCommand();
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
+    });
+
+    it("getTsoParams: uses default tso profile if present", async () => {
+        const defaultProfile = {
+            name: "defaultTso",
+            profile: {
+                account: "DEFACC",
+            },
+            type: "tso",
+        };
+
+        const getTsoActions = () => {
+            const tsoActions = TsoCommandHandler.getInstance();
+            return tsoActions;
+        };
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [],
+                    defaultProfile: defaultProfile,
+                };
+            }),
+        });
+        const handler = getTsoActions();
+
+        const mockProfileInfo = {
+            getDefaultProfile: jest.fn().mockReturnValue(defaultProfile),
+            getAllProfiles: [],
+        };
+        const mockProfileInstance = {
+            getProfileInfo: jest.fn().mockResolvedValue(mockProfileInfo),
+        };
+        (handler as any).profileInstance = mockProfileInstance;
+
+        const result = await (handler as any).getTsoParams();
+
+        console.log(result);
+        expect(result.account).toEqual("/d iplinfo");
     });
 });
