@@ -420,6 +420,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.zoom",
+        "title": "%zoom%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.submitMember",
         "title": "%submitMember%",
         "category": "Zowe Explorer"
@@ -712,6 +717,11 @@
         "command": "zowe.openRecentMember",
         "title": "%zowe.openRecentMember%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.displayReleaseNotes",
+        "title": "%zowe.displayReleaseNotes%",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -720,6 +730,11 @@
           "when": "editorFocus && focusedView != 'workbench.panel.output'",
           "command": "zowe.ds.submitJcl",
           "group": "000_zowe_dsMainframeInteraction@1"
+        },
+        {
+          "when": "editorHasSelection && editorFocus",
+          "command": "zowe.ds.zoom",
+          "group": "000_zowe_dsMainframeInteraction@2"
         }
       ],
       "explorer/context": [
@@ -1659,6 +1674,10 @@
           "command": "zowe.openRecentMember",
           "when": "true",
           "group": "navigation"
+        },
+        {
+          "command": "zowe.displayReleaseNotes",
+          "when": "true"
         }
       ]
     },
@@ -2026,6 +2045,12 @@
           "type": "number",
           "default": 0,
           "description": "%zowe.settings.requestTimeout%",
+          "scope": "window"
+        },
+        "zowe.settings.displayReleaseNotes": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.settings.displayReleaseNotes%",
           "scope": "window"
         }
       }

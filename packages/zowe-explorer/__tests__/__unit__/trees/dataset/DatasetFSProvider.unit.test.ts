@@ -32,6 +32,7 @@ import { Profiles } from "../../../../src/configuration/Profiles";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import * as path from "path";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 const dayjs = require("dayjs");
 
 const testProfile = createIProfile();
@@ -84,8 +85,10 @@ describe("DatasetFSProvider", () => {
             value: jest.fn().mockReturnValue({
                 loadNamedProfile: jest.fn().mockReturnValue(testProfile),
                 allProfiles: [],
+                getProfileFromConfig: jest.fn(),
             } as any),
         });
+        jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
     });
 
     afterAll(() => {
@@ -480,6 +483,7 @@ describe("DatasetFSProvider", () => {
             };
 
             Profiles.extenderTypeReady.set(testProfile.name, profilePromise);
+
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce({
                 ...testEntries.ps,
                 wasAccessed: true,
@@ -508,6 +512,7 @@ describe("DatasetFSProvider", () => {
             // Create a mock instance of Profiles
             const mockProfilesInstance = {
                 allProfiles: mockAllProfiles,
+
             };
 
             // Mock Profiles.getInstance to return the mock instance
@@ -521,6 +526,7 @@ describe("DatasetFSProvider", () => {
                 }),
             };
             jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
+
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce({
                 ...testEntries.ps,
                 wasAccessed: true,
@@ -536,6 +542,7 @@ describe("DatasetFSProvider", () => {
             await DatasetFSProvider.instance.readFile(testUris.ps);
 
             await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
+
         });
     });
 
@@ -1280,7 +1287,7 @@ describe("DatasetFSProvider", () => {
             mvsApiMock.mockRestore();
             _lookupParentDirectoryMock.mockRestore();
         });
-
+      
         it("renames a PDS", async () => {
             const oldPds = new PdsEntry("USER.DATA.PDS");
             oldPds.metadata = new DsEntryMetadata({ profile: testProfile, path: "/USER.DATA.PDS" });

@@ -18,6 +18,7 @@ import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 
 const testProfile = createIProfile();
 
@@ -78,8 +79,11 @@ describe("UssFSProvider", () => {
             value: jest.fn().mockReturnValue({
                 loadNamedProfile: jest.fn().mockReturnValue(testProfile),
                 allProfiles: [],
+                getProfileFromConfig: jest.fn(),
+
             } as any),
         });
+        jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
     });
 
     afterAll(() => {
@@ -1276,6 +1280,7 @@ describe("UssFSProvider", () => {
                     : ({ fileList, create, uploadFromBuffer } as any)
             );
             const getInfoFromUri = jest.spyOn(UssFSProvider.instance as any, "_getInfoFromUri");
+
 
             return {
                 profile: createIProfile(),

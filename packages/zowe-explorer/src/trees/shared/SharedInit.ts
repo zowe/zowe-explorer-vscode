@@ -51,6 +51,7 @@ import { CertificateWizard } from "../../utils/CertificateWizard";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 import { ZoweUriHandler } from "../../utils/UriHandler";
 import { TroubleshootError } from "../../utils/TroubleshootError";
+import { ReleaseNotes } from "../../utils/ReleaseNotes";
 
 export class SharedInit {
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
@@ -91,6 +92,15 @@ export class SharedInit {
                 return new SharedHistoryView(context, providers, commandProviders);
             })
         );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.displayReleaseNotes", () => {
+                ReleaseNotes.display(context, true); // Always display when command is run
+            })
+        );
+
+        // Display release notes on activation
+        ReleaseNotes.display(context, false);
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
@@ -327,9 +337,23 @@ export class SharedInit {
                     await this.setupRemoteWorkspaceFolders(undefined, profileType);
                 })
             );
+
             // initialize the Constants.filesToCompare array during initialization
             LocalFileManagement.resetCompareSelection();
         }
+
+        // Prevent VS Code from restoring selected the webview panels after restart
+        // This is a workaround for issue where the webview panels are not restored properly when VS Code is closed & reopened
+        context.subscriptions.push(
+            vscode.window.registerWebviewPanelSerializer("ZEAPIWebview", {
+                deserializeWebviewPanel(panel) {
+                    if (panel.title.startsWith(Constants.RELEASE_NOTES_PANEL_TITLE) || panel.title.startsWith(Constants.SHARED_HISTORY_PANEL_TITLE)) {
+                        panel.dispose();
+                    }
+                    return Promise.resolve();
+                },
+            })
+        );
     }
 
     public static watchConfigProfile(context: vscode.ExtensionContext): void {
