@@ -752,4 +752,65 @@ describe("TsoCommandHandler unit testing", () => {
 
         expect(result.account).toEqual("fake");
     });
+
+    it("getTsoParams: maps merged args to tsoProfile.profile fields", async () => {
+        const handler = TsoCommandHandler.getInstance();
+
+        // Mock tsoProfile with empty fields
+        const tsoProfile = {
+            name: "testTso",
+            profile: {
+                account: undefined,
+                characterSet: undefined,
+                codePage: undefined,
+                columns: undefined,
+                logonProcedure: undefined,
+                regionSize: undefined,
+                rows: undefined,
+            },
+            type: "tso",
+            message: "",
+            failNotFound: false,
+        };
+
+        // Mock mergeArgsForProfile to return knownArgs for all fields
+        const mergedArgs = {
+            knownArgs: [
+                { argName: "account", argValue: "ACCVAL" },
+                { argName: "characterSet", argValue: "CSVAL" },
+                { argName: "codePage", argValue: "CPVAL" },
+                { argName: "columns", argValue: "80" },
+                { argName: "logonProcedure", argValue: "LOGPROC" },
+                { argName: "regionSize", argValue: "4096" },
+                { argName: "rows", argValue: "24" },
+            ],
+        };
+
+        const mockProfileInfo = {
+            getDefaultProfile: jest.fn().mockReturnValue(undefined),
+            getAllProfiles: jest.fn().mockReturnValue([tsoProfile]),
+            mergeArgsForProfile: jest.fn().mockReturnValue(mergedArgs),
+        };
+
+        const mockProfileInstance = {
+            getProfileInfo: jest.fn().mockResolvedValue(mockProfileInfo),
+        };
+
+        (handler as any).profileInstance = mockProfileInstance;
+
+        // Mock selectServiceProfile to return our tsoProfile
+        jest.spyOn(handler, "selectServiceProfile").mockResolvedValue(tsoProfile);
+
+        const result = await (handler as any).getTsoParams();
+
+        expect(result).toEqual({
+            account: "ACCVAL",
+            characterSet: "CSVAL",
+            codePage: "CPVAL",
+            columns: "80",
+            logonProcedure: "LOGPROC",
+            regionSize: "4096",
+            rows: "24",
+        });
+    });
 });
