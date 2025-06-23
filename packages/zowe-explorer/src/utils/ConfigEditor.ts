@@ -190,7 +190,7 @@ export class ConfigEditor extends WebView {
 
         for (const change of changes) {
             try {
-                profInfo.getTeamConfig().set(`profiles.${change.key}`, change.value, { parseString: true, secure: change.secure });
+                profInfo.getTeamConfig().set(change.key, change.value, { parseString: true, secure: change.secure });
             } catch (err) {
                 // console.log(err);
             }
@@ -198,7 +198,7 @@ export class ConfigEditor extends WebView {
 
         for (const deletion of deletions) {
             try {
-                profInfo.getTeamConfig().delete(`profiles.${deletion.key}`);
+                profInfo.getTeamConfig().delete(deletion.key);
             } catch (err) {
                 // console.log(err);
             }

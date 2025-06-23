@@ -164,14 +164,14 @@ export function App() {
 
     const configPath = configurations[selectedTab!]!.configPath;
     const path = [...newProfileKeyPath, newProfileKey.trim()];
-    const fullKey = path.join(".");
+    const fullKey = isSecure ? path.join(".").replace("secure", "properties") : path.join(".");
     const profileKey = path[0];
 
     setPendingChanges((prev) => ({
       ...prev,
       [configPath]: {
         ...prev[configPath],
-        [fullKey]: { value: newProfileValue, path, profile: profileKey, secure: isSecure },
+        [fullKey]: { value: newProfileValue, path: path.slice(-1), profile: profileKey, secure: isSecure },
       },
     }));
 
@@ -417,20 +417,19 @@ export function App() {
 
       if (isParent) {
         return (
-          <div key={fullKey} className="config-item parent" style={{ marginLeft: `${path.length * 10}px` }}>
+          <div key={fullKey} className="config-item parent">
             <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
-              {"> "}
-              {displayKey}
+              {displayKey?.toLocaleLowerCase() === "properties" ? "Profile Properties" : displayKey}
               <button className="add-default-button" title={`Add key inside "${fullKey}"`} onClick={() => openAddProfileModalAtPath(currentPath)}>
                 <span className="codicon codicon-add"></span>
               </button>
-              <button
+              {/* <button
                 className="add-default-button"
                 title={`Add child object inside "${fullKey}"`}
                 onClick={() => openAddLayerModalAtPath(currentPath)}
               >
                 <span className="codicon codicon-bracket-dot"></span>
-              </button>
+              </button> */}
             </h3>
             {renderConfig(value, currentPath)}
           </div>
@@ -438,11 +437,22 @@ export function App() {
       } else if (isArray) {
         const tabsHiddenItems = hiddenItems[configurations[selectedTab!]!.configPath];
         return (
-          <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
-            <span className="config-label" style={{ fontWeight: "bold" }}>
-              {"> "}
-              {displayKey}
-            </span>
+          <div key={fullKey} className="config-item">
+            <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
+              <span className="config-label" style={{ fontWeight: "bold" }}>
+                {displayKey?.toLocaleLowerCase() === "secure" ? "Secure Properties" : displayKey}
+              </span>
+              <button
+                className="add-default-button"
+                title={`Add key inside "${fullKey}"`}
+                onClick={() => {
+                  setIsSecure(true);
+                  openAddProfileModalAtPath(currentPath);
+                }}
+              >
+                <span className="codicon codicon-add"></span>
+              </button>
+            </h3>
             <div>
               {Array.from(new Set(value)).map((item: any, index: number) => {
                 // Logic to handle hidden items in secure properties
@@ -480,7 +490,7 @@ export function App() {
         );
       } else {
         return (
-          <div key={fullKey} className="config-item" style={{ marginLeft: `${path.length * 10}px` }}>
+          <div key={fullKey} className="config-item">
             <div className="config-item-container">
               <span className="config-label">{displayKey}</span>
               {typeof pendingValue === "string" || typeof pendingValue === "boolean" || typeof pendingValue === "number" ? (
@@ -523,14 +533,14 @@ export function App() {
 
       if (isParent) {
         return (
-          <div key={fullKey} className="config-item parent" style={{ marginLeft: `${currentPath.length * 10}px` }}>
+          <div key={fullKey} className="config-item parent">
             <h3 className={`header-level-${currentPath.length}`}>{key}</h3>
             {renderDefaults(value)}
           </div>
         );
       } else if (isArray) {
         return (
-          <div key={fullKey} className="config-item" style={{ marginLeft: `${currentPath.length * 10}px` }}>
+          <div key={fullKey} className="config-item">
             <span className="config-label">
               {">"}
               {key}
@@ -546,7 +556,7 @@ export function App() {
         );
       } else {
         return (
-          <div key={fullKey} className="config-item" style={{ marginLeft: `${currentPath.length * 10}px` }}>
+          <div key={fullKey} className="config-item">
             <div className="config-item-container">
               <span className="config-label">{key}</span>
               <input
@@ -594,10 +604,11 @@ export function App() {
     setEditModalOpen(false);
     setPendingChanges((prev) => {
       const configPath = configurations[selectedTab!]!.configPath;
+      console.log(editingKey);
       const updatedKey = editingKey.replace("secure", "properties");
+      console.log(updatedKey);
       const profileKey = updatedKey.split(".")[0];
       const value = editingValue;
-
       // Create a new object with the updated value
       const newPendingChanges = {
         ...prev,
@@ -606,7 +617,7 @@ export function App() {
           [updatedKey]: {
             value,
             profile: profileKey,
-            path: updatedKey.split("."),
+            path: updatedKey.split(".").slice(-1),
             configPath,
             secure: true,
           },
@@ -808,7 +819,7 @@ export function App() {
         />
         <div className="modal-actions">
           <div style={{ display: "flex", alignItems: "center" }}>
-            {newProfileKeyPath && newProfileKeyPath.join(".").endsWith("properties") && (
+            {/* {newProfileKeyPath && newProfileKeyPath.join(".").endsWith("properties") && (
               <label
                 className="secure-checkbox-label"
                 style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", marginRight: 8 }}
@@ -821,7 +832,7 @@ export function App() {
                   style={{ marginLeft: 4 }}
                 />
               </label>
-            )}
+            )} */}
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end", flexGrow: 1 }}>
             <button style={{ marginRight: 8 }} onClick={handleAddNewProfileKey}>
@@ -908,7 +919,7 @@ export function App() {
           background: "var(--vscode-editor-background)",
         }}
       >
-        <h1>{l10n.t("Configuration Editor")}</h1>
+        <h1>{l10n.t("Zowe Configuration Editor")}</h1>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <button
             className="header-button"
