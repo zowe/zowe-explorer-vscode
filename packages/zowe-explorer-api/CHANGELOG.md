@@ -49,7 +49,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Generalized and updated the README. [#3367](https://github.com/zowe/zowe-explorer-vscode/issues/3367)
 - Added ability to pass the `OverrideWithEnv` property to the `imperative.ProfileInfo` class when the setting "Override with Environment Variables" is enabled. When enabled, environment variables such as `ZOWE_OPT_USER` and `ZOWE_OPT_PASSWORD` take priority over properties specified in the team configuration. [#3591](https://github.com/zowe/zowe-explorer-vscode/pull/3591)
 - Implemented the `Paginator` class, providing a generic facility for extenders to paginate tree nodes within their own tree views. [#3585](https://github.com/zowe/zowe-explorer-vscode/pull/3585)
-- Added an optional parameter of ProfileCache instance to ZoweTreeNode.getProfile to fix an issue seen with out of date profile information within tree views. [#3664](https://github.com/zowe/zowe-explorer-vscode/issues/3664)
+- Added an optional parameter of `ProfileCache` instance to `ZoweTreeNode.getProfile` to fix an issue seen with out of date profile information within tree views. [#3664](https://github.com/zowe/zowe-explorer-vscode/issues/3664)
 
 ### Bug fixes
 
