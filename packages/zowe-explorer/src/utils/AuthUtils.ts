@@ -30,6 +30,7 @@ export class AuthUtils {
      *
      * @param err {Error} The error that occurred
      * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
+     * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
     public static async handleProfileAuthOnError(err: Error, profile?: imperative.IProfileLoaded): Promise<void> {
         if (
@@ -55,12 +56,14 @@ export class AuthUtils {
                 imperativeError: err,
                 isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
                 errorCorrelation,
+                throwErrorOnCancel: true,
             };
             // If the profile is already locked, prompt the user to re-authenticate.
             if (AuthHandler.isProfileLocked(profile)) {
                 await AuthHandler.waitForUnlock(profile);
             } else {
                 // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
+                // This may throw AuthCancelledError if the user cancels the authentication prompt
                 await AuthHandler.lockProfile(profile, authOpts);
             }
         } else if (profile != null && AuthHandler.isProfileLocked(profile)) {
