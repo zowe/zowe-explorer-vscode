@@ -604,9 +604,7 @@ export function App() {
     setEditModalOpen(false);
     setPendingChanges((prev) => {
       const configPath = configurations[selectedTab!]!.configPath;
-      console.log(editingKey);
       const updatedKey = editingKey.replace("secure", "properties");
-      console.log(updatedKey);
       const profileKey = updatedKey.split(".")[0];
       const value = editingValue;
       // Create a new object with the updated value
@@ -740,7 +738,7 @@ export function App() {
     const currentConfig = { ...baseConfig };
 
     // Construct the type path: profiles.[...pathWithoutLastSegment].type
-    const typePath = ["profiles", ...path.slice(0, -1), "type"];
+    const typePath = [...path.slice(0, -1), "type"];
 
     // Remove "profiles" prefix to match pendingChanges key format
     const modifiedTypePath = typePath.slice(1).join(".");
