@@ -16,7 +16,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed unexpected behavior occuring with TSO commands. ZE now does not ignore default TSO profile when there are multiple TSO profiles. [#2528](https://github.com/zowe/zowe-explorer-vscode/issues/2528)
+- Fixed unexpected behavior occuring with TSO commands. Zowe Explorer now does not ignore the default TSO profile when there are multiple TSO profiles. [#2528](https://github.com/zowe/zowe-explorer-vscode/issues/2528)
 - Fixed a bug where USS files and data set VS Code editors accessed by an extender (SSH, FTP, etc) are not restored when reloading/reopening a window. [#3678](https://github.com/zowe/zowe-explorer-vscode/pull/3678)
 - Fixed an issue where an incorrect profile name is shown in the output for the "Issue Unix Command" function when an SSH profile is required to issue commands. [#3646](https://github.com/zowe/zowe-explorer-vscode/issues/3646)
 - Improved integrated terminal behavior to match standard terminal functionality. Now, users can smoothly maintain proper cursor position when typing and backspacing. [#3391](https://github.com/zowe/zowe-explorer-vscode/issues/3391)
