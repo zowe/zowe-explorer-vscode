@@ -49,7 +49,7 @@ export type ProfileLike = string | imperative.IProfileLoaded;
 export class AuthCancelledError extends vscode.FileSystemError {
     public readonly profileName: string;
 
-    constructor(profileName: string, message?: string) {
+    public constructor(profileName: string, message?: string) {
         super(message ?? `Authentication cancelled for profile: ${profileName}`);
         this.name = "AuthCancelledError";
         this.profileName = profileName;
