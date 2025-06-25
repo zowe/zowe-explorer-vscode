@@ -279,7 +279,7 @@ importers:
         version: 8.21.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0)
       '@zowe/zos-tso-for-zowe-sdk':
         specifier: ^8.21.0
-        version: 8.21.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0)
+        version: 8.23.1(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0)
       '@zowe/zos-uss-for-zowe-sdk':
         specifier: ^8.21.0
         version: 8.21.0(@zowe/imperative@8.21.0)
@@ -4003,8 +4003,8 @@ packages:
       '@zowe/zos-files-for-zowe-sdk': 8.21.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0)
     dev: false
 
-  /@zowe/zos-tso-for-zowe-sdk@8.21.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0):
-    resolution: {integrity: sha512-AhDNs4UAunyzDEobJ/QIxBtlLTlyiL4xCu0ZU39XRyfwodJnBlY+sp5jhxC2H0uKOfdYBVbL1wx7BtxP4XZQNQ==}
+  /@zowe/zos-tso-for-zowe-sdk@8.23.1(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0):
+    resolution: {integrity: sha512-2bStOPQtfgWaiirq1W1Yns7pKHXGUbjBaELwLtI9PRzMNOf29gSlpr61Q48btirn8FswazhgSNAI1iw10379Bw==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
@@ -4012,7 +4012,7 @@ packages:
     dependencies:
       '@zowe/core-for-zowe-sdk': 8.21.0(@zowe/imperative@8.21.0)
       '@zowe/imperative': 8.21.0
-      '@zowe/zosmf-for-zowe-sdk': 8.21.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0)
+      '@zowe/zosmf-for-zowe-sdk': 8.23.1(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0)
     dev: false
 
   /@zowe/zos-uss-for-zowe-sdk@8.21.0(@zowe/imperative@8.21.0):
@@ -4027,6 +4027,17 @@ packages:
 
   /@zowe/zosmf-for-zowe-sdk@8.21.0(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0):
     resolution: {integrity: sha512-Uih5ozzooM9CDdgcdle2cMXv4v1sPf2yqEc/6gjk+4QhFi8xuU0uTG4AnZlo9VTGuUXx3dyzZxB9fKNTn8BMQg==}
+    engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@zowe/core-for-zowe-sdk': ^8.0.0
+      '@zowe/imperative': ^8.0.0
+    dependencies:
+      '@zowe/core-for-zowe-sdk': 8.21.0(@zowe/imperative@8.21.0)
+      '@zowe/imperative': 8.21.0
+    dev: false
+
+  /@zowe/zosmf-for-zowe-sdk@8.23.1(@zowe/core-for-zowe-sdk@8.21.0)(@zowe/imperative@8.21.0):
+    resolution: {integrity: sha512-hTX8Rqpyyu3ln5baXZSXrbIs4ddC7Pidv21v6DDjxsJdlC9h8a3X3PayFcKTAE6vH7PmTcaKNNkIifcfP9hQkA==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0

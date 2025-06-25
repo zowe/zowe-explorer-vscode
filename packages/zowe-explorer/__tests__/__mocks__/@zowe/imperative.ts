@@ -220,6 +220,15 @@ export class ProfileInfo {
     ): any {
         return;
     }
+    public static profAttrsToProfLoaded(): any {
+        return;
+    }
+    public mergeArgsForProfile(): any {
+        return;
+    }
+    public getAllProfiles(): any {
+        return;
+    }
 }
 
 export class ConfigUtils {
