@@ -33,10 +33,11 @@ export class AuthUtils {
      */
     public static async handleProfileAuthOnError(err: Error, profile?: imperative.IProfileLoaded): Promise<void> {
         if (
-            err instanceof imperative.ImperativeError &&
-            profile != null &&
-            (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
-                err.message.includes("All configured authentication methods failed"))
+            (err instanceof imperative.ImperativeError &&
+                profile != null &&
+                (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                    err.message.includes("All configured authentication methods failed"))) ||
+            err.message.includes("HTTP(S) status 401")
         ) {
             if (!(await AuthHandler.shouldHandleAuthError(profile.name))) {
                 ZoweLogger.debug(`[AuthUtils] Skipping authentication prompt for profile ${profile.name} due to debouncing`);
@@ -61,7 +62,7 @@ export class AuthUtils {
                 await AuthHandler.waitForUnlock(profile);
             } else {
                 // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
-                await AuthHandler.lockProfile(profile, authOpts);
+                await AuthHandler.lockProfile(profile, authOpts as any);
             }
         } else if (profile != null && AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
