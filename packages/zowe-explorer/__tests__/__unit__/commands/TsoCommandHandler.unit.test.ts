@@ -756,7 +756,6 @@ describe("TsoCommandHandler unit testing", () => {
     it("getTsoParams: maps merged args to tsoProfile.profile fields", async () => {
         const handler = TsoCommandHandler.getInstance();
 
-        // Mock tsoProfile with empty fields
         const tsoProfile = {
             name: "testTso",
             profile: {
@@ -772,8 +771,6 @@ describe("TsoCommandHandler unit testing", () => {
             message: "",
             failNotFound: false,
         };
-
-        // Mock mergeArgsForProfile to return knownArgs for all fields
         const mergedArgs = {
             knownArgs: [
                 { argName: "account", argValue: "ACCVAL" },
@@ -798,7 +795,6 @@ describe("TsoCommandHandler unit testing", () => {
 
         (handler as any).profileInstance = mockProfileInstance;
 
-        // Mock selectServiceProfile to return our tsoProfile
         jest.spyOn(handler, "selectServiceProfile").mockResolvedValue(tsoProfile);
 
         const result = await (handler as any).getTsoParams();
