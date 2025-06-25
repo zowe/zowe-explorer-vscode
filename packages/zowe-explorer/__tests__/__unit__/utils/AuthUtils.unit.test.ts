@@ -966,4 +966,71 @@ describe("AuthUtils", () => {
             expect(sessionNode.tooltip).toContain("Auth Method: Token-based Authentication");
         });
     });
+
+    describe("reauthenticateIfCancelled", () => {
+        const profile = { name: "test-profile", type: "zosmf" } as any;
+        let isProfileLockedMock: jest.SpyInstance;
+        let wasAuthCancelledMock: jest.SpyInstance;
+        let handleProfileAuthOnErrorMock: jest.SpyInstance;
+
+        beforeEach(() => {
+            isProfileLockedMock = jest.spyOn(AuthHandler, "isProfileLocked");
+            wasAuthCancelledMock = jest.spyOn(AuthHandler, "wasAuthCancelled");
+            handleProfileAuthOnErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockResolvedValue(undefined);
+        });
+
+        afterEach(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should not do anything if profile is not locked", async () => {
+            isProfileLockedMock.mockReturnValue(false);
+            wasAuthCancelledMock.mockReturnValue(true);
+
+            await AuthUtils.reauthenticateIfCancelled(profile);
+
+            expect(handleProfileAuthOnErrorMock).not.toHaveBeenCalled();
+        });
+
+        it("should not do anything if auth was not cancelled", async () => {
+            isProfileLockedMock.mockReturnValue(true);
+            wasAuthCancelledMock.mockReturnValue(false);
+
+            await AuthUtils.reauthenticateIfCancelled(profile);
+
+            expect(handleProfileAuthOnErrorMock).not.toHaveBeenCalled();
+        });
+
+        it("should trigger reauthentication if profile was locked and auth was cancelled", async () => {
+            isProfileLockedMock.mockReturnValue(true);
+            wasAuthCancelledMock.mockReturnValue(true);
+
+            await AuthUtils.reauthenticateIfCancelled(profile);
+
+            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledTimes(1);
+            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate.",
+                }),
+                profile
+            );
+        });
+
+        it("should propagate error if reauthentication fails", async () => {
+            isProfileLockedMock.mockReturnValue(true);
+            wasAuthCancelledMock.mockReturnValue(true);
+            const authError = new Error("Authentication failed again");
+            handleProfileAuthOnErrorMock.mockRejectedValue(authError);
+
+            await expect(AuthUtils.reauthenticateIfCancelled(profile)).rejects.toThrow(authError);
+
+            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledTimes(1);
+            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate.",
+                }),
+                profile
+            );
+        });
+    });
 });

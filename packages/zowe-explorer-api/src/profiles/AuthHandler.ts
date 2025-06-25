@@ -59,7 +59,31 @@ export class AuthCancelledError extends vscode.FileSystemError {
 export class AuthHandler {
     private static authPromptLocks = new Map<string, Mutex>();
     private static profileLocks = new Map<string, Mutex>();
+    private static authCancelledProfiles = new Set<string>();
     private static enabledProfileTypes: Set<string> = new Set(["zosmf"]);
+
+    /**
+     * Records whether the user cancelled the authentication prompt for a profile.
+     * @param profile The profile to update
+     * @param wasCancelled Whether the prompt was cancelled
+     */
+    public static setAuthCancelled(profile: ProfileLike, wasCancelled: boolean): void {
+        const profileName = AuthHandler.getProfileName(profile);
+        if (wasCancelled) {
+            this.authCancelledProfiles.add(profileName);
+        } else {
+            this.authCancelledProfiles.delete(profileName);
+        }
+    }
+
+    /**
+     * Checks if the last authentication attempt for a profile was cancelled.
+     * @param profile The profile to check
+     * @returns {boolean} True if authentication was cancelled, false otherwise
+     */
+    public static wasAuthCancelled(profile: ProfileLike): boolean {
+        return this.authCancelledProfiles.has(AuthHandler.getProfileName(profile));
+    }
 
     /**
      * Enables profile locks for the given type.
@@ -98,6 +122,7 @@ export class AuthHandler {
      */
     public static unlockProfile(profile: ProfileLike, refreshResources?: boolean): void {
         const profileName = AuthHandler.getProfileName(profile);
+        this.authCancelledProfiles.delete(profileName);
         this.authPromptLocks.get(profileName)?.release();
         const mutex = this.profileLocks.get(profileName);
         // If a mutex doesn't exist for this profile or the mutex is no longer locked, return
@@ -149,6 +174,7 @@ export class AuthHandler {
      */
     public static async promptForAuthentication(profile: ProfileLike, params: AuthPromptParams): Promise<boolean> {
         const profileName = AuthHandler.getProfileName(profile);
+        AuthHandler.setAuthCancelled(profileName, false);
         if (params.imperativeError.mDetails.additionalDetails) {
             const tokenError: string = params.imperativeError.mDetails.additionalDetails;
             if (tokenError.includes("Token is not valid or expired.") || params.isUsingTokenAuth) {
@@ -164,6 +190,7 @@ export class AuthHandler {
                     return true;
                 }
                 // User cancelled the SSO login prompt
+                AuthHandler.setAuthCancelled(profileName, true);
                 if (params.throwErrorOnCancel) {
                     throw new AuthCancelledError(profileName, "User cancelled SSO authentication");
                 }
@@ -180,6 +207,7 @@ export class AuthHandler {
 
         if (selection !== checkCredsButton) {
             // User cancelled the credential prompt
+            AuthHandler.setAuthCancelled(profileName, true);
             if (params.throwErrorOnCancel) {
                 throw new AuthCancelledError(profileName, "User cancelled credential authentication");
             }
@@ -194,6 +222,7 @@ export class AuthHandler {
         }
 
         // User cancelled during credential input
+        AuthHandler.setAuthCancelled(profileName, true);
         if (params.throwErrorOnCancel) {
             throw new AuthCancelledError(profileName, "User cancelled during credential input");
         }
@@ -286,6 +315,7 @@ export class AuthHandler {
         for (const mutex of this.profileLocks.values()) {
             mutex.release();
         }
+        this.authCancelledProfiles.clear();
     }
 
     /**

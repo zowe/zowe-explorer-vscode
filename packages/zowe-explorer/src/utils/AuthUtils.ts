@@ -25,6 +25,29 @@ interface ErrorContext {
 
 export class AuthUtils {
     /**
+     * Checks if a profile's authentication was previously cancelled and, if so,
+     * re-prompts the user to authenticate. This should be called before any
+     * remote operation that requires authentication.
+     * @param profile The profile to check.
+     * @throws {AuthCancelledError} If the user cancels the re-authentication prompt.
+     */
+    public static async reauthenticateIfCancelled(profile: imperative.IProfileLoaded): Promise<void> {
+        if (AuthHandler.isProfileLocked(profile) && AuthHandler.wasAuthCancelled(profile)) {
+            try {
+                // The original error doesn't matter here, we just need to trigger the flow.
+                await this.handleProfileAuthOnError(
+                    new Error("User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate."),
+                    profile
+                );
+            } catch (err) {
+                // If handleProfileAuthOnError fails (e.g., user cancels again),
+                // we should propagate that failure.
+                throw err;
+            }
+        }
+    }
+
+    /**
      * Locks the profile if an authentication error has occurred (prevents further requests in filesystem until unlocked).
      * If the error is not an authentication error, the profile is unlocked for further use.
      *
