@@ -237,6 +237,60 @@ describe("AuthHandler.promptForAuthentication", () => {
         expect(errorMessageMock).toHaveBeenCalledTimes(1);
         expect(promptCredentials).toHaveBeenCalledTimes(1);
     });
+
+    it("returns false when user cancels SSO login and throwErrorOnCancel is false", async () => {
+        const tokenNotValidMsg = "Token is not valid or expired.";
+        const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
+        const ssoLogin = jest.fn().mockResolvedValue(true);
+        const promptCredentials = jest.fn();
+        const showMessageMock = jest.spyOn(Gui, "showMessage").mockClear().mockResolvedValueOnce(undefined); // User cancels
+
+        const result = await AuthHandler.promptForAuthentication("lpar.zosmf", {
+            authMethods: { promptCredentials, ssoLogin },
+            imperativeError,
+        });
+
+        expect(result).toBe(false);
+        expect(promptCredentials).not.toHaveBeenCalled();
+        expect(ssoLogin).not.toHaveBeenCalled();
+        expect(showMessageMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns false when user cancels credential prompt and throwErrorOnCancel is false", async () => {
+        const tokenNotValidMsg = "Invalid credentials";
+        const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
+        const ssoLogin = jest.fn();
+        const promptCredentials = jest.fn();
+        const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockClear().mockResolvedValueOnce(undefined); // User cancels
+
+        const result = await AuthHandler.promptForAuthentication("lpar.zosmf", {
+            authMethods: { promptCredentials, ssoLogin },
+            imperativeError,
+        });
+
+        expect(result).toBe(false);
+        expect(ssoLogin).not.toHaveBeenCalled();
+        expect(errorMessageMock).toHaveBeenCalledTimes(1);
+        expect(promptCredentials).not.toHaveBeenCalled();
+    });
+
+    it("returns false when credential input is cancelled and throwErrorOnCancel is false", async () => {
+        const tokenNotValidMsg = "Invalid credentials";
+        const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
+        const ssoLogin = jest.fn();
+        const promptCredentials = jest.fn().mockResolvedValue(undefined); // User cancels credential input
+        const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockClear().mockResolvedValueOnce("Update Credentials");
+
+        const result = await AuthHandler.promptForAuthentication("lpar.zosmf", {
+            authMethods: { promptCredentials, ssoLogin },
+            imperativeError,
+        });
+
+        expect(result).toBe(false);
+        expect(ssoLogin).not.toHaveBeenCalled();
+        expect(errorMessageMock).toHaveBeenCalledTimes(1);
+        expect(promptCredentials).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe("AuthCancelledError", () => {
