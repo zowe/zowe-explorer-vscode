@@ -9,6 +9,7 @@
  *
  */
 
+export * from "./DatasetAttributesProvider";
 export * from "./IApiExplorerExtender";
 export * from "./ILocalStorageAccess";
 export * from "./IRegisterClient";

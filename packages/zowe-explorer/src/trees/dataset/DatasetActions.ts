@@ -22,6 +22,8 @@ import {
     FsAbstractUtils,
     ZoweScheme,
     ZoweExplorerApiType,
+    type attributeInfo,
+    DataSetAttributesProvider,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
@@ -39,7 +41,6 @@ import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { Definitions } from "../../configuration/Definitions";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
-
 export class DatasetActions {
     public static typeEnum: zosfiles.CreateDataSetTypeEnum;
     public static newDSProperties;
@@ -977,6 +978,12 @@ export class DatasetActions {
                 },
             ];
 
+            const extenderAttributes = DataSetAttributesProvider.getInstance();
+            DatasetActions.attributeInfo.push(
+                ...(await extenderAttributes.fetchAll({ dsName: attributes[0].dsname, profile: Profiles.getInstance() }))
+            );
+
+            // Check registered DataSetAttributesProvider, send dsname and profile. get results and append to `attributeInfo`
             const attributesMessage = vscode.l10n.t("Attributes");
 
             const webviewHTML = `<!DOCTYPE html>
@@ -1034,11 +1041,7 @@ export class DatasetActions {
         }
     }
 
-    private static attributeInfo: Array<{
-        title: string;
-        reference?: string;
-        keys: Map<string, { displayName?: string; description?: string; value: any }>;
-    }>;
+    private static attributeInfo: attributeInfo;
 
     /**
      * Submit the contents of the editor or file as JCL.

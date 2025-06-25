@@ -10,7 +10,16 @@
  */
 
 import * as vscode from "vscode";
-import { IApiExplorerExtender, MainframeInteraction, Types, Validation, ZoweExplorerZosmf, ZoweScheme, imperative } from "@zowe/zowe-explorer-api";
+import {
+    DataSetAttributesProvider,
+    IApiExplorerExtender,
+    MainframeInteraction,
+    Types,
+    Validation,
+    ZoweExplorerZosmf,
+    ZoweScheme,
+    imperative,
+} from "@zowe/zowe-explorer-api";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { ZoweLogger } from "../tools/ZoweLogger";
 
@@ -33,6 +42,9 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
         return ZoweExplorerApiRegister.register;
     }
 
+    public getDatasetAttrProvider(): DataSetAttributesProvider {
+        return DataSetAttributesProvider.getInstance();
+    }
     /**
      * Static lookup of an API for USS for a given profile.
      * @param {IProfileLoaded} a profile to be used with this instance of the API returned
