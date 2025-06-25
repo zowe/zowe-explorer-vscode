@@ -183,9 +183,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
             //write the contents to the destination LPAR
             try {
+                //always transfer data as binary to prevent issues with encoding
                 await DatasetFSProvider.instance.writeFile(
                     destUri.with({
-                        query: "forceUpload=true",
+                        query: "forceUpload=true&encoding=binary",
                     }),
                     contents,
                     { create: true, overwrite: true }
