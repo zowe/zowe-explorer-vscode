@@ -34,7 +34,6 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { DeferredPromise } from "@zowe/imperative";
 
-
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
 
@@ -458,7 +457,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profileName = uri.path.split("/")[1];
         const profileInfo = Profiles.getInstance();
         const profile = profileInfo.allProfiles.find((prof) => prof.name === profileName);
-        if (profile && profile.type !== "zosmf" && !Profiles.extenderTypeReady.get(profileName)) {
+        if (profile?.type !== "zosmf" && !Profiles.extenderTypeReady.get(profileName)) {
             const deferredPromise = new DeferredPromise<void>();
             Profiles.extenderTypeReady.set(profileName, deferredPromise);
         }

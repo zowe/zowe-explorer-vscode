@@ -443,12 +443,15 @@ export class SharedInit {
         );
 
         const profInfo = Profiles.getInstance();
-        let profileNames: string[] = [];
+        const profileNames = new Set<string>();
         if (profileType) {
-            profileNames = profInfo.allProfiles.filter((prof) => prof.type === profileType).map((prof) => prof.name);
+            profInfo
+                .getProfiles(profileType)
+                .map((prof) => prof.name)
+                .forEach((item) => profileNames.add(item));
             newWorkspaces = newWorkspaces.filter((f) => {
                 const uriInfo = FsAbstractUtils.getInfoForUri(f.uri);
-                return profileNames.includes(uriInfo.profileName);
+                return profileNames.has(uriInfo.profileName);
             });
         }
 
