@@ -44,7 +44,7 @@ export namespace Table {
     };
 
     /* Defines the supported callbacks and related types. */
-    export type CallbackTypes = "single-row" | "multi-row" | "column" | "cell";
+    export type CallbackTypes = "single-row" | "multi-row" | "column" | "cell" | "no-selection";
     export type SingleRowCallback = {
         /** The type of callback */
         typ: "single-row";
@@ -69,8 +69,14 @@ export namespace Table {
         /** The callback function itself - called from within the webview container. */
         fn: (view: Table.View, col: ColData) => void | PromiseLike<void>;
     };
+    export type NoSelectionCallback = {
+        /** The type of callback */
+        typ: "no-selection";
+        /** The callback function itself - called from within the webview container. */
+        fn: (view: Table.View) => void | PromiseLike<void>;
+    };
 
-    export type Callback = SingleRowCallback | MultiRowCallback | CellCallback;
+    export type Callback = SingleRowCallback | MultiRowCallback | CellCallback | NoSelectionCallback;
 
     /** Conditional callback function - whether an action or option should be rendered. */
     export type Conditional = ((data: RowData[] | RowData | ContentTypes) => boolean | Promise<boolean>) | string;
@@ -85,7 +91,6 @@ export namespace Table {
         /** A function that's invoked with row data. It should return `true` if the action must be hidden from the UI. */
         hideCondition?: Conditional;
         type?: ActionKind;
-        noSelectionRequired?: boolean;
         callback: Callback;
     };
     export type ContextMenuOption = Omit<Action, "type"> & { dataType?: CallbackTypes };
@@ -94,7 +99,7 @@ export namespace Table {
 
     /** @deprecated Use `Action` type instead. */
     export type ActionOpts = Action;
-    /** @deprecated Use `ContextMenuOption` type instead. */
+    /** @deprecated Use `ContextMenuOpts` type instead. */
     export type ContextMenuOpts = ContextMenuOption;
 
     // Context namespace for table extensibility
@@ -632,6 +637,9 @@ export namespace Table {
                     case "cell":
                         await matchingActionable.callback.fn(this, payload.cell);
                         break;
+                    case "no-selection":
+                        await matchingActionable.callback.fn(this);
+                        break;
                     // TODO: Support column callbacks? (if there's enough interest)
                     default:
                         break;
@@ -657,7 +665,6 @@ export namespace Table {
                             title: action.title,
                             command: action.command,
                             type: action.type,
-                            noSelectionRequired: action.noSelectionRequired,
                             callback: action.callback,
                         })),
                     ])

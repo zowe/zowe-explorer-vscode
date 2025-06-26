@@ -123,7 +123,7 @@ export const ActionsBar = (props: ActionsProps) => {
               style={{ fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}
               onClick={(_event: any) => {
                 const selectedNodes = (props.gridRef.current.api as GridApi).getSelectedNodes();
-                if (selectedNodes.length === 0) {
+                if (selectedNodes.length === 0 && action.callback.typ !== "no-selection") {
                   return;
                 }
 

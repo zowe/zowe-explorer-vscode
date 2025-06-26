@@ -426,9 +426,8 @@ export class DatasetTableView {
             title: l10n.t("Back"),
             type: "primary",
             command: "back",
-            callback: { fn: this.goBack.bind(this), typ: "multi-row" },
+            callback: { fn: this.goBack.bind(this), typ: "no-selection" },
             hideCondition: () => this.currentTableType !== "members",
-            noSelectionRequired: true,
         },
     };
 
@@ -489,13 +488,15 @@ export class DatasetTableView {
             this.currentTableType = this.previousTableData.tableType;
             this.shouldShow = this.previousTableData.shouldShow;
 
-            this.table = this.previousTableData.table;
+            // Force re-generation of the table by clearing the current instance.
+            // This is necessary because generateTable tries to update an existing table if one exists,
+            // but we need a completely new table instance to get a fresh webview with active listeners.
+            this.table = null;
+            this.table = await this.generateTable(this.context);
+            await TableViewProvider.getInstance().setTableView(this.table);
 
             // Clear navigation state
             this.previousTableData = null;
-
-            // Restore the previous table view
-            await TableViewProvider.getInstance().setTableView(this.table);
         }
     }
 
@@ -999,6 +1000,5 @@ export class DatasetTableView {
 
     public dispose(): void {
         this.shouldShow = {};
-        this.context = null;
     }
 }

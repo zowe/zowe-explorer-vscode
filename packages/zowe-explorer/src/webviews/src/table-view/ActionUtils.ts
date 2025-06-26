@@ -65,13 +65,16 @@ export async function evaluateActionState(
         // First check selection requirements
         switch (action.callback.typ) {
             case "single-row":
-                isEnabled = action.noSelectionRequired || (selectionCount !== 0 && selectionCount === 1);
+                isEnabled = selectionCount !== 0 && selectionCount === 1;
                 break;
             case "multi-row":
-                isEnabled = action.noSelectionRequired || selectionCount > 0;
+                isEnabled = selectionCount > 0;
                 break;
             case "cell":
                 isEnabled = false;
+                break;
+            case "no-selection":
+                isEnabled = true;
                 break;
             default:
                 isEnabled = true;
@@ -164,6 +167,9 @@ export function sendActionCommand(action: Table.Action, context: ActionEvaluatio
             rowIndex: context.rowIndex,
             row: { ...context.rowData, actions: undefined },
         });
+    } else if (action.callback.typ === "no-selection") {
+        console.log("Sending no-selection action:", action.command);
+        messageHandler.send(action.command, { ...baseData });
     } else {
         // Fallback for other action types or when context.rowData is available
         if (context.rowData) {
