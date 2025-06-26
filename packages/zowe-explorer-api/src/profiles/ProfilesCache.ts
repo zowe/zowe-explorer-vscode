@@ -20,6 +20,8 @@ import { Types } from "../Types";
 import { VscSettings } from "../vscode/doc/VscSettings";
 
 export class ProfilesCache {
+    private profileInfo: imperative.ProfileInfo;
+
     public profilesForValidation: Validation.IValidationProfile[] = [];
     public profilesValidationSetting: Validation.IValidationSetting[] = [];
     public allProfiles: imperative.IProfileLoaded[] = [];
@@ -79,14 +81,15 @@ export class ProfilesCache {
     }
 
     public async getProfileInfo(_envTheia = false): Promise<imperative.ProfileInfo> {
-        const mProfileInfo = new imperative.ProfileInfo("zowe", {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            overrideWithEnv: this.overrideWithEnv,
-            credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-        });
-        await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd ?? undefined });
+        if (this.profileInfo == null) {
+            this.profileInfo = new imperative.ProfileInfo("zowe", {
+                overrideWithEnv: this.overrideWithEnv,
+                credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            });
+        }
+        await this.profileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd ?? undefined });
         this.checkForEnvVarAndUpdate();
-        return mProfileInfo;
+        return this.profileInfo;
     }
 
     /**
