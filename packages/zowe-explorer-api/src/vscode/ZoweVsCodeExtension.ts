@@ -38,11 +38,10 @@ export class ZoweVsCodeExtension {
     }
 
     /**
-     * @internal
+     * @internal This is used to access the profiles cache through the Zowe Explorer API. For internal use only.
      */
     public static get profilesCache(): ProfilesCache {
-        const workspacePath = this.workspaceRoot?.uri.fsPath;
-        return new ProfilesCache(imperative.Logger.getAppLogger(), workspacePath);
+        return this.getZoweExplorerApi()?.getExplorerExtenderApi().getProfilesCache();
     }
 
     /**
