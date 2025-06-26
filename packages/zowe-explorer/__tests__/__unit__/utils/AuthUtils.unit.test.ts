@@ -22,7 +22,7 @@ describe("AuthUtils", () => {
     describe("handleProfileAuthOnError", () => {
         it("should prompt for authentication", async () => {
             const imperativeError = new imperative.ImperativeError({
-                errorCode: 401 as unknown as string,
+                errorCode: Number(401).toString(),
                 msg: "All configured authentication methods failed",
             });
             const profile = { name: "aProfile", type: "zosmf" } as any;
@@ -61,7 +61,7 @@ describe("AuthUtils", () => {
         });
         it("should debounce duplicate/parallel auth prompts", async () => {
             const imperativeError = new imperative.ImperativeError({
-                errorCode: 401 as unknown as string,
+                errorCode: Number(401).toString(),
                 msg: "All configured authentication methods failed",
             });
             const profile = { name: "aProfile", type: "zosmf" } as any;
@@ -102,6 +102,22 @@ describe("AuthUtils", () => {
             );
             profilesCacheMock[Symbol.dispose]();
             isUsingTokenAuthMock.mockRestore();
+        });
+        it("should call wait for unlock and not re-attempt locking profile if the profile is already locked", async () => {
+            const profile = createIProfile();
+            const imperativeError = new imperative.ImperativeError({
+                errorCode: Number(401).toString(),
+                msg: "All configured authentication methods failed",
+            });
+            const isUsingTokenAuthMock = jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            const isProfileLockedMock = jest.spyOn(AuthHandler, "isProfileLocked").mockReturnValueOnce(true);
+            const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
+            const lockProfileSpy = jest.spyOn(AuthHandler, "lockProfile");
+            await AuthUtils.handleProfileAuthOnError(imperativeError, profile);
+            expect(waitForUnlockMock).toHaveBeenCalledWith(profile);
+            expect(isProfileLockedMock).toHaveBeenCalledWith(profile);
+            expect(isUsingTokenAuthMock).toHaveBeenCalledWith(profile.name);
+            expect(lockProfileSpy).not.toHaveBeenCalledWith(profile);
         });
     });
 
@@ -964,6 +980,73 @@ describe("AuthUtils", () => {
             expect(getChildrenSpy).toHaveBeenCalled();
             expect(sessionNode.tooltip).toContain("JobId: JOB0002");
             expect(sessionNode.tooltip).toContain("Auth Method: Token-based Authentication");
+        });
+    });
+
+    describe("reauthenticateIfCancelled", () => {
+        const profile = { name: "test-profile", type: "zosmf" } as any;
+        let isProfileLockedMock: jest.SpyInstance;
+        let wasAuthCancelledMock: jest.SpyInstance;
+        let handleProfileAuthOnErrorMock: jest.SpyInstance;
+
+        beforeEach(() => {
+            isProfileLockedMock = jest.spyOn(AuthHandler, "isProfileLocked");
+            wasAuthCancelledMock = jest.spyOn(AuthHandler, "wasAuthCancelled");
+            handleProfileAuthOnErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockResolvedValue(undefined);
+        });
+
+        afterEach(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should not do anything if profile is not locked", async () => {
+            isProfileLockedMock.mockReturnValue(false);
+            wasAuthCancelledMock.mockReturnValue(true);
+
+            await AuthUtils.reauthenticateIfCancelled(profile);
+
+            expect(handleProfileAuthOnErrorMock).not.toHaveBeenCalled();
+        });
+
+        it("should not do anything if auth was not cancelled", async () => {
+            isProfileLockedMock.mockReturnValue(true);
+            wasAuthCancelledMock.mockReturnValue(false);
+
+            await AuthUtils.reauthenticateIfCancelled(profile);
+
+            expect(handleProfileAuthOnErrorMock).not.toHaveBeenCalled();
+        });
+
+        it("should trigger reauthentication if profile was locked and auth was cancelled", async () => {
+            isProfileLockedMock.mockReturnValue(true);
+            wasAuthCancelledMock.mockReturnValue(true);
+
+            await AuthUtils.reauthenticateIfCancelled(profile);
+
+            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledTimes(1);
+            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate.",
+                }),
+                profile
+            );
+        });
+
+        it("should propagate error if reauthentication fails", async () => {
+            isProfileLockedMock.mockReturnValue(true);
+            wasAuthCancelledMock.mockReturnValue(true);
+            const authError = new Error("Authentication failed again");
+            handleProfileAuthOnErrorMock.mockRejectedValue(authError);
+
+            await expect(AuthUtils.reauthenticateIfCancelled(profile)).rejects.toThrow(authError);
+
+            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledTimes(1);
+            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate.",
+                }),
+                profile
+            );
         });
     });
 });

@@ -228,7 +228,8 @@ export class ErrorCorrelator {
                         matches: ["Username or password are not valid or expired", "All configured authentication methods failed"],
                         summary:
                             "Invalid credentials for profile {{profileName}}. " +
-                            "Please ensure the username and password are valid or this may lead to a lock-out.",
+                            "Please ensure the username and password are valid or this may lead to a lock-out.\n\n" +
+                            "NOTE: Selecting \"Cancel\" or closing this dialog blocks further actions with the profile. To unblock, select the Zowe Explorer icon, right-click the profile, and select \"Manage Profile\" to re-authenticate.",
                     },
                 ],
             },
