@@ -2657,7 +2657,7 @@ describe("Profiles unit tests - function showProfilesInactiveMsg", () => {
     });
 });
 
-describe("Profiles unit tests - function _resolveTypePromise", () => {
+describe("Profiles unit tests - function resolveTypePromise", () => {
     it("should resolve each deferred promise of matching profile type", () => {
         createGlobalMocks();
         Object.defineProperty(Profiles.getInstance(), "allProfiles", {
@@ -2668,8 +2668,8 @@ describe("Profiles unit tests - function _resolveTypePromise", () => {
             ],
             configurable: true,
         });
-        const extenderTypeReadySpy = jest.spyOn(Profiles.extenderTypeReady, "get");
-        Profiles.getInstance()._resolveTypePromise("ssh");
+        const extenderTypeReadySpy = jest.spyOn(ProfilesUtils.extenderTypeReady, "get");
+        ProfilesUtils.resolveTypePromise("ssh");
         expect(extenderTypeReadySpy).toHaveBeenCalledTimes(2);
     });
     it("should not resolve any deferred promise", () => {
@@ -2682,8 +2682,8 @@ describe("Profiles unit tests - function _resolveTypePromise", () => {
             ],
             configurable: true,
         });
-        const extenderTypeReadySpy = jest.spyOn(Profiles.extenderTypeReady, "get");
-        Profiles.getInstance()._resolveTypePromise("ssh");
+        const extenderTypeReadySpy = jest.spyOn(ProfilesUtils.extenderTypeReady, "get");
+        ProfilesUtils.resolveTypePromise("ssh");
         expect(extenderTypeReadySpy).toHaveBeenCalledTimes(0);
     });
     it("should resolve an existing promise without setting it", () => {
@@ -2696,14 +2696,14 @@ describe("Profiles unit tests - function _resolveTypePromise", () => {
             ],
             configurable: true,
         });
-        jest.spyOn(Profiles.extenderTypeReady, "has").mockReturnValue(true);
-        const extenderTypeReadySetSpy = jest.spyOn(Profiles.extenderTypeReady, "set");
-        const extenderTypeReadyGetSpy = jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValue({
+        jest.spyOn(ProfilesUtils.extenderTypeReady, "has").mockReturnValue(true);
+        const extenderTypeReadySetSpy = jest.spyOn(ProfilesUtils.extenderTypeReady, "set");
+        const extenderTypeReadyGetSpy = jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValue({
             resolve: jest.fn(),
             reject: jest.fn(),
         });
 
-        Profiles.getInstance()._resolveTypePromise("ssh");
+        ProfilesUtils.resolveTypePromise("ssh");
         expect(extenderTypeReadySetSpy).toHaveBeenCalledTimes(0);
         expect(extenderTypeReadyGetSpy).toHaveBeenCalledTimes(2);
     });

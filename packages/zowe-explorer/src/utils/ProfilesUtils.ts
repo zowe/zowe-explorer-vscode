@@ -734,7 +734,7 @@ export class ProfilesUtils {
         Gui.infoMessage(responseMsg.join(""), { vsCodeOpts: { modal: true } });
     }
 
-    private static extenderTypeReady: Map<string, imperative.DeferredPromise<void>> = new Map([
+    public static extenderTypeReady: Map<string, imperative.DeferredPromise<void>> = new Map([
         [
             "zosmf",
             ((): imperative.DeferredPromise<void> => {

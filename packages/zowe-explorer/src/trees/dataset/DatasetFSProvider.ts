@@ -37,6 +37,7 @@ import * as dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { DeferredPromise } from "@zowe/imperative";
+import { ProfilesUtils } from "../../utils/ProfilesUtils";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
@@ -510,25 +511,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
         // If the extenderTypeReady map does not contain the profile, create a deferred promise for the profile.
-
-        const profileName = uri.path.split("/")[1];
-        const profileInfo = Profiles.getInstance();
-        const profile = profileInfo.allProfiles.find((prof) => prof.name === profileName);
-        if (profile && !Profiles.extenderTypeReady.get(profileName)) {
-            const deferredPromise = new DeferredPromise<void>();
-            Profiles.extenderTypeReady.set(profileName, deferredPromise);
-        }
-
-        const profilePromise = Profiles.extenderTypeReady.get(profileName);
-        const promiseTimeout = 10000;
-        if (profilePromise) {
-            let timeoutHandle: NodeJS.Timeout;
-            const timeoutPromise = new Promise<void>((resolve, _) => {
-                timeoutHandle = setTimeout(() => resolve(), promiseTimeout);
-            });
-
-            await Promise.race([profilePromise.promise.finally(() => clearTimeout(timeoutHandle)), timeoutPromise]);
-        }
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
+        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
         try {
             ds = this._lookupAsFile(uri) as DsEntry;

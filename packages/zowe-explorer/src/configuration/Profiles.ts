@@ -36,7 +36,6 @@ import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { ZoweExplorerExtender } from "../extending/ZoweExplorerExtender";
 import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
-import { DeferredPromise } from "@zowe/imperative";
 
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
@@ -1210,22 +1209,5 @@ export class Profiles extends ProfilesCache {
             description: vscode.l10n.t("Apply to current tree selected"),
         };
         return [qpItemAll, qpItemCurrent];
-    }
-
-    public static extenderTypeReady = new Map();
-
-    public async _resolveTypePromise(extenderType: string): Promise<void> {
-        const profInfo = Profiles.getInstance();
-        const profilesWithExtenderType = profInfo.allProfiles.filter((profile) => profile.type === extenderType);
-        for (const profile of profilesWithExtenderType) {
-            if (Profiles.extenderTypeReady.has(profile.name)) {
-                Profiles.extenderTypeReady.get(profile.name).resolve();
-            } else {
-                // Prevent deadlocks by setting a resolved promise to avoid setting a new promise
-                Profiles.extenderTypeReady.set(profile.name, new DeferredPromise());
-                Profiles.extenderTypeReady.get(profile.name).resolve();
-            }
-        }
-        await vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", extenderType);
     }
 }

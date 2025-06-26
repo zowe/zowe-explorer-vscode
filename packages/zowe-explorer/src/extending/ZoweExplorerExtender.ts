@@ -30,7 +30,6 @@ import { Constants } from "../configuration/Constants";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
-import type { Profiles } from "../configuration/Profiles";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -240,6 +239,6 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         await this.jobsProvider?.refreshFavorites();
 
         // Release deferred promise for extender profile type
-        (this.getProfilesCache() as Profiles)._resolveTypePromise(profileType);
+        ProfilesUtils.resolveTypePromise(profileType);
     }
 }
