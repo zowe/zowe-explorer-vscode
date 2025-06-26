@@ -734,7 +734,16 @@ export class ProfilesUtils {
         Gui.infoMessage(responseMsg.join(""), { vsCodeOpts: { modal: true } });
     }
 
-    private static extenderTypeReady = new Map<string, imperative.DeferredPromise<void>>();
+    private static extenderTypeReady: Map<string, imperative.DeferredPromise<void>> = new Map([
+        [
+            "zosmf",
+            ((): imperative.DeferredPromise<void> => {
+                const deferred = new imperative.DeferredPromise<void>();
+                deferred.resolve();
+                return deferred;
+            })(),
+        ],
+    ]);
 
     public static async awaitExtenderType(profileName: string, profInfo: ProfilesCache): Promise<void> {
         const profAttrs = await profInfo.getProfileFromConfig(profileName);
