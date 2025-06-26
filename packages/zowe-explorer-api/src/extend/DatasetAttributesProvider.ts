@@ -50,7 +50,7 @@ export class DataSetAttributesProvider {
             try {
                 attributes.push(...(await provider.fetchAttributes(context)));
             } catch (e) {
-                const err = e;
+                // Catch Error
             }
         }
         return attributes;
