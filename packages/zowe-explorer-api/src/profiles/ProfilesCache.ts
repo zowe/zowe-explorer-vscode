@@ -87,7 +87,7 @@ export class ProfilesCache {
                 credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
             });
         }
-        await this.profileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd ?? undefined });
+        await this.profileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd });
         this.checkForEnvVarAndUpdate();
         return this.profileInfo;
     }
