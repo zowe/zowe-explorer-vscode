@@ -22,7 +22,7 @@ describe("AuthUtils", () => {
     describe("handleProfileAuthOnError", () => {
         it("should prompt for authentication", async () => {
             const imperativeError = new imperative.ImperativeError({
-                errorCode: 401 as unknown as string,
+                errorCode: Number(401).toString(),
                 msg: "All configured authentication methods failed",
             });
             const profile = { name: "aProfile", type: "zosmf" } as any;
@@ -61,7 +61,7 @@ describe("AuthUtils", () => {
         });
         it("should debounce duplicate/parallel auth prompts", async () => {
             const imperativeError = new imperative.ImperativeError({
-                errorCode: 401 as unknown as string,
+                errorCode: Number(401).toString(),
                 msg: "All configured authentication methods failed",
             });
             const profile = { name: "aProfile", type: "zosmf" } as any;
@@ -102,6 +102,22 @@ describe("AuthUtils", () => {
             );
             profilesCacheMock[Symbol.dispose]();
             isUsingTokenAuthMock.mockRestore();
+        });
+        it("should call wait for unlock and not re-attempt locking profile if the profile is already locked", async () => {
+            const profile = createIProfile();
+            const imperativeError = new imperative.ImperativeError({
+                errorCode: Number(401).toString(),
+                msg: "All configured authentication methods failed",
+            });
+            const isUsingTokenAuthMock = jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            const isProfileLockedMock = jest.spyOn(AuthHandler, "isProfileLocked").mockReturnValueOnce(true);
+            const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
+            const lockProfileSpy = jest.spyOn(AuthHandler, "lockProfile");
+            await AuthUtils.handleProfileAuthOnError(imperativeError, profile);
+            expect(waitForUnlockMock).toHaveBeenCalledWith(profile);
+            expect(isProfileLockedMock).toHaveBeenCalledWith(profile);
+            expect(isUsingTokenAuthMock).toHaveBeenCalledWith(profile.name);
+            expect(lockProfileSpy).not.toHaveBeenCalledWith(profile);
         });
     });
 

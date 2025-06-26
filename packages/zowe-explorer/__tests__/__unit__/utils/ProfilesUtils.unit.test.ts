@@ -168,7 +168,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should handle error for invalid credentials and prompt for authentication - credentials entered", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
-                errorCode: 401 as unknown as string,
+                errorCode: Number(401).toString(),
                 additionalDetails: "Authentication is not valid or expired.",
             });
             const scenario = "Task failed successfully";
