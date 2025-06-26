@@ -514,7 +514,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profileName = uri.path.split("/")[1];
         const profileInfo = Profiles.getInstance();
         const profile = profileInfo.allProfiles.find((prof) => prof.name === profileName);
-        if (profile && profile.type !== "zosmf" && !Profiles.extenderTypeReady.get(profileName)) {
+        if (profile && !Profiles.extenderTypeReady.get(profileName)) {
             const deferredPromise = new DeferredPromise<void>();
             Profiles.extenderTypeReady.set(profileName, deferredPromise);
         }
