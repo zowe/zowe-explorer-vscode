@@ -508,7 +508,7 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(fakeEventInfo, "added", {
                 get: addedArr,
             });
-            const profilesInstance = await Profiles.createInstance(undefined as any);
+            await Profiles.createInstance(undefined as any);
             const getProfileSpy = jest.spyOn(Profiles.getInstance(), "getProfiles");
 
             await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "ssh");
