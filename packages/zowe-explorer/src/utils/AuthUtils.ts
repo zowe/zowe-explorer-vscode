@@ -62,7 +62,7 @@ export class AuthUtils {
 
             const authOpts: AuthPromptParams = {
                 authMethods: Constants.PROFILES_CACHE,
-                imperativeError: new imperative.ImperativeError({ msg: String(err), stack: err.stack }),
+                imperativeError: err as unknown as imperative.ImperativeError,
                 isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
                 errorCorrelation,
             };
