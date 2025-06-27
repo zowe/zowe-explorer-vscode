@@ -502,6 +502,19 @@ describe("Test src/shared/extension", () => {
             await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
             expect(addedArr).toHaveBeenCalled();
         });
+        it("should setup a remote workspace for an extender type", async () => {
+            const fakeEventInfo = getFakeEventInfo();
+            const addedArr = jest.fn();
+            Object.defineProperty(fakeEventInfo, "added", {
+                get: addedArr,
+            });
+            const profilesInstance = await Profiles.createInstance(undefined as any);
+            const getProfileSpy = jest.spyOn(Profiles.getInstance(), "getProfiles");
+
+            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "ssh");
+            expect(addedArr).toHaveBeenCalled();
+            expect(getProfileSpy).toHaveBeenCalled();
+        });
         it("calls DatasetFSProvider for ZoweScheme.DS", async () => {
             const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/lpar.zosmf/TEST.PDS" }) }]);
             const remoteLookupMock = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockImplementation();

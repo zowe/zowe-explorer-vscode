@@ -444,6 +444,7 @@ export class SharedInit {
 
         const profInfo = Profiles.getInstance();
         const profileNames = new Set<string>();
+
         if (profileType) {
             profInfo
                 .getProfiles(profileType)
