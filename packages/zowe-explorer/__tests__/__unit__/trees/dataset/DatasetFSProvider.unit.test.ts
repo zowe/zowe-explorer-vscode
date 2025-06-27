@@ -512,7 +512,6 @@ describe("DatasetFSProvider", () => {
             // Create a mock instance of Profiles
             const mockProfilesInstance = {
                 allProfiles: mockAllProfiles,
-
             };
 
             // Mock Profiles.getInstance to return the mock instance
@@ -542,7 +541,6 @@ describe("DatasetFSProvider", () => {
             await DatasetFSProvider.instance.readFile(testUris.ps);
 
             await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
-
         });
     });
 
@@ -1287,7 +1285,7 @@ describe("DatasetFSProvider", () => {
             mvsApiMock.mockRestore();
             _lookupParentDirectoryMock.mockRestore();
         });
-      
+
         it("renames a PDS", async () => {
             const oldPds = new PdsEntry("USER.DATA.PDS");
             oldPds.metadata = new DsEntryMetadata({ profile: testProfile, path: "/USER.DATA.PDS" });

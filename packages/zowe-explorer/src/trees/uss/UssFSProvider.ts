@@ -32,7 +32,6 @@ import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
-import { DeferredPromise } from "@zowe/imperative";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
@@ -178,10 +177,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const loadedProfile = Profiles.getInstance().loadNamedProfile(profile.name);
 
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
+        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
+
         let response: IZosFilesResponse;
         try {
-            const uriInfo = FsAbstractUtils.getInfoForUri(uri);
-            await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
             response = await ZoweExplorerApiRegister.getUssApi(loadedProfile).fileList(ussPath);
 
             // If request was successful, create directories for the path if it doesn't exist
@@ -441,8 +441,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // If the extenderTypeReady map does not contain the profile, create a deferred promise for the profile.
         const uriInfo = FsAbstractUtils.getInfoForUri(uri);
         await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
-        let test = ProfilesUtils.extenderTypeReady.get("ssh");
-        let test1 = ProfilesUtils.extenderTypeReady.get("zosmf");
         try {
             file = this._lookupAsFile(uri) as UssFile;
         } catch (err) {

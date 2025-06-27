@@ -80,7 +80,6 @@ describe("UssFSProvider", () => {
                 loadNamedProfile: jest.fn().mockReturnValue(testProfile),
                 allProfiles: [],
                 getProfileFromConfig: jest.fn(),
-
             } as any),
         });
         jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
@@ -1280,7 +1279,6 @@ describe("UssFSProvider", () => {
                     : ({ fileList, create, uploadFromBuffer } as any)
             );
             const getInfoFromUri = jest.spyOn(UssFSProvider.instance as any, "_getInfoFromUri");
-
 
             return {
                 profile: createIProfile(),

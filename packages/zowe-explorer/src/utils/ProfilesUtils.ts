@@ -747,7 +747,7 @@ export class ProfilesUtils {
 
     public static async awaitExtenderType(profileName: string, profInfo: ProfilesCache): Promise<void> {
         const profAttrs = await profInfo.getProfileFromConfig(profileName);
-        if (profAttrs && profAttrs.profType !== "zosmf" && !ProfilesUtils.extenderTypeReady.has(profAttrs.profType)) {
+        if (profAttrs && !ProfilesUtils.extenderTypeReady.has(profAttrs.profType)) {
             const deferredPromise = new imperative.DeferredPromise<void>();
             ProfilesUtils.extenderTypeReady.set(profAttrs.profType, deferredPromise);
         }
@@ -762,11 +762,12 @@ export class ProfilesUtils {
         }
     }
 
-    public static resolveTypePromise(extenderType: string): void {
+    public static async resolveTypePromise(extenderType: string): Promise<void> {
         if (!ProfilesUtils.extenderTypeReady.has(extenderType)) {
             // Prevent deadlocks by setting a resolved promise to avoid setting a new promise
             ProfilesUtils.extenderTypeReady.set(extenderType, new imperative.DeferredPromise());
         }
         ProfilesUtils.extenderTypeReady.get(extenderType).resolve();
+        await vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", extenderType);
     }
 }
