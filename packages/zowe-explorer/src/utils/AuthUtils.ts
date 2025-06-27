@@ -11,7 +11,16 @@
 
 import * as util from "util";
 import * as vscode from "vscode";
-import { imperative, Gui, MainframeInteraction, IZoweTreeNode, ErrorCorrelator, ZoweExplorerApiType, AuthHandler } from "@zowe/zowe-explorer-api";
+import {
+    imperative,
+    Gui,
+    MainframeInteraction,
+    IZoweTreeNode,
+    ErrorCorrelator,
+    ZoweExplorerApiType,
+    AuthHandler,
+    AuthPromptParams,
+} from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
@@ -51,9 +60,9 @@ export class AuthUtils {
                 },
             });
 
-            const authOpts = {
+            const authOpts: AuthPromptParams = {
                 authMethods: Constants.PROFILES_CACHE,
-                imperativeError: err,
+                imperativeError: new imperative.ImperativeError({ msg: String(err), stack: err.stack }),
                 isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
                 errorCorrelation,
             };
@@ -62,7 +71,7 @@ export class AuthUtils {
                 await AuthHandler.waitForUnlock(profile);
             } else {
                 // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
-                await AuthHandler.lockProfile(profile, authOpts as any);
+                await AuthHandler.lockProfile(profile, authOpts);
             }
         } else if (profile != null && AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use

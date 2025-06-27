@@ -861,7 +861,9 @@ describe("USSTree Unit Tests - Function filterBy", () => {
         const blockMocks = await createBlockMocks();
         globalMocks.isUsingTokenAuth.mockResolvedValueOnce(true);
         const sessionWithCred = createISession();
-        globalMocks.mockProfilesInstance.loadNamedProfile.mockReturnValue({ name: "ussTestSess2" } as any);
+        const profile = createIProfile();
+        profile.name = "ussTestSess2";
+        globalMocks.mockProfilesInstance.loadNamedProfile.mockReturnValue(profile);
         globalMocks.createSessCfgFromArgs.mockReturnValue(sessionWithCred);
         const node = new ZoweUSSNode({
             label: "/u/myFolder",
