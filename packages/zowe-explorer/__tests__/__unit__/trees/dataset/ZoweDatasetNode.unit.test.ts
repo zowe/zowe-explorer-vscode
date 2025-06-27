@@ -433,13 +433,18 @@ describe("ZoweDatasetNode Unit Tests", () => {
      * Profile properties have changed
      *************************************************************************************************************/
     it("Testing what happens when profile has been updated", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn().mockReturnValue({ ...profileOne, profile: { encoding: "IBM-939" } }),
-                };
-            }),
+        const profInstanceSpy = jest.spyOn(Profiles, "getInstance");
+        profInstanceSpy.mockImplementationOnce(() => {
+            return {
+                loadNamedProfile: jest.fn().mockReturnValue({ ...profileOne, profile: { encoding: "IBM-939" } } as any),
+            } as any;
         });
+        profInstanceSpy.mockImplementationOnce(() => {
+            return {
+                loadNamedProfile: jest.fn().mockReturnValue(profileOne as any),
+            } as any;
+        });
+        profInstanceSpy.mockReturnValueOnce(profileOne as any);
 
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const pds = new ZoweDatasetNode({
