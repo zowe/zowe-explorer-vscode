@@ -463,6 +463,7 @@ export class DatasetTableView {
             tableType: this.currentTableType,
             shouldShow: { ...this.shouldShow },
             table: this.table,
+            gridState: await this.table.getGridState(),
         };
 
         // Create a new data source for PDS members
@@ -476,6 +477,7 @@ export class DatasetTableView {
         // Generate and display the members table (this will create a new table)
         this.table = await this.generateTable(this.context);
         await TableViewProvider.getInstance().setTableView(this.table);
+        await this.table.setPage(0);
     }
 
     /**
@@ -494,6 +496,8 @@ export class DatasetTableView {
             this.table = null;
             this.table = await this.generateTable(this.context);
             await TableViewProvider.getInstance().setTableView(this.table);
+            await this.table.waitForAPI();
+            await this.table.setGridState(this.previousTableData.gridState);
 
             // Clear navigation state
             this.previousTableData = null;
@@ -520,6 +524,7 @@ export class DatasetTableView {
         tableType: DataSetTableType;
         shouldShow: Record<string, boolean>;
         table: Table.Instance;
+        gridState: any;
     } = null;
 
     // Static table identifiers for this table view

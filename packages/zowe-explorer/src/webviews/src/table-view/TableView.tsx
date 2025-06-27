@@ -17,6 +17,17 @@ import { GetLocaleTextParams } from "ag-grid-community";
 import * as l10n from "@vscode/l10n";
 import { TreeCellRenderer, CustomTreeCellRendererParams } from "./treeCellRenderer";
 import { messageHandler } from "../MessageHandler";
+import { Messenger } from "../Messenger";
+
+import { provideGlobalGridOptions } from "ag-grid-community";
+
+// Mark all grids as using legacy themes
+provideGlobalGridOptions({
+  theme: "legacy",
+});
+
+import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 // Helper to generate unique enough IDs for tree nodes
 let treeNodeIdCounter = 0;
@@ -68,7 +79,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
   const [originalHierarchicalData, setOriginalHierarchicalData] = useState<Table.RowData[] | undefined>(undefined);
   const [theme, setTheme] = useState<string>(baseTheme ?? "ag-theme-quartz");
   const [selectionCount, setSelectionCount] = useState<number>(0);
-  const gridRef = useRef<any>();
+  const gridRef = useRef<AgGridReact>();
   const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
 
   const contextMenu = useContextMenu({
@@ -162,7 +173,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     window.addEventListener("contextmenu", (e) => e.preventDefault(), true);
 
     // Set up MessageHandler listeners for handling data changes being sent to the webview.
-    const setupMessageHandlers = async () => {
+    const getLocalizationContents = async () => {
       try {
         // Request localization data
         const localizationData = await messageHandler.request<Record<string, string>>("GET_LOCALIZATION");
@@ -281,6 +292,157 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       }
     };
 
+    // Handle requests from the extension that need responses
+    const handleExtensionRequest = (command: string, requestId: string, payload?: any) => {
+      let responsePayload: any = null;
+      let error: string | null = null;
+
+      try {
+        switch (command) {
+          case "get-page-size":
+            responsePayload = gridRef.current?.api.paginationGetPageSize() ?? 1000;
+            break;
+          case "set-page-size":
+            if (gridRef.current?.api) {
+              console.log("setting page size to: ", payload);
+              gridRef.current.api.setGridOption("paginationPageSize", payload);
+              responsePayload = true;
+            } else {
+              console.log("grid api not available");
+              error = "Grid API not available";
+              responsePayload = false;
+            }
+            break;
+          case "get-page":
+            responsePayload = gridRef.current?.api.paginationGetCurrentPage() ?? 0;
+            break;
+          case "set-page":
+            if (gridRef.current?.api) {
+              gridRef.current.api.paginationGoToPage(payload);
+              responsePayload = true;
+            } else {
+              error = "Grid API not available";
+              responsePayload = false;
+            }
+            break;
+          case "get-grid-state":
+            responsePayload = gridRef.current?.api.getState();
+            break;
+          case "set-grid-state":
+            if (gridRef.current?.api) {
+              gridRef.current.api.setState(payload);
+              responsePayload = true;
+            } else {
+              error = "Grid API not available";
+              responsePayload = false;
+            }
+            break;
+          case "get-selected-rows":
+            if (gridRef.current?.api) {
+              responsePayload = gridRef.current.api.getSelectedRows();
+            } else {
+              error = "Grid API not available";
+            }
+            break;
+
+          case "get-filtered-rows":
+            if (gridRef.current?.api) {
+              const filteredRows: Table.RowData[] = [];
+              gridRef.current.api.forEachNodeAfterFilterAndSort((row: any) => filteredRows.push(row.data));
+              responsePayload = filteredRows;
+            } else {
+              error = "Grid API not available";
+            }
+            break;
+
+          case "get-all-rows":
+            responsePayload = tableDataRef.current?.rows || [];
+            break;
+
+          case "get-visible-columns":
+            responsePayload = visibleColumns;
+            break;
+
+          case "get-column-state":
+            if (gridRef.current?.api) {
+              responsePayload = gridRef.current.api.getColumnState();
+            } else {
+              error = "Grid API not available";
+            }
+            break;
+
+          case "get-selection-count":
+            responsePayload = selectionCount;
+            break;
+
+          case "get-grid-info":
+            responsePayload = {
+              totalRows: tableDataRef.current?.rows?.length || 0,
+              visibleRows: gridRef.current?.api
+                ? (() => {
+                    let count = 0;
+                    gridRef.current.api.forEachNodeAfterFilterAndSort(() => count++);
+                    return count;
+                  })()
+                : 0,
+              selectedRows: selectionCount,
+              visibleColumns: visibleColumns.length,
+              totalColumns: tableDataRef.current?.columns?.length || 0,
+            };
+            break;
+
+          case "get-row-by-index":
+            if (payload?.index !== undefined && tableDataRef.current?.rows) {
+              const row = tableDataRef.current.rows[payload.index];
+              responsePayload = row || null;
+            } else {
+              error = "Row index not provided or invalid";
+            }
+            break;
+
+          case "find-rows":
+            if (payload?.predicate && tableDataRef.current?.rows) {
+              try {
+                // Create a function from the predicate string
+                const predicateFn = new Function("row", `return ${payload.predicate}`) as (row: Table.RowData) => boolean;
+                responsePayload = tableDataRef.current.rows.filter(predicateFn);
+              } catch (err) {
+                error = `Invalid predicate function: ${err instanceof Error ? err.message : String(err)}`;
+              }
+            } else {
+              error = "Predicate not provided";
+            }
+            break;
+
+          case "export-data":
+            if (gridRef.current?.api) {
+              const format = payload?.format || "csv";
+              if (format === "csv") {
+                responsePayload = gridRef.current.api.getDataAsCsv();
+              } else {
+                error = `Unsupported export format: ${format}`;
+              }
+            } else {
+              error = "Grid API not available";
+            }
+            break;
+
+          default:
+            error = `Unknown command: ${command}`;
+            break;
+        }
+      } catch (err) {
+        error = err instanceof Error ? err.message : String(err);
+      }
+
+      // Send response back to extension
+      if (error) {
+        messageHandler.send("error", error);
+      } else {
+        Messenger.sendWithReqId(`${command}-response`, requestId, responsePayload);
+      }
+    };
+
     // Set up the message listeners using a more modern approach
     // Note: We'll use the existing window event listener temporarily until MessageHandler supports
     // command-based message handling properly
@@ -294,19 +456,24 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       }
 
       const response = event.data;
-      if (response.command === "ondatachanged") {
-        handleDataChanged(response.data);
-      }
-
-      // Handle response with loaded children
-      if (response.command === "treeChildrenLoaded") {
-        handleTreeChildrenLoaded(response.data);
+      switch (response.command) {
+        case "ondatachanged":
+          handleDataChanged(response.data);
+          break;
+        case "treeChildrenLoaded":
+          handleTreeChildrenLoaded(response.data);
+          break;
+        default:
+          if (response.requestId && response.command) {
+            console.log("extension request received: ", response.command, response.requestId, response.payload);
+            handleExtensionRequest(response.command, response.requestId, response.payload);
+          }
+          break;
       }
     });
 
-    // Once the listener is in place, send a "ready signal" to the TableView instance to handle new data.
     messageHandler.send("ready");
-    setupMessageHandlers();
+    getLocalizationContents();
   }, [localization]);
 
   const localizationMap = [
@@ -340,6 +507,10 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     }
   };
 
+  const onGridReady = () => {
+    messageHandler.send("api-ready");
+  };
+
   return (
     <div className={`table-view ${theme} ag-theme-vsc ${contextMenu.open ? "ctx-menu-open" : ""}`}>
       {contextMenu.component}
@@ -353,7 +524,14 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         visibleColumns={visibleColumns}
         setVisibleColumns={setVisibleColumns}
       />
-      {tableData ? <AgGridReact {...tableProps(contextMenu, setSelectionCount, tableData)} ref={gridRef} getLocaleText={getLocaleText} /> : null}
+      {tableData ? (
+        <AgGridReact
+          {...tableProps(contextMenu, setSelectionCount, tableData)}
+          ref={gridRef}
+          getLocaleText={getLocaleText}
+          onGridReady={onGridReady}
+        />
+      ) : null}
     </div>
   );
 };

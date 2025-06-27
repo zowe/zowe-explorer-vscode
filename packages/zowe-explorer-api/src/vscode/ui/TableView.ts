@@ -456,8 +456,11 @@ export namespace Table {
         public onTableDisplayChanged: Event<RowData | RowData[]> = this.onTableDisplayChangedEmitter.event;
         public onTableDataReceived: Event<Partial<ViewOpts>> = this.onTableDataReceivedEmitter.event;
         public onTableDataEdited: Event<EditEvent> = this.onTableDataEditedEmitter.event;
+        private pendingRequests: Record<string, { resolve: (value: any) => void; reject: (reason?: any) => void }> = {};
 
         private uuid: string;
+        private apiReady: boolean = false;
+        private apiReadyResolvers: Array<() => void> = [];
 
         public getUris(): UriPair {
             return this.uris;
@@ -530,7 +533,22 @@ export namespace Table {
             if (!("command" in message)) {
                 return;
             }
+
             const { command, requestId, payload } = message;
+
+            // Handle responses to pending requests
+            if (requestId && this.pendingRequests[requestId]) {
+                const { resolve, reject } = this.pendingRequests[requestId];
+                delete this.pendingRequests[requestId];
+
+                if (message.error) {
+                    reject(new Error(message.error));
+                } else {
+                    resolve(payload);
+                }
+                return;
+            }
+
             switch (command) {
                 // "check-condition-for-action" command: Check if the given action ID (command) should be usable.
                 case "check-condition-for-action":
@@ -586,6 +604,12 @@ export namespace Table {
                 // "ready" command: The table view has attached its message listener and is ready to receive data.
                 case "ready":
                     await this.updateWebview();
+                    return;
+                // "api-ready" command: The AG Grid API is ready and can be used.
+                case "api-ready":
+                    this.apiReady = true;
+                    this.apiReadyResolvers.forEach((resolve) => resolve());
+                    this.apiReadyResolvers = [];
                     return;
                 // "copy" command: Copy the data for the row that was right-clicked.
                 case "copy":
@@ -748,6 +772,30 @@ export namespace Table {
             return this.data.rows;
         }
 
+        public async getPageSize(): Promise<number> {
+            return this.request<number>("get-page-size");
+        }
+
+        public async setPageSize(pageSize: number): Promise<boolean> {
+            return this.request<boolean>("set-page-size", pageSize);
+        }
+
+        public async getGridState(): Promise<any> {
+            return this.request<any>("get-grid-state");
+        }
+
+        public async setGridState(state: any): Promise<boolean> {
+            return this.request<boolean>("set-grid-state", state);
+        }
+
+        public async setPage(page: number): Promise<boolean> {
+            return this.request<boolean>("set-page", page);
+        }
+
+        public async getPage(): Promise<number> {
+            return this.request<number>("get-page");
+        }
+
         /**
          * Add rows of content to the table view.
          * @param rows The rows of data to add to the table
@@ -840,6 +888,50 @@ export namespace Table {
         public async setTitle(title: string): Promise<boolean> {
             this.data.title = title;
             return this.updateWebview();
+        }
+
+        /**
+         * Request data from the webview and return the response.
+         * Similar to the MessageHandler.request method but for table views.
+         *
+         * @param command The command to send to the webview
+         * @param payload Optional payload to send with the request
+         * @returns A promise that resolves with the response from the webview
+         */
+        public request<T>(command: string, payload?: any): Promise<T> {
+            const requestId = randomUUID();
+
+            return new Promise((resolve, reject) => {
+                this.pendingRequests[requestId] = { resolve, reject };
+
+                const message = {
+                    command,
+                    requestId,
+                    payload,
+                };
+
+                const success = (this.panel ?? this.view).webview.postMessage(message);
+                if (!success) {
+                    delete this.pendingRequests[requestId];
+                    reject(new Error("Failed to send message to webview"));
+                }
+            });
+        }
+
+        /**
+         * Wait for the AG Grid API to be ready.
+         * This method resolves when the grid has been initialized and the API is available for use.
+         *
+         * @returns A promise that resolves when the AG Grid API is ready
+         */
+        public async waitForAPI(): Promise<void> {
+            if (this.apiReady) {
+                return Promise.resolve();
+            }
+
+            return new Promise<void>((resolve) => {
+                this.apiReadyResolvers.push(resolve);
+            });
         }
     }
 

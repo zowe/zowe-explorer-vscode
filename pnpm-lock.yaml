@@ -345,11 +345,11 @@ importers:
         specifier: ^1.2.2
         version: 1.4.0(react@18.3.1)
       ag-grid-community:
-        specifier: ^32.0.2
-        version: 32.0.2
+        specifier: ^34.0.0
+        version: 34.0.0
       ag-grid-react:
-        specifier: ^32.0.2
-        version: 32.0.2(react-dom@18.3.1)(react@18.3.1)
+        specifier: ^34.0.0
+        version: 34.0.0(react-dom@18.3.1)(react@18.3.1)
       es-toolkit:
         specifier: ^1.16.0
         version: 1.16.0
@@ -3907,23 +3907,23 @@ packages:
     engines: {node: '>=12.0'}
     dev: true
 
-  /ag-charts-types@10.0.2:
-    resolution: {integrity: sha512-Nxo5slHOXlaeg0gRIsVnovAosQzzlYfWJtdDy0Aq/VvpJru/PJ+5i2c9aCyEhgRxhBjImsoegwkgRj7gNOWV6Q==}
+  /ag-charts-types@12.0.0:
+    resolution: {integrity: sha512-/SFzPVLnCzRDsEV6Lh/dqdbdgSowK23jBogYAWLZnQuHjM3o7wbV78yv4WXlQSb5TcubNk3GEdhRLgIMR17WIg==}
     dev: false
 
-  /ag-grid-community@32.0.2:
-    resolution: {integrity: sha512-vLJJUjnsG9hNK41GNuW2EHu1W264kxA/poOpcX4kmyrjU5Uzvelsbj3HdKAO9POV28iqyRdKGYfAWdn8QzA7KA==}
+  /ag-grid-community@34.0.0:
+    resolution: {integrity: sha512-mSHETYazOYHxYpA4p4fea/iJhM7SW0t12gaSaoS4wOLUEwo0vI+Lgq3F9ZSAyErcXpj9MLCSmRqQrpzBn3epHQ==}
     dependencies:
-      ag-charts-types: 10.0.2
+      ag-charts-types: 12.0.0
     dev: false
 
-  /ag-grid-react@32.0.2(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-IWYsoyJ/Z763rWbE5/9SaT1n5xwIKrm/QzOG14l7i8z5J6JdJwfV0aQFATmEE8Xws2H48vlLcLdW1cv4hwV3eg==}
+  /ag-grid-react@34.0.0(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-PuLvms8EN+0+xkpBqWIVtsD4c6zma9sWSKEiCWdD8BLMSA0ZOkQE3oH9yOE1IFJ3Ji32eDm/smIKi/9EQCn3YQ==}
     peerDependencies:
-      react: ^16.3.0 || ^17.0.0 || ^18.0.0
-      react-dom: ^16.3.0 || ^17.0.0 || ^18.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
     dependencies:
-      ag-grid-community: 32.0.2
+      ag-grid-community: 34.0.0
       prop-types: 15.8.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
