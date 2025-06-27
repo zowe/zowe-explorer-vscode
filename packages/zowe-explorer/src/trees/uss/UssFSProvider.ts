@@ -98,6 +98,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
 
             const fileResp = await this.listFiles(entry.metadata.profile, uri, true);
+
             if (fileResp.success) {
                 // Regardless of the resource type, it will be the first item in a successful response.
                 // When listing a folder, the folder's stats will be represented as the "." entry.
@@ -175,6 +176,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         const loadedProfile = Profiles.getInstance().loadNamedProfile(profile.name);
+
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
+        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
         let response: IZosFilesResponse;
         try {
@@ -437,7 +441,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // If the extenderTypeReady map does not contain the profile, create a deferred promise for the profile.
         const uriInfo = FsAbstractUtils.getInfoForUri(uri);
         await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
-
         try {
             file = this._lookupAsFile(uri) as UssFile;
         } catch (err) {
