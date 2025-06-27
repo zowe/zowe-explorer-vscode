@@ -339,6 +339,14 @@ describe("Test src/shared/extension", () => {
             expect(mockOnProfileUpdated.mock).toHaveBeenCalledTimes(1);
             expect(onProfileUpdated).toHaveBeenCalledTimes(1);
         });
+
+        it("should register setupRemoteWorkspaces", () => {
+            jest.spyOn(vscode.commands, "registerCommand").mockImplementation(() => {
+                return {} as vscode.Disposable;
+            });
+            SharedInit.registerCommonCommands(test.context, test.value.providers);
+            expect(vscode.commands.registerCommand).toHaveBeenCalledWith("zowe.setupRemoteWorkspaceFolders", expect.any(Function));
+        });
     });
 
     describe("watchConfigProfile", () => {
