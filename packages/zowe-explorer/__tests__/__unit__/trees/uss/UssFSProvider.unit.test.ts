@@ -721,7 +721,7 @@ describe("UssFSProvider", () => {
                 }),
             };
 
-            Profiles.extenderTypeReady.set(testProfile.name, profilePromise);
+            ProfilesUtils.extenderTypeReady.set(testProfile.name, profilePromise);
 
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
             lookupAsFileMock.mockReturnValue(testEntries.file);
@@ -748,7 +748,7 @@ describe("UssFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - no existing promise", async () => {
-            jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(undefined);
+            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(undefined);
             const mockAllProfiles = [
                 { name: "sestest", type: "ssh" },
                 { name: "profile1", type: "zosmf" },
@@ -770,7 +770,7 @@ describe("UssFSProvider", () => {
                     setTimeout(resolve, 50);
                 }),
             };
-            jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
+            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
             lookupAsFileMock.mockReturnValue(testEntries.file);
 
@@ -1664,7 +1664,7 @@ describe("UssFSProvider", () => {
                         setTimeout(resolve, 50);
                     }),
                 };
-                jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
+                jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
                 isProfileLockedMock.mockReturnValueOnce(false);
                 const ussApiMock = {
                     fileList: jest.fn().mockResolvedValueOnce({

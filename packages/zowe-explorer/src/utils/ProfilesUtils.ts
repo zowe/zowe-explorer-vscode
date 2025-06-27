@@ -751,7 +751,7 @@ export class ProfilesUtils {
             const deferredPromise = new imperative.DeferredPromise<void>();
             ProfilesUtils.extenderTypeReady.set(profAttrs.profType, deferredPromise);
         }
-        const profilePromise = ProfilesUtils.extenderTypeReady.get(profAttrs.profType);
+        const profilePromise = ProfilesUtils.extenderTypeReady.get(profAttrs?.profType);
         const promiseTimeout = 10000;
         if (profilePromise) {
             let timeoutHandle: NodeJS.Timeout;

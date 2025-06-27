@@ -33,6 +33,7 @@ import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import * as path from "path";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
+import { DeferredPromise } from "@zowe/imperative";
 const dayjs = require("dayjs");
 
 const testProfile = createIProfile();
@@ -474,15 +475,11 @@ describe("DatasetFSProvider", () => {
             // Mock Profiles.getInstance to return the mock instance
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfilesInstance as any);
 
-            const resolveProfile = jest.fn();
-            const profilePromise = {
-                promise: new Promise<void>((resolve) => {
-                    resolveProfile.mockImplementation(resolve);
-                    setTimeout(resolve, 50);
-                }),
-            };
+            const profilePromise = new DeferredPromise<void>();
 
-            Profiles.extenderTypeReady.set(testProfile.name, profilePromise);
+            if (testProfile.name) {
+                ProfilesUtils.extenderTypeReady.set(testProfile.name, profilePromise);
+            }
 
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce({
                 ...testEntries.ps,
@@ -502,7 +499,7 @@ describe("DatasetFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - no existing promise", async () => {
-            jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(undefined);
+            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(undefined);
             const mockAllProfiles = [
                 { name: "sestest", type: "ssh" },
                 { name: "profile1", type: "zosmf" },
@@ -517,14 +514,8 @@ describe("DatasetFSProvider", () => {
             // Mock Profiles.getInstance to return the mock instance
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfilesInstance as any);
 
-            const resolveProfile = jest.fn();
-            const profilePromise = {
-                promise: new Promise<void>((resolve) => {
-                    resolveProfile.mockImplementation(resolve);
-                    setTimeout(resolve, 50);
-                }),
-            };
-            jest.spyOn(Profiles.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
+            const profilePromise = new DeferredPromise<void>();
+            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
 
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce({
                 ...testEntries.ps,
