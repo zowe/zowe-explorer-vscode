@@ -503,13 +503,41 @@ describe("Test src/shared/extension", () => {
             expect(addedArr).toHaveBeenCalled();
         });
         it("should setup a remote workspace for an extender type", async () => {
+            jest.mock("vscode", () => {
+                const original = jest.requireActual("vscode");
+                return {
+                    ...original,
+                    workspace: {
+                        ...original.workspace,
+                        workspaceFolders: [
+                            {
+                                uri: {
+                                    $mid: 1,
+                                    fsPath: "/ssh_profile/u/users/user/member",
+                                    external: "zowe-uss:/ssh_profile/u/users/user/member",
+                                    path: "/ssh_profile/u/users/user/member",
+                                    scheme: "zowe-uss",
+                                },
+                                name: "[ssh_profile] /u/users/jace/member",
+                                index: 0,
+                            },
+                        ],
+                    },
+                    commands: {
+                        executeCommand: jest.fn(),
+                    },
+                };
+            });
+
             const fakeEventInfo = getFakeEventInfo();
             const addedArr = jest.fn();
             Object.defineProperty(fakeEventInfo, "added", {
                 get: addedArr,
             });
             await Profiles.createInstance(undefined as any);
-            const getProfileSpy = jest.spyOn(Profiles.getInstance(), "getProfiles");
+            const getProfileSpy = jest
+                .spyOn(Profiles.getInstance(), "getProfiles")
+                .mockReturnValue([{ message: ".", failNotFound: false, type: "ssh" }]);
 
             await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "ssh");
             expect(addedArr).toHaveBeenCalled();
