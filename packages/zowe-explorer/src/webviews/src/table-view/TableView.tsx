@@ -427,6 +427,67 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
             }
             break;
 
+          case "pin-rows":
+            if (gridRef.current?.api && payload?.rows) {
+              try {
+                // Get current pinned rows
+                const currentPinnedRows = gridRef.current.api.getGridOption("pinnedTopRowData") || [];
+
+                // Convert payload rows object to array and filter out any existing pinned rows
+                const newRowsToPin = Object.values(payload.rows) as Table.RowData[];
+                const existingPinnedIds = new Set(currentPinnedRows.map((row: any) => JSON.stringify(row)));
+                const filteredNewRows = newRowsToPin.filter((row) => !existingPinnedIds.has(JSON.stringify(row)));
+
+                // Combine existing pinned rows with new ones
+                const updatedPinnedRows = [...currentPinnedRows, ...filteredNewRows];
+
+                // Set the updated pinned rows
+                gridRef.current.api.setGridOption("pinnedTopRowData", updatedPinnedRows);
+                responsePayload = true;
+              } catch (err) {
+                error = `Failed to pin rows: ${err instanceof Error ? err.message : String(err)}`;
+                responsePayload = false;
+              }
+            } else {
+              error = "Grid API not available or no rows provided";
+              responsePayload = false;
+            }
+            break;
+
+          case "unpin-rows":
+            if (gridRef.current?.api && payload?.rows) {
+              try {
+                // Get current pinned rows
+                const currentPinnedRows = gridRef.current.api.getGridOption("pinnedTopRowData") || [];
+
+                // Convert payload rows object to array for comparison
+                const rowsToUnpin = Object.values(payload.rows) as Table.RowData[];
+                const unpinIds = new Set(rowsToUnpin.map((row) => JSON.stringify(row)));
+
+                // Filter out rows that should be unpinned
+                const remainingPinnedRows = currentPinnedRows.filter((row: any) => !unpinIds.has(JSON.stringify(row)));
+
+                // Set the updated pinned rows
+                gridRef.current.api.setGridOption("pinnedTopRowData", remainingPinnedRows);
+                responsePayload = true;
+              } catch (err) {
+                error = `Failed to unpin rows: ${err instanceof Error ? err.message : String(err)}`;
+                responsePayload = false;
+              }
+            } else {
+              error = "Grid API not available or no rows provided";
+              responsePayload = false;
+            }
+            break;
+
+          case "get-pinned-rows":
+            if (gridRef.current?.api) {
+              responsePayload = gridRef.current.api.getGridOption("pinnedTopRowData") || [];
+            } else {
+              error = "Grid API not available";
+            }
+            break;
+
           default:
             error = `Unknown command: ${command}`;
             break;

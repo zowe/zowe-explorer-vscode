@@ -933,6 +933,42 @@ export namespace Table {
                 this.apiReadyResolvers.push(resolve);
             });
         }
+
+        /**
+         * Pin the specified rows to the top of the grid.
+         * @param rows The rows to pin to the top
+         * @returns Whether the webview successfully pinned the rows
+         */
+        public async pinRows(rows: RowData[]): Promise<boolean> {
+            const rowsObject = rows.reduce((acc, row, index) => {
+                acc[index] = row;
+                return acc;
+            }, {} as Record<number, RowData>);
+
+            return this.request<boolean>("pin-rows", { rows: rowsObject });
+        }
+
+        /**
+         * Unpin the specified rows from the top of the grid.
+         * @param rows The rows to unpin
+         * @returns Whether the webview successfully unpinned the rows
+         */
+        public async unpinRows(rows: RowData[]): Promise<boolean> {
+            const rowsObject = rows.reduce((acc, row, index) => {
+                acc[index] = row;
+                return acc;
+            }, {} as Record<number, RowData>);
+
+            return this.request<boolean>("unpin-rows", { rows: rowsObject });
+        }
+
+        /**
+         * Get all currently pinned rows from the top of the grid.
+         * @returns Array of pinned row data
+         */
+        public async getPinnedRows(): Promise<RowData[]> {
+            return this.request<RowData[]>("get-pinned-rows");
+        }
     }
 
     export class Instance extends View {

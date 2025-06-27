@@ -408,6 +408,16 @@ export class DatasetTableView {
                     return this.currentTableType === "members" || dsorg?.startsWith("PS") || isMember;
                 }),
         },
+        pinRows: {
+            title: l10n.t("Pin"),
+            command: "pin-selected-rows",
+            callback: { fn: this.pinSelectedRows.bind(this), typ: "multi-row" },
+            type: "secondary",
+            condition: (rows: Table.RowData[]): boolean => {
+                // Allow pinning any selected rows
+                return rows.length > 0;
+            },
+        },
         focusPDS: {
             title: l10n.t("Focus"),
             command: "focus",
@@ -504,6 +514,48 @@ export class DatasetTableView {
         }
     }
 
+    /**
+     * Pin selected rows to the top of the table
+     *
+     * This action allows users to pin selected dataset rows to the top of the table view,
+     * making them always visible regardless of scrolling or filtering. Pinned rows are
+     * displayed above the normal table content and remain fixed in position.
+     *
+     * @param _view The table view instance
+     * @param rows Record of selected rows to pin, indexed by row number
+     *
+     * @example
+     * // When user selects multiple rows and clicks "Pin" action:
+     * // - Selected rows are moved to the top of the table
+     * // - Pinned rows remain visible during scrolling
+     * // - User receives confirmation message about pinned rows
+     */
+    private async pinSelectedRows(this: DatasetTableView, _view: Table.View, rows: Record<number, Table.RowData>): Promise<void> {
+        try {
+            const rowsArray = Object.values(rows);
+            const success = await this.table.pinRows(rowsArray);
+
+            if (success) {
+                Gui.infoMessage(
+                    l10n.t({
+                        message: "Successfully pinned {0} row(s) to the top of the table.",
+                        args: [rowsArray.length.toString()],
+                        comment: ["Number of rows pinned"],
+                    })
+                );
+            } else {
+                Gui.errorMessage(l10n.t("Failed to pin rows to the table."));
+            }
+        } catch (error) {
+            Gui.errorMessage(
+                l10n.t({
+                    message: "Error pinning rows: {0}",
+                    args: [error instanceof Error ? error.message : String(error)],
+                    comment: ["Error message"],
+                })
+            );
+        }
+    }
     private onDataSetTableChangedEmitter: EventEmitter<IDataSetTableEvent>;
     public onDataSetTableChanged: Event<IDataSetTableEvent>;
     private static _instance: DatasetTableView;
@@ -781,6 +833,7 @@ export class DatasetTableView {
                 .columns(...[...columnDefs, { field: "actions", hide: true }])
                 .addContextOption("all", this.contextOptions.displayInTree)
                 .addRowAction("all", this.rowActions.openInEditor)
+                .addRowAction("all", this.rowActions.pinRows)
                 .addRowAction("all", this.rowActions.focusPDS)
                 .addRowAction("all", this.rowActions.goBack);
 
