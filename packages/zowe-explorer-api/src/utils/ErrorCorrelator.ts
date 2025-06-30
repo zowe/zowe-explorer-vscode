@@ -221,7 +221,8 @@ export class ErrorCorrelator {
                         matches: ["Token is not valid or expired"],
                         summary:
                             "Your connection is no longer active for profile {{profileName}}. " +
-                            "Please log in to an authentication service to restore the connection.",
+                            "Please log in to an authentication service to restore the connection.\n\n" +
+                            'NOTE: Selecting "Cancel" or closing this dialog blocks further actions with the profile. To unblock, select the Zowe Explorer icon, right-click the profile, and select "Manage Profile" to re-authenticate.',
                     },
                     {
                         errorCode: "401",
@@ -229,7 +230,7 @@ export class ErrorCorrelator {
                         summary:
                             "Invalid credentials for profile {{profileName}}. " +
                             "Please ensure the username and password are valid or this may lead to a lock-out.\n\n" +
-                            "NOTE: Selecting \"Cancel\" or closing this dialog blocks further actions with the profile. To unblock, select the Zowe Explorer icon, right-click the profile, and select \"Manage Profile\" to re-authenticate.",
+                            'NOTE: Selecting "Cancel" or closing this dialog blocks further actions with the profile. To unblock, select the Zowe Explorer icon, right-click the profile, and select "Manage Profile" to re-authenticate.',
                     },
                 ],
             },

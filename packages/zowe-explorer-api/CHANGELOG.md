@@ -17,6 +17,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Implemented graceful handling for non-existent named profiles within the loadNamedProfile function. [#3678](https://github.com/zowe/zowe-explorer-vscode/pull/3678)
 - Added an option `throwErrorOnCancel` to `AuthPromptParams`. When this option is `true`, an error is thrown when the user cancels or dismisses an authentication prompt. [#3662](https://github.com/zowe/zowe-explorer-vscode/issues/3662)
+- Updated the messages for the authentication prompts to guide the user on how to continue using their profile if they dismiss the prompt. [#3662](https://github.com/zowe/zowe-explorer-vscode/issues/3662)
 
 ### Bug fixes
 
