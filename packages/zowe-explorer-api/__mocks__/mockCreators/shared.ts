@@ -10,6 +10,7 @@
  */
 
 import * as imperative from "@zowe/imperative";
+import { IAttributesProvider, attributeInfo } from "../../src/dataset/DatasetAttributesProvider";
 
 export function createConfigInstance() {
     return {
@@ -91,4 +92,46 @@ export function createTeamConfigMock(): imperative.IConfig {
         },
         autoStore: true,
     };
+}
+export class extenderAttr implements IAttributesProvider {
+    public fetchAttributes(): attributeInfo {
+        const keys = new Map<string, { displayName?: string; description?: string; value: any }>([
+            [
+                "DescriptionAndDisplayName",
+                {
+                    displayName: "DisplayName",
+                    description: "Description",
+                    value: "Value1",
+                },
+            ],
+            [
+                "NoDescNoDisplayName",
+                {
+                    value: "Value2",
+                },
+            ],
+            [
+                "descNoDN",
+                {
+                    description: "Description - No Display Name",
+                    value: "Value3",
+                },
+            ],
+            [
+                "DNnoDesc",
+                {
+                    displayName: "DisplayName - No Description",
+                    value: "Value4",
+                },
+            ],
+        ]);
+
+        return [
+            {
+                title: "Dummy Extender",
+                reference: "https://github.com/zowe/zowe-explorer-vscode",
+                keys,
+            },
+        ];
+    }
 }
