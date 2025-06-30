@@ -93,18 +93,31 @@ describe("Table.View", () => {
             await expect((view as any).updateWebview()).resolves.toBe(false);
             expect(postMessageMock).toHaveBeenCalledWith({
                 command: "ondatachanged",
-                data: { title: "Table" },
+                data: {
+                    actions: { all: [] },
+                    columns: [],
+                    contextOpts: { all: [] },
+                    rows: [],
+                    title: "Table",
+                },
             });
 
             // case 2: Post message was successful; updateWebview returns true and event is fired
             const emitterFireMock = jest.spyOn(EventEmitter.prototype, "fire");
             postMessageMock.mockResolvedValueOnce(true);
             await expect((view as any).updateWebview()).resolves.toBe(true);
+            const tableData = {
+                actions: { all: [] },
+                columns: [],
+                contextOpts: { all: [] },
+                rows: [],
+                title: "Table",
+            };
             expect(postMessageMock).toHaveBeenCalledWith({
                 command: "ondatachanged",
-                data: { title: "Table" },
+                data: tableData,
             });
-            expect(emitterFireMock).toHaveBeenCalledWith({ title: "Table" });
+            expect(emitterFireMock).toHaveBeenCalledWith(tableData);
             postMessageMock.mockRestore();
             emitterFireMock.mockClear();
 
@@ -116,7 +129,13 @@ describe("Table.View", () => {
             await expect((view as any).updateWebview()).resolves.toBe(true);
             expect(postMessageMock).toHaveBeenCalledWith({
                 command: "ondatachanged",
-                data: { title: "Table", rows: [mockNewRow] },
+                data: {
+                    actions: { all: [] },
+                    columns: [],
+                    contextOpts: { all: [] },
+                    rows: [mockNewRow],
+                    title: "Table",
+                },
             });
             expect(emitterFireMock).toHaveBeenCalledWith(diff((view as any).lastUpdated, (view as any).data));
             postMessageMock.mockRestore();
@@ -231,7 +250,7 @@ describe("Table.View", () => {
             globalMocks.updateWebviewMock.mockClear();
             const tableData = { rows: [{ a: 1, b: 1, c: 1 }] };
             await view.onMessageReceived({
-                data: tableData,
+                payload: tableData,
             });
             expect(onTableDisplayChangedFireMock).not.toHaveBeenCalledWith(tableData);
             expect(globalMocks.updateWebviewMock).not.toHaveBeenCalled();
@@ -244,7 +263,7 @@ describe("Table.View", () => {
             const tableData = { rows: [{ a: 1, b: 1, c: 1 }] };
             await view.onMessageReceived({
                 command: "ondisplaychanged",
-                data: tableData,
+                payload: tableData,
             });
             expect(onTableDisplayChangedFireMock).toHaveBeenCalledWith(tableData);
         });
@@ -259,11 +278,11 @@ describe("Table.View", () => {
                 value: 2,
                 oldValue: tableData.rows[0].a,
                 field: "a",
-                rowIndex: 1,
+                rowIndex: 0,
             };
             await view.onMessageReceived({
                 command: "ontableedited",
-                data: editData,
+                payload: editData,
             });
             expect(onTableDataEditedFireMock).toHaveBeenCalledWith(editData);
         });
@@ -286,7 +305,8 @@ describe("Table.View", () => {
             await view.onMessageReceived({ command: "GET_LOCALIZATION" });
             expect(postMessageSpy).toHaveBeenCalledWith({
                 command: "GET_LOCALIZATION",
-                contents: "file contents",
+                payload: "file contents",
+                requestId: undefined,
             });
             globalMocks.updateWebviewMock.mockRestore();
         });
@@ -297,10 +317,10 @@ describe("Table.View", () => {
             const writeTextMock = jest.spyOn(env.clipboard, "writeText").mockImplementation();
             const mockWebviewMsg = {
                 command: "copy",
-                data: { row: { a: 1, b: 1, c: 1 } },
+                payload: { row: { a: 1, b: 1, c: 1 } },
             };
             await view.onMessageReceived(mockWebviewMsg);
-            expect(writeTextMock).toHaveBeenCalledWith(JSON.stringify(mockWebviewMsg.data.row));
+            expect(writeTextMock).toHaveBeenCalledWith(JSON.stringify(mockWebviewMsg.payload.row));
             writeTextMock.mockRestore();
         });
 
@@ -310,10 +330,10 @@ describe("Table.View", () => {
             const writeTextMock = jest.spyOn(env.clipboard, "writeText").mockImplementation();
             const mockWebviewMsg = {
                 command: "copy-cell",
-                data: { cell: 1, row: { a: 1, b: 1, c: 1 } },
+                payload: { cell: 1, row: { a: 1, b: 1, c: 1 } },
             };
             await view.onMessageReceived(mockWebviewMsg);
-            expect(writeTextMock).toHaveBeenCalledWith(mockWebviewMsg.data.cell);
+            expect(writeTextMock).toHaveBeenCalledWith(mockWebviewMsg.payload.cell);
             writeTextMock.mockRestore();
         });
 
@@ -334,7 +354,7 @@ describe("Table.View", () => {
             const writeTextMock = jest.spyOn(env.clipboard, "writeText");
             const mockWebviewMsg = {
                 command: "nonexistent-action",
-                data: { row: data.rows[0] },
+                payload: { row: data.rows[0] },
             };
             await view.onMessageReceived(mockWebviewMsg);
             expect(writeTextMock).not.toHaveBeenCalled();
@@ -376,7 +396,7 @@ describe("Table.View", () => {
                             },
                         } as Table.Action,
                     ],
-                    1: [
+                    0: [
                         {
                             title: "Zero action",
                             command: "zero-action",
@@ -396,8 +416,8 @@ describe("Table.View", () => {
             // case 1: A cell action that exists for all rows
             const mockWebviewMsg = {
                 command: "some-action",
-                data: { cell: data.rows[0].a, row: data.rows[0] },
-                rowIndex: 1,
+                payload: { cell: data.rows[0].a, row: data.rows[0] },
+                rowIndex: 0,
             };
             await view.onMessageReceived(mockWebviewMsg);
             expect(writeTextMock).not.toHaveBeenCalled();
@@ -407,8 +427,8 @@ describe("Table.View", () => {
             // case 2: A single-row action that exists for one row
             const mockNextWebviewMsg = {
                 command: "zero-action",
-                data: { cell: data.rows[0].a, row: data.rows[0] },
-                rowIndex: 1,
+                payload: { cell: data.rows[0].a, row: data.rows[0] },
+                rowIndex: 0,
             };
             await view.onMessageReceived(mockNextWebviewMsg);
             expect(writeTextMock).not.toHaveBeenCalled();
@@ -418,8 +438,8 @@ describe("Table.View", () => {
             // case 2: A multi-row action that exists for all rows
             const mockFinalWebviewMsg = {
                 command: "multi-action",
-                data: { cell: data.rows[0].a, rows: data.rows },
-                rowIndex: 2,
+                payload: { cell: data.rows[0].a, rows: data.rows },
+                rowIndex: 1,
             };
             await view.onMessageReceived(mockFinalWebviewMsg);
             expect(writeTextMock).not.toHaveBeenCalled();
@@ -517,9 +537,9 @@ describe("Table.View", () => {
                 },
                 condition: (_data) => true,
             } as Table.ContextMenuOption;
-            await view.addContextOption(1, singleRowContextOpt);
+            await view.addContextOption(0, singleRowContextOpt);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
-            expect((view as any).data.contextOpts[1]).toStrictEqual([singleRowContextOpt]);
+            expect((view as any).data.contextOpts[0]).toStrictEqual([singleRowContextOpt]);
             globalMocks.updateWebviewMock.mockRestore();
         });
 
@@ -551,9 +571,9 @@ describe("Table.View", () => {
                     fn: (_data) => {},
                 },
             } as Table.ContextMenuOption;
-            await view.addContextOption(1, singleRowContextOpt);
+            await view.addContextOption(0, singleRowContextOpt);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
-            expect((view as any).data.contextOpts[1]).toStrictEqual([singleRowContextOpt]);
+            expect((view as any).data.contextOpts[0]).toStrictEqual([singleRowContextOpt]);
             globalMocks.updateWebviewMock.mockRestore();
         });
     });
@@ -589,9 +609,9 @@ describe("Table.View", () => {
                 },
                 condition: (_data) => true,
             } as Table.ContextMenuOption;
-            await view.addAction(2, singleRowAction);
+            await view.addAction(0, singleRowAction);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
-            expect((view as any).data.actions[2]).toStrictEqual([singleRowAction]);
+            expect((view as any).data.actions[0]).toStrictEqual([singleRowAction]);
             globalMocks.updateWebviewMock.mockRestore();
         });
 
@@ -623,9 +643,9 @@ describe("Table.View", () => {
                     fn: (_data) => {},
                 },
             } as Table.ContextMenuOption;
-            await view.addAction(2, singleRowAction);
+            await view.addAction(0, singleRowAction);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
-            expect((view as any).data.actions[2]).toStrictEqual([singleRowAction]);
+            expect((view as any).data.actions[0]).toStrictEqual([singleRowAction]);
             globalMocks.updateWebviewMock.mockRestore();
         });
     });
@@ -685,7 +705,7 @@ describe("Table.View", () => {
             const message = {
                 command: "check-condition-for-action",
                 requestId: "test-request-123",
-                data: {
+                payload: {
                     actionId: "test-action",
                     row: { name: "test", value: 123 },
                     rowIndex: 0,
@@ -698,7 +718,7 @@ describe("Table.View", () => {
             expect(mockPostMessage).toHaveBeenCalledWith({
                 command: "condition-for-action-result",
                 requestId: "test-request-123",
-                result: true,
+                payload: true,
             });
         });
 
@@ -727,7 +747,7 @@ describe("Table.View", () => {
             const message = {
                 command: "check-condition-for-action",
                 requestId: "async-test-456",
-                data: {
+                payload: {
                     actionId: "async-action",
                     row: { name: "test", value: 456 },
                     rowIndex: 0,
@@ -740,7 +760,7 @@ describe("Table.View", () => {
             expect(mockPostMessage).toHaveBeenCalledWith({
                 command: "condition-for-action-result",
                 requestId: "async-test-456",
-                result: false,
+                payload: false,
             });
         });
 
@@ -768,7 +788,7 @@ describe("Table.View", () => {
             const message = {
                 command: "check-condition-for-action",
                 requestId: "string-test-789",
-                data: {
+                payload: {
                     actionId: "string-condition",
                     row: { name: "test", value: 456 },
                     rowIndex: 0,
@@ -780,7 +800,7 @@ describe("Table.View", () => {
             expect(mockPostMessage).toHaveBeenCalledWith({
                 command: "condition-for-action-result",
                 requestId: "string-test-789",
-                result: true,
+                payload: true,
             });
         });
 
@@ -809,7 +829,7 @@ describe("Table.View", () => {
             const message = {
                 command: "check-condition-for-action",
                 requestId: "context-test-789",
-                data: {
+                payload: {
                     actionId: "context-action",
                     row: { name: "test", value: 789 },
                     rowIndex: 0,
@@ -822,7 +842,7 @@ describe("Table.View", () => {
             expect(mockPostMessage).toHaveBeenCalledWith({
                 command: "condition-for-action-result",
                 requestId: "context-test-789",
-                result: true,
+                payload: true,
             });
         });
 
@@ -843,7 +863,7 @@ describe("Table.View", () => {
             const message = {
                 command: "check-condition-for-action",
                 requestId: "not-found-test",
-                data: {
+                payload: {
                     actionId: "non-existent-action",
                     row: { name: "test", value: 123 },
                     rowIndex: 0,
@@ -855,7 +875,7 @@ describe("Table.View", () => {
             expect(mockPostMessage).toHaveBeenCalledWith({
                 command: "condition-for-action-result",
                 requestId: "not-found-test",
-                result: false,
+                payload: false,
             });
         });
 
@@ -886,7 +906,7 @@ describe("Table.View", () => {
             const message = {
                 command: "check-condition-for-action",
                 requestId: "error-test",
-                data: {
+                payload: {
                     actionId: "error-action",
                     row: { name: "test", value: 123 },
                     rowIndex: 0,
@@ -898,8 +918,7 @@ describe("Table.View", () => {
             expect(mockPostMessage).toHaveBeenCalledWith({
                 command: "condition-for-action-result",
                 requestId: "error-test",
-                result: false,
-                error: "Test condition error",
+                payload: false,
             });
         });
     });

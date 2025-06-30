@@ -35,6 +35,34 @@ export interface ActionEvaluationResult {
 }
 
 /**
+ * Gets the dynamic title for an action if it has one
+ * @param action The action to get the title for
+ * @param context The context data for evaluation
+ * @returns Promise resolving to the action title
+ */
+export async function getActionTitle(action: Table.Action, context: ActionEvaluationContext): Promise<string> {
+    // Check if this is a dynamic title (marked with our special prefix)
+    if (typeof action.title === "string" && action.title.startsWith("__DYNAMIC_TITLE__")) {
+        try {
+            const evaluationData = prepareEvaluationData(action, context);
+            const dynamicTitle = await messageHandler.request<string>("get-dynamic-title-for-action", {
+                actionId: action.command,
+                row: evaluationData.row,
+                rowIndex: evaluationData.rowIndex,
+            });
+            return dynamicTitle;
+        } catch (error) {
+            console.warn(`Failed to get dynamic title for action ${action.command}:`, error);
+            // Fallback to command name if dynamic title fails
+            return action.command;
+        }
+    }
+
+    // Return static title as-is
+    return action.title as string;
+}
+
+/**
  * Evaluates the visibility and enabled state of an action based on its conditions
  * @param action The action to evaluate
  * @param context The context data for evaluation

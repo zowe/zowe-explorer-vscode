@@ -83,8 +83,12 @@ export namespace Table {
 
     // Defines the supported actions and related types.
     export type ActionKind = "primary" | "secondary" | "icon";
+
+    /** Dynamic title function - returns the title based on the selected data. */
+    export type DynamicTitle = ((data: RowData[] | RowData | ContentTypes) => string | Promise<string>) | string;
+
     export type Action = {
-        title: string;
+        title: DynamicTitle;
         command: string;
         /** A function that's invoked with row data. It should return `true` if the action can be used on the given row(s). */
         condition?: Conditional;
@@ -477,7 +481,7 @@ export namespace Table {
                 unsafeEval: true,
             });
             if (data) {
-                this.data = data;
+                this.data = { ...this.data, ...data };
             }
         }
 
@@ -561,10 +565,42 @@ export namespace Table {
                         if (action?.condition) {
                             const conditionData = this.getConditionData(payload);
                             result = await this.evaluateCondition(action.condition, conditionData, action.command, false);
+                        } else if (!action) {
+                            result = false;
                         }
 
                         (this.panel ?? this.view).webview.postMessage({
                             command: "condition-for-action-result",
+                            requestId,
+                            payload: result,
+                        });
+                    }
+                    return;
+                // "get-dynamic-title-for-action" command: Get the dynamic title for the given action ID (command).
+                case "get-dynamic-title-for-action":
+                    {
+                        const allActions = Object.values(this.data.actions).flat();
+                        const allContextOpts = Object.values(this.data.contextOpts).flat();
+                        const action = [...allActions, ...allContextOpts].find((act) => act.command === payload.actionId);
+
+                        let result = action?.command || "Action";
+                        if (action?.title) {
+                            if (typeof action.title === "string") {
+                                result = action.title;
+                            } else {
+                                try {
+                                    const conditionData = this.getConditionData(payload);
+                                    const titleResult = await Promise.resolve(action.title(conditionData));
+                                    result = titleResult;
+                                } catch (error) {
+                                    Logger.getImperativeLogger().warn(`Failed to evaluate dynamic title for action ${action.command}:`, error);
+                                    result = action.command;
+                                }
+                            }
+                        }
+
+                        (this.panel ?? this.view).webview.postMessage({
+                            command: "dynamic-title-for-action-result",
                             requestId,
                             payload: result,
                         });
@@ -686,7 +722,7 @@ export namespace Table {
                     Object.entries(this.data.actions).map(([key, actions]) => [
                         key,
                         actions.map((action) => ({
-                            title: action.title,
+                            title: typeof action.title === "string" ? action.title : `__DYNAMIC_TITLE__${action.command}`,
                             command: action.command,
                             type: action.type,
                             callback: action.callback,
@@ -697,7 +733,7 @@ export namespace Table {
                     Object.entries(this.data.contextOpts).map(([key, options]) => [
                         key,
                         options.map((option) => ({
-                            title: option.title,
+                            title: typeof option.title === "string" ? option.title : `__DYNAMIC_TITLE__${option.command}`,
                             command: option.command,
                             dataType: option.dataType,
                             callback: option.callback,
@@ -968,6 +1004,27 @@ export namespace Table {
          */
         public async getPinnedRows(): Promise<RowData[]> {
             return this.request<RowData[]>("get-pinned-rows");
+        }
+
+        /**
+         * Set the pinned rows to a specific array of rows.
+         *
+         * This method replaces all currently pinned rows with the provided array.
+         * Unlike pinRows() which adds to existing pinned rows, this method completely
+         * replaces the pinned row data.
+         *
+         * @param rows The rows to set as pinned (empty array clears all pinned rows)
+         * @returns Whether the webview successfully set the pinned rows
+         *
+         * @example
+         * // Clear all pinned rows
+         * await tableView.setPinnedRows([]);
+         *
+         * // Set specific rows as pinned (replaces any existing pinned rows)
+         * await tableView.setPinnedRows([row1, row2, row3]);
+         */
+        public async setPinnedRows(rows: RowData[]): Promise<boolean> {
+            return this.request<boolean>("set-pinned-rows", { rows });
         }
     }
 

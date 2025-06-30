@@ -488,6 +488,22 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
             }
             break;
 
+          case "set-pinned-rows":
+            if (gridRef.current?.api && payload?.rows !== undefined) {
+              try {
+                // Set the pinned rows to the provided array (could be empty to clear all)
+                gridRef.current.api.setGridOption("pinnedTopRowData", payload.rows);
+                responsePayload = true;
+              } catch (err) {
+                error = `Failed to set pinned rows: ${err instanceof Error ? err.message : String(err)}`;
+                responsePayload = false;
+              }
+            } else {
+              error = "Grid API not available or no rows provided";
+              responsePayload = false;
+            }
+            break;
+
           default:
             error = `Unknown command: ${command}`;
             break;

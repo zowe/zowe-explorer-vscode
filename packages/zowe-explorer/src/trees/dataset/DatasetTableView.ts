@@ -409,12 +409,14 @@ export class DatasetTableView {
                 }),
         },
         pinRows: {
-            title: l10n.t("Pin"),
+            title: (rows: Table.RowData[]): Promise<string> => {
+                return this.getPinActionTitle(rows as Table.RowData[]);
+            },
             command: "pin-selected-rows",
-            callback: { fn: this.pinSelectedRows.bind(this), typ: "multi-row" },
+            callback: { fn: this.togglePinSelectedRows.bind(this), typ: "multi-row" },
             type: "secondary",
             condition: (rows: Table.RowData[]): boolean => {
-                // Allow pinning any selected rows
+                // Allow pinning/unpinning any selected rows
                 return rows.length > 0;
             },
         },
@@ -467,6 +469,13 @@ export class DatasetTableView {
             profile = this.currentDataSource.profile;
         }
 
+        let pinnedRows: Table.RowData[] = [];
+        try {
+            pinnedRows = await this.table.getPinnedRows();
+        } catch (error) {
+            console.warn("Failed to get pinned rows:", error);
+        }
+
         // Store current table state before navigating
         this.previousTableData = {
             dataSource: this.currentDataSource,
@@ -474,6 +483,7 @@ export class DatasetTableView {
             shouldShow: { ...this.shouldShow },
             table: this.table,
             gridState: await this.table.getGridState(),
+            pinnedRows: pinnedRows,
         };
 
         // Create a new data source for PDS members
@@ -488,6 +498,7 @@ export class DatasetTableView {
         this.table = await this.generateTable(this.context);
         await TableViewProvider.getInstance().setTableView(this.table);
         await this.table.setPage(0);
+        await this.table.setPinnedRows([]);
     }
 
     /**
@@ -509,47 +520,107 @@ export class DatasetTableView {
             await this.table.waitForAPI();
             await this.table.setGridState(this.previousTableData.gridState);
 
+            // Restore pinned rows after grid state is restored
+            if (this.previousTableData.pinnedRows && this.previousTableData.pinnedRows.length > 0) {
+                try {
+                    await this.table.setPinnedRows(this.previousTableData.pinnedRows);
+                } catch (error) {
+                    console.warn("Failed to restore pinned rows:", error);
+                }
+            }
+
             // Clear navigation state
             this.previousTableData = null;
         }
     }
 
     /**
-     * Pin selected rows to the top of the table
+     * Get the appropriate title for the pin/unpin action based on selected rows
      *
-     * This action allows users to pin selected dataset rows to the top of the table view,
-     * making them always visible regardless of scrolling or filtering. Pinned rows are
-     * displayed above the normal table content and remain fixed in position.
+     * @param rows The selected rows to check pin status for
+     * @returns Promise resolving to "Pin" or "Unpin" based on current state
+     */
+    private async getPinActionTitle(rows: Table.RowData[]): Promise<string> {
+        try {
+            if (!this.table || rows.length === 0) {
+                return l10n.t("Pin");
+            }
+
+            const pinnedRows = await this.table.getPinnedRows();
+
+            // Check if all selected rows are currently pinned
+            const allRowsPinned = rows.every((selectedRow) =>
+                pinnedRows.some((pinnedRow) => JSON.stringify(selectedRow) === JSON.stringify(pinnedRow))
+            );
+
+            return allRowsPinned ? l10n.t("Unpin") : l10n.t("Pin");
+        } catch (error) {
+            // Fallback to "Pin" if we can't determine the state
+            return l10n.t("Pin");
+        }
+    }
+
+    /**
+     * Toggle pin/unpin for selected rows based on their current pinned state
+     *
+     * This action dynamically pins or unpins selected dataset rows. If all selected rows
+     * are currently pinned, it will unpin them. If any selected rows are not pinned,
+     * it will pin all selected rows to the top of the table view.
      *
      * @param _view The table view instance
-     * @param rows Record of selected rows to pin, indexed by row number
+     * @param rows Record of selected rows to pin/unpin, indexed by row number
      *
      * @example
-     * // When user selects multiple rows and clicks "Pin" action:
-     * // - Selected rows are moved to the top of the table
-     * // - Pinned rows remain visible during scrolling
-     * // - User receives confirmation message about pinned rows
+     * // When user selects rows and clicks "Pin/Unpin" action:
+     * // - If rows are not pinned: they are moved to the top of the table
+     * // - If rows are already pinned: they are unpinned and returned to normal position
+     * // - User receives confirmation message about the action performed
      */
-    private async pinSelectedRows(this: DatasetTableView, _view: Table.View, rows: Record<number, Table.RowData>): Promise<void> {
+    private async togglePinSelectedRows(this: DatasetTableView, _view: Table.View, rows: Record<number, Table.RowData>): Promise<void> {
         try {
             const rowsArray = Object.values(rows);
-            const success = await this.table.pinRows(rowsArray);
+            const pinnedRows = await this.table.getPinnedRows();
+
+            // Check if all selected rows are currently pinned
+            const allRowsPinned = rowsArray.every((selectedRow) =>
+                pinnedRows.some((pinnedRow) => JSON.stringify(selectedRow) === JSON.stringify(pinnedRow))
+            );
+
+            let success: boolean;
+            let actionPerformed: string;
+
+            if (allRowsPinned) {
+                // All selected rows are pinned, so unpin them
+                success = await this.table.unpinRows(rowsArray);
+                actionPerformed = "unpinned";
+            } else {
+                // Some or all selected rows are not pinned, so pin them
+                success = await this.table.pinRows(rowsArray);
+                actionPerformed = "pinned";
+            }
 
             if (success) {
+                const messageKey =
+                    actionPerformed === "pinned"
+                        ? "Successfully pinned {0} row(s) to the top of the table."
+                        : "Successfully unpinned {0} row(s) from the table.";
+
                 Gui.infoMessage(
                     l10n.t({
-                        message: "Successfully pinned {0} row(s) to the top of the table.",
+                        message: messageKey,
                         args: [rowsArray.length.toString()],
-                        comment: ["Number of rows pinned"],
+                        comment: ["Number of rows pinned/unpinned"],
                     })
                 );
             } else {
-                Gui.errorMessage(l10n.t("Failed to pin rows to the table."));
+                const errorKey = actionPerformed === "pinned" ? "Failed to pin rows to the table." : "Failed to unpin rows from the table.";
+
+                Gui.errorMessage(l10n.t(errorKey));
             }
         } catch (error) {
             Gui.errorMessage(
                 l10n.t({
-                    message: "Error pinning rows: {0}",
+                    message: "Error toggling pin state for rows: {0}",
                     args: [error instanceof Error ? error.message : String(error)],
                     comment: ["Error message"],
                 })
@@ -577,6 +648,7 @@ export class DatasetTableView {
         shouldShow: Record<string, boolean>;
         table: Table.Instance;
         gridState: any;
+        pinnedRows: Table.RowData[];
     } = null;
 
     // Static table identifiers for this table view
