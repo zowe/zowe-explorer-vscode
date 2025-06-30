@@ -979,7 +979,6 @@ export class DatasetActions {
             ];
 
             const extenderAttributes = DataSetAttributesProvider.getInstance();
-            const test = await extenderAttributes.fetchAll({ dsName: attributes[0].dsname, profile: Profiles.getInstance() });
             DatasetActions.attributeInfo.push(
                 ...(await extenderAttributes.fetchAll({ dsName: attributes[0].dsname, profile: Profiles.getInstance() }))
             );
