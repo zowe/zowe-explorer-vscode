@@ -274,7 +274,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         expect(favChildNodeForProfile).toEqual(node);
     });
     it("Checking function for sequential DS favorite", async () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
@@ -285,6 +285,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             profile: blockMocks.imperativeProfile,
             contextOverride: Constants.DS_FAV_CONTEXT,
         });
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         node.resourceUri = blockMocks.datasetSessionNode.resourceUri?.with({
             path: `/${blockMocks.datasetSessionNode.label as string}/${node.label as string}`,
         });
