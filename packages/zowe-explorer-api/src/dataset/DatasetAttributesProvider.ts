@@ -9,11 +9,11 @@
  *
  */
 
-export type attributeInfo = Array<{
+export type attributeInfo = {
     title: string;
     reference?: string;
     keys: Map<string, { displayName?: string; description?: string; value: any }>;
-}>;
+}[];
 
 export type dsInfo = {
     profile: any;

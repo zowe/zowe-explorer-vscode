@@ -13,7 +13,7 @@ import * as imperative from "@zowe/imperative";
 import { MainframeInteraction } from "./MainframeInteraction";
 import { Validation } from "../profiles";
 import * as vscode from "vscode";
-import { DataSetAttributesProvider } from "./DatasetAttributesProvider";
+import { DataSetAttributesProvider } from "../dataset/DatasetAttributesProvider";
 
 /**
  * This interface can be used by other VS Code Extensions to register themselves

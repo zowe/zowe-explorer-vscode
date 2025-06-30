@@ -9,7 +9,4 @@
  *
  */
 
-export * from "./IApiExplorerExtender";
-export * from "./ILocalStorageAccess";
-export * from "./IRegisterClient";
-export * from "./MainframeInteraction";
+export * from "./DatasetAttributesProvider";
