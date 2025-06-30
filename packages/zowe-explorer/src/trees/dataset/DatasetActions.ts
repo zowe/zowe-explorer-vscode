@@ -993,30 +993,29 @@ export class DatasetActions {
     <title>${label} "${attributesMessage}"</title>
 </head>
 <body>
-    ${
-        DatasetActions.attributeInfo
-            .map(({ title, reference, keys }) => {
-                const linkedTitle = reference
-                    ? `<a href="${reference as string}" target="_blank" style="text-decoration: none;">
-                    <h2 style="color: var(--vscode-textLink-foreground)">${title as string}</h2>
+    ${DatasetActions.attributeInfo
+        .map(({ title, reference, keys }) => {
+            const linkedTitle = reference
+                ? `<a href="${reference}" target="_blank" style="text-decoration: none;">
+                    <h2 style="color: var(--vscode-textLink-foreground)">${title}</h2>
                 </a>`
-                    : `<h2>${title as string}</h2>`;
-                const tableRows = Array.from(keys.entries())
-                    .filter(([key], _, all) => !(key === "vol" && all.some(([k]) => k === "vols")))
-                    .reduce((html, [key, info]) => {
-                        if (info.value === undefined || info.value === null) {
-                            return html;
-                        }
-                        return html.concat(`
+                : `<h2>${title}</h2>`;
+            const tableRows = Array.from(keys.entries())
+                .filter(([key], _, all) => !(key === "vol" && all.some(([k]) => k === "vols")))
+                .reduce((html, [key, info]) => {
+                    if (info.value === undefined || info.value === null) {
+                        return html;
+                    }
+                    return html.concat(`
                         <tr ${
                             info.displayName || info.description
-                                ? `title="${info.displayName ? `(${key as string})` : ""}${
-                                      info.description ? (info.displayName ? " " : "") + (info.description as string) : ""
+                                ? `title="${info.displayName ? `(${key})` : ""}${
+                                      info.description ? (info.displayName ? " " : "") + info.description : ""
                                   }"`
                                 : ""
                         }>
                             <td align="left" style="color: var(--vscode-editorLink-activeForeground); font-weight: bold">
-                                ${(info.displayName || key) as string}:
+                                ${info.displayName || key}:
                             </td>
                             <td align="right" style="color: ${
                                 isNaN(info.value) ? "var(--vscode-settings-textInputForeground)" : "var(--vscode-problemsWarningIcon-foreground)"
@@ -1025,17 +1024,16 @@ export class DatasetActions {
                             </td>
                         </tr>
                 `);
-                    }, "");
+                }, "");
 
-                return `
+            return `
             ${linkedTitle}
             <table style="margin-top: 2em; border-spacing: 2em 0">
-                ${tableRows as string}
+                ${tableRows}
             </table>
         `;
-            })
-            .join("") as string
-    }
+        })
+        .join("")}
 </body>
 </html>`;
 
