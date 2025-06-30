@@ -9,6 +9,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### Bug fixes
 
 - Implemented graceful handling for non-existent named profiles within the loadNamedProfile function. [#3678](https://github.com/zowe/zowe-explorer-vscode/pull/3678)
+- Fixed an issue where clicking the Cancel button in the Save Credentials dialog triggered a 401 error prompting to update credentials. [#3713](https://github.com/zowe/zowe-explorer-vscode/pull/3713)
 
 ## `3.2.1`
 
