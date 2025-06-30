@@ -10,6 +10,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Fixed an issue where clicking the refresh icon beside a profile in the Unix System Services (USS) view had no effect. [#3693](https://github.com/zowe/zowe-explorer-vscode/issues/3693)
 - Fixed a bug where USS files and data set VS Code editors accessed by an extender (SSH, FTP, etc) are not restored when reloading/reopening a window. [#3678](https://github.com/zowe/zowe-explorer-vscode/pull/3678)
+- Fix issues seen with out of date profile information within Zowe Explorer tree views. [#3664](https://github.com/zowe/zowe-explorer-vscode/issues/3664)
 
 ## `3.2.1`
 

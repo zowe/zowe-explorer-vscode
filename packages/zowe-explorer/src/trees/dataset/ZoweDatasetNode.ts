@@ -664,6 +664,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         };
     }
 
+    public getProfile(): imperative.IProfileLoaded {
+        return super.getProfile(Profiles.getInstance());
+    }
+
     public getSessionNode(): IZoweDatasetTreeNode {
         ZoweLogger.trace("ZoweDatasetNode.getSessionNode called.");
         return this.session ? this : (this.getParent()?.getSessionNode() as IZoweDatasetTreeNode) ?? this;
