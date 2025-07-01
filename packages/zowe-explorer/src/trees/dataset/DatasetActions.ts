@@ -22,7 +22,7 @@ import {
     FsAbstractUtils,
     ZoweScheme,
     ZoweExplorerApiType,
-    type attributeInfo,
+    type AttributeInfo,
     DataSetAttributesProvider,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
@@ -979,8 +979,10 @@ export class DatasetActions {
             ];
 
             const extenderAttributes = DataSetAttributesProvider.getInstance();
+            const sessionNode = node.getSessionNode();
+
             DatasetActions.attributeInfo.push(
-                ...(await extenderAttributes.fetchAll({ dsName: attributes[0].dsname, profile: Profiles.getInstance() }))
+                ...(await extenderAttributes.fetchAll({ dsName: attributes[0].dsname, profile: sessionNode.getProfile() }))
             );
 
             // Check registered DataSetAttributesProvider, send dsname and profile. get results and append to `attributeInfo`
@@ -1018,7 +1020,9 @@ export class DatasetActions {
                                 ${info.displayName || key}:
                             </td>
                             <td align="right" style="color: ${
-                                isNaN(info.value) ? "var(--vscode-settings-textInputForeground)" : "var(--vscode-problemsWarningIcon-foreground)"
+                                isNaN(info.value as any)
+                                    ? "var(--vscode-settings-textInputForeground)"
+                                    : "var(--vscode-problemsWarningIcon-foreground)"
                             }">
                                 ${info.value as string}
                             </td>
@@ -1046,7 +1050,7 @@ export class DatasetActions {
         }
     }
 
-    private static attributeInfo: attributeInfo;
+    private static attributeInfo: AttributeInfo;
 
     /**
      * Submit the contents of the editor or file as JCL.

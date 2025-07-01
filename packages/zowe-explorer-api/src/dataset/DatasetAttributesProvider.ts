@@ -9,21 +9,21 @@
  *
  */
 
-import { imperative } from "..";
+import { Logger, IProfileLoaded } from "@zowe/imperative";
 
-export type attributeInfo = {
+export type AttributeInfo = {
     title: string;
     reference?: string;
-    keys: Map<string, { displayName?: string; description?: string; value: any }>;
+    keys: Map<string, { displayName?: string; description?: string; value: boolean | number | string }>;
 }[];
 
-export type dsInfo = {
-    profile: any;
+export type DsInfo = {
+    profile: IProfileLoaded;
     dsName: string;
 };
 
 export interface IAttributesProvider {
-    fetchAttributes(context: dsInfo): attributeInfo | Promise<attributeInfo>;
+    fetchAttributes(context: DsInfo): AttributeInfo | Promise<AttributeInfo>;
 }
 
 export class DataSetAttributesProvider {
@@ -46,13 +46,13 @@ export class DataSetAttributesProvider {
         this.providers.push(attributeExtender);
     }
 
-    public async fetchAll(context: dsInfo): Promise<attributeInfo> {
-        const attributes: attributeInfo = [];
+    public async fetchAll(context: DsInfo): Promise<AttributeInfo> {
+        const attributes: AttributeInfo = [];
         for (const provider of this.providers) {
             try {
                 attributes.push(...(await provider.fetchAttributes(context)));
             } catch (e) {
-                imperative.Logger.getAppLogger().error(e);
+                Logger.getAppLogger().error(e);
             }
         }
         return attributes;

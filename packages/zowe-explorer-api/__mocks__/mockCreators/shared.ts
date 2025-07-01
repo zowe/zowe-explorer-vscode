@@ -10,7 +10,7 @@
  */
 
 import * as imperative from "@zowe/imperative";
-import { IAttributesProvider, attributeInfo } from "../../src/dataset/DatasetAttributesProvider";
+import { IAttributesProvider, AttributeInfo } from "../../src/dataset/DatasetAttributesProvider";
 
 export function createConfigInstance() {
     return {
@@ -94,7 +94,7 @@ export function createTeamConfigMock(): imperative.IConfig {
     };
 }
 export class ExtenderAttr implements IAttributesProvider {
-    public fetchAttributes(): attributeInfo {
+    public fetchAttributes(): AttributeInfo {
         const keys = new Map<string, { displayName?: string; description?: string; value: any }>([
             [
                 "DescriptionAndDisplayName",
