@@ -1475,8 +1475,8 @@ export function App() {
                     }}
                   >
                     <span style={{ fontWeight: "bold", flex: 1 }}>{prop.key}:</span>
-                    <span style={{ flex: 1, marginLeft: "0.5rem" }}>{prop.secure ? "••••••••" : prop.value}</span>
-                    {prop.secure && <span style={{ fontSize: "0.8em", color: "#666", marginLeft: "0.5rem" }}>(secure)</span>}
+                    <span style={{ flex: 1 }}>{prop.secure ? "********" : prop.value}</span>
+                    {/* {prop.secure && <span style={{ fontSize: "0.8em", color: "#666", marginLeft: "0.5rem" }}>(secure)</span>} */}
                     <button
                       onClick={() => handleWizardRemoveProperty(index)}
                       style={{
