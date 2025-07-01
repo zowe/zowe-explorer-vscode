@@ -791,8 +791,10 @@ describe("Tree Provider Unit Tests - function updateSessionContext", () => {
         };
     }
 
-    it("updates the session context across all shared tree providers", () => {
+    it("updates the session context across all shared tree providers", async () => {
         const blockMocks = getBlockMocks();
+        const globalMocks = await createGlobalMocks();
+        globalMocks.mockLoadNamedProfile.mockReturnValue(blockMocks.profile);
         (ZoweTreeProvider as any).updateSessionContext(blockMocks.profile.name, Validation.ValidationType.VALID);
         expect(blockMocks.sharedProviders.ds.setStatusForSession).toHaveBeenCalledWith(blockMocks.sessionNodes.ds, Validation.ValidationType.VALID);
         expect(blockMocks.sharedProviders.uss.setStatusForSession).toHaveBeenCalledWith(blockMocks.sessionNodes.uss, Validation.ValidationType.VALID);
