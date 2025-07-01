@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
 import { createConfigInstance, createConfigLoad, createTeamConfigMock } from "../../../__mocks__/mockCreators/shared";
-import { ZoweVsCodeExtension, FileManagement, Gui } from "../../../src";
+import { ZoweVsCodeExtension, FileManagement, Gui, ProfilesCache } from "../../../src";
 
 jest.mock("@zowe/imperative");
 
@@ -84,7 +84,11 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
                 user: true,
             },
             mockError: new Error(),
+            profilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
+            profilesCacheMock: jest.spyOn(ZoweVsCodeExtension, "profilesCache", "get"),
         };
+
+        newMocks.profilesCacheMock.mockReturnValue(newMocks.profilesCache);
 
         newMocks.baseProfile.profile = { ...newMocks.testProfile };
         newMocks.serviceProfile.profile = { ...newMocks.testProfile };
@@ -175,6 +179,7 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
             spyLayers.mockClear();
             spyInfoMessage.mockClear();
             spyOpenFile.mockClear();
+            blockMocks.profilesCacheMock.mockRestore();
         });
 
         it("Test that createTeamConfiguration will create project if VSC in project", async () => {
@@ -191,6 +196,7 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
             spyQuickPick.mockClear();
             spyLayers.mockClear();
             spyOpenFile.mockClear();
+            blockMocks.profilesCacheMock.mockRestore();
         });
 
         it("Test that createTeamConfiguration will create unsecure global", async () => {
@@ -212,6 +218,7 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
             spyLayers.mockClear();
             spyInfoMessage.mockClear();
             spyOpenFile.mockClear();
+            blockMocks.profilesCacheMock.mockRestore();
         });
     });
 });
