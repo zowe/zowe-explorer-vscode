@@ -4,6 +4,7 @@ import { cloneDeep } from "es-toolkit";
 import { isSecureOrigin } from "../utils";
 import { schemaValidation } from "../../../utils/ConfigEditor";
 import "./App.css";
+import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 const vscodeApi = acquireVsCodeApi();
 
 export function App() {
@@ -60,6 +61,16 @@ export function App() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [schemaValidations, setSchemaValidations] = useState<{ [configPath: string]: schemaValidation | undefined }>({});
   const [selectedProfileKey, setSelectedProfileKey] = useState<string | null>(null);
+  // Profile Wizard state
+  const [wizardModalOpen, setWizardModalOpen] = useState(false);
+  const [wizardRootProfile, setWizardRootProfile] = useState("root");
+  const [wizardSelectedType, setWizardSelectedType] = useState("");
+  const [wizardProfileName, setWizardProfileName] = useState("");
+  const [wizardProperties, setWizardProperties] = useState<{ key: string; value: string; secure?: boolean }[]>([]);
+  const [wizardShowKeyDropdown, setWizardShowKeyDropdown] = useState(false);
+  const [wizardNewPropertyKey, setWizardNewPropertyKey] = useState("");
+  const [wizardNewPropertyValue, setWizardNewPropertyValue] = useState("");
+  const [wizardNewPropertySecure, setWizardNewPropertySecure] = useState(false);
   // Invoked on webview load
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -114,9 +125,9 @@ export function App() {
   }, [selectedTab, configurations]);
 
   useEffect(() => {
-    const isModalOpen = newKeyModalOpen || newProfileModalOpen || saveModalOpen || newLayerModalOpen || editModalOpen;
+    const isModalOpen = newKeyModalOpen || newProfileModalOpen || saveModalOpen || newLayerModalOpen || editModalOpen || wizardModalOpen;
     document.body.classList.toggle("modal-open", isModalOpen);
-  }, [newKeyModalOpen, newProfileModalOpen, saveModalOpen, newLayerModalOpen, editModalOpen]);
+  }, [newKeyModalOpen, newProfileModalOpen, saveModalOpen, newLayerModalOpen, editModalOpen, wizardModalOpen]);
 
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
@@ -387,10 +398,72 @@ export function App() {
 
     const flatProfiles = flattenProfiles(profilesObj);
 
+    // Get pending profiles from pendingChanges
+    const configPath = configurations[selectedTab!]!.configPath;
+    const pendingProfiles: { [key: string]: any } = {};
+
+    Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
+      if (entry.profile) {
+        // Extract the profile path from the key
+        const keyParts = key.split(".");
+        if (keyParts[0] === "profiles") {
+          // Remove "profiles" prefix and get the profile path
+          const profilePathParts = keyParts.slice(1);
+
+          // Find where the profile name ends (before "type" or "properties")
+          let profileNameEndIndex = profilePathParts.length;
+          for (let i = 0; i < profilePathParts.length; i++) {
+            if (profilePathParts[i] === "type" || profilePathParts[i] === "properties") {
+              profileNameEndIndex = i;
+              break;
+            }
+          }
+
+          // Extract just the profile name parts
+          const profileNameParts = profilePathParts.slice(0, profileNameEndIndex);
+
+          if (profileNameParts.length > 0) {
+            // Filter out "profiles" segments to get the actual profile name
+            const filteredProfileParts = profileNameParts.filter((part) => part !== "profiles");
+            const profileKey = filteredProfileParts.join(".");
+
+            // Initialize the profile structure if it doesn't exist
+            if (!pendingProfiles[profileKey]) {
+              pendingProfiles[profileKey] = {};
+            }
+
+            // Add the property to the profile
+            const propertyName = keyParts[keyParts.length - 1];
+            if (propertyName === "type") {
+              pendingProfiles[profileKey].type = entry.value;
+            } else if (keyParts.includes("properties")) {
+              if (!pendingProfiles[profileKey].properties) {
+                pendingProfiles[profileKey].properties = {};
+              }
+              pendingProfiles[profileKey].properties[propertyName] = entry.value;
+
+              // If this is a secure property, also add it to the secure array
+              if (entry.secure) {
+                if (!pendingProfiles[profileKey].secure) {
+                  pendingProfiles[profileKey].secure = [];
+                }
+                if (!pendingProfiles[profileKey].secure.includes(propertyName)) {
+                  pendingProfiles[profileKey].secure.push(propertyName);
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Combine existing and pending profiles for the profile list
+    const allProfiles = { ...flatProfiles, ...pendingProfiles };
+
     return (
       <div style={{ display: "flex", gap: "2rem" }}>
         <div style={{ width: "250px", paddingRight: "1rem" }}>
-          {Object.keys(flatProfiles).map((profileKey) => (
+          {Object.keys(allProfiles).map((profileKey) => (
             <div
               key={profileKey}
               className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""}`}
@@ -400,10 +473,22 @@ export function App() {
                 padding: "8px",
                 border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "1px solid #ccc",
                 backgroundColor: selectedProfileKey === profileKey ? "var(--vscode-button-hoverBackground)" : "transparent",
+                opacity: pendingProfiles[profileKey] ? 0.7 : 1, // Dim pending profiles
               }}
               onClick={() => setSelectedProfileKey(profileKey)}
+              title={profileKey}
             >
-              <strong>{profileKey}</strong>
+              <strong
+                style={{
+                  display: "block",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {profileKey}
+              </strong>
+              {pendingProfiles[profileKey]}
             </div>
           ))}
         </div>
@@ -428,7 +513,10 @@ export function App() {
                     }
                   }
                 }
-                return renderConfig(flatProfiles[selectedProfileKey], path);
+                // Pass the original profile object (without pending changes) to renderConfig
+                // so that renderConfig can properly combine existing and pending changes
+                const originalProfile = flatProfiles[selectedProfileKey] || {};
+                return renderConfig(originalProfile, path);
               })()}
             </div>
           )}
@@ -440,59 +528,68 @@ export function App() {
   const renderConfig = (obj: any, path: string[] = []) => {
     const fullPath = path.join(".");
     const baseObj = cloneDeep(obj);
-
     const configPath = configurations[selectedTab!]!.configPath;
-    const combinedConfig = {
-      ...baseObj,
-      ...Object.fromEntries(
-        Object.entries(pendingChanges[configPath] ?? {})
-          .filter(([key, entry]) => {
-            const keyParts = key.split(".");
-            // Secure property handling
-            if (entry.secure) {
-              let securePath = cloneDeep(pendingChanges[configPath][key].path);
-              let property = securePath.pop();
-              securePath.pop();
-              securePath.push("secure");
-              let newSecureCreds = securePath.reduce((acc, key) => acc?.[key], baseObj);
-              if (newSecureCreds) {
-                if (!Array.isArray(newSecureCreds)) {
-                  newSecureCreds = [];
-                }
-                newSecureCreds.push(property);
-              } else {
-                const securePathObj = securePath.reduce((acc, key, idx) => {
-                  if (!acc[key]) {
-                    acc[key] = idx === securePath.length - 1 ? [] : {};
-                  }
-                  return acc[key];
-                }, baseObj);
-                securePathObj.push(property);
+
+    // Prepare a copy of baseObj for this level
+    let combinedConfig = { ...baseObj };
+
+    // Create a map of pending changes that should be applied at this level
+    const pendingChangesAtLevel: { [key: string]: any } = {};
+    Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
+      if (!entry.secure) {
+        const keyParts = key.split(".");
+        if (key.startsWith(fullPath)) {
+          const relativePath = keyParts.slice(path.length);
+          if (relativePath.length === 1) {
+            pendingChangesAtLevel[relativePath[0]] = entry.value;
+          } else if (relativePath.length > 1) {
+            let current = combinedConfig;
+            for (let i = 0; i < relativePath.length - 1; i++) {
+              if (!current[relativePath[i]]) {
+                current[relativePath[i]] = {};
               }
+              current = current[relativePath[i]];
             }
-            return key.startsWith(fullPath) && keyParts.length === path.length + 1 && !entry.secure;
-          })
-          .map(([key, entry]) => [key.split(".").pop()!, entry.value])
-      ),
+            current[relativePath[relativePath.length - 1]] = entry.value;
+          }
+        }
+      }
+    });
+
+    // Combine base object with pending changes at this level
+    combinedConfig = {
+      ...combinedConfig,
+      ...pendingChangesAtLevel,
     };
 
     return Object.entries(combinedConfig).map(([key, value]) => {
       const currentPath = [...path, key];
       const fullKey = currentPath.join(".");
       const displayKey = key.split(".").pop();
-
       if ((deletions[configPath] ?? []).includes(fullKey)) return null;
-
       const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
       const isArray = Array.isArray(value);
       const pendingValue = (pendingChanges[configPath] ?? {})[fullKey]?.value ?? value;
-
+      // --- Fix: Merge pending secure properties when rendering a 'secure' array ---
+      let renderValue: any[] = Array.isArray(value) ? value : [];
+      if (isArray && key === "secure") {
+        // Find all pending secure properties for this exact secure array path
+        const pendingSecureProps: string[] = Object.entries(pendingChanges[configPath] ?? {})
+          .filter(([, entry]) => entry.secure && currentPath.join(".") === pathFromArray(path.concat(["secure"])))
+          .map(([, entry]) => String(entry.path[entry.path.length - 1]));
+        const baseArray: any[] = Array.isArray(value) ? value : [];
+        if (pendingSecureProps.length > 0) {
+          renderValue = Array.from(new Set([...baseArray, ...pendingSecureProps]));
+        } else {
+          renderValue = baseArray;
+        }
+      }
       if (isParent) {
         return (
           <div key={fullKey} className="config-item parent">
             <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
               {displayKey?.toLocaleLowerCase() === "properties" ? "Profile Properties" : displayKey}
-              <button className="add-default-button" title={`Add key inside "${fullKey}"`} onClick={() => openAddProfileModalAtPath(currentPath)}>
+              <button className="add-default-button" title={`Add key inside \"${fullKey}\"`} onClick={() => openAddProfileModalAtPath(currentPath)}>
                 <span className="codicon codicon-add"></span>
               </button>
             </h3>
@@ -509,7 +606,7 @@ export function App() {
               </span>
               <button
                 className="add-default-button"
-                title={`Add key inside "${fullKey}"`}
+                title={`Add key inside \"${fullKey}\"`}
                 onClick={() => {
                   setIsSecure(true);
                   openAddProfileModalAtPath(currentPath);
@@ -519,8 +616,7 @@ export function App() {
               </button>
             </h3>
             <div>
-              {Array.from(new Set(value)).map((item: any, index: number) => {
-                // Logic to handle hidden items in secure properties
+              {Array.from(new Set(renderValue)).map((item: any, index: number) => {
                 if (
                   tabsHiddenItems &&
                   tabsHiddenItems[item] &&
@@ -779,6 +875,144 @@ export function App() {
 
   const typeOptions = selectedTab !== null ? schemaValidations[configurations[selectedTab].configPath]?.validDefaults || [] : [];
 
+  // Profile Wizard helper functions
+  const getAvailableProfiles = () => {
+    if (selectedTab === null) return ["root"];
+
+    const config = configurations[selectedTab].properties;
+    const flatProfiles = flattenProfiles(config.profiles);
+    const profileNames = Object.keys(flatProfiles);
+
+    // Include pending profiles from pendingChanges
+    const pendingProfiles = new Set<string>();
+    Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([key, entry]) => {
+      if (entry.profile) {
+        pendingProfiles.add(entry.profile);
+      }
+    });
+
+    return ["root", ...profileNames, ...Array.from(pendingProfiles)];
+  };
+
+  const getWizardTypeOptions = () => {
+    if (selectedTab === null) return [];
+    return schemaValidations[configurations[selectedTab].configPath]?.validDefaults || [];
+  };
+
+  const getWizardPropertyOptions = () => {
+    if (!wizardSelectedType || selectedTab === null) return [];
+    return schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || [];
+  };
+
+  const handleWizardAddProperty = () => {
+    if (!wizardNewPropertyKey.trim() || !wizardNewPropertyValue.trim()) return;
+
+    setWizardProperties((prev) => [
+      ...prev,
+      {
+        key: wizardNewPropertyKey,
+        value: wizardNewPropertyValue,
+        secure: wizardNewPropertySecure,
+      },
+    ]);
+    setWizardNewPropertyKey("");
+    setWizardNewPropertyValue("");
+    setWizardNewPropertySecure(false);
+    setWizardShowKeyDropdown(false);
+  };
+
+  const handleWizardRemoveProperty = (index: number) => {
+    setWizardProperties((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleWizardCreateProfile = () => {
+    if (!wizardProfileName.trim() || !wizardSelectedType) return;
+
+    const configPath = configurations[selectedTab!]!.configPath;
+
+    // Create the profile path
+    let profilePath: string[];
+    if (wizardRootProfile === "root") {
+      profilePath = ["profiles", wizardProfileName];
+    } else {
+      // For nested profiles, we need to build the path to the selected profile
+      // and then add "profiles" and the new profile name
+      const profileParts = wizardRootProfile.split(".");
+      profilePath = ["profiles"];
+
+      // Build the path to the selected profile
+      for (let i = 0; i < profileParts.length; i++) {
+        profilePath.push(profileParts[i]);
+        // Add "profiles" between each level
+        if (i < profileParts.length - 1) {
+          profilePath.push("profiles");
+        }
+      }
+
+      // Add "profiles" after the selected profile, then the new profile name
+      profilePath.push("profiles", wizardProfileName);
+    }
+
+    // Add type property
+    const typePath = [...profilePath, "type"];
+    const typeKey = typePath.join(".");
+
+    setPendingChanges((prev) => ({
+      ...prev,
+      [configPath]: {
+        ...prev[configPath],
+        [typeKey]: {
+          value: wizardSelectedType,
+          path: typePath.slice(-1),
+          profile: wizardRootProfile === "root" ? wizardProfileName : `${wizardRootProfile}.${wizardProfileName}`,
+        },
+      },
+    }));
+
+    // Add properties
+    wizardProperties.forEach((prop) => {
+      // Always use properties path, but set secure flag if needed
+      const propertyPath = [...profilePath, "properties", prop.key];
+      const propertyKey = propertyPath.join(".");
+
+      setPendingChanges((prev) => ({
+        ...prev,
+        [configPath]: {
+          ...prev[configPath],
+          [propertyKey]: {
+            value: prop.value,
+            path: propertyPath.slice(-1),
+            profile: wizardRootProfile === "root" ? wizardProfileName : `${wizardRootProfile}.${wizardProfileName}`,
+            secure: prop.secure,
+          },
+        },
+      }));
+    });
+
+    // Reset wizard state
+    setWizardModalOpen(false);
+    setWizardRootProfile("root");
+    setWizardSelectedType("");
+    setWizardProfileName("");
+    setWizardProperties([]);
+    setWizardNewPropertyKey("");
+    setWizardNewPropertyValue("");
+    setWizardNewPropertySecure(false);
+    setWizardShowKeyDropdown(false);
+  };
+
+  const handleWizardCancel = () => {
+    setWizardModalOpen(false);
+    setWizardRootProfile("root");
+    setWizardSelectedType("");
+    setWizardProfileName("");
+    setWizardProperties([]);
+    setWizardNewPropertyKey("");
+    setWizardNewPropertyValue("");
+    setWizardNewPropertySecure(false);
+    setWizardShowKeyDropdown(false);
+  };
+
   useEnhancedDatalist(newKeyModalOpen ? "type-input" : null, "type-options");
 
   const modal = newKeyModalOpen && (
@@ -825,7 +1059,7 @@ export function App() {
           className="modal-input"
         />
         <div className="modal-actions">
-          <button onClick={handleAddNewDefault}>{l10n.t("Add")}</button>
+          <VSCodeButton onClick={handleAddNewDefault}>{l10n.t("Add")}</VSCodeButton>
           <button
             onClick={() => {
               setNewKeyModalOpen(false);
@@ -1013,6 +1247,302 @@ export function App() {
     </div>
   );
 
+  const wizardModal = wizardModalOpen && (
+    <div className="modal-backdrop">
+      <style>
+        {`
+          .wizard-select {
+            position: relative;
+            z-index: 1;
+          }
+          .wizard-select:focus {
+            z-index: 10;
+          }
+          .wizard-select option {
+            background-color: var(--vscode-dropdown-background);
+            color: var(--vscode-dropdown-foreground);
+            padding: 4px 8px;
+          }
+        `}
+      </style>
+      <div
+        className="modal"
+        style={{
+          maxWidth: "600px",
+          width: "600px",
+          maxHeight: "85vh",
+          overflow: "visible",
+          display: "flex",
+          flexDirection: "column",
+          position: "relative",
+        }}
+      >
+        <h3 style={{ margin: "0 0 1rem 0", paddingBottom: "0.5rem" }}>{l10n.t("Profile Wizard")}</h3>
+
+        <div style={{ flex: 1, overflow: "auto", paddingRight: "0.5rem", position: "relative" }}>
+          {/* Root Profile Selection */}
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>{l10n.t("Root Profile")}:</label>
+            <select
+              value={wizardRootProfile}
+              onChange={(e) => setWizardRootProfile((e.target as HTMLSelectElement).value)}
+              className="modal-input wizard-select"
+              style={{
+                width: "100%",
+                height: "36px",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
+              {getAvailableProfiles().map((profile) => (
+                <option key={profile} value={profile}>
+                  {profile === "root" ? "/" : profile}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Profile Name */}
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>{l10n.t("Profile Name")}:</label>
+            <input
+              type="text"
+              value={wizardProfileName}
+              onKeyDown={(e) => {
+                // Allow: backspace, delete, tab, escape, enter, and navigation keys
+                if ([8, 9, 27, 13, 46, 37, 38, 39, 40].includes(e.keyCode)) {
+                  return;
+                }
+                // Allow: alphanumeric characters and underscore
+                if (/^[a-zA-Z0-9_]$/.test(e.key)) {
+                  return;
+                }
+                // Prevent all other keys
+                e.preventDefault();
+              }}
+              onChange={(e) => setWizardProfileName((e.target as HTMLInputElement).value)}
+              className="modal-input"
+              placeholder={l10n.t("Enter profile name")}
+              style={{ width: "100%", height: "36px" }}
+            />
+          </div>
+
+          {/* Type Selection */}
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>{l10n.t("Profile Type")}:</label>
+            <select
+              value={wizardSelectedType}
+              onChange={(e) => setWizardSelectedType((e.target as HTMLSelectElement).value)}
+              className="modal-input wizard-select"
+              style={{
+                width: "100%",
+                height: "36px",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
+              <option value="">{l10n.t("Select a type")}</option>
+              {getWizardTypeOptions().map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Properties Section - Always rendered but conditionally visible */}
+          <div
+            style={{
+              marginBottom: "1rem",
+              minHeight: wizardSelectedType ? "auto" : "120px",
+              opacity: wizardSelectedType ? 1 : 0.3,
+              pointerEvents: wizardSelectedType ? "auto" : "none",
+            }}
+          >
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>{l10n.t("Properties")}:</label>
+
+            {/* Add New Property */}
+            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+              <div style={{ flex: 1, position: "relative" }}>
+                <input
+                  type="text"
+                  value={wizardNewPropertyKey}
+                  onChange={(e) => {
+                    setWizardNewPropertyKey((e.target as HTMLInputElement).value);
+                    setWizardShowKeyDropdown(true);
+                  }}
+                  onFocus={() => setWizardShowKeyDropdown(true)}
+                  onBlur={() => setTimeout(() => setWizardShowKeyDropdown(false), 100)}
+                  className="modal-input"
+                  placeholder={l10n.t("Property key")}
+                  style={{ height: "32px" }}
+                />
+                {wizardShowKeyDropdown && (
+                  <ul
+                    className="dropdown-list"
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                      right: 0,
+                      zIndex: 9999,
+                      maxHeight: "200px",
+                      overflow: "auto",
+                      backgroundColor: "var(--vscode-dropdown-background)",
+                      border: "1px solid var(--vscode-dropdown-border)",
+                      borderRadius: "4px",
+                      margin: 0,
+                      padding: 0,
+                      listStyle: "none",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    {getWizardPropertyOptions()
+                      .filter((opt) => opt.toLowerCase().includes(wizardNewPropertyKey.toLowerCase()))
+                      .map((option, index) => (
+                        <li
+                          key={index}
+                          className="dropdown-item"
+                          style={{
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            borderBottom: "1px solid var(--vscode-dropdown-border)",
+                          }}
+                          onMouseDown={() => {
+                            setWizardNewPropertyKey(option);
+                            setWizardShowKeyDropdown(false);
+                          }}
+                        >
+                          {option}
+                        </li>
+                      ))}
+                  </ul>
+                )}
+              </div>
+              <input
+                type="text"
+                value={wizardNewPropertyValue}
+                onChange={(e) => setWizardNewPropertyValue((e.target as HTMLInputElement).value)}
+                className="modal-input"
+                placeholder={l10n.t("Property value")}
+                style={{ flex: 1, height: "32px" }}
+              />
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <label style={{ display: "flex", alignItems: "center", fontSize: "0.9em", whiteSpace: "nowrap" }}>
+                  <input
+                    type="checkbox"
+                    checked={wizardNewPropertySecure}
+                    onChange={(e) => setWizardNewPropertySecure((e.target as HTMLInputElement).checked)}
+                    style={{ marginRight: "0.25rem" }}
+                  />
+                  Secure
+                </label>
+                <button
+                  onClick={handleWizardAddProperty}
+                  disabled={!wizardNewPropertyKey.trim() || !wizardNewPropertyValue.trim()}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    height: "32px",
+                    minWidth: "60px",
+                  }}
+                >
+                  {l10n.t("Add")}
+                </button>
+              </div>
+            </div>
+
+            {/* Properties List */}
+            <div
+              style={{
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                padding: "0.5rem",
+                minHeight: "60px",
+                maxHeight: "200px",
+                overflow: "auto",
+              }}
+            >
+              {wizardProperties.length > 0 ? (
+                wizardProperties.map((prop, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "0.5rem",
+                      padding: "0.25rem 0",
+                    }}
+                  >
+                    <span style={{ fontWeight: "bold", flex: 1 }}>{prop.key}:</span>
+                    <span style={{ flex: 1, marginLeft: "0.5rem" }}>{prop.secure ? "••••••••" : prop.value}</span>
+                    {prop.secure && <span style={{ fontSize: "0.8em", color: "#666", marginLeft: "0.5rem" }}>(secure)</span>}
+                    <button
+                      onClick={() => handleWizardRemoveProperty(index)}
+                      style={{
+                        padding: "0.25rem 0.5rem",
+                        marginLeft: "0.5rem",
+                        minWidth: "32px",
+                        height: "24px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <span style={{ marginBottom: "4px" }} className="codicon codicon-trash"></span>
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div
+                  style={{
+                    color: "#666",
+                    fontStyle: "italic",
+                    textAlign: "center",
+                    padding: "1rem",
+                  }}
+                >
+                  {l10n.t("No properties added yet")}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="modal-actions"
+          style={{
+            marginTop: "0.5rem",
+            paddingTop: "0.5rem",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "0.5rem",
+          }}
+        >
+          <VSCodeButton
+            onClick={handleWizardCreateProfile}
+            disabled={!wizardProfileName.trim() || !wizardSelectedType}
+            style={{
+              padding: "0.5rem 1rem",
+              minWidth: "120px",
+            }}
+          >
+            {l10n.t("Create Profile")}
+          </VSCodeButton>
+          <VSCodeButton
+            onClick={handleWizardCancel}
+            style={{
+              padding: "0.5rem 1rem",
+              minWidth: "80px",
+            }}
+          >
+            {l10n.t("Cancel")}
+          </VSCodeButton>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div>
       <div
@@ -1027,6 +1557,9 @@ export function App() {
       >
         <h1>{l10n.t("Zowe Configuration Editor")}</h1>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <button className="header-button" title="Profile Wizard" onClick={() => setWizardModalOpen(true)}>
+            <span className="codicon codicon-wand"></span>
+          </button>
           <button
             className="header-button"
             title="Clear Pending Changes"
@@ -1065,6 +1598,7 @@ export function App() {
       {newLayerModal}
       {saveModal}
       {editModal}
+      {wizardModal}
     </div>
   );
 }
@@ -1146,4 +1680,9 @@ export function useEnhancedDatalist(inputId: string | null, datalistId: string) 
 
     return () => clearTimeout(timeout);
   }, [inputId, datalistId]);
+}
+
+// Helper to join path arrays
+function pathFromArray(arr: string[]) {
+  return arr.join(".");
 }
