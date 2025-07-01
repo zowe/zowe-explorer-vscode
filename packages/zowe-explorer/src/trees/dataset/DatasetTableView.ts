@@ -292,14 +292,14 @@ export class PatternDataSource implements IDataSetSource {
  */
 export class PDSMembersDataSource implements IDataSetSource {
     public constructor(
-        private parentDataSource: IDataSetSource,
+        public parentDataSource: IDataSetSource | null,
         private pdsName: string,
         private pdsUri: string,
         private profile?: imperative.IProfileLoaded
     ) {}
 
     public async fetchDataSets(): Promise<IDataSetInfo[]> {
-        if (this.parentDataSource.loadChildren && this.parentDataSource instanceof PatternDataSource) {
+        if (this.parentDataSource?.loadChildren && this.parentDataSource instanceof PatternDataSource) {
             return await this.parentDataSource.loadChildren(this.pdsUri);
         }
 
@@ -432,13 +432,16 @@ export class DatasetTableView {
                 // Only allow focus for PDS datasets (not members)
                 return dsorg?.startsWith("PO") && !isMember;
             },
+            hideCondition: () => this.currentDataSource instanceof PDSMembersDataSource,
         },
         goBack: {
             title: l10n.t("Back"),
             type: "primary",
             command: "back",
             callback: { fn: this.goBack.bind(this), typ: "no-selection" },
-            hideCondition: () => this.currentTableType !== "members",
+            hideCondition: () =>
+                this.currentTableType !== "members" ||
+                (this.currentDataSource instanceof PDSMembersDataSource && this.currentDataSource.parentDataSource == null),
         },
     };
 
@@ -1138,12 +1141,7 @@ export class DatasetTableView {
             const profile = selectedNode.getSessionNode()?.getProfile();
             const uri = selectedNode.resourceUri;
 
-            this.currentDataSource = new PDSMembersDataSource(
-                new TreeDataSource(selectedNode, selectedNode.children?.filter((child) => !SharedContext.isInformation(child)) || []),
-                selectedNode.label.toString(),
-                uri.toString(),
-                profile
-            );
+            this.currentDataSource = new PDSMembersDataSource(null, selectedNode.label.toString(), uri.toString(), profile);
         }
 
         await TableViewProvider.getInstance().setTableView(await this.generateTable(context));
