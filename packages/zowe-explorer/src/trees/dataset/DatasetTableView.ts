@@ -397,16 +397,9 @@ export class DatasetTableView {
             command: "open",
             callback: { fn: DatasetTableView.openInEditor, typ: "multi-row" },
             type: "primary",
-            condition: (rows: Table.RowData[]): boolean =>
-                rows.every((r) => {
-                    // Check if it's a sequential dataset (PS) or a PDS member
-                    const dsorg = r["dsorg"] as string;
-                    const hasTreeData = (r as any)._tree as Table.TreeNodeData;
-                    const isMember = hasTreeData?.parentId != null;
-
-                    // Allow opening for PS data sets or PDS members, whether in focused mode or as tree view
-                    return this.currentTableType === "members" || dsorg?.startsWith("PS") || isMember;
-                }),
+            condition: (rows: Table.RowData[]): boolean => {
+                return this.canOpenInEditor(rows);
+            },
         },
         pinRows: {
             title: (rows: Table.RowData[]): Promise<string> => {
@@ -442,6 +435,18 @@ export class DatasetTableView {
             hideCondition: () => this.currentTableType !== "members",
         },
     };
+
+    private canOpenInEditor(rows: Table.RowData[]): boolean {
+        return rows.every((r) => {
+            // Check if it's a sequential dataset (PS) or a PDS member
+            const dsorg = r["dsorg"] as string;
+            const hasTreeData = (r as any)._tree as Table.TreeNodeData;
+            const isMember = hasTreeData?.parentId != null;
+
+            // Allow opening for PS data sets or PDS members, whether in focused mode or as tree view
+            return this.currentTableType === "members" || dsorg?.startsWith("PS") || isMember;
+        });
+    }
 
     private static readonly URI_SEGMENTS = {
         MEMBER: 3,

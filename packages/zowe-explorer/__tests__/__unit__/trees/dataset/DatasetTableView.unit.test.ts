@@ -540,13 +540,20 @@ describe("DatasetTableView", () => {
             expect(result).toEqual({
                 dsname: "TEST.DATASET",
                 dsorg: "PS",
-                createdDate: datasetInfo.createdDate.toLocaleTimeString(),
-                modifiedDate: datasetInfo.modifiedDate.toLocaleTimeString(),
+                createdDate: datasetInfo.createdDate.toLocaleDateString(),
+                modifiedDate: datasetInfo.modifiedDate.toLocaleString(),
                 lrecl: "80",
                 migr: "NO",
                 recfm: "FB",
                 volumes: "VOL001",
                 uri: "zowe-ds:/profile/TEST.DATASET",
+                user: "USER1",
+                cnorc: undefined,
+                inorc: undefined,
+                mnorc: undefined,
+                mod: undefined,
+                sclm: undefined,
+                vers: undefined,
             });
         });
 
@@ -690,7 +697,7 @@ describe("DatasetTableView", () => {
             await (DatasetTableView as any).openInEditor(null, rows);
 
             expect(executeCommandSpy).toHaveBeenCalledTimes(1);
-            expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME"));
+            expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME"), { preview: false });
         });
 
         it("should open multiple data sets in the editor", async () => {
@@ -702,8 +709,8 @@ describe("DatasetTableView", () => {
             await (DatasetTableView as any).openInEditor(null, rows);
 
             expect(executeCommandSpy).toHaveBeenCalledTimes(2);
-            expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME1"));
-            expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME2"));
+            expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME1"), { preview: false });
+            expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME2"), { preview: false });
         });
 
         it("should do nothing for an empty list of rows", async () => {
@@ -1216,7 +1223,7 @@ describe("DatasetTableView", () => {
 
                 expect(eventSpy).toHaveBeenCalledWith({
                     source: mockDataSource,
-                    tableType: "dataSets",
+                    tableType: null,
                     eventType: 1,
                 });
 
@@ -1235,19 +1242,16 @@ describe("DatasetTableView", () => {
 
         describe("canOpenInEditor", () => {
             it("should return true for all PS (sequential) datasets", () => {
-                const condition = (DatasetTableView as any).canOpenInEditor;
-
                 const rows: Table.RowData[] = [
                     { dsorg: "PS", uri: "zowe-ds:/profile/TEST.PS1" },
                     { dsorg: "PS-L", uri: "zowe-ds:/profile/TEST.PS2" },
                 ];
 
-                expect(condition(rows)).toBe(true);
+                const result = (datasetTableView as any).canOpenInEditor(rows);
+                expect(result).toBe(true);
             });
 
             it("should return true for all PDS members", () => {
-                const condition = (DatasetTableView as any).canOpenInEditor;
-
                 const rows: Table.RowData[] = [
                     {
                         uri: "zowe-ds:/profile/TEST.PDS/MEM1",
@@ -1259,12 +1263,11 @@ describe("DatasetTableView", () => {
                     },
                 ];
 
-                expect(condition(rows)).toBe(true);
+                const result = (datasetTableView as any).canOpenInEditor(rows);
+                expect(result).toBe(true);
             });
 
             it("should return true for mixed PS datasets and PDS members", () => {
-                const condition = (DatasetTableView as any).canOpenInEditor;
-
                 const rows: Table.RowData[] = [
                     { dsorg: "PS", uri: "zowe-ds:/profile/TEST.PS" },
                     {
@@ -1273,57 +1276,51 @@ describe("DatasetTableView", () => {
                     },
                 ];
 
-                expect(condition(rows)).toBe(true);
+                const result = (datasetTableView as any).canOpenInEditor(rows);
+                expect(result).toBe(true);
             });
 
             it("should return false for PO (PDS) datasets without member context", () => {
-                const condition = (DatasetTableView as any).canOpenInEditor;
-
                 const rows: Table.RowData[] = [{ dsorg: "PO", uri: "zowe-ds:/profile/TEST.PDS" }];
 
-                expect(condition(rows)).toBe(false);
+                const result = (datasetTableView as any).canOpenInEditor(rows);
+                expect(result).toBe(false);
             });
 
             it("should return false when at least one row doesn't meet criteria", () => {
-                const condition = (DatasetTableView as any).canOpenInEditor;
-
                 const rows: Table.RowData[] = [
                     { dsorg: "PS", uri: "zowe-ds:/profile/TEST.PS" },
                     { dsorg: "PO", uri: "zowe-ds:/profile/TEST.PDS" }, // This one fails the condition
                 ];
 
-                expect(condition(rows)).toBe(false);
+                const result = (datasetTableView as any).canOpenInEditor(rows);
+                expect(result).toBe(false);
             });
 
             it("should return false for VSAM datasets", () => {
-                const condition = (DatasetTableView as any).canOpenInEditor;
-
                 const rows: Table.RowData[] = [{ dsorg: "VS", uri: "zowe-ds:/profile/TEST.VSAM" }];
 
-                expect(condition(rows)).toBe(false);
+                const result = (datasetTableView as any).canOpenInEditor(rows);
+                expect(result).toBe(false);
             });
 
             it("should handle undefined dsorg gracefully", () => {
-                const condition = (DatasetTableView as any).canOpenInEditor;
-
                 const rows: Table.RowData[] = [
                     { uri: "zowe-ds:/profile/TEST.UNKNOWN" }, // No dsorg property
                 ];
 
-                expect(condition(rows)).toBe(false);
+                const result = (datasetTableView as any).canOpenInEditor(rows);
+                expect(result).toBe(false);
             });
 
             it("should handle empty rows array", () => {
-                const condition = (DatasetTableView as any).canOpenInEditor;
-
                 const rows: Table.RowData[] = [];
 
-                expect(condition(rows)).toBe(true); // every() returns true for empty arrays
+                const result = (datasetTableView as any).canOpenInEditor(rows);
+                expect(result).toBe(true); // every() returns true for empty arrays
             });
 
             it("should return true for PDS member with undefined dsorg", () => {
-                const condition = (DatasetTableView as any).canOpenInEditor;
-
                 const rows: Table.RowData[] = [
                     {
                         dsorg: undefined,
@@ -1332,7 +1329,8 @@ describe("DatasetTableView", () => {
                     },
                 ];
 
-                expect(condition(rows)).toBe(true);
+                const result = (datasetTableView as any).canOpenInEditor(rows);
+                expect(result).toBe(true);
             });
         });
 
@@ -1408,33 +1406,64 @@ describe("DatasetTableView", () => {
 
                 const message = {
                     command: "loadTreeChildren",
-                    data: {
+                    payload: {
                         nodeId: "zowe-ds:/sestest/TEST.PDS",
                     },
                 };
 
                 await datasetTableView["onDidReceiveMessage"](message);
 
-                expect(mockDataSource.loadChildren).toHaveBeenCalledWith(message.data.nodeId);
+                expect(mockDataSource.loadChildren).toHaveBeenCalledWith(message.payload.nodeId);
                 expect(mockWebview.postMessage).toHaveBeenCalledWith({
                     command: "treeChildrenLoaded",
                     data: {
-                        parentNodeId: message.data.nodeId,
+                        parentNodeId: message.payload.nodeId,
                         children: expect.arrayContaining([
                             {
                                 dsname: "MEMBER1",
                                 volumes: "VOL001",
                                 uri: "zowe-ds:/sestest/TEST.PDS/MEMBER1",
-                                _tree: expect.any(Object),
+                                _tree: expect.objectContaining({
+                                    id: "zowe-ds:/sestest/TEST.PDS/MEMBER1",
+                                }),
+                                cnorc: undefined,
+                                createdDate: undefined,
+                                dsorg: undefined,
+                                inorc: undefined,
+                                lrecl: undefined,
+                                migr: undefined,
+                                mnorc: undefined,
+                                mod: undefined,
+                                modifiedDate: undefined,
+                                recfm: undefined,
+                                sclm: undefined,
+                                user: undefined,
+                                vers: undefined,
                             },
                             {
                                 dsname: "MEMBER2",
                                 volumes: "VOL002",
                                 uri: "zowe-ds:/sestest/TEST.PDS/MEMBER2",
-                                _tree: expect.any(Object),
+                                _tree: expect.objectContaining({
+                                    id: "zowe-ds:/sestest/TEST.PDS/MEMBER2",
+                                }),
+                                cnorc: undefined,
+                                createdDate: undefined,
+                                dsorg: undefined,
+                                inorc: undefined,
+                                lrecl: undefined,
+                                migr: undefined,
+                                mnorc: undefined,
+                                mod: undefined,
+                                modifiedDate: undefined,
+                                recfm: undefined,
+                                sclm: undefined,
+                                user: undefined,
+                                vers: undefined,
                             },
                         ]),
                     },
+                    requestId: undefined,
                 });
             });
 
@@ -1452,7 +1481,7 @@ describe("DatasetTableView", () => {
 
                 const message = {
                     command: "someOtherCommand",
-                    data: {
+                    payload: {
                         nodeId: "zowe-ds:/sestest/TEST.PDS",
                     },
                 };
@@ -1477,7 +1506,7 @@ describe("DatasetTableView", () => {
 
                 const message = {
                     command: "loadTreeChildren",
-                    data: {
+                    payload: {
                         nodeId: "zowe-ds:/sestest/TEST.PDS",
                     },
                 };
