@@ -94,16 +94,20 @@ export class ProfilesCache {
      *
      * @param {string} name Name of Profile
      * @param {string} type Type of Profile, optional
+     * @param {boolean} optional Whether or not to throw an error if profile is not found
      *
+     * @throws {Error} Throws an error if profile is not found (unless optional is true)
      * @returns {IProfileLoaded}
      */
-    public loadNamedProfile(name: string, type?: string): imperative.IProfileLoaded {
+    public loadNamedProfile(name: string, type?: string, optional = false): imperative.IProfileLoaded {
         for (const profile of this.allProfiles) {
             if (profile.name === name && (!type || profile.type === type)) {
                 return profile;
             }
         }
-        throw new Error(`Zowe Explorer Profiles Cache error: Could not find profile named: ${name}.`);
+        if (!optional) {
+            throw new Error(`Zowe Explorer Profiles Cache error: Could not find profile named: ${name}.`);
+        }
     }
 
     /**
@@ -125,21 +129,17 @@ export class ProfilesCache {
         }
     }
 
-    public async updateCachedProfile(
+    public updateCachedProfile(
         profileLoaded: imperative.IProfileLoaded,
         profileNode?: Types.IZoweNodeType,
         zeRegister?: Types.IApiRegisterClient
-    ): Promise<void> {
-        if ((await this.getProfileInfo()).getTeamConfig().properties.autoStore) {
-            await this.refresh(zeRegister);
-        } else {
-            // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
-            const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
-            this.allProfiles[profIndex].profile = profileLoaded.profile;
-            const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
-            if (defaultProf != null && defaultProf.name === profileLoaded.name) {
-                this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
-            }
+    ): void {
+        // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
+        const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
+        this.allProfiles[profIndex].profile = profileLoaded.profile;
+        const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
+        if (defaultProf != null && defaultProf.name === profileLoaded.name) {
+            this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
         }
         profileNode?.setProfileToChoice(profileLoaded);
     }

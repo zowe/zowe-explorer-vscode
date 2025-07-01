@@ -521,6 +521,15 @@
   "zowe.settings.overrideWithEnvironmentVariables": {
     "Indicates if environment variables should override values stored in Zowe configuration profiles on disk.": ""
   },
+  "zowe.settings.socketConnectTimeout": {
+    "The amount of time to wait for a connection to be initiated with the server, in milliseconds.": ""
+  },
+  "zowe.settings.requestTimeout": {
+    "The amount of time to wait for a REST request to complete, in milliseconds.": ""
+  },
+  "zowe.settings.displayReleaseNotes": {
+    "Should display the Zowe Explorer release notes after an update.": ""
+  },
   "Enter command here...": "",
   "Page Size:": "",
   "Page": "",
