@@ -151,7 +151,7 @@ export class AuthHandler {
         const checkCredsButton = "Update Credentials";
         const creds = await Gui.errorMessage(params.errorCorrelation?.message ?? params.imperativeError.message, {
             items: [checkCredsButton],
-            vsCodeOpts: { modal: true },
+            vsCodeOpts: { modal: true, detail: params.imperativeError.mDetails.additionalDetails },
         }).then(async (selection) => {
             if (selection !== checkCredsButton) {
                 return;

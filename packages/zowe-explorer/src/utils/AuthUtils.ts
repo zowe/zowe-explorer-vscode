@@ -19,6 +19,7 @@ import {
     ErrorCorrelator,
     ZoweExplorerApiType,
     AuthHandler,
+    ZoweExplorerZosmf,
     AuthPromptParams,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
@@ -123,6 +124,32 @@ export class AuthUtils {
                 if (!AuthHandler.isProfileLocked(profile)) {
                     await AuthHandler.lockProfile(profile);
                 }
+                const addDet = imperativeError.mDetails.additionalDetails;
+                if (addDet.includes("Auth order:") && addDet.includes("Auth type:") && addDet.includes("Available creds:")) {
+                    const additionalDetails = [addDet.split("\n")[0]];
+                    additionalDetails.push(
+                        vscode.l10n.t({
+                            message: "Your available creds: {0}",
+                            args: [addDet.match(/\nAvailable creds:(.*?)(?=\n|$)/)?.[1]?.trim()],
+                            comment: ["Available credentials"],
+                        })
+                    );
+                    additionalDetails.push(
+                        vscode.l10n.t({
+                            message: "Your authOrder: {0}",
+                            args: [addDet.match(/\nAuth order:(.*?)(?=\n|$)/)?.[1]?.trim()],
+                            comment: ["Authentication order"],
+                        })
+                    );
+                    additionalDetails.push(
+                        vscode.l10n.t({
+                            message: "Selected auth type: {0}",
+                            args: [addDet.match(/\nAuth type:(.*?)(?=\n|$)/)?.[1]?.trim()],
+                            comment: ["Selected authentication method"],
+                        })
+                    );
+                    imperativeError.mDetails.additionalDetails = additionalDetails.join("\n");
+                }
                 return await AuthHandler.promptForAuthentication(profile, {
                     authMethods: Constants.PROFILES_CACHE,
                     imperativeError,
@@ -164,13 +191,23 @@ export class AuthUtils {
     }
 
     public static async updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
-        const usingBasicAuth = profile.profile.user && profile.profile.password;
-        const usingCertAuth = profile.profile.certFile && profile.profile.certKeyFile;
+        let usingBasicAuth = profile.profile.user && profile.profile.password;
+        let usingCertAuth = profile.profile.certFile && profile.profile.certKeyFile;
         let usingTokenAuth: boolean;
-        try {
-            usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
-        } catch (err) {
-            ZoweLogger.error(err);
+        if (profile.profile.authOrder) {
+            const tempSession = sessionNode.getSession().ISession;
+            imperative.AuthOrder.addCredsToSession(tempSession, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
+            usingBasicAuth = tempSession.authTypeOrder.includes(imperative.SessConstants.AUTH_TYPE_BASIC);
+            usingCertAuth = tempSession.authTypeOrder.includes(imperative.SessConstants.AUTH_TYPE_CERT_PEM);
+            usingTokenAuth =
+                tempSession.authTypeOrder.includes(imperative.SessConstants.AUTH_TYPE_TOKEN) ||
+                tempSession.authTypeOrder.includes(imperative.SessConstants.AUTH_TYPE_BEARER);
+        } else {
+            try {
+                usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
+            } catch (err) {
+                ZoweLogger.error(err);
+            }
         }
         const toolTipList = sessionNode.tooltip === "" ? [] : (sessionNode.tooltip as string).split("\n");
 
@@ -344,11 +381,6 @@ export class AuthUtils {
      */
     public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
         const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
-        const shouldRemoveToken = Constants.PROFILES_CACHE.shouldRemoveTokenFromProfile(
-            Constants.PROFILES_CACHE.loadNamedProfile(profileName),
-            baseProfile
-        );
-        if (shouldRemoveToken) return false;
         const props = await Constants.PROFILES_CACHE.getPropsForProfile(profileName, false);
         const baseProps = await Constants.PROFILES_CACHE.getPropsForProfile(baseProfile?.name, false);
         return AuthHandler.isUsingTokenAuth(props, baseProps);
