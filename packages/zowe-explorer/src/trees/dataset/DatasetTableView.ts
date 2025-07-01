@@ -272,7 +272,7 @@ export class PatternDataSource implements IDataSetSource {
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(this.profile);
 
         try {
-            const membersResp = await mvsApi.allMembers(datasetName);
+            const membersResp = await mvsApi.allMembers(datasetName, { attributes: true });
             const members: IDataSetInfo[] = [];
 
             for (const member of membersResp.apiResponse?.items || []) {
@@ -299,9 +299,9 @@ export class PDSMembersDataSource implements IDataSetSource {
     ) {}
 
     public async fetchDataSets(): Promise<IDataSetInfo[]> {
-        // if (this.parentDataSource.loadChildren) {
-        //     return await this.parentDataSource.loadChildren(this.pdsUri);
-        // }
+        if (this.parentDataSource.loadChildren && this.parentDataSource instanceof PatternDataSource) {
+            return await this.parentDataSource.loadChildren(this.pdsUri);
+        }
 
         // Fallback to API if parent data source doesn't support loading children
         if (this.profile) {
@@ -474,10 +474,11 @@ export class DatasetTableView {
         const pdsName = row.dsname as string;
         const pdsUri = row.uri as string;
 
-        // Extract profile from current data source if it's a PatternDataSource
         let profile: imperative.IProfileLoaded | undefined;
         if (this.currentDataSource instanceof PatternDataSource) {
             profile = this.currentDataSource.profile;
+        } else if (this.currentDataSource instanceof TreeDataSource) {
+            profile = this.currentDataSource.treeNode.getSessionNode()?.getProfile();
         }
 
         let pinnedRows: Table.RowData[] = [];
@@ -1134,9 +1135,14 @@ export class DatasetTableView {
                 selectedNode.children.filter((child) => !SharedContext.isInformation(child))
             );
         } else if (SharedContext.isPds(selectedNode)) {
-            this.currentDataSource = new TreeDataSource(
-                selectedNode,
-                selectedNode.children?.filter((child) => !SharedContext.isInformation(child)) || []
+            const profile = selectedNode.getSessionNode()?.getProfile();
+            const uri = selectedNode.resourceUri;
+
+            this.currentDataSource = new PDSMembersDataSource(
+                new TreeDataSource(selectedNode, selectedNode.children?.filter((child) => !SharedContext.isInformation(child)) || []),
+                selectedNode.label.toString(),
+                uri.toString(),
+                profile
             );
         }
 

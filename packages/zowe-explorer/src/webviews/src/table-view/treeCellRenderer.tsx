@@ -16,6 +16,9 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
   const isExpanded = data._tree?.isExpanded || false;
   const nodeId: string | undefined = typeof data._tree?.id === "string" ? data._tree.id : undefined;
 
+  // Check if this row is pinned - if so, hide the twisty element
+  const isPinned = props.node?.rowPinned === "top";
+
   const indentationStyle = {
     paddingLeft: `${depth * 20}px`, // 20px per depth level
     display: "flex",
@@ -103,15 +106,16 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
     return false;
   };
 
-  const icon = hasChildren ? (
-    isExpanded ? (
-      <span className="codicon codicon-chevron-down" style={{ cursor: "pointer", marginRight: "5px" }} onClick={iconClickHandler}></span>
+  const icon =
+    hasChildren && !isPinned ? (
+      isExpanded ? (
+        <span className="codicon codicon-chevron-down" style={{ cursor: "pointer", marginRight: "5px" }} onClick={iconClickHandler}></span>
+      ) : (
+        <span className="codicon codicon-chevron-right" style={{ cursor: "pointer", marginRight: "5px" }} onClick={iconClickHandler}></span>
+      )
     ) : (
-      <span className="codicon codicon-chevron-right" style={{ cursor: "pointer", marginRight: "5px" }} onClick={iconClickHandler}></span>
-    )
-  ) : (
-    <span style={{ marginRight: "5px", width: "16px", display: "inline-block" }}></span>
-  );
+      <span style={{ marginRight: "5px", width: "16px", display: "inline-block" }}></span>
+    );
 
   return (
     <div style={{ display: "flex", alignItems: "center" }}>
