@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import path from "path";
 import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
 import { isSecureOrigin } from "../utils";
 import { schemaValidation } from "../../../utils/ConfigEditor";
 import "./App.css";
-import { VSCodeButton, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 const vscodeApi = acquireVsCodeApi();
 
 export function App() {
@@ -331,10 +329,12 @@ export function App() {
   const renderProfiles = (profilesObj: any) => {
     if (!profilesObj || typeof profilesObj !== "object") return null;
 
+    const flatProfiles = flattenProfiles(profilesObj);
+
     return (
       <div style={{ display: "flex", gap: "2rem" }}>
         <div style={{ width: "250px", paddingRight: "1rem" }}>
-          {Object.keys(profilesObj).map((profileKey) => (
+          {Object.keys(flatProfiles).map((profileKey) => (
             <div
               key={profileKey}
               className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""}`}
@@ -354,12 +354,7 @@ export function App() {
 
         {/* Profile Details */}
         <div style={{ flexGrow: 1 }}>
-          {selectedProfileKey && (
-            <div>
-              {/* <h3>Profile: {selectedProfileKey}</h3> */}
-              {renderConfig(profilesObj[selectedProfileKey], ["profiles", selectedProfileKey])}
-            </div>
-          )}
+          {selectedProfileKey && <div>{renderConfig(flatProfiles[selectedProfileKey], ["profiles", selectedProfileKey])}</div>}
         </div>
       </div>
     );
@@ -600,6 +595,25 @@ export function App() {
     return result;
   };
 
+  const flattenProfiles = (profiles: any, parentKey = "", result: Record<string, any> = {}) => {
+    if (!profiles || typeof profiles !== "object") return result;
+
+    for (const key of Object.keys(profiles)) {
+      const profile = profiles[key];
+      const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+      result[key] = profile;
+
+      // If this profile contains a nested `profiles` object, flatten those too
+      if (profile.profiles) {
+        flattenProfiles(profile.profiles, qualifiedKey, result);
+        // Optional: remove the nested profiles from the original to avoid double rendering
+        delete result[key].profiles;
+      }
+    }
+
+    return result;
+  };
+
   const handleSaveEdit = () => {
     setEditModalOpen(false);
     setPendingChanges((prev) => {
@@ -663,11 +677,11 @@ export function App() {
     setNewLayerModalOpen(false);
   };
 
-  const openAddLayerModalAtPath = (path: string[]) => {
-    setNewLayerPath(path);
-    setNewLayerName("");
-    setNewLayerModalOpen(true);
-  };
+  // const openAddLayerModalAtPath = (path: string[]) => {
+  //   setNewLayerPath(path);
+  //   setNewLayerName("");
+  //   setNewLayerModalOpen(true);
+  // };
 
   const typeOptions = selectedTab !== null ? schemaValidations[configurations[selectedTab].configPath]?.validDefaults || [] : [];
 
