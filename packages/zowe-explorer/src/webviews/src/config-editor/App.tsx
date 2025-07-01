@@ -121,7 +121,35 @@ export function App() {
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
     const path = flattenedConfig[key]?.path ?? key.split(".");
-    const profileKey = path[0];
+    // For nested profiles, we need to extract the actual profile name from the path
+    // Path structure: ["profiles", "project_base", "profiles", "tso", "properties", "port"]
+    // We want to get "project_base.tso" as the profile key
+    let profileKey;
+    if (path[0] === "profiles" && path.length > 2) {
+      // Check if this is a nested profile
+      const profilesIndices = [];
+      for (let i = 0; i < path.length; i++) {
+        if (path[i] === "profiles") {
+          profilesIndices.push(i);
+        }
+      }
+      if (profilesIndices.length > 1) {
+        // This is a nested profile - construct the full profile key
+        const profileParts = [];
+        for (let i = 1; i < path.length; i++) {
+          if (path[i] !== "profiles") {
+            profileParts.push(path[i]);
+          }
+        }
+        profileKey = profileParts.join(".");
+      } else {
+        // Top-level profile
+        profileKey = path[1];
+      }
+    } else {
+      profileKey = path[0];
+    }
+
     setPendingChanges((prev) => ({
       ...prev,
       [configPath]: {
@@ -163,7 +191,35 @@ export function App() {
     const configPath = configurations[selectedTab!]!.configPath;
     const path = [...newProfileKeyPath, newProfileKey.trim()];
     const fullKey = isSecure ? path.join(".").replace("secure", "properties") : path.join(".");
-    const profileKey = path[0];
+
+    // For nested profiles, we need to extract the actual profile name from the path
+    // Path structure: ["profiles", "project_base", "profiles", "tso", "properties", "port"]
+    // We want to get "project_base.tso" as the profile key
+    let profileKey;
+    if (path[0] === "profiles" && path.length > 2) {
+      // Check if this is a nested profile
+      const profilesIndices = [];
+      for (let i = 0; i < path.length; i++) {
+        if (path[i] === "profiles") {
+          profilesIndices.push(i);
+        }
+      }
+      if (profilesIndices.length > 1) {
+        // This is a nested profile - construct the full profile key
+        const profileParts = [];
+        for (let i = 1; i < path.length; i++) {
+          if (path[i] !== "profiles") {
+            profileParts.push(path[i]);
+          }
+        }
+        profileKey = profileParts.join(".");
+      } else {
+        // Top-level profile
+        profileKey = path[1];
+      }
+    } else {
+      profileKey = path[0];
+    }
 
     setPendingChanges((prev) => ({
       ...prev,
@@ -354,7 +410,28 @@ export function App() {
 
         {/* Profile Details */}
         <div style={{ flexGrow: 1 }}>
-          {selectedProfileKey && <div>{renderConfig(flatProfiles[selectedProfileKey], ["profiles", selectedProfileKey])}</div>}
+          {selectedProfileKey && (
+            <div>
+              {(() => {
+                const profilePathParts = selectedProfileKey.split(".");
+                let path;
+                if (profilePathParts.length === 1) {
+                  // Top-level profile
+                  path = ["profiles", selectedProfileKey];
+                } else {
+                  // Nested profile - need to construct path like ["profiles", "project_base", "profiles", "tso"]
+                  path = ["profiles"];
+                  for (let i = 0; i < profilePathParts.length; i++) {
+                    path.push(profilePathParts[i]);
+                    if (i < profilePathParts.length - 1) {
+                      path.push("profiles");
+                    }
+                  }
+                }
+                return renderConfig(flatProfiles[selectedProfileKey], path);
+              })()}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -418,13 +495,6 @@ export function App() {
               <button className="add-default-button" title={`Add key inside "${fullKey}"`} onClick={() => openAddProfileModalAtPath(currentPath)}>
                 <span className="codicon codicon-add"></span>
               </button>
-              {/* <button
-                className="add-default-button"
-                title={`Add child object inside "${fullKey}"`}
-                onClick={() => openAddLayerModalAtPath(currentPath)}
-              >
-                <span className="codicon codicon-bracket-dot"></span>
-              </button> */}
             </h3>
             {renderConfig(value, currentPath)}
           </div>
@@ -601,13 +671,16 @@ export function App() {
     for (const key of Object.keys(profiles)) {
       const profile = profiles[key];
       const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
-      result[key] = profile;
+
+      // Create a copy of the profile without the nested profiles
+      const profileCopy = { ...profile };
+      delete profileCopy.profiles;
+
+      result[qualifiedKey] = profileCopy;
 
       // If this profile contains a nested `profiles` object, flatten those too
       if (profile.profiles) {
         flattenProfiles(profile.profiles, qualifiedKey, result);
-        // Optional: remove the nested profiles from the original to avoid double rendering
-        delete result[key].profiles;
       }
     }
 
@@ -619,7 +692,34 @@ export function App() {
     setPendingChanges((prev) => {
       const configPath = configurations[selectedTab!]!.configPath;
       const updatedKey = editingKey.replace("secure", "properties");
-      const profileKey = updatedKey.split(".")[0];
+      // For nested profiles, we need to extract the actual profile name from the path
+      const pathParts = updatedKey.split(".");
+      let profileKey;
+      if (pathParts[0] === "profiles" && pathParts.length > 2) {
+        // Check if this is a nested profile
+        const profilesIndices = [];
+        for (let i = 0; i < pathParts.length; i++) {
+          if (pathParts[i] === "profiles") {
+            profilesIndices.push(i);
+          }
+        }
+        if (profilesIndices.length > 1) {
+          // This is a nested profile - construct the full profile key
+          const profileParts = [];
+          for (let i = 1; i < pathParts.length; i++) {
+            if (pathParts[i] !== "profiles") {
+              profileParts.push(pathParts[i]);
+            }
+          }
+          profileKey = profileParts.join(".");
+        } else {
+          // Top-level profile
+          profileKey = pathParts[1];
+        }
+      } else {
+        profileKey = pathParts[0];
+      }
+
       const value = editingValue;
       // Create a new object with the updated value
       const newPendingChanges = {
@@ -676,12 +776,6 @@ export function App() {
     setNewLayerPath(null);
     setNewLayerModalOpen(false);
   };
-
-  // const openAddLayerModalAtPath = (path: string[]) => {
-  //   setNewLayerPath(path);
-  //   setNewLayerName("");
-  //   setNewLayerModalOpen(true);
-  // };
 
   const typeOptions = selectedTab !== null ? schemaValidations[configurations[selectedTab].configPath]?.validDefaults || [] : [];
 

@@ -77,14 +77,10 @@ export class ConfigEditor extends WebView {
                         const schemaContent = fs.readFileSync(schemaPath, { encoding: "utf8" });
                         const schema = JSON.parse(schemaContent);
                         const schemaValidation = this.generateSchemaValidation(schema);
-                        for (const profileName in layer.properties.profiles) {
-                            if (layer.properties.profiles[profileName].secure) {
-                                const secureKeys = layer.properties.profiles[profileName].secure;
-                                layer.properties.profiles[profileName].properties = Object.fromEntries(
-                                    Object.entries(layer.properties.profiles[profileName].properties).filter(([key]) => !secureKeys.includes(key))
-                                );
-                            }
-                        }
+
+                        // Process profiles recursively to handle nested profiles
+                        this.processProfilesRecursively(layer.properties.profiles);
+
                         allConfigs.push({
                             configPath,
                             properties: layer.properties,
@@ -109,6 +105,27 @@ export class ConfigEditor extends WebView {
         }
 
         return allConfigs;
+    }
+
+    private processProfilesRecursively(profiles: any): void {
+        if (!profiles || typeof profiles !== "object") {
+            return;
+        }
+
+        for (const profileName in profiles) {
+            const profile = profiles[profileName];
+
+            // Handle secure properties for current profile
+            if (profile.secure && profile.properties) {
+                const secureKeys = profile.secure;
+                profile.properties = Object.fromEntries(Object.entries(profile.properties).filter(([key]) => !secureKeys.includes(key)));
+            }
+
+            // Recursively process nested profiles
+            if (profile.profiles) {
+                this.processProfilesRecursively(profile.profiles);
+            }
+        }
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
