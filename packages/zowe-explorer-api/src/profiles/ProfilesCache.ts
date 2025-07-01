@@ -132,21 +132,17 @@ export class ProfilesCache {
         }
     }
 
-    public async updateCachedProfile(
+    public updateCachedProfile(
         profileLoaded: imperative.IProfileLoaded,
         profileNode?: Types.IZoweNodeType,
         zeRegister?: Types.IApiRegisterClient
-    ): Promise<void> {
-        if ((await this.getProfileInfo()).getTeamConfig().properties.autoStore) {
-            await this.refresh(zeRegister);
-        } else {
-            // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
-            const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
-            this.allProfiles[profIndex].profile = profileLoaded.profile;
-            const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
-            if (defaultProf != null && defaultProf.name === profileLoaded.name) {
-                this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
-            }
+    ): void {
+        // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
+        const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
+        this.allProfiles[profIndex].profile = profileLoaded.profile;
+        const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
+        if (defaultProf != null && defaultProf.name === profileLoaded.name) {
+            this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
         }
         profileNode?.setProfileToChoice(profileLoaded);
     }
