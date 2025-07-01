@@ -196,19 +196,28 @@ describe("TableBuilder", () => {
                 },
                 condition: (_data) => true,
             } as Table.ContextMenuOption;
+            const singleCtxOpt = {
+                title: "Delete This One",
+                command: "delete-this-one",
+                callback: {
+                    typ: "cell",
+                    fn: (_view: Table.View, _cell: Table.ContentTypes) => {},
+                },
+                condition: (_data) => true,
+            } as Table.ContextMenuOption;
 
             // case 0: adding context option w/ conditional to "all" rows, index previously existed
             const builderCtxOpts = builder.addContextOption("all", ctxOpt);
             expect(builderCtxOpts).toBeInstanceOf(TableBuilder);
             expect((builderCtxOpts as any).data.contextOpts).toStrictEqual({
-                all: [{ ...ctxOpt, condition: ctxOpt.condition?.toString() }],
+                all: [ctxOpt],
             });
 
             // case 1: adding context option w/ conditional to a specific row, index did not already exist
-            const finalBuilder = builderCtxOpts.addContextOption(0, ctxOpt);
+            const finalBuilder = builderCtxOpts.addContextOption(0, singleCtxOpt);
             expect((finalBuilder as any).data.contextOpts).toStrictEqual({
-                0: [{ ...ctxOpt, condition: ctxOpt.condition?.toString() }],
-                all: [{ ...ctxOpt, condition: ctxOpt.condition?.toString() }],
+                0: [singleCtxOpt],
+                all: [ctxOpt],
             });
         });
 
@@ -224,19 +233,27 @@ describe("TableBuilder", () => {
                     fn: (_view: Table.View, _cell: Table.ContentTypes) => {},
                 },
             } as Table.ContextMenuOption;
+            const singleCtxOpt = {
+                title: "Add This One",
+                command: "add-this-one",
+                callback: {
+                    typ: "cell",
+                    fn: (_view: Table.View, _cell: Table.ContentTypes) => {},
+                },
+            } as Table.ContextMenuOption;
 
             // case 0: adding context option w/ condition to "all" rows, index previously existed
             const builderCtxOpts = builder.addContextOption("all", ctxOptNoCond);
             expect(builderCtxOpts).toBeInstanceOf(TableBuilder);
             expect((builderCtxOpts as any).data.contextOpts).toStrictEqual({
-                all: [{ ...ctxOptNoCond, condition: ctxOptNoCond.condition?.toString() }],
+                all: [ctxOptNoCond],
             });
 
             // case 1: adding context option w/ condition to a specific row, index did not already exist
-            const finalBuilder = builderCtxOpts.addContextOption(0, ctxOptNoCond);
+            const finalBuilder = builderCtxOpts.addContextOption(0, singleCtxOpt);
             expect((finalBuilder as any).data.contextOpts).toStrictEqual({
-                0: [{ ...ctxOptNoCond, condition: ctxOptNoCond.condition?.toString() }],
-                all: [{ ...ctxOptNoCond, condition: ctxOptNoCond.condition?.toString() }],
+                0: [singleCtxOpt],
+                all: [ctxOptNoCond],
             });
         });
     });
@@ -254,15 +271,25 @@ describe("TableBuilder", () => {
                 },
                 condition: (_data) => true,
             } as Table.Action;
+            const singleRowAction = {
+                title: "Move This One",
+                command: "move-this-one",
+                callback: {
+                    typ: "cell",
+                    fn: (_cell: Table.ContentTypes) => {},
+                },
+                condition: (_data) => true,
+            } as Table.Action;
+
             const builderAction = builder.addRowAction("all", rowAction);
             expect(builderAction).toBeInstanceOf(TableBuilder);
             expect((builderAction as any).data.actions).toStrictEqual({
-                all: [{ ...rowAction, condition: rowAction.condition?.toString() }],
+                all: [rowAction],
             });
-            const finalBuilder = builderAction.addRowAction(0, rowAction);
+            const finalBuilder = builderAction.addRowAction(0, singleRowAction);
             expect((finalBuilder as any).data.actions).toStrictEqual({
-                0: [{ ...rowAction, condition: rowAction.condition?.toString() }],
-                all: [{ ...rowAction, condition: rowAction.condition?.toString() }],
+                0: [singleRowAction],
+                all: [rowAction],
             });
         });
     });
