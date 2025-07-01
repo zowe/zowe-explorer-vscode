@@ -135,3 +135,8 @@ export class ExtenderAttr implements IAttributesProvider {
         ];
     }
 }
+export class FailExtenderAttr implements IAttributesProvider {
+    public fetchAttributes(): AttributeInfo {
+        throw new Error("TEST: Fetching attributes failed");
+    }
+}

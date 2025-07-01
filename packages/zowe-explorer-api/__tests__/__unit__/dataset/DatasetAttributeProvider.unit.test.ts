@@ -10,7 +10,8 @@
  */
 
 import { DataSetAttributesProvider } from "../../../src";
-import { ExtenderAttr } from "../../../__mocks__/mockCreators/shared";
+import { ExtenderAttr, FailExtenderAttr } from "../../../__mocks__/mockCreators/shared";
+import { IProfileLoaded, Logger } from "@zowe/imperative";
 
 describe("DatasetAttributeProvider", () => {
     beforeEach(() => {
@@ -31,8 +32,27 @@ describe("DatasetAttributeProvider", () => {
     it("Should be able to fetchAll implementations from DataSetAttributeProviders", async () => {
         const fetchAttributeProv = DataSetAttributesProvider.getInstance();
         fetchAttributeProv.register(new ExtenderAttr());
-        const fetchAll = await fetchAttributeProv.fetchAll({ dsName: "TEST", profile: undefined });
+        const fetchAll = await fetchAttributeProv.fetchAll({ dsName: "TEST", profile: {} as IProfileLoaded });
         expect(fetchAll.length).toBe(1);
         expect(fetchAll[0].keys.size).toBe(4);
+    });
+    it("Should handle a fetching attributes from an extender failing", async () => {
+        const fetchAttributeProv = DataSetAttributesProvider.getInstance();
+        fetchAttributeProv.register(new FailExtenderAttr());
+        fetchAttributeProv.register(new ExtenderAttr());
+        fetchAttributeProv.register(new FailExtenderAttr());
+
+        const mockLogger = {
+            error: jest.fn(),
+        };
+        jest.spyOn(Logger, "getAppLogger").mockReturnValue(mockLogger as any);
+        const fetchAll = await fetchAttributeProv.fetchAll({ dsName: "TEST", profile: {} as IProfileLoaded });
+
+        expect(fetchAll.length).toBe(1);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: "TEST: Fetching attributes failed",
+            })
+        );
     });
 });
