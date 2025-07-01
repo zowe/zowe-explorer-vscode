@@ -299,15 +299,15 @@ export class PDSMembersDataSource implements IDataSetSource {
     ) {}
 
     public async fetchDataSets(): Promise<IDataSetInfo[]> {
-        if (this.parentDataSource.loadChildren) {
-            return await this.parentDataSource.loadChildren(this.pdsUri);
-        }
+        // if (this.parentDataSource.loadChildren) {
+        //     return await this.parentDataSource.loadChildren(this.pdsUri);
+        // }
 
         // Fallback to API if parent data source doesn't support loading children
         if (this.profile) {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(this.profile);
             try {
-                const membersResp = await mvsApi.allMembers(this.pdsName);
+                const membersResp = await mvsApi.allMembers(this.pdsName, { attributes: true });
                 const members: IDataSetInfo[] = [];
 
                 for (const member of membersResp.apiResponse?.items || []) {
@@ -390,6 +390,12 @@ export class DatasetTableView {
         { field: "mnorc", headerName: l10n.t("Modified Records") },
         { field: "sclm", headerName: l10n.t("SCLM") },
     ];
+
+    // Dataset-specific columns (shown when currentTableType is not "members")
+    private datasetFields = ["dsname", "dsorg", "createdDate", "modifiedDate", "lrecl", "migr", "recfm", "volumes", "user"];
+
+    // Member-specific columns (shown when currentTableType is "members")
+    private memberFields = ["dsname", "createdDate", "modifiedDate", "user", "vers", "mod", "cnorc", "inorc", "mnorc", "sclm"];
 
     private rowActions: Record<string, Table.ActionOpts> = {
         openInEditor: {
@@ -856,10 +862,15 @@ export class DatasetTableView {
         const previousTableType = this.currentTableType;
         const tableTypeChanged = previousTableType !== this.currentTableType;
 
-        // Prepare column definitions
-        const columnDefs = this.expectedFields.map((field) => ({
+        // Prepare column definitions based on table type
+        const relevantFields = this.currentTableType === "members" ? this.memberFields : this.datasetFields;
+        const filteredFields = this.expectedFields.filter((field) => relevantFields.includes(field.field));
+
+        const columnDefs = filteredFields.map((field) => ({
             filter: true,
             ...field,
+            // Update header name for dsname when showing members
+            headerName: field.field === "dsname" && this.currentTableType === "members" ? l10n.t("Member Name") : field.headerName,
             initialHide: this.shouldShow[field.field] === false,
             // Set the tree column for dataset name when using tree mode
             ...(useTreeMode && field.field === "dsname"
