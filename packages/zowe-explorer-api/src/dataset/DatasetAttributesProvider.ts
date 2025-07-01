@@ -9,6 +9,8 @@
  *
  */
 
+import { imperative } from "..";
+
 export type attributeInfo = {
     title: string;
     reference?: string;
@@ -50,7 +52,7 @@ export class DataSetAttributesProvider {
             try {
                 attributes.push(...(await provider.fetchAttributes(context)));
             } catch (e) {
-                // Catch Error
+                imperative.Logger.getAppLogger().error(e);
             }
         }
         return attributes;

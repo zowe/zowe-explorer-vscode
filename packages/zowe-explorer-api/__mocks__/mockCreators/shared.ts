@@ -93,7 +93,7 @@ export function createTeamConfigMock(): imperative.IConfig {
         autoStore: true,
     };
 }
-export class extenderAttr implements IAttributesProvider {
+export class ExtenderAttr implements IAttributesProvider {
     public fetchAttributes(): attributeInfo {
         const keys = new Map<string, { displayName?: string; description?: string; value: any }>([
             [

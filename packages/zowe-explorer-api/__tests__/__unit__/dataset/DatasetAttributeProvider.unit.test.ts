@@ -10,7 +10,7 @@
  */
 
 import { DataSetAttributesProvider } from "../../../src";
-import { extenderAttr } from "../../../__mocks__/mockCreators/shared";
+import { ExtenderAttr } from "../../../__mocks__/mockCreators/shared";
 
 describe("DatasetAttributeProvider", () => {
     beforeEach(() => {
@@ -19,18 +19,18 @@ describe("DatasetAttributeProvider", () => {
     });
     it("Should be able register a DataSetAttributeProvider", () => {
         const DataSetAttrProv = DataSetAttributesProvider.getInstance();
-        DataSetAttrProv.register(new extenderAttr());
+        DataSetAttrProv.register(new ExtenderAttr());
         expect(DataSetAttrProv.providers.length).toBe(1);
     });
     it("Should be able register multiple DataSetAttributeProviders", () => {
         const DataSetAttrProv = DataSetAttributesProvider.getInstance();
-        DataSetAttrProv.register(new extenderAttr());
-        DataSetAttrProv.register(new extenderAttr());
+        DataSetAttrProv.register(new ExtenderAttr());
+        DataSetAttrProv.register(new ExtenderAttr());
         expect(DataSetAttrProv.providers.length).toBe(2);
     });
     it("Should be able to fetchAll implementations from DataSetAttributeProviders", async () => {
         const fetchAttributeProv = DataSetAttributesProvider.getInstance();
-        fetchAttributeProv.register(new extenderAttr());
+        fetchAttributeProv.register(new ExtenderAttr());
         const fetchAll = await fetchAttributeProv.fetchAll({ dsName: "TEST", profile: undefined });
         expect(fetchAll.length).toBe(1);
         expect(fetchAll[0].keys.size).toBe(4);

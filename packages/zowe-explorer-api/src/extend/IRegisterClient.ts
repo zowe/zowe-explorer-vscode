@@ -134,5 +134,5 @@ export interface IRegisterClient {
      */
     getCommonApi?(profile: imperative.IProfileLoaded): MainframeInteraction.ICommon;
 
-    getDatasetAttrProvider?(): DataSetAttributesProvider;
+    getDataSetAttrProvider?(): DataSetAttributesProvider;
 }
