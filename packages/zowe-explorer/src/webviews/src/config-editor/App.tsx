@@ -562,7 +562,20 @@ export function App() {
       ...pendingChangesAtLevel,
     };
 
-    return Object.entries(combinedConfig).map(([key, value]) => {
+    // Sort properties according to the specified order
+    const sortedEntries = Object.entries(combinedConfig).sort(([keyA], [keyB]) => {
+      // Define the order: type, properties, secure, others
+      const getOrder = (key: string) => {
+        if (key === "type") return 0;
+        if (key === "properties") return 1;
+        if (key === "secure") return 2;
+        return 3; // All others
+      };
+
+      return getOrder(keyA) - getOrder(keyB);
+    });
+
+    return sortedEntries.map(([key, value]) => {
       const currentPath = [...path, key];
       const fullKey = currentPath.join(".");
       const displayKey = key.split(".").pop();
