@@ -18,11 +18,15 @@ interface ActionsProps {
   setVisibleColumns: Dispatch<string[]>;
 }
 
+interface ActionState {
+  action: Table.Action;
+  isEnabled: boolean;
+  title: string;
+}
+
 export const ActionsBar = (props: ActionsProps) => {
   const [searchFilter, setSearchFilter] = useState<string>("");
-  const [visibleActions, setVisibleActions] = useState<Table.Action[]>([]);
-  const [actionsEnabled, setActionsEnabled] = useState<boolean[]>([]);
-  const [actionTitles, setActionTitles] = useState<string[]>([]);
+  const [actionStates, setActionStates] = useState<ActionState[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   useEffect(() => {
@@ -30,9 +34,7 @@ export const ActionsBar = (props: ActionsProps) => {
       const selectedNodes = props.gridRef.current?.api?.getSelectedNodes();
       const selectedRows = selectedNodes?.map((n: any) => n.data) ?? [];
 
-      const visibleActionsList: Table.Action[] = [];
-      const enabledStates: boolean[] = [];
-      const titles: string[] = [];
+      const visibleActionStates: ActionState[] = [];
 
       const context: ActionEvaluationContext = {
         selectedNodes,
@@ -44,15 +46,15 @@ export const ActionsBar = (props: ActionsProps) => {
         const title = await getActionTitle(action, context);
 
         if (shouldShow) {
-          visibleActionsList.push(action);
+          visibleActionStates.push({
+            action,
+            isEnabled,
+            title,
+          });
         }
-        enabledStates.push(isEnabled);
-        titles.push(title);
       }
 
-      setVisibleActions(visibleActionsList);
-      setActionsEnabled(enabledStates);
-      setActionTitles(titles);
+      setActionStates(visibleActionStates);
     };
 
     checkActionsVisibilityAndState();
@@ -120,33 +122,33 @@ export const ActionsBar = (props: ActionsProps) => {
           {props.selectionCount === 0 ? l10n.t("No") : props.selectionCount}
           &nbsp;{props.selectionCount > 1 || props.selectionCount === 0 ? l10n.t("items") : l10n.t("item")} {l10n.t("selected")}
         </p>
-        {visibleActions.map((action, i) => {
+        {actionStates.map((actionState, i) => {
           return (
             <VSCodeButton
-              disabled={!actionsEnabled[i]}
-              key={`${action.command}-action-bar-${i}`}
-              appearance={action.type}
+              disabled={!actionState.isEnabled}
+              key={`${actionState.action.command}-action-bar-${i}`}
+              appearance={actionState.action.type}
               style={{ fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}
               onClick={async (_event: any) => {
                 const selectedNodes = (props.gridRef.current.api as GridApi).getSelectedNodes();
-                if (selectedNodes.length === 0 && action.callback.typ !== "no-selection") {
+                if (selectedNodes.length === 0 && actionState.action.callback.typ !== "no-selection") {
                   return;
                 }
 
                 const context: ActionEvaluationContext = {
                   selectedNodes,
                 };
-                sendActionCommand(action, context);
+                sendActionCommand(actionState.action, context);
 
                 // For pin/unpin actions, refresh the action states after a short delay
-                if (action.command === "pin-selected-rows") {
+                if (actionState.action.command === "pin-selected-rows") {
                   setTimeout(() => {
                     setRefreshTrigger((prev) => prev + 1);
                   }, 100);
                 }
               }}
             >
-              {actionTitles[i] || action.title}
+              {actionState.title}
             </VSCodeButton>
           );
         })}
