@@ -124,6 +124,32 @@ export class AuthUtils {
                 if (!AuthHandler.isProfileLocked(profile)) {
                     await AuthHandler.lockProfile(profile);
                 }
+                const addDet = imperativeError.mDetails.additionalDetails;
+                if (addDet.includes("Auth order:") && addDet.includes("Auth type:") && addDet.includes("Available creds:")) {
+                    const additionalDetails = [addDet.split("\n")[0]];
+                    additionalDetails.push(
+                        vscode.l10n.t({
+                            message: "Your available creds: {0}",
+                            args: [addDet.match(/\nAvailable creds:(.*?)(?=\n|$)/)?.[1]?.trim()],
+                            comment: ["Available credentials"],
+                        })
+                    );
+                    additionalDetails.push(
+                        vscode.l10n.t({
+                            message: "Your authOrder: {0}",
+                            args: [addDet.match(/\nAuth order:(.*?)(?=\n|$)/)?.[1]?.trim()],
+                            comment: ["Authentication order"],
+                        })
+                    );
+                    additionalDetails.push(
+                        vscode.l10n.t({
+                            message: "Selected auth type: {0}",
+                            args: [addDet.match(/\nAuth type:(.*?)(?=\n|$)/)?.[1]?.trim()],
+                            comment: ["Selected authentication method"],
+                        })
+                    );
+                    imperativeError.mDetails.additionalDetails = additionalDetails.join("\n");
+                }
                 return await AuthHandler.promptForAuthentication(profile, {
                     authMethods: Constants.PROFILES_CACHE,
                     imperativeError,
