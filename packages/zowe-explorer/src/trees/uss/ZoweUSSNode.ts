@@ -394,7 +394,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             await vscode.workspace.fs.rename(oldUri, newUri, { overwrite: false });
         } catch (err) {
             if (err instanceof vscode.FileSystemError && err.code === "FileExists") {
-                // UssFSProvider.instance.
                 try {
                     const fileList = await UssFSProvider.instance.listFiles(this.getProfile(), newUri, true);
                     if (!fileList.success) {

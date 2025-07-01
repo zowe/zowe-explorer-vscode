@@ -35,6 +35,7 @@ import { USSUtils } from "../../../../src/trees/uss/USSUtils";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
+import exp from "constants";
 
 jest.mock("fs");
 
@@ -454,7 +455,26 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         errMessageMock.mockRestore();
         renameMock.mockRestore();
     });
+    it("shows error message when fileExists error occurs and listFiles returns { success: false }", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
+        const newFullPath = "/u/user/newName";
+        const errMessageMock = jest.spyOn(Gui, "errorMessage").mockImplementation();
+        const fileExistsError = new vscode.FileSystemError("File exists");
+        fileExistsError.code = "FileExists";
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(fileExistsError);
+        const listFilesSpy = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({ success: false, commandResponse: "" });
+
+        await blockMocks.ussDir.rename(newFullPath);
+
+        expect(errMessageMock).toHaveBeenCalledTimes(1);
+        expect(errMessageMock).toHaveBeenCalledWith("File exists");
+
+        errMessageMock.mockRestore();
+        renameMock.mockRestore();
+        listFilesSpy.mockRestore();
+    });
     it("Tests that rename updates and refreshes the UI components of the node", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
