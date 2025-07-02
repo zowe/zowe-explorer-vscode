@@ -100,7 +100,7 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
-        const usingBasicAuth = theProfile.profile.user && theProfile.profile.password;
+        const usingBasicAuth = theProfile.profile.user?.toString() && theProfile.profile.password?.toString();
         const usingCertAuth = theProfile.profile.certFile && theProfile.profile.certKeyFile;
         let usingTokenAuth: boolean;
         try {

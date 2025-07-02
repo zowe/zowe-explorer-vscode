@@ -486,8 +486,8 @@ export class ProfilesCache {
             profile?.profile?.port &&
             (baseProfile?.profile.host !== profile?.profile.host ||
                 baseProfile?.profile.port !== profile?.profile.port ||
-                (profile?.profile.user && profile?.profile.password)) &&
-            profile?.profile.tokenType?.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) as boolean;
+                (profile?.profile.user?.toString() && profile?.profile.password?.toString())) &&
+            profile?.profile.tokenType?.toString().startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) as boolean;
     }
 
     public async updateBaseProfileFileLogin(
@@ -513,14 +513,14 @@ export class ProfilesCache {
 
     public checkForEnvVarAndUpdate(): void {
         for (const profile of this.allProfiles) {
-            if (profile.profile.user?.startsWith("$")) {
+            if (profile.profile.user?.toString().startsWith("$")) {
                 const userEnvVar = profile.profile.user.match(/^\$(\w+)$/)?.[1];
                 if (!userEnvVar || !process.env[userEnvVar]) {
                     continue;
                 }
                 profile.profile.user = process.env[userEnvVar];
             }
-            if (profile.profile.password?.startsWith("$")) {
+            if (profile.profile.password?.toString().startsWith("$")) {
                 const passwordEnvVar = profile.profile.password.match(/^\$(\w+)$/)?.[1];
                 if (!passwordEnvVar || !process.env[passwordEnvVar]) {
                     continue;

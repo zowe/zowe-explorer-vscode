@@ -164,7 +164,7 @@ export class AuthUtils {
     }
 
     public static async updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
-        const usingBasicAuth = profile.profile.user && profile.profile.password;
+        const usingBasicAuth = profile.profile.user?.toString() && profile.profile.password?.toString();
         const usingCertAuth = profile.profile.certFile && profile.profile.certKeyFile;
         let usingTokenAuth: boolean;
         try {
@@ -183,7 +183,7 @@ export class AuthUtils {
                 }
                 case Boolean(usingBasicAuth): {
                     toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Basic Authentication")}`);
-                    toolTipList.push(`${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
+                    toolTipList.push(`${vscode.l10n.t("User: ")}${profile.profile.user?.toString() ?? ""}`);
                     break;
                 }
                 case Boolean(usingCertAuth): {
@@ -205,9 +205,9 @@ export class AuthUtils {
                     toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Basic Authentication")}`;
                     const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
                     if (userIDIndex !== -1) {
-                        toolTipList[userIDIndex] = `${vscode.l10n.t("User: ")}${profile.profile.user as string}`;
+                        toolTipList[userIDIndex] = `${vscode.l10n.t("User: ")}${profile.profile.user?.toString() ?? ""}`;
                     } else {
-                        toolTipList.splice(authMethodIndex + 1, 0, `${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
+                        toolTipList.splice(authMethodIndex + 1, 0, `${vscode.l10n.t("User: ")}${profile.profile.user?.toString() ?? ""}`);
                     }
                     break;
                 }

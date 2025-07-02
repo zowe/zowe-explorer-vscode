@@ -223,7 +223,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             Gui.errorMessage(this.unixCmdMsgs.sshProfMissingInfoMsg);
             return;
         }
-        if (!(this.sshProfile.profile.user || this.sshProfile.profile.password) && !this.sshProfile.profile.privateKey) {
+        if (!(this.sshProfile.profile.user?.toString() || this.sshProfile.profile.password?.toString()) && !this.sshProfile.profile.privateKey) {
             const prompted = await this.profileInstance.promptCredentials(this.sshProfile);
             if (!prompted) {
                 return;
