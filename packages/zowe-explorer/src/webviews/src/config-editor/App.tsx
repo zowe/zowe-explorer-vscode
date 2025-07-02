@@ -1416,8 +1416,6 @@ export function App() {
                       maxHeight: "200px",
                       overflow: "auto",
                       backgroundColor: "var(--vscode-dropdown-background)",
-                      border: "1px solid var(--vscode-dropdown-border)",
-                      borderRadius: "4px",
                       margin: 0,
                       padding: 0,
                       listStyle: "none",
@@ -1433,7 +1431,6 @@ export function App() {
                           style={{
                             padding: "8px 12px",
                             cursor: "pointer",
-                            borderBottom: "1px solid var(--vscode-dropdown-border)",
                           }}
                           onMouseDown={() => {
                             setWizardNewPropertyKey(option);
@@ -1481,8 +1478,6 @@ export function App() {
             {/* Properties List */}
             <div
               style={{
-                border: "1px solid #ccc",
-                borderRadius: "4px",
                 padding: "0.5rem",
                 minHeight: "60px",
                 maxHeight: "200px",
