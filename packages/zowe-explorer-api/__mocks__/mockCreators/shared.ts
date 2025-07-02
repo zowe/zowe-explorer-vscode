@@ -95,44 +95,7 @@ export function createTeamConfigMock(): imperative.IConfig {
 }
 export class ExtenderAttr implements IAttributesProvider {
     public fetchAttributes(): AttributeInfo {
-        const keys = new Map<string, { displayName?: string; description?: string; value: any }>([
-            [
-                "DescriptionAndDisplayName",
-                {
-                    displayName: "DisplayName",
-                    description: "Description",
-                    value: "Value1",
-                },
-            ],
-            [
-                "NoDescNoDisplayName",
-                {
-                    value: "Value2",
-                },
-            ],
-            [
-                "descNoDN",
-                {
-                    description: "Description - No Display Name",
-                    value: "Value3",
-                },
-            ],
-            [
-                "DNnoDesc",
-                {
-                    displayName: "DisplayName - No Description",
-                    value: "Value4",
-                },
-            ],
-        ]);
-
-        return [
-            {
-                title: "Dummy Extender",
-                reference: "https://github.com/zowe/zowe-explorer-vscode",
-                keys,
-            },
-        ];
+        return [];
     }
 }
 export class FailExtenderAttr implements IAttributesProvider {

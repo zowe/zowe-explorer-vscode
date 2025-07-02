@@ -48,6 +48,7 @@ export class DataSetAttributesProvider {
 
     public async fetchAll(context: DsInfo): Promise<AttributeInfo> {
         const attributes: AttributeInfo = [];
+
         for (const provider of this.providers) {
             try {
                 attributes.push(...(await provider.fetchAttributes(context)));
@@ -55,6 +56,51 @@ export class DataSetAttributesProvider {
                 Logger.getAppLogger().error(e);
             }
         }
+
+        attributes.sort((a, b) => {
+            const titleA = a.title.toLowerCase() || "";
+            const titleB = b.title.toLowerCase() || "";
+            return titleA.localeCompare(titleB);
+        });
+
         return attributes;
     }
 }
+/*        const keys = new Map<string, { displayName?: string; description?: string; value: any }>([
+            [
+                "DescriptionAndDisplayName",
+                {
+                    displayName: "DisplayName",
+                    description: "Description",
+                    value: "Value1",
+                },
+            ],
+            [
+                "NoDescNoDisplayName",
+                {
+                    value: "Value2",
+                },
+            ],
+            [
+                "descNoDN",
+                {
+                    description: "Description - No Display Name",
+                    value: "Value3",
+                },
+            ],
+            [
+                "DNnoDesc",
+                {
+                    displayName: "DisplayName - No Description",
+                    value: "Value4",
+                },
+            ],
+        ]);
+
+        return [
+            {
+                title: "Dummy Extender",
+                reference: "https://github.com/zowe/zowe-explorer-vscode",
+                keys,
+            },
+        ]; */
