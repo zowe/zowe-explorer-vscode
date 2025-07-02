@@ -401,7 +401,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         return;
                     }
                 } catch (err) {
-                    if (err instanceof imperative.ImperativeError && Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
+                    if ((err as any).name === "ImperativeError" && Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
+                        console.log("HELLO");
+                        console.log(err);
                         const parent = UssFSProvider.instance._lookupParentDirectory(newUri);
                         parent.entries.delete(path.posix.basename(newUri.path));
                         await vscode.workspace.fs.rename(oldUri, newUri);

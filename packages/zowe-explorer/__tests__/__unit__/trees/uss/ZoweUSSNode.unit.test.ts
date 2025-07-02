@@ -483,21 +483,17 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         const fileExistsError = new vscode.FileSystemError("File exists");
         fileExistsError.code = "FileExists";
         const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(fileExistsError);
-        const imperativeError = new imperative.ImperativeError({
-            msg: "Not found",
-            errorCode: `${imperative.RestConstants.HTTP_STATUS_404}`,
+
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockRejectedValueOnce({
+            name: "ImperativeError",
+            errorCode: imperative.RestConstants.HTTP_STATUS_404,
         });
-        jest.spyOn(UssFSProvider.instance, "listFiles").mockRejectedValueOnce(imperativeError);
 
         const parent = { entries: new Map([["newName", {}]]) };
         const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValue(parent);
-        parent.entries.delete(path.posix.basename(newUri.path));
-        // const basenameMock = jest.spyOn(path.posix, "basename").mockReturnValue("newName");
-
         await blockMocks.ussDir.rename(newUri.path);
         expect(parent.entries.has("newName")).toBe(false);
-        expect(renameMock).toHaveBeenCalledTimes(1);
-        // basenameMock.mockClear();
+        expect(renameMock).toHaveBeenCalledTimes(2);
         lookupParentDirMock.mockRestore();
         renameMock.mockRestore();
     });
