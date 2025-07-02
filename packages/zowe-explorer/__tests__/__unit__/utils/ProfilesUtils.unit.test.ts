@@ -168,14 +168,14 @@ describe("ProfilesUtils unit tests", () => {
         it("should handle error for invalid credentials and prompt for authentication - credentials entered", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
-                errorCode: 401 as unknown as string,
+                errorCode: Number(401).toString(),
                 additionalDetails: "Authentication is not valid or expired.",
             });
             const scenario = "Task failed successfully";
             const showMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
-            const promptCredsSpy = jest.fn();
+            const promptCredsSpy = jest.fn().mockResolvedValueOnce(["someusername", "pw"]);
             const ssoLoginSpy = jest.fn();
-            const profile = { name: "lpar.zosmf", type: "zosmf" } as any;
+            const profile = createIProfile();
             // disable locking mechanism for this test, will be tested in separate test cases
 
             Object.defineProperty(Constants, "PROFILES_CACHE", {
@@ -191,12 +191,16 @@ describe("ProfilesUtils unit tests", () => {
                 },
                 configurable: true,
             });
+            const unlockProfileMock = jest.spyOn(AuthHandler, "unlockProfile").mockImplementation();
             await AuthUtils.errorHandling(errorDetails, { profile, scenario });
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(promptCredsSpy).toHaveBeenCalledTimes(1);
             expect(ssoLoginSpy).not.toHaveBeenCalled();
+            // ensure profile is unlocked after successful credential update
+            expect(unlockProfileMock).toHaveBeenCalledWith(profile.name, true);
             showMessageSpy.mockClear();
             promptCredsSpy.mockClear();
+            unlockProfileMock.mockRestore();
         });
 
         it("should handle token error and proceed to login", async () => {
@@ -208,9 +212,13 @@ describe("ProfilesUtils unit tests", () => {
             const scenario = "Task failed successfully";
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("Log in to Authentication Service"));
-            const ssoLoginSpy = jest.fn();
+
+            // simulate successful SSO login
+            const ssoLoginSpy = jest.fn().mockResolvedValueOnce(true);
             const promptCredentialsSpy = jest.fn();
-            const profile = { type: "zosmf" } as any;
+            const profile = createIProfile();
+            const unlockProfileMock = jest.spyOn(AuthHandler, "unlockProfile").mockImplementation();
+            const setAuthCancelledMock = jest.spyOn(AuthHandler, "setAuthCancelled").mockImplementation();
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     getProfileInfo: profileInfoMock,
@@ -225,6 +233,8 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             await AuthUtils.errorHandling(errorDetails, { profile, scenario });
+            // ensure profile is unlocked after successful SSO login
+            expect(unlockProfileMock).toHaveBeenCalledWith(profile.name, true);
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
             expect(showErrorSpy).not.toHaveBeenCalled();
@@ -232,8 +242,9 @@ describe("ProfilesUtils unit tests", () => {
             showErrorSpy.mockClear();
             showMessageSpy.mockClear();
             ssoLoginSpy.mockClear();
+            setAuthCancelledMock.mockRestore();
         });
-        it("should handle credential error and no selection made for update", async () => {
+        it("should handle credential error - no selection made for update", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
                 errorCode: "401",
@@ -247,6 +258,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+            const setAuthCancelledMock = jest.spyOn(AuthHandler, "setAuthCancelled").mockImplementation();
             const showMsgSpy = jest.spyOn(Gui, "showMessage");
             const promptCredentialsSpy = jest.fn();
             const ssoLogin = jest.fn();
@@ -272,6 +284,7 @@ describe("ProfilesUtils unit tests", () => {
             showErrorSpy.mockClear();
             showMsgSpy.mockClear();
             promptCredentialsSpy.mockClear();
+            setAuthCancelledMock.mockRestore();
         });
     });
 

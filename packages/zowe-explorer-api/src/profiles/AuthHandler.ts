@@ -14,6 +14,7 @@ import { CorrelatedError, FileManagement } from "../utils";
 import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "../tree";
 import { Mutex } from "async-mutex";
+import * as vscode from "vscode";
 
 /**
  * @brief individual authentication methods (also supports a `ProfilesCache` class)
@@ -34,13 +35,55 @@ export type AuthPromptParams = {
     authMethods: IAuthMethods;
     // Error encountered from API call
     imperativeError: imperative.ImperativeError;
+    // Whether to throw an AuthCancelledError if the user cancels the authentication prompt
+    throwErrorOnCancel?: boolean;
 };
 
 export type ProfileLike = string | imperative.IProfileLoaded;
+
+/**
+ * Error thrown when the user cancels an authentication prompt.
+ * This allows extenders to distinguish between authentication failures and user cancellation.
+ * Extends FileSystemError to be compliant with VS Code's filesystem API expectations.
+ */
+export class AuthCancelledError extends vscode.FileSystemError {
+    public readonly profileName: string;
+
+    public constructor(profileName: string, message?: string) {
+        super(message ?? `Authentication cancelled for profile: ${profileName}`);
+        this.name = "AuthCancelledError";
+        this.profileName = profileName;
+    }
+}
+
 export class AuthHandler {
     private static authPromptLocks = new Map<string, Mutex>();
     private static profileLocks = new Map<string, Mutex>();
+    private static authCancelledProfiles = new Set<string>();
     private static enabledProfileTypes: Set<string> = new Set(["zosmf"]);
+
+    /**
+     * Records whether the user cancelled the authentication prompt for a profile.
+     * @param profile The profile to update
+     * @param wasCancelled Whether the prompt was cancelled
+     */
+    public static setAuthCancelled(profile: ProfileLike, wasCancelled: boolean): void {
+        const profileName = AuthHandler.getProfileName(profile);
+        if (wasCancelled) {
+            this.authCancelledProfiles.add(profileName);
+        } else {
+            this.authCancelledProfiles.delete(profileName);
+        }
+    }
+
+    /**
+     * Checks if the last authentication attempt for a profile was cancelled.
+     * @param profile The profile to check
+     * @returns {boolean} True if authentication was cancelled, false otherwise
+     */
+    public static wasAuthCancelled(profile: ProfileLike): boolean {
+        return this.authCancelledProfiles.has(AuthHandler.getProfileName(profile));
+    }
 
     /**
      * Enables profile locks for the given type.
@@ -79,6 +122,7 @@ export class AuthHandler {
      */
     public static unlockProfile(profile: ProfileLike, refreshResources?: boolean): void {
         const profileName = AuthHandler.getProfileName(profile);
+        this.authCancelledProfiles.delete(profileName);
         this.authPromptLocks.get(profileName)?.release();
         const mutex = this.profileLocks.get(profileName);
         // If a mutex doesn't exist for this profile or the mutex is no longer locked, return
@@ -126,9 +170,11 @@ export class AuthHandler {
      * @param profile The profile to authenticate
      * @param params {AuthPromptParams} Prompt parameters (login methods, using token auth, error correlation)
      * @returns {boolean} Whether authentication was successful
+     * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
     public static async promptForAuthentication(profile: ProfileLike, params: AuthPromptParams): Promise<boolean> {
         const profileName = AuthHandler.getProfileName(profile);
+        AuthHandler.setAuthCancelled(profileName, false);
         if (params.imperativeError.mDetails.additionalDetails) {
             const tokenError: string = params.imperativeError.mDetails.additionalDetails;
             if (tokenError.includes("Token is not valid or expired.") || params.isUsingTokenAuth) {
@@ -143,26 +189,42 @@ export class AuthHandler {
                     AuthHandler.unlockProfile(profileName, true);
                     return true;
                 }
+                // User cancelled the SSO login prompt
+                AuthHandler.setAuthCancelled(profileName, true);
+                if (params.throwErrorOnCancel) {
+                    throw new AuthCancelledError(profileName, "User cancelled SSO authentication");
+                }
                 return false;
             }
         }
 
         // Prompt the user to update their credentials using the given `promptCredentials` method.
         const checkCredsButton = "Update Credentials";
-        const creds = await Gui.errorMessage(params.errorCorrelation?.message ?? params.imperativeError.message, {
+        const selection = await Gui.errorMessage(params.errorCorrelation?.message ?? params.imperativeError.message, {
             items: [checkCredsButton],
             vsCodeOpts: { modal: true },
-        }).then(async (selection) => {
-            if (selection !== checkCredsButton) {
-                return;
-            }
-            return params.authMethods.promptCredentials(profile, true);
         });
 
+        if (selection !== checkCredsButton) {
+            // User cancelled the credential prompt
+            AuthHandler.setAuthCancelled(profileName, true);
+            if (params.throwErrorOnCancel) {
+                throw new AuthCancelledError(profileName, "User cancelled credential authentication");
+            }
+            return false;
+        }
+
+        const creds = await params.authMethods.promptCredentials(profile, true);
         if (creds != null) {
             // Unlock profile so it can be used again
             AuthHandler.unlockProfile(profileName, true);
             return true;
+        }
+
+        // User cancelled during credential input
+        AuthHandler.setAuthCancelled(profileName, true);
+        if (params.throwErrorOnCancel) {
+            throw new AuthCancelledError(profileName, "User cancelled during credential input");
         }
         return false;
     }
@@ -253,6 +315,7 @@ export class AuthHandler {
         for (const mutex of this.profileLocks.values()) {
             mutex.release();
         }
+        this.authCancelledProfiles.clear();
     }
 
     /**
