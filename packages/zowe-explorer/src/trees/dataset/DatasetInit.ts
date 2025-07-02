@@ -119,6 +119,7 @@ export class DatasetInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.submitJcl", async (file) => DatasetActions.submitJcl(datasetProvider, file))
         );
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.zoom", async () => DatasetActions.zoom()));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.submitMember", async (node) => DatasetActions.submitMember(node)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.showAttributes", async (node, nodeList) => {

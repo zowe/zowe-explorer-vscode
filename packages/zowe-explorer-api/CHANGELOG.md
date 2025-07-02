@@ -11,11 +11,29 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added a `zowe.settings.socketConnectTimeout` setting to provide users with the ability to specify a connection timeout for REST requests. [#3379](https://github.com/zowe/zowe-explorer-vscode/issues/3379)
 - Added a `zowe.settings.requestTimeout` setting to provide users with the ability to specify a timeout for REST requests. [#3631](https://github.com/zowe/zowe-explorer-vscode/pull/3631)
 - Updated Zowe SDKs to `8.20.0` for technical currency. [#3631](https://github.com/zowe/zowe-explorer-vscode/pull/3631)
+- Added new option `viewColumn` to `WebViewOpts` to allow extenders to specify the column in which the webview should be displayed. [#3657](https://github.com/zowe/zowe-explorer-vscode/pull/3657)
+- Added new option `iconPath` to `WebViewOpts` to allow extenders to specify the light and dark icon paths for the webview. [#3657](https://github.com/zowe/zowe-explorer-vscode/pull/3657)
+- Added support for asynchronous operations when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
+- Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
+- Implemented graceful handling for non-existent named profiles within the loadNamedProfile function. [#3678](https://github.com/zowe/zowe-explorer-vscode/pull/3678)
 
 ### Bug fixes
 
+- BugFix: Resolved a bug where extenders adding `ssh` or `base` to `allTypes` on `ProfileCache` will result in duplicate nodes when adding a profile of that type in Zowe Explorer. [#3625](https://github.com/zowe/zowe-explorer-vscode/pull/3625)
 - Fixed error message shown when creating a config file that already exists. [#3647](https://github.com/zowe/zowe-explorer-vscode/issues/3647)
+- Fixed an issue where clicking the Cancel button in the Save Credentials dialog triggered a 401 error prompting to update credentials. [#3713](https://github.com/zowe/zowe-explorer-vscode/pull/3713)
+- Resolved an issue where secure credentials were inadvertently converted to non-string data types. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)
+
+## `3.2.1`
+
+### New features and enhancements
+
+- Updated Zowe SDKs to `8.21.0` for technical currency. [#3668](https://github.com/zowe/zowe-explorer-vscode/pull/3668)
+
+### Bug fixes
+
 - Fixed an issue where using functions such as `ZoweVsCodeExtension.updateCredentials` caused extender log4js configurations to be overwritten. [#3587](https://github.com/zowe/zowe-explorer-vscode/issues/3587)
+- Fixed an issue to avoid prompting the user with the dialog of 'Save credentials' or 'Cancel' when the credential manager is disabled and the `autoStore` setting is set to False. [#3557](https://github.com/zowe/zowe-explorer-vscode/issues/3557)
 
 ## `3.2.0`
 
@@ -33,6 +51,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Generalized and updated the README. [#3367](https://github.com/zowe/zowe-explorer-vscode/issues/3367)
 - Added ability to pass the `OverrideWithEnv` property to the `imperative.ProfileInfo` class when the setting "Override with Environment Variables" is enabled. When enabled, environment variables such as `ZOWE_OPT_USER` and `ZOWE_OPT_PASSWORD` take priority over properties specified in the team configuration. [#3591](https://github.com/zowe/zowe-explorer-vscode/pull/3591)
 - Implemented the `Paginator` class, providing a generic facility for extenders to paginate tree nodes within their own tree views. [#3585](https://github.com/zowe/zowe-explorer-vscode/pull/3585)
+- Added an optional `profilesCache` parameter to `ZoweTreeNode.getProfile` to fix an issue seen with out of date profile information within tree views. When provided, the tree node uses that cache to obtain profile information. [#3664](https://github.com/zowe/zowe-explorer-vscode/issues/3664)
 
 ### Bug fixes
 

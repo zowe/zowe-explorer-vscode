@@ -45,6 +45,7 @@
   "removeFavorite": "Remove Favorite",
   "saveSearch": "Add to Favorites",
   "submitJcl": "Submit as JCL",
+  "zoom": "Open Selected Data Set",
   "submitMember": "Submit Job",
   "uss.addSession": "Add Profile to USS View",
   "uss.copyPath": "Copy Path",
@@ -142,6 +143,7 @@
   "zowe.security.checkForCustomCredentialManagers": "Check for any installed VS Code extensions for handling credentials when activating Zowe Explorer",
   "zowe.security.secureCredentialsEnabled": "Allow credentials to be stored securely. If disabled and autoStore is set to true, z/OS credentials are stored as clear text in zowe.config.json.",
   "zowe.openRecentMember": "Open Recent Member",
+  "zowe.displayReleaseNotes": "Display Release Notes",
   "issueTsoCmd": "Issue TSO Command",
   "deleteProfile": "Delete a Profile Permanently...",
   "renameDataSet": "Rename Data Set",
@@ -175,5 +177,6 @@
   "zowe.history.deprecationMsg": "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.",
   "zowe.settings.overrideWithEnvironmentVariables": "Indicates if environment variables should override values stored in Zowe configuration profiles on disk.",
   "zowe.settings.socketConnectTimeout": "The amount of time to wait for a connection to be initiated with the server, in milliseconds.",
-  "zowe.settings.requestTimeout": "The amount of time to wait for a REST request to complete, in milliseconds."
+  "zowe.settings.requestTimeout": "The amount of time to wait for a REST request to complete, in milliseconds.",
+  "zowe.settings.displayReleaseNotes": "Should display the Zowe Explorer release notes after an update."
 }

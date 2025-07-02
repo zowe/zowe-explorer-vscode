@@ -1,0 +1,222 @@
+.heroBanner {
+    padding: 1.5rem 0 1rem 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-editor-foreground);
+    background-image: linear-gradient(to bottom, rgb(1, 38, 93) 0%, rgba(57, 117, 208, 0.8) 100%), url("../resources/background-img.svg");
+    background-size: cover, 400px;
+    background-repeat: no-repeat, repeat;
+    background-position: center, right top;
+    animation: waveX 10s linear infinite, waveY 10s linear infinite;
+    animation-play-state: paused;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    margin-bottom: 0;
+}
+
+.heroBanner:hover {
+    animation-play-state: running;
+}
+
+.heroTitle {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+    color: white;
+    text-align: center;
+    letter-spacing: 0.2px;
+}
+
+.heroSubtitle {
+    font-size: 15px;
+    color: white;
+    margin: 0 0 0 0;
+    text-align: center;
+}
+
+@keyframes waveX {
+    0% {
+        background-position-x: center, 0;
+    }
+    100% {
+        background-position-x: center, 33rem;
+    }
+}
+@keyframes waveY {
+    100% {
+        background-position-y: center, 0;
+    }
+    0% {
+        background-position-y: center, 33rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .heroBanner {
+        padding: 0.75rem 0 0.75rem 0;
+        background-size: cover, 400px;
+    }
+}
+
+.releaseNotesRoot {
+    min-height: 100vh;
+    background: var(--vscode-editor-background);
+    font-family: Segoe UI, Arial, sans-serif;
+    color: var(--vscode-editor-foreground);
+}
+
+.releaseNotesCard {
+    max-width: 100%;
+    margin: 0 auto;
+    background: var(--vscode-sideBar-background);
+    border-radius: 0 0 8px 8px;
+    border: 1px solid var(--vscode-panel-border);
+    border-top: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    padding: 0 16px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.releaseNotesDropdownLabel {
+    width: 100%;
+    margin: 12px 0 9px 0;
+}
+
+.releaseNotesDropdownLabelText {
+    font-weight: 500;
+    color: var(--vscode-editor-foreground);
+    font-size: 14px;
+}
+
+.releaseNotesDropdownsLabelsRow {
+    display: flex;
+    width: 100%;
+    gap: 2rem;
+    margin-bottom: 0;
+    justify-content: space-between;
+}
+
+.releaseNotesDropdownsLabelsRow .releaseNotesDropdownLabelText {
+    flex: 1 1 0;
+    max-width: 340px;
+    font-weight: 500;
+    color: var(--vscode-editor-foreground);
+    font-size: 14px;
+    margin-bottom: 0;
+    margin-top: 12px;
+}
+
+.releaseNotesDropdownsLabelsRow .releaseNotesDropdownLabelText:last-child {
+    text-align: right;
+}
+
+.releaseNotesDropdownsRow {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    gap: 2rem;
+    margin-bottom: 10px;
+    justify-content: space-between;
+}
+
+.releaseNotesDropdownCol {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 340px;
+}
+
+.releaseNotesDropdownCol:last-child {
+    align-items: flex-end;
+}
+
+.releaseNotesDropdown {
+    margin-top: 7px;
+    width: 100%;
+    max-width: 340px;
+    font-size: 14px;
+    background: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border);
+    border-radius: 4px;
+}
+
+.releaseNotesDivider {
+    width: 100%;
+    border: none;
+    border-top: 1px solid var(--vscode-panel-border);
+    margin: 5px 0 9px 0;
+}
+
+.releaseNotesContent {
+    width: 100%;
+    margin-top: 0;
+}
+
+.releaseNotesMarkdown {
+    background: var(--vscode-editor-background);
+    border-radius: 6px;
+    padding: 14px 16px;
+    color: var(--vscode-editor-foreground);
+    font-size: var(--vscode-font-size);
+    line-height: 1.7;
+    border: 1px solid var(--vscode-panel-border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.releaseNotesMarkdown img {
+    border: 1.5px solid var(--vscode-panel-border);
+    border-radius: 6px;
+    padding: 2px;
+    background: var(--vscode-editor-background);
+    max-width: 100%;
+    display: block;
+    margin: 16px 0;
+}
+
+.releaseNotesLoading {
+    color: var(--vscode-descriptionForeground);
+    font-style: italic;
+}
+
+.releaseNotesTabs {
+    display: flex;
+    width: 100%;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    margin-bottom: 12px;
+}
+
+.releaseNotesTab {
+    flex: 1;
+    padding: 10px 0;
+    text-align: center;
+    cursor: pointer;
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--vscode-editor-foreground);
+    border-bottom: 2px solid transparent;
+    transition: border-bottom 0.2s, color 0.2s;
+}
+
+.releaseNotesTab.active {
+    color: var(--vscode-editor-foreground);
+    border-bottom: 2px solid var(--vscode-editor-foreground);
+    background: var(--vscode-sideBar-background);
+}
+
+.releaseNotesTab:not(.active):hover {
+    color: var(--vscode-editor-foreground);
+    background: var(--vscode-sideBar-background);
+}
+
+.releaseNotesTabPanel {
+    width: 100%;
+}

@@ -26,15 +26,17 @@ import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler"
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import * as certWizard from "../../../../src/utils/CertificateWizard";
-import { Gui, imperative, ZoweScheme, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
+import { ReleaseNotes } from "../../../../src/utils/ReleaseNotes";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
+jest.mock("../../../../src/utils/ReleaseNotes");
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
@@ -84,6 +86,10 @@ describe("Test src/shared/extension", () => {
             {
                 name: "zowe.editHistory",
                 mock: [{ spy: jest.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders] }],
+            },
+            {
+                name: "zowe.displayReleaseNotes",
+                mock: [{ spy: jest.spyOn(ReleaseNotes, "display"), arg: [test.context, true] }],
             },
             {
                 name: "zowe.promptCredentials",
@@ -302,6 +308,11 @@ describe("Test src/shared/extension", () => {
         ];
 
         beforeAll(() => {
+            test.context.extension = {
+                packageJSON: {
+                    version: "2.3.4",
+                },
+            };
             const registerCommand = (cmd: string, fun: () => void) => {
                 return { [cmd]: fun };
             };
