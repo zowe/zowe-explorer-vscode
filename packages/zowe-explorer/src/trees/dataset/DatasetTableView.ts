@@ -1086,7 +1086,7 @@ export class DatasetTableView {
         }
 
         // Load the profile
-        const profile = Profiles.getInstance().getProfileByName(selectedProfileName);
+        const profile = Profiles.getInstance().loadNamedProfile(selectedProfileName);
         if (!profile) {
             Gui.errorMessage(l10n.t({ message: "Profile {0} not found.", args: [selectedProfileName], comment: ["Name of the selected profile"] }));
             return;
@@ -1094,6 +1094,7 @@ export class DatasetTableView {
 
         // Create the pattern-based data source
         this.currentDataSource = new PatternDataSource(profile, pattern);
+        this.currentTableType = "dataSets";
 
         // Generate and display the table
         await TableViewProvider.getInstance().setTableView(await this.generateTable(context));
@@ -1139,11 +1140,13 @@ export class DatasetTableView {
                 selectedNode,
                 selectedNode.children.filter((child) => !SharedContext.isInformation(child))
             );
+            this.currentTableType = "dataSets";
         } else if (SharedContext.isPds(selectedNode)) {
             const profile = selectedNode.getSessionNode()?.getProfile();
             const uri = selectedNode.resourceUri;
 
             this.currentDataSource = new PDSMembersDataSource(null, selectedNode.label.toString(), uri.toString(), profile);
+            this.currentTableType = "members";
         }
 
         await TableViewProvider.getInstance().setTableView(await this.generateTable(context));
