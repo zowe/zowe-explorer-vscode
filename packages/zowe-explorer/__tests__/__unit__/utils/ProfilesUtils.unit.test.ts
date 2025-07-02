@@ -1442,5 +1442,25 @@ describe("ProfilesUtils unit tests", () => {
             (ProfilesUtils as any).resolveTypePromise("zftp");
             expect(mockResolve).toHaveBeenCalledTimes(1);
         });
+
+        it("should resolve each deferred promise of matching profile type", () => {
+            const extenderTypeReadySpy = jest.spyOn(ProfilesUtils.extenderTypeReady, "get");
+            ProfilesUtils.resolveTypePromise("ssh");
+            expect(extenderTypeReadySpy).toHaveBeenCalledTimes(1);
+        });
+        it("should resolve an existing promise without setting it", () => {
+            jest.spyOn(ProfilesUtils.extenderTypeReady, "has").mockReturnValue(true);
+            const extenderTypeReadySetSpy = jest.spyOn(ProfilesUtils.extenderTypeReady, "set");
+            const mockDeferred: imperative.DeferredPromise<void> = {
+                resolve: jest.fn(),
+                reject: jest.fn(),
+            } as any;
+
+            const extenderTypeReadyGetSpy = jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValue(mockDeferred);
+
+            ProfilesUtils.resolveTypePromise("ssh");
+            expect(extenderTypeReadySetSpy).toHaveBeenCalledTimes(0);
+            expect(extenderTypeReadyGetSpy).toHaveBeenCalledTimes(1);
+        });
     });
 });
