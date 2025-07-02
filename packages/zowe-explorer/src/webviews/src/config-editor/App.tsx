@@ -437,12 +437,15 @@ export function App() {
             if (propertyName === "type") {
               pendingProfiles[profileKey].type = entry.value;
             } else if (keyParts.includes("properties")) {
-              if (!pendingProfiles[profileKey].properties) {
-                pendingProfiles[profileKey].properties = {};
+              // Only add non-secure properties to the properties object
+              if (!entry.secure) {
+                if (!pendingProfiles[profileKey].properties) {
+                  pendingProfiles[profileKey].properties = {};
+                }
+                pendingProfiles[profileKey].properties[propertyName] = entry.value;
               }
-              pendingProfiles[profileKey].properties[propertyName] = entry.value;
 
-              // If this is a secure property, also add it to the secure array
+              // If this is a secure property, add it to the secure array
               if (entry.secure) {
                 if (!pendingProfiles[profileKey].secure) {
                   pendingProfiles[profileKey].secure = [];
@@ -515,7 +518,8 @@ export function App() {
                 }
                 // Pass the original profile object (without pending changes) to renderConfig
                 // so that renderConfig can properly combine existing and pending changes
-                const originalProfile = flatProfiles[selectedProfileKey] || {};
+                // For newly created profiles, use the pending profile data as the base
+                const originalProfile = flatProfiles[selectedProfileKey] || pendingProfiles[selectedProfileKey] || {};
                 return renderConfig(originalProfile, path);
               })()}
             </div>
@@ -536,13 +540,17 @@ export function App() {
     // Create a map of pending changes that should be applied at this level
     const pendingChangesAtLevel: { [key: string]: any } = {};
     Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-      if (!entry.secure) {
-        const keyParts = key.split(".");
-        if (key.startsWith(fullPath)) {
-          const relativePath = keyParts.slice(path.length);
-          if (relativePath.length === 1) {
+      const keyParts = key.split(".");
+      if (key.startsWith(fullPath)) {
+        const relativePath = keyParts.slice(path.length);
+        if (relativePath.length === 1) {
+          // Don't add secure properties to the properties object
+          if (!entry.secure) {
             pendingChangesAtLevel[relativePath[0]] = entry.value;
-          } else if (relativePath.length > 1) {
+          }
+        } else if (relativePath.length > 1) {
+          // For nested properties, only add non-secure properties
+          if (!entry.secure) {
             let current = combinedConfig;
             for (let i = 0; i < relativePath.length - 1; i++) {
               if (!current[relativePath[i]]) {
@@ -945,8 +953,10 @@ export function App() {
 
     // Create the profile path
     let profilePath: string[];
+    let newProfileKey: string;
     if (wizardRootProfile === "root") {
       profilePath = ["profiles", wizardProfileName];
+      newProfileKey = wizardProfileName;
     } else {
       // For nested profiles, we need to build the path to the selected profile
       // and then add "profiles" and the new profile name
@@ -964,6 +974,7 @@ export function App() {
 
       // Add "profiles" after the selected profile, then the new profile name
       profilePath.push("profiles", wizardProfileName);
+      newProfileKey = `${wizardRootProfile}.${wizardProfileName}`;
     }
 
     // Add type property
@@ -977,7 +988,7 @@ export function App() {
         [typeKey]: {
           value: wizardSelectedType,
           path: typePath.slice(-1),
-          profile: wizardRootProfile === "root" ? wizardProfileName : `${wizardRootProfile}.${wizardProfileName}`,
+          profile: newProfileKey,
         },
       },
     }));
@@ -995,12 +1006,15 @@ export function App() {
           [propertyKey]: {
             value: prop.value,
             path: propertyPath.slice(-1),
-            profile: wizardRootProfile === "root" ? wizardProfileName : `${wizardRootProfile}.${wizardProfileName}`,
+            profile: newProfileKey,
             secure: prop.secure,
           },
         },
       }));
     });
+
+    // Automatically select the newly created profile
+    setSelectedProfileKey(newProfileKey);
 
     // Reset wizard state
     setWizardModalOpen(false);
