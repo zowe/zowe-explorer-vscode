@@ -922,11 +922,20 @@ export function App() {
 
   const getWizardPropertyOptions = () => {
     if (!wizardSelectedType || selectedTab === null) return [];
-    return schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || [];
+    const allOptions = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || [];
+    // Filter out properties that are already added
+    const usedKeys = new Set(wizardProperties.map((prop) => prop.key));
+    return allOptions.filter((option) => !usedKeys.has(option));
   };
 
   const handleWizardAddProperty = () => {
     if (!wizardNewPropertyKey.trim() || !wizardNewPropertyValue.trim()) return;
+
+    // Check if the key already exists
+    const keyExists = wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim());
+    if (keyExists) {
+      return; // Don't add duplicate keys
+    }
 
     setWizardProperties((prev) => [
       ...prev,
@@ -1402,8 +1411,28 @@ export function App() {
                   onBlur={() => setTimeout(() => setWizardShowKeyDropdown(false), 100)}
                   className="modal-input"
                   placeholder={l10n.t("Property key")}
-                  style={{ height: "32px" }}
+                  style={{
+                    height: "32px",
+                    borderColor:
+                      wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim())
+                        ? "#ff6b6b"
+                        : undefined,
+                  }}
                 />
+                {wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) && (
+                  <div
+                    style={{
+                      fontSize: "0.8em",
+                      color: "#ff6b6b",
+                      marginTop: "2px",
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                    }}
+                  >
+                    {l10n.t("Property key already exists")}
+                  </div>
+                )}
                 {wizardShowKeyDropdown && (
                   <ul
                     className="dropdown-list"
@@ -1463,7 +1492,11 @@ export function App() {
                 </label>
                 <button
                   onClick={handleWizardAddProperty}
-                  disabled={!wizardNewPropertyKey.trim() || !wizardNewPropertyValue.trim()}
+                  disabled={
+                    !wizardNewPropertyKey.trim() ||
+                    !wizardNewPropertyValue.trim() ||
+                    wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim())
+                  }
                   style={{
                     padding: "0.5rem 1rem",
                     height: "32px",
