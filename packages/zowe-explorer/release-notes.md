@@ -87,7 +87,7 @@ Data sets can now be searched for a string, similar to ISPF's `SRCHFOR`.
 
 ### Integrated terminal
 
-The integrated terminal connects to the mainframe via SSH for MVS, TSO, or USS commands. Multiple sessions are supported. Currently  disabled by default as further development is actively ongoing.
+The integrated terminal connects to the mainframe via SSH for MVS, TSO, or USS commands. Multiple sessions are supported. Currently disabled by default as further development is actively ongoing.
 
 - **Enable:** Go to Zowe Explorer settings and check **Use Integrated Terminals**.
 - **Open:** Right-click a profile in Data Sets, USS, or Jobs tree and select an **Issue x Command** option.
