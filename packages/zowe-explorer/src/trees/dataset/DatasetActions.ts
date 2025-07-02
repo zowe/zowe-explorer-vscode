@@ -22,6 +22,8 @@ import {
     FsAbstractUtils,
     ZoweScheme,
     ZoweExplorerApiType,
+    type AttributeInfo,
+    DataSetAttributesProvider,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
@@ -39,7 +41,6 @@ import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { Definitions } from "../../configuration/Definitions";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
-
 export class DatasetActions {
     public static typeEnum: zosfiles.CreateDataSetTypeEnum;
     public static newDSProperties;
@@ -938,39 +939,118 @@ export class DatasetActions {
                 throw err;
             }
 
+            DatasetActions.attributeInfo = [
+                {
+                    title: "Zowe Explorer",
+                    reference: "https://docs.zowe.org/stable/typedoc/interfaces/_zowe_zos_files_for_zowe_sdk.izosmflistresponse",
+                    keys: new Map(
+                        [
+                            ["dsname", "Data Set Name", "The name of the dataset"],
+                            ["member", "Member Name", "The name of the member"],
+                            ["blksz", "Block Size", "The block size of the dataset"],
+                            ["catnm", "Catalog Name", "The catalog in which the dataset entry is stored"],
+                            ["cdate", "Create Date", "The dataset creation date"],
+                            ["dev", "Device Type", "The type of the device the dataset is stored on"],
+                            ["dsntp", "Data Set Type", "LIBRARY, (LIBRARY,1), (LIBRARY,2), PDS, HFS, EXTREQ, EXTPREF, BASIC or LARGE"],
+                            ["dsorg", "Data Set Organization", "The organization of the data set as PS, PO, or DA"],
+                            ["edate", "Expiration Date", "The dataset expiration date"],
+                            ["extx", "Extensions", "The number of extensions the dataset has"],
+                            ["lrecl", "Logical Record Length", "The length in bytes of each record"],
+                            ["migr", "Migration", "Indicates if automatic migration is active"],
+                            ["mvol", "Multivolume", "Whether the dataset is on multiple volumes"],
+                            ["ovf", "Open virtualization format", ""],
+                            ["rdate", "Reference Date", "Last referenced date"],
+                            ["recfm", "Record Format", "Valid values: A, B, D, F, M, S, T, U, V (combinable)"],
+                            ["sizex", "Size", "Size of the first extent in tracks"],
+                            ["spacu", "Space Unit", "Type of space units measurement"],
+                            ["used", "Used Space", "Used space percentage"],
+                            ["vol", "Volume", "Volume serial numbers for data set"],
+                            ["vols", "Volumes", "Multiple volume serial numbers"],
+                        ].map(([key, displayName, description]) => [
+                            key,
+                            {
+                                displayName: vscode.l10n.t(displayName),
+                                description: vscode.l10n.t(description),
+                                value: attributes[0][key as keyof (typeof attributes)[0]],
+                            },
+                        ])
+                    ),
+                },
+            ];
+
+            const extenderAttributes = DataSetAttributesProvider.getInstance();
+            const sessionNode = node.getSessionNode();
+
+            DatasetActions.attributeInfo.push(
+                ...(await extenderAttributes.fetchAll({ dsName: attributes[0].dsname, profile: sessionNode.getProfile() }))
+            );
+
+            // Check registered DataSetAttributesProvider, send dsname and profile. get results and append to `attributeInfo`
             const attributesMessage = vscode.l10n.t("Attributes");
+
             const webviewHTML = `<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <title>${label} "${attributesMessage}"</title>
-        </head>
-        <body>
-        <table style="margin-top: 2em; border-spacing: 2em 0">
-        ${Object.keys(attributes[0]).reduce(
-            (html, key) =>
-                html.concat(`
-                <tr>
-                    <td align="left" style="color: var(--vscode-editorLink-activeForeground); font-weight: bold">${key}:</td>
-                    <td align="right" style="color: ${
-                        isNaN(attributes[0][key]) ? "var(--vscode-settings-textInputForeground)" : "var(--vscode-problemsWarningIcon-foreground)"
-                        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                    }">${attributes[0][key]}</td>
-                </tr>
-        `),
-            ""
-        )}
-        </table>
-        </body>
-        </html>`;
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>${label} "${attributesMessage}"</title>
+</head>
+<body>
+    ${DatasetActions.attributeInfo
+        .map(({ title, reference, keys }) => {
+            const linkedTitle = reference
+                ? `<a href="${reference}" target="_blank" style="text-decoration: none;">
+                    <h2 style="color: var(--vscode-textLink-foreground)">${title}</h2>
+                </a>`
+                : `<h2>${title}</h2>`;
+            const tableRows = Array.from(keys.entries())
+                .filter(([key], _, all) => !(key === "vol" && all.some(([k]) => k === "vols")))
+                .reduce((html, [key, info]) => {
+                    if (info.value === undefined || info.value === null) {
+                        return html;
+                    }
+                    return html.concat(`
+                        <tr ${
+                            info.displayName || info.description
+                                ? `title="${info.displayName ? `(${key})` : ""}${
+                                      info.description ? (info.displayName ? " " : "") + info.description : ""
+                                  }"`
+                                : ""
+                        }>
+                            <td align="left" style="color: var(--vscode-editorLink-activeForeground); font-weight: bold">
+                                ${info.displayName || key}:
+                            </td>
+                            <td align="right" style="color: ${
+                                isNaN(info.value as any)
+                                    ? "var(--vscode-settings-textInputForeground)"
+                                    : "var(--vscode-problemsWarningIcon-foreground)"
+                            }">
+                                ${info.value as string}
+                            </td>
+                        </tr>
+                `);
+                }, "");
+
+            return `
+            ${linkedTitle}
+            <table style="margin-top: 2em; border-spacing: 2em 0">
+                ${tableRows}
+            </table>
+        `;
+        })
+        .join("")}
+</body>
+</html>`;
+
             const panel: vscode.WebviewPanel = Gui.createWebviewPanel({
                 viewType: "zowe",
-                title: label + " " + vscode.l10n.t("Attributes"),
-                showOptions: vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : 1,
+                title: `${label} ${attributesMessage}`,
+                showOptions: vscode.window.activeTextEditor?.viewColumn ?? 1,
             });
             panel.webview.html = webviewHTML;
         }
     }
+
+    private static attributeInfo: AttributeInfo;
 
     /**
      * Submit the contents of the editor or file as JCL.
