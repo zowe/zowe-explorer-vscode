@@ -35,7 +35,7 @@ import { USSUtils } from "../../../../src/trees/uss/USSUtils";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
-import exp from "constants";
+import * as path from "path";
 
 jest.mock("fs");
 
@@ -455,7 +455,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         errMessageMock.mockRestore();
         renameMock.mockRestore();
     });
-    it("shows error message when fileExists error occurs and listFiles returns { success: false }", async () => {
+    it("shows error message when fileExists error occurs and listFiles success returns false", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -474,6 +474,32 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         errMessageMock.mockRestore();
         renameMock.mockRestore();
         listFilesSpy.mockRestore();
+    });
+    it("deletes entry and retries rename when listFiles throws 404", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const newUri = { path: "/u/user/newName" };
+
+        const fileExistsError = new vscode.FileSystemError("File exists");
+        fileExistsError.code = "FileExists";
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(fileExistsError);
+        const imperativeError = new imperative.ImperativeError({
+            msg: "Not found",
+            errorCode: `${imperative.RestConstants.HTTP_STATUS_404}`,
+        });
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockRejectedValueOnce(imperativeError);
+
+        const parent = { entries: new Map([["newName", {}]]) };
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValue(parent);
+        parent.entries.delete(path.posix.basename(newUri.path));
+        // const basenameMock = jest.spyOn(path.posix, "basename").mockReturnValue("newName");
+
+        await blockMocks.ussDir.rename(newUri.path);
+        expect(parent.entries.has("newName")).toBe(false);
+        expect(renameMock).toHaveBeenCalledTimes(1);
+        // basenameMock.mockClear();
+        lookupParentDirMock.mockRestore();
+        renameMock.mockRestore();
     });
     it("Tests that rename updates and refreshes the UI components of the node", async () => {
         const globalMocks = createGlobalMocks();
