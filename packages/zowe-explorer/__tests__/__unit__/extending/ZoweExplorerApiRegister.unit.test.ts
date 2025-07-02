@@ -291,6 +291,6 @@ describe("ZoweExplorerApiRegister unit testing", () => {
 
     it("allows access to the DataSetAttributesProvider instance", () => {
         const ZEApiRegister = ZoweExplorerApiRegister.getInstance();
-        expect(ZEApiRegister.getDatasetAttrProvider()).toBeDefined();
+        expect(ZEApiRegister.getDataSetAttrProvider()).toBeDefined();
     });
 });

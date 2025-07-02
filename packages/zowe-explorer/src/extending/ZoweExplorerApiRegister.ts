@@ -42,7 +42,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
         return ZoweExplorerApiRegister.register;
     }
 
-    public getDatasetAttrProvider(): DataSetAttributesProvider {
+    public getDataSetAttrProvider(): DataSetAttributesProvider {
         return DataSetAttributesProvider.getInstance();
     }
     /**
