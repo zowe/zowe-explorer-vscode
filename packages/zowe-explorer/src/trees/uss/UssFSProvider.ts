@@ -128,8 +128,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async move(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<boolean> {
         const info = this._getInfoFromUri(newUri);
-        const profile = Profiles.getInstance().loadNamedProfile(info.profile.name);
-        const ussApi = ZoweExplorerApiRegister.getUssApi(profile);
+        const ussApi = ZoweExplorerApiRegister.getUssApi(info.profile);
 
         if (!ussApi.move) {
             await Gui.errorMessage(vscode.l10n.t("The 'move' function is not implemented for this USS API."));
@@ -139,7 +138,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const oldInfo = this._getInfoFromUri(oldUri);
 
         try {
-            await AuthUtils.reauthenticateIfCancelled(profile);
+            await AuthUtils.reauthenticateIfCancelled(info.profile);
             await AuthHandler.waitForUnlock(info.profile);
             await ussApi.move(oldInfo.path, info.path);
         } catch (err) {
@@ -798,8 +797,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const sourceInfo = this._getInfoFromUri(source);
 
         // Wait for any ongoing authentication process to complete
-        const profile = Profiles.getInstance().loadNamedProfile(destInfo.profile.name);
-        await AuthUtils.reauthenticateIfCancelled(profile);
+        await AuthUtils.reauthenticateIfCancelled(destInfo.profile);
         await AuthHandler.waitForUnlock(destInfo.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -809,7 +807,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return;
         }
 
-        const api = ZoweExplorerApiRegister.getUssApi(profile);
+        const api = ZoweExplorerApiRegister.getUssApi(destInfo.profile);
 
         const hasCopyApi = api.copy != null;
 
@@ -862,7 +860,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath);
             }
         } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, profile);
+            await AuthUtils.handleProfileAuthOnError(err, destInfo.profile);
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to copy {0} to {1}",
