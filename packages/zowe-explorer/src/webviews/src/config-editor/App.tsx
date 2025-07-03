@@ -463,10 +463,13 @@ export function App() {
     // Combine existing and pending profiles for the profile list
     const allProfiles = { ...flatProfiles, ...pendingProfiles };
 
+    // Sort profile keys alphabetically
+    const sortedProfileKeys = Object.keys(allProfiles).sort((a, b) => a.localeCompare(b));
+
     return (
       <div style={{ display: "flex", gap: "2rem" }}>
         <div style={{ width: "250px", paddingRight: "1rem" }}>
-          {Object.keys(allProfiles).map((profileKey) => (
+          {sortedProfileKeys.map((profileKey) => (
             <div
               key={profileKey}
               className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""}`}
@@ -928,6 +931,42 @@ export function App() {
     return allOptions.filter((option) => !usedKeys.has(option));
   };
 
+  const isProfileNameTaken = () => {
+    if (!wizardProfileName.trim() || selectedTab === null) return false;
+
+    const config = configurations[selectedTab].properties;
+    const flatProfiles = flattenProfiles(config.profiles);
+
+    // Check existing profiles
+    const existingProfilesUnderRoot = Object.keys(flatProfiles).some((profileKey) => {
+      if (wizardRootProfile === "root") {
+        return profileKey === wizardProfileName.trim();
+      } else {
+        return (
+          profileKey === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
+          profileKey.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
+        );
+      }
+    });
+
+    // Check pending changes
+    const pendingProfilesUnderRoot = Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).some(([key, entry]) => {
+      if (entry.profile) {
+        if (wizardRootProfile === "root") {
+          return entry.profile === wizardProfileName.trim();
+        } else {
+          return (
+            entry.profile === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
+            entry.profile.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
+          );
+        }
+      }
+      return false;
+    });
+
+    return existingProfilesUnderRoot || pendingProfilesUnderRoot;
+  };
+
   const handleWizardAddProperty = () => {
     if (!wizardNewPropertyKey.trim() || !wizardNewPropertyValue.trim()) return;
 
@@ -959,6 +998,44 @@ export function App() {
     if (!wizardProfileName.trim() || !wizardSelectedType) return;
 
     const configPath = configurations[selectedTab!]!.configPath;
+
+    // Check if profile already exists under the selected root
+    const config = configurations[selectedTab!].properties;
+    const flatProfiles = flattenProfiles(config.profiles);
+
+    // Get all existing profile names under the selected root
+    const existingProfilesUnderRoot = Object.keys(flatProfiles).filter((profileKey) => {
+      if (wizardRootProfile === "root") {
+        // For root, check if the profile name exists as a top-level profile
+        return profileKey === wizardProfileName.trim();
+      } else {
+        // For nested profiles, check if the profile exists under the selected root
+        return (
+          profileKey === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
+          profileKey.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
+        );
+      }
+    });
+
+    // Also check pending changes for profiles being created
+    const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([key, entry]) => {
+      if (entry.profile) {
+        if (wizardRootProfile === "root") {
+          return entry.profile === wizardProfileName.trim();
+        } else {
+          return (
+            entry.profile === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
+            entry.profile.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
+          );
+        }
+      }
+      return false;
+    });
+
+    if (existingProfilesUnderRoot.length > 0 || pendingProfilesUnderRoot) {
+      // Profile already exists, don't create it
+      return;
+    }
 
     // Create the profile path
     let profilePath: string[];
@@ -1359,8 +1436,23 @@ export function App() {
               onChange={(e) => setWizardProfileName((e.target as HTMLInputElement).value)}
               className="modal-input"
               placeholder={l10n.t("Enter profile name")}
-              style={{ width: "100%", height: "36px" }}
+              style={{
+                width: "100%",
+                height: "36px",
+                borderColor: isProfileNameTaken() ? "#ff6b6b" : undefined,
+              }}
             />
+            {isProfileNameTaken() && (
+              <div
+                style={{
+                  fontSize: "0.8em",
+                  color: "#ff6b6b",
+                  marginTop: "2px",
+                }}
+              >
+                {l10n.t("Profile name already exists under this root")}
+              </div>
+            )}
           </div>
 
           {/* Type Selection */}
@@ -1576,7 +1668,7 @@ export function App() {
         >
           <VSCodeButton
             onClick={handleWizardCreateProfile}
-            disabled={!wizardProfileName.trim() || !wizardSelectedType}
+            disabled={!wizardProfileName.trim() || !wizardSelectedType || isProfileNameTaken()}
             style={{
               padding: "0.5rem 1rem",
               minWidth: "120px",
