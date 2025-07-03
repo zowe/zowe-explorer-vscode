@@ -225,7 +225,7 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
     describe("profilesCache", () => {
         it("should create new ProfilesCache: getZoweExplorerApi returns undefined", () => {
             // Mock getZoweExplorerApi to return undefined to trigger fallback path
-            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue(undefined);
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue(null as any);
 
             // Mock workspaceRoot to return a workspace folder with uri.fsPath
             const mockWorkspaceFolder = {
@@ -264,6 +264,32 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
             expect(imperative.Logger.getAppLogger).toHaveBeenCalled();
             expect(workspaceRootMock).toHaveBeenCalled();
             // Verify that the workspacePath and app logger were grabbed for ProfilesCache constructor
+        });
+
+        it("should create new ProfilesCache with correct constructor parameters if api is not available", () => {
+            // Mock getZoweExplorerApi to return undefined to trigger fallback path (line 46)
+            const apiMock = jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue(null as any);
+
+            // Mock workspaceRoot to return a workspace folder with uri.fsPath
+            const mockWorkspaceFolder = {
+                uri: { fsPath: "/test/workspace/path" },
+                name: "test-workspace",
+                index: 0,
+            } as vscode.WorkspaceFolder;
+            const workspaceRootMock = jest.spyOn(ZoweVsCodeExtension, "workspaceRoot", "get").mockReturnValue(mockWorkspaceFolder);
+
+            // Mock Logger.getAppLogger
+            const mockLogger = { debug: jest.fn() } as unknown as imperative.Logger;
+            const appLoggerSpy = jest.spyOn(imperative.Logger, "getAppLogger").mockReturnValue(mockLogger);
+
+            // Access the profilesCache getter to trigger line 46
+            expect(ZoweVsCodeExtension.profilesCache.allProfiles).toBeDefined();
+
+            // Verify that the workspacePath and app logger were grabbed for ProfilesCache constructor
+            expect(appLoggerSpy).toHaveBeenCalled();
+            expect(workspaceRootMock).toHaveBeenCalled();
+            apiMock.mockRestore();
+            workspaceRootMock.mockRestore();
         });
     });
 });
