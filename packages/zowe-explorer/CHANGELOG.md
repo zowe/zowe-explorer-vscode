@@ -21,6 +21,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Improved integrated terminal behavior to match standard terminal functionality. Now, users can smoothly maintain proper cursor position when typing and backspacing. [#3391](https://github.com/zowe/zowe-explorer-vscode/issues/3391)
 - Fixed an issue where cancelling multiple commands in rapid succession could render the terminal unusable. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Fixed an issue where clicking the refresh icon beside a profile in the Unix System Services (USS) view had no effect. [#3693](https://github.com/zowe/zowe-explorer-vscode/issues/3693)
+- Fixed cross-LPAR PDS transfers to preserve original DCB attributes and prevent binary data corruption. Data is now transferred as binary, and encoding is user-selected at file open time. The encoding query parameter is now respected during write operations. [#3731](https://github.com/zowe/zowe-explorer-vscode/pull/3731)
 
 ## `3.2.1`
 

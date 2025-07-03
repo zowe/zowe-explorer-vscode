@@ -617,10 +617,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileExists(uri);
         }
 
-        // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
+        // Extract query parameters
         const urlQuery = new URLSearchParams(uri.query);
         const forceUpload = urlQuery.has("forceUpload");
-        // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
+        const encodingParam = urlQuery.get("encoding") || undefined;
 
         try {
             if (!entry) {
@@ -636,8 +636,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry.metadata = profInfo;
 
                 if (content.byteLength > 0) {
-                    // Update e-tag if write was successful.
-                    const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
+                    // Pass encodingParam and e-tag if write was successful.
+                    const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload, encodingParam);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
                 }
@@ -656,7 +656,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
-                    const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
+                    // Pass encodingParam to uploadEntry
+                    const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload, encodingParam);
                     entry.etag = resp.apiResponse.etag;
                 }
                 entry.data = content;
