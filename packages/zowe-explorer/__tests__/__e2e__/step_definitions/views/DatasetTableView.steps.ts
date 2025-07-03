@@ -234,7 +234,6 @@ Given("a user who has the dataset table view opened with PS datasets", async fun
     }
 
     await expect(hasPsDatasets).toBe(true);
-    await this.tableView.close();
 });
 
 Given("a user who has the dataset table view opened with PDS datasets", async function () {
@@ -256,7 +255,6 @@ Given("a user who has the dataset table view opened with PDS datasets", async fu
     }
 
     await expect(hasPdsDatasets).toBe(true);
-    await this.tableView.close();
 });
 
 Given("a user who has the dataset table view opened with mixed dataset types", async function () {
@@ -351,12 +349,17 @@ When("the user selects one or more sequential datasets", async function () {
             await checkbox.click();
             selectedCount++;
         }
+
+        if (selectedCount === 2) {
+            break;
+        }
     }
 
     await expect(selectedCount).toBeGreaterThan(0);
 });
 
 When("the user selects one or more rows", async function () {
+    await this.tableView.open();
     // Select first two rows
     const rows = await browser.$$(".ag-row[row-index]");
     await expect(rows.length).toBeGreaterThan(0);
@@ -372,15 +375,27 @@ When("the user selects one or more rows", async function () {
 
 When("the user selects a PDS dataset", async function () {
     // Find and select a PDS dataset
+    // Clear any existing selections by clicking "select all" checkbox twice
+    const selectAllCheckbox = await browser.$(".ag-header-select-all");
+    await selectAllCheckbox.waitForClickable();
+
+    // First click to select all
+    await selectAllCheckbox.click();
+    // Second click to deselect all
+    await selectAllCheckbox.click();
+
     const rows = await browser.$$(".ag-row[row-index]");
     let pdsSelected = false;
 
     for (const row of rows) {
+        await row.waitForExist();
         const dsorgCell = await row.$("[col-id='dsorg']");
         const dsorgText = await dsorgCell.getText();
-
+        // div.ag-cell.ag-cell-not-inline-editing.ag-cell-normal-height.ag-column-first > div > div
+        // Check if the row is a PDS dataset
         if (dsorgText.startsWith("PO")) {
-            const checkbox = await row.$(".ag-selection-checkbox");
+            const dsnameCell = await row.$("div[col-id='dsname']");
+            const checkbox = await dsnameCell.$("div");
             await checkbox.click();
             pdsSelected = true;
             break;
@@ -401,32 +416,52 @@ When("the user selects the pinned rows", async function () {
     }
 });
 
+async function getWebviewButtonByTitle(title: string, appearance: string = "primary"): Promise<WebdriverIO.Element | null> {
+    const buttons = await browser.$$(`vscode-button[appearance='${appearance}']`);
+    let btn = null;
+
+    for (const button of buttons) {
+        const buttonText = await button.getText();
+        if (buttonText === title) {
+            btn = button;
+            break;
+        }
+    }
+
+    return btn;
+}
+
 When('clicks the "Open" action button', async function () {
-    const openButton = await browser.$("button[title='Open']");
+    const openButton = await getWebviewButtonByTitle("Open");
+    await expect(openButton).not.toBe(null);
     await openButton.waitForClickable();
     await openButton.click();
 });
 
 When('clicks the "Pin" action button', async function () {
-    const pinButton = await browser.$("button[title='Pin']");
+    const pinButton = await getWebviewButtonByTitle("Pin", "secondary");
+    await expect(pinButton).not.toBe(null);
     await pinButton.waitForClickable();
     await pinButton.click();
 });
 
 When('clicks the "Unpin" action button', async function () {
-    const unpinButton = await browser.$("button[title='Unpin']");
+    const unpinButton = await getWebviewButtonByTitle("Unpin", "secondary");
+    await expect(unpinButton).not.toBe(null);
     await unpinButton.waitForClickable();
     await unpinButton.click();
 });
 
 When('clicks the "Focus" action button', async function () {
-    const focusButton = await browser.$("button[title='Focus']");
+    const focusButton = await getWebviewButtonByTitle("Focus", "secondary");
+    await expect(focusButton).not.toBe(null);
     await focusButton.waitForClickable();
     await focusButton.click();
 });
 
 When('clicks the "Back" action button', async function () {
-    const backButton = await browser.$("button[title='Back']");
+    const backButton = await getWebviewButtonByTitle("Back");
+    await expect(backButton).not.toBe(null);
     await backButton.waitForClickable();
     await backButton.click();
 });
@@ -561,7 +596,7 @@ When("the table loads with hierarchical tree support", async function () {
     await expect(treeColumn.isExisting()).toBe(true);
 });
 
-Then("PDS datasets show expand/collapse indicators", async function () {
+Then("PDS datasets show expand and collapse indicators", async function () {
     // Look for tree expansion indicators
     const expandIcons = await browser.$$(".ag-group-expanded, .ag-group-contracted");
     await expect(expandIcons.length).toBeGreaterThan(0);

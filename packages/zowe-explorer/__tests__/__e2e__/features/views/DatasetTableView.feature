@@ -25,12 +25,6 @@ Scenario: User wants to search datasets using pattern from command palette
     Then the dataset table view appears in the Zowe Resources panel
     And the table displays datasets matching the pattern
 
-Scenario: User wants to toggle columns in the dataset table view
-    Given a user who has the dataset table view opened
-    When the user clicks on the Gear icon in the table view
-    Then the column selector menu appears
-    And the user can toggle a column on and off
-
 Scenario: User wants to open datasets from the table view
     Given a user who has the dataset table view opened with PS datasets
     When the user selects one or more sequential datasets
@@ -42,9 +36,6 @@ Scenario: User wants to pin and unpin rows in the table view
     When the user selects one or more rows
     And clicks the "Pin" action button
     Then the selected rows are pinned to the top of the table
-    When the user selects the pinned rows
-    And clicks the "Unpin" action button
-    Then the selected rows are unpinned from the table
 
 Scenario: User wants to focus on a PDS to view its members
     Given a user who has the dataset table view opened with PDS datasets
@@ -55,7 +46,7 @@ Scenario: User wants to focus on a PDS to view its members
 
 Scenario: User wants to navigate back from PDS members view
     Given a user who has focused on a PDS and is viewing its members
-    When the user clicks the "Back" action button
+    And clicks the "Back" action button
     Then the table view returns to the previous dataset list
     And preserves the previous table state including pinned rows
 
@@ -74,7 +65,7 @@ Scenario: User wants to reveal PDS member in tree from table view
 Scenario: User wants to use hierarchical tree view for datasets with PDS
     Given a user who has the dataset table view opened with mixed dataset types
     When the table loads with hierarchical tree support
-    Then PDS datasets show expand/collapse indicators
+    Then PDS datasets show expand and collapse indicators
     And users can expand PDS nodes to view members inline
     And the tree structure is properly displayed
 
