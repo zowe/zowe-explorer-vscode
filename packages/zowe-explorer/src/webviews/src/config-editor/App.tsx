@@ -573,6 +573,20 @@ export function App() {
       ...pendingChangesAtLevel,
     };
 
+    // Ensure properties key exists with empty object value if not present
+    // Only add properties key at the profile level (when path ends with profile name)
+    console.log("combinedConfig", combinedConfig);
+    console.log("path", path);
+    if (path.length > 0 && path[path.length - 1] !== "type" && path[path.length - 1] !== "properties" && path[path.length - 1] !== "secure") {
+      if (!combinedConfig.hasOwnProperty("properties")) {
+        combinedConfig.properties = {};
+      }
+      if (!combinedConfig.hasOwnProperty("secure")) {
+        combinedConfig.secure = [];
+      }
+    }
+    console.log("combinedConfig", combinedConfig);
+
     // Sort properties according to the specified order
     const sortedEntries = Object.entries(combinedConfig).sort(([keyA], [keyB]) => {
       // Define the order: type, properties, secure, others
@@ -597,9 +611,34 @@ export function App() {
       // --- Fix: Merge pending secure properties when rendering a 'secure' array ---
       let renderValue: any[] = Array.isArray(value) ? value : [];
       if (isArray && key === "secure") {
-        // Find all pending secure properties for this exact secure array path
+        // Find all pending secure properties for this exact secure array path and profile
         const pendingSecureProps: string[] = Object.entries(pendingChanges[configPath] ?? {})
-          .filter(([, entry]) => entry.secure && currentPath.join(".") === pathFromArray(path.concat(["secure"])))
+          .filter(([, entry]) => {
+            if (!entry.secure) return false;
+
+            // Check if this secure property belongs to the current profile context
+            // The path should match the current secure array path
+            const expectedSecurePath = pathFromArray(path.concat(["secure"]));
+            const actualPath = currentPath.join(".");
+
+            // Extract the profile name from the current path
+            // The path structure is ["profiles", "profile_name", "profiles", "nested_profile", ...]
+            let currentProfileName: string;
+            if (path.length >= 2 && path[0] === "profiles") {
+              // Find all profile name segments by filtering out "profiles" and "secure"
+              const profileSegments = [];
+              for (let i = 1; i < path.length; i++) {
+                if (path[i] !== "profiles" && path[i] !== "secure") {
+                  profileSegments.push(path[i]);
+                }
+              }
+              currentProfileName = profileSegments.join(".");
+            } else {
+              currentProfileName = path[1] || "";
+            }
+
+            return actualPath === expectedSecurePath && entry.profile === currentProfileName;
+          })
           .map(([, entry]) => String(entry.path[entry.path.length - 1]));
         const baseArray: any[] = Array.isArray(value) ? value : [];
         if (pendingSecureProps.length > 0) {
