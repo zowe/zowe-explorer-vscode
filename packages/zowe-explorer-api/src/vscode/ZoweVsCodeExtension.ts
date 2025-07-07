@@ -171,8 +171,8 @@ export class ZoweVsCodeExtension {
             tokenType,
             type: imperative.SessConstants.AUTH_TYPE_TOKEN,
         });
-        delete updSession.ISession.user;
-        delete updSession.ISession.password;
+        delete updSession.ISession.user;        // Todo:AuthOrder remove line
+        delete updSession.ISession.password;    // Todo:AuthOrder remove line
         const qpItems: vscode.QuickPickItem[] = [
             { label: "$(account) User and Password", description: "Log in with basic authentication" },
             { label: "$(note) Certificate", description: "Log in with PEM format certificate file" },
@@ -186,20 +186,25 @@ export class ZoweVsCodeExtension {
             if (!creds) {
                 return false;
             }
+            updSession.ISession.user = creds[0];
+            updSession.ISession.password = creds[1];
             updSession.ISession.base64EncodedAuth = imperative.AbstractSession.getBase64Auth(creds[0], creds[1]);
+            // Todo:AuthOrder AuthOrder.newFirstChoicesInSess(updSession.ISession, [AUTH_TYPE_TOKEN, AUTH_TYPE_BEARER])
         } else if (response === qpItems[1]) {
             try {
                 await ZoweVsCodeExtension.promptCertificate({ profile: serviceProfile, session: updSession.ISession, rePrompt: true });
             } catch (err) {
                 return false;
             }
-            delete updSession.ISession.base64EncodedAuth;
+            delete updSession.ISession.base64EncodedAuth;    // Todo:AuthOrder remove line
             updSession.ISession.storeCookie = true;
             updSession.ISession.type = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
+            // Todo:AuthOrder AuthOrder.newFirstChoicesInSess(updSession.ISession, [AUTH_TYPE_CERT_PEM])
         } else {
             return false;
         }
 
+        // Todo:AuthOrder AuthOrder.makingRequestForToken(session.ISession);
         const loginToken = await (opts.zeRegister?.getCommonApi(serviceProfile).login ?? Login.apimlLogin)(updSession);
         const updBaseProfile: imperative.IProfile = {
             tokenType: updSession.ISession.tokenType ?? tokenType,

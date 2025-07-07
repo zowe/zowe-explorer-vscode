@@ -60,6 +60,7 @@ export class AuthHandler {
 
     /**
      * Function that checks whether a profile is using token based authentication
+     * @deprecated Use AuthUtils.sessTypeFromProfile and/or AuthUtils.sessTypeFromSession, which will adhere to authOrder.
      * @param {string[]} profileProps Secure properties for the service profile
      * @param {string[]} baseProfileProps Base profile's secure properties (optional)
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not

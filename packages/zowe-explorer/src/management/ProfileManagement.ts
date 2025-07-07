@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, IZoweTreeNode, ZoweExplorerZosmf, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweLogger } from "../tools/ZoweLogger";
@@ -40,27 +40,14 @@ export class ProfileManagement {
     }
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
-        let usingBasicAuth: boolean;
-        let usingTokenAuth: boolean;
-        if (profile.profile.authOrder) {
-            let givenAuthOrder: imperative.SessConstants.AUTH_TYPE_CHOICES[];
-            const tempSession = node.getSession().ISession;
-            imperative.AuthOrder.addCredsToSession(tempSession, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
-            givenAuthOrder = tempSession.authTypeOrder;
-
-            usingBasicAuth = givenAuthOrder.includes(imperative.SessConstants.AUTH_TYPE_BASIC);
-            usingTokenAuth =
-                givenAuthOrder.includes(imperative.SessConstants.AUTH_TYPE_TOKEN) ||
-                givenAuthOrder.includes(imperative.SessConstants.AUTH_TYPE_BEARER);
-        } else {
-            usingBasicAuth = AuthUtils.isProfileUsingBasicAuth(profile);
-            usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
-        }
+        const sessTypeFromProf = AuthUtils.sessTypeFromProfile(profile);
         let selected: vscode.QuickPickItem;
-        if (usingBasicAuth) {
+        if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BASIC) {
             ZoweLogger.debug(`Profile ${profile.name} is using basic authentication.`);
             selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, node);
-        } else if (usingTokenAuth) {
+        } else if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
+                   sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER
+        ) {
             ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
             selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_TOKEN, node);
         } else {

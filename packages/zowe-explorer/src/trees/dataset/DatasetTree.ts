@@ -1352,7 +1352,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             ZoweLogger.warn(e);
             return;
         }
-        await AuthUtils.updateNodeToolTip(node, profile);
+        AuthUtils.updateNodeToolTip(node, profile);
         // looking for members in pattern
         node.patternMatches = this.extractPatterns(pattern);
         const dsPattern = this.buildFinalPattern(node.patternMatches);
