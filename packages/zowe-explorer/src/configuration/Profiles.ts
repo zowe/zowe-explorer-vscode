@@ -27,6 +27,7 @@ import {
     IRegisterClient,
     Types,
     AuthHandler,
+    ZoweExplorerZosmf,
 } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./SettingsConfig";
 import { Constants } from "./Constants";
@@ -100,15 +101,23 @@ export class Profiles extends ProfilesCache {
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
-        const usingBasicAuth = theProfile.profile.user && theProfile.profile.password;
-        const usingCertAuth = theProfile.profile.certFile && theProfile.profile.certKeyFile;
-        let usingTokenAuth: boolean;
-        try {
-            usingTokenAuth = await AuthUtils.isUsingTokenAuth(theProfile.name);
-        } catch (err) {
-            ZoweLogger.error(err);
-            ZoweExplorerExtender.showZoweConfigError(err.message);
-            return profileStatus;
+        let usingBasicAuth: boolean = false;
+        let usingCertAuth: boolean = false;
+        let usingTokenAuth: boolean = false;
+        
+        const iSessFromProf = AuthUtils.getSessFromProfile(theProfile).ISession;
+        imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(theProfile));
+        switch(iSessFromProf.type) {
+            case imperative.SessConstants.AUTH_TYPE_BASIC:
+                usingBasicAuth = true;
+                break;
+            case imperative.SessConstants.AUTH_TYPE_TOKEN:
+            case imperative.SessConstants.AUTH_TYPE_BEARER:
+                usingTokenAuth = true;
+                break;
+            case imperative.SessConstants.AUTH_TYPE_CERT_PEM:
+                usingCertAuth = true;
+                break;
         }
 
         if (usingTokenAuth && !theProfile.profile.tokenValue) {
@@ -187,6 +196,9 @@ export class Profiles extends ProfilesCache {
 
         // Profile should have enough information to allow validation
         profileStatus = await this.getProfileSetting(theProfile);
+        if (theProfile.profile.authOrder) {
+            profileStatus.status = "active";
+        }
 
         switch (profileStatus.status) {
             case "unverified":
@@ -770,11 +782,6 @@ export class Profiles extends ProfilesCache {
         } else {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
-        // This check will handle service profiles that have username and password
-        if (AuthUtils.isProfileUsingBasicAuth(serviceProfile)) {
-            Gui.showMessage(vscode.l10n.t(`This profile is using basic authentication and does not support token authentication.`));
-            return false;
-        }
 
         const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {
@@ -910,8 +917,9 @@ export class Profiles extends ProfilesCache {
             return;
         }
         await this.checkCurrentProfile(serviceProfile, node);
-        switch (true) {
-            case AuthUtils.isProfileUsingBasicAuth(serviceProfile): {
+
+        switch (AuthUtils.sessTypeFromProfile(serviceProfile)) {
+            case imperative.SessConstants.AUTH_TYPE_BASIC: {
                 let loginOk = false;
                 if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
                     loginOk = await ZoweVsCodeExtension.ssoLogin({
@@ -946,7 +954,8 @@ export class Profiles extends ProfilesCache {
                 }
                 break;
             }
-            case await AuthUtils.isUsingTokenAuth(serviceProfile.name): {
+            case imperative.SessConstants.AUTH_TYPE_TOKEN:
+            case imperative.SessConstants.AUTH_TYPE_BEARER: {
                 try {
                     const profile: string | imperative.IProfileLoaded = node.getProfile();
                     await this.ssoLogout(node);
@@ -1038,12 +1047,6 @@ export class Profiles extends ProfilesCache {
     public async ssoLogout(node: Types.IZoweNodeType): Promise<void> {
         ZoweLogger.trace("Profiles.ssoLogout called.");
         const serviceProfile = node.getProfile();
-        // This check will handle service profiles that have username and password
-        if (AuthUtils.isProfileUsingBasicAuth(serviceProfile)) {
-            Gui.showMessage(vscode.l10n.t(`This profile is using basic authentication and does not support token authentication.`));
-            return;
-        }
-
         try {
             this.clearFilterFromAllTrees(node);
             let logoutOk: boolean;
