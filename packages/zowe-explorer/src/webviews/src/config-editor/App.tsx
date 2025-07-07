@@ -637,7 +637,10 @@ export function App() {
               currentProfileName = path[1] || "";
             }
 
-            return actualPath === expectedSecurePath && entry.profile === currentProfileName;
+            return (
+              actualPath === expectedSecurePath &&
+              (entry.profile === currentProfileName || entry.profile.split(".").slice(0, -2).join(".") === currentProfileName)
+            );
           })
           .map(([, entry]) => String(entry.path[entry.path.length - 1]));
         const baseArray: any[] = Array.isArray(value) ? value : [];
