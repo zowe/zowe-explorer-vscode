@@ -1003,6 +1003,10 @@ describe("DatasetTableView", () => {
                 profile: mockProfile,
                 session: createISession(),
             });
+            const loadNamedProfileMock = jest.fn().mockReturnValue(mockProfile);
+            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile: loadNamedProfileMock,
+            } as any);
 
             jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
             jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest");
@@ -1023,6 +1027,8 @@ describe("DatasetTableView", () => {
 
             expect(result).toBe(mockProfileNode);
             expect(mockTreeProvider.addSingleSession).toHaveBeenCalledWith(mockProfile);
+            expect(loadNamedProfileMock).toHaveBeenCalledWith("sestest");
+            profilesMock.mockRestore();
         });
 
         it("should handle no profiles available", async () => {
