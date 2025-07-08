@@ -3998,6 +3998,10 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             getChildren: jest.fn().mockResolvedValue([mockMemberNode]),
         };
 
+        // mock generateDatasetOptions to return the correct attributes
+        jest.spyOn(require("@zowe/zos-files-for-zowe-sdk").Copy, "generateDatasetOptions")
+            .mockReturnValue({ recfm: "U", lrecl: 0, blksize: 32760 });
+
         const mvsApi = {
             dataSet: jest.fn().mockResolvedValue({
                 apiResponse: { items: [{ recfm: "U", lrecl: 0, blksize: 32760 }] },
