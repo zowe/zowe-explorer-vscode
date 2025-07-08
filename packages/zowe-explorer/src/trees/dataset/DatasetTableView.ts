@@ -1119,7 +1119,7 @@ export class DatasetTableView {
             return undefined;
         }
 
-        const profile = Profiles.getInstance().getProfileByName(resp);
+        const profile = Profiles.getInstance().loadNamedProfile(resp);
         let profileNode = SharedTreeProviders.ds.mSessionNodes.find((s) => s.label.toString() === resp) as IZoweDatasetTreeNode;
         if (!profileNode) {
             await SharedTreeProviders.ds.addSingleSession(profile);

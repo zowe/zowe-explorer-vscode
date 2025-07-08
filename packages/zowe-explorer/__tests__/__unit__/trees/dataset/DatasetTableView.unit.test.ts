@@ -441,7 +441,7 @@ describe("PatternDataSource", () => {
             const parentId = `zowe-ds:/${profile.name}/TEST.PDS`;
             const children = await patternDataSource.loadChildren(parentId);
 
-            expect(mvsApiMock.allMembers).toHaveBeenCalledWith("TEST.PDS");
+            expect(mvsApiMock.allMembers).toHaveBeenCalledWith("TEST.PDS", { attributes: true });
             expect(children).toHaveLength(2);
             expect(children[0].name).toBe("MEM1");
             expect(children[0].isMember).toBe(true);
@@ -922,17 +922,20 @@ describe("DatasetTableView", () => {
 
         it("should handle pattern search successfully", async () => {
             const mockProfile = createIProfile();
+            const loadNamedProfileMock = jest.fn().mockReturnValue(mockProfile);
+            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile: loadNamedProfileMock,
+            } as any);
             jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
             jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest");
             jest.spyOn(Gui, "showInputBox").mockResolvedValue("TEST.*");
-            jest.spyOn(Profiles, "getInstance").mockReturnValue({
-                getProfileByName: jest.fn().mockReturnValue(mockProfile),
-            } as any);
 
             await datasetTableView.handlePatternSearch(mockContext);
 
             expect(mockTableViewProvider.setTableView).toHaveBeenCalled();
             expect(commands.executeCommand).toHaveBeenCalledWith("zowe-resources.focus");
+            expect(loadNamedProfileMock).toHaveBeenCalledWith("sestest");
+            profilesMock.mockRestore();
         });
 
         it("should handle no profiles available", async () => {
@@ -965,18 +968,21 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle profile not found error", async () => {
+            const loadNamedProfileMock = jest.fn().mockReturnValue(undefined);
+            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile: loadNamedProfileMock,
+            } as any);
             jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
             jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest");
             jest.spyOn(Gui, "showInputBox").mockResolvedValue("TEST.*");
-            jest.spyOn(Profiles, "getInstance").mockReturnValue({
-                getProfileByName: jest.fn().mockReturnValue(null),
-            } as any);
             const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
 
             await datasetTableView.handlePatternSearch(mockContext);
 
             expect(errorMessageSpy).toHaveBeenCalledWith("Profile sestest not found.");
             expect(mockTableViewProvider.setTableView).not.toHaveBeenCalled();
+            expect(loadNamedProfileMock).toHaveBeenCalledWith("sestest");
+            profilesMock.mockRestore();
         });
     });
 
@@ -1000,9 +1006,6 @@ describe("DatasetTableView", () => {
 
             jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
             jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest");
-            jest.spyOn(Profiles, "getInstance").mockReturnValue({
-                getProfileByName: jest.fn().mockReturnValue(mockProfile),
-            } as any);
 
             const sessionNodes: ZoweDatasetNode[] = [];
             // Mock the tree provider to return the profile node after adding

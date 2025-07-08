@@ -946,11 +946,12 @@ export namespace Table {
                     payload,
                 };
 
-                const success = (this.panel ?? this.view).webview.postMessage(message);
-                if (!success) {
-                    delete this.pendingRequests[requestId];
-                    reject(new Error("Failed to send message to webview"));
-                }
+                (this.panel ?? this.view).webview.postMessage(message).then((success) => {
+                    if (!success) {
+                        delete this.pendingRequests[requestId];
+                        reject(new Error("Failed to send message to webview"));
+                    }
+                });
             });
         }
 
