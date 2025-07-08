@@ -274,7 +274,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         expect(favChildNodeForProfile).toEqual(node);
     });
     it("Checking function for sequential DS favorite", async () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
@@ -285,6 +285,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             profile: blockMocks.imperativeProfile,
             contextOverride: Constants.DS_FAV_CONTEXT,
         });
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         node.resourceUri = blockMocks.datasetSessionNode.resourceUri?.with({
             path: `/${blockMocks.datasetSessionNode.label as string}/${node.label as string}`,
         });
@@ -3983,6 +3984,51 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         jest.restoreAllMocks();
     });
 
+    it("crossLparMove allocates with correct DCB and writes as binary", async () => {
+        createGlobalMocks();
+        const tree = new DatasetTree();
+
+        const mockMemberNode = {
+            getEncoding: jest.fn().mockResolvedValue({ kind: "binary" }),
+            getLabel: jest.fn().mockReturnValue("MEMBER1"),
+            resourceUri: vscode.Uri.parse("zowe-ds:/profile/TEST.BIN/MEMBER1"),
+        };
+        const mockSourceNode = {
+            getLabel: jest.fn().mockReturnValue("TEST.BIN"),
+            getChildren: jest.fn().mockResolvedValue([mockMemberNode]),
+        };
+
+        const mvsApi = {
+            dataSet: jest.fn().mockResolvedValue({
+                apiResponse: { items: [{ recfm: "U", lrecl: 0, blksize: 32760 }] },
+            }),
+            createDataSet: jest.fn().mockResolvedValue({}), // or reject with errorCode if testing error path
+        };
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mvsApi as any);
+
+        jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        const writeFileSpy = jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue();
+
+        await tree["crossLparMove"](
+            mockSourceNode as any,
+            vscode.Uri.parse("zowe-ds:/profile/TEST.BIN"),
+            vscode.Uri.parse("zowe-ds:/profile2/TEST.BIN")
+        );
+
+        expect(mvsApi.createDataSet).toHaveBeenCalledWith(
+            expect.anything(),
+            "TEST.BIN",
+            expect.objectContaining({ recfm: "U", lrecl: 0, blksize: 32760 })
+        );
+        expect(writeFileSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                query: expect.stringContaining("encoding=binary")
+            }),
+            expect.any(Uint8Array),
+            expect.objectContaining({ create: true, overwrite: true })
+        );
+    });
+
     it("returns early if there are no items in the dataTransfer object", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -4021,51 +4067,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         expect(crossLparMoveMock).not.toHaveBeenCalled();
         expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a partitioned dataset or member into a sequential dataset.");
         draggedNodeMock[Symbol.dispose]();
-    });
-
-    it("crossLparMove allocates with correct DCB and writes as binary", async () => {
-        const tree = new DatasetTree();
-
-        // Mock source node and member
-        const mockMemberNode = {
-            getEncoding: jest.fn().mockResolvedValue({ kind: "binary" }),
-            getLabel: jest.fn().mockReturnValue("MEMBER1"),
-            resourceUri: vscode.Uri.parse("zowe-ds:/profile/TEST.BIN/MEMBER1"),
-        };
-        const mockSourceNode = {
-            getLabel: jest.fn().mockReturnValue("TEST.BIN"),
-            getChildren: jest.fn().mockResolvedValue([mockMemberNode]),
-        };
-
-        const mvsApi = {
-            dataSet: jest.fn().mockResolvedValue({
-                apiResponse: { items: [{ recfm: "U", lrecl: 0, blksize: 32760 }] },
-            }),
-            createDataSet: jest.fn().mockResolvedValue({}),
-        };
-        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mvsApi as any);
-
-        jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
-        const writeFileSpy = jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue();
-
-        await tree["crossLparMove"](
-            mockSourceNode as any,
-            vscode.Uri.parse("zowe-ds:/profile/TEST.BIN"),
-            vscode.Uri.parse("zowe-ds:/profile2/TEST.BIN")
-        );
-
-        expect(mvsApi.createDataSet).toHaveBeenCalledWith(
-            expect.anything(),
-            "TEST.BIN",
-            expect.objectContaining({ recfm: "U", lrecl: 0, blksize: 32760 })
-        );
-        expect(writeFileSpy).toHaveBeenCalledWith(
-            expect.objectContaining({
-                query: expect.stringContaining("encoding=binary")
-            }),
-            expect.any(Uint8Array),
-            expect.objectContaining({ create: true, overwrite: true })
-        );
     });
 
     it("Dragging a pds onto another pds on different LPAR should throw error", async () => {
