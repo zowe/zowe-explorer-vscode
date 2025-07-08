@@ -248,9 +248,9 @@ export class PatternDataSource implements IDataSetSource {
 
     public getTitle(): string {
         return l10n.t({
-            message: `[${this.profile.name}]: {0}`,
-            args: [this.pattern],
-            comment: ["Data Set Search Pattern"],
+            message: "[{0}]: {1}",
+            args: [this.profile.name, this.pattern],
+            comment: ["Profile Name", "Data Set Search Pattern"],
         });
     }
 
