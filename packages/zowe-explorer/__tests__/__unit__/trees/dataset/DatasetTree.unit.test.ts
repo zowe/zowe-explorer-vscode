@@ -3998,7 +3998,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             getChildren: jest.fn().mockResolvedValue([mockMemberNode]),
         };
 
-        // mock generateDatasetOptions to return the correct attributes
+        // Mock generateDatasetOptions to return the correct attributes
         Object.defineProperty(zosfiles, "Copy", {
             value: {
                 generateDatasetOptions: jest.fn().mockReturnValue({ recfm: "U", lrecl: 0, blksize: 32760 })
@@ -4010,11 +4010,12 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             dataSet: jest.fn().mockResolvedValue({
                 apiResponse: { items: [{ recfm: "U", lrecl: 0, blksize: 32760 }] },
             }),
-            createDataSet: jest.fn().mockResolvedValue({}), // or reject with errorCode if testing error path
+            createDataSet: jest.fn().mockResolvedValue({}),
         };
-        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mvsApi as any);
 
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mvsApi as any);
         jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+
         const writeFileSpy = jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue();
 
         await tree["crossLparMove"](
