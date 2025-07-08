@@ -33,7 +33,7 @@ type LayerModifications = {
 };
 
 export type schemaValidation = {
-    propertySchema: Record<string, string[]>;
+    propertySchema: Record<string, Record<string, { type?: string; description?: string }>>;
     validDefaults: string[];
 };
 
@@ -252,7 +252,7 @@ export class ConfigEditor extends WebView {
     }
 
     private generateSchemaValidation(schema: any): schemaValidation {
-        const propertySchema: Record<string, string[]> = {};
+        const propertySchema: Record<string, Record<string, { type?: string; description?: string }>> = {};
         const allOf = schema.properties.profiles.patternProperties["^\\S*$"].allOf;
 
         for (const rule of allOf) {
@@ -260,7 +260,13 @@ export class ConfigEditor extends WebView {
             const properties = rule?.then?.properties?.properties?.properties;
 
             if (profileType && properties) {
-                propertySchema[profileType] = Object.keys(properties);
+                propertySchema[profileType] = Object.keys(properties).reduce((acc, key) => {
+                    acc[key] = {
+                        type: properties[key].type,
+                        description: properties[key].description,
+                    };
+                    return acc;
+                }, {} as Record<string, { type?: string; description?: string }>);
             }
         }
 

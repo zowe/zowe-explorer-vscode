@@ -16,7 +16,7 @@ export function App() {
   const [pendingChanges, setPendingChanges] = useState<{
     [configPath: string]: {
       [key: string]: {
-        value: string | Record<string, any>;
+        value: string | number | boolean | Record<string, any>;
         path: string[];
         profile: string;
         secure?: boolean;
@@ -66,7 +66,7 @@ export function App() {
   const [wizardRootProfile, setWizardRootProfile] = useState("root");
   const [wizardSelectedType, setWizardSelectedType] = useState("");
   const [wizardProfileName, setWizardProfileName] = useState("");
-  const [wizardProperties, setWizardProperties] = useState<{ key: string; value: string; secure?: boolean }[]>([]);
+  const [wizardProperties, setWizardProperties] = useState<{ key: string; value: string | boolean | number; secure?: boolean }[]>([]);
   const [wizardShowKeyDropdown, setWizardShowKeyDropdown] = useState(false);
   const [wizardNewPropertyKey, setWizardNewPropertyKey] = useState("");
   const [wizardNewPropertyValue, setWizardNewPropertyValue] = useState("");
@@ -724,7 +724,7 @@ export function App() {
                 <input
                   className="config-input"
                   type="text"
-                  value={pendingValue}
+                  value={String(pendingValue)}
                   onChange={(e) => handleChange(fullKey, (e.target as HTMLTextAreaElement).value)}
                 />
               ) : (
@@ -966,11 +966,40 @@ export function App() {
   };
 
   const getWizardPropertyOptions = () => {
-    if (!wizardSelectedType || selectedTab === null) return [];
-    const allOptions = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || [];
+    if (selectedTab === null) return [];
+    if (!wizardSelectedType) return [];
+    const allOptions = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || {};
     // Filter out properties that are already added
     const usedKeys = new Set(wizardProperties.map((prop) => prop.key));
-    return allOptions.filter((option) => !usedKeys.has(option));
+    return Object.keys(allOptions).filter((option) => !usedKeys.has(option));
+  };
+
+  const getPropertyType = (propertyKey: string): string | undefined => {
+    if (selectedTab === null) return undefined;
+    if (!wizardSelectedType) return undefined;
+    const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || {};
+    return propertySchema[propertyKey]?.type;
+  };
+
+  const parseValueByType = (value: string, type: string | undefined): string | number | boolean => {
+    if (!type) return value;
+
+    switch (type) {
+      case "boolean":
+        return value.toLowerCase() === "true";
+      case "number":
+        const num = parseFloat(value);
+        return isNaN(num) ? 0 : num;
+      default:
+        return value;
+    }
+  };
+
+  const stringifyValueByType = (value: string | number | boolean): string => {
+    if (typeof value === "boolean") {
+      return value ? "true" : "false";
+    }
+    return String(value);
   };
 
   const isProfileNameTaken = () => {
@@ -1018,11 +1047,14 @@ export function App() {
       return; // Don't add duplicate keys
     }
 
+    const propertyType = getPropertyType(wizardNewPropertyKey.trim());
+    const parsedValue = parseValueByType(wizardNewPropertyValue, propertyType);
+
     setWizardProperties((prev) => [
       ...prev,
       {
         key: wizardNewPropertyKey,
-        value: wizardNewPropertyValue,
+        value: parsedValue,
         secure: wizardNewPropertySecure,
       },
     ]);
@@ -1036,8 +1068,20 @@ export function App() {
     setWizardProperties((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleWizardPropertyValueChange = (index: number, newValue: string) => {
+    setWizardProperties((prev) => {
+      const updated = [...prev];
+      const propertyType = getPropertyType(updated[index].key);
+      updated[index] = {
+        ...updated[index],
+        value: parseValueByType(newValue, propertyType),
+      };
+      return updated;
+    });
+  };
+
   const handleWizardCreateProfile = () => {
-    if (!wizardProfileName.trim() || !wizardSelectedType) return;
+    if (!wizardProfileName.trim()) return;
 
     const configPath = configurations[selectedTab!]!.configPath;
 
@@ -1105,21 +1149,23 @@ export function App() {
       newProfileKey = `${wizardRootProfile}.${wizardProfileName}`;
     }
 
-    // Add type property
-    const typePath = [...profilePath, "type"];
-    const typeKey = typePath.join(".");
+    // Add type property only if selected
+    if (wizardSelectedType) {
+      const typePath = [...profilePath, "type"];
+      const typeKey = typePath.join(".");
 
-    setPendingChanges((prev) => ({
-      ...prev,
-      [configPath]: {
-        ...prev[configPath],
-        [typeKey]: {
-          value: wizardSelectedType,
-          path: typePath.slice(-1),
-          profile: newProfileKey,
+      setPendingChanges((prev) => ({
+        ...prev,
+        [configPath]: {
+          ...prev[configPath],
+          [typeKey]: {
+            value: wizardSelectedType,
+            path: typePath.slice(-1),
+            profile: newProfileKey,
+          },
         },
-      },
-    }));
+      }));
+    }
 
     // Add properties
     wizardProperties.forEach((prop) => {
@@ -1254,7 +1300,8 @@ export function App() {
       resolvedType = valueAtPath;
     }
 
-    return schemaValidations[configPath]?.propertySchema[resolvedType] || [];
+    const propertySchema = schemaValidations[configPath]?.propertySchema[resolvedType] || {};
+    return Object.keys(propertySchema);
   };
 
   const profileModal = newProfileModalOpen && (
@@ -1520,16 +1567,18 @@ export function App() {
             </select>
           </div>
 
-          {/* Properties Section - Always rendered but conditionally visible */}
+          {/* Properties Section - Always rendered and always enabled */}
           <div
             style={{
               marginBottom: "1rem",
-              minHeight: wizardSelectedType ? "auto" : "120px",
-              opacity: wizardSelectedType ? 1 : 0.3,
-              pointerEvents: wizardSelectedType ? "auto" : "none",
+              minHeight: "120px",
+              opacity: 1,
+              pointerEvents: "auto",
             }}
           >
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>{l10n.t("Properties")}:</label>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>
+              {l10n.t("Properties")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}:
+            </label>
 
             {/* Add New Property */}
             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
@@ -1606,14 +1655,44 @@ export function App() {
                   </ul>
                 )}
               </div>
-              <input
-                type="text"
-                value={wizardNewPropertyValue}
-                onChange={(e) => setWizardNewPropertyValue((e.target as HTMLInputElement).value)}
-                className="modal-input"
-                placeholder={l10n.t("Property value")}
-                style={{ flex: 1, height: "32px" }}
-              />
+              {(() => {
+                const propertyType = getPropertyType(wizardNewPropertyKey.trim());
+                if (propertyType === "boolean") {
+                  return (
+                    <select
+                      value={wizardNewPropertyValue}
+                      onChange={(e) => setWizardNewPropertyValue((e.target as HTMLSelectElement).value)}
+                      className="modal-input"
+                      style={{ flex: 1, height: "32px" }}
+                    >
+                      <option value="true">True</option>
+                      <option value="false">False</option>
+                    </select>
+                  );
+                } else if (propertyType === "number") {
+                  return (
+                    <input
+                      type="number"
+                      value={wizardNewPropertyValue}
+                      onChange={(e) => setWizardNewPropertyValue((e.target as HTMLInputElement).value)}
+                      className="modal-input"
+                      placeholder={l10n.t("Property value")}
+                      style={{ flex: 1, height: "32px" }}
+                    />
+                  );
+                } else {
+                  return (
+                    <input
+                      type="text"
+                      value={wizardNewPropertyValue}
+                      onChange={(e) => setWizardNewPropertyValue((e.target as HTMLInputElement).value)}
+                      className="modal-input"
+                      placeholder={l10n.t("Property value")}
+                      style={{ flex: 1, height: "32px" }}
+                    />
+                  );
+                }
+              })()}
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <label style={{ display: "flex", alignItems: "center", fontSize: "0.9em", whiteSpace: "nowrap" }}>
                   <input
@@ -1652,36 +1731,68 @@ export function App() {
               }}
             >
               {wizardProperties.length > 0 ? (
-                wizardProperties.map((prop, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "0.5rem",
-                      padding: "0.25rem 0",
-                    }}
-                  >
-                    <span style={{ fontWeight: "bold", flex: 1 }}>{prop.key}:</span>
-                    <span style={{ flex: 1 }}>{prop.secure ? "********" : prop.value}</span>
-                    {/* {prop.secure && <span style={{ fontSize: "0.8em", color: "#666", marginLeft: "0.5rem" }}>(secure)</span>} */}
-                    <button
-                      onClick={() => handleWizardRemoveProperty(index)}
+                wizardProperties.map((prop, index) => {
+                  const propertyType = getPropertyType(prop.key);
+                  return (
+                    <div
+                      key={index}
                       style={{
-                        padding: "0.25rem 0.5rem",
-                        marginLeft: "0.5rem",
-                        minWidth: "32px",
-                        height: "24px",
                         display: "flex",
+                        justifyContent: "space-between",
                         alignItems: "center",
-                        justifyContent: "center",
+                        marginBottom: "0.5rem",
+                        padding: "0.25rem 0",
                       }}
                     >
-                      <span style={{ marginBottom: "4px" }} className="codicon codicon-trash"></span>
-                    </button>
-                  </div>
-                ))
+                      <span style={{ fontWeight: "bold", flex: 1 }}>{prop.key}:</span>
+                      <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+                        {prop.secure ? (
+                          <span>********</span>
+                        ) : propertyType === "boolean" ? (
+                          <select
+                            value={stringifyValueByType(prop.value)}
+                            onChange={(e) => handleWizardPropertyValueChange(index, (e.target as HTMLSelectElement).value)}
+                            className="modal-input"
+                            style={{ height: "24px", fontSize: "0.9em" }}
+                          >
+                            <option value="true">true</option>
+                            <option value="false">false</option>
+                          </select>
+                        ) : propertyType === "number" ? (
+                          <input
+                            type="number"
+                            value={stringifyValueByType(prop.value)}
+                            onChange={(e) => handleWizardPropertyValueChange(index, (e.target as HTMLInputElement).value)}
+                            className="modal-input"
+                            style={{ height: "24px", fontSize: "0.9em" }}
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            value={stringifyValueByType(prop.value)}
+                            onChange={(e) => handleWizardPropertyValueChange(index, (e.target as HTMLInputElement).value)}
+                            className="modal-input"
+                            style={{ height: "24px", fontSize: "0.9em" }}
+                          />
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleWizardRemoveProperty(index)}
+                        style={{
+                          padding: "0.25rem 0.5rem",
+                          marginLeft: "0.5rem",
+                          minWidth: "32px",
+                          height: "24px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <span style={{ marginBottom: "4px" }} className="codicon codicon-trash"></span>
+                      </button>
+                    </div>
+                  );
+                })
               ) : (
                 <div
                   style={{
@@ -1710,7 +1821,7 @@ export function App() {
         >
           <VSCodeButton
             onClick={handleWizardCreateProfile}
-            disabled={!wizardProfileName.trim() || !wizardSelectedType || isProfileNameTaken()}
+            disabled={!wizardProfileName.trim() || isProfileNameTaken()}
             style={{
               padding: "0.5rem 1rem",
               minWidth: "120px",
