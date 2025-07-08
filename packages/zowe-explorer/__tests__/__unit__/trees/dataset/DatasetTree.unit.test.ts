@@ -4023,6 +4023,51 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         draggedNodeMock[Symbol.dispose]();
     });
 
+    it("crossLparMove allocates with correct DCB and writes as binary", async () => {
+        const tree = new DatasetTree();
+
+        // Mock source node and member
+        const mockMemberNode = {
+            getEncoding: jest.fn().mockResolvedValue({ kind: "binary" }),
+            getLabel: jest.fn().mockReturnValue("MEMBER1"),
+            resourceUri: vscode.Uri.parse("zowe-ds:/profile/TEST.BIN/MEMBER1"),
+        };
+        const mockSourceNode = {
+            getLabel: jest.fn().mockReturnValue("TEST.BIN"),
+            getChildren: jest.fn().mockResolvedValue([mockMemberNode]),
+        };
+
+        const mvsApi = {
+            dataSet: jest.fn().mockResolvedValue({
+                apiResponse: { items: [{ recfm: "U", lrecl: 0, blksize: 32760 }] },
+            }),
+            createDataSet: jest.fn().mockResolvedValue({}),
+        };
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mvsApi as any);
+
+        jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        const writeFileSpy = jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue();
+
+        await tree["crossLparMove"](
+            mockSourceNode as any,
+            vscode.Uri.parse("zowe-ds:/profile/TEST.BIN"),
+            vscode.Uri.parse("zowe-ds:/profile2/TEST.BIN")
+        );
+
+        expect(mvsApi.createDataSet).toHaveBeenCalledWith(
+            expect.anything(),
+            "TEST.BIN",
+            expect.objectContaining({ recfm: "U", lrecl: 0, blksize: 32760 })
+        );
+        expect(writeFileSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                query: expect.stringContaining("encoding=binary")
+            }),
+            expect.any(Uint8Array),
+            expect.objectContaining({ create: true, overwrite: true })
+        );
+    });
+
     it("Dragging a pds onto another pds on different LPAR should throw error", async () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
