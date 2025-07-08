@@ -123,6 +123,7 @@ async function createGlobalMocks() {
         testProfile: createIProfile(),
         testProfileOps: {
             allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+            getProfiles: jest.fn().mockReturnValue([]),
             defaultProfile: { name: "firstName" },
             getDefaultProfile: null,
             getBaseProfile: jest.fn(),
@@ -265,6 +266,7 @@ async function createGlobalMocks() {
             "zowe.revealOutputChannel",
             "zowe.troubleshootError",
             "zowe.placeholderCommand",
+            "zowe.setupRemoteWorkspaceFolders",
         ],
     };
 

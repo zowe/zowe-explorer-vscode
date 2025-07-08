@@ -685,7 +685,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         expect(resultFavProfileNode).toEqual(expectedFavProfileNode);
     });
     it("Checks that the error is handled if profile fails to load", async () => {
-        await createGlobalMocks();
+        const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new JobTree();
         const favProfileNode = new ZoweJobNode({
@@ -697,28 +697,12 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
         const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
-
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [blockMocks.imperativeProfile],
-                    loadNamedProfile: jest.fn(() => {
-                        throw new Error();
-                    }),
-                    getDefaultProfile: jest.fn(() => {
-                        return blockMocks.imperativeProfile;
-                    }),
-                    getBaseProfile: jest.fn(() => {
-                        return blockMocks.imperativeProfile;
-                    }),
-                    getProfileInfo: jest.fn(() => createInstanceOfProfileInfo()),
-                    fetchAllProfiles: jest.fn(() => {
-                        return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
-                    }),
-                };
-            }),
-            configurable: true,
-        });
+        globalMocks.mockProfileInstance.getDefaultProfile.mockReturnValue(blockMocks.imperativeProfile);
+        globalMocks.mockProfileInstance.getBaseProfile.mockReturnValue(blockMocks.imperativeProfile);
+        globalMocks.mockProfileInstance.getProfileInfo.mockReturnValue(createInstanceOfProfileInfo());
+        globalMocks.mockProfileInstance.fetchAllProfiles.mockReturnValue([{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }]);
+        globalMocks.mockProfileInstance.checkCurrentProfile.mockRejectedValue("Failed request");
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         mocked(Gui.errorMessage).mockResolvedValueOnce({ title: "Remove" });
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);

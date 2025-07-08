@@ -710,6 +710,10 @@
         "enablement": "false"
       },
       {
+        "command": "zowe.setupRemoteWorkspaceFolders",
+        "title": "%zowe.setupRemoteWorkspaceFolders%"
+      },
+      {
         "command": "zowe.openRecentMember",
         "title": "%zowe.openRecentMember%",
         "category": "Zowe Explorer"
@@ -1663,6 +1667,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.setupRemoteWorkspaceFolders",
+          "when": "never"
+        },
+        {
           "command": "zowe.openRecentMember",
           "when": "true",
           "group": "navigation"
@@ -2122,11 +2130,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.21.0",
+    "@zowe/core-for-zowe-sdk": "^8.24.1",
     "@zowe/secrets-for-zowe-sdk": "^8.18.3",
-    "@zowe/zos-files-for-zowe-sdk": "^8.21.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.21.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.21.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.24.1",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.24.1",
+    "@zowe/zosmf-for-zowe-sdk": "^8.24.1",
     "@zowe/zowe-explorer-api": "3.3.0-SNAPSHOT",
     "dayjs": "^1.11.10",
     "isbinaryfile": "4.0.4",
