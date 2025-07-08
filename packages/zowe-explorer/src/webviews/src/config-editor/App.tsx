@@ -66,7 +66,7 @@ export function App() {
   const [wizardRootProfile, setWizardRootProfile] = useState("root");
   const [wizardSelectedType, setWizardSelectedType] = useState("");
   const [wizardProfileName, setWizardProfileName] = useState("");
-  const [wizardProperties, setWizardProperties] = useState<{ key: string; value: string | boolean | number; secure?: boolean }[]>([]);
+  const [wizardProperties, setWizardProperties] = useState<{ key: string; value: string | boolean | number | Object; secure?: boolean }[]>([]);
   const [wizardShowKeyDropdown, setWizardShowKeyDropdown] = useState(false);
   const [wizardNewPropertyKey, setWizardNewPropertyKey] = useState("");
   const [wizardNewPropertyValue, setWizardNewPropertyValue] = useState("");
@@ -575,8 +575,7 @@ export function App() {
 
     // Ensure properties key exists with empty object value if not present
     // Only add properties key at the profile level (when path ends with profile name)
-    console.log("combinedConfig", combinedConfig);
-    console.log("path", path);
+
     if (path.length > 0 && path[path.length - 1] !== "type" && path[path.length - 1] !== "properties" && path[path.length - 1] !== "secure") {
       if (!combinedConfig.hasOwnProperty("properties")) {
         combinedConfig.properties = {};
@@ -585,7 +584,6 @@ export function App() {
         combinedConfig.secure = [];
       }
     }
-    console.log("combinedConfig", combinedConfig);
 
     // Sort properties according to the specified order
     const sortedEntries = Object.entries(combinedConfig).sort(([keyA], [keyB]) => {
@@ -995,7 +993,7 @@ export function App() {
     }
   };
 
-  const stringifyValueByType = (value: string | number | boolean): string => {
+  const stringifyValueByType = (value: string | number | boolean | Object): string => {
     if (typeof value === "boolean") {
       return value ? "true" : "false";
     }
@@ -1179,9 +1177,18 @@ export function App() {
     }
 
     // Add properties
+
+    // If no properties/type are set, set an empty properties object on the profile
+    if (wizardProperties.length === 0 && !wizardSelectedType) {
+      wizardProperties.push({ key: "", value: {} });
+    }
     wizardProperties.forEach((prop) => {
       // Always use properties path, but set secure flag if needed
-      const propertyPath = [...profilePath, "properties", prop.key];
+      const propertyPath = [...profilePath, "properties"];
+
+      // Logic for setting empty properties
+      if (prop.key !== "") propertyPath.push(prop.key);
+
       const propertyKey = propertyPath.join(".");
 
       setPendingChanges((prev) => ({
