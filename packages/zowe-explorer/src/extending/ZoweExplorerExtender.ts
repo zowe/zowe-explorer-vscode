@@ -249,9 +249,9 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
      * @param tableId The table identifier to register for
      * @param provider The action provider implementation
      */
-    public registerTableActionProvider(tableId: string, provider: TableActionProvider): void {
-        const registry = TableProviderRegistry.getInstance();
-        registry.registerProvider(tableId, provider);
+    public registerTableActionProvider(tableId: string, provider: TableActionProvider): vscode.Disposable {
+        this.getTableProviderRegistry().registerProvider(tableId, provider);
+        return new vscode.Disposable(() => this.getTableProviderRegistry().unregisterProvider(tableId, provider));
     }
 
     /**

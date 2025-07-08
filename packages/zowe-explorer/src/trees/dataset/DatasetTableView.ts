@@ -15,7 +15,6 @@ import {
     Table,
     TableBuilder,
     TableViewProvider,
-    TableProviderRegistry,
     IDataSetInfo,
     IDataSetSource,
     DataSetTableType,
@@ -32,6 +31,7 @@ import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../../utils/AuthUtils";
 import * as imperative from "@zowe/imperative";
+import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
 
 /**
  * Tree-based data source that uses existing tree nodes
@@ -905,7 +905,7 @@ export class DatasetTableView {
         };
 
         // Get additional actions and context menu items from registered providers
-        const registry = TableProviderRegistry.getInstance();
+        const registry = ZoweExplorerExtender.getInstance().getTableProviderRegistry();
         const tableContext = this.buildTableContext();
 
         const additionalActions = await registry.getActions(tableContext);
