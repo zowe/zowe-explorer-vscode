@@ -1275,6 +1275,84 @@ describe("Table.View", () => {
             await view.getPage();
             expect(requestSpy).toHaveBeenCalledWith("get-page");
         });
+
+        it("should call request for pinRows", async () => {
+            const rows: Table.RowData[] = [{ id: 1 }, { id: 2 }];
+            await view.pinRows(rows);
+            expect(requestSpy).toHaveBeenCalledWith("pin-rows", { rows: { "0": { id: 1 }, "1": { id: 2 } } });
+        });
+
+        it("should call request for unpinRows", async () => {
+            const rows: Table.RowData[] = [{ id: 1 }, { id: 2 }];
+            await view.unpinRows(rows);
+            expect(requestSpy).toHaveBeenCalledWith("unpin-rows", { rows: { "0": { id: 1 }, "1": { id: 2 } } });
+        });
+
+        it("should call request for getPinnedRows", async () => {
+            await view.getPinnedRows();
+            expect(requestSpy).toHaveBeenCalledWith("get-pinned-rows");
+        });
+
+        it("should call request for setPinnedRows", async () => {
+            const rows: Table.RowData[] = [{ id: 1 }, { id: 2 }];
+            await view.setPinnedRows(rows);
+            expect(requestSpy).toHaveBeenCalledWith("set-pinned-rows", { rows });
+        });
+    });
+
+    describe("request", () => {
+        it("should resolve with payload on successful response", async () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, { title: "Request Test" } as any);
+            const postMessageMock = jest.spyOn((view as any).panel.webview, "postMessage").mockResolvedValue(true);
+
+            const requestPromise = view.request("test-command", { data: "test-data" });
+
+            // Need to get the requestId to simulate the response
+            const lastCall = postMessageMock.mock.calls[0][0] as { requestId: string };
+            const requestId = lastCall.requestId;
+
+            await view.onMessageReceived({
+                requestId,
+                payload: { result: "success" },
+            });
+
+            await expect(requestPromise).resolves.toEqual({ result: "success" });
+            expect(postMessageMock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    command: "test-command",
+                    payload: { data: "test-data" },
+                })
+            );
+        });
+
+        it("should reject when postMessage fails", async () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, { title: "Request Test" } as any);
+            jest.spyOn((view as any).panel.webview, "postMessage").mockResolvedValue(false);
+
+            const requestPromise = view.request("test-command");
+
+            await expect(requestPromise).rejects.toThrow("Failed to send message to webview");
+        });
+
+        it("should reject when webview sends an error", async () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, { title: "Request Test" } as any);
+            const postMessageMock = jest.spyOn((view as any).panel.webview, "postMessage").mockResolvedValue(true);
+
+            const requestPromise = view.request("test-command");
+
+            const lastCall = postMessageMock.mock.calls[0][0] as { requestId: string };
+            const requestId = lastCall.requestId;
+
+            await view.onMessageReceived({
+                requestId,
+                error: "Something went wrong in the webview",
+            });
+
+            await expect(requestPromise).rejects.toThrow("Something went wrong in the webview");
+        });
     });
 });
 
