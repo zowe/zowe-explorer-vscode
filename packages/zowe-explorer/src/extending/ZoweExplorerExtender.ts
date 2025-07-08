@@ -241,7 +241,7 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         await this.jobsProvider?.refreshFavorites();
 
         // Release deferred promise for extender profile type
-        ProfilesUtils.resolveTypePromise(profileType);
+        await ProfilesUtils.resolveTypePromise(profileType);
     }
 
     /**
