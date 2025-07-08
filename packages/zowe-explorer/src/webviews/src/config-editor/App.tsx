@@ -1080,6 +1080,17 @@ export function App() {
     });
   };
 
+  const handleWizardPropertySecureToggle = (index: number) => {
+    setWizardProperties((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        secure: !updated[index].secure,
+      };
+      return updated;
+    });
+  };
+
   const handleWizardCreateProfile = () => {
     if (!wizardProfileName.trim()) return;
 
@@ -1600,6 +1611,7 @@ export function App() {
                       wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim())
                         ? "#ff6b6b"
                         : undefined,
+                    marginBottom: "0"!,
                   }}
                 />
                 {wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) && (
@@ -1665,8 +1677,8 @@ export function App() {
                       className="modal-input"
                       style={{ flex: 1, height: "32px" }}
                     >
-                      <option value="true">True</option>
-                      <option value="false">False</option>
+                      <option value="true">true</option>
+                      <option value="false">false</option>
                     </select>
                   );
                 } else if (propertyType === "number") {
@@ -1693,16 +1705,27 @@ export function App() {
                   );
                 }
               })()}
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <label style={{ display: "flex", alignItems: "center", fontSize: "0.9em", whiteSpace: "nowrap" }}>
-                  <input
-                    type="checkbox"
-                    checked={wizardNewPropertySecure}
-                    onChange={(e) => setWizardNewPropertySecure((e.target as HTMLInputElement).checked)}
-                    style={{ marginRight: "0.25rem" }}
-                  />
-                  Secure
-                </label>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <button
+                  onClick={() => setWizardNewPropertySecure(!wizardNewPropertySecure)}
+                  style={{
+                    padding: "0.25rem",
+                    height: "32px",
+                    width: "32px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: wizardNewPropertySecure ? "var(--vscode-button-background)" : "var(--vscode-button-secondaryBackground)",
+                    color: wizardNewPropertySecure ? "var(--vscode-button-foreground)" : "var(--vscode-button-secondaryForeground)",
+                    border: "1px solid var(--vscode-button-border)",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  title={wizardNewPropertySecure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
+                >
+                  <span style={{ marginBottom: "4px" }} className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}></span>
+                </button>
                 <button
                   onClick={handleWizardAddProperty}
                   disabled={
@@ -1724,7 +1747,7 @@ export function App() {
             {/* Properties List */}
             <div
               style={{
-                padding: "0.5rem",
+                padding: "0.25rem",
                 minHeight: "60px",
                 maxHeight: "200px",
                 overflow: "auto",
@@ -1740,41 +1763,79 @@ export function App() {
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        marginBottom: "0.5rem",
-                        padding: "0.25rem 0",
+                        minHeight: "32px",
+                        padding: "4px 0",
                       }}
                     >
-                      <span style={{ fontWeight: "bold", flex: 1 }}>{prop.key}:</span>
-                      <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
-                        {prop.secure ? (
-                          <span>********</span>
-                        ) : propertyType === "boolean" ? (
-                          <select
-                            value={stringifyValueByType(prop.value)}
-                            onChange={(e) => handleWizardPropertyValueChange(index, (e.target as HTMLSelectElement).value)}
-                            className="modal-input"
-                            style={{ height: "24px", fontSize: "0.9em" }}
-                          >
-                            <option value="true">true</option>
-                            <option value="false">false</option>
-                          </select>
-                        ) : propertyType === "number" ? (
-                          <input
-                            type="number"
-                            value={stringifyValueByType(prop.value)}
-                            onChange={(e) => handleWizardPropertyValueChange(index, (e.target as HTMLInputElement).value)}
-                            className="modal-input"
-                            style={{ height: "24px", fontSize: "0.9em" }}
-                          />
-                        ) : (
-                          <input
-                            type="text"
-                            value={stringifyValueByType(prop.value)}
-                            onChange={(e) => handleWizardPropertyValueChange(index, (e.target as HTMLInputElement).value)}
-                            className="modal-input"
-                            style={{ height: "24px", fontSize: "0.9em" }}
-                          />
-                        )}
+                      <span style={{ fontWeight: "bold", flex: 1, display: "flex", alignItems: "center" }}>{prop.key}:</span>
+                      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+                          {prop.secure ? (
+                            <span style={{ display: "flex", alignItems: "center", height: "28px" }}>********</span>
+                          ) : propertyType === "boolean" ? (
+                            <select
+                              value={stringifyValueByType(prop.value)}
+                              onChange={(e) => handleWizardPropertyValueChange(index, (e.target as HTMLSelectElement).value)}
+                              className="modal-input"
+                              style={{
+                                height: "28px",
+                                fontSize: "0.9em",
+                                padding: "2px 6px",
+                                marginBottom: "0",
+                              }}
+                            >
+                              <option value="true">true</option>
+                              <option value="false">false</option>
+                            </select>
+                          ) : propertyType === "number" ? (
+                            <input
+                              type="number"
+                              value={stringifyValueByType(prop.value)}
+                              onChange={(e) => handleWizardPropertyValueChange(index, (e.target as HTMLInputElement).value)}
+                              className="modal-input"
+                              style={{
+                                height: "28px",
+                                fontSize: "0.9em",
+                                padding: "2px 6px",
+                                marginBottom: "0",
+                              }}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              value={stringifyValueByType(prop.value)}
+                              onChange={(e) => handleWizardPropertyValueChange(index, (e.target as HTMLInputElement).value)}
+                              className="modal-input"
+                              style={{
+                                height: "28px",
+                                fontSize: "0.9em",
+                                padding: "2px 6px",
+                                marginBottom: "0",
+                              }}
+                            />
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleWizardPropertySecureToggle(index)}
+                          style={{
+                            padding: "0.25rem",
+                            height: "28px",
+                            width: "28px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: prop.secure ? "var(--vscode-button-background)" : "var(--vscode-button-secondaryBackground)",
+                            color: prop.secure ? "var(--vscode-button-foreground)" : "var(--vscode-button-secondaryForeground)",
+                            border: "1px solid var(--vscode-button-border)",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                            marginLeft: "0.5rem",
+                          }}
+                          title={prop.secure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
+                        >
+                          <span className={`codicon ${prop.secure ? "codicon-lock" : "codicon-unlock"}`} style={{ marginTop: "0" }}></span>
+                        </button>
                       </div>
                       <button
                         onClick={() => handleWizardRemoveProperty(index)}
@@ -1782,13 +1843,13 @@ export function App() {
                           padding: "0.25rem 0.5rem",
                           marginLeft: "0.5rem",
                           minWidth: "32px",
-                          height: "24px",
+                          height: "28px",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                         }}
                       >
-                        <span style={{ marginBottom: "4px" }} className="codicon codicon-trash"></span>
+                        <span className="codicon codicon-trash" style={{ marginTop: "0" }}></span>
                       </button>
                     </div>
                   );
