@@ -922,6 +922,360 @@ describe("Table.View", () => {
             });
         });
     });
+
+    describe("dynamic titles", () => {
+        it("handles get-dynamic-title-for-action with function title", async () => {
+            const globalMocks = createGlobalMocks();
+            const titleFn = jest.fn().mockReturnValue("Dynamic Title");
+            const action = {
+                title: titleFn,
+                command: "dynamic-title-action",
+                callback: { typ: "single-row", fn: jest.fn() },
+            } as Table.Action;
+
+            const data = {
+                title: "Table w/ dynamic titles",
+                actions: { all: [action] },
+                contextOpts: { all: [] },
+                rows: [{ name: "test", value: 123 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data as any);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "get-dynamic-title-for-action",
+                requestId: "dynamic-title-test-123",
+                payload: {
+                    actionId: "dynamic-title-action",
+                    row: { name: "test", value: 123 },
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(titleFn).toHaveBeenCalledWith({ name: "test", value: 123 });
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "dynamic-title-for-action-result",
+                requestId: "dynamic-title-test-123",
+                payload: "Dynamic Title",
+            });
+        });
+
+        it("handles get-dynamic-title-for-action with async function title", async () => {
+            const globalMocks = createGlobalMocks();
+            const titleFn = jest.fn().mockResolvedValue("Async Dynamic Title");
+            const action = {
+                title: titleFn,
+                command: "async-dynamic-title-action",
+                callback: { typ: "single-row", fn: jest.fn() },
+            } as Table.Action;
+
+            const data = {
+                title: "Table w/ async dynamic titles",
+                actions: { all: [action] },
+                contextOpts: { all: [] },
+                rows: [{ name: "test", value: 456 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data as any);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "get-dynamic-title-for-action",
+                requestId: "async-dynamic-title-test-456",
+                payload: {
+                    actionId: "async-dynamic-title-action",
+                    row: { name: "test", value: 456 },
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(titleFn).toHaveBeenCalledWith({ name: "test", value: 456 });
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "dynamic-title-for-action-result",
+                requestId: "async-dynamic-title-test-456",
+                payload: "Async Dynamic Title",
+            });
+        });
+
+        it("handles get-dynamic-title-for-action with string title", async () => {
+            const globalMocks = createGlobalMocks();
+            const action = {
+                title: "Static Title",
+                command: "static-title-action",
+                callback: { typ: "single-row", fn: jest.fn() },
+            } as Table.Action;
+
+            const data = {
+                title: "Table w/ static titles",
+                actions: { all: [action] },
+                contextOpts: { all: [] },
+                rows: [{ name: "test", value: 789 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data as any);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "get-dynamic-title-for-action",
+                requestId: "static-title-test-789",
+                payload: {
+                    actionId: "static-title-action",
+                    row: { name: "test", value: 789 },
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "dynamic-title-for-action-result",
+                requestId: "static-title-test-789",
+                payload: "Static Title",
+            });
+        });
+
+        it("handles get-dynamic-title-for-action when title function throws error", async () => {
+            const globalMocks = createGlobalMocks();
+            const titleFn = jest.fn().mockImplementation(() => {
+                throw new Error("Test title error");
+            });
+            const action = {
+                title: titleFn,
+                command: "error-title-action",
+                callback: { typ: "single-row", fn: jest.fn() },
+            } as Table.Action;
+
+            const data = {
+                title: "Table w/ error titles",
+                actions: { all: [action] },
+                contextOpts: { all: [] },
+                rows: [{ name: "test", value: 123 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data as any);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "get-dynamic-title-for-action",
+                requestId: "error-title-test",
+                payload: {
+                    actionId: "error-title-action",
+                    row: { name: "test", value: 123 },
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "dynamic-title-for-action-result",
+                requestId: "error-title-test",
+                payload: "error-title-action", // falls back to command
+            });
+        });
+    });
+
+    describe("hide conditions", () => {
+        it("handles check-hide-condition-for-action with function returning true", async () => {
+            const globalMocks = createGlobalMocks();
+            const hideConditionFn = jest.fn().mockReturnValue(true);
+            const action = {
+                title: "Hide Me",
+                command: "hide-action",
+                hideCondition: hideConditionFn,
+                callback: { typ: "single-row", fn: jest.fn() },
+            } as Table.Action;
+
+            const data = {
+                title: "Table w/ hide conditions",
+                actions: { all: [action] },
+                contextOpts: { all: [] },
+                rows: [{ name: "test", value: 123 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data as any);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "check-hide-condition-for-action",
+                requestId: "hide-test-123",
+                payload: {
+                    actionId: "hide-action",
+                    row: { name: "test", value: 123 },
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(hideConditionFn).toHaveBeenCalledWith({ name: "test", value: 123 });
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "hide-condition-for-action-result",
+                requestId: "hide-test-123",
+                payload: true,
+            });
+        });
+
+        it("handles check-hide-condition-for-action with async function", async () => {
+            const globalMocks = createGlobalMocks();
+            const hideConditionFn = jest.fn().mockResolvedValue(true);
+            const action = {
+                title: "Hide Me Async",
+                command: "hide-action-async",
+                hideCondition: hideConditionFn,
+                callback: { typ: "single-row", fn: jest.fn() },
+            } as Table.Action;
+
+            const data = {
+                title: "Table w/ hide conditions",
+                actions: { all: [action] },
+                contextOpts: { all: [] },
+                rows: [{ name: "test", value: 123 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data as any);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "check-hide-condition-for-action",
+                requestId: "hide-test-async-123",
+                payload: {
+                    actionId: "hide-action-async",
+                    row: { name: "test", value: 123 },
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(hideConditionFn).toHaveBeenCalledWith({ name: "test", value: 123 });
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "hide-condition-for-action-result",
+                requestId: "hide-test-async-123",
+                payload: true,
+            });
+        });
+
+        it("handles check-hide-condition-for-action with no hideCondition", async () => {
+            const globalMocks = createGlobalMocks();
+            const action = {
+                title: "Don't Hide Me",
+                command: "no-hide-action",
+                callback: { typ: "single-row", fn: jest.fn() },
+            } as Table.Action;
+
+            const data = {
+                title: "Table w/o hide conditions",
+                actions: { all: [action] },
+                contextOpts: { all: [] },
+                rows: [{ name: "test", value: 456 }],
+            };
+            const view = new Table.View(globalMocks.context as any, false, data as any);
+
+            const mockPostMessage = jest.fn();
+            (view as any).panel = { webview: { postMessage: mockPostMessage } };
+
+            const message = {
+                command: "check-hide-condition-for-action",
+                requestId: "no-hide-test-456",
+                payload: {
+                    actionId: "no-hide-action",
+                    row: { name: "test", value: 456 },
+                },
+            };
+
+            await view.onMessageReceived(message);
+
+            expect(mockPostMessage).toHaveBeenCalledWith({
+                command: "hide-condition-for-action-result",
+                requestId: "no-hide-test-456",
+                payload: false, // defaults to false
+            });
+        });
+    });
+
+    describe("waitForAPI", () => {
+        it("should resolve when api-ready is received", async () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, { title: "API Ready Test" } as any);
+
+            let resolved = false;
+            const promise = view.waitForAPI().then(() => {
+                resolved = true;
+            });
+
+            expect(resolved).toBe(false);
+
+            await view.onMessageReceived({ command: "api-ready" });
+
+            await promise;
+            expect(resolved).toBe(true);
+        });
+
+        it("should resolve immediately if api is already ready", async () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, { title: "API Already Ready Test" } as any);
+
+            await view.onMessageReceived({ command: "api-ready" });
+
+            let resolved = false;
+            await view.waitForAPI().then(() => {
+                resolved = true;
+            });
+            expect(resolved).toBe(true);
+        });
+    });
+
+    describe("AG Grid API methods", () => {
+        let view: Table.View;
+        let requestSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+            const globalMocks = createGlobalMocks();
+            view = new Table.View(globalMocks.context as any, { title: "API Test" } as any);
+            requestSpy = jest.spyOn(view, "request").mockResolvedValue(true);
+        });
+
+        afterEach(() => {
+            requestSpy.mockRestore();
+        });
+
+        it("should call request for getPageSize", async () => {
+            await view.getPageSize();
+            expect(requestSpy).toHaveBeenCalledWith("get-page-size");
+        });
+
+        it("should call request for setPageSize", async () => {
+            await view.setPageSize(50);
+            expect(requestSpy).toHaveBeenCalledWith("set-page-size", 50);
+        });
+
+        it("should call request for getGridState", async () => {
+            await view.getGridState();
+            expect(requestSpy).toHaveBeenCalledWith("get-grid-state");
+        });
+
+        it("should call request for setGridState", async () => {
+            const state = { colId: "test", sort: "asc" };
+            await view.setGridState(state);
+            expect(requestSpy).toHaveBeenCalledWith("set-grid-state", state);
+        });
+
+        it("should call request for setPage", async () => {
+            await view.setPage(2);
+            expect(requestSpy).toHaveBeenCalledWith("set-page", 2);
+        });
+
+        it("should call request for getPage", async () => {
+            await view.getPage();
+            expect(requestSpy).toHaveBeenCalledWith("get-page");
+        });
+    });
 });
 
 // Table.Instance unit tests
