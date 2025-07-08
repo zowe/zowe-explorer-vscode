@@ -63,9 +63,9 @@ export class TreeDataSource implements IDataSetSource {
         }
         if (this.treeNode.pattern) {
             return l10n.t({
-                message: `[${this.treeNode.getProfileName()}]: {0}`,
-                args: [this.treeNode.pattern],
-                comment: ["Data Set Search Pattern"],
+                message: `[{0}]: {1}`,
+                args: [this.treeNode.getProfileName(), this.treeNode.pattern],
+                comment: ["Profile Name", "Data Set Search Pattern"],
             });
         }
 
