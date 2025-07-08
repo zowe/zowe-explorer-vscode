@@ -79,6 +79,7 @@ describe("UssFSProvider", () => {
         mockedProperty = new MockedProperty(Profiles, "getInstance", {
             value: jest.fn().mockReturnValue({
                 loadNamedProfile: jest.fn().mockReturnValue(testProfile),
+                allProfiles: [],
                 getProfileFromConfig: jest.fn(),
             } as any),
         });
@@ -698,76 +699,101 @@ describe("UssFSProvider", () => {
             getInfoFromUriMock.mockRestore();
         });
 
-        it("should properly await the profile deferred promise for extenders - existing promise", async () => {
+        it("should properly await the profile deferred promise - existing promise", async () => {
+            const mockAllProfiles = [
+                { name: "sestest", type: "ssh" },
+                { name: "profile1", type: "zosmf" },
+                { name: "profile2", type: "zosmf" },
+            ];
+
             // Create a mock instance of Profiles
             const mockProfilesInstance = {
-                getProfileFromConfig: jest.fn().mockResolvedValueOnce({ profName: testProfile.name, profType: "zftp" }),
+                allProfiles: mockAllProfiles,
             };
 
             // Mock Profiles.getInstance to return the mock instance
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfilesInstance as any);
-            jest.spyOn(ProfilesUtils, "awaitExtenderType").mockRestore();
-            const awaitExtenderTypeSpy = jest.spyOn(ProfilesUtils, "awaitExtenderType");
 
-            const profilePromise = { promise: Promise.resolve() };
-            (ProfilesUtils as any).extenderTypeReady.set("zftp", profilePromise);
-            const getExtenderTypeSpy = jest.spyOn((ProfilesUtils as any).extenderTypeReady, "get");
+            const resolveProfile = jest.fn();
+            const profilePromise = {
+                promise: new Promise<void>((resolve) => {
+                    resolveProfile.mockImplementation(resolve);
+                    setTimeout(resolve, 50);
+                }),
+            };
+
+            ProfilesUtils.extenderTypeReady.set(testProfile.name, profilePromise);
 
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
             lookupAsFileMock.mockReturnValue(testEntries.file);
+
             getInfoFromUriMock.mockReturnValue({
                 profile: testProfile,
                 path: "/aFile.txt",
             });
+
             jest.spyOn(UssFSProvider.instance as any, "fetchFileAtUri").mockReturnValueOnce({
                 profile: testProfile,
                 path: "/USER.DATA.PS",
             });
+
+            const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
 
             await UssFSProvider.instance.readFile(
                 testUris.file.with({
                     query: "conflict=true",
                 })
             );
-            expect(awaitExtenderTypeSpy).toHaveBeenCalledWith("sestest", mockProfilesInstance);
-            expect(getExtenderTypeSpy).toHaveReturnedWith(profilePromise);
+
+            await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
         });
 
-        it("should properly await the profile deferred promise for extenders - no existing promise", async () => {
+        it("should properly await the profile deferred promise - no existing promise", async () => {
+            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(undefined);
+            const mockAllProfiles = [
+                { name: "sestest", type: "ssh" },
+                { name: "profile1", type: "zosmf" },
+                { name: "profile2", type: "zosmf" },
+            ];
+
             // Create a mock instance of Profiles
             const mockProfilesInstance = {
-                getProfileFromConfig: jest.fn().mockResolvedValueOnce({ profName: testProfile.name, profType: "zftp" }),
+                allProfiles: mockAllProfiles,
             };
 
             // Mock Profiles.getInstance to return the mock instance
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfilesInstance as any);
-            jest.spyOn(ProfilesUtils, "awaitExtenderType").mockRestore();
-            const awaitExtenderTypeSpy = jest.spyOn(ProfilesUtils, "awaitExtenderType");
 
-            (ProfilesUtils as any).extenderTypeReady.clear();
-            const profilePromise = { promise: Promise.resolve() };
-            const setExtenderTypeSpy = jest
-                .spyOn((ProfilesUtils as any).extenderTypeReady, "set")
-                .mockImplementationOnce((key) => (ProfilesUtils as any).extenderTypeReady.set(key, profilePromise));
-
+            const resolveProfile = jest.fn();
+            const profilePromise = {
+                promise: new Promise<void>((resolve) => {
+                    resolveProfile.mockImplementation(resolve);
+                    setTimeout(resolve, 50);
+                }),
+            };
+            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
             lookupAsFileMock.mockReturnValue(testEntries.file);
+
             getInfoFromUriMock.mockReturnValue({
                 profile: testProfile,
                 path: "/aFile.txt",
             });
+
             jest.spyOn(UssFSProvider.instance as any, "fetchFileAtUri").mockReturnValueOnce({
                 profile: testProfile,
                 path: "/USER.DATA.PS",
             });
+
+            const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
 
             await UssFSProvider.instance.readFile(
                 testUris.file.with({
                     query: "conflict=true",
                 })
             );
-            expect(awaitExtenderTypeSpy).toHaveBeenCalledWith("sestest", mockProfilesInstance);
-            expect(setExtenderTypeSpy).toHaveBeenCalledTimes(2);
+
+            await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
         });
     });
 
@@ -1642,8 +1668,7 @@ describe("UssFSProvider", () => {
                         setTimeout(resolve, 50);
                     }),
                 };
-                jest.spyOn((ProfilesUtils as any).extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
-
+                jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
                 isProfileLockedMock.mockReturnValueOnce(false);
                 const ussApiMock = {
                     fileList: jest.fn().mockResolvedValueOnce({

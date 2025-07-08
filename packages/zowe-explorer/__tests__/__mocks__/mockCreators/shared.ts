@@ -371,6 +371,7 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         getPropsForProfile: jest.fn(),
         showProfileInactiveMsg: jest.fn(),
         getConfigLayers: jest.fn(),
+        resolveTypePromise: jest.fn(() => Promise.resolve()),
     } as any;
 }
 
