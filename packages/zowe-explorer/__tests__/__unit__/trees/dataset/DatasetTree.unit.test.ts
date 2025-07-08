@@ -3999,7 +3999,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         };
 
         // mock generateDatasetOptions to return the correct attributes
-        jest.spyOn(require("@zowe/zos-files-for-zowe-sdk").Copy, "generateDatasetOptions")
+        jest.spyOn(zosfiles.Copy as any, "generateDatasetOptions")
             .mockReturnValue({ recfm: "U", lrecl: 0, blksize: 32760 });
 
         const mvsApi = {
