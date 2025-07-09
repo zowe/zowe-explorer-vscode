@@ -141,7 +141,7 @@ export class TreeDataSource implements IDataSetSource {
 /**
  * Helper function to build member information from API response
  */
-function buildMemberInfo(member: any, parentUri: string, profileName?: string): IDataSetInfo {
+function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
     // Parse c4date and m4date with mtime if available
     let createdDate: Date | undefined;
     let modifiedDate: Date | undefined;
@@ -278,7 +278,7 @@ export class PatternDataSource implements IDataSetSource {
             const members: IDataSetInfo[] = [];
 
             for (const member of membersResp.apiResponse?.items || []) {
-                members.push(buildMemberInfo(member, parentId, this.profile.name));
+                members.push(buildMemberInfo(member, parentId));
             }
 
             return members;
