@@ -1991,13 +1991,13 @@
         },
         "zowe.jobs.paginate.enabled": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "%zowe.jobs.paginate.enabled%",
           "scope": "window"
         },
         "zowe.jobs.paginate.recordsToFetch": {
           "type": "integer",
-          "default": 100,
+          "default": 1000,
           "description": "%zowe.jobs.paginate.recordsToFetch%",
           "scope": "window",
           "minimum": 2
