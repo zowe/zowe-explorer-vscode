@@ -52,7 +52,7 @@ export async function getActionTitle(action: Table.Action, context: ActionEvalua
             });
             return dynamicTitle;
         } catch (error) {
-            console.warn(`Failed to get dynamic title for action ${action.command}:`, error);
+            console.warn("Failed to get dynamic title for action %s:", action.command, error);
             // Fallback to command name if dynamic title fails
             return action.command;
         }
