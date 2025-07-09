@@ -291,5 +291,27 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
             apiMock.mockRestore();
             workspaceRootMock.mockRestore();
         });
+
+        it("should return profiles cache from API when getZoweExplorerApi is available", () => {
+            const mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
+            const mockExplorerExtenderApi = {
+                getProfilesCache: jest.fn().mockReturnValue(mockProfilesCache),
+            };
+            const mockApiObject = {
+                getExplorerExtenderApi: jest.fn().mockReturnValue(mockExplorerExtenderApi),
+            };
+
+            const apiMock = jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue(mockApiObject as any);
+
+            // Grab cache to trigger logic for getter
+            const result = ZoweVsCodeExtension.profilesCache;
+
+            expect(apiMock).toHaveBeenCalled();
+            expect(mockApiObject.getExplorerExtenderApi).toHaveBeenCalled();
+            expect(mockExplorerExtenderApi.getProfilesCache).toHaveBeenCalled();
+            expect(result).toBe(mockProfilesCache);
+
+            apiMock.mockRestore();
+        });
     });
 });
