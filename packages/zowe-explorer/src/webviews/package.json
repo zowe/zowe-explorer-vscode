@@ -25,7 +25,7 @@
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "ag-grid-community": "^32.0.2",
     "ag-grid-react": "^32.0.2",
-    "dompurify": "^3.2.5",
+    "dompurify": "^3.2.6",
     "es-toolkit": "^1.16.0",
     "marked": "^15.0.11",
     "preact": "^10.16.0",
