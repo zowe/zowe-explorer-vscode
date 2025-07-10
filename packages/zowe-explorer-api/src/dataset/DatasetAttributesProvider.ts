@@ -14,8 +14,14 @@ import { Logger, IProfileLoaded } from "@zowe/imperative";
 export type AttributeInfo = {
     title: string;
     reference?: string;
-    keys: Map<string, { displayName?: string; description?: string; value: boolean | number | string }>;
+    keys: Map<string, AttributeEntryInfo>;
 }[];
+
+export type AttributeEntryInfo = {
+    displayName?: string;
+    description?: string;
+    value: boolean | number | string;
+};
 
 export type DsInfo = {
     profile: IProfileLoaded;
@@ -23,7 +29,7 @@ export type DsInfo = {
 };
 
 export interface IAttributesProvider {
-    fetchAttributes(context: DsInfo): AttributeInfo | Promise<AttributeInfo>;
+    fetchAttributes(context: DsInfo): AttributeInfo | PromiseLike<AttributeInfo>;
 }
 
 export class DataSetAttributesProvider {
@@ -42,7 +48,7 @@ export class DataSetAttributesProvider {
         return DataSetAttributesProvider.instance;
     }
 
-    public register(attributeExtender: any): void {
+    public register(attributeExtender: IAttributesProvider): void {
         this.providers.push(attributeExtender);
     }
 
@@ -58,8 +64,8 @@ export class DataSetAttributesProvider {
         }
 
         attributes.sort((a, b) => {
-            const titleA = a.title.toLowerCase() || "";
-            const titleB = b.title.toLowerCase() || "";
+            const titleA = a.title.toLowerCase();
+            const titleB = b.title.toLowerCase();
             return titleA.localeCompare(titleB);
         });
 

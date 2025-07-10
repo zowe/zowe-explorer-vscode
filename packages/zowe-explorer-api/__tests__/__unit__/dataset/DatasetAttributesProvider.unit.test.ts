@@ -9,7 +9,7 @@
  *
  */
 
-import { DataSetAttributesProvider } from "../../../src";
+import { AttributeEntryInfo, DataSetAttributesProvider } from "../../../src";
 import { ExtenderAttr, FailExtenderAttr } from "../../../__mocks__/mockCreators/shared";
 import { IProfileLoaded, Logger } from "@zowe/imperative";
 
@@ -26,7 +26,7 @@ describe("DatasetAttributeProvider", () => {
         {
             title: "Dummy Extender",
             reference: "https://github.com/zowe/zowe-explorer-vscode",
-            keys: new Map<string, { displayName?: string; description?: string; value: any }>([
+            keys: new Map<string, AttributeEntryInfo>([
                 ["DescriptionAndDisplayName", { displayName: "DisplayName", description: "Description", value: "Value1" }],
                 ["NoDescNoDisplayName", { value: "Value2" }],
                 ["descNoDN", { description: "Description - No Display Name", value: "Value3" }],
