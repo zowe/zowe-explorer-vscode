@@ -41,14 +41,14 @@ export function App() {
   }, [localizationState]);
 
   return (
-    <div>
+    <div style={{ minWidth: "25em" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1>{l10n.t("Log in to Authentication Service")}</h1>
       </div>
       <VSCodeDivider />
       <div style={{ marginTop: "1em" }}>
-        <div style={{ maxWidth: "fit-content" }}>
-          <VSCodeDataGrid style={{ marginTop: "1em" }} gridTemplateColumns="15vw 45vw 30vw">
+        <div style={{ maxWidth: "100%" }}>
+          <VSCodeDataGrid style={{ marginTop: "1em" }} gridTemplateColumns="7em 1fr auto">
             <h3>{l10n.t("Select a certificate and certificate key in PEM format:")}</h3>
             <VSCodeDataGridRow rowType="header">
               <VSCodeDataGridCell cellType="columnheader" gridColumn="1"></VSCodeDataGridCell>
