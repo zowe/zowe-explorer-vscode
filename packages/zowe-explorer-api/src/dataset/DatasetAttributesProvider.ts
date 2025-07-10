@@ -10,7 +10,7 @@
  */
 
 import { Logger, IProfileLoaded } from "@zowe/imperative";
-import { Gui } from "..";
+import { Gui } from "../globals/Gui";
 
 export type AttributeInfo = {
     title: string;
