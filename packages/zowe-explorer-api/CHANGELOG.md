@@ -6,11 +6,12 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Resolved an issue where secure credentials were inadvertently converted to non-string data types. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)
+
 ### Bug fixes
 
 - Implemented graceful handling for non-existent named profiles within the loadNamedProfile function. [#3678](https://github.com/zowe/zowe-explorer-vscode/pull/3678)
 - Fixed an issue where clicking the Cancel button in the Save Credentials dialog triggered a 401 error prompting to update credentials. [#3713](https://github.com/zowe/zowe-explorer-vscode/pull/3713)
-- Resolved an issue where secure credentials were inadvertently converted to non-string data types. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)
 
 ## `3.2.1`
 
