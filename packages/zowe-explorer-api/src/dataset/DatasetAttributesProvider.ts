@@ -10,6 +10,7 @@
  */
 
 import { Logger, IProfileLoaded } from "@zowe/imperative";
+import { Gui } from "..";
 
 export type AttributeInfo = {
     title: string;
@@ -60,6 +61,7 @@ export class DataSetAttributesProvider {
                 attributes.push(...(await provider.fetchAttributes(context)));
             } catch (e) {
                 Logger.getAppLogger().error(e);
+                Gui.warningMessage(e);
             }
         }
 
