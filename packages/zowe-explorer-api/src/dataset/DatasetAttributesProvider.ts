@@ -61,7 +61,7 @@ export class DataSetAttributesProvider {
                 attributes.push(...(await provider.fetchAttributes(context)));
             } catch (e) {
                 Logger.getAppLogger().error(e);
-                Gui.warningMessage(e);
+                Gui.warningMessage(e.message);
             }
         }
 
