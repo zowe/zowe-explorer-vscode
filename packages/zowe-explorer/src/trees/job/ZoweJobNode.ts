@@ -466,6 +466,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from JES list API"),
             });
+            if (!updated) {
+                this.dirty = false;
+            }
             AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
             return;
         }
@@ -487,6 +490,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from JES list API"),
             });
+            if (!updated) {
+                this.dirty = false;
+            }
             AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
             return;
         }
