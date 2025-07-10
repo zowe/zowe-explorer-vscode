@@ -25,8 +25,6 @@ import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { ZoweJobNode, ZoweSpoolNode } from "../../../../src/trees/job/ZoweJobNode";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
-import { AuthUtils } from "../../../../src/utils/AuthUtils";
-import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { createIJobFile, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";

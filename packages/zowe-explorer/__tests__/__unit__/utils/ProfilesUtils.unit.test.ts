@@ -496,6 +496,16 @@ describe("ProfilesUtils unit tests", () => {
 
         it("fires onProfilesUpdate event if secure credentials are enabled", async () => {
             const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
+            (mockProfileInstance as any).allProfiles = [
+                {
+                    name: "testConfig",
+                    type: "test-type",
+                    profile: {
+                        port: 456,
+                        host: "example.host",
+                    },
+                },
+            ];
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as any);
             jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
@@ -512,8 +522,8 @@ describe("ProfilesUtils unit tests", () => {
             const secureCredsMock = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             const testConfig = {
                 name: "testConfig",
+                type: "test-type",
                 profile: {
-                    type: "test-type",
                     user: "user",
                     password: "pass",
                     base64EncodedAuth: "user-pass",
@@ -1417,6 +1427,40 @@ describe("ProfilesUtils unit tests", () => {
             await ProfilesUtils.setupDefaultCredentialManager();
             expect(profileManagerWillLoadSpy).toHaveBeenCalled();
             expect(disableCredMgmtSpy).toHaveBeenCalled();
+        });
+    });
+
+    describe("Profiles unit tests - function resolveTypePromise", () => {
+        it("should resolve deferred promise for matching profile type", () => {
+            const mockResolve = jest.spyOn(imperative.DeferredPromise.prototype, "resolve").mockReturnValueOnce();
+            (ProfilesUtils as any).resolveTypePromise("zftp");
+            expect(mockResolve).toHaveBeenCalledTimes(1);
+        });
+        it("should resolve an existing promise without setting it", () => {
+            const mockResolve = jest.fn();
+            (ProfilesUtils as any).extenderTypeReady.set("zftp", { resolve: mockResolve });
+            (ProfilesUtils as any).resolveTypePromise("zftp");
+            expect(mockResolve).toHaveBeenCalledTimes(1);
+        });
+
+        it("should resolve each deferred promise of matching profile type", () => {
+            const extenderTypeReadySpy = jest.spyOn(ProfilesUtils.extenderTypeReady, "get");
+            ProfilesUtils.resolveTypePromise("ssh");
+            expect(extenderTypeReadySpy).toHaveBeenCalledTimes(1);
+        });
+        it("should resolve an existing promise without setting it", () => {
+            jest.spyOn(ProfilesUtils.extenderTypeReady, "has").mockReturnValue(true);
+            const extenderTypeReadySetSpy = jest.spyOn(ProfilesUtils.extenderTypeReady, "set");
+            const mockDeferred: imperative.DeferredPromise<void> = {
+                resolve: jest.fn(),
+                reject: jest.fn(),
+            } as any;
+
+            const extenderTypeReadyGetSpy = jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValue(mockDeferred);
+
+            ProfilesUtils.resolveTypePromise("ssh");
+            expect(extenderTypeReadySetSpy).toHaveBeenCalledTimes(0);
+            expect(extenderTypeReadyGetSpy).toHaveBeenCalledTimes(1);
         });
     });
 });

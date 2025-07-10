@@ -35,6 +35,7 @@ import { ZoweExplorerApiRegister } from "../../src/extending/ZoweExplorerApiRegi
 
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/tools/ZoweLogger");
+jest.mock("../../src/utils/ReleaseNotes");
 jest.mock("vscode");
 jest.mock("fs");
 jest.mock("fs-extra");
@@ -122,6 +123,7 @@ async function createGlobalMocks() {
         testProfile: createIProfile(),
         testProfileOps: {
             allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+            getProfiles: jest.fn().mockReturnValue([]),
             defaultProfile: { name: "firstName" },
             getDefaultProfile: null,
             getBaseProfile: jest.fn(),
@@ -165,6 +167,7 @@ async function createGlobalMocks() {
             "zowe.ds.editDataSet",
             "zowe.ds.editMember",
             "zowe.ds.submitJcl",
+            "zowe.ds.zoom",
             "zowe.ds.submitMember",
             "zowe.ds.showAttributes",
             "zowe.ds.renameDataSet",
@@ -229,6 +232,7 @@ async function createGlobalMocks() {
             "zowe.updateSecureCredentials",
             "zowe.manualPoll",
             "zowe.editHistory",
+            "zowe.displayReleaseNotes",
             "zowe.promptCredentials",
             "zowe.profileManagement",
             "zowe.updateSchema",
@@ -262,6 +266,7 @@ async function createGlobalMocks() {
             "zowe.revealOutputChannel",
             "zowe.troubleshootError",
             "zowe.placeholderCommand",
+            "zowe.setupRemoteWorkspaceFolders",
         ],
     };
 

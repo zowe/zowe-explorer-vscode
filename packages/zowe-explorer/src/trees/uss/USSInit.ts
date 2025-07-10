@@ -80,7 +80,7 @@ export class USSInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.refreshDirectory", async (node, nodeList) => {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-                selectedNodes = selectedNodes.filter((x) => SharedContext.isUssDirectory(x));
+                selectedNodes = selectedNodes.filter((x) => SharedContext.isUssDirectory(x) || SharedContext.isUssSession(x));
                 for (const item of selectedNodes) {
                     await USSActions.refreshDirectory(item, ussFileProvider);
                 }

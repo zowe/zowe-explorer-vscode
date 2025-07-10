@@ -274,7 +274,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         expect(favChildNodeForProfile).toEqual(node);
     });
     it("Checking function for sequential DS favorite", async () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
@@ -285,6 +285,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             profile: blockMocks.imperativeProfile,
             contextOverride: Constants.DS_FAV_CONTEXT,
         });
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         node.resourceUri = blockMocks.datasetSessionNode.resourceUri?.with({
             path: `/${blockMocks.datasetSessionNode.label as string}/${node.label as string}`,
         });
@@ -2979,18 +2980,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(child);
         expect(error).toBe(defaultError);
     });
-    it("Checking validate validateDataSetName util function successfully execution", () => {
-        expect(DatasetUtils.validateDataSetName("#DSNAME.DSNAME")).toBe(true);
-    });
-
-    it("Checking validate validateDataSetName util function fail", () => {
-        expect(DatasetUtils.validateDataSetName("#DSNAME.DSNAMEMORETHAN8CHARS.TEST")).toBe(false);
-    });
-    it("Checking validate validateDataSetName util function fail on max ds length", () => {
-        const dsName = "#DSNAMET.DSNAME.DSNAME.DSNAME.DSNAME.DSNAMETE";
-        expect(dsName.length - 1 === Constants.MAX_DATASET_LENGTH).toBe(true);
-        expect(DatasetUtils.validateDataSetName(dsName)).toBe(false);
-    });
 
     it("Tests that rename() validates the dataset name", async () => {
         createGlobalMocks();
@@ -4008,7 +3997,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
     it("handle moving of pds to different profiles dropping on seq - should throw error", async () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
-        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
         const blockMocks = createBlockMocks();
         const datasetSession = blockMocks.datasetSessionNode;
 

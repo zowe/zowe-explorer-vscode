@@ -134,6 +134,9 @@
   "submitJcl": {
     "Submit as JCL": ""
   },
+  "zoom": {
+    "Open Selected Data Set": ""
+  },
   "submitMember": {
     "Submit Job": ""
   },
@@ -431,6 +434,9 @@
   "zowe.openRecentMember": {
     "Open Recent Member": ""
   },
+  "zowe.displayReleaseNotes": {
+    "Display Release Notes": ""
+  },
   "issueTsoCmd": {
     "Issue TSO Command": ""
   },
@@ -533,6 +539,9 @@
   "zowe.settings.requestTimeout": {
     "The amount of time to wait for a REST request to complete, in milliseconds.": ""
   },
+  "zowe.settings.displayReleaseNotes": {
+    "Should display the Zowe Explorer release notes after an update.": ""
+  },
   "Enter command here...": "",
   "Page Size:": "",
   "Page": "",
@@ -540,6 +549,14 @@
   "items": "",
   "item": "",
   "selected": "",
+  "What's New in Zowe Explorer {0}": "",
+  "You can find the latest updates and features here.": "",
+  "Select the version to display release notes for": "",
+  "Display release notes after an update": "",
+  "Release Notes": "",
+  "Changelog": "",
+  "Loading release notes...": "",
+  "Loading changelog...": "",
   "Data Sets": "",
   "Unix System Services (USS)": "",
   "Jobs": "",
@@ -584,6 +601,9 @@
   "Cancel": "",
   "Troubleshoot Error": "",
   "rename": "",
+  "No release notes found for this version.": "",
+  "No changelog entries found for this version.": "",
+  "No {0} entries found for this version.": "",
   "Zowe Explorer profiles are being set as unsecured.": "",
   "Zowe Explorer profiles are being set as secured.": "",
   "Custom credential manager failed to activate": "",
@@ -609,6 +629,7 @@
   "Enter a name for the connection.": "",
   "Operation cancelled": "",
   "Credentials for {0} were successfully updated": "",
+  "User: ": "",
   "Zowe home directory is located at {0}": "",
   "Reading imperative.json failed. Will try to create file.": "",
   "Reading imperative.json credential manager.\n {0}": "",
@@ -640,7 +661,6 @@
   "Auth Method: ": "",
   "Token-based Authentication": "",
   "Basic Authentication": "",
-  "User: ": "",
   "Certificate Authentication": "",
   "Unknown": "",
   "Pattern: ": "",
@@ -835,8 +855,8 @@
   "User ID": "",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "",
   "Failed to move {0}: {1}": "",
-  "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.": "",
-  "Cannot drop a member onto a sequential dataset.": "",
+  "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "",
+  "Cannot drop a partitioned dataset or member into a sequential dataset.": "",
   "Moving MVS files...": "",
   "Initializing profiles with data set favorites.": "",
   "No data set favorites found.": "",
@@ -936,6 +956,14 @@
   "Job submitted {0}": "",
   "Job submitted {0} using profile {1}.": "",
   "Job submission failed.": "",
+  "No active editor open. Please open a file and select text to open a data set.": "",
+  "No selection to open.": "",
+  "Selection is not a valid data set member name.": "",
+  "Selection is not a valid data set name.": "",
+  "Select the profile to use to open the data set": "",
+  "Data set member {0} does not exist or cannot be opened in data set {1}.": "",
+  "Data set {0} does not exist or cannot be opened.": "",
+  "Opening data set failed.": "",
   "Are you sure you want to submit the following job?\n\n{0}": "",
   "Cannot submit, item invalid.": "",
   "Cannot delete, item invalid.": "",
@@ -1035,6 +1063,7 @@
   "Do you wish to apply this for all trees?": "",
   "Apply to all trees": "",
   "Apply to current tree selected": "",
+  "Edit History": "",
   "Enter an allocation unit": "",
   "Enter the average block length (if allocation unit = BLK)": "",
   "Enter a block size": "",

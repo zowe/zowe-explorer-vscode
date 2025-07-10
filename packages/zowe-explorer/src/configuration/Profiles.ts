@@ -156,7 +156,7 @@ export class Profiles extends ProfilesCache {
         if (node !== undefined) {
             const toolTipList = (node.tooltip as string)?.split("\n") ?? [];
 
-            const autoStoreValue = (await this.getProfileInfo()).getTeamConfig().properties.autoStore;
+            const autoStoreValue = (await this.getProfileInfo()).getTeamConfig().properties.autoStore ?? true;
             const autoStoreIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auto Store: ")));
             if (autoStoreIndex === -1) {
                 toolTipList.push(`${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()}`);
@@ -850,7 +850,8 @@ export class Profiles extends ProfilesCache {
         const profInfo = await this.getProfileInfo();
         const configApi = profInfo.getTeamConfig();
         const usingApimlToken = loginTokenType?.startsWith("apimlAuthenticationToken");
-        const profAttrs = await this.getProfileFromConfig(usingApimlToken ? "base" : profileName);
+        const baseProfile = this.getBaseProfile();
+        const profAttrs = await this.getProfileFromConfig(usingApimlToken ? baseProfile.name : profileName);
         // For users with nested profiles, we should only update the secure array if a base profile or a regular profile matching profileName exists.
         // Otherwise, we want to keep `tokenValue` in the secure array of the parent profile to avoid disconnecting child profiles
         if (profAttrs?.profLoc.jsonLoc) {
@@ -946,19 +947,25 @@ export class Profiles extends ProfilesCache {
                 break;
             }
             case await AuthUtils.isUsingTokenAuth(serviceProfile.name): {
-                const profile: string | imperative.IProfileLoaded = node.getProfile();
-                const creds = await Profiles.getInstance().promptCredentials(profile, true);
+                try {
+                    const profile: string | imperative.IProfileLoaded = node.getProfile();
+                    await this.ssoLogout(node);
+                    const creds = await Profiles.getInstance().promptCredentials(profile, true);
 
-                if (creds !== undefined) {
-                    const successMsg = vscode.l10n.t(
-                        "Changing authentication to basic was successful for profile {0}.",
-                        typeof profile === "string" ? profile : profile.name
-                    );
-                    ZoweLogger.info(successMsg);
-                    Gui.showMessage(successMsg);
-                    await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
-                    ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
-                } else {
+                    if (creds !== undefined) {
+                        const successMsg = vscode.l10n.t(
+                            "Changing authentication to basic was successful for profile {0}.",
+                            typeof profile === "string" ? profile : profile.name
+                        );
+                        ZoweLogger.info(successMsg);
+                        Gui.showMessage(successMsg);
+                        await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
+                        ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
+                    } else {
+                        Gui.errorMessage(vscode.l10n.t("Unable to switch to basic authentication for profile {0}.", serviceProfile.name));
+                        return;
+                    }
+                } catch (err) {
                     Gui.errorMessage(vscode.l10n.t("Unable to switch to basic authentication for profile {0}.", serviceProfile.name));
                     return;
                 }
@@ -1039,7 +1046,7 @@ export class Profiles extends ProfilesCache {
 
         try {
             this.clearFilterFromAllTrees(node);
-            let logoutOk = true;
+            let logoutOk: boolean;
             const zeRegister = ZoweExplorerApiRegister.getInstance();
 
             // this will handle extenders

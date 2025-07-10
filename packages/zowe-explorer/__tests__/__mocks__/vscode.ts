@@ -599,6 +599,22 @@ export namespace window {
         return new Disposable();
     }
 
+    /**
+     * Registers a webview panel serializer.
+     *
+     * Extensions that support reviving should have an `"onWebviewPanel:viewType"` activation event and
+     * make sure that `registerWebviewPanelSerializer` is called during activation.
+     *
+     * Only a single serializer may be registered at a time for a given `viewType`.
+     *
+     * @param viewType Type of the webview panel that can be serialized.
+     * @param serializer Webview serializer.
+     * @returns A {@link Disposable disposable} that unregisters the serializer.
+     */
+    export function registerWebviewPanelSerializer(viewType: string, serializer: any): Disposable {
+        return new Disposable();
+    }
+
     export const visibleTextEditors = [];
     /**
      * Options for creating a {@link TreeView}

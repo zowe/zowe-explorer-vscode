@@ -260,7 +260,6 @@ describe("ZoweExplorerExtender unit tests", () => {
                 typeInfo: { sourceApp: string; schema: any; version?: string | undefined }
             ) => any = jest.fn()
         ) => {
-            const blockMocks = await createBlockMocks();
             // bypass "if (hasSecureCredentialManagerEnabled)" check for sake of testing
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
             jest.spyOn(ZoweLogger, "trace").mockImplementation();
@@ -298,7 +297,6 @@ describe("ZoweExplorerExtender unit tests", () => {
         });
 
         it("should log a message if addProfileTypeToSchema returns a warning", async () => {
-            const blockMocks = await createBlockMocks();
             const profInfo = new imperative.ProfileInfo("zowe", {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
