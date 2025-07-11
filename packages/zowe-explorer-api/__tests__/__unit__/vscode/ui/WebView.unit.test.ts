@@ -47,6 +47,9 @@ describe("WebView unit tests", () => {
         const disposeMock = jest.fn();
         const disposable = new vscode.Disposable(disposeMock);
 
+        const disposeMock = jest.fn();
+        const disposable = new vscode.Disposable(disposeMock);
+
         const testView = new WebView("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext, {
             onDidReceiveMessage: async (_message: any) => {},
         });
