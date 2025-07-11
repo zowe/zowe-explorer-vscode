@@ -9,6 +9,7 @@
  *
  */
 
+export * from "./dataset";
 export * from "./extend";
 export * from "./globals/Gui";
 export * from "./globals/GuiOptions";
