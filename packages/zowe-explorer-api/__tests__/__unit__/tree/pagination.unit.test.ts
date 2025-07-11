@@ -127,13 +127,13 @@ describe("Paginator", () => {
         it("should determine hasNextPage correctly when fetch returns fewer items than limit but has cursor", async () => {
             // Simulate scenario where API returns a next cursor even if fewer items were returned than the limit
             // (e.g., due to filtering or reaching the end soon)
-            const lessItemsFetch = jest.fn(async (cursor: string | undefined, limit: number): Promise<IFetchResult<MockDataItem, string>> => {
+            const lessItemsFetch = jest.fn((cursor: string | undefined, limit: number): Promise<IFetchResult<MockDataItem, string>> => {
                 if (cursor === undefined) {
-                    return {
+                    return Promise.resolve({
                         items: createMockData(MAX_ITEMS_PER_PAGE - 1, "item-0-"), // Return 4 items
                         nextPageCursor: "cursor-3", // Still provide a cursor
                         totalItems: 12,
-                    };
+                    });
                 }
                 // Subsequent fetches (not tested here, but needed for mock completeness)
                 const startIndex = cursor ? parseInt(cursor.split("-")[1], 10) + 1 : 0;
@@ -141,7 +141,7 @@ describe("Paginator", () => {
                 const items = createMockData(endIndex - startIndex, `item-${startIndex}-`);
                 items.forEach((item, idx) => (item.id = startIndex + idx));
                 const nextCursor = endIndex < 12 ? `cursor-${items[items.length - 1].id}` : undefined;
-                return { items, nextPageCursor: nextCursor, totalItems: 12 };
+                return Promise.resolve({ items, nextPageCursor: nextCursor, totalItems: 12 });
             });
             paginator = new Paginator(MAX_ITEMS_PER_PAGE, lessItemsFetch);
             await paginator.initialize();
@@ -452,7 +452,7 @@ describe("Paginator", () => {
     });
 
     describe("Getter Methods", () => {
-        beforeEach(async () => {
+        beforeEach(() => {
             mockFetch = createMockFetchFunction(12);
             paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
         });

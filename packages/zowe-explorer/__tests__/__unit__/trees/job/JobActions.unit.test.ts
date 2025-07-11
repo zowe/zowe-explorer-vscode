@@ -999,7 +999,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                     }
                 );
             }
-            expect(mocked(Profiles.getInstance)).toHaveBeenCalledTimes(2 * (o + 1));
+            expect(mocked(Profiles.getInstance)).toHaveBeenCalledTimes(4 * (o + 1) + 2);
         }
 
         // Test for "Cancel" or closing the dialog
