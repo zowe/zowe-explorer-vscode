@@ -23,6 +23,9 @@
   "zowe.placeholderCommand": {
     "Placeholder": ""
   },
+  "zowe.setupRemoteWorkspaceFolders": {
+    "Setup Remote Workspace Folders": ""
+  },
   "zowe.promptCredentials": {
     "Update Credentials": ""
   },
