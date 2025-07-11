@@ -168,11 +168,20 @@ export class ZoweVsCodeExtension {
             user: "Username",
             password: "Password",
             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-            tokenType,
+            tokenType
+            /* TODO:authOrder remove this permanently
             type: imperative.SessConstants.AUTH_TYPE_TOKEN,
+            */
         });
-        delete updSession.ISession.user;        // Todo:AuthOrder remove line
-        delete updSession.ISession.password;    // Todo:AuthOrder remove line
+        // TODO:authOrder remove this permanently -> delete updSession.ISession.user;
+        // TODO:authOrder remove this permanently -> delete updSession.ISession.password;
+
+        // remember the existing authOrder from the session
+        let prevAuthOrder: imperative.SessConstants.AUTH_TYPE_CHOICES[] = null;
+        if (updSession.ISession.authTypeOrder) {
+            prevAuthOrder = [...updSession.ISession.authTypeOrder];
+        }
+
         const qpItems: vscode.QuickPickItem[] = [
             { label: "$(account) User and Password", description: "Log in with basic authentication" },
             { label: "$(note) Certificate", description: "Log in with PEM format certificate file" },
@@ -189,28 +198,49 @@ export class ZoweVsCodeExtension {
             updSession.ISession.user = creds[0];
             updSession.ISession.password = creds[1];
             updSession.ISession.base64EncodedAuth = imperative.AbstractSession.getBase64Auth(creds[0], creds[1]);
-            // Todo:AuthOrder AuthOrder.newFirstChoicesInSess(updSession.ISession, [AUTH_TYPE_TOKEN, AUTH_TYPE_BEARER])
+
+            // The user has told us to use basic to login, so put basic to the front of authOrder
+            // in this session. We will not store this authOrder to the profile on disk.
+            imperative.AuthOrder.putNewAuthsFirstInSess(updSession.ISession,
+                [imperative.SessConstants.AUTH_TYPE_BASIC],
+                { onlyTheseAuths: true }
+            );
         } else if (response === qpItems[1]) {
             try {
                 await ZoweVsCodeExtension.promptCertificate({ profile: serviceProfile, session: updSession.ISession, rePrompt: true });
             } catch (err) {
                 return false;
             }
-            delete updSession.ISession.base64EncodedAuth;    // Todo:AuthOrder remove line
+            // TODO:authOrder remove this permanently -> delete updSession.ISession.base64EncodedAuth;
             updSession.ISession.storeCookie = true;
-            updSession.ISession.type = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
-            // Todo:AuthOrder AuthOrder.newFirstChoicesInSess(updSession.ISession, [AUTH_TYPE_CERT_PEM])
+            // TODO:authOrder remove this permanently -> updSession.ISession.type = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
+            
+            // The user has told us to use a cert to login, so put cert-pem to the front of authOrder
+            // in this session. We will not store this authOrder to the profile on disk.
+            imperative.AuthOrder.putNewAuthsFirstInSess(updSession.ISession,
+                [imperative.SessConstants.AUTH_TYPE_CERT_PEM],
+                { onlyTheseAuths: true }
+            );
         } else {
             return false;
         }
 
-        // Todo:AuthOrder AuthOrder.makingRequestForToken(session.ISession);
+        // record that this request is to get a token
+        imperative.AuthOrder.makingRequestForToken(updSession.ISession);
+
         const loginToken = await (opts.zeRegister?.getCommonApi(serviceProfile).login ?? Login.apimlLogin)(updSession);
         const updBaseProfile: imperative.IProfile = {
             tokenType: updSession.ISession.tokenType ?? tokenType,
             tokenValue: loginToken,
         };
         updSession.ISession.storeCookie = false;
+
+        // Now that we did the login, restore the authOrder in session to its previous state
+        if (prevAuthOrder) {
+            updSession.ISession.authTypeOrder = [...prevAuthOrder];
+        } else {
+            delete updSession.ISession.authTypeOrder;
+        }
 
         // A simplified version of the ProfilesCache.shouldRemoveTokenFromProfile `private` method
         const connOk =
@@ -230,6 +260,20 @@ export class ZoweVsCodeExtension {
         await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
         serviceProfile.profile = { ...serviceProfile.profile, ...updBaseProfile };
         cache.updateCachedProfile(serviceProfile, opts.profileNode);
+
+        /* TODO:authOrder
+            Find the right place to:
+                const configObj = call await (this.profilesCache.getProfileInfo()).getTeamConfig();
+                imperative.AuthOrder.putNewAuthsFirstOnDisk(serviceProfile.profile.name,
+                    [imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER],
+                    { onlyTheseAuths: true, clientConfig: configObj }
+                );
+            Alternatively, if ZE is already storing profile data to disk, do something like this:
+                <PprofileToStore>.<CorrectPath>.properties.authOrder = imperative.AuthOrder.authArrayToCfgVal(
+                    [imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER]
+                );
+                StoreProfileUsingExistingZeTechnique();
+        */
         return true;
     }
 
@@ -307,8 +351,9 @@ export class ZoweVsCodeExtension {
             port: serviceProfile.profile.port,
             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
             tokenType: tokenType,
-            tokenValue: primaryProfile.profile.tokenValue ?? secondaryProfile.profile.tokenValue,
+            tokenValue: primaryProfile.profile.tokenValue ?? secondaryProfile.profile.tokenValue/* TODO:authOrder remove this permanently,
             type: imperative.SessConstants.AUTH_TYPE_TOKEN,
+            */
         });
         await (opts.zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
 

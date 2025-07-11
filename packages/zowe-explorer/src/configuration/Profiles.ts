@@ -938,6 +938,7 @@ export class Profiles extends ProfilesCache {
                     Gui.showMessage(
                         vscode.l10n.t("Login using token-based authentication service was successful for profile {0}.", serviceProfile.name)
                     );
+                    // TODO:authOrder No longer remove user and password
                     await this.basicAuthClearSecureArray(serviceProfile.name, loginTokenType);
                     const updBaseProfile: imperative.IProfile = {
                         user: undefined,
@@ -968,6 +969,8 @@ export class Profiles extends ProfilesCache {
                         );
                         ZoweLogger.info(successMsg);
                         Gui.showMessage(successMsg);
+
+                        // TODO:authOrder No longer remove token? Maybe still remove it, since the token has been revoked?
                         await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
                         ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
                     } else {
