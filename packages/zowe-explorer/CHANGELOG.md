@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added a Release Notes page which opens when VS Code is launched or from the command palette `Display Release Notes`. The `zowe.settings.displayReleaseNotes` setting can be changed to set when the release notes display. [#3621](https://github.com/zowe/zowe-explorer-vscode/issues/3621)
 - Added support for asynchronous operations when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
+- Adjusted formatting for the certificate selection webview to make better use of space. [#3754](https://github.com/zowe/zowe-explorer-vscode/issues/3754)
 
 ### Bug fixes
 
