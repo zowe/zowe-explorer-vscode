@@ -85,7 +85,7 @@ export async function evaluateActionState(
             rowIndex: evaluationData.rowIndex,
         }));
     } catch (error) {
-        console.warn(`Failed to evaluate hide condition for action ${action.command}:`, error);
+        console.warn(`[ActionUtils.evaluateActionState] Failed to evaluate hide condition for action %s:`, action.command, error);
     }
 
     // Only evaluate enabled condition if action is visible
@@ -119,7 +119,7 @@ export async function evaluateActionState(
                 });
                 isEnabled = conditionResult;
             } catch (error) {
-                console.warn(`Failed to evaluate condition for action ${action.command}:`, error);
+                console.warn(`[ActionUtils.evaluateActionState] Failed to evaluate condition for action %s:`, action.command, error);
                 isEnabled = false;
             }
         }
@@ -196,7 +196,6 @@ export function sendActionCommand(action: Table.Action, context: ActionEvaluatio
             row: { ...context.rowData, actions: undefined },
         });
     } else if (action.callback.typ === "no-selection") {
-        console.log("Sending no-selection action:", action.command);
         messageHandler.send(action.command, { ...baseData });
     } else {
         // Fallback for other action types or when context.rowData is available

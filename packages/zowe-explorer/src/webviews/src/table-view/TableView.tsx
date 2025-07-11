@@ -225,7 +225,6 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
       let newColumns = newData.columns;
       if (newData.options?.customTreeMode && newData.options?.customTreeColumnField) {
-        console.log("customTreeMode:", newData.options?.customTreeMode);
         const treeColumnField = newData.options.customTreeColumnField;
         newColumns = newData.columns?.map((col) => {
           if (col.field === treeColumnField) {
@@ -304,11 +303,9 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
             break;
           case "set-page-size":
             if (gridRef.current?.api) {
-              console.log("setting page size to: ", payload);
               gridRef.current.api.setGridOption("paginationPageSize", payload);
               responsePayload = true;
             } else {
-              console.log("grid api not available");
               error = "Grid API not available";
               responsePayload = false;
             }
@@ -542,7 +539,6 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
           break;
         default:
           if (response.requestId && response.command) {
-            console.log("extension request received: ", response.command, response.requestId, response.payload);
             handleExtensionRequest(response.command, response.requestId, response.payload);
           }
           break;
