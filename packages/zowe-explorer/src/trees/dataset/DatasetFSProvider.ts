@@ -61,7 +61,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     public watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
-        return new vscode.Disposable(() => {});
+        return new vscode.Disposable(() => { });
     }
 
     /**
@@ -400,10 +400,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profInfo =
             parent !== this.root
                 ? new DsEntryMetadata({
-                      profile: parent.metadata.profile,
-                      // we can strip profile name from path because its not involved in API calls
-                      path: path.posix.join(parent.metadata.path, basename),
-                  })
+                    profile: parent.metadata.profile,
+                    // we can strip profile name from path because its not involved in API calls
+                    path: path.posix.join(parent.metadata.path, basename),
+                })
                 : this._getInfoFromUri(uri);
 
         if (FsAbstractUtils.isFilterEntry(parent)) {
@@ -577,7 +577,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         parentDir.entries.set(fileName, entry);
     }
 
-    private async uploadEntry(entry: DsEntry, content: Uint8Array, forceUpload?: boolean): Promise<IZosFilesResponse> {
+    private async uploadEntry(entry: DsEntry, content: Uint8Array, forceUpload?: boolean, encoding?: string): Promise<IZosFilesResponse> {
         const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Saving data set...")}`);
         let resp: IZosFilesResponse;
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
@@ -591,7 +591,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
             resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
                 binary: entry.encoding?.kind === "binary",
-                encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+                encoding: encoding ?? (entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding),
                 etag: forceUpload ? undefined : entry.etag,
                 returnEtag: true,
             });
@@ -625,10 +625,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileExists(uri);
         }
 
-        // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
+        // Extract query parameters
         const urlQuery = new URLSearchParams(uri.query);
         const forceUpload = urlQuery.has("forceUpload");
-        // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
+        const encodingParam = urlQuery.get("encoding") || undefined;
 
         try {
             if (!entry) {
@@ -637,15 +637,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry.data = content;
                 const profInfo = parent.metadata
                     ? new DsEntryMetadata({
-                          profile: parent.metadata.profile,
-                          path: path.posix.join(parent.metadata.path, basename),
-                      })
+                        profile: parent.metadata.profile,
+                        path: path.posix.join(parent.metadata.path, basename),
+                    })
                     : this._getInfoFromUri(uri);
                 entry.metadata = profInfo;
 
                 if (content.byteLength > 0) {
-                    // Update e-tag if write was successful.
-                    const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
+                    // Pass encodingParam and e-tag if write was successful.
+                    const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload, encodingParam);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
                 }
@@ -664,7 +664,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
-                    const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
+                    // Pass encodingParam to uploadEntry
+                    const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload, encodingParam);
                     entry.etag = resp.apiResponse.etag;
                 }
                 entry.data = content;

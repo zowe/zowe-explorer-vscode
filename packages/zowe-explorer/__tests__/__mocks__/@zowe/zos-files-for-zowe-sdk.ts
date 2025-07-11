@@ -10,7 +10,7 @@
  */
 
 import * as imperative from "@zowe/imperative";
-import type { IListOptions } from "@zowe/zos-files-for-zowe-sdk";
+import type { IDataSet, IListOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 export const CreateDefaults = {
     DATA_SET: {
@@ -185,4 +185,10 @@ export class IZosFilesResponse {
      * @type{*}
      */
     public apiResponse?: any;
+}
+
+export class Copy {
+    private static generateDatasetOptions(options: IDataSet): IDataSet {
+        return options;
+    }
 }
