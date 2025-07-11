@@ -479,7 +479,7 @@ export class BaseProvider {
         return entry;
     }
 
-    protected _lookupParentDirectory(uri: vscode.Uri, silent?: boolean): DirEntry {
+    public _lookupParentDirectory(uri: vscode.Uri, silent?: boolean): DirEntry {
         return this._lookupAsDirectory(
             uri.with({
                 path: path.posix.join(uri.path, ".."),
