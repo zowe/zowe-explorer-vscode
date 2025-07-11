@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added a Release Notes page which opens when VS Code is launched or from the command palette `Display Release Notes`. The `zowe.settings.displayReleaseNotes` setting can be changed to set when the release notes display. [#3621](https://github.com/zowe/zowe-explorer-vscode/issues/3621)
 - Added support for asynchronous operations when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
+- Adjusted formatting for the certificate selection webview to make better use of space. [#3754](https://github.com/zowe/zowe-explorer-vscode/issues/3754)
 
 ### Bug fixes
 
@@ -25,6 +26,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where clicking the refresh icon beside a profile in the Unix System Services (USS) view had no effect. [#3693](https://github.com/zowe/zowe-explorer-vscode/issues/3693)
 - Fixed an issue where clicking the Cancel button in the Save Credentials dialog triggered a 401 error prompting to update credentials. [#3713](https://github.com/zowe/zowe-explorer-vscode/pull/3713)
 - Resolved an issue where secure credentials were inadvertently converted to non-string data types. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)
+- Changed the jobs pagination setting to be disabled by default and the default records to fetch from 100 to 1000 due to customer feedback. [#3743](https://github.com/zowe/zowe-explorer-vscode/issues/3743)
+- Fixed an issue where a `401 Unauthorized` error is thrown by the FileSystemProvider implementations when the user cancels or closes an authentication prompt. Now, the filesystem throws a more explicit `AuthCancelledError` in this scenario. [#3662](https://github.com/zowe/zowe-explorer-vscode/issues/3662)
 
 ## `3.2.1`
 

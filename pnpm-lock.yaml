@@ -352,8 +352,8 @@ importers:
         specifier: ^34.0.0
         version: 34.0.0(react-dom@18.3.1)(react@18.3.1)
       dompurify:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.2.6
+        version: 3.2.6
       es-toolkit:
         specifier: ^1.16.0
         version: 1.16.0
@@ -5828,8 +5828,8 @@ packages:
       domelementtype: 2.3.0
     dev: true
 
-  /dompurify@3.2.5:
-    resolution: {integrity: sha512-mLPd29uoRe9HpvwP2TxClGQBzGXeEC/we/q+bFlmPPmj2p2Ugl3r6ATu/UU1v77DXNcehiBg9zsr1dREyA/dJQ==}
+  /dompurify@3.2.6:
+    resolution: {integrity: sha512-/2GogDQlohXPZe6D6NOgQvXLPSYBqIWMnZ8zzOhn09REE4eyAzb+Hed3jhoM9OkuaJ8P6ZGTTVWQKAi8ieIzfQ==}
     optionalDependencies:
       '@types/trusted-types': 2.0.7
     dev: false
