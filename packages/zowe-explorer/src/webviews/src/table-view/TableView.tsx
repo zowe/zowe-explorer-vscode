@@ -397,20 +397,6 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
             }
             break;
 
-          case "find-rows":
-            if (payload?.predicate && tableDataRef.current?.rows) {
-              try {
-                // Create a function from the predicate string
-                const predicateFn = new Function("row", `return ${payload.predicate}`) as (row: Table.RowData) => boolean;
-                responsePayload = tableDataRef.current.rows.filter(predicateFn);
-              } catch (err) {
-                error = `Invalid predicate function: ${err instanceof Error ? err.message : String(err)}`;
-              }
-            } else {
-              error = "Predicate not provided";
-            }
-            break;
-
           case "export-data":
             if (gridRef.current?.api) {
               const format = payload?.format || "csv";
