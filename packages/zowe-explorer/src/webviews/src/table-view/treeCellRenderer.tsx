@@ -118,7 +118,7 @@ export const TreeCellRenderer = (props: ICellRendererParams & CustomTreeCellRend
     );
 
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
+    <div style={{ display: "flex", alignItems: "center" }} aria-level={depth}>
       <span style={indentationStyle}>{icon}</span>
       {value}
     </div>

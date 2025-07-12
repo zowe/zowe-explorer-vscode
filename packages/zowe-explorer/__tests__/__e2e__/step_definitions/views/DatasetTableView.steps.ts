@@ -32,6 +32,7 @@ When('the user right-clicks on the dataset profile and selects "Show as Table"',
 
     const showAsTableItem = await ctxMenu.getItem("Show as Table");
     await (await showAsTableItem.elem).click();
+    await browser.pause(1000); // Wait for table to load
 });
 
 When('the user right-clicks on a PDS and selects "Show as Table"', async function () {
@@ -54,7 +55,7 @@ Then("the dataset table view appears in the Zowe Resources panel", async functio
 
     await this.tableView.open();
     const tableViewDiv = await browser.$(".table-view");
-    await tableViewDiv.waitForExist();
+    await tableViewDiv.waitForExist({ timeout: 5000 });
 
     // Verify the table has the correct title format
     const titleElement = await browser.$(".table-view > div > h3");
@@ -533,8 +534,11 @@ Then("the table view returns to the previous dataset list", async function () {
 });
 
 Then("preserves the previous table state including pinned rows", async function () {
-    // This is tested implicitly by checking that the table returns to its previous state
-    // Additional checks could verify specific pinned rows if needed
+    await browser.pause(1000);
+    const pinnedRows = await browser.$$(".ag-pinned-top .ag-row");
+    // TODO: Currently assuming that previous table had pinned rows, but we should check count
+    // (not needed for now since we pin rows in the test)
+    await expect(pinnedRows.length).toBeGreaterThan(0);
     await this.tableView.close();
 });
 
@@ -587,15 +591,19 @@ When('selects "Display in Tree" from the context menu', async function () {
 Then("the dataset is revealed and focused in the Data Sets tree", async function () {
     await browser.pause(2000); // Allow time for tree reveal
 
-    // Close table view to see tree
+    // Close table view so that Selenium can focus on the tree
     await this.tableView.close();
 
-    // The dataset should be revealed in the tree - this is hard to verify directly
-    // but we can check that the Data Sets tree is focused
-    // TODO: Update check
-    // const dataSetsPanelTab = await browser.$("*=DATA SETS");
-    // const isActive = await dataSetsPanelTab.getAttribute("aria-selected");
-    // await expect(isActive).toBe("true");
+    const dsPane = await paneDivForTree("Data Sets");
+    const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
+    // Assume first item after favorites is the profile, check if expanded
+    const profileNode = treeItems[1];
+    await expect(await profileNode.isExpanded()).toBe(true);
+
+    // Find the dataset node and check if selected
+    const dsNode = await profileNode.findChildItem(/* assume from context or env */ testInfo.sequential);
+    await expect(dsNode).toBeDefined();
+    await expect(await dsNode.elem.getAttribute("aria-selected")).toBe("true");
 });
 
 Then("the PDS member is revealed and focused in the Data Sets tree", async function () {
@@ -658,6 +666,7 @@ Then("the PDS member is revealed and focused in the Data Sets tree", async funct
 
 // Hierarchical tree functionality
 When("the table loads with hierarchical tree support", async function () {
+    await this.tableView.open();
     // Verify tree column renderer is active
     await this.tableView.open();
     // TODO: Fix this test
@@ -667,34 +676,33 @@ When("the table loads with hierarchical tree support", async function () {
 });
 
 Then("PDS datasets show expand and collapse indicators", async function () {
-    // Look for tree expansion indicators
-    const expandIcons = await browser.$$("[col-id='dsname'] > .codicon .codicon-chevron-right");
-    await expect(expandIcons.length).toBeGreaterThan(0);
-
+    // Look for tree expansion indicators in PDS rows
+    const pdsRows = await browser.$$(".ag-row [col-id='dsname'] > .codicon-chevron-right");
+    await expect(pdsRows.length).toBeGreaterThan(0);
     await this.tableView.close();
 });
 
 Then("users can expand PDS nodes to view members inline", async function () {
-    // Try to expand a PDS node
-    const expandIcon = await browser.$(".ag-group-contracted");
-    if (await expandIcon.isExisting()) {
-        await expandIcon.click();
-        await browser.pause(1000);
+    // Find and expand a PDS node
+    const expandIcon = await browser.$(".ag-row [col-id='dsname'] > .codicon-chevron-right");
+    await expect(expandIcon).toBeExisting();
+    await expandIcon.click();
+    await browser.pause(1000);
 
-        // Verify child rows appeared
-        const childRows = await browser.$$(".ag-row[aria-level='1']");
-        await expect(childRows.length).toBeGreaterThan(0);
-    }
+    // Verify child rows appeared
+    const childRows = await browser.$$(".ag-row[aria-level='1']");
+    await expect(childRows.length).toBeGreaterThan(0);
 
     await this.tableView.close();
 });
 
 Then("the tree structure is properly displayed", async function () {
     // Verify hierarchical structure with proper indentation
-    //const level0Rows = await browser.$$(".ag-row[aria-level='0']");
-    //const level1Rows = await browser.$$(".ag-row[aria-level='1']");
-
+    const level0Rows = await browser.$$(".ag-row[aria-level='0']");
+    const level1Rows = await browser.$$(".ag-row[aria-level='1']");
+    await expect(level0Rows.length).toBeGreaterThan(0);
     // Should have both parent and child levels if expanded
+    await expect(level1Rows.length).toBeGreaterThan(0);
     await this.tableView.close();
 });
 
@@ -711,12 +719,10 @@ When("the user uses the table's built-in search functionality", async function (
 });
 
 When("applies filters to dataset columns", async function () {
-    // Apply a filter to the dataset name column
     const filterInput = await browser.$(".ag-filter-wrapper input");
-    if (await filterInput.isExisting()) {
-        await filterInput.setValue("TEST");
-        await browser.pause(1000);
-    }
+    await filterInput.waitForExist({ timeout: 3000 });
+    await filterInput.setValue("TEST");
+    await browser.pause(1000);
 });
 
 Then("the table shows only datasets matching the search criteria", async function () {
