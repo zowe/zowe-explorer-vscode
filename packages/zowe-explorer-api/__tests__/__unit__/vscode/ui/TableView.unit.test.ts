@@ -1449,7 +1449,7 @@ describe("Table.View", () => {
 
         describe("pending requests handling", () => {
             it("should resolve pending request with payload when message has requestId and no error", async () => {
-                const globalMocks = createGlobalMocks();
+                createGlobalMocks();
                 const postMessageMock = jest.spyOn(view.panel.webview, "postMessage").mockResolvedValue(true);
 
                 // Start a request to create a pending request
@@ -1479,7 +1479,7 @@ describe("Table.View", () => {
             });
 
             it("should reject pending request with error when message has requestId and error", async () => {
-                const globalMocks = createGlobalMocks();
+                createGlobalMocks();
                 const postMessageMock = jest.spyOn(view.panel.webview, "postMessage").mockResolvedValue(true);
 
                 // Start a request to create a pending request
@@ -1509,7 +1509,7 @@ describe("Table.View", () => {
             });
 
             it("should not handle message when requestId exists but no pending request found", async () => {
-                const globalMocks = createGlobalMocks();
+                createGlobalMocks();
                 const onTableDisplayChangedFireMock = jest.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
 
                 // Simulate a message with requestId but no corresponding pending request
@@ -1524,7 +1524,7 @@ describe("Table.View", () => {
             });
 
             it("should not handle message when requestId is missing", async () => {
-                const globalMocks = createGlobalMocks();
+                createGlobalMocks();
                 const onTableDisplayChangedFireMock = jest.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
 
                 // Simulate a message without requestId
