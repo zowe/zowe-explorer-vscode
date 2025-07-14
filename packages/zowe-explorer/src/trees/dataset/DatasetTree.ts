@@ -1006,7 +1006,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public addSearchHistory(criteria: string): void {
         ZoweLogger.trace("DatasetTree.addSearchHistory called.");
         this.mHistory.addSearchHistory(criteria);
-        this.refresh();
     }
 
     public getSearchHistory(): string[] {
