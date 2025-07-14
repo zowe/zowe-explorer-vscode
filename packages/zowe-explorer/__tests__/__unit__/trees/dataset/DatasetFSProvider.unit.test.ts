@@ -1370,6 +1370,7 @@ describe("DatasetFSProvider", () => {
                 });
 
                 isProfileLockedMock.mockReturnValueOnce(true);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
 
                 const datasetMock = jest.fn().mockResolvedValueOnce({});
@@ -1377,6 +1378,7 @@ describe("DatasetFSProvider", () => {
 
                 const result = await DatasetFSProvider.instance.stat(testUris.ps);
 
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
@@ -1397,6 +1399,7 @@ describe("DatasetFSProvider", () => {
                 const uriInfo = { profile: testProfile };
 
                 isProfileLockedMock.mockReturnValueOnce(true);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
 
                 const datasetMock = jest.fn().mockResolvedValueOnce({});
@@ -1404,6 +1407,7 @@ describe("DatasetFSProvider", () => {
 
                 const result = await (DatasetFSProvider.instance as any).fetchEntriesForProfile(testUris.session, uriInfo, "USER.*");
 
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
@@ -1425,6 +1429,7 @@ describe("DatasetFSProvider", () => {
                 const getInfoFromUriMock = jest.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce(file.metadata);
 
                 isProfileLockedMock.mockReturnValueOnce(true);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
 
                 const getContentsMock = jest.fn().mockResolvedValueOnce({});
@@ -1432,8 +1437,9 @@ describe("DatasetFSProvider", () => {
 
                 const result = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
 
-                expect(waitForUnlockMock).toHaveBeenCalled();
-                expect(isProfileLockedMock).toHaveBeenCalled();
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+                expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(getContentsMock).not.toHaveBeenCalled();
                 expect(result).toBeNull();
