@@ -256,7 +256,7 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
 
             // Mock Logger.getAppLogger
             const mockLogger = { debug: jest.fn() } as unknown as imperative.Logger;
-            const appLoggerMock = jest.spyOn(imperative.Logger, "getAppLogger").mockClear().mockReturnValue(mockLogger);
+            jest.spyOn(imperative.Logger, "getAppLogger").mockClear().mockReturnValue(mockLogger);
 
             // Access the profilesCache getter to trigger the code path
             expect(ZoweVsCodeExtension.profilesCache.allProfiles).toBeDefined();
