@@ -141,7 +141,7 @@ export class TreeDataSource implements IDataSetSource {
 /**
  * Helper function to build member information from API response
  */
-function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
+export function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
     // Parse c4date and m4date with mtime if available
     let createdDate: Date | undefined;
     let modifiedDate: Date | undefined;

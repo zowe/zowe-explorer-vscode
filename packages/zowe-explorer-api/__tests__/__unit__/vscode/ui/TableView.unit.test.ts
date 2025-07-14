@@ -1489,6 +1489,101 @@ describe("Table.View", () => {
 
             await expect(requestPromise).rejects.toThrow("Something went wrong in the webview");
         });
+
+        describe("pending requests handling", () => {
+            it("should resolve pending request with payload when message has requestId and no error", async () => {
+                const globalMocks = createGlobalMocks();
+                const view = new Table.View(globalMocks.context as any, false, { title: "Test Table" } as any);
+                const postMessageMock = jest.spyOn(view.panel.webview, "postMessage").mockResolvedValue(true);
+
+                // Start a request to create a pending request
+                const requestPromise = view.request("test-command", { data: "test-data" });
+
+                // Get the requestId from the postMessage call
+                const lastCall = postMessageMock.mock.calls[0][0] as { requestId: string };
+                const requestId = lastCall.requestId;
+
+                // Verify the request is in pendingRequests
+                expect((view as any).pendingRequests[requestId]).toBeDefined();
+
+                const payload = { result: "success", data: "response-data" };
+
+                // Simulate the webview response
+                await view.onMessageReceived({
+                    command: "response",
+                    requestId,
+                    payload,
+                });
+
+                // Verify the promise resolves with the payload
+                await expect(requestPromise).resolves.toEqual(payload);
+
+                // Verify the request is removed from pendingRequests
+                expect((view as any).pendingRequests[requestId]).toBeUndefined();
+            });
+
+            it("should reject pending request with error when message has requestId and error", async () => {
+                const globalMocks = createGlobalMocks();
+                const view = new Table.View(globalMocks.context as any, false, { title: "Test Table" } as any);
+                const postMessageMock = jest.spyOn(view.panel.webview, "postMessage").mockResolvedValue(true);
+
+                // Start a request to create a pending request
+                const requestPromise = view.request("test-command", { data: "test-data" });
+
+                // Get the requestId from the postMessage call
+                const lastCall = postMessageMock.mock.calls[0][0] as { requestId: string };
+                const requestId = lastCall.requestId;
+
+                // Verify the request is in pendingRequests
+                expect((view as any).pendingRequests[requestId]).toBeDefined();
+
+                const errorMessage = "Something went wrong in the webview";
+
+                // Simulate the webview error response
+                await view.onMessageReceived({
+                    command: "response",
+                    requestId,
+                    error: errorMessage,
+                });
+
+                // Verify the promise rejects with the error
+                await expect(requestPromise).rejects.toThrow(errorMessage);
+
+                // Verify the request is removed from pendingRequests
+                expect((view as any).pendingRequests[requestId]).toBeUndefined();
+            });
+
+            it("should not handle message when requestId exists but no pending request found", async () => {
+                const globalMocks = createGlobalMocks();
+                const view = new Table.View(globalMocks.context as any, false, { title: "Test Table" } as any);
+                const onTableDisplayChangedFireMock = jest.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
+
+                // Simulate a message with requestId but no corresponding pending request
+                await view.onMessageReceived({
+                    command: "ondisplaychanged",
+                    requestId: "non-existent-request-id",
+                    payload: { rows: [{ a: 1, b: 2 }] },
+                });
+
+                // Verify that normal command handling continues (not early return)
+                expect(onTableDisplayChangedFireMock).toHaveBeenCalledWith({ rows: [{ a: 1, b: 2 }] });
+            });
+
+            it("should not handle message when requestId is missing", async () => {
+                const globalMocks = createGlobalMocks();
+                const view = new Table.View(globalMocks.context as any, false, { title: "Test Table" } as any);
+                const onTableDisplayChangedFireMock = jest.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
+
+                // Simulate a message without requestId
+                await view.onMessageReceived({
+                    command: "ondisplaychanged",
+                    payload: { rows: [{ a: 1, b: 2 }] },
+                });
+
+                // Verify that normal command handling continues (not early return)
+                expect(onTableDisplayChangedFireMock).toHaveBeenCalledWith({ rows: [{ a: 1, b: 2 }] });
+            });
+        });
     });
 });
 

@@ -10,7 +10,7 @@
  */
 
 import { TreeItemCollapsibleState, commands, Uri, ExtensionContext } from "vscode";
-import { DatasetTableView, PatternDataSource, TreeDataSource } from "../../../../src/trees/dataset/DatasetTableView";
+import { DatasetTableView, PatternDataSource, TreeDataSource, buildMemberInfo } from "../../../../src/trees/dataset/DatasetTableView";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import { Constants } from "../../../../src/configuration/Constants";
@@ -1731,6 +1731,253 @@ describe("DatasetTableView action handlers/callbacks", () => {
             (datasetTableView as any).shouldShow = { dsname: true, dsorg: true };
             datasetTableView.dispose();
             expect((datasetTableView as any).shouldShow).toEqual({});
+        });
+    });
+});
+
+describe("buildMemberInfo", () => {
+    const parentUri = "zowe-ds:/profile/TEST.PDS";
+
+    describe("createdDate handling", () => {
+        it("should set createdDate properly when c4date exists on a member", () => {
+            const member = {
+                member: "MEMBER1",
+                c4date: "2023-12-01",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            expect(result.createdDate).toEqual(new Date("2023-12-01"));
+            expect(result.name).toBe("MEMBER1");
+            expect(result.user).toBe("USER1");
+            expect(result.uri).toBe(`${parentUri}/MEMBER1`);
+            expect(result.isMember).toBe(true);
+            expect(result.isDirectory).toBe(false);
+            expect(result.parentId).toBe(parentUri);
+        });
+
+        it("should leave createdDate undefined when c4date does not exist", () => {
+            const member = {
+                member: "MEMBER1",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            expect(result.createdDate).toBeUndefined();
+            expect(result.name).toBe("MEMBER1");
+        });
+
+        it("should handle invalid c4date gracefully", () => {
+            const member = {
+                member: "MEMBER1",
+                c4date: "invalid-date",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            // Invalid date should still create a Date object, but it will be "Invalid Date"
+            expect(result.createdDate).toBeInstanceOf(Date);
+            expect(result.createdDate?.toString()).toBe("Invalid Date");
+        });
+    });
+
+    describe("modifiedDate handling", () => {
+        it("should set modifiedDate properly when m4date exists on a member", () => {
+            const member = {
+                member: "MEMBER1",
+                m4date: "2023-12-15",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            expect(result.modifiedDate).toEqual(new Date("2023-12-15"));
+            expect(result.name).toBe("MEMBER1");
+        });
+
+        it("should leave modifiedDate undefined when m4date does not exist", () => {
+            const member = {
+                member: "MEMBER1",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            expect(result.modifiedDate).toBeUndefined();
+        });
+
+        it("should handle mtime component when both m4date and mtime exist", () => {
+            const member = {
+                member: "MEMBER1",
+                m4date: "2023-12-15",
+                mtime: "14:30",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            const expectedDate = new Date("2023-12-15");
+            expectedDate.setHours(14, 30);
+
+            expect(result.modifiedDate).toEqual(expectedDate);
+            expect(result.modifiedDate?.getHours()).toBe(14);
+            expect(result.modifiedDate?.getMinutes()).toBe(30);
+        });
+
+        it("should handle msec component when m4date, mtime, and msec exist", () => {
+            const member = {
+                member: "MEMBER1",
+                m4date: "2023-12-15",
+                mtime: "14:30",
+                msec: "45",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            const expectedDate = new Date("2023-12-15");
+            expectedDate.setHours(14, 30, 45);
+
+            expect(result.modifiedDate).toEqual(expectedDate);
+            expect(result.modifiedDate?.getHours()).toBe(14);
+            expect(result.modifiedDate?.getMinutes()).toBe(30);
+            expect(result.modifiedDate?.getSeconds()).toBe(45);
+        });
+
+        it("should handle mtime without msec", () => {
+            const member = {
+                member: "MEMBER1",
+                m4date: "2023-12-15",
+                mtime: "09:15",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            const expectedDate = new Date("2023-12-15");
+            expectedDate.setHours(9, 15);
+
+            expect(result.modifiedDate).toEqual(expectedDate);
+            expect(result.modifiedDate?.getHours()).toBe(9);
+            expect(result.modifiedDate?.getMinutes()).toBe(15);
+            expect(result.modifiedDate?.getSeconds()).toBe(0); // Should default to 0 when msec not provided
+        });
+
+        it("should ignore mtime and msec when m4date does not exist", () => {
+            const member = {
+                member: "MEMBER1",
+                mtime: "14:30",
+                msec: "45",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            expect(result.modifiedDate).toBeUndefined();
+        });
+
+        it("should handle invalid m4date gracefully", () => {
+            const member = {
+                member: "MEMBER1",
+                m4date: "invalid-date",
+                mtime: "14:30",
+                msec: "45",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            // Invalid date should still create a Date object, but it will be "Invalid Date"
+            expect(result.modifiedDate).toBeInstanceOf(Date);
+            expect(result.modifiedDate?.toString()).toBe("Invalid Date");
+        });
+
+        it("should handle invalid mtime format gracefully", () => {
+            const member = {
+                member: "MEMBER1",
+                m4date: "2023-12-15",
+                mtime: "invalid-time",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            const expectedDate = new Date("2023-12-15");
+            // Invalid time format should result in NaN for hours/minutes
+            expectedDate.setHours(NaN, NaN);
+
+            expect(result.modifiedDate).toBeInstanceOf(Date);
+            expect(result.modifiedDate?.toString()).toBe("Invalid Date");
+        });
+    });
+
+    describe("complete member info structure", () => {
+        it("should return complete member info with all fields", () => {
+            const member = {
+                member: "MEMBER1",
+                c4date: "2023-12-01",
+                m4date: "2023-12-15",
+                mtime: "14:30",
+                msec: "45",
+                user: "USER1",
+                vers: "01.02",
+                mod: "03",
+                cnorc: "100",
+                inorc: "95",
+                mnorc: "5",
+                sclm: "Y",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            expect(result).toEqual({
+                name: "MEMBER1",
+                createdDate: new Date("2023-12-01"),
+                modifiedDate: (() => {
+                    const date = new Date("2023-12-15");
+                    date.setHours(14, 30, 45);
+                    return date;
+                })(),
+                user: "USER1",
+                uri: `${parentUri}/MEMBER1`,
+                isMember: true,
+                isDirectory: false,
+                parentId: parentUri,
+                vers: "01.02",
+                mod: "03",
+                cnorc: "100",
+                inorc: "95",
+                mnorc: "5",
+                sclm: "Y",
+            });
+        });
+
+        it("should handle minimal member info", () => {
+            const member = {
+                member: "MEMBER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            expect(result).toEqual({
+                name: "MEMBER1",
+                createdDate: undefined,
+                modifiedDate: undefined,
+                user: undefined,
+                uri: `${parentUri}/MEMBER1`,
+                isMember: true,
+                isDirectory: false,
+                parentId: parentUri,
+                vers: undefined,
+                mod: undefined,
+                cnorc: undefined,
+                inorc: undefined,
+                mnorc: undefined,
+                sclm: undefined,
+            });
         });
     });
 });

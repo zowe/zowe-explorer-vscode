@@ -41,7 +41,7 @@ export interface ActionEvaluationResult {
  * @returns Promise resolving to the action title
  */
 export async function getActionTitle(action: Table.Action, context: ActionEvaluationContext): Promise<string> {
-    // Check if this is a dynamic title (marked with our special prefix)
+    // Check if this is a dynamic title (marked with __DYNAMIC_TITLE__ prefix)
     if (typeof action.title === "string" && action.title.startsWith("__DYNAMIC_TITLE__")) {
         try {
             const evaluationData = prepareEvaluationData(action, context);
