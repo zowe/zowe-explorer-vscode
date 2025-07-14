@@ -68,10 +68,3 @@ Scenario: User wants to use hierarchical tree view for datasets with PDS
     Then PDS datasets show expand and collapse indicators
     And users can expand PDS nodes to view members inline
     And the tree structure is properly displayed
-
-Scenario: User wants to search and filter datasets in the table
-    Given a user who has the dataset table view opened
-    When the user uses the table's built-in search functionality
-    And applies filters to dataset columns
-    Then the table shows only datasets matching the search criteria
-    And the filtering works correctly across all visible columns

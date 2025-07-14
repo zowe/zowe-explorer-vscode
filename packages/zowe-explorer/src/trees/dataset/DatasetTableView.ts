@@ -98,7 +98,7 @@ export class TreeDataSource implements IDataSetSource {
         });
 
         if (pdsNode) {
-            const children = await pdsNode.getChildren();
+            const children = await pdsNode.getChildren(false);
             return (
                 children
                     ?.filter((memberNode) => !SharedContext.isInformation(memberNode))
@@ -708,14 +708,14 @@ export class DatasetTableView {
 
             if (profileNode) {
                 // Load children if not already loaded
-                await profileNode.getChildren();
+                await profileNode.getChildren(false);
 
                 // Find the PDS node
                 const pdsNode = profileNode.children?.find((child) => child.label.toString() === datasetName);
 
                 if (pdsNode) {
                     // Load PDS members if not already loaded
-                    await pdsNode.getChildren();
+                    await pdsNode.getChildren(false);
 
                     // Find the member node
                     const memberNode = pdsNode.children?.find((child) => child.label.toString() === memberName);
@@ -735,7 +735,7 @@ export class DatasetTableView {
             const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
 
             if (profileNode) {
-                await profileNode.getChildren();
+                await profileNode.getChildren(false);
                 const dsNode = profileNode.children?.find((child) => child.label.toString() === datasetName);
 
                 if (dsNode) {
@@ -1126,7 +1126,7 @@ export class DatasetTableView {
             profileNode = SharedTreeProviders.ds.mSessionNodes.find((s) => s.label.toString() === resp) as IZoweDatasetTreeNode;
         }
 
-        await profileNode.getChildren();
+        await profileNode.getChildren(false);
         return profileNode;
     }
 

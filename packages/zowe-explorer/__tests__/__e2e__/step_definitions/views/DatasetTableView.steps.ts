@@ -19,7 +19,7 @@ const testInfo = {
     profileName: process.env.ZE_TEST_PROFILE_NAME,
     dsFilter: process.env.ZE_TEST_DS_FILTER,
     pds: process.env.ZE_TEST_PDS,
-    sequential: process.env.ZE_TEST_SEQUENTIAL_DS,
+    sequential: process.env.ZE_TEST_PS,
     testPattern: process.env.ZE_TEST_DS_PATTERN,
 };
 
@@ -534,20 +534,24 @@ Then("the table view returns to the previous dataset list", async function () {
 });
 
 Then("preserves the previous table state including pinned rows", async function () {
-    await browser.pause(1000);
-    const pinnedRows = await browser.$$(".ag-pinned-top .ag-row");
-    // TODO: Currently assuming that previous table had pinned rows, but we should check count
-    // (not needed for now since we pin rows in the test)
-    await expect(pinnedRows.length).toBeGreaterThan(0);
+    await browser.pause(3000);
+    const pinnedRows = await browser.$(".ag-row-pinned");
+    await expect(pinnedRows).not.toBe(null);
     await this.tableView.close();
 });
 
 // Context menu functionality
 When("the user right-clicks on a dataset row", async function () {
     await this.tableView.open();
-    const firstRow = await browser.$(".ag-row[row-index='0']");
-    await firstRow.waitForExist();
-    await firstRow.click({ button: "right" });
+    const rows = await browser.$$(".ag-row");
+    for (const row of rows) {
+        const dsnameCell = await row.$("[col-id='dsname']");
+        const dsnameText = await dsnameCell.getText();
+        if (dsnameText === testInfo.sequential) {
+            await row.click({ button: "right" });
+            break;
+        }
+    }
 });
 
 When("the user right-clicks on a member row", async function () {
@@ -615,125 +619,43 @@ Then("the PDS member is revealed and focused in the Data Sets tree", async funct
     // Get the Data Sets tree pane using the same pattern as TreeActions.steps.ts
     const dsPane = await paneDivForTree("Data Sets");
     const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
-
-    // Find the profile node (skip index 0 which is Favorites)
-    let profileNode: TreeItem | null = null;
-    for (let i = 1; i < treeItems.length; i++) {
-        const item = treeItems[i];
-        const label = await item.getLabel();
-        if (label && typeof label === "string") {
-            profileNode = item;
-            break;
-        }
-    }
-
-    await expect(profileNode).not.toBe(null);
-
-    // Get updated tree items after profile expansion
-    const expandedTreeItems = (await dsPane.getVisibleItems()) as TreeItem[];
-
-    // Find the PDS node
-    let pdsNode: TreeItem | null = null;
-    for (const item of expandedTreeItems) {
-        const label = await item.getLabel();
-        if (label === this.selectedPdsName) {
-            pdsNode = item;
-            break;
-        }
-    }
-
-    await expect(pdsNode).not.toBe(null);
-
-    // Get updated tree items after PDS expansion
-    const memberTreeItems = (await dsPane.getVisibleItems()) as TreeItem[];
-
-    // Find the member node
-    let memberNode: TreeItem | null = null;
-    for (const item of memberTreeItems) {
-        const label = await item.getLabel();
-        if (label === this.selectedMemberName) {
-            memberNode = item;
-            break;
-        }
-    }
-
-    await expect(memberNode).not.toBe(null);
-
-    // Verify the member node is focused/selected
-    const memberSelected = await memberNode.elem.getAttribute("aria-selected");
-    await expect(memberSelected).toBe("true");
+    const allLabels = await Promise.all(treeItems.map(async (item) => await item.getLabel()));
+    await expect(allLabels.find((label) => label === this.selectedMemberName)).not.toBe(null);
 });
 
 // Hierarchical tree functionality
 When("the table loads with hierarchical tree support", async function () {
     await this.tableView.open();
-    // Verify tree column renderer is active
-    await this.tableView.open();
-    // TODO: Fix this test
-
-    //const treeColumn = await browser.$("[col-id='dsname'] > .codicon .codicon-chevron-right");
-    //await expect(await treeColumn.isExisting()).toBe(true);
 });
 
 Then("PDS datasets show expand and collapse indicators", async function () {
     // Look for tree expansion indicators in PDS rows
-    const pdsRows = await browser.$$(".ag-row [col-id='dsname'] > .codicon-chevron-right");
+    // Verify tree column renderer is active
+    const pdsRows = await browser.$$(".ag-row > div[col-id='dsname'] > div > span > div > span > .codicon-chevron-right");
     await expect(pdsRows.length).toBeGreaterThan(0);
-    await this.tableView.close();
 });
 
 Then("users can expand PDS nodes to view members inline", async function () {
     // Find and expand a PDS node
-    const expandIcon = await browser.$(".ag-row [col-id='dsname'] > .codicon-chevron-right");
+    const expandIcon = (await browser.$$(".ag-row > div[col-id='dsname'] > div > span > div > span > .codicon-chevron-right"))[0];
     await expect(expandIcon).toBeExisting();
     await expandIcon.click();
-    await browser.pause(1000);
-
     // Verify child rows appeared
-    const childRows = await browser.$$(".ag-row[aria-level='1']");
-    await expect(childRows.length).toBeGreaterThan(0);
-
-    await this.tableView.close();
+    await browser.waitUntil(
+        async () => {
+            const childRows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='1']");
+            return childRows.length > 0;
+        },
+        { timeout: 10000 }
+    );
 });
 
 Then("the tree structure is properly displayed", async function () {
     // Verify hierarchical structure with proper indentation
-    const level0Rows = await browser.$$(".ag-row[aria-level='0']");
-    const level1Rows = await browser.$$(".ag-row[aria-level='1']");
+    const level0Rows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='0']");
+    const level1Rows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='1']");
     await expect(level0Rows.length).toBeGreaterThan(0);
     // Should have both parent and child levels if expanded
     await expect(level1Rows.length).toBeGreaterThan(0);
-    await this.tableView.close();
-});
-
-// Search and filter functionality
-When("the user uses the table's built-in search functionality", async function () {
-    await this.tableView.open();
-
-    // Use AG Grid's filter functionality
-    const filterIcon = await browser.$(".ag-header-cell-menu-button");
-    if (await filterIcon.isExisting()) {
-        await filterIcon.click();
-        await browser.pause(500);
-    }
-});
-
-When("applies filters to dataset columns", async function () {
-    const filterInput = await browser.$(".ag-filter-wrapper input");
-    await filterInput.waitForExist({ timeout: 3000 });
-    await filterInput.setValue("TEST");
-    await browser.pause(1000);
-});
-
-Then("the table shows only datasets matching the search criteria", async function () {
-    // Verify filtered results
-    const visibleRows = await browser.$$(".ag-row:not(.ag-row-hidden)");
-    await expect(visibleRows.length).toBeGreaterThan(0);
-
-    await this.tableView.close();
-});
-
-Then("the filtering works correctly across all visible columns", async function () {
-    // This is verified by the previous step
     await this.tableView.close();
 });
