@@ -14,6 +14,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for asynchronous operations when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Adjusted formatting for the certificate selection webview to make better use of space. [#3754](https://github.com/zowe/zowe-explorer-vscode/issues/3754)
+- Added "Show as Table" option for profiles with search patterns in the Data Sets tree. Users can now right-click on a profile in the Data Sets tree with a search pattern set and select "Show as Table" to view matching data sets in a tabular format. [#3583](https://github.com/zowe/zowe-explorer-vscode/issues/3583)
+- Added "Show as Table" option for partitioned data sets. Users can now right-click on a partitioned data set in the Data Sets tree and select "Show as Table" to view its members in a tabular format. [#3583](https://github.com/zowe/zowe-explorer-vscode/issues/3583)
+- Added "Zowe Explorer: List Data Sets" command. Users can now run this command from the command palette to be prompted for a search pattern and display the matching data sets in a table view. [#3583](https://github.com/zowe/zowe-explorer-vscode/issues/3583)
 
 ### Bug fixes
 
