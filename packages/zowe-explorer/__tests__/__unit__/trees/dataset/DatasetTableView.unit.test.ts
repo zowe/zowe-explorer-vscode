@@ -33,7 +33,7 @@ import { l10n } from "vscode";
 
 describe("TreeDataSource", () => {
     describe("fetchDatasets", () => {
-        it("returns a map of data set info based on the cachedChildren property", () => {
+        it("returns a map of data set info based on the result of getChildren", async () => {
             const profile = createIProfile();
             const dsProfileNode = new ZoweDatasetNode({
                 label: "sestest",
@@ -60,17 +60,21 @@ describe("TreeDataSource", () => {
                     user: "USER1",
                     vol: "WRK001",
                 },
+                getStatsMock: jest.fn(),
             }));
 
             const dsNodes = dataSets.map((ds) => ds.node);
             const getStatsMock = jest
                 .spyOn(ZoweDatasetNode.prototype, "getStats")
                 .mockImplementation(function (this: ZoweDatasetNode): Types.DatasetStats {
-                    return dataSets.find((ds) => ds.node.label === this.label)!.stats;
+                    return dataSets.find((ds) => ds.node.label === this.label)?.stats;
                 });
             dsProfileNode.children = dsNodes;
-            const treeDataSource = new TreeDataSource(dsProfileNode, dsProfileNode.children);
-            const result = treeDataSource.fetchDataSets();
+            const getChildrenMock = jest.spyOn(dsProfileNode, "getChildren").mockImplementation((_paginate) => {
+                return Promise.resolve(dsNodes);
+            });
+            const treeDataSource = new TreeDataSource(dsProfileNode);
+            const result = await treeDataSource.fetchDataSets();
             expect(result).toEqual(
                 dataSets.map((ds) => {
                     const stats: Record<string, any> = { ...ds.stats };
@@ -88,6 +92,8 @@ describe("TreeDataSource", () => {
                 })
             );
             expect(getStatsMock).toHaveBeenCalledTimes(dsNodes.length);
+            expect(getChildrenMock).toHaveBeenCalledTimes(1);
+            expect(getChildrenMock).toHaveBeenCalledWith(false);
             getStatsMock.mockRestore();
         });
 
@@ -119,11 +125,18 @@ describe("TreeDataSource", () => {
             const getChildrenMock = jest.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(newChildren);
             });
-            const treeDataSource = new TreeDataSource(profileNode, profileNode.children);
+            const loadNamedProfile = jest.fn().mockResolvedValue(profile);
+            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile,
+            } as any);
+            const treeDataSource = new TreeDataSource(profileNode);
             const parentId = `zowe-ds:/wrongProfile/${pdsNode.label?.toString()}`;
             const children = await treeDataSource.loadChildren(parentId);
             expect(getChildrenMock).not.toHaveBeenCalledTimes(1);
             expect(children).toEqual([]);
+            expect(profilesMock).toHaveBeenCalled();
+            expect(loadNamedProfile).toHaveBeenCalledWith("sestest");
+            profilesMock.mockRestore();
         });
     });
 
@@ -146,9 +159,10 @@ describe("TreeDataSource", () => {
                         contextOverride: Constants.DS_MEMBER_CONTEXT,
                     })
             );
-
-            const treeDataSource = new TreeDataSource(pdsNode, pdsNode.children);
+            const getProfileNameMock = jest.spyOn(pdsNode, "getProfileName").mockReturnValue("sestest");
+            const treeDataSource = new TreeDataSource(pdsNode);
             expect(treeDataSource.getTitle()).toBe("[sestest]: TEST.PDS");
+            expect(getProfileNameMock).toHaveBeenCalledTimes(1);
         });
 
         it("returns the profile name with the pattern if pattern specified", () => {
@@ -172,13 +186,13 @@ describe("TreeDataSource", () => {
                     })
             );
 
-            const treeDataSource = new TreeDataSource(profileNode, profileNode.children);
+            const treeDataSource = new TreeDataSource(profileNode);
             expect(treeDataSource.getTitle()).toBe(`[${profileNode.getProfileName()}]: ${profileNode.pattern}`);
         });
     });
 
     describe("supportsHierarchy", () => {
-        it("returns true if tree node is a profile and one child is a PDS", () => {
+        it("returns true if tree node is a profile and one child is a PDS", async () => {
             const profileNode = new ZoweDatasetNode({
                 label: "sestest",
                 collapsibleState: TreeItemCollapsibleState.Expanded,
@@ -201,22 +215,31 @@ describe("TreeDataSource", () => {
                     profile: createIProfile(),
                 }),
             ];
-            const treeDataSource = new TreeDataSource(profileNode, profileNode.children);
-            expect(treeDataSource.supportsHierarchy()).toBe(true);
+            const treeDataSource = new TreeDataSource(profileNode);
+            const getChildrenMock = jest.spyOn(profileNode, "getChildren").mockImplementation((_paginate) => {
+                return Promise.resolve(profileNode.children);
+            });
+            expect(await treeDataSource.supportsHierarchy()).toBe(true);
+            expect(getChildrenMock).toHaveBeenCalledTimes(1);
+            expect(getChildrenMock).toHaveBeenCalledWith(false);
         });
 
-        it("returns false if tree node is not a profile", () => {
+        it("returns false if tree node is not a profile", async () => {
             const pdsNode = new ZoweDatasetNode({
                 label: "TEST.PDS",
                 collapsibleState: TreeItemCollapsibleState.Expanded,
                 contextOverride: Constants.DS_PDS_CONTEXT,
                 profile: createIProfile(),
             });
-            const treeDataSource = new TreeDataSource(pdsNode, pdsNode.children);
-            expect(treeDataSource.supportsHierarchy()).toBe(false);
+            const treeDataSource = new TreeDataSource(pdsNode);
+            const getChildrenMock = jest.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
+                return Promise.resolve(pdsNode.children);
+            });
+            expect(await treeDataSource.supportsHierarchy()).toBe(false);
+            expect(getChildrenMock).not.toHaveBeenCalledTimes(1);
         });
 
-        it("returns false if no PDS child found under profile node", () => {
+        it("returns false if no PDS child found under profile node", async () => {
             const profileNode = new ZoweDatasetNode({
                 label: "sestest",
                 collapsibleState: TreeItemCollapsibleState.Expanded,
@@ -239,8 +262,13 @@ describe("TreeDataSource", () => {
                     profile: createIProfile(),
                 }),
             ];
-            const treeDataSource = new TreeDataSource(profileNode, profileNode.children);
-            expect(treeDataSource.supportsHierarchy()).toBe(false);
+            const treeDataSource = new TreeDataSource(profileNode);
+            const getChildrenMock = jest.spyOn(profileNode, "getChildren").mockImplementation((_paginate) => {
+                return Promise.resolve(profileNode.children);
+            });
+            expect(await treeDataSource.supportsHierarchy()).toBe(false);
+            expect(getChildrenMock).toHaveBeenCalledTimes(1);
+            expect(getChildrenMock).toHaveBeenCalledWith(false);
         });
     });
 
@@ -270,13 +298,19 @@ describe("TreeDataSource", () => {
                 }),
             ];
             profileNode.children = [pdsNode];
-            const getChildrenMock = jest.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
+            const getChildrenMock = jest.spyOn(profileNode, "getChildren").mockImplementation((_paginate) => {
+                return Promise.resolve(profileNode.children);
+            });
+            const pdsGetChildrenMock = jest.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(newChildren);
             });
-            const treeDataSource = new TreeDataSource(profileNode, profileNode.children);
+            const treeDataSource = new TreeDataSource(profileNode);
             const parentId = `zowe-ds:/${profile.name}/${pdsNode.label?.toString()}`;
             const children = await treeDataSource.loadChildren(parentId);
             expect(getChildrenMock).toHaveBeenCalledTimes(1);
+            expect(getChildrenMock).toHaveBeenCalledWith(false);
+            expect(pdsGetChildrenMock).toHaveBeenCalledTimes(1);
+            expect(pdsGetChildrenMock).toHaveBeenCalledWith(false);
             expect(children).toEqual([
                 {
                     name: "MEM1",
@@ -314,14 +348,20 @@ describe("TreeDataSource", () => {
                 }),
             ];
             profileNode.children = [pdsNode];
+            const loadNamedProfile = jest.fn().mockResolvedValue(profile);
+            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile,
+            } as any);
             const getChildrenMock = jest.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(newChildren);
             });
-            const treeDataSource = new TreeDataSource(profileNode, profileNode.children);
+            const treeDataSource = new TreeDataSource(profileNode);
             const parentId = `zowe-ds:/wrongProfile/${pdsNode.label?.toString()}`;
             const children = await treeDataSource.loadChildren(parentId);
             expect(getChildrenMock).not.toHaveBeenCalledTimes(1);
             expect(children).toEqual([]);
+            expect(loadNamedProfile).toHaveBeenCalledWith("sestest");
+            profilesMock.mockRestore();
         });
     });
 });
@@ -544,7 +584,7 @@ describe("PDSMembersDataSource", () => {
         });
 
         it("should use API fallback when parentDataSource is not PatternDataSource", async () => {
-            const treeDataSource = new TreeDataSource({} as any, []);
+            const treeDataSource = new TreeDataSource({} as any);
 
             const mvsApiMock = {
                 allMembers: jest.fn().mockResolvedValue({
@@ -1055,10 +1095,16 @@ describe("DatasetTableView", () => {
             jest.spyOn(SharedContext, "isSession").mockReturnValue(true);
             jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
             jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
+            const loadNamedProfile = jest.fn().mockResolvedValue(createIProfile());
+            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile,
+            } as any);
 
             await datasetTableView.handleCommand(mockContext, mockNode, [mockNode]);
 
             expect(mockTableViewProvider.setTableView).toHaveBeenCalled();
+            expect(loadNamedProfile).toHaveBeenCalledWith("sestest");
+            profilesMock.mockRestore();
         });
 
         it("should handle PDS node command", async () => {
@@ -1376,14 +1422,18 @@ describe("DatasetTableView", () => {
                 jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
                 jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
 
+                const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                    loadNamedProfile: jest.fn().mockResolvedValue(createIProfile()),
+                } as any);
                 await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
 
                 expect(mockTableViewProvider.setTableView).toHaveBeenCalled();
                 expect(commands.executeCommand).toHaveBeenCalledWith("zowe-resources.focus");
+                profilesMock.mockRestore();
             });
 
             it("should call filterPrompt for session node without pattern", async () => {
-                mockNode.pattern = null;
+                mockNode.pattern = "";
                 mockNode.children = [];
                 jest.spyOn(SharedContext, "isSession").mockReturnValue(true);
                 jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
@@ -1805,7 +1855,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
             jest.spyOn(sessionNode, "getSessionNode").mockReturnValue(sessionNode);
 
             const pdsRow = { dsname: "TEST.PDS", uri: "zowe-ds:/sestest/TEST.PDS", dsorg: "PO" };
-            const dataSource = new TreeDataSource(sessionNode, []);
+            const dataSource = new TreeDataSource(sessionNode);
             (datasetTableView as any).currentDataSource = dataSource;
             (datasetTableView as any).currentTableType = "dataSets";
             (datasetTableView as any).context = mockContext;

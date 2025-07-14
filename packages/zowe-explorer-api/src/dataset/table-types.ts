@@ -52,7 +52,7 @@ export interface IDataSetSource {
     /**
      * Supports hierarchical tree structure (PDS)
      */
-    supportsHierarchy(): boolean;
+    supportsHierarchy(): boolean | PromiseLike<boolean>;
 
     /**
      * Loads children for a specific parent (PDS)

@@ -37,15 +37,18 @@ import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
  * Tree-based data source that uses existing tree nodes
  */
 export class TreeDataSource implements IDataSetSource {
-    public constructor(public treeNode: IZoweDatasetTreeNode, private cachedChildren: IZoweDatasetTreeNode[]) {}
+    public constructor(public treeNode: IZoweDatasetTreeNode) {}
 
     /**
      * Fetches dataset information based on the cached children tree nodes.
      *
      * @returns {IDataSetInfo[]} An array of dataset information objects, each representing a dataset.
      */
-    public fetchDataSets(): IDataSetInfo[] {
-        return this.cachedChildren.map((dsNode) => this.mapNodeToInfo(dsNode));
+    public async fetchDataSets(): Promise<IDataSetInfo[]> {
+        // Force a refresh of the tree node
+        this.treeNode.dirty = true;
+        const children = await this.treeNode.getChildren(false);
+        return children.map((dsNode) => this.mapNodeToInfo(dsNode));
     }
 
     /**
@@ -81,8 +84,12 @@ export class TreeDataSource implements IDataSetSource {
      * @returns {boolean} Returns `true` if the tree node is a session and at least one of its children
      * is a PDS, indicating support for hierarchical tree structure. Returns `false` otherwise.
      */
-    public supportsHierarchy(): boolean {
-        return SharedContext.isSession(this.treeNode) && this.cachedChildren.some((child) => SharedContext.isPds(child));
+    public async supportsHierarchy(): Promise<boolean> {
+        if (!SharedContext.isSession(this.treeNode)) {
+            return false;
+        }
+        const children = await this.treeNode.getChildren(false);
+        return children.some((child) => SharedContext.isPds(child));
     }
 
     /**
@@ -93,7 +100,8 @@ export class TreeDataSource implements IDataSetSource {
      */
     public async loadChildren(parentId: string): Promise<IDataSetInfo[]> {
         const parentUri = Uri.parse(parentId);
-        const pdsNode = this.cachedChildren.find((child) => {
+        const children = await this.treeNode.getChildren(false);
+        const pdsNode = children.find((child) => {
             return child.resourceUri.path === parentUri.path && SharedContext.isPds(child);
         });
 
@@ -861,7 +869,7 @@ export class DatasetTableView {
      */
     private async generateTable(context: ExtensionContext): Promise<Table.Instance> {
         this.context = context; // Store context for navigation actions
-        const useTreeMode = this.currentDataSource.supportsHierarchy();
+        const useTreeMode = await this.currentDataSource.supportsHierarchy();
         const rows = await this.generateRows(useTreeMode);
 
         // Determine the current table type and ID
@@ -1136,10 +1144,7 @@ export class DatasetTableView {
             if (selectedNode.pattern == null || selectedNode.pattern.length === 0) {
                 await SharedTreeProviders.ds.filterPrompt(selectedNode);
             }
-            this.currentDataSource = new TreeDataSource(
-                selectedNode,
-                selectedNode.children.filter((child) => !SharedContext.isInformation(child))
-            );
+            this.currentDataSource = new TreeDataSource(selectedNode);
             this.currentTableType = "dataSets";
         } else if (SharedContext.isPds(selectedNode)) {
             const profile = selectedNode.getSessionNode()?.getProfile();
