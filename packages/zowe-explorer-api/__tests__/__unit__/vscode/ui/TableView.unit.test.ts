@@ -446,6 +446,132 @@ describe("Table.View", () => {
             expect(globalMocks.updateWebviewMock).not.toHaveBeenCalled();
             expect(multiCallbackMock).toHaveBeenCalled();
         });
+
+        it("runs the callback for a no-selection action that exists", async () => {
+            const globalMocks = createGlobalMocks();
+            const noSelectionCallbackMock = jest.fn();
+            const data = {
+                title: "Some table",
+                rows: [{ a: 1, b: 1, c: 1 }],
+                columns: [],
+                contextOpts: {
+                    all: [],
+                },
+                actions: {
+                    all: [
+                        {
+                            title: "No selection action",
+                            command: "no-selection-action",
+                            callback: {
+                                typ: "no-selection",
+                                fn: (_view: Table.View) => {
+                                    noSelectionCallbackMock();
+                                },
+                            },
+                        } as Table.Action,
+                    ],
+                },
+            };
+            const view = new Table.View(globalMocks.context as any, false, data);
+
+            const mockWebviewMsg = {
+                command: "no-selection-action",
+                payload: {},
+                rowIndex: 0,
+            };
+            await view.onMessageReceived(mockWebviewMsg);
+            expect(noSelectionCallbackMock).toHaveBeenCalled();
+        });
+    });
+
+    describe("getConditionData", () => {
+        it("returns row data when payload.row is provided", () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, false, { title: "Table" } as any);
+            const rowData = { a: 1, b: 2, c: 3 };
+            const payload = { row: rowData };
+
+            const result = (view as any).getConditionData(payload);
+            expect(result).toBe(rowData);
+        });
+
+        it("returns rows data when payload.rows is provided", () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, false, { title: "Table" } as any);
+            const rowsData = [
+                { a: 1, b: 2 },
+                { a: 3, b: 4 },
+            ];
+            const payload = { rows: rowsData };
+
+            const result = (view as any).getConditionData(payload);
+            expect(result).toBe(rowsData);
+        });
+
+        it("returns cell data when payload.cell is provided", () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, false, { title: "Table" } as any);
+            const cellData = "test cell value";
+            const payload = { cell: cellData };
+
+            const result = (view as any).getConditionData(payload);
+            expect(result).toBe(cellData);
+        });
+
+        it("returns cell data when payload.cell is 0 (falsy but defined)", () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, false, { title: "Table" } as any);
+            const cellData = 0;
+            const payload = { cell: cellData };
+
+            const result = (view as any).getConditionData(payload);
+            expect(result).toBe(cellData);
+        });
+
+        it("returns this.data.rows when no specific data is provided", () => {
+            const globalMocks = createGlobalMocks();
+            const tableRows = [{ a: 1 }, { b: 2 }];
+            const view = new Table.View(globalMocks.context as any, false, {
+                title: "Table",
+                rows: tableRows,
+            } as any);
+            const payload = { someOtherField: "value" };
+
+            const result = (view as any).getConditionData(payload);
+            expect(result).toBe(tableRows);
+        });
+    });
+
+    describe("evaluateCondition", () => {
+        it("successfully evaluates valid string conditions", async () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, false, { title: "Table" } as any);
+
+            // Test with valid string condition
+            const validCondition = "(data) => data.a > 5";
+            const conditionData = { a: 10, b: 2 };
+            const actionCommand = "test-action";
+            const defaultValue = false;
+
+            const result = await (view as any).evaluateCondition(validCondition, conditionData, actionCommand, defaultValue);
+
+            expect(result).toBe(true);
+        });
+
+        it("successfully evaluates valid function conditions", async () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, false, { title: "Table" } as any);
+
+            // Test with valid function condition
+            const validCondition = (data: any) => data.a < 5;
+            const conditionData = { a: 3, b: 2 };
+            const actionCommand = "test-action";
+            const defaultValue = true;
+
+            const result = await (view as any).evaluateCondition(validCondition, conditionData, actionCommand, defaultValue);
+
+            expect(result).toBe(true);
+        });
     });
 
     describe("setContent", () => {
