@@ -36,7 +36,6 @@ import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProv
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 
-
 jest.mock("fs");
 
 function createGlobalMocks() {
@@ -485,7 +484,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(fileExistsError);
 
         jest.spyOn(UssFSProvider.instance, "listFiles").mockRejectedValueOnce({
-            name: "ImperativeError",
+            name: "Error",
             errorCode: imperative.RestConstants.HTTP_STATUS_404,
         });
 
