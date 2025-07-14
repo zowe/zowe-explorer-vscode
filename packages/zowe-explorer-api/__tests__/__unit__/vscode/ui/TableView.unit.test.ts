@@ -1439,31 +1439,6 @@ describe("Table.View", () => {
             };
         });
 
-        xit("should resolve with payload on successful response", async () => {
-            const postMessageMock = (view as any).panel.webview.postMessage.mockResolvedValue(true);
-
-            const requestPromise = view.request("test-command", { data: "test-data" });
-
-            // Need to get the requestId to simulate the response
-            const lastCall = postMessageMock.mock.calls[0][0] as { requestId: string };
-            const requestId = lastCall.requestId;
-
-            process.nextTick(async () => {
-                await view.onMessageReceived({
-                    requestId,
-                    payload: { result: "success" },
-                });
-            });
-
-            await expect(requestPromise).resolves.toEqual({ result: "success" });
-            expect(postMessageMock).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    command: "test-command",
-                    payload: { data: "test-data" },
-                })
-            );
-        });
-
         it("should reject when postMessage fails", async () => {
             (view as any).panel.webview.postMessage.mockResolvedValue(false);
 
@@ -1472,28 +1447,9 @@ describe("Table.View", () => {
             await expect(requestPromise).rejects.toThrow("Failed to send message to webview");
         });
 
-        xit("should reject when webview sends an error", async () => {
-            const postMessageMock = (view as any).panel.webview.postMessage.mockResolvedValue(true);
-
-            const requestPromise = view.request("test-command");
-
-            const lastCall = postMessageMock.mock.calls[0][0] as { requestId: string };
-            const requestId = lastCall.requestId;
-
-            process.nextTick(async () => {
-                await view.onMessageReceived({
-                    requestId,
-                    error: "Something went wrong in the webview",
-                });
-            });
-
-            await expect(requestPromise).rejects.toThrow("Something went wrong in the webview");
-        });
-
         describe("pending requests handling", () => {
             it("should resolve pending request with payload when message has requestId and no error", async () => {
                 const globalMocks = createGlobalMocks();
-                const view = new Table.View(globalMocks.context as any, false, { title: "Test Table" } as any);
                 const postMessageMock = jest.spyOn(view.panel.webview, "postMessage").mockResolvedValue(true);
 
                 // Start a request to create a pending request
@@ -1524,7 +1480,6 @@ describe("Table.View", () => {
 
             it("should reject pending request with error when message has requestId and error", async () => {
                 const globalMocks = createGlobalMocks();
-                const view = new Table.View(globalMocks.context as any, false, { title: "Test Table" } as any);
                 const postMessageMock = jest.spyOn(view.panel.webview, "postMessage").mockResolvedValue(true);
 
                 // Start a request to create a pending request
@@ -1555,7 +1510,6 @@ describe("Table.View", () => {
 
             it("should not handle message when requestId exists but no pending request found", async () => {
                 const globalMocks = createGlobalMocks();
-                const view = new Table.View(globalMocks.context as any, false, { title: "Test Table" } as any);
                 const onTableDisplayChangedFireMock = jest.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
 
                 // Simulate a message with requestId but no corresponding pending request
@@ -1571,7 +1525,6 @@ describe("Table.View", () => {
 
             it("should not handle message when requestId is missing", async () => {
                 const globalMocks = createGlobalMocks();
-                const view = new Table.View(globalMocks.context as any, false, { title: "Test Table" } as any);
                 const onTableDisplayChangedFireMock = jest.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
 
                 // Simulate a message without requestId

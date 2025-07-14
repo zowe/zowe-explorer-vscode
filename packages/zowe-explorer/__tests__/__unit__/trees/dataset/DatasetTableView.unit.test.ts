@@ -10,7 +10,13 @@
  */
 
 import { TreeItemCollapsibleState, commands, Uri, ExtensionContext } from "vscode";
-import { DatasetTableView, PatternDataSource, TreeDataSource, buildMemberInfo } from "../../../../src/trees/dataset/DatasetTableView";
+import {
+    DatasetTableView,
+    PatternDataSource,
+    TreeDataSource,
+    PDSMembersDataSource,
+    buildMemberInfo,
+} from "../../../../src/trees/dataset/DatasetTableView";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import { Constants } from "../../../../src/configuration/Constants";
@@ -477,6 +483,195 @@ describe("PatternDataSource", () => {
 
             expect(children).toEqual([]);
             expect(authUtilsMock).toHaveBeenCalledWith(error, profile);
+        });
+    });
+});
+
+describe("PDSMembersDataSource", () => {
+    let profile: imperative.IProfileLoaded;
+    let getMvsApiMock: jest.SpyInstance;
+    let authUtilsMock: jest.SpyInstance;
+    let parentDataSource: PatternDataSource;
+    let pdsName: string;
+    let pdsUri: string;
+
+    beforeEach(() => {
+        profile = createIProfile();
+        getMvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi");
+        authUtilsMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation(jest.fn());
+        parentDataSource = new PatternDataSource(profile, "TEST.*");
+        pdsName = "TEST.PDS";
+        pdsUri = `zowe-ds:/${profile.name}/TEST.PDS`;
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    describe("getParentDataSource", () => {
+        it("should return the parent data source", () => {
+            const pdsDataSource = new PDSMembersDataSource(parentDataSource, pdsName, pdsUri, profile);
+
+            const result = pdsDataSource.getParentDataSource();
+
+            expect(result).toBe(parentDataSource);
+        });
+
+        it("should return null when parent data source is null", () => {
+            const pdsDataSource = new PDSMembersDataSource(null, pdsName, pdsUri, profile);
+
+            const result = pdsDataSource.getParentDataSource();
+
+            expect(result).toBeNull();
+        });
+    });
+
+    describe("fetchDataSets", () => {
+        it("should return result of loadChildren when parentDataSource is PatternDataSource with loadChildren", async () => {
+            const expectedMembers = [
+                { name: "MEM1", isMember: true, parentId: pdsUri },
+                { name: "MEM2", isMember: true, parentId: pdsUri },
+            ];
+
+            jest.spyOn(parentDataSource, "loadChildren").mockResolvedValue(expectedMembers);
+
+            const pdsDataSource = new PDSMembersDataSource(parentDataSource, pdsName, pdsUri, profile);
+
+            const result = await pdsDataSource.fetchDataSets();
+
+            expect(parentDataSource.loadChildren).toHaveBeenCalledWith(pdsUri);
+            expect(result).toEqual(expectedMembers);
+        });
+
+        it("should use API fallback when parentDataSource is not PatternDataSource", async () => {
+            const treeDataSource = new TreeDataSource({} as any, []);
+
+            const mvsApiMock = {
+                allMembers: jest.fn().mockResolvedValue({
+                    apiResponse: {
+                        items: [
+                            { member: "MEM1", user: "USER1" },
+                            { member: "MEM2", user: "USER2" },
+                        ],
+                    },
+                }),
+            };
+            getMvsApiMock.mockReturnValue(mvsApiMock as any);
+
+            const pdsDataSource = new PDSMembersDataSource(treeDataSource, pdsName, pdsUri, profile);
+
+            const result = await pdsDataSource.fetchDataSets();
+
+            expect(getMvsApiMock).toHaveBeenCalledWith(profile);
+            expect(mvsApiMock.allMembers).toHaveBeenCalledWith(pdsName, { attributes: true });
+            expect(result).toHaveLength(2);
+            expect(result[0].name).toBe("MEM1");
+            expect(result[0].isMember).toBe(true);
+            expect(result[1].name).toBe("MEM2");
+            expect(result[1].isMember).toBe(true);
+        });
+
+        it("should use API fallback when parentDataSource does not have loadChildren method", async () => {
+            const parentWithoutLoadChildren = {
+                fetchDataSets: jest.fn(),
+                getTitle: jest.fn(),
+                supportsHierarchy: jest.fn(),
+                getParentDataSource: jest.fn(),
+            };
+
+            const mvsApiMock = {
+                allMembers: jest.fn().mockResolvedValue({
+                    apiResponse: {
+                        items: [{ member: "MEM1", user: "USER1" }],
+                    },
+                }),
+            };
+            getMvsApiMock.mockReturnValue(mvsApiMock as any);
+
+            const pdsDataSource = new PDSMembersDataSource(parentWithoutLoadChildren, pdsName, pdsUri, profile);
+
+            const result = await pdsDataSource.fetchDataSets();
+
+            expect(getMvsApiMock).toHaveBeenCalledWith(profile);
+            expect(mvsApiMock.allMembers).toHaveBeenCalledWith(pdsName, { attributes: true });
+            expect(result).toHaveLength(1);
+            expect(result[0].name).toBe("MEM1");
+        });
+
+        it("should return empty array when no profile is provided", async () => {
+            const pdsDataSource = new PDSMembersDataSource(null, pdsName, pdsUri, undefined);
+
+            const result = await pdsDataSource.fetchDataSets();
+
+            expect(result).toEqual([]);
+            expect(getMvsApiMock).not.toHaveBeenCalled();
+        });
+
+        it("should return empty array when API call fails and handle auth error", async () => {
+            const error = new Error("API Error");
+            const mvsApiMock = {
+                allMembers: jest.fn().mockRejectedValue(error),
+            };
+            getMvsApiMock.mockReturnValue(mvsApiMock as any);
+
+            const pdsDataSource = new PDSMembersDataSource(null, pdsName, pdsUri, profile);
+
+            const result = await pdsDataSource.fetchDataSets();
+
+            expect(result).toEqual([]);
+            expect(authUtilsMock).toHaveBeenCalledWith(error, profile);
+        });
+
+        it("should return empty array when API response has no items", async () => {
+            const mvsApiMock = {
+                allMembers: jest.fn().mockResolvedValue({
+                    apiResponse: {
+                        items: null,
+                    },
+                }),
+            };
+            getMvsApiMock.mockReturnValue(mvsApiMock as any);
+
+            const pdsDataSource = new PDSMembersDataSource(null, pdsName, pdsUri, profile);
+
+            const result = await pdsDataSource.fetchDataSets();
+
+            expect(result).toEqual([]);
+        });
+
+        it("should return empty array when API response has empty items array", async () => {
+            const mvsApiMock = {
+                allMembers: jest.fn().mockResolvedValue({
+                    apiResponse: {
+                        items: [],
+                    },
+                }),
+            };
+            getMvsApiMock.mockReturnValue(mvsApiMock as any);
+
+            const pdsDataSource = new PDSMembersDataSource(null, pdsName, pdsUri, profile);
+
+            const result = await pdsDataSource.fetchDataSets();
+
+            expect(result).toEqual([]);
+        });
+
+        it("should return empty array when parentDataSource is null and no profile", async () => {
+            const pdsDataSource = new PDSMembersDataSource(null, pdsName, pdsUri, undefined);
+
+            const result = await pdsDataSource.fetchDataSets();
+
+            expect(result).toEqual([]);
+        });
+    });
+
+    describe("supportsHierarchy", () => {
+        it("should return false as members don't have children", () => {
+            const pdsDataSource = new PDSMembersDataSource(parentDataSource, pdsName, pdsUri, profile);
+
+            const result = pdsDataSource.supportsHierarchy();
+
+            expect(result).toBe(false);
         });
     });
 });
