@@ -25,7 +25,7 @@ import {
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
-import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
+// import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -66,8 +66,8 @@ export class AuthUtils {
             const authOpts: AuthPromptParams = {
                 authMethods: Constants.PROFILES_CACHE,
                 imperativeError: err as unknown as imperative.ImperativeError,
-                isUsingTokenAuth: sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
-                                  sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
+                isUsingTokenAuth:
+                    sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                 errorCorrelation,
             };
             // If the profile is already locked, prompt the user to re-authenticate.
@@ -153,13 +153,14 @@ export class AuthUtils {
                     );
                     imperativeError.mDetails.additionalDetails = additionalDetails.join("\n");
                 }
-                
+
                 const sessTypeFromProf = AuthUtils.sessTypeFromProfile(profile);
                 return await AuthHandler.promptForAuthentication(profile, {
                     authMethods: Constants.PROFILES_CACHE,
                     imperativeError,
-                    isUsingTokenAuth: sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
-                                      sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
+                    isUsingTokenAuth:
+                        sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
+                        sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                     errorCorrelation,
                 });
             }
@@ -199,11 +200,11 @@ export class AuthUtils {
     public static updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): void {
         const iSessFromProf = AuthUtils.getSessFromProfile(profile).ISession;
         imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
- 
+
         let usingBasicAuth: boolean = false;
         let usingTokenAuth: boolean = false;
         let usingCertAuth: boolean = false;
-        switch(iSessFromProf.type) {
+        switch (iSessFromProf.type) {
             case imperative.SessConstants.AUTH_TYPE_BASIC:
                 usingBasicAuth = true;
                 break;
@@ -372,25 +373,26 @@ export class AuthUtils {
 
     /**
      * Function that returns the session associated with the specified profile.
-     * 
+     *
      * @param {imperative.IProfileLoaded} profile The profile to be inspected.
-     * 
-     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES} 
+     *
+     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES}
      *      The session type for the session associated with the specified profile
      */
     public static getSessFromProfile(profile: imperative.IProfileLoaded): imperative.Session {
         if (!profile) {
             throw new Error("Supplied profile was null or undefined.");
         }
-        return ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getSession();
+        return new ZoweExplorerZosmf.CommonApi(profile).getSession();
+        // return ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getSession();
     }
 
     /**
      * Function that returns the session type for the session associated with the specified profile.
-     * 
+     *
      * @param {imperative.IProfileLoaded} profile The profile to be inspected.
-     * 
-     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES} 
+     *
+     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES}
      *      The session type for the session associated with the specified profile
      */
     public static sessTypeFromProfile(profile: imperative.IProfileLoaded): imperative.SessConstants.AUTH_TYPE_CHOICES {
@@ -402,10 +404,10 @@ export class AuthUtils {
 
     /**
      * Function that returns the session type for the specified session.
-     * 
+     *
      * @param {imperative.Session} session The session to be inspected.
-     * 
-     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES} 
+     *
+     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES}
      *      The session type for the specified session
      */
     public static sessTypeFromSession(session: imperative.Session): imperative.SessConstants.AUTH_TYPE_CHOICES {

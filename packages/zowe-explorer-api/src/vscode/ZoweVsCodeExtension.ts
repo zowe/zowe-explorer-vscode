@@ -168,7 +168,7 @@ export class ZoweVsCodeExtension {
             user: "Username",
             password: "Password",
             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-            tokenType
+            tokenType,
             /* TODO:authOrder remove this permanently
             type: imperative.SessConstants.AUTH_TYPE_TOKEN,
             */
@@ -181,6 +181,9 @@ export class ZoweVsCodeExtension {
         if (updSession.ISession.authTypeOrder) {
             prevAuthOrder = [...updSession.ISession.authTypeOrder];
         }
+
+        // record that this request is to get a token
+        imperative.AuthOrder.makingRequestForToken(updSession.ISession);
 
         const qpItems: vscode.QuickPickItem[] = [
             { label: "$(account) User and Password", description: "Log in with basic authentication" },
@@ -201,10 +204,7 @@ export class ZoweVsCodeExtension {
 
             // The user has told us to use basic to login, so put basic to the front of authOrder
             // in this session. We will not store this authOrder to the profile on disk.
-            imperative.AuthOrder.putNewAuthsFirstInSess(updSession.ISession,
-                [imperative.SessConstants.AUTH_TYPE_BASIC],
-                { onlyTheseAuths: true }
-            );
+            imperative.AuthOrder.putNewAuthsFirstInSess(updSession.ISession, [imperative.SessConstants.AUTH_TYPE_BASIC], { onlyTheseAuths: true });
         } else if (response === qpItems[1]) {
             try {
                 await ZoweVsCodeExtension.promptCertificate({ profile: serviceProfile, session: updSession.ISession, rePrompt: true });
@@ -214,19 +214,13 @@ export class ZoweVsCodeExtension {
             // TODO:authOrder remove this permanently -> delete updSession.ISession.base64EncodedAuth;
             updSession.ISession.storeCookie = true;
             // TODO:authOrder remove this permanently -> updSession.ISession.type = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
-            
+
             // The user has told us to use a cert to login, so put cert-pem to the front of authOrder
             // in this session. We will not store this authOrder to the profile on disk.
-            imperative.AuthOrder.putNewAuthsFirstInSess(updSession.ISession,
-                [imperative.SessConstants.AUTH_TYPE_CERT_PEM],
-                { onlyTheseAuths: true }
-            );
+            imperative.AuthOrder.putNewAuthsFirstInSess(updSession.ISession, [imperative.SessConstants.AUTH_TYPE_CERT_PEM], { onlyTheseAuths: true });
         } else {
             return false;
         }
-
-        // record that this request is to get a token
-        imperative.AuthOrder.makingRequestForToken(updSession.ISession);
 
         const loginToken = await (opts.zeRegister?.getCommonApi(serviceProfile).login ?? Login.apimlLogin)(updSession);
         const updBaseProfile: imperative.IProfile = {
@@ -351,9 +345,9 @@ export class ZoweVsCodeExtension {
             port: serviceProfile.profile.port,
             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
             tokenType: tokenType,
-            tokenValue: primaryProfile.profile.tokenValue ?? secondaryProfile.profile.tokenValue/* TODO:authOrder remove this permanently,
+            tokenValue: primaryProfile.profile.tokenValue ?? secondaryProfile.profile.tokenValue /* TODO:authOrder remove this permanently,
             type: imperative.SessConstants.AUTH_TYPE_TOKEN,
-            */
+            */,
         });
         await (opts.zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
 

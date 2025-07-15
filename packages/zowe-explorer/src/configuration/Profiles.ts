@@ -104,10 +104,10 @@ export class Profiles extends ProfilesCache {
         let usingBasicAuth: boolean = false;
         let usingCertAuth: boolean = false;
         let usingTokenAuth: boolean = false;
-        
+
         const iSessFromProf = AuthUtils.getSessFromProfile(theProfile).ISession;
         imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(theProfile));
-        switch(iSessFromProf.type) {
+        switch (iSessFromProf.type) {
             case imperative.SessConstants.AUTH_TYPE_BASIC:
                 usingBasicAuth = true;
                 break;

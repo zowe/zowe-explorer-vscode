@@ -45,9 +45,7 @@ export class ProfileManagement {
         if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BASIC) {
             ZoweLogger.debug(`Profile ${profile.name} is using basic authentication.`);
             selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, node);
-        } else if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
-                   sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER
-        ) {
+        } else if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER) {
             ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
             selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_TOKEN, node);
         } else {

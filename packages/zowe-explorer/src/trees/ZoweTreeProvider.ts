@@ -274,9 +274,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
 
         let jwtCheckResult: JwtCheckResult;
         const sessTypeFromProf = AuthUtils.sessTypeFromProfile(profile);
-        if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
-            sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER)
-        {
+        if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER) {
             jwtCheckResult = await ZoweTreeProvider.checkJwtForProfile(profileName);
         } else {
             jwtCheckResult = JwtCheckResult.TokenUnusedOrUnsupported;
