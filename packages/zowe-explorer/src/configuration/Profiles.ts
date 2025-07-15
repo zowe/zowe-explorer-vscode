@@ -922,7 +922,7 @@ export class Profiles extends ProfilesCache {
         switch (AuthUtils.sessTypeFromProfile(serviceProfile)) {
             case imperative.SessConstants.AUTH_TYPE_BASIC: {
                 let loginOk = false;
-                if (loginTokenType && loginTokenType.startsWith("apimlAuthenticationToken")) {
+                if (loginTokenType?.startsWith("apimlAuthenticationToken")) {
                     loginOk = await ZoweVsCodeExtension.ssoLogin({
                         serviceProfile,
                         defaultTokenType: loginTokenType,
@@ -940,15 +940,25 @@ export class Profiles extends ProfilesCache {
                         vscode.l10n.t("Login using token-based authentication service was successful for profile {0}.", serviceProfile.name)
                     );
                     // TODO:authOrder No longer remove user and password
-                    await this.basicAuthClearSecureArray(serviceProfile.name, loginTokenType);
-                    const updBaseProfile: imperative.IProfile = {
-                        user: undefined,
-                        password: undefined,
-                    };
-                    node.setProfileToChoice({
-                        ...node.getProfile(),
-                        profile: { ...node.getProfile().profile, ...updBaseProfile },
-                    });
+                    if (!loginTokenType?.startsWith("apimlAuthenticationToken")) {
+                        await imperative.AuthOrder.putNewAuthsFirstOnDisk(
+                            serviceProfile.name,
+                            [imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER],
+                            {
+                                clientConfig: await (await this.getProfileInfo()).getTeamConfig(),
+                            }
+                        );
+                    }
+
+                    // await this.basicAuthClearSecureArray(serviceProfile.name, loginTokenType);
+                    // const updBaseProfile: imperative.IProfile = {
+                    //     user: undefined,
+                    //     password: undefined,
+                    // };
+                    // node.setProfileToChoice({
+                    //     ...node.getProfile(),
+                    //     profile: { ...node.getProfile().profile, ...updBaseProfile },
+                    // });
                     ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
                 } else {
                     Gui.errorMessage(vscode.l10n.t("Unable to switch to token-based authentication for profile {0}.", serviceProfile.name));
@@ -972,7 +982,10 @@ export class Profiles extends ProfilesCache {
                         Gui.showMessage(successMsg);
 
                         // TODO:authOrder No longer remove token? Maybe still remove it, since the token has been revoked?
-                        await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
+                        await imperative.AuthOrder.putNewAuthsFirstOnDisk(serviceProfile.name, [imperative.SessConstants.AUTH_TYPE_BASIC], {
+                            clientConfig: await (await this.getProfileInfo()).getTeamConfig(),
+                        });
+                        // await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
                         ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
                     } else {
                         Gui.errorMessage(vscode.l10n.t("Unable to switch to basic authentication for profile {0}.", serviceProfile.name));
