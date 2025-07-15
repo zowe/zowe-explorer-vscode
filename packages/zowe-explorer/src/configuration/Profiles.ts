@@ -836,52 +836,6 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async basicAuthClearSecureArray(profileName?: string, loginTokenType?: string): Promise<void> {
-        const profInfo = await this.getProfileInfo();
-        const configApi = profInfo.getTeamConfig();
-        const profAttrs = await this.getProfileFromConfig(profileName);
-        if (profAttrs.profLoc.jsonLoc) {
-            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, loginTokenType?.startsWith("apimlAuthenticationToken") ? [] : ["tokenValue"]);
-        }
-        const userArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "user")?.argLoc.jsonLoc;
-        if (userArgJsonLoc) {
-            configApi.delete(userArgJsonLoc);
-        }
-        const passwordArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "password")?.argLoc.jsonLoc;
-        if (passwordArgJsonLoc) {
-            configApi.delete(passwordArgJsonLoc);
-        }
-        await configApi.save();
-    }
-
-    public async tokenAuthClearSecureArray(profileName?: string, loginTokenType?: string): Promise<void> {
-        const profInfo = await this.getProfileInfo();
-        const configApi = profInfo.getTeamConfig();
-        const usingApimlToken = loginTokenType?.startsWith("apimlAuthenticationToken");
-        const baseProfile = this.getBaseProfile();
-        const profAttrs = await this.getProfileFromConfig(usingApimlToken ? baseProfile.name : profileName);
-        // For users with nested profiles, we should only update the secure array if a base profile or a regular profile matching profileName exists.
-        // Otherwise, we want to keep `tokenValue` in the secure array of the parent profile to avoid disconnecting child profiles
-        if (profAttrs?.profLoc.jsonLoc) {
-            configApi.set(`${profAttrs.profLoc.jsonLoc}.secure`, usingApimlToken ? [] : ["user", "password"]);
-            const tokenTypeArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenType")?.argLoc.jsonLoc;
-            if (tokenTypeArgJsonLoc) {
-                configApi.delete(tokenTypeArgJsonLoc);
-            }
-            const tokenValueArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenValue")
-                ?.argLoc.jsonLoc;
-            if (tokenValueArgJsonLoc) {
-                configApi.delete(tokenValueArgJsonLoc);
-            }
-            const tokenExpirationArgJsonLoc = profInfo.mergeArgsForProfile(profAttrs).knownArgs.find((arg) => arg.argName === "tokenExpiration")
-                ?.argLoc.jsonLoc;
-            if (tokenExpirationArgJsonLoc) {
-                configApi.delete(tokenExpirationArgJsonLoc);
-            }
-        }
-        await configApi.save();
-    }
-
     public async handleSwitchAuthentication(node: Types.IZoweNodeType): Promise<void> {
         const qp = Gui.createQuickPick();
         const qpItemYes: vscode.QuickPickItem = {
@@ -939,7 +893,6 @@ export class Profiles extends ProfilesCache {
                     Gui.showMessage(
                         vscode.l10n.t("Login using token-based authentication service was successful for profile {0}.", serviceProfile.name)
                     );
-                    // TODO:authOrder No longer remove user and password
                     if (!loginTokenType?.startsWith("apimlAuthenticationToken")) {
                         await imperative.AuthOrder.putNewAuthsFirstOnDisk(
                             serviceProfile.name,
@@ -949,16 +902,6 @@ export class Profiles extends ProfilesCache {
                             }
                         );
                     }
-
-                    // await this.basicAuthClearSecureArray(serviceProfile.name, loginTokenType);
-                    // const updBaseProfile: imperative.IProfile = {
-                    //     user: undefined,
-                    //     password: undefined,
-                    // };
-                    // node.setProfileToChoice({
-                    //     ...node.getProfile(),
-                    //     profile: { ...node.getProfile().profile, ...updBaseProfile },
-                    // });
                     ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
                 } else {
                     Gui.errorMessage(vscode.l10n.t("Unable to switch to token-based authentication for profile {0}.", serviceProfile.name));
@@ -981,11 +924,9 @@ export class Profiles extends ProfilesCache {
                         ZoweLogger.info(successMsg);
                         Gui.showMessage(successMsg);
 
-                        // TODO:authOrder No longer remove token? Maybe still remove it, since the token has been revoked?
                         await imperative.AuthOrder.putNewAuthsFirstOnDisk(serviceProfile.name, [imperative.SessConstants.AUTH_TYPE_BASIC], {
                             clientConfig: await (await this.getProfileInfo()).getTeamConfig(),
                         });
-                        // await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
                         ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
                     } else {
                         Gui.errorMessage(vscode.l10n.t("Unable to switch to basic authentication for profile {0}.", serviceProfile.name));

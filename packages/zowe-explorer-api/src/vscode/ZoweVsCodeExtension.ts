@@ -169,12 +169,7 @@ export class ZoweVsCodeExtension {
             password: opts.profileNode.getSession().ISession.password ?? "Password",
             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
             tokenType,
-            /* TODO:authOrder remove this permanently
-            type: imperative.SessConstants.AUTH_TYPE_TOKEN,
-            */
         });
-        // TODO:authOrder remove this permanently -> delete updSession.ISession.user;
-        // TODO:authOrder remove this permanently -> delete updSession.ISession.password;
 
         // remember the existing authOrder from the session
         let prevAuthOrder: imperative.SessConstants.AUTH_TYPE_CHOICES[] = null;
@@ -211,9 +206,7 @@ export class ZoweVsCodeExtension {
             } catch (err) {
                 return false;
             }
-            // TODO:authOrder remove this permanently -> delete updSession.ISession.base64EncodedAuth;
             updSession.ISession.storeCookie = true;
-            // TODO:authOrder remove this permanently -> updSession.ISession.type = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
 
             // The user has told us to use a cert to login, so put cert-pem to the front of authOrder
             // in this session. We will not store this authOrder to the profile on disk.
@@ -265,19 +258,6 @@ export class ZoweVsCodeExtension {
             { clientConfig: await (await cache.getProfileInfo()).getTeamConfig() }
         );
 
-        /* TODO:authOrder
-            Find the right place to:
-                const configObj = call await (this.profilesCache.getProfileInfo()).getTeamConfig();
-                imperative.AuthOrder.putNewAuthsFirstOnDisk(serviceProfile.profile.name,
-                    [imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER],
-                    { onlyTheseAuths: true, clientConfig: configObj }
-                );
-            Alternatively, if ZE is already storing profile data to disk, do something like this:
-                <PprofileToStore>.<CorrectPath>.properties.authOrder = imperative.AuthOrder.authArrayToCfgVal(
-                    [imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER]
-                );
-                StoreProfileUsingExistingZeTechnique();
-        */
         return true;
     }
 
@@ -354,10 +334,8 @@ export class ZoweVsCodeExtension {
             hostname: serviceProfile.profile.host,
             port: serviceProfile.profile.port,
             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-            tokenType: tokenType,
-            tokenValue: primaryProfile.profile.tokenValue ?? secondaryProfile.profile.tokenValue /* TODO:authOrder remove this permanently,
-            type: imperative.SessConstants.AUTH_TYPE_TOKEN,
-            */,
+            tokenType,
+            tokenValue: primaryProfile.profile.tokenValue ?? secondaryProfile.profile.tokenValue,
         });
         await (opts.zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
 
