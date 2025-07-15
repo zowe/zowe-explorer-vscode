@@ -489,7 +489,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         });
 
         const parent = { entries: new Map([["newName", {}]]) };
-        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValue(parent);
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(parent);
         await blockMocks.ussDir.rename(newUri.path);
         expect(parent.entries.has("newName")).toBe(false);
         expect(renameMock).toHaveBeenCalledTimes(2);

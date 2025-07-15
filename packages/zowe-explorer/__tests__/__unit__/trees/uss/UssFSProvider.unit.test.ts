@@ -273,7 +273,7 @@ describe("UssFSProvider", () => {
                     commandResponse: "",
                 });
                 const lookupParentDirMock = jest
-                    .spyOn(UssFSProvider.instance as any, "_lookupParentDirectory")
+                    .spyOn(UssFSProvider.instance as any, "lookupParentDirectory")
                     .mockReturnValueOnce(null)
                     .mockReturnValueOnce({ ...testEntries.folder, entries: new Map() });
                 const createDirMock = jest.spyOn(workspace.fs, "createDirectory").mockImplementation();
@@ -626,7 +626,7 @@ describe("UssFSProvider", () => {
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
                 throw FileSystemError.FileNotFound(uri as Uri);
             });
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(testEntries.folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(testEntries.folder);
 
             let err;
             try {
@@ -644,7 +644,7 @@ describe("UssFSProvider", () => {
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
                 throw FileSystemError.FileNotFound(uri as Uri);
             });
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(null);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(null);
             const remoteLookupForResource = jest
                 .spyOn(UssFSProvider.instance, "remoteLookupForResource")
                 .mockResolvedValueOnce(testEntries.folder as any);
@@ -812,7 +812,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.folder,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const newContents = new Uint8Array([3, 6, 9]);
             await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true });
 
@@ -840,7 +840,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.folder,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
             const newContents = new Uint8Array([3, 6, 9]);
             const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockImplementation();
@@ -873,7 +873,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.folder,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
             const newContents = new Uint8Array([3, 6, 9]);
             const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockImplementation();
@@ -907,7 +907,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.session,
                 entries: new Map(),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
             const newContents = new Uint8Array([3, 6, 9]);
             await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: true, overwrite: true });
@@ -933,7 +933,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.folder,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const newContents = new Uint8Array([]);
             await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true });
 
@@ -949,7 +949,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.folder,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const newContents = new Uint8Array([]);
             await UssFSProvider.instance.writeFile(
                 testUris.file.with({
@@ -982,7 +982,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.session,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(rootFolder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(rootFolder);
             let err;
             try {
                 await UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: true, overwrite: false });
@@ -999,7 +999,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.session,
                 entries: new Map([[testEntries.folder.name, { ...testEntries.folder }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(rootFolder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(rootFolder);
             let err;
             try {
                 await UssFSProvider.instance.writeFile(testUris.folder, new Uint8Array([]), { create: true, overwrite: false });
@@ -1015,7 +1015,7 @@ describe("UssFSProvider", () => {
     describe("makeEmptyFileWithEncoding", () => {
         it("creates an empty file in the provider with the given encoding", () => {
             const fakeSession = { ...testEntries.session };
-            const parentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(fakeSession);
+            const parentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(fakeSession);
             expect(UssFSProvider.instance.makeEmptyFileWithEncoding(testUris.file, { kind: "binary" }));
             expect(fakeSession.entries.has(testEntries.file.name)).toBe(true);
             parentDirMock.mockRestore();

@@ -179,7 +179,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public createDirectory(uri: vscode.Uri, options?: { isFilter?: boolean; job?: IJob }): void {
         const basename = path.posix.basename(uri.path);
-        const parent = this._lookupParentDirectory(uri, false);
+        const parent = this.lookupParentDirectory(uri, false);
         if (parent.entries.has(basename)) {
             return;
         }
@@ -258,7 +258,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
                 await jesApi.downloadSingleSpool(spoolDownloadObject);
             } else {
-                const jobEntry = this._lookupParentDirectory(uri) as JobEntry;
+                const jobEntry = this.lookupParentDirectory(uri) as JobEntry;
                 bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id, spoolEncoding));
             }
         } catch (err) {
@@ -315,7 +315,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     ): void {
         const basename = path.posix.basename(uri.path);
         const spoolName = options.name ?? basename;
-        const parent = this._lookupParentDirectory(uri);
+        const parent = this.lookupParentDirectory(uri);
         let entry = parent.entries.get(spoolName) as JobEntry | SpoolEntry;
         if (FsJobsUtils.isJobEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
@@ -357,7 +357,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             return;
         }
 
-        const parent = this._lookupParentDirectory(uri, false);
+        const parent = this.lookupParentDirectory(uri, false);
         const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         try {
             await AuthUtils.reauthenticateIfCancelled(profInfo.profile);
