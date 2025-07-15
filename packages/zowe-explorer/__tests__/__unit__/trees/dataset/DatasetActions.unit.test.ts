@@ -45,6 +45,7 @@ import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
 import { ProfileManagement } from "../../../../src/management/ProfileManagement";
+import { DataSetAttributesProvider } from "../../../../../zowe-explorer-api/lib/dataset/DatasetAttributesProvider";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -78,6 +79,7 @@ function createGlobalMocks() {
         getConfiguration: jest
             .spyOn(vscode.workspace, "getConfiguration")
             .mockReturnValue({ has: jest.fn(), get: jest.fn().mockImplementation((_key, def) => def), inspect: jest.fn(), update: jest.fn() }),
+        fetchAllMock: jest.fn().mockReturnValue([]),
     };
     newMocks.fspDelete.mockClear();
 
@@ -97,6 +99,11 @@ function createGlobalMocks() {
             "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
         }),
     });
+
+    jest.spyOn(DataSetAttributesProvider, "getInstance").mockReturnValue({
+        fetchAll: newMocks.fetchAllMock,
+    } as Partial<DataSetAttributesProvider> as any);
+
     Object.defineProperty(zosfiles, "Upload", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosfiles.Upload, "bufferToDataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosfiles.Upload, "pathToDataSet", { value: jest.fn(), configurable: true });
