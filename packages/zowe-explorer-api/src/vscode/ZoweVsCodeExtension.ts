@@ -54,10 +54,10 @@ export class ZoweVsCodeExtension {
 
     /**
      * @param {string} [requiredVersion] Optional semver string specifying the minimal required version
-     *           of Zowe Explorer that needs to be installed for the API to be usable to the client.
+     * of Zowe Explorer that needs to be installed for the API to be usable to the client.
      * @returns an initialized instance `IApiRegisterClient` that extenders can use
-     *          to access the Zowe Explorer APIs or `undefined`. Also `undefined` if requiredVersion
-     *          is larger than the version of Zowe Explorer found.
+     * to access the Zowe Explorer APIs or `undefined`. Also `undefined` if requiredVersion
+     * is larger than the version of Zowe Explorer found.
      */
     public static getZoweExplorerApi(requiredVersion?: string): Types.IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
@@ -122,8 +122,8 @@ export class ZoweVsCodeExtension {
 
     /**
      * Trigger a login operation with the merged contents between the service profile and the base profile.
-     *  If the connection details (host:port) do not match (service vs base), the token will be stored in the service profile.
-     *  If there is no API registered for the profile type, this method defaults the login behavior to that of the APIML.
+     * If the connection details (host:port) do not match (service vs base), the token will be stored in the service profile.
+     * If there is no API registered for the profile type, this method defaults the login behavior to that of the APIML.
      * @deprecated Use `ZoweVsCodeExtension.ssoLogin` instead
      * @param serviceProfile Profile to be used for login purposes (either the name of the IProfileLoaded instance)
      * @param loginTokenType The tokenType value for compatibility purposes
@@ -143,8 +143,8 @@ export class ZoweVsCodeExtension {
 
     /**
      * Trigger a login operation with the merged contents between the service profile and the base profile.
-     *  If the connection details (host:port) do not match (service vs base), the token will be stored in the service profile.
-     *  If there is no API registered for the profile type, this method defaults the login behavior to that of the APIML.
+     * If the connection details (host:port) do not match (service vs base), the token will be stored in the service profile.
+     * If there is no API registered for the profile type, this method defaults the login behavior to that of the APIML.
      * @param {BaseProfileAuthOptions} opts Object defining options for base profile authentication
      */
     public static async ssoLogin(opts: BaseProfileAuthOptions): Promise<boolean> {
@@ -165,8 +165,8 @@ export class ZoweVsCodeExtension {
         const updSession = new imperative.Session({
             hostname: serviceProfile.profile.host,
             port: serviceProfile.profile.port,
-            user: "Username",
-            password: "Password",
+            user: opts.profileNode.getSession().ISession.user ?? "Username",
+            password: opts.profileNode.getSession().ISession.password ?? "Password",
             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
             tokenType,
             /* TODO:authOrder remove this permanently

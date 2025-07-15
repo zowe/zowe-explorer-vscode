@@ -570,9 +570,10 @@ export class Profiles extends ProfilesCache {
 
     public async promptCredentials(profile: string | imperative.IProfileLoaded, rePrompt?: boolean): Promise<string[]> {
         ZoweLogger.trace("Profiles.promptCredentials called.");
-        const profilename = typeof profile === "string" ? profile : profile.name;
+        const isProfileString = typeof profile === "string";
+        const profilename = isProfileString ? profile : profile.name;
         const userInputBoxOptions: vscode.InputBoxOptions = {
-            placeHolder: vscode.l10n.t(`User Name`),
+            placeHolder: isProfileString ? vscode.l10n.t(`User Name`) : profile.profile.user,
             prompt: vscode.l10n.t({
                 message: "Enter the user name for the {0} connection. Leave blank to not store.",
                 args: [profilename],
@@ -580,7 +581,7 @@ export class Profiles extends ProfilesCache {
             }),
         };
         const passwordInputBoxOptions: vscode.InputBoxOptions = {
-            placeHolder: vscode.l10n.t(`Password`),
+            placeHolder: isProfileString ? vscode.l10n.t(`Password`) : profile.profile.password,
             prompt: vscode.l10n.t({
                 message: "Enter the password for the {0} connection. Leave blank to not store.",
                 args: [profilename],
@@ -598,8 +599,8 @@ export class Profiles extends ProfilesCache {
         }
         const promptInfo = await ZoweVsCodeExtension.updateCredentials(
             {
-                profile: typeof profile === "string" ? undefined : profile,
-                sessionName: typeof profile === "string" ? profile : undefined,
+                profile: isProfileString ? undefined : profile,
+                sessionName: isProfileString ? profile : undefined,
                 rePrompt,
                 secure: mProfileInfo.isSecured(),
                 userInputBoxOptions,
