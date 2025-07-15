@@ -122,12 +122,14 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     responseTimeout: sourceInfo.profile?.profile?.responseTimeout,
                 });
                 const { dsname: dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
-                // create a PDS on remote
+
+                // create a PDS on remote with the same attributes as source PDS
                 const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
+                const isBinary = transformedAttrs.recfm === "U" && transformedAttrs.lrecl === 0;
                 try {
                     dsname = sourceNode.getLabel() as string;
                     await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
-                        zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
+                        isBinary ? zosfiles.CreateDataSetTypeEnum.DATA_SET_BINARY : zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
                         dsname,
                         transformedAttrs
                     );
@@ -144,6 +146,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const children = await sourceNode.getChildren();
             for (const childNode of children) {
                 // move members within the folder to the destination
+                childNode.contextValue = 'member'; //force casting binary members to member context
                 await this.crossLparMove(
                     childNode,
                     sourceUri.with({
@@ -203,6 +206,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 // Delete any files from the selection on the source LPAR
                 await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
             }
+            //dialog message for successful move of pds and members
+            Gui.infoMessage(vscode.l10n.t("Data set(s) moved successfully."));
         }
     }
 
