@@ -255,7 +255,7 @@ export class ZoweVsCodeExtension {
         await imperative.AuthOrder.putNewAuthsFirstOnDisk(
             serviceProfile.name,
             [imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER],
-            { clientConfig: await (await cache.getProfileInfo()).getTeamConfig() }
+            { onlyTheseAuths: true, clientConfig: await (await cache.getProfileInfo()).getTeamConfig() }
         );
 
         return true;

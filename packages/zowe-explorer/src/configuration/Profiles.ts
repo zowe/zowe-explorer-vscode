@@ -178,9 +178,8 @@ export class Profiles extends ProfilesCache {
             if (configFileIndex === -1) {
                 toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")}`);
             } else {
-                toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
-                    layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
-                }`;
+                toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+                    }`;
             }
 
             const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
@@ -898,6 +897,7 @@ export class Profiles extends ProfilesCache {
                             serviceProfile.name,
                             [imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER],
                             {
+                                onlyTheseAuths: false,
                                 clientConfig: await (await this.getProfileInfo()).getTeamConfig(),
                             }
                         );
@@ -913,6 +913,7 @@ export class Profiles extends ProfilesCache {
             case imperative.SessConstants.AUTH_TYPE_BEARER: {
                 try {
                     const profile: string | imperative.IProfileLoaded = node.getProfile();
+                    const isApimlToken = profile.profile.tokenType?.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML) ?? false;
                     await this.ssoLogout(node);
                     const creds = await Profiles.getInstance().promptCredentials(profile, true);
 
@@ -925,6 +926,7 @@ export class Profiles extends ProfilesCache {
                         Gui.showMessage(successMsg);
 
                         await imperative.AuthOrder.putNewAuthsFirstOnDisk(serviceProfile.name, [imperative.SessConstants.AUTH_TYPE_BASIC], {
+                            onlyTheseAuths: isApimlToken,
                             clientConfig: await (await this.getProfileInfo()).getTeamConfig(),
                         });
                         ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
