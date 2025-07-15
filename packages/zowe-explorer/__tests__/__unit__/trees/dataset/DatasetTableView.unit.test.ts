@@ -20,7 +20,7 @@ import {
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import { Constants } from "../../../../src/configuration/Constants";
-import { Gui, Table, Types, TableViewProvider } from "@zowe/zowe-explorer-api";
+import { Gui, Table, Types, TableViewProvider, Sorting } from "@zowe/zowe-explorer-api";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
@@ -1330,7 +1330,7 @@ describe("DatasetTableView", () => {
                 (datasetTableView as any).currentDataSource = mockDataSource;
             });
 
-            it("should generate a new table when no existing table", async () => {
+            it("should always generate a new table", async () => {
                 const result = await (datasetTableView as any).generateTable(mockContext);
 
                 expect(result).toBeDefined();
@@ -1338,29 +1338,6 @@ describe("DatasetTableView", () => {
                 expect(mockDataSource.getTitle).toHaveBeenCalled();
                 expect(mockDataSource.supportsHierarchy).toHaveBeenCalled();
                 expect(result).toBeInstanceOf(Table.Instance);
-            });
-
-            it("should update existing table when table exists and type unchanged", async () => {
-                // First create a table
-                await (datasetTableView as any).generateTable(mockContext);
-
-                // Mock the existing table
-                const mockTable = {
-                    setTitle: jest.fn().mockResolvedValue(undefined),
-                    setColumns: jest.fn().mockResolvedValue(undefined),
-                    setContent: jest.fn().mockResolvedValue(undefined),
-                    setOptions: jest.fn().mockResolvedValue(undefined),
-                    onDisposed: jest.fn(),
-                    onDidReceiveMessage: jest.fn(),
-                };
-                (datasetTableView as any).table = mockTable;
-
-                // Generate table again
-                await (datasetTableView as any).generateTable(mockContext);
-
-                expect(mockTable.setTitle).toHaveBeenCalledWith("Test Title");
-                expect(mockTable.setColumns).toHaveBeenCalled();
-                expect(mockTable.setContent).toHaveBeenCalled();
             });
 
             it("should set up tree mode when data source supports hierarchy", async () => {
@@ -1807,8 +1784,8 @@ describe("DatasetTableView action handlers/callbacks", () => {
         } as unknown as jest.Mocked<TableViewProvider>;
 
         jest.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
-        jest.spyOn(Gui, "infoMessage").mockImplementation(async () => {});
-        jest.spyOn(Gui, "errorMessage").mockImplementation(async () => {});
+        jest.spyOn(Gui, "infoMessage").mockImplementation();
+        jest.spyOn(Gui, "errorMessage").mockImplementation();
         jest.spyOn(l10n, "t").mockImplementation((key: any) => (typeof key === "string" ? key : key.message));
 
         (datasetTableView as any).table = mockTable;
@@ -1976,6 +1953,338 @@ describe("DatasetTableView action handlers/callbacks", () => {
             (datasetTableView as any).shouldShow = { dsname: true, dsorg: true };
             datasetTableView.dispose();
             expect((datasetTableView as any).shouldShow).toEqual({});
+        });
+    });
+
+    describe("sorting functions", () => {
+        beforeEach(() => {
+            (DatasetTableView as any)._instance = undefined;
+            datasetTableView = DatasetTableView.getInstance();
+        });
+
+        describe("mapSortOptionToColumnField", () => {
+            it("should map DatasetSortOpts.Name to dsname", () => {
+                const result = (datasetTableView as any).mapSortOptionToColumnField(0); // DatasetSortOpts.Name = 0
+                expect(result).toBe("dsname");
+            });
+
+            it("should map DatasetSortOpts.DateCreated to createdDate", () => {
+                const result = (datasetTableView as any).mapSortOptionToColumnField(1); // DatasetSortOpts.DateCreated = 1
+                expect(result).toBe("createdDate");
+            });
+
+            it("should map DatasetSortOpts.LastModified to modifiedDate", () => {
+                const result = (datasetTableView as any).mapSortOptionToColumnField(2); // DatasetSortOpts.LastModified = 2
+                expect(result).toBe("modifiedDate");
+            });
+
+            it("should map DatasetSortOpts.UserId to user", () => {
+                const result = (datasetTableView as any).mapSortOptionToColumnField(3); // DatasetSortOpts.UserId = 3
+                expect(result).toBe("user");
+            });
+
+            it("should return dsname for invalid sort method", () => {
+                const result = (datasetTableView as any).mapSortOptionToColumnField(999);
+                expect(result).toBe("dsname");
+            });
+
+            it("should return dsname for JobSortOpts (non-dataset sort options)", () => {
+                const result = (datasetTableView as any).mapSortOptionToColumnField(10); // JobSortOpts value
+                expect(result).toBe("dsname");
+            });
+        });
+
+        describe("getEffectiveSortSettings", () => {
+            let mockTreeNode: ZoweDatasetNode;
+            let mockSessionNode: ZoweDatasetNode;
+
+            beforeEach(() => {
+                const profile = createIProfile();
+                mockSessionNode = new ZoweDatasetNode({
+                    label: "sestest",
+                    collapsibleState: TreeItemCollapsibleState.Expanded,
+                    contextOverride: Constants.DS_SESSION_CONTEXT,
+                    profile,
+                    session: createISession(),
+                });
+
+                mockTreeNode = new ZoweDatasetNode({
+                    label: "TEST.PDS",
+                    collapsibleState: TreeItemCollapsibleState.Collapsed,
+                    contextOverride: Constants.DS_PDS_CONTEXT,
+                    profile,
+                    parentNode: mockSessionNode,
+                });
+            });
+
+            it("should return tree node sort settings when available", () => {
+                const expectedSort = { method: Sorting.DatasetSortOpts.LastModified, direction: Sorting.SortDirection.Descending };
+                mockTreeNode.sort = expectedSort;
+
+                const result = (datasetTableView as any).getEffectiveSortSettings(mockTreeNode);
+                expect(result).toEqual(expectedSort);
+            });
+
+            it("should fall back to session node sort settings when tree node has no sort", () => {
+                const expectedSort = { method: Sorting.DatasetSortOpts.DateCreated, direction: Sorting.SortDirection.Ascending };
+                mockTreeNode.sort = undefined;
+                mockSessionNode.sort = expectedSort;
+                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+
+                const result = (datasetTableView as any).getEffectiveSortSettings(mockTreeNode);
+                expect(result).toEqual(expectedSort);
+            });
+
+            it("should return undefined when neither tree node nor session has sort settings", () => {
+                mockTreeNode.sort = undefined;
+                mockSessionNode.sort = undefined;
+                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+
+                const result = (datasetTableView as any).getEffectiveSortSettings(mockTreeNode);
+                expect(result).toBeUndefined();
+            });
+
+            it("should return undefined when getSessionNode returns undefined", () => {
+                mockTreeNode.sort = undefined;
+                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(undefined as any);
+
+                const result = (datasetTableView as any).getEffectiveSortSettings(mockTreeNode);
+                expect(result).toBeUndefined();
+            });
+        });
+
+        describe("getTreeNodeForSortContext", () => {
+            let mockTreeNode: ZoweDatasetNode;
+            let mockPdsNode: ZoweDatasetNode;
+
+            beforeEach(() => {
+                const profile = createIProfile();
+                mockTreeNode = new ZoweDatasetNode({
+                    label: "sestest",
+                    collapsibleState: TreeItemCollapsibleState.Expanded,
+                    contextOverride: Constants.DS_SESSION_CONTEXT,
+                    profile,
+                    session: createISession(),
+                });
+
+                mockPdsNode = new ZoweDatasetNode({
+                    label: "TEST.PDS",
+                    collapsibleState: TreeItemCollapsibleState.Collapsed,
+                    contextOverride: Constants.DS_PDS_CONTEXT,
+                    profile,
+                    parentNode: mockTreeNode,
+                });
+
+                mockTreeNode.children = [mockPdsNode];
+            });
+
+            it("should return tree node for TreeDataSource", () => {
+                const treeDataSource = new TreeDataSource(mockTreeNode);
+                (datasetTableView as any).currentDataSource = treeDataSource;
+
+                const result = (datasetTableView as any).getTreeNodeForSortContext();
+                expect(result).toBe(mockTreeNode);
+            });
+
+            it("should return PDS node for PDSMembersDataSource with TreeDataSource parent", () => {
+                const parentTreeDataSource = new TreeDataSource(mockTreeNode);
+                const pdsDataSource = new PDSMembersDataSource(parentTreeDataSource, "TEST.PDS", "zowe-ds:/sestest/TEST.PDS");
+                (datasetTableView as any).currentDataSource = pdsDataSource;
+
+                const result = (datasetTableView as any).getTreeNodeForSortContext();
+                expect(result).toBe(mockPdsNode);
+            });
+
+            it("should return undefined for PDSMembersDataSource without matching PDS name", () => {
+                const parentTreeDataSource = new TreeDataSource(mockTreeNode);
+                const pdsDataSource = new PDSMembersDataSource(parentTreeDataSource, "NONEXISTENT.PDS", "zowe-ds:/sestest/NONEXISTENT.PDS");
+                (datasetTableView as any).currentDataSource = pdsDataSource;
+
+                const result = (datasetTableView as any).getTreeNodeForSortContext();
+                expect(result).toBeUndefined();
+            });
+
+            it("should return undefined for PDSMembersDataSource without tree node children", () => {
+                mockTreeNode.children = [];
+                const parentTreeDataSource = new TreeDataSource(mockTreeNode);
+                const pdsDataSource = new PDSMembersDataSource(parentTreeDataSource, "TEST.PDS", "zowe-ds:/sestest/TEST.PDS");
+                (datasetTableView as any).currentDataSource = pdsDataSource;
+
+                const result = (datasetTableView as any).getTreeNodeForSortContext();
+                expect(result).toBeUndefined();
+            });
+
+            it("should return undefined for PDSMembersDataSource with non-TreeDataSource parent", () => {
+                const profile = createIProfile();
+                const patternDataSource = new PatternDataSource(profile, "TEST.*");
+                const pdsDataSource = new PDSMembersDataSource(patternDataSource, "TEST.PDS", "zowe-ds:/sestest/TEST.PDS");
+                (datasetTableView as any).currentDataSource = pdsDataSource;
+
+                const result = (datasetTableView as any).getTreeNodeForSortContext();
+                expect(result).toBeUndefined();
+            });
+
+            it("should return undefined for PatternDataSource", () => {
+                const profile = createIProfile();
+                const patternDataSource = new PatternDataSource(profile, "TEST.*");
+                (datasetTableView as any).currentDataSource = patternDataSource;
+
+                const result = (datasetTableView as any).getTreeNodeForSortContext();
+                expect(result).toBeUndefined();
+            });
+
+            it("should return undefined for PDSMembersDataSource without parent data source", () => {
+                const pdsDataSource = new PDSMembersDataSource(null, "TEST.PDS", "zowe-ds:/sestest/TEST.PDS");
+                (datasetTableView as any).currentDataSource = pdsDataSource;
+
+                const result = (datasetTableView as any).getTreeNodeForSortContext();
+                expect(result).toBeUndefined();
+            });
+        });
+
+        describe("applyTreeSortToColumns", () => {
+            let mockTreeNode: ZoweDatasetNode;
+            let mockSessionNode: ZoweDatasetNode;
+            let columnDefs: any[];
+
+            beforeEach(() => {
+                const profile = createIProfile();
+                mockSessionNode = new ZoweDatasetNode({
+                    label: "sestest",
+                    collapsibleState: TreeItemCollapsibleState.Expanded,
+                    contextOverride: Constants.DS_SESSION_CONTEXT,
+                    profile,
+                    session: createISession(),
+                });
+
+                mockTreeNode = new ZoweDatasetNode({
+                    label: "TEST.PDS",
+                    collapsibleState: TreeItemCollapsibleState.Collapsed,
+                    contextOverride: Constants.DS_PDS_CONTEXT,
+                    profile,
+                    parentNode: mockSessionNode,
+                });
+
+                columnDefs = [
+                    { field: "dsname", headerName: "Data Set Name" },
+                    { field: "dsorg", headerName: "Organization" },
+                    { field: "createdDate", headerName: "Created" },
+                    { field: "modifiedDate", headerName: "Modified" },
+                    { field: "user", headerName: "User" },
+                ];
+            });
+
+            it("should return original columns when no tree node provided", () => {
+                const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, undefined);
+                expect(result).toEqual(columnDefs.map((col) => ({ ...col, initialSort: undefined })));
+            });
+
+            it("should return original columns when tree node has no sort settings", () => {
+                mockTreeNode.sort = undefined;
+                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(undefined as any);
+
+                const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, mockTreeNode);
+                expect(result).toEqual(columnDefs.map((col) => ({ ...col, initialSort: undefined })));
+            });
+
+            it("should apply ascending sort to dsname column for Name sort method", () => {
+                mockTreeNode.sort = { method: Sorting.DatasetSortOpts.Name, direction: Sorting.SortDirection.Ascending };
+                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+
+                const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, mockTreeNode);
+
+                const dsnameColumn = result.find((col) => col.field === "dsname");
+                expect(dsnameColumn.initialSort).toBe("asc");
+
+                const otherColumns = result.filter((col) => col.field !== "dsname");
+                otherColumns.forEach((col) => {
+                    expect(col.initialSort).toBeUndefined();
+                });
+            });
+
+            it("should apply descending sort to modifiedDate column for LastModified sort method", () => {
+                mockTreeNode.sort = { method: Sorting.DatasetSortOpts.LastModified, direction: Sorting.SortDirection.Descending };
+                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+
+                const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, mockTreeNode);
+
+                const modifiedDateColumn = result.find((col) => col.field === "modifiedDate");
+                expect(modifiedDateColumn.initialSort).toBe("desc");
+
+                const otherColumns = result.filter((col) => col.field !== "modifiedDate");
+                otherColumns.forEach((col) => {
+                    expect(col.initialSort).toBeUndefined();
+                });
+            });
+
+            it("should apply ascending sort to createdDate column for DateCreated sort method", () => {
+                mockTreeNode.sort = { method: Sorting.DatasetSortOpts.DateCreated, direction: Sorting.SortDirection.Ascending };
+                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+
+                const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, mockTreeNode);
+
+                const createdDateColumn = result.find((col) => col.field === "createdDate");
+                expect(createdDateColumn.initialSort).toBe("asc");
+
+                const otherColumns = result.filter((col) => col.field !== "createdDate");
+                otherColumns.forEach((col) => {
+                    expect(col.initialSort).toBeUndefined();
+                });
+            });
+
+            it("should apply descending sort to user column for UserId sort method", () => {
+                mockTreeNode.sort = { method: Sorting.DatasetSortOpts.UserId, direction: Sorting.SortDirection.Descending };
+                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+
+                const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, mockTreeNode);
+
+                const userColumn = result.find((col) => col.field === "user");
+                expect(userColumn.initialSort).toBe("desc");
+
+                const otherColumns = result.filter((col) => col.field !== "user");
+                otherColumns.forEach((col) => {
+                    expect(col.initialSort).toBeUndefined();
+                });
+            });
+
+            it("should fall back to session sort when PDS has no sort settings", () => {
+                mockTreeNode.sort = undefined;
+                mockSessionNode.sort = { method: Sorting.DatasetSortOpts.LastModified, direction: Sorting.SortDirection.Ascending };
+                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+
+                const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, mockTreeNode);
+
+                const modifiedDateColumn = result.find((col) => col.field === "modifiedDate");
+                expect(modifiedDateColumn.initialSort).toBe("asc");
+
+                const otherColumns = result.filter((col) => col.field !== "modifiedDate");
+                otherColumns.forEach((col) => {
+                    expect(col.initialSort).toBeUndefined();
+                });
+            });
+
+            it("should preserve other column properties when applying sort", () => {
+                const enrichedColumnDefs = [
+                    { field: "dsname", headerName: "Data Set Name", width: 200, filter: true },
+                    { field: "dsorg", headerName: "Organization", resizable: false },
+                ];
+
+                mockTreeNode.sort = { method: Sorting.DatasetSortOpts.Name, direction: Sorting.SortDirection.Descending };
+                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+
+                const result = (datasetTableView as any).applyTreeSortToColumns(enrichedColumnDefs, mockTreeNode);
+
+                const dsnameColumn = result.find((col) => col.field === "dsname");
+                expect(dsnameColumn.initialSort).toBe("desc");
+                expect(dsnameColumn.width).toBe(200);
+                expect(dsnameColumn.filter).toBe(true);
+                expect(dsnameColumn.headerName).toBe("Data Set Name");
+
+                const dsorgColumn = result.find((col) => col.field === "dsorg");
+                expect(dsorgColumn.initialSort).toBeUndefined();
+                expect(dsorgColumn.resizable).toBe(false);
+                expect(dsorgColumn.headerName).toBe("Organization");
+            });
         });
     });
 });

@@ -20,6 +20,7 @@ import {
     DataSetTableType,
     IDataSetTableEvent,
     DataSetTableEventType,
+    Sorting,
 } from "@zowe/zowe-explorer-api";
 import { commands, Event, EventEmitter, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -303,7 +304,7 @@ export class PatternDataSource implements IDataSetSource {
 export class PDSMembersDataSource implements IDataSetSource {
     public constructor(
         public parentDataSource: IDataSetSource | null,
-        private pdsName: string,
+        public pdsName: string,
         private pdsUri: string,
         private profile?: imperative.IProfileLoaded
     ) {}
@@ -449,9 +450,7 @@ export class DatasetTableView {
             type: "primary",
             command: "back",
             callback: { fn: this.goBack.bind(this), typ: "no-selection" },
-            hideCondition: () =>
-                this.currentTableType !== "members" ||
-                (this.currentDataSource instanceof PDSMembersDataSource && this.currentDataSource.parentDataSource == null),
+            hideCondition: () => this.previousTableData == null || this.currentTableType !== "members",
         },
     };
 
@@ -865,6 +864,94 @@ export class DatasetTableView {
     }
 
     /**
+     * Maps sorting options from tree view to corresponding table column fields
+     */
+    private mapSortOptionToColumnField(sortMethod: Sorting.DatasetSortOpts | Sorting.JobSortOpts): string {
+        if (typeof sortMethod === "number" && sortMethod in Sorting.DatasetSortOpts) {
+            switch (sortMethod as Sorting.DatasetSortOpts) {
+                case Sorting.DatasetSortOpts.Name:
+                    return "dsname";
+                case Sorting.DatasetSortOpts.DateCreated:
+                    return "createdDate";
+                case Sorting.DatasetSortOpts.LastModified:
+                    return "modifiedDate";
+                case Sorting.DatasetSortOpts.UserId:
+                    return "user";
+                default:
+                    return "dsname";
+            }
+        }
+        return "dsname";
+    }
+
+    /**
+     * Gets the tree node for sort order context
+     */
+    private getTreeNodeForSortContext(): IZoweDatasetTreeNode | undefined {
+        if (this.currentDataSource instanceof TreeDataSource) {
+            return this.currentDataSource.treeNode;
+        } else if (this.currentDataSource instanceof PDSMembersDataSource) {
+            // For PDS members, try to get the parent tree data source and use the PDS name to find the node
+            const parentDataSource = this.currentDataSource.parentDataSource;
+            if (parentDataSource instanceof TreeDataSource) {
+                const treeNode = parentDataSource.treeNode;
+                if (treeNode && treeNode.children) {
+                    const pdsName = this.currentDataSource.pdsName;
+                    const pdsNode = treeNode.children.find((child) => child.label?.toString() === pdsName);
+                    return pdsNode;
+                }
+            }
+        }
+        return undefined;
+    }
+
+    /**
+     * Gets the effective sort settings for a tree node, falling back to session sort if needed
+     */
+    private getEffectiveSortSettings(treeNode: IZoweDatasetTreeNode): Sorting.NodeSort | undefined {
+        // Use the PDS sort settings if defined; otherwise, use session sort method
+        if (treeNode.sort) {
+            return treeNode.sort;
+        }
+
+        // Fall back to session node sort settings
+        const sessionNode = treeNode.getSessionNode?.();
+        if (sessionNode && sessionNode.sort) {
+            return sessionNode.sort;
+        }
+
+        return undefined;
+    }
+
+    /**
+     * Applies tree node sorting to column definitions
+     */
+    private applyTreeSortToColumns(columnDefs: any[], treeNode?: IZoweDatasetTreeNode): any[] {
+        if (!treeNode) {
+            return columnDefs;
+        }
+
+        const sortSettings = this.getEffectiveSortSettings(treeNode);
+        if (!sortSettings) {
+            return columnDefs;
+        }
+
+        const { method, direction } = sortSettings;
+        const sortField = this.mapSortOptionToColumnField(method);
+        const sortDirection = direction === Sorting.SortDirection.Ascending ? "asc" : "desc";
+
+        return columnDefs.map((col) => {
+            if (col.field === sortField) {
+                return {
+                    ...col,
+                    initialSort: sortDirection,
+                };
+            }
+            return { ...col, initialSort: undefined };
+        });
+    }
+
+    /**
      * Generates a table given the data source
      */
     private async generateTable(context: ExtensionContext): Promise<Table.Instance> {
@@ -872,15 +959,11 @@ export class DatasetTableView {
         const useTreeMode = await this.currentDataSource.supportsHierarchy();
         const rows = await this.generateRows(useTreeMode);
 
-        // Determine the current table type and ID
-        const previousTableType = this.currentTableType;
-        const tableTypeChanged = previousTableType !== this.currentTableType;
-
         // Prepare column definitions based on table type
         const relevantFields = this.currentTableType === "members" ? this.memberFields : this.datasetFields;
         const filteredFields = this.expectedFields.filter((field) => relevantFields.includes(field.field));
 
-        const columnDefs = filteredFields.map((field) => ({
+        let columnDefs = filteredFields.map((field) => ({
             filter: true,
             ...field,
             // Update header name for dsname when showing members
@@ -893,6 +976,12 @@ export class DatasetTableView {
                   }
                 : {}),
         }));
+
+        // Apply tree node sorting to columns if this table is created from tree view
+        const treeNode = this.getTreeNodeForSortContext();
+        if (treeNode) {
+            columnDefs = this.applyTreeSortToColumns(columnDefs, treeNode);
+        }
 
         const tableOptions: Table.GridProperties = {
             autoSizeStrategy: { type: "fitCellContents" } as const,
@@ -919,59 +1008,54 @@ export class DatasetTableView {
         const additionalActions = await registry.getActions(tableContext);
         const additionalContextItems = await registry.getContextMenuItems(tableContext);
 
-        if (this.table && !tableTypeChanged) {
-            await this.table.setTitle(this.currentDataSource.getTitle());
-            await this.table.setColumns([...columnDefs, { field: "actions", hide: true }]);
-            await this.table.setContent(rows);
-            if (useTreeMode) {
-                await this.table.setOptions(tableOptions);
-            }
-        } else {
-            const tableBuilder = new TableBuilder(context)
-                .options(tableOptions)
-                .isView()
-                .title(this.currentDataSource.getTitle())
-                .addRows(rows)
-                .columns(...[...columnDefs, { field: "actions", hide: true }])
-                .addContextOption("all", this.contextOptions.displayInTree)
-                .addRowAction("all", this.rowActions.openInEditor)
-                .addRowAction("all", this.rowActions.pinRows)
-                .addRowAction("all", this.rowActions.focusPDS)
-                .addRowAction("all", this.rowActions.goBack);
+        if (this.table) {
+            this.table.dispose();
+        }
 
-            // Add additional actions from registered providers
-            for (const action of additionalActions) {
-                tableBuilder.addRowAction("all", action);
-            }
+        const tableBuilder = new TableBuilder(context)
+            .options(tableOptions)
+            .isView()
+            .title(this.currentDataSource.getTitle())
+            .addRows(rows)
+            .columns(...[...columnDefs, { field: "actions", hide: true }])
+            .addContextOption("all", this.contextOptions.displayInTree)
+            .addRowAction("all", this.rowActions.openInEditor)
+            .addRowAction("all", this.rowActions.pinRows)
+            .addRowAction("all", this.rowActions.focusPDS)
+            .addRowAction("all", this.rowActions.goBack);
 
-            // Add additional context menu items from registered providers
-            for (const contextItem of additionalContextItems) {
-                tableBuilder.addContextOption("all", contextItem);
-            }
+        // Add additional actions from registered providers
+        for (const action of additionalActions) {
+            tableBuilder.addRowAction("all", action);
+        }
 
-            this.table = tableBuilder.build();
+        // Add additional context menu items from registered providers
+        for (const contextItem of additionalContextItems) {
+            tableBuilder.addContextOption("all", contextItem);
+        }
 
-            this.table.onDisposed((e) => {
-                this.dispose();
+        this.table = tableBuilder.build();
 
-                this.onDataSetTableChangedEmitter.fire({
-                    source: this.currentDataSource,
-                    tableType: "dataSets",
-                    eventType: DataSetTableEventType.Disposed,
-                });
-            });
+        this.table.onDisposed((e) => {
+            this.dispose();
 
             this.onDataSetTableChangedEmitter.fire({
                 source: this.currentDataSource,
-                tableType: this.currentTableType,
-                eventType: DataSetTableEventType.Created,
+                tableType: "dataSets",
+                eventType: DataSetTableEventType.Disposed,
             });
+        });
 
-            // Set up message handler for lazy loading if using tree mode
-            if (useTreeMode) {
-                // Subscribe to the onDidReceiveMessage event to handle "external" lazy loading command
-                this.table.onDidReceiveMessage((e) => this.onDidReceiveMessage(e));
-            }
+        this.onDataSetTableChangedEmitter.fire({
+            source: this.currentDataSource,
+            tableType: this.currentTableType,
+            eventType: DataSetTableEventType.Created,
+        });
+
+        // Set up message handler for lazy loading if using tree mode
+        if (useTreeMode) {
+            // Subscribe to the onDidReceiveMessage event to handle "external" lazy loading command
+            this.table.onDidReceiveMessage((e) => this.onDidReceiveMessage(e));
         }
 
         return this.table;
@@ -1147,10 +1231,16 @@ export class DatasetTableView {
             this.currentDataSource = new TreeDataSource(selectedNode);
             this.currentTableType = "dataSets";
         } else if (SharedContext.isPds(selectedNode)) {
-            const profile = selectedNode.getSessionNode()?.getProfile();
+            const sessionNode = selectedNode.getSessionNode() as IZoweDatasetTreeNode;
+            const profile = sessionNode!.getProfile();
             const uri = selectedNode.resourceUri;
 
-            this.currentDataSource = new PDSMembersDataSource(null, selectedNode.label.toString(), uri.toString(), profile);
+            this.currentDataSource = new PDSMembersDataSource(
+                new TreeDataSource(sessionNode),
+                selectedNode.label.toString(),
+                uri.toString(),
+                profile
+            );
             this.currentTableType = "members";
         }
 
