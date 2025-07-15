@@ -4001,7 +4001,10 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         };
 
         // Mock dataSetCrossLPAR to return the correct attributes
-        jest.spyOn(zosfiles.Copy as any, "dataSetCrossLPAR").mockReturnValue({ recfm: "U", lrecl: 0, blksize: 32760 });
+        if (!zosfiles.Copy) {
+            (zosfiles as any).Copy = {};
+        }
+        (zosfiles.Copy as any).dataSetCrossLPAR = jest.fn().mockReturnValue({ recfm: "U", lrecl: 0, blksize: 32760 });
 
         const mvsApi = {
             dataSet: jest.fn().mockResolvedValue({
