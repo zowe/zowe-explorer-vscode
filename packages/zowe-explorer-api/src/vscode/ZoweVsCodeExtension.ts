@@ -255,6 +255,16 @@ export class ZoweVsCodeExtension {
         serviceProfile.profile = { ...serviceProfile.profile, ...updBaseProfile };
         cache.updateCachedProfile(serviceProfile, opts.profileNode);
 
+        imperative.AuthOrder.putNewAuthsFirstInSess(opts.profileNode.getSession().ISession, [
+            imperative.SessConstants.AUTH_TYPE_TOKEN,
+            imperative.SessConstants.AUTH_TYPE_BEARER,
+        ]);
+        await imperative.AuthOrder.putNewAuthsFirstOnDisk(
+            serviceProfile.name,
+            [imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER],
+            { clientConfig: await (await cache.getProfileInfo()).getTeamConfig() }
+        );
+
         /* TODO:authOrder
             Find the right place to:
                 const configObj = call await (this.profilesCache.getProfileInfo()).getTeamConfig();
