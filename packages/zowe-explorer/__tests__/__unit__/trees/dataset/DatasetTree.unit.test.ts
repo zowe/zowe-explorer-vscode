@@ -4027,7 +4027,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         );
 
         expect(mvsApi.createDataSet).toHaveBeenCalledWith(
-            zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
+            zosfiles.CreateDataSetTypeEnum.DATA_SET_BINARY,
             "TEST.BIN",
             expect.objectContaining({ recfm: "U", lrecl: 0, blksize: 32760 })
         );
