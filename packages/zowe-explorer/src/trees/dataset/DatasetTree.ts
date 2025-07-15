@@ -124,7 +124,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 const { dsname: dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
 
                 // create a PDS on remote with the same attributes as source PDS
-                const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
+                const transformedAttrs = (zosfiles.Copy as any).dataSetCrossLPAR({}, rest);
                 const isBinary = transformedAttrs.recfm === "U" && transformedAttrs.lrecl === 0;
                 try {
                     dsname = sourceNode.getLabel() as string;

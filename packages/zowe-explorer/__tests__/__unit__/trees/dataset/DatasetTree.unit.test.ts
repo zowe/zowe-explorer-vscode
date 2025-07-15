@@ -4000,8 +4000,8 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             contextValue: Constants.DS_PDS_CONTEXT,
         };
 
-        // Mock generateDatasetOptions to return the correct attributes
-        jest.spyOn(zosfiles.Copy as any, "generateDatasetOptions").mockReturnValue({ recfm: "U", lrecl: 0, blksize: 32760 });
+        // Mock dataSetCrossLPAR to return the correct attributes
+        jest.spyOn(zosfiles.Copy as any, "dataSetCrossLPAR").mockReturnValue({ recfm: "U", lrecl: 0, blksize: 32760 });
 
         const mvsApi = {
             dataSet: jest.fn().mockResolvedValue({

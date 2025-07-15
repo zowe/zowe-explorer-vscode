@@ -125,7 +125,7 @@ export namespace List {
     }
 
     export class Items {
-        constructor(public dsname: string, public dsorg: string, public member: string, public migr?: string) {}
+        constructor(public dsname: string, public dsorg: string, public member: string, public migr?: string) { }
     }
 
     export function fileList(session: imperative.Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
@@ -185,10 +185,4 @@ export class IZosFilesResponse {
      * @type{*}
      */
     public apiResponse?: any;
-}
-
-export class Copy {
-    private static generateDatasetOptions(options: IDataSet): IDataSet {
-        return options;
-    }
 }
