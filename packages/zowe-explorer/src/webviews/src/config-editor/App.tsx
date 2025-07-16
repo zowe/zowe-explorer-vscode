@@ -71,6 +71,7 @@ export function App() {
   const [wizardNewPropertyKey, setWizardNewPropertyKey] = useState("");
   const [wizardNewPropertyValue, setWizardNewPropertyValue] = useState("");
   const [wizardNewPropertySecure, setWizardNewPropertySecure] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
   // Invoked on webview load
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -129,6 +130,23 @@ export function App() {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [newKeyModalOpen, newProfileModalOpen, saveModalOpen, newLayerModalOpen, editModalOpen, wizardModalOpen]);
 
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuOpen && !(event.target as Element).closest(".profile-list-item")) {
+        setProfileMenuOpen(null);
+      }
+    };
+
+    if (profileMenuOpen) {
+      document.addEventListener("click", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [profileMenuOpen]);
+
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
     const path = flattenedConfig[key]?.path ?? key.split(".");
@@ -152,7 +170,13 @@ export function App() {
             profileParts.push(path[i]);
           }
         }
-        profileKey = profileParts.join(".");
+        // Stop at the first occurrence of "properties" or "type" to get the actual profile name
+        const profileNameEndIndex = profileParts.findIndex((part) => part === "properties" || part === "type");
+        if (profileNameEndIndex !== -1) {
+          profileKey = profileParts.slice(0, profileNameEndIndex).join(".");
+        } else {
+          profileKey = profileParts.join(".");
+        }
       } else {
         // Top-level profile
         profileKey = path[1];
@@ -223,7 +247,13 @@ export function App() {
             profileParts.push(path[i]);
           }
         }
-        profileKey = profileParts.join(".");
+        // Stop at the first occurrence of "properties" or "type" to get the actual profile name
+        const profileNameEndIndex = profileParts.findIndex((part) => part === "properties" || part === "type");
+        if (profileNameEndIndex !== -1) {
+          profileKey = profileParts.slice(0, profileNameEndIndex).join(".");
+        } else {
+          profileKey = profileParts.join(".");
+        }
       } else {
         // Top-level profile
         profileKey = path[1];
@@ -348,6 +378,62 @@ export function App() {
     }
   };
 
+  const handleDeleteProfile = (profileKey: string) => {
+    if (selectedTab === null) return;
+    const configPath = configurations[selectedTab!]!.configPath;
+
+    // Add to deletions - we'll add all profile-related keys to deletions
+    setDeletions((prev) => {
+      const newDeletions = { ...prev };
+      if (!newDeletions[configPath]) {
+        newDeletions[configPath] = [];
+      }
+
+      // Construct the full profile path
+      let fullProfilePath: string;
+      if (profileKey.includes(".")) {
+        // Nested profile - construct the full path
+        const profileParts = profileKey.split(".");
+        const pathArray = ["profiles"];
+        for (let i = 0; i < profileParts.length; i++) {
+          pathArray.push(profileParts[i]);
+          if (i < profileParts.length - 1) {
+            pathArray.push("profiles");
+          }
+        }
+        fullProfilePath = pathArray.join(".");
+      } else {
+        // Top-level profile
+        fullProfilePath = `profiles.${profileKey}`;
+      }
+
+      // Add the full profile path to deletions
+      newDeletions[configPath].push(fullProfilePath);
+
+      return newDeletions;
+    });
+
+    // Clear any pending changes for this profile
+    setPendingChanges((prev) => {
+      const newState = { ...prev };
+      if (newState[configPath]) {
+        // Remove all pending changes that belong to this profile
+        Object.keys(newState[configPath]).forEach((key) => {
+          const entry = newState[configPath][key];
+          if (entry.profile === profileKey) {
+            delete newState[configPath][key];
+          }
+        });
+      }
+      return newState;
+    });
+
+    // If this profile is currently selected, clear the selection
+    if (selectedProfileKey === profileKey) {
+      setSelectedProfileKey(null);
+    }
+  };
+
   const handleSave = () => {
     const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
       Object.keys(changesForPath).map((key) => {
@@ -463,8 +549,43 @@ export function App() {
     // Combine existing and pending profiles for the profile list
     const allProfiles = { ...flatProfiles, ...pendingProfiles };
 
+    // Filter out deleted profiles and their children
+    const deletedProfiles = deletions[configurations[selectedTab!]!.configPath] || [];
+    const filteredProfileKeys = Object.keys(allProfiles).filter((profileKey) => {
+      // Check if this profile or any of its parent profiles are deleted
+      const profileParts = profileKey.split(".");
+
+      // Check each level of the profile hierarchy
+      for (let i = 0; i < profileParts.length; i++) {
+        const currentLevelProfileKey = profileParts.slice(0, i + 1).join(".");
+        let fullProfilePath: string;
+
+        if (i === 0) {
+          // Top-level profile
+          fullProfilePath = `profiles.${currentLevelProfileKey}`;
+        } else {
+          // Nested profile - construct the full path for this specific level
+          const pathArray = ["profiles"];
+          for (let j = 0; j <= i; j++) {
+            pathArray.push(profileParts[j]);
+            if (j < i) {
+              pathArray.push("profiles");
+            }
+          }
+          fullProfilePath = pathArray.join(".");
+        }
+
+        // If any parent profile is deleted, hide this profile
+        if (deletedProfiles.includes(fullProfilePath)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
     // Sort profile keys alphabetically
-    const sortedProfileKeys = Object.keys(allProfiles).sort((a, b) => a.localeCompare(b));
+    const sortedProfileKeys = filteredProfileKeys.sort((a, b) => a.localeCompare(b));
 
     return (
       <div style={{ display: "flex", gap: "2rem" }}>
@@ -480,6 +601,7 @@ export function App() {
                 border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "1px solid #ccc",
                 backgroundColor: selectedProfileKey === profileKey ? "var(--vscode-button-hoverBackground)" : "transparent",
                 opacity: pendingProfiles[profileKey] ? 0.7 : 1, // Dim pending profiles
+                position: "relative",
               }}
               onClick={() => setSelectedProfileKey(profileKey)}
               title={profileKey}
@@ -490,11 +612,150 @@ export function App() {
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
+                  paddingRight: "24px", // Make room for delete button
                 }}
               >
                 {profileKey}
               </strong>
-              {pendingProfiles[profileKey]}
+
+              <button
+                className="action-button"
+                style={{
+                  position: "absolute",
+                  top: "4px",
+                  right: "4px",
+                  padding: "2px",
+                  height: "20px",
+                  width: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "transparent",
+                  color: "var(--vscode-button-secondaryForeground)",
+                  border: "1px solid var(--vscode-button-border)",
+                  borderRadius: "3px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  lineHeight: "1",
+                }}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent profile selection
+                  setProfileMenuOpen(profileMenuOpen === profileKey ? null : profileKey);
+                }}
+                title={`More options for "${profileKey}"`}
+              >
+                <span
+                  style={{
+                    backgroundColor: "transparent",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "12px",
+                    lineHeight: "1",
+                  }}
+                  className="codicon codicon-more"
+                ></span>
+              </button>
+              {profileMenuOpen === profileKey && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "28px",
+                    right: "4px",
+                    backgroundColor: "var(--vscode-dropdown-background)",
+                    border: "1px solid var(--vscode-dropdown-border)",
+                    borderRadius: "4px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    zIndex: 1000,
+                    minWidth: "120px",
+                  }}
+                >
+                  <button
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "none",
+                      background: "none",
+                      color: "var(--vscode-dropdown-foreground)",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      fontSize: "12px",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.target as HTMLElement).style.backgroundColor = "var(--vscode-dropdown-hoverBackground)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.target as HTMLElement).style.backgroundColor = "transparent";
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // TODO: Implement rename functionality
+                      setProfileMenuOpen(null);
+                    }}
+                  >
+                    <span className="codicon codicon-edit" style={{ marginRight: "6px", fontSize: "12px" }}></span>
+                    Rename (WIP)
+                  </button>
+                  <button
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "none",
+                      background: "none",
+                      color: "var(--vscode-dropdown-foreground)",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      fontSize: "12px",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.target as HTMLElement).style.backgroundColor = "var(--vscode-dropdown-hoverBackground)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.target as HTMLElement).style.backgroundColor = "transparent";
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // TODO: Implement set as default functionality
+                      setProfileMenuOpen(null);
+                    }}
+                  >
+                    <span className="codicon codicon-star" style={{ marginRight: "6px", fontSize: "12px" }}></span>
+                    Set as Default (WIP)
+                  </button>
+                  <button
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
+                      padding: "8px 12px",
+                      border: "none",
+                      background: "none",
+                      color: "var(--vscode-errorForeground)",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      fontSize: "12px",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.target as HTMLElement).style.backgroundColor = "var(--vscode-dropdown-hoverBackground)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.target as HTMLElement).style.backgroundColor = "transparent";
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteProfile(profileKey);
+                      setProfileMenuOpen(null);
+                    }}
+                  >
+                    <span className="codicon codicon-trash" style={{ marginRight: "6px", fontSize: "12px" }}></span>
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -537,19 +798,90 @@ export function App() {
     const baseObj = cloneDeep(obj);
     const configPath = configurations[selectedTab!]!.configPath;
 
+    // DEBUG: Add debug logging
+    console.log("renderConfig DEBUG:", {
+      fullPath,
+      baseObj,
+      path,
+      pendingChanges: pendingChanges[configPath],
+    });
+
     // Prepare a copy of baseObj for this level
     let combinedConfig = { ...baseObj };
 
     // Create a map of pending changes that should be applied at this level
     const pendingChangesAtLevel: { [key: string]: any } = {};
+
+    // Determine the current profile being rendered from the path
+    // Use the same logic as handleChange to extract profile key
+    let currentProfileKey: string;
+    if (path[0] === "profiles" && path.length > 2) {
+      // Check if this is a nested profile
+      const profilesIndices = [];
+      for (let i = 0; i < path.length; i++) {
+        if (path[i] === "profiles") {
+          profilesIndices.push(i);
+        }
+      }
+      if (profilesIndices.length > 1) {
+        // This is a nested profile - construct the full profile key
+        const profileParts = [];
+        for (let i = 1; i < path.length; i++) {
+          if (path[i] !== "profiles") {
+            profileParts.push(path[i]);
+          }
+        }
+        // Stop at the first occurrence of "properties" or "type" to get the actual profile name
+        const profileNameEndIndex = profileParts.findIndex((part) => part === "properties" || part === "type");
+        if (profileNameEndIndex !== -1) {
+          currentProfileKey = profileParts.slice(0, profileNameEndIndex).join(".");
+        } else {
+          currentProfileKey = profileParts.join(".");
+        }
+      } else {
+        // Top-level profile
+        currentProfileKey = path[1];
+      }
+    } else {
+      currentProfileKey = path[0];
+    }
+
+    // DEBUG: Log current profile key
+    console.log("renderConfig DEBUG - currentProfileKey:", currentProfileKey);
+
     Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-      const keyParts = key.split(".");
-      if (key.startsWith(fullPath)) {
+      // DEBUG: Log each pending change being processed
+      console.log("renderConfig DEBUG - processing pending change:", {
+        key,
+        entry,
+        entryProfile: entry.profile,
+        currentProfileKey,
+        keyStartsWithFullPath: key.startsWith(fullPath),
+        fullPath,
+      });
+
+      // Only apply pending changes that belong to the current profile being rendered
+      if (entry.profile === currentProfileKey && key.startsWith(fullPath)) {
+        const keyParts = key.split(".");
         const relativePath = keyParts.slice(path.length);
+
+        // DEBUG: Log the relative path calculation
+        console.log("renderConfig DEBUG - relative path:", {
+          keyParts,
+          path,
+          relativePath,
+          entrySecure: entry.secure,
+        });
+
         if (relativePath.length === 1) {
           // Don't add secure properties to the properties object
           if (!entry.secure) {
             pendingChangesAtLevel[relativePath[0]] = entry.value;
+            // DEBUG: Log when a pending change is added
+            console.log("renderConfig DEBUG - added pending change at level 1:", {
+              key: relativePath[0],
+              value: entry.value,
+            });
           }
         } else if (relativePath.length > 1) {
           // For nested properties, only add non-secure properties
@@ -562,16 +894,28 @@ export function App() {
               current = current[relativePath[i]];
             }
             current[relativePath[relativePath.length - 1]] = entry.value;
+            // DEBUG: Log when a nested pending change is added
+            console.log("renderConfig DEBUG - added nested pending change:", {
+              relativePath,
+              value: entry.value,
+              finalKey: relativePath[relativePath.length - 1],
+            });
           }
         }
       }
     });
+
+    // DEBUG: Log the pending changes at level
+    console.log("renderConfig DEBUG - pendingChangesAtLevel:", pendingChangesAtLevel);
 
     // Combine base object with pending changes at this level
     combinedConfig = {
       ...combinedConfig,
       ...pendingChangesAtLevel,
     };
+
+    // DEBUG: Log the final combined config
+    console.log("renderConfig DEBUG - final combinedConfig:", combinedConfig);
 
     // Ensure properties key exists with empty object value if not present
     // Only add properties key at the profile level (when path ends with profile name)
