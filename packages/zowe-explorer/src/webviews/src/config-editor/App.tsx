@@ -132,8 +132,8 @@ export function App() {
 
   // Close profile menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (profileMenuOpen && !(event.target as Element).closest(".profile-list-item")) {
+    const handleClickOutside = () => {
+      if (profileMenuOpen) {
         setProfileMenuOpen(null);
       }
     };
@@ -612,7 +612,7 @@ export function App() {
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
-                  paddingRight: "24px", // Make room for delete button
+                  paddingRight: "24px",
                 }}
               >
                 {profileKey}
@@ -649,7 +649,7 @@ export function App() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "12px",
+                    fontSize: "16px",
                     lineHeight: "1",
                   }}
                   className="codicon codicon-more"
@@ -2236,6 +2236,7 @@ export function App() {
             style={{
               padding: "0.5rem 1rem",
               minWidth: "120px",
+              borderRadius: "4px",
             }}
           >
             {l10n.t("Create Profile")}
@@ -2245,6 +2246,7 @@ export function App() {
             style={{
               padding: "0.5rem 1rem",
               minWidth: "80px",
+              borderRadius: "4px",
             }}
           >
             {l10n.t("Cancel")}
