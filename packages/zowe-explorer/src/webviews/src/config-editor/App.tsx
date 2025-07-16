@@ -600,7 +600,7 @@ export function App() {
                 padding: "8px",
                 border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "1px solid #ccc",
                 backgroundColor: selectedProfileKey === profileKey ? "var(--vscode-button-hoverBackground)" : "transparent",
-                opacity: pendingProfiles[profileKey] ? 0.7 : 1, // Dim pending profiles
+                // opacity: pendingProfiles[profileKey] ? 0.7 : 1, // Dim pending profiles
                 position: "relative",
               }}
               onClick={() => setSelectedProfileKey(profileKey)}
@@ -613,6 +613,7 @@ export function App() {
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                   paddingRight: "24px",
+                  opacity: pendingProfiles[profileKey] ? 0.7 : 1, // Dim pending profiles
                 }}
               >
                 {profileKey}
