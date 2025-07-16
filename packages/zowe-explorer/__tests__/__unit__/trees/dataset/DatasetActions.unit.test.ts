@@ -38,7 +38,7 @@ import { FilterDescriptor } from "../../../../src/management/FilterManagement";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
-import { mocked } from "../../../__mocks__/mockUtils";
+import { mocked, MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
@@ -3185,7 +3185,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         } as any);
 
         const testError = new Error("Some error");
-        jest.spyOn(vscode.workspace.fs, "readFile").mockRejectedValueOnce(testError);
+        const readFileMock = jest.spyOn(vscode.workspace.fs, "readFile").mockRejectedValueOnce(testError);
         const authUtilsSpy = jest.spyOn(AuthUtils, "errorHandling").mockResolvedValue(undefined);
 
         await DatasetActions.zoom();
@@ -3201,6 +3201,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
                 scenario: "Opening data set failed.",
             })
         );
+        readFileMock.mockRestore();
     });
 
     it("should open the dataset/member if all is valid", async () => {
@@ -3216,6 +3217,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
 
         jest.spyOn(vscode.workspace.fs, "readFile").mockResolvedValueOnce(Buffer.from("data"));
         const execCmdSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+        const mockedEditor = new MockedProperty(vscode.window, "activeTextEditor", undefined, blockMocks.editor);
 
         await DatasetActions.zoom();
 
@@ -3223,6 +3225,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
             preview: false,
             viewColumn: 1,
         });
+        mockedEditor[Symbol.dispose]();
     });
 
     it("should focus on PDS in tree if selected text is a PDS and found", async () => {
