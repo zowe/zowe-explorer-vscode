@@ -598,7 +598,8 @@ export function App() {
                 cursor: "pointer",
                 margin: "8px 0",
                 padding: "8px",
-                border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "1px solid #ccc",
+                borderRadius: "4px",
+                border: "2px solid var(--vscode-button-background)",
                 backgroundColor: selectedProfileKey === profileKey ? "var(--vscode-button-hoverBackground)" : "transparent",
                 // opacity: pendingProfiles[profileKey] ? 0.7 : 1, // Dim pending profiles
                 position: "relative",
