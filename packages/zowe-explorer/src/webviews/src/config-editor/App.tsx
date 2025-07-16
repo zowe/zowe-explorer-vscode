@@ -632,7 +632,6 @@ export function App() {
                   justifyContent: "center",
                   backgroundColor: "transparent",
                   color: "var(--vscode-button-secondaryForeground)",
-                  border: "1px solid var(--vscode-button-border)",
                   borderRadius: "3px",
                   cursor: "pointer",
                   fontSize: "12px",
