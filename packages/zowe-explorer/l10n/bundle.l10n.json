@@ -720,10 +720,11 @@
     ]
   },
   "[{0}]: *": "[{0}]: *",
-  "Members of {0}/PDS member list title": {
-    "message": "Members of {0}",
+  "[{0}] Members of {1}/Profile namePDS name": {
+    "message": "[{0}] Members of {1}",
     "comment": [
-      "PDS member list title"
+      "Profile name",
+      "PDS name"
     ]
   },
   "Data Set Name": "Data Set Name",

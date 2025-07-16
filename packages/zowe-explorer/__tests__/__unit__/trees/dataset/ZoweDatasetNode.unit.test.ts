@@ -890,19 +890,6 @@ describe("ZoweDatasetNode Unit Tests - Function node.setStats", () => {
         lookupMock.mockRestore();
         createDirMock.mockRestore();
     });
-
-    xit("returns early when trying to set the stats for a PDS", () => {
-        const pdsEntry = new PdsEntry("TEST.PDS");
-        const lookupMock = jest.spyOn(DatasetFSProvider.instance, "lookup").mockClear().mockReturnValueOnce(pdsEntry);
-        const createDirMock = jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
-
-        const node = new ZoweDatasetNode({ label: "pds", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
-        node.setStats({ user: "bUser" });
-        expect(lookupMock).toHaveBeenCalled();
-        expect(pdsEntry).not.toHaveProperty("stats");
-        lookupMock.mockRestore();
-        createDirMock.mockRestore();
-    });
 });
 
 describe("ZoweDatasetNode Unit Tests - Function node.updateStats", () => {
@@ -950,8 +937,8 @@ describe("ZoweDatasetNode Unit Tests - Function node.updateStats", () => {
         // Create mock item with FTP properties
         const mockItem = {
             id: "ftpuser",
-            created: "2024-01-15T10:30:00Z",
-            changed: "2024-02-20T14:30:45Z",
+            c4date: "2024-01-15T10:30:00Z",
+            m4date: "2024-02-20T14:30:45Z",
             dsorg: "PS",
             lrecl: 133,
             recfm: "VB",

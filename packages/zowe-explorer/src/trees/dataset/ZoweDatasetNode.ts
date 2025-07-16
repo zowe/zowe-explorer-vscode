@@ -168,16 +168,20 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public updateStats(item: any): void {
         const dsStats: Partial<Types.DatasetStats> = {};
+        dsStats.user = item.user ?? item.id;
         if ("c4date" in item && "m4date" in item) {
-            const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
-            dsStats.user = item.user;
+            const { m4date, mtime, msec }: { m4date: string; mtime?: string; msec?: string } = item;
             dsStats.createdDate = dayjs(item.c4date).toDate();
-            dsStats.modifiedDate = dayjs(`${m4date} ${mtime}:${msec}`).toDate();
-        } else if ("id" in item || "changed" in item) {
-            // missing keys from API response; check for FTP keys
-            dsStats.user = item.id;
-            dsStats.createdDate = item.created ? dayjs(item.created).toDate() : undefined;
-            dsStats.modifiedDate = item.changed ? dayjs(item.changed).toDate() : undefined;
+            if (mtime) {
+                const [hours, minutes] = mtime.split(":");
+                dsStats.modifiedDate = dayjs(`${m4date} ${hours}:${minutes}`).toDate();
+
+                if (msec) {
+                    dsStats.modifiedDate.setSeconds(parseInt(msec, 10));
+                }
+            } else {
+                dsStats.modifiedDate = dayjs(`${m4date}`).toDate();
+            }
         }
 
         dsStats["dsorg"] = item.dsorg;

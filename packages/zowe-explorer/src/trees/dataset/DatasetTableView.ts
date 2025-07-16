@@ -306,7 +306,7 @@ export class PDSMembersDataSource implements IDataSetSource {
         public parentDataSource: IDataSetSource | null,
         public pdsName: string,
         private pdsUri: string,
-        private profile?: imperative.IProfileLoaded
+        private profile: imperative.IProfileLoaded
     ) {}
 
     public async fetchDataSets(): Promise<IDataSetInfo[]> {
@@ -339,9 +339,9 @@ export class PDSMembersDataSource implements IDataSetSource {
 
     public getTitle(): string {
         return l10n.t({
-            message: "Members of {0}",
-            args: [this.pdsName],
-            comment: ["PDS member list title"],
+            message: "[{0}] Members of {1}",
+            args: [this.profile.name, this.pdsName],
+            comment: ["Profile name", "PDS name"],
         });
     }
 
