@@ -64,7 +64,7 @@ export const tableProps = (
                 }
                 names.reverse();
                 names.push(params.data[col.field]);
-                return names.join(" > ");
+                return names.length > 1 ? names.join(" > ") : names[0];
             }
             const tooltipKey = `_${col.field}_tooltip`;
             return params.data[tooltipKey] || params.value;
