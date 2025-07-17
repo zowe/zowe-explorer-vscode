@@ -288,4 +288,9 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.Jobs, JobFSProvider.instance.onDidChangeFile);
         expect(ZoweExplorerApiRegister.onResourceChanged(ZoweScheme.Jobs)).toBe(JobFSProvider.instance.onDidChangeFile);
     });
+
+    it("allows access to the DataSetAttributesProvider instance", () => {
+        const ZEApiRegister = ZoweExplorerApiRegister.getInstance();
+        expect(ZEApiRegister.getDataSetAttrProvider()).toBeDefined();
+    });
 });
