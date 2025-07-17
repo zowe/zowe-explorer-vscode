@@ -38,6 +38,7 @@ export const tableProps = (
     enableCellTextSelection: true,
     ensureDomOrder: true,
     rowData: tableData.rows,
+    getRowId: tableData.options?.customTreeMode ? (params: any) => params.data._tree?.id : undefined,
     columnDefs: tableData.columns?.map((col) => ({
         sortable: true,
         sortingOrder: ["asc", "desc", null],
@@ -46,6 +47,28 @@ export const tableProps = (
         colSpan: col.colSpan ? new Function(wrapFn(col.colSpan))() : undefined,
         rowSpan: col.rowSpan ? new Function(wrapFn(col.rowSpan))() : undefined,
         valueFormatter: col.valueFormatter ? new Function(wrapFn(col.valueFormatter))() : undefined,
+        tooltipValueGetter: (params: any) => {
+            if (params.data._tree) {
+                const level = params.data._tree.depth;
+                const names = [];
+                // Start at inner-most level and work outwards
+                let dataAtLevel = params.data;
+                for (let i = level; i > 0; i--) {
+                    const parentId = dataAtLevel._tree.parentId;
+                    const parentNode = params.api.getRowNode(parentId);
+                    if (parentNode) {
+                        names.push(dataAtLevel[col.field]);
+                    }
+                    // Move up to the parent level
+                    dataAtLevel = parentNode.data;
+                }
+                names.reverse();
+                names.push(params.data[col.field]);
+                return names.join(" > ");
+            }
+            const tooltipKey = `_${col.field}_tooltip`;
+            return params.data[tooltipKey] || params.value;
+        },
     })),
     onCellContextMenu: contextMenu.callback,
     onCellValueChanged: tableData.columns?.some((col) => col.editable)
