@@ -995,7 +995,7 @@
           "group": "inline@1"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)(session|pds).*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(session|pds).*/ && !listMultiSelection",
           "command": "zowe.ds.tableView",
           "group": "100_zowe_tableview"
         },
