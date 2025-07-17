@@ -20,6 +20,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import { Logger } from "@zowe/imperative";
 import type { IDataSetSource } from "../../dataset";
+import { Gui } from "../../globals/Gui";
 export namespace Table {
     /* Tree node structure for hierarchical data */
     export type TreeNodeData = {
@@ -977,6 +978,28 @@ export namespace Table {
          * @returns Whether the webview successfully pinned the rows
          */
         public async pinRows(rows: RowData[]): Promise<boolean> {
+            const config = vscode.workspace.getConfiguration("zowe");
+            const maxPinnedRows = config.get<number>("table.maxPinnedRows", 10);
+            const hideWarning = config.get<boolean>("table.hidePinnedRowsWarning", false);
+
+            // Get currently pinned rows to check against the limit
+            const currentPinnedRows = await this.getPinnedRows();
+            const totalAfterPinning = currentPinnedRows.length + rows.length;
+
+            if (!hideWarning && currentPinnedRows.length <= maxPinnedRows && totalAfterPinning > maxPinnedRows) {
+                const message = `Pinning many rows can negatively impact the table view user experience.`;
+                const dontShowAgain = "Don't show this again";
+                Gui.warningMessage(message, { items: [dontShowAgain] }).then(async (result) => {
+                    if (result === dontShowAgain) {
+                        try {
+                            await config.update("table.hidePinnedRowsWarning", true, vscode.ConfigurationTarget.Global);
+                        } catch (error) {
+                            Logger.getAppLogger().error("Failed to update pinned rows warning setting: %s", error.toString());
+                        }
+                    }
+                });
+            }
+
             const rowsObject = rows.reduce((acc, row, index) => {
                 acc[index] = row;
                 return acc;

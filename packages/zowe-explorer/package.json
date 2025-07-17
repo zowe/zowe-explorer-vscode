@@ -2071,6 +2071,19 @@
           "default": true,
           "description": "%zowe.settings.displayReleaseNotes%",
           "scope": "window"
+        },
+        "zowe.table.maxPinnedRows": {
+          "type": "integer",
+          "default": 10,
+          "description": "%zowe.table.maxPinnedRows%",
+          "scope": "window",
+          "minimum": 1
+        },
+        "zowe.table.hidePinnedRowsWarning": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.table.hidePinnedRowsWarning%",
+          "scope": "window"
         }
       }
     },

@@ -542,6 +542,12 @@
   "zowe.settings.displayReleaseNotes": {
     "Should display the Zowe Explorer release notes after an update.": ""
   },
+  "zowe.table.maxPinnedRows": {
+    "Maximum number of rows that can be pinned to the top of table views.": ""
+  },
+  "zowe.table.hidePinnedRowsWarning": {
+    "Hide the warning message when pinning many rows to table views.": ""
+  },
   "Enter command here...": "",
   "Page Size:": "",
   "Page": "",
