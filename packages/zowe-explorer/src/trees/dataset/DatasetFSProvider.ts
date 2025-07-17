@@ -590,12 +590,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
             const profileEncoding = entry.encoding ? null : profile.profile?.encoding;
 
-            let binary = false;
-            if (encoding === "binary") {
-                binary = true;
-            } else if (entry.encoding?.kind === "binary") {
-                binary = true;
-            }
+            const binary = encoding === "binary" || entry.encoding?.kind === "binary";
 
             resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
                 binary,
