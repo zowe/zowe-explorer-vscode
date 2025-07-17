@@ -454,7 +454,48 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         errMessageMock.mockRestore();
         renameMock.mockRestore();
     });
+    it("shows error message when fileExists error occurs and listFiles success returns false", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
 
+        const newFullPath = "/u/user/newName";
+        const errMessageMock = jest.spyOn(Gui, "errorMessage").mockImplementation();
+        const fileExistsError = new vscode.FileSystemError("File exists");
+        fileExistsError.code = "FileExists";
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(fileExistsError);
+        const listFilesSpy = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({ success: false, commandResponse: "" });
+
+        await blockMocks.ussDir.rename(newFullPath);
+
+        expect(errMessageMock).toHaveBeenCalledTimes(1);
+        expect(errMessageMock).toHaveBeenCalledWith("File exists");
+
+        errMessageMock.mockRestore();
+        renameMock.mockRestore();
+        listFilesSpy.mockRestore();
+    });
+    it("deletes entry and retries rename when listFiles throws 404", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const newUri = { path: "/u/user/newName" };
+
+        const fileExistsError = new vscode.FileSystemError("File exists");
+        fileExistsError.code = "FileExists";
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(fileExistsError);
+
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockRejectedValueOnce({
+            name: "Error",
+            errorCode: imperative.RestConstants.HTTP_STATUS_404,
+        });
+
+        const parent = { entries: new Map([["newName", {}]]) };
+        const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(parent);
+        await blockMocks.ussDir.rename(newUri.path);
+        expect(parent.entries.has("newName")).toBe(false);
+        expect(renameMock).toHaveBeenCalledTimes(2);
+        lookupParentDirMock.mockRestore();
+        renameMock.mockRestore();
+    });
     it("Tests that rename updates and refreshes the UI components of the node", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);

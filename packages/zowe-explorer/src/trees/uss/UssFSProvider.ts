@@ -241,12 +241,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
         if (entry == null && resp?.success) {
             // if entry is null, listFiles did not create a new directory entry - this is a file
-            let parentDir = this._lookupParentDirectory(uri, true);
+            let parentDir = this.lookupParentDirectory(uri, true);
             if (parentDir == null) {
                 const parentPath = path.posix.join(uri.path, "..");
                 const parentUri = uri.with({ path: parentPath, query: "" });
                 await vscode.workspace.fs.createDirectory(parentUri);
-                parentDir = this._lookupParentDirectory(uri, false);
+                parentDir = this.lookupParentDirectory(uri, false);
                 parentDir.metadata = this._getInfoFromUri(parentUri);
             }
             const filename = path.posix.basename(uri.path);
@@ -456,7 +456,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
 
             // check if parent directory exists; if not, do a remote lookup
-            const parent = this._lookupParentDirectory(uri, true);
+            const parent = this.lookupParentDirectory(uri, true);
             if (parent == null) {
                 file = await this.remoteLookupForResource(uri);
             }
@@ -549,7 +549,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         options: { create: boolean; overwrite: boolean; noStatusMsg?: boolean }
     ): Promise<void> {
         const fileName = path.posix.basename(uri.path);
-        const parentDir = this._lookupParentDirectory(uri);
+        const parentDir = this.lookupParentDirectory(uri);
 
         let entry = parentDir.entries.get(fileName);
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
@@ -626,7 +626,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     public makeEmptyFileWithEncoding(uri: vscode.Uri, encoding: ZosEncoding): void {
-        const parentDir = this._lookupParentDirectory(uri);
+        const parentDir = this.lookupParentDirectory(uri);
         const fileName = path.posix.basename(uri.path);
         const entry = new UssFile(fileName);
         entry.encoding = encoding;
@@ -654,7 +654,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         const entry = this.lookup(oldUri, false) as UssDirectory | UssFile;
-        const parentDir = this._lookupParentDirectory(oldUri);
+        const parentDir = this.lookupParentDirectory(oldUri);
 
         const newName = path.posix.basename(newUri.path);
 
@@ -889,7 +889,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public createDirectory(uri: vscode.Uri): void {
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const basename = path.posix.basename(uri.path);
-        const parent = this._lookupParentDirectory(uri, false);
+        const parent = this.lookupParentDirectory(uri, false);
         if (parent.entries.has(basename)) {
             return;
         }

@@ -88,6 +88,7 @@ export class USSActions {
 
                 const newNode = await node.getChildren().then((children) => children.find((child) => child.label === name) as ZoweUSSNode);
                 await ussFileProvider.getTreeView().reveal(node, { select: true, focus: true });
+                await this.refreshDirectory(node, ussFileProvider);
                 ussFileProvider.getTreeView().reveal(newNode, { select: true, focus: true });
 
                 const equivalentNodeParent = ussFileProvider.findEquivalentNode(
