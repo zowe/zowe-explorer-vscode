@@ -33,6 +33,7 @@ import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import * as path from "path";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
+import { DeferredPromise } from "@zowe/imperative";
 const dayjs = require("dayjs");
 
 const testProfile = createIProfile();
@@ -84,6 +85,7 @@ describe("DatasetFSProvider", () => {
         mockedProperty = new MockedProperty(Profiles, "getInstance", {
             value: jest.fn().mockReturnValue({
                 loadNamedProfile: jest.fn().mockReturnValue(testProfile),
+                allProfiles: [],
                 getProfileFromConfig: jest.fn(),
             } as any),
         });
@@ -458,20 +460,26 @@ describe("DatasetFSProvider", () => {
             _lookupAsFileMock.mockRestore();
         });
 
-        it("should properly await the profile deferred promise for extenders - existing promise", async () => {
+        it("should properly await the profile deferred promise - existing promise", async () => {
+            const mockAllProfiles = [
+                { name: "sestest", type: "ssh" },
+                { name: "profile1", type: "zosmf" },
+                { name: "profile2", type: "zosmf" },
+            ];
+
             // Create a mock instance of Profiles
             const mockProfilesInstance = {
-                getProfileFromConfig: jest.fn().mockResolvedValueOnce({ profName: testProfile.name, profType: "zftp" }),
+                allProfiles: mockAllProfiles,
             };
 
             // Mock Profiles.getInstance to return the mock instance
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfilesInstance as any);
-            jest.spyOn(ProfilesUtils, "awaitExtenderType").mockRestore();
-            const awaitExtenderTypeSpy = jest.spyOn(ProfilesUtils, "awaitExtenderType");
 
-            const profilePromise = { promise: Promise.resolve() };
-            (ProfilesUtils as any).extenderTypeReady.set("zftp", profilePromise);
-            const getExtenderTypeSpy = jest.spyOn((ProfilesUtils as any).extenderTypeReady, "get");
+            const profilePromise = new DeferredPromise<void>();
+
+            if (testProfile.name) {
+                ProfilesUtils.extenderTypeReady.set(testProfile.name, profilePromise);
+            }
 
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce({
                 ...testEntries.ps,
@@ -483,27 +491,31 @@ describe("DatasetFSProvider", () => {
                 path: "/USER.DATA.PS",
             });
 
+            const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
+
             await DatasetFSProvider.instance.readFile(testUris.ps);
-            expect(awaitExtenderTypeSpy).toHaveBeenCalledWith("sestest", mockProfilesInstance);
-            expect(getExtenderTypeSpy).toHaveReturnedWith(profilePromise);
+
+            await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
         });
 
-        it("should properly await the profile deferred promise for extenders - no existing promise", async () => {
+        it("should properly await the profile deferred promise - no existing promise", async () => {
+            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(undefined);
+            const mockAllProfiles = [
+                { name: "sestest", type: "ssh" },
+                { name: "profile1", type: "zosmf" },
+                { name: "profile2", type: "zosmf" },
+            ];
+
             // Create a mock instance of Profiles
             const mockProfilesInstance = {
-                getProfileFromConfig: jest.fn().mockResolvedValueOnce({ profName: testProfile.name, profType: "zftp" }),
+                allProfiles: mockAllProfiles,
             };
 
             // Mock Profiles.getInstance to return the mock instance
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfilesInstance as any);
-            jest.spyOn(ProfilesUtils, "awaitExtenderType").mockRestore();
-            const awaitExtenderTypeSpy = jest.spyOn(ProfilesUtils, "awaitExtenderType");
 
-            (ProfilesUtils as any).extenderTypeReady.clear();
-            const profilePromise = { promise: Promise.resolve() };
-            const setExtenderTypeSpy = jest
-                .spyOn((ProfilesUtils as any).extenderTypeReady, "set")
-                .mockImplementationOnce((key) => (ProfilesUtils as any).extenderTypeReady.set(key, profilePromise));
+            const profilePromise = new DeferredPromise<void>();
+            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
 
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce({
                 ...testEntries.ps,
@@ -515,9 +527,11 @@ describe("DatasetFSProvider", () => {
                 path: "/USER.DATA.PS",
             });
 
+            const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
+
             await DatasetFSProvider.instance.readFile(testUris.ps);
-            expect(awaitExtenderTypeSpy).toHaveBeenCalledWith("sestest", mockProfilesInstance);
-            expect(setExtenderTypeSpy).toHaveBeenCalledTimes(2);
+
+            await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
         });
     });
 
@@ -1356,6 +1370,7 @@ describe("DatasetFSProvider", () => {
                 });
 
                 isProfileLockedMock.mockReturnValueOnce(true);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
 
                 const datasetMock = jest.fn().mockResolvedValueOnce({});
@@ -1363,6 +1378,7 @@ describe("DatasetFSProvider", () => {
 
                 const result = await DatasetFSProvider.instance.stat(testUris.ps);
 
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
@@ -1383,6 +1399,7 @@ describe("DatasetFSProvider", () => {
                 const uriInfo = { profile: testProfile };
 
                 isProfileLockedMock.mockReturnValueOnce(true);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
 
                 const datasetMock = jest.fn().mockResolvedValueOnce({});
@@ -1390,6 +1407,7 @@ describe("DatasetFSProvider", () => {
 
                 const result = await (DatasetFSProvider.instance as any).fetchEntriesForProfile(testUris.session, uriInfo, "USER.*");
 
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
@@ -1411,6 +1429,7 @@ describe("DatasetFSProvider", () => {
                 const getInfoFromUriMock = jest.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce(file.metadata);
 
                 isProfileLockedMock.mockReturnValueOnce(true);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
 
                 const getContentsMock = jest.fn().mockResolvedValueOnce({});
@@ -1418,8 +1437,9 @@ describe("DatasetFSProvider", () => {
 
                 const result = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
 
-                expect(waitForUnlockMock).toHaveBeenCalled();
-                expect(isProfileLockedMock).toHaveBeenCalled();
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+                expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(getContentsMock).not.toHaveBeenCalled();
                 expect(result).toBeNull();

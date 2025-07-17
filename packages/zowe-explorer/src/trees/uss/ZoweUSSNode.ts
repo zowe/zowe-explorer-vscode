@@ -191,6 +191,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         return this.onUpdateEmitter.event;
     }
 
+    public getProfile(): imperative.IProfileLoaded {
+        return super.getProfile(Profiles.getInstance());
+    }
+
     public getSessionNode(): IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.getSessionNode called.");
         return this.session ? this : (this.getParent()?.getSessionNode() as IZoweUSSTreeNode) ?? this;
@@ -709,6 +713,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from USS list API"),
             });
+            if (!updated) {
+                this.dirty = false;
+            }
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getUssApi(prof), this.getSessionNode(), updated && this);
             return { success: false, commandResponse: null };
         }

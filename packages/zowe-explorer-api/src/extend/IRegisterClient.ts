@@ -13,6 +13,7 @@ import * as imperative from "@zowe/imperative";
 import { MainframeInteraction } from "./MainframeInteraction";
 import { Validation } from "../profiles";
 import * as vscode from "vscode";
+import { DataSetAttributesProvider } from "../dataset/DatasetAttributesProvider";
 
 /**
  * This interface can be used by other VS Code Extensions to register themselves
@@ -132,4 +133,6 @@ export interface IRegisterClient {
      * @returns the registered API instance
      */
     getCommonApi?(profile: imperative.IProfileLoaded): MainframeInteraction.ICommon;
+
+    getDataSetAttrProvider?(): DataSetAttributesProvider;
 }
