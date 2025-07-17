@@ -10,7 +10,7 @@
  */
 
 import * as imperative from "@zowe/imperative";
-import type { IListOptions } from "@zowe/zos-files-for-zowe-sdk";
+import type { IDataSet, IListOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 export const CreateDefaults = {
     DATA_SET: {
@@ -125,7 +125,7 @@ export namespace List {
     }
 
     export class Items {
-        constructor(public dsname: string, public dsorg: string, public member: string, public migr?: string) {}
+        constructor(public dsname: string, public dsorg: string, public member: string, public migr?: string) { }
     }
 
     export function fileList(session: imperative.Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
