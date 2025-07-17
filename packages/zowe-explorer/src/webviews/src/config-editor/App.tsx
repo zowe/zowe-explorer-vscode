@@ -765,6 +765,36 @@ export function App() {
         <div style={{ flexGrow: 1 }}>
           {selectedProfileKey && (
             <div>
+              {/* Add button for root-level properties */}
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontWeight: "bold", marginRight: 8 }}>{selectedProfileKey}</span>
+                <button
+                  className="add-default-button"
+                  title={`Add key at root of ${selectedProfileKey}`}
+                  onClick={() => {
+                    // Build the path to the root of the selected profile
+                    const profilePathParts = selectedProfileKey.split(".");
+                    let path;
+                    if (profilePathParts.length === 1) {
+                      // Top-level profile
+                      path = ["profiles", selectedProfileKey];
+                    } else {
+                      // Nested profile - need to construct path like ["profiles", "project_base", "profiles", "tso"]
+                      path = ["profiles"];
+                      for (let i = 0; i < profilePathParts.length; i++) {
+                        path.push(profilePathParts[i]);
+                        if (i < profilePathParts.length - 1) {
+                          path.push("profiles");
+                        }
+                      }
+                    }
+                    openAddProfileModalAtPath(path);
+                  }}
+                  style={{ marginLeft: 4 }}
+                >
+                  <span className="codicon codicon-add"></span>
+                </button>
+              </div>
               {(() => {
                 const profilePathParts = selectedProfileKey.split(".");
                 let path;
@@ -798,14 +828,6 @@ export function App() {
     const fullPath = path.join(".");
     const baseObj = cloneDeep(obj);
     const configPath = configurations[selectedTab!]!.configPath;
-
-    // DEBUG: Add debug logging
-    console.log("renderConfig DEBUG:", {
-      fullPath,
-      baseObj,
-      path,
-      pendingChanges: pendingChanges[configPath],
-    });
 
     // Prepare a copy of baseObj for this level
     let combinedConfig = { ...baseObj };
@@ -844,47 +866,20 @@ export function App() {
         currentProfileKey = path[1];
       }
     } else {
-      currentProfileKey = path[0];
+      currentProfileKey = path[1];
     }
-
-    // DEBUG: Log current profile key
-    console.log("renderConfig DEBUG - currentProfileKey:", currentProfileKey);
-
     Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-      // DEBUG: Log each pending change being processed
-      console.log("renderConfig DEBUG - processing pending change:", {
-        key,
-        entry,
-        entryProfile: entry.profile,
-        currentProfileKey,
-        keyStartsWithFullPath: key.startsWith(fullPath),
-        fullPath,
-      });
-
       // Only apply pending changes that belong to the current profile being rendered
-      if (entry.profile === currentProfileKey && key.startsWith(fullPath)) {
+      if (entry.profile === currentProfileKey && (key === fullPath || key.startsWith(fullPath + "."))) {
         const keyParts = key.split(".");
         const relativePath = keyParts.slice(path.length);
 
-        // DEBUG: Log the relative path calculation
-        console.log("renderConfig DEBUG - relative path:", {
-          keyParts,
-          path,
-          relativePath,
-          entrySecure: entry.secure,
-        });
-
-        if (relativePath.length === 1) {
-          // Don't add secure properties to the properties object
+        // Only add as a property if the next segment is not "profiles"
+        if (relativePath.length === 1 && relativePath[0] !== "profiles") {
           if (!entry.secure) {
             pendingChangesAtLevel[relativePath[0]] = entry.value;
-            // DEBUG: Log when a pending change is added
-            console.log("renderConfig DEBUG - added pending change at level 1:", {
-              key: relativePath[0],
-              value: entry.value,
-            });
           }
-        } else if (relativePath.length > 1) {
+        } else if (relativePath.length > 1 && relativePath[0] !== "profiles") {
           // For nested properties, only add non-secure properties
           if (!entry.secure) {
             let current = combinedConfig;
@@ -895,28 +890,17 @@ export function App() {
               current = current[relativePath[i]];
             }
             current[relativePath[relativePath.length - 1]] = entry.value;
-            // DEBUG: Log when a nested pending change is added
-            console.log("renderConfig DEBUG - added nested pending change:", {
-              relativePath,
-              value: entry.value,
-              finalKey: relativePath[relativePath.length - 1],
-            });
           }
         }
+        // If relativePath[0] === "profiles", skip for this level
       }
     });
-
-    // DEBUG: Log the pending changes at level
-    console.log("renderConfig DEBUG - pendingChangesAtLevel:", pendingChangesAtLevel);
 
     // Combine base object with pending changes at this level
     combinedConfig = {
       ...combinedConfig,
       ...pendingChangesAtLevel,
     };
-
-    // DEBUG: Log the final combined config
-    console.log("renderConfig DEBUG - final combinedConfig:", combinedConfig);
 
     // Ensure properties key exists with empty object value if not present
     // Only add properties key at the profile level (when path ends with profile name)
