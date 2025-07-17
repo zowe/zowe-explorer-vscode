@@ -10,8 +10,8 @@
  */
 
 import { join } from "path";
-import { Table, TableBuilder, WebView } from "../../../../src";
-import { env, EventEmitter, Uri, window } from "vscode";
+import { Table, TableBuilder, WebView, Gui } from "../../../../src";
+import { ConfigurationTarget, env, EventEmitter, Uri, window, workspace } from "vscode";
 import * as crypto from "crypto";
 import { diff } from "deep-object-diff";
 import * as fs from "fs";
@@ -1423,6 +1423,133 @@ describe("Table.View", () => {
             const rows: Table.RowData[] = [{ id: 1 }, { id: 2 }];
             await view.setPinnedRows(rows);
             expect(requestSpy).toHaveBeenCalledWith("set-pinned-rows", { rows });
+        });
+    });
+
+    describe("pinRows warning functionality", () => {
+        let view: Table.View;
+        let requestSpy: jest.SpyInstance;
+        let configMock: any;
+        let warningMessageSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+            const globalMocks = createGlobalMocks();
+            view = new Table.View(globalMocks.context as any, { title: "Warning Test" } as any);
+
+            // Mock the configuration
+            configMock = {
+                get: jest.fn(),
+                update: jest.fn().mockResolvedValue(undefined),
+            };
+            jest.spyOn(workspace, "getConfiguration").mockReturnValue(configMock);
+
+            // Mock the warning message
+            warningMessageSpy = jest.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+
+            // Mock the request method to simulate different scenarios
+            requestSpy = jest.spyOn(view, "request");
+        });
+
+        afterEach(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should show warning when pinning rows that exceed maxPinnedRows limit", async () => {
+            // Setup: current has 8 pinned rows, max is 10, trying to pin 3 more (would total 11)
+            configMock.get.mockImplementation((key: string, defaultValue: any) => {
+                if (key === "table.maxPinnedRows") return 10;
+                if (key === "table.hidePinnedRowsWarning") return false;
+                return defaultValue;
+            });
+
+            // Mock getPinnedRows to return 8 existing rows
+            const existingRows = Array.from({ length: 8 }, (_, i) => ({ id: i + 1 }));
+            requestSpy.mockImplementation((command: string) => {
+                if (command === "get-pinned-rows") return Promise.resolve(existingRows);
+                if (command === "pin-rows") return Promise.resolve(true);
+                return Promise.resolve(undefined);
+            });
+
+            const newRows: Table.RowData[] = [{ id: 9 }, { id: 10 }, { id: 11 }];
+            const result = await view.pinRows(newRows);
+
+            // Should show warning message since 8 + 3 = 11 > 10 (maxPinnedRows)
+            expect(warningMessageSpy).toHaveBeenCalledWith("Pinning many rows can negatively impact the table view user experience.", {
+                items: ["Don't show this again"],
+            });
+            expect(result).toBe(true); // Should still succeed
+        });
+
+        it("should not show warning when hidePinnedRowsWarning is true", async () => {
+            // Setup: warning is disabled
+            configMock.get.mockImplementation((key: string, defaultValue: any) => {
+                if (key === "table.maxPinnedRows") return 10;
+                if (key === "table.hidePinnedRowsWarning") return true; // Warning disabled
+                return defaultValue;
+            });
+
+            // Mock getPinnedRows to return 8 existing rows
+            const existingRows = Array.from({ length: 8 }, (_, i) => ({ id: i + 1 }));
+            requestSpy.mockImplementation((command: string) => {
+                if (command === "get-pinned-rows") return Promise.resolve(existingRows);
+                if (command === "pin-rows") return Promise.resolve(true);
+                return Promise.resolve(undefined);
+            });
+
+            const newRows: Table.RowData[] = [{ id: 9 }, { id: 10 }, { id: 11 }];
+            await view.pinRows(newRows);
+
+            // Should NOT show warning since hidePinnedRowsWarning is true
+            expect(warningMessageSpy).not.toHaveBeenCalled();
+        });
+
+        it("should not show warning when not exceeding the limit", async () => {
+            // Setup: current has 5 pinned rows, max is 10, trying to pin 2 more (would total 7)
+            configMock.get.mockImplementation((key: string, defaultValue: any) => {
+                if (key === "table.maxPinnedRows") return 10;
+                if (key === "table.hidePinnedRowsWarning") return false;
+                return defaultValue;
+            });
+
+            // Mock getPinnedRows to return 5 existing rows
+            const existingRows = Array.from({ length: 5 }, (_, i) => ({ id: i + 1 }));
+            requestSpy.mockImplementation((command: string) => {
+                if (command === "get-pinned-rows") return Promise.resolve(existingRows);
+                if (command === "pin-rows") return Promise.resolve(true);
+                return Promise.resolve(undefined);
+            });
+
+            const newRows: Table.RowData[] = [{ id: 6 }, { id: 7 }];
+            await view.pinRows(newRows);
+
+            // Should NOT show warning since 5 + 2 = 7 <= 10 (maxPinnedRows)
+            expect(warningMessageSpy).not.toHaveBeenCalled();
+        });
+
+        it("should update hidePinnedRowsWarning setting when 'Don't show this again' is clicked", async () => {
+            // Setup: current has 8 pinned rows, max is 10, trying to pin 3 more
+            configMock.get.mockImplementation((key: string, defaultValue: any) => {
+                if (key === "table.maxPinnedRows") return 10;
+                if (key === "table.hidePinnedRowsWarning") return false;
+                return defaultValue;
+            });
+
+            // Mock the warning message to return "Don't show this again"
+            warningMessageSpy.mockResolvedValue("Don't show this again");
+
+            // Mock getPinnedRows to return 8 existing rows
+            const existingRows = Array.from({ length: 8 }, (_, i) => ({ id: i + 1 }));
+            requestSpy.mockImplementation((command: string) => {
+                if (command === "get-pinned-rows") return Promise.resolve(existingRows);
+                if (command === "pin-rows") return Promise.resolve(true);
+                return Promise.resolve(undefined);
+            });
+
+            const newRows: Table.RowData[] = [{ id: 9 }, { id: 10 }, { id: 11 }];
+            await view.pinRows(newRows);
+
+            // Should have called update to set hidePinnedRowsWarning to true
+            expect(configMock.update).toHaveBeenCalledWith("table.hidePinnedRowsWarning", true, ConfigurationTarget.Global);
         });
     });
 
