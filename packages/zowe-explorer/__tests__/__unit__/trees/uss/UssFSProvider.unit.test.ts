@@ -736,7 +736,6 @@ describe("UssFSProvider", () => {
                 profile: testProfile,
                 path: "/aFile.txt",
             });
-
             jest.spyOn(UssFSProvider.instance as any, "fetchFileAtUri").mockReturnValueOnce({
                 profile: testProfile,
                 path: "/USER.DATA.PS",
@@ -784,7 +783,6 @@ describe("UssFSProvider", () => {
                 profile: testProfile,
                 path: "/aFile.txt",
             });
-
             jest.spyOn(UssFSProvider.instance as any, "fetchFileAtUri").mockReturnValueOnce({
                 profile: testProfile,
                 path: "/USER.DATA.PS",
