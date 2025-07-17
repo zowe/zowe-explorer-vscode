@@ -51,16 +51,16 @@ export const tableProps = (
             if (params.data._tree) {
                 const level = params.data._tree.depth;
                 const names = [];
-                // Start at inner-most level and work outwards
                 let dataAtLevel = params.data;
                 for (let i = level; i > 0; i--) {
                     const parentId = dataAtLevel._tree.parentId;
                     const parentNode = params.api.getRowNode(parentId);
                     if (parentNode) {
-                        names.push(dataAtLevel[col.field]);
+                        names.push(parentNode.data[col.field]);
+                        dataAtLevel = parentNode.data;
+                    } else {
+                        break;
                     }
-                    // Move up to the parent level
-                    dataAtLevel = parentNode.data;
                 }
                 names.reverse();
                 names.push(params.data[col.field]);
