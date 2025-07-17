@@ -185,6 +185,12 @@
   "uss.cd": {
     "Go Up One Level": ""
   },
+  "uss.back": {
+    "Back": ""
+  },
+  "uss.forward": {
+    "Forward": ""
+  },
   "jobs.search": {
     "Search Jobs": ""
   },
@@ -679,15 +685,6 @@
   "Uploading USS files...": "",
   "Error uploading files": "",
   "Retrieving response from USS list API": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Failed to move {0}": "",
-  "Profile does not exist for this file.": "",
-  "Saving USS file...": "",
-  "Failed to rename {0}": "",
-  "Failed to delete {0}": "",
-  "No error details given": "",
-  "Error fetching destination {0} for paste action: {1}": "",
-  "Failed to copy {0} to {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -701,6 +698,8 @@
   "Continue": "",
   "Prompting the user to choose a member from the filtered list": "",
   "You are already at the root directory.": "",
+  "No previous path in history.": "",
+  "No next path in history.": "",
   "Prompting the user for a USS path": "",
   "Select a filter": "",
   "No selection made. Operation cancelled.": "",
@@ -714,6 +713,15 @@
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
   "Pulling from Mainframe...": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Failed to move {0}": "",
+  "Profile does not exist for this file.": "",
+  "Saving USS file...": "",
+  "Failed to rename {0}": "",
+  "Failed to delete {0}": "",
+  "No error details given": "",
+  "Error fetching destination {0} for paste action: {1}": "",
+  "Failed to copy {0} to {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
