@@ -289,14 +289,20 @@ describe("TreeDataSource", () => {
                 contextOverride: Constants.DS_PDS_CONTEXT,
                 profile,
             });
-            const newChildren = [
-                new ZoweDatasetNode({
-                    label: "MEM1",
-                    collapsibleState: TreeItemCollapsibleState.None,
-                    profile,
-                    parentNode: pdsNode,
-                }),
-            ];
+            const pdsMember = new ZoweDatasetNode({
+                label: "MEM1",
+                collapsibleState: TreeItemCollapsibleState.None,
+                contextOverride: Constants.DS_MEMBER_CONTEXT,
+                profile,
+                parentNode: pdsNode,
+            });
+            const newChildren = [pdsMember];
+            const getStatsMock = jest.spyOn(pdsMember, "getStats").mockReturnValue({
+                migr: "NO",
+                user: "USER1",
+                createdDate: new Date(),
+                modifiedDate: new Date(),
+            } as Types.DatasetStats);
             profileNode.children = [pdsNode];
             const getChildrenMock = jest.spyOn(profileNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(profileNode.children);
@@ -312,14 +318,14 @@ describe("TreeDataSource", () => {
             expect(pdsGetChildrenMock).toHaveBeenCalledTimes(1);
             expect(pdsGetChildrenMock).toHaveBeenCalledWith(false);
             expect(children).toEqual([
-                {
+                expect.objectContaining({
                     name: "MEM1",
                     migr: "NO",
-                    uri: "zowe-ds:///sestest/MEM1",
-                    isMember: false,
+                    uri: "zowe-ds:///sestest/TEST.PDS/MEM1",
+                    isMember: true,
                     isDirectory: false,
                     parentId: "zowe-ds:/sestest/TEST.PDS",
-                },
+                }),
             ]);
         });
 
