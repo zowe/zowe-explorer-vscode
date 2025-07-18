@@ -220,6 +220,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public getStats(): Types.DatasetStats {
+        // Migrated data sets don't have stats in the z/OSMF response
+        if (this.resourceUri == null) {
+            return;
+        }
+
         const dsEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DsEntry | PdsEntry;
         if (dsEntry == null) {
             return;

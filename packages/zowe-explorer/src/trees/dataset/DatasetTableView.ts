@@ -103,7 +103,7 @@ export class TreeDataSource implements IDataSetSource {
         const parentUri = Uri.parse(parentId);
         const children = await this.treeNode.getChildren(false);
         const pdsNode = children.find((child) => {
-            return child.resourceUri.path === parentUri.path && SharedContext.isPds(child);
+            return child.resourceUri?.path === parentUri.path && SharedContext.isPds(child);
         });
 
         if (pdsNode) {
@@ -128,6 +128,8 @@ export class TreeDataSource implements IDataSetSource {
      */
     private mapNodeToInfo(dsNode: IZoweDatasetTreeNode, parentId?: string): IDataSetInfo {
         const dsStats = dsNode.getStats();
+        const isMigrated = dsStats == null || (Object.keys(dsStats).length === 0 && !SharedContext.isDsMember(dsNode));
+        const migr = isMigrated ? "YES" : dsStats?.["migr"];
 
         return {
             name: dsNode.label?.toString(),
@@ -135,7 +137,7 @@ export class TreeDataSource implements IDataSetSource {
             createdDate: dsStats?.createdDate,
             modifiedDate: dsStats?.modifiedDate,
             lrecl: dsStats?.["lrecl"],
-            migr: dsStats?.["migr"] ?? (SharedContext.isDsMember(dsNode) ? undefined : "NO"),
+            migr,
             recfm: dsStats?.["recfm"],
             volumes: dsStats?.["vols"] ?? dsStats?.["vol"],
             user: dsStats?.["user"],
@@ -237,7 +239,7 @@ export class PatternDataSource implements IDataSetSource {
                         createdDate: ds.createdDate ? new Date(ds.createdDate) : undefined,
                         modifiedDate: ds.modifiedDate ? new Date(ds.modifiedDate) : undefined,
                         lrecl: ds.lrecl,
-                        migr: ds.migr === "yes" ? "YES" : "NO",
+                        migr: ds.migr?.toLocaleUpperCase() === "YES" ? "YES" : "NO",
                         recfm: ds.recfm,
                         volumes: ds.vols || ds.vol,
                         user: ds.user,
