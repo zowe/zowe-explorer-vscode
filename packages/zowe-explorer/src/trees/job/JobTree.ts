@@ -1133,6 +1133,182 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         this.refreshElement(node);
     }
 
+    /**
+     * Poll the currently filtered jobs on the session node, given a user-provided polling interval.
+     * @param session The session node to start/stop polling active jobs for
+     */
+    public async pollActiveJobs(session: IZoweJobTreeNode): Promise<void> {
+        if (!SharedContext.isSession(session)) {
+            return;
+        }
+
+        // If the session is already being polled, stop polling all active jobs
+        if (SharedContext.isPolling(session)) {
+            const sessionPollKey = `${session.resourceUri.path}-active-jobs`;
+
+            // Stop the main polling request
+            if (sessionPollKey in Poller.pollRequests) {
+                Poller.pollRequests[sessionPollKey].dispose = true;
+            }
+
+            // Find all active jobs that are currently being polled
+            const activeJobsBeingPolled = session.children?.filter((job) => job.job && SharedContext.isPolling(job)) || [];
+
+            // Remove polling context from each active job
+            for (const job of activeJobsBeingPolled) {
+                job.contextValue = job.contextValue.replace(Constants.POLL_CONTEXT, "");
+                this.mOnDidChangeTreeData.fire(job);
+            }
+
+            // Remove polling context from session
+            session.contextValue = session.contextValue.replace(Constants.POLL_CONTEXT, "");
+            this.mOnDidChangeTreeData.fire(session);
+            return;
+        }
+
+        // Always prompt the user for a poll interval
+        const pollInterval = await this.showPollOptions(session.resourceUri);
+        if (pollInterval === 0) {
+            return;
+        }
+
+        // Filter all jobs on the session node for active jobs
+        if (!session.children || session.children.length === 0) {
+            Gui.infoMessage(
+                vscode.l10n.t({
+                    message: "No active jobs found for session: {0}",
+                    args: [session.label],
+                    comment: ["Session label"],
+                })
+            );
+            return;
+        }
+
+        const activeJobs: IZoweJobTreeNode[] = session.children.filter((job) => {
+            return job.job && job.job.status && job.job.status.toLowerCase() === "active";
+        });
+
+        if (activeJobs.length === 0) {
+            Gui.infoMessage(
+                vscode.l10n.t({
+                    message: "No active jobs found for session: {0}",
+                    args: [session.label],
+                    comment: ["Session label"],
+                })
+            );
+            return;
+        }
+
+        if (activeJobs.length > Constants.MIN_WARN_ACTIVE_JOBS_TO_POLL) {
+            const warningMessage = vscode.l10n.t({
+                message: "Polling {0} active jobs may cause performance issues. Do you want to continue?",
+                args: [activeJobs.length],
+                comment: ["Number of active jobs"],
+            });
+            const continuePolling = await Gui.warningMessage(warningMessage, {
+                items: [vscode.l10n.t("Continue"), vscode.l10n.t("Cancel")],
+                vsCodeOpts: { modal: true },
+            });
+            if (continuePolling !== vscode.l10n.t("Continue")) {
+                return;
+            }
+        }
+
+        // Start polling each active job individually
+        const sessionPollKey = `${session.resourceUri.path}-active-jobs`;
+        let activeJobCount = activeJobs.length;
+        Poller.addRequest(sessionPollKey, {
+            msInterval: pollInterval,
+            request: async () => {
+                const statusMsg = Gui.setStatusBarMessage(
+                    `$(sync~spin) ${vscode.l10n.t({
+                        message: "Polling {0} active jobs...",
+                        args: [activeJobCount],
+                        comment: ["Number of active jobs"],
+                    })}`,
+                    Constants.ACTIVE_JOBS_POLLING_TIMEOUT_MS
+                );
+
+                try {
+                    // Refresh the session to get all current jobs (including any new ones)
+                    await this.refreshElement(session);
+
+                    // Get current active jobs after refresh
+                    const currentActiveJobs =
+                        session.children?.filter((job) => {
+                            return job.job && job.job.status && job.job.status.toLowerCase() === "active";
+                        }) || [];
+
+                    // Update the active job count
+                    activeJobCount = currentActiveJobs.length;
+
+                    // If no active jobs remain, stop polling
+                    if (activeJobCount === 0) {
+                        Poller.pollRequests[sessionPollKey].dispose = true;
+                        session.contextValue = session.contextValue.replace(Constants.POLL_CONTEXT, "");
+                        this.mOnDidChangeTreeData.fire(session);
+
+                        // Remove polling context from any remaining jobs
+                        session.children?.forEach((job) => {
+                            if (SharedContext.isPolling(job)) {
+                                job.contextValue = job.contextValue.replace(Constants.POLL_CONTEXT, "");
+                                this.mOnDidChangeTreeData.fire(job);
+                            }
+                        });
+
+                        statusMsg.dispose();
+                        Gui.infoMessage(
+                            vscode.l10n.t({
+                                message: "No more active jobs for {0}. Stopping polling.",
+                                args: [session.label],
+                                comment: ["Session label"],
+                            })
+                        );
+                        return;
+                    } else {
+                        // Update polling context for current active jobs
+                        session.children?.forEach((job) => {
+                            if (job.job && job.job.status && job.job.status.toLowerCase() === "active") {
+                                if (!SharedContext.isPolling(job)) {
+                                    job.contextValue += Constants.POLL_CONTEXT;
+                                    this.mOnDidChangeTreeData.fire(job);
+                                }
+                            } else if (SharedContext.isPolling(job)) {
+                                // Remove polling context from jobs that are no longer active
+                                job.contextValue = job.contextValue.replace(Constants.POLL_CONTEXT, "");
+                                this.mOnDidChangeTreeData.fire(job);
+                            }
+                        });
+                    }
+                } catch (error) {
+                    Poller.pollRequests[sessionPollKey].dispose = true;
+                    session.contextValue = session.contextValue.replace(Constants.POLL_CONTEXT, "");
+                    this.mOnDidChangeTreeData.fire(session);
+
+                    // Remove polling context from all jobs
+                    session.children?.forEach((job) => {
+                        if (SharedContext.isPolling(job)) {
+                            job.contextValue = job.contextValue.replace(Constants.POLL_CONTEXT, "");
+                            this.mOnDidChangeTreeData.fire(job);
+                        }
+                    });
+
+                    statusMsg.dispose();
+                }
+            },
+        });
+
+        // Add polling context to initial active jobs
+        for (const job of activeJobs) {
+            job.contextValue += Constants.POLL_CONTEXT;
+            this.mOnDidChangeTreeData.fire(job);
+        }
+
+        // Add polling context to session to indicate it's managing polling
+        session.contextValue += Constants.POLL_CONTEXT;
+        this.mOnDidChangeTreeData.fire(session);
+    }
+
     public sortBy(session: IZoweJobTreeNode): void {
         if (session.children != null) {
             session.children.sort(ZoweJobNode.sortJobs(session.sort));
