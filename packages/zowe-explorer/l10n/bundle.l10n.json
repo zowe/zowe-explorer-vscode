@@ -225,42 +225,6 @@
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Failed to move {0}/File path": {
-    "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to delete {0}/File name": {
-    "message": "Failed to delete {0}",
-    "comment": [
-      "File name"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
-  "Failed to copy {0} to {1}/Source pathDestination path": {
-    "message": "Failed to copy {0} to {1}",
-    "comment": [
-      "Source path",
-      "Destination path"
-    ]
-  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -323,6 +287,42 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
+    ]
+  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -712,6 +712,62 @@
   "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
+  "[{0}]: {1}/Profile NameData Set Search Pattern": {
+    "message": "[{0}]: {1}",
+    "comment": [
+      "Profile Name",
+      "Data Set Search Pattern"
+    ]
+  },
+  "[{0}]: *": "[{0}]: *",
+  "[{0}] Members of {1}/Profile namePDS name": {
+    "message": "[{0}] Members of {1}",
+    "comment": [
+      "Profile name",
+      "PDS name"
+    ]
+  },
+  "Data Set Name": "Data Set Name",
+  "Data Set Organization": "Data Set Organization",
+  "Creation Date": "Creation Date",
+  "Modified Date": "Modified Date",
+  "Record Length": "Record Length",
+  "Migrated": "Migrated",
+  "Record Format": "Record Format",
+  "Volumes": "Volumes",
+  "Last Modified By": "Last Modified By",
+  "Version": "Version",
+  "Modification Level": "Modification Level",
+  "Current Records": "Current Records",
+  "Initial Records": "Initial Records",
+  "Modified Records": "Modified Records",
+  "SCLM": "SCLM",
+  "Open": "Open",
+  "Focus": "Focus",
+  "Back": "Back",
+  "Pin": "Pin",
+  "Unpin": "Unpin",
+  "Error toggling pin state for rows: {0}/Error message": {
+    "message": "Error toggling pin state for rows: {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Member Name": "Member Name",
+  "Please select a single profile or PDS.": "Please select a single profile or PDS.",
+  "This action is only supported for session and PDS nodes. Please select a session or PDS node.": "This action is only supported for session and PDS nodes. Please select a session or PDS node.",
+  "No profiles available.": "No profiles available.",
+  "Select a profile to search for data sets": "Select a profile to search for data sets",
+  "Select a profile": "Select a profile",
+  "Enter Dataset Pattern": "Enter Dataset Pattern",
+  "e.g., USER.*, PUBLIC.DATA.*, etc.": "e.g., USER.*, PUBLIC.DATA.*, etc.",
+  "Enter a dataset pattern to search for": "Enter a dataset pattern to search for",
+  "Profile {0} not found./Name of the selected profile": {
+    "message": "Profile {0} not found.",
+    "comment": [
+      "Name of the selected profile"
+    ]
+  },
   "No search pattern applied. Search for a pattern and try again.": "No search pattern applied. Search for a pattern and try again.",
   "Searching for \"{0}\"/The string to search data sets for.": {
     "message": "Searching for \"{0}\"",
@@ -725,10 +781,8 @@
       "The string to search data sets for."
     ]
   },
-  "Data Set Name": "Data Set Name",
   "Position": "Position",
   "Contents": "Contents",
-  "Open": "Open",
   "Enter the text to search for.": "Enter the text to search for.",
   "Search Options": "Search Options",
   "Select search options": "Select search options",

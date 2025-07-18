@@ -77,8 +77,8 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
                     // Ideally we could just do `result.apiResponse.items = response;`
                     result.apiResponse.items = response.map((element) => ({
                         member: element.name,
-                        changed: element.changed,
-                        created: element.created,
+                        m4date: element.changed,
+                        c4date: element.created,
                         size: element.size,
                         version: element.version,
                         // id: element.id, // Removed in zos-node-accessor v2

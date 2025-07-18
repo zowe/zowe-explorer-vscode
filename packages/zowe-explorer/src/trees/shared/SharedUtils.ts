@@ -133,7 +133,7 @@ export class SharedUtils {
         } else {
             resultNodeList = nodeList;
         }
-        return resultNodeList;
+        return resultNodeList.filter(Boolean);
     }
 
     /**

@@ -10,3 +10,4 @@
  */
 
 export * from "./DatasetAttributesProvider";
+export * from "./table-types";

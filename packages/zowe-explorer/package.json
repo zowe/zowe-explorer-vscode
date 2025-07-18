@@ -183,8 +183,18 @@
         }
       },
       {
+        "command": "zowe.ds.tableView",
+        "title": "%tableView%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.ds.listDataSets",
+        "title": "%listDataSets%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.tableView",
-        "title": "%jobsTableView%",
+        "title": "%tableView%",
         "category": "Zowe Explorer"
       },
       {
@@ -985,6 +995,11 @@
           "group": "inline@1"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(session|pds).*/ && !listMultiSelection",
+          "command": "zowe.ds.tableView",
+          "group": "100_zowe_tableview"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.ds.pattern",
           "group": "inline@2"
@@ -1492,6 +1507,10 @@
         },
         {
           "command": "zowe.saveSearch",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.tableView",
           "when": "never"
         },
         {
@@ -2051,6 +2070,19 @@
           "type": "boolean",
           "default": true,
           "description": "%zowe.settings.displayReleaseNotes%",
+          "scope": "window"
+        },
+        "zowe.table.maxPinnedRows": {
+          "type": "integer",
+          "default": 10,
+          "description": "%zowe.table.maxPinnedRows%",
+          "scope": "window",
+          "minimum": 1
+        },
+        "zowe.table.hidePinnedRowsWarning": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.table.hidePinnedRowsWarning%",
           "scope": "window"
         }
       }

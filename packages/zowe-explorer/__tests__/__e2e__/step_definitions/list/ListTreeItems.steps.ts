@@ -68,8 +68,46 @@ async function setFilterForProfile(world: IWorld, profileNode: TreeItem, tree: s
 Given(/the user has a profile in their (.*) tree/, async function (tree: string) {
     this.tree = tree;
     this.treePane = await paneDivForTree(tree);
-    this.profileNode = (await this.treePane.findItem(testInfo.profileName)) as TreeItem;
-    if (this.profileNode == undefined) {
+
+    // Wait for tree to be fully loaded and try to find the profile
+    await browser.waitUntil(
+        async () => {
+            try {
+                const items = await this.treePane.getVisibleItems();
+                return items.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        {
+            timeout: 10000,
+            timeoutMsg: `${tree} tree did not load within timeout`,
+        }
+    );
+
+    // Try to find the profile with retries
+    this.profileNode = null;
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    while (attempts < maxAttempts && !this.profileNode) {
+        try {
+            this.profileNode = (await this.treePane.findItem(testInfo.profileName)) as TreeItem;
+            if (this.profileNode) {
+                break;
+            }
+        } catch (error) {
+            // findItem throws error if not found, continue to next attempt
+        }
+
+        attempts++;
+        if (attempts < maxAttempts) {
+            await browser.pause(1000); // Wait before retrying
+        }
+    }
+
+    // Only add profile if it really doesn't exist after all attempts
+    if (!this.profileNode) {
         // add profile via quick pick
         await this.treePane.elem.moveTo();
         const plusIcon = await this.treePane.getAction(`Add Profile to ${tree} View`);
@@ -82,7 +120,22 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
         this.yesOpt = await quickPick.findItem("Yes, Apply to all trees");
         await expect(this.yesOpt).toBeClickable();
         await this.yesOpt.click();
-        this.profileNode = (await this.treePane.findItem(testInfo.profileName)) as TreeItem;
+
+        // Wait for the profile to be added and then find it
+        await browser.waitUntil(
+            async () => {
+                try {
+                    this.profileNode = (await this.treePane.findItem(testInfo.profileName)) as TreeItem;
+                    return this.profileNode != null;
+                } catch {
+                    return false;
+                }
+            },
+            {
+                timeout: 10000,
+                timeoutMsg: `Profile ${testInfo.profileName} was not found after adding to ${tree} tree`,
+            }
+        );
     }
 });
 
