@@ -1274,6 +1274,20 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                                     this.mOnDidChangeTreeData.fire(job);
                                 }
                             } else if (SharedContext.isPolling(job)) {
+                                // Job is no longer active - show completion notification
+                                if (job.job && job.job.status) {
+                                    const sessProfileName = session.getProfileName();
+                                    const args = [sessProfileName, job.job.jobid];
+                                    const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+                                    Gui.showMessage(
+                                        vscode.l10n.t({
+                                            message: "Job completed {0} - Retcode: {1}",
+                                            args: [`[${job.job.jobid}](${setJobCmd})`, job.job.retcode],
+                                            comment: ["Job ID with clickable link", "Job status"],
+                                        })
+                                    );
+                                }
+
                                 // Remove polling context from jobs that are no longer active
                                 job.contextValue = job.contextValue.replace(Constants.POLL_CONTEXT, "");
                                 this.mOnDidChangeTreeData.fire(job);
