@@ -1390,6 +1390,44 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         expect(infoMessageSpy).toHaveBeenCalledWith(expect.stringContaining("No more active jobs for"));
     });
 
+    it("should handle job completion during polling", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const mockActiveJob = new ZoweJobNode({
+            label: "TESTJOB(JOB001) - ACTIVE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testSessionNode,
+            session: testSessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, status: "ACTIVE", jobid: "JOB001", retcode: "CC 0000" },
+        });
+
+        mockActiveJob.contextValue = Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT;
+        testSessionNode.children = [mockActiveJob];
+
+        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        jest.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
+
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
+            mockActiveJob.job.status = "OUTPUT";
+        });
+
+        showMessageSpy.mockClear();
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        const sessionPollKey = `${String(testSessionNode.resourceUri.path)}-active-jobs`;
+        const pollRequest = Poller.pollRequests[sessionPollKey];
+
+        await pollRequest.request();
+
+        expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringMatching("Job completed JOB001 - Retcode: CC 0000"));
+        expect(mockActiveJob.contextValue).not.toContain(Constants.POLL_CONTEXT);
+    });
+
     it("should properly validate the user-provided polling interval", async () => {
         const globalMocks = await createGlobalMocks();
 
