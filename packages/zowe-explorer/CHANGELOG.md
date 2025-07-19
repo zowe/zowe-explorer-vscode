@@ -15,6 +15,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for asynchronous operations when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Adjusted formatting for the certificate selection webview to make better use of space. [#3754](https://github.com/zowe/zowe-explorer-vscode/issues/3754)
+- Added the ability to poll on active jobs in the current filtered jobs tree. If an active job completes while polling, a notification that the job has completed is displayed. [#3472](https://github.com/zowe/zowe-explorer-vscode/issues/3472)
 
 ### Bug fixes
 

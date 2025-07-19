@@ -23,6 +23,9 @@
   "zowe.placeholderCommand": {
     "Placeholder": ""
   },
+  "zowe.setupRemoteWorkspaceFolders": {
+    "Setup Remote Workspace Folders": ""
+  },
   "zowe.promptCredentials": {
     "Update Credentials": ""
   },
@@ -115,6 +118,12 @@
   },
   "stopPolling": {
     "Stop Polling": ""
+  },
+  "jobs.startPollingActiveJobs": {
+    "Start Polling Active Jobs": ""
+  },
+  "jobs.stopPollingActiveJobs": {
+    "Stop Polling Active Jobs": ""
   },
   "refreshNode": {
     "Pull from Mainframe": ""
@@ -676,15 +685,6 @@
   "Uploading USS files...": "",
   "Error uploading files": "",
   "Retrieving response from USS list API": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Failed to move {0}": "",
-  "Profile does not exist for this file.": "",
-  "Saving USS file...": "",
-  "Failed to rename {0}": "",
-  "Failed to delete {0}": "",
-  "No error details given": "",
-  "Error fetching destination {0} for paste action: {1}": "",
-  "Failed to copy {0} to {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -711,6 +711,15 @@
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
   "Pulling from Mainframe...": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Failed to move {0}": "",
+  "Profile does not exist for this file.": "",
+  "Saving USS file...": "",
+  "Failed to rename {0}": "",
+  "Failed to delete {0}": "",
+  "No error details given": "",
+  "Error fetching destination {0} for paste action: {1}": "",
+  "Failed to copy {0} to {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
@@ -790,6 +799,11 @@
   "The polling interval must be greater than or equal to 1000ms.": "",
   "Poll interval (in ms) for: {0}": "",
   "Polling: {0}...": "",
+  "No active jobs found for session: {0}": "",
+  "Polling {0} active jobs may cause performance issues. Do you want to continue?": "",
+  "Polling {0} active jobs...": "",
+  "No more active jobs for {0}. Stopping polling.": "",
+  "Job completed {0} - Retcode: {1}": "",
   "Filter: {0}": "",
   "Set a filter...": "",
   "Filter cleared for {0}": "",
