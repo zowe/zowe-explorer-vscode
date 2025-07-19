@@ -1110,6 +1110,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
 
 describe("ZosJobsProvider unit tests - function pollData", () => {
     jest.useFakeTimers();
+
     it("correctly toggles polling on and off", async () => {
         const globalMocks = await createGlobalMocks();
         const testJobNode = new ZoweJobNode({
@@ -1161,6 +1162,243 @@ describe("ZosJobsProvider unit tests - function pollData", () => {
             "The polling interval must be greater than or equal to 1000ms."
         );
         // number >= 1000 should be undefined
+        expect(globalMocks.testJobsProvider.validatePollInterval("1000")).toStrictEqual(undefined);
+        expect(globalMocks.testJobsProvider.validatePollInterval("1001")).toStrictEqual(undefined);
+    });
+});
+
+describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
+    jest.useFakeTimers();
+
+    beforeEach(() => {
+        Object.keys(Poller.pollRequests).forEach((key) => {
+            delete Poller.pollRequests[key];
+        });
+    });
+
+    afterEach(() => {
+        Object.keys(Poller.pollRequests).forEach((key) => {
+            delete Poller.pollRequests[key];
+        });
+    });
+
+    it("should return early if node is not a session", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testJobNode = new ZoweJobNode({
+            label: "SOME(JOBNODE) - Input",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testJobsProvider.mSessionNodes[1],
+            session: globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+            profile: globalMocks.testProfile,
+            job: globalMocks.testIJob,
+        });
+
+        const pollActiveJobsSpy = jest.spyOn(globalMocks.testJobsProvider, "pollActiveJobs");
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testJobNode);
+
+        expect(pollActiveJobsSpy).toHaveBeenCalledWith(testJobNode);
+        expect(Poller.pollRequests).toStrictEqual({});
+    });
+
+    it("should stop polling when session is already being polled", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        testSessionNode.contextValue += Constants.POLL_CONTEXT;
+        const sessionPollKey = `${String(testSessionNode.resourceUri.path)}-active-jobs`;
+        Poller.pollRequests[sessionPollKey] = { dispose: false, msInterval: 2000, request: async () => {} };
+
+        const mockActiveJob = new ZoweJobNode({
+            label: "TESTJOB(JOB001) - ACTIVE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testSessionNode,
+            session: testSessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, status: "ACTIVE" },
+        });
+        mockActiveJob.contextValue += Constants.POLL_CONTEXT;
+        testSessionNode.children = [mockActiveJob];
+
+        const fireTreeDataSpy = jest.spyOn(globalMocks.testJobsProvider.mOnDidChangeTreeData, "fire");
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        expect(Poller.pollRequests[sessionPollKey].dispose).toBe(true);
+        expect(mockActiveJob.contextValue).not.toContain(Constants.POLL_CONTEXT);
+        expect(testSessionNode.contextValue).not.toContain(Constants.POLL_CONTEXT);
+        expect(fireTreeDataSpy).toHaveBeenCalledWith(mockActiveJob);
+        expect(fireTreeDataSpy).toHaveBeenCalledWith(testSessionNode);
+    });
+
+    it("should return early if user dismisses polling dialog", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        expect(inputBoxSpy).toHaveBeenCalled();
+        expect(Poller.pollRequests).toStrictEqual({});
+    });
+
+    it("should show info message when no children exist", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        testSessionNode.children = [];
+
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        expect(inputBoxSpy).toHaveBeenCalled();
+        expect(infoMessageSpy).toHaveBeenCalledWith(expect.stringContaining("No active jobs found for session"));
+    });
+
+    it("should show info message when no active jobs found", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const mockCompletedJob = new ZoweJobNode({
+            label: "TESTJOB(JOB001) - CC 0000",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testSessionNode,
+            session: testSessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, status: "OUTPUT" },
+        });
+        testSessionNode.children = [mockCompletedJob];
+
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        expect(inputBoxSpy).toHaveBeenCalled();
+        expect(infoMessageSpy).toHaveBeenCalledWith(expect.stringContaining("No active jobs found for session"));
+    });
+
+    it("should show warning and return if user cancels when too many active jobs", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const activeJobs = [];
+        for (let i = 0; i < Constants.MIN_WARN_ACTIVE_JOBS_TO_POLL + 1; i++) {
+            const mockActiveJob = new ZoweJobNode({
+                label: `TESTJOB${i}(JOB${i.toString().padStart(3, "0")}) - ACTIVE`,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testSessionNode,
+                session: testSessionNode.getSession(),
+                profile: globalMocks.testProfile,
+                job: { ...globalMocks.testIJob, status: "ACTIVE" },
+            });
+            activeJobs.push(mockActiveJob);
+        }
+        testSessionNode.children = activeJobs;
+
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        const warningMessageSpy = jest.spyOn(Gui, "warningMessage").mockResolvedValueOnce("Cancel");
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        expect(inputBoxSpy).toHaveBeenCalled();
+        expect(warningMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Polling"),
+            expect.objectContaining({
+                items: [expect.any(String), expect.any(String)],
+            })
+        );
+        expect(Poller.pollRequests).toStrictEqual({});
+    });
+
+    it("should start polling active jobs successfully", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const mockActiveJob1 = new ZoweJobNode({
+            label: "TESTJOB1(JOB001) - ACTIVE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testSessionNode,
+            session: testSessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, status: "ACTIVE", jobid: "JOB001" },
+        });
+        const mockActiveJob2 = new ZoweJobNode({
+            label: "TESTJOB2(JOB002) - ACTIVE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testSessionNode,
+            session: testSessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, status: "ACTIVE", jobid: "JOB002" },
+        });
+        testSessionNode.children = [mockActiveJob1, mockActiveJob2];
+
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        const fireTreeDataSpy = jest.spyOn(globalMocks.testJobsProvider.mOnDidChangeTreeData, "fire");
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        expect(inputBoxSpy).toHaveBeenCalled();
+
+        const sessionPollKey = `${String(testSessionNode.resourceUri.path)}-active-jobs`;
+        expect(Poller.pollRequests[sessionPollKey]).toBeDefined();
+        expect(Poller.pollRequests[sessionPollKey].msInterval).toBe(2000);
+
+        expect(mockActiveJob1.contextValue).toContain(Constants.POLL_CONTEXT);
+        expect(mockActiveJob2.contextValue).toContain(Constants.POLL_CONTEXT);
+        expect(testSessionNode.contextValue).toContain(Constants.POLL_CONTEXT);
+
+        expect(fireTreeDataSpy).toHaveBeenCalledWith(mockActiveJob1);
+        expect(fireTreeDataSpy).toHaveBeenCalledWith(mockActiveJob2);
+        expect(fireTreeDataSpy).toHaveBeenCalledWith(testSessionNode);
+    });
+
+    it("should stop polling when no active jobs remain", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const mockActiveJob = new ZoweJobNode({
+            label: "TESTJOB(JOB001) - ACTIVE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testSessionNode,
+            session: testSessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, status: "ACTIVE", jobid: "JOB001" },
+        });
+        mockActiveJob.contextValue += Constants.POLL_CONTEXT;
+        testSessionNode.children = [mockActiveJob];
+
+        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
+            testSessionNode.children = [];
+        });
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        const sessionPollKey = `${String(testSessionNode.resourceUri.path)}-active-jobs`;
+        const pollRequest = Poller.pollRequests[sessionPollKey];
+
+        await pollRequest.request();
+
+        expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
+        expect(Poller.pollRequests[sessionPollKey].dispose).toBe(true);
+        expect(testSessionNode.contextValue).not.toContain(Constants.POLL_CONTEXT);
+        expect(infoMessageSpy).toHaveBeenCalledWith(expect.stringContaining("No more active jobs for"));
+    });
+
+    it("should properly validate the user-provided polling interval", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        expect(globalMocks.testJobsProvider.validatePollInterval("string that should be a number")).toStrictEqual(
+            "The polling interval must be greater than or equal to 1000ms."
+        );
+        expect(globalMocks.testJobsProvider.validatePollInterval("999")).toStrictEqual(
+            "The polling interval must be greater than or equal to 1000ms."
+        );
         expect(globalMocks.testJobsProvider.validatePollInterval("1000")).toStrictEqual(undefined);
         expect(globalMocks.testJobsProvider.validatePollInterval("1001")).toStrictEqual(undefined);
     });
