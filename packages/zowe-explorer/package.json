@@ -605,6 +605,16 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.jobs.startPollingActiveJobs",
+        "title": "%jobs.startPollingActiveJobs%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.jobs.stopPollingActiveJobs",
+        "title": "%jobs.stopPollingActiveJobs%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.issueTsoCmd",
         "title": "%issueTsoCmd%",
         "category": "Zowe Explorer"
@@ -1255,6 +1265,16 @@
           "group": "000_zowe_jobsMainframeInteraction@1"
         },
         {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)(?!.*_polling.*)server.*/ && !listMultiSelection",
+          "command": "zowe.jobs.startPollingActiveJobs",
+          "group": "000_zowe_jobsMainframeInteraction@1"
+        },
+        {
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)(?=.*_polling.*)server.*/ && !listMultiSelection",
+          "command": "zowe.jobs.stopPollingActiveJobs",
+          "group": "000_zowe_jobsMainframeInteraction@1"
+        },
+        {
           "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/ && !listMultiSelection",
           "command": "zowe.issueMvsCmd",
           "group": "000_zowe_jobsMainframeInteraction@2"
@@ -1652,6 +1672,14 @@
         },
         {
           "command": "zowe.jobs.stopPolling",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.startPollingActiveJobs",
+          "when": "never"
+        },
+        {
+          "command": "zowe.jobs.stopPollingActiveJobs",
           "when": "never"
         },
         {
