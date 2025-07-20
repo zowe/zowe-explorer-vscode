@@ -3,6 +3,8 @@ interface ProfileListProps {
   selectedProfileKey: string | null;
   pendingProfiles: { [key: string]: any };
   profileMenuOpen: string | null;
+  configPath: string;
+  vscodeApi: any;
   onProfileSelect: (profileKey: string) => void;
   onProfileMenuToggle: (profileKey: string | null) => void;
   onDeleteProfile: (profileKey: string) => void;
@@ -15,12 +17,22 @@ export function ProfileList({
   selectedProfileKey,
   pendingProfiles,
   profileMenuOpen,
+  configPath,
+  vscodeApi,
   onProfileSelect,
   onProfileMenuToggle,
   onDeleteProfile,
   onSetAsDefault,
   isProfileDefault,
 }: ProfileListProps) {
+  const handlePreviewArgs = (profileKey: string) => {
+    vscodeApi.postMessage({
+      command: "PREVIEW_ARGS",
+      profilePath: profileKey,
+      configPath: configPath,
+    });
+  };
+
   return (
     <div
       style={{
@@ -176,6 +188,34 @@ export function ProfileList({
               >
                 <span className="codicon codicon-star" style={{ marginRight: "6px", fontSize: "12px" }}></span>
                 {isProfileDefault(profileKey) ? "Currently Default" : "Set as Default"}
+              </button>
+              <button
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  width: "100%",
+                  padding: "8px 12px",
+                  border: "none",
+                  background: "none",
+                  color: "var(--vscode-dropdown-foreground)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  fontSize: "12px",
+                }}
+                onMouseEnter={(e) => {
+                  (e.target as HTMLElement).style.backgroundColor = "var(--vscode-dropdown-hoverBackground)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.target as HTMLElement).style.backgroundColor = "transparent";
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePreviewArgs(profileKey);
+                  onProfileMenuToggle(null);
+                }}
+              >
+                <span className="codicon codicon-eye" style={{ marginRight: "6px", fontSize: "12px" }}></span>
+                Preview Args (WIP)
               </button>
               <button
                 style={{

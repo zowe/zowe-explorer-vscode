@@ -635,6 +635,8 @@ export function App() {
             selectedProfileKey={selectedProfileKey}
             pendingProfiles={pendingProfiles}
             profileMenuOpen={profileMenuOpen}
+            configPath={configurations[selectedTab!]?.configPath || ""}
+            vscodeApi={vscodeApi}
             onProfileSelect={setSelectedProfileKey}
             onProfileMenuToggle={setProfileMenuOpen}
             onDeleteProfile={handleDeleteProfile}

@@ -170,7 +170,14 @@ export class ConfigEditor extends WebView {
                 }
                 break;
             }
-            case "GET_LOCALIZATION":
+            case "PREVIEW_ARGS": {
+                const mergedArgs = await this.getMergedArgsForProfile(message.profilePath, message.configPath);
+                await this.panel.webview.postMessage({
+                    command: "PREVIEW_ARGS",
+                    mergedArgs,
+                });
+                break;
+            }
             default:
                 break;
         }
@@ -274,5 +281,15 @@ export class ConfigEditor extends WebView {
             validDefaults: Object.keys(schema.properties.defaults.properties) ?? undefined,
             propertySchema,
         };
+    }
+
+    // WIP
+    private async getMergedArgsForProfile(profPath: string, configPath: string): Promise<any> {
+        const profInfo = new ProfileInfo("zowe");
+        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+        const allProfiles = profInfo.getAllProfiles();
+        const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc.join("") === path.normalize(configPath));
+        const mergedArgs = profInfo.mergeArgsForProfile(profile);
+        console.log(mergedArgs);
     }
 }
