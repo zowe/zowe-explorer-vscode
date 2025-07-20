@@ -338,6 +338,80 @@ export function App() {
     }
   };
 
+  // Helper function to get a profile's type
+  const getProfileType = (profileKey: string): string | null => {
+    if (selectedTab === null) return null;
+    const configPath = configurations[selectedTab!]!.configPath;
+
+    // Check pending changes first
+    const pendingType = Object.entries(pendingChanges[configPath] ?? {}).find(([key, entry]) => {
+      if (entry.profile !== profileKey) return false;
+      const keyParts = key.split(".");
+      return keyParts[keyParts.length - 1] === "type";
+    });
+
+    if (pendingType) {
+      return pendingType[1].value as string;
+    }
+
+    // Check existing profiles
+    const config = configurations[selectedTab!].properties;
+    const flatProfiles = flattenProfiles(config.profiles);
+    const profile = flatProfiles[profileKey];
+
+    if (profile && profile.type) {
+      return profile.type;
+    }
+
+    return null;
+  };
+
+  // Helper function to check if a profile is set as default
+  const isProfileDefault = (profileKey: string): boolean => {
+    if (selectedTab === null) return false;
+    const configPath = configurations[selectedTab!]!.configPath;
+    const profileType = getProfileType(profileKey);
+
+    if (!profileType) return false;
+
+    // Check pending defaults first
+    const pendingDefault = pendingDefaults[configPath]?.[profileType];
+    if (pendingDefault) {
+      return pendingDefault.value === profileKey;
+    }
+
+    // Check existing defaults
+    const config = configurations[selectedTab!].properties;
+    const defaults = config.defaults || {};
+
+    return defaults[profileType] === profileKey;
+  };
+
+  const handleSetAsDefault = (profileKey: string) => {
+    const profileType = getProfileType(profileKey);
+    if (!profileType) {
+      // Could show an error message here
+      return;
+    }
+
+    const configPath = configurations[selectedTab!]!.configPath;
+
+    // Set the default for this profile type
+    setPendingDefaults((prev) => ({
+      ...prev,
+      [configPath]: {
+        ...prev[configPath],
+        [profileType]: { value: profileKey, path: [profileType] },
+      },
+    }));
+
+    // Remove any deletion for this default
+    setDefaultsDeletions((prev) => ({
+      ...prev,
+      [configPath]: prev[configPath]?.filter((k) => k !== profileType) ?? [],
+    }));
+  };
+
   const handleDeleteProfile = (profileKey: string) => {
     if (selectedTab === null) return;
     const configPath = configurations[selectedTab!]!.configPath;
@@ -563,6 +637,8 @@ export function App() {
           onProfileSelect={setSelectedProfileKey}
           onProfileMenuToggle={setProfileMenuOpen}
           onDeleteProfile={handleDeleteProfile}
+          onSetAsDefault={handleSetAsDefault}
+          isProfileDefault={isProfileDefault}
         />
 
         {/* Profile Details */}
@@ -831,6 +907,8 @@ export function App() {
   };
 
   const renderDefaults = (defaults: { [key: string]: any }) => {
+    if (!defaults || typeof defaults !== "object") return null;
+
     const combinedDefaults = {
       ...defaults,
       ...Object.fromEntries(
@@ -840,56 +918,97 @@ export function App() {
       ),
     };
 
-    return Object.entries(combinedDefaults).map(([key, value]) => {
-      const currentPath = [key];
-      const fullKey = currentPath.join(".");
-      if (defaultsDeletions[configurations[selectedTab!]!.configPath]?.includes(fullKey)) return null;
-      const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
-      const isArray = Array.isArray(value);
-      const pendingValue = (pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})[fullKey]?.value ?? value;
+    return (
+      <div>
+        {/* Add button for defaults */}
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+          <span style={{ fontWeight: "bold", marginRight: 8 }}>Defaults</span>
+          <button className="add-default-button" title="Add new default" onClick={() => setNewKeyModalOpen(true)} style={{ marginLeft: 4 }}>
+            <span className="codicon codicon-add"></span>
+          </button>
+        </div>
 
-      if (isParent) {
-        return (
-          <div key={fullKey} className="config-item parent">
-            <h3 className={`header-level-${currentPath.length}`}>{key}</h3>
-            {renderDefaults(value)}
-          </div>
-        );
-      } else if (isArray) {
-        return (
-          <div key={fullKey} className="config-item">
-            <span className="config-label">
-              {">"}
-              {key}
-            </span>
-            <ul>
-              {value.map((item: any, index: number) => (
-                <li style={{ fontSize: "16px" }} key={index}>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        );
-      } else {
-        return (
-          <div key={fullKey} className="config-item">
-            <div className="config-item-container">
-              <span className="config-label">{key}</span>
-              <input
-                className="config-input"
-                type="text"
-                value={pendingValue}
-                onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLInputElement).value)}
-              />
-              <button className="action-button" onClick={() => handleDeleteDefaultsProperty(fullKey)}>
-                <span className="codicon codicon-trash"></span>
-              </button>
-            </div>
-          </div>
-        );
-      }
-    });
+        {/* Render defaults */}
+        {Object.entries(combinedDefaults).map(([key, value]) => {
+          const currentPath = [key];
+          const fullKey = currentPath.join(".");
+          if (defaultsDeletions[configurations[selectedTab!]!.configPath]?.includes(fullKey)) return null;
+          const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
+          const isArray = Array.isArray(value);
+          const pendingValue = (pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})[fullKey]?.value ?? value;
+
+          if (isParent) {
+            return (
+              <div key={fullKey} className="config-item parent">
+                <h3 className={`header-level-${currentPath.length}`}>
+                  {key}
+                  <button
+                    className="add-default-button"
+                    title={`Add key inside "${fullKey}"`}
+                    onClick={() => {
+                      setNewKeyModalOpen(true);
+                      setNewKey(key + ".");
+                    }}
+                    style={{ marginLeft: 8 }}
+                  >
+                    <span className="codicon codicon-add"></span>
+                  </button>
+                </h3>
+                {renderDefaults(value)}
+              </div>
+            );
+          } else if (isArray) {
+            return (
+              <div key={fullKey} className="config-item">
+                <h3 className={`header-level-${currentPath.length}`}>
+                  <span className="config-label" style={{ fontWeight: "bold" }}>
+                    {key}
+                  </span>
+                  <button
+                    className="add-default-button"
+                    title={`Add item to "${fullKey}"`}
+                    onClick={() => {
+                      setNewKeyModalOpen(true);
+                      setNewKey(key);
+                    }}
+                    style={{ marginLeft: 8 }}
+                  >
+                    <span className="codicon codicon-add"></span>
+                  </button>
+                </h3>
+                <div>
+                  {value.map((item: any, index: number) => (
+                    <div className="list-item" key={index}>
+                      {item}
+                      <button className="action-button" style={{ marginLeft: "8px" }} onClick={() => handleDeleteDefaultsProperty(fullKey)}>
+                        <span className="codicon codicon-trash"></span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          } else {
+            return (
+              <div key={fullKey} className="config-item">
+                <div className="config-item-container">
+                  <span className="config-label">{key}</span>
+                  <input
+                    className="config-input"
+                    type="text"
+                    value={String(pendingValue)}
+                    onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLInputElement).value)}
+                  />
+                  <button className="action-button" onClick={() => handleDeleteDefaultsProperty(fullKey)}>
+                    <span className="codicon codicon-trash"></span>
+                  </button>
+                </div>
+              </div>
+            );
+          }
+        })}
+      </div>
+    );
   };
 
   const openAddProfileModalAtPath = (path: string[]) => {
@@ -1316,7 +1435,7 @@ export function App() {
         }}
       />
       <Tabs configurations={configurations} selectedTab={selectedTab} onTabChange={handleTabChange} />
-      <Panels configurations={configurations} selectedTab={selectedTab} renderProfiles={renderProfiles} />
+      <Panels configurations={configurations} selectedTab={selectedTab} renderProfiles={renderProfiles} renderDefaults={renderDefaults} />
       {/* Modals */}
       <AddDefaultModal
         isOpen={newKeyModalOpen}

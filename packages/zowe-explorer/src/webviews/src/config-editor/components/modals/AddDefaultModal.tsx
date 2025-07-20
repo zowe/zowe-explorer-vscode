@@ -43,7 +43,7 @@ export function AddDefaultModal({
             onFocus={() => onShowDropdownChange(true)}
             onBlur={() => setTimeout(() => onShowDropdownChange(false), 100)}
             className="modal-input"
-            placeholder={l10n.t("Type")}
+            placeholder={l10n.t("Default Key")}
           />
           {showDropdown && (
             <ul className="dropdown-list">
@@ -66,7 +66,7 @@ export function AddDefaultModal({
         </div>
 
         <input
-          placeholder={l10n.t("Profile (e.g. ssh1,my_lpar)")}
+          placeholder={l10n.t("Default Value")}
           value={newValue}
           onChange={(e) => onNewValueChange((e.target as HTMLInputElement).value)}
           className="modal-input"

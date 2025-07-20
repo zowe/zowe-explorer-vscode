@@ -6,6 +6,8 @@ interface ProfileListProps {
   onProfileSelect: (profileKey: string) => void;
   onProfileMenuToggle: (profileKey: string | null) => void;
   onDeleteProfile: (profileKey: string) => void;
+  onSetAsDefault: (profileKey: string) => void;
+  isProfileDefault: (profileKey: string) => boolean;
 }
 
 export function ProfileList({
@@ -16,6 +18,8 @@ export function ProfileList({
   onProfileSelect,
   onProfileMenuToggle,
   onDeleteProfile,
+  onSetAsDefault,
+  isProfileDefault,
 }: ProfileListProps) {
   return (
     <div style={{ width: "250px", paddingRight: "1rem" }}>
@@ -46,6 +50,17 @@ export function ProfileList({
             }}
           >
             {profileKey}
+            {isProfileDefault(profileKey) && (
+              <span
+                className="codicon codicon-star"
+                style={{
+                  marginLeft: "4px",
+                  fontSize: "12px",
+                  color: "var(--vscode-textPreformat-foreground)",
+                }}
+                title="Default profile"
+              />
+            )}
           </strong>
 
           <button
@@ -134,7 +149,7 @@ export function ProfileList({
                   padding: "8px 12px",
                   border: "none",
                   background: "none",
-                  color: "var(--vscode-dropdown-foreground)",
+                  color: isProfileDefault(profileKey) ? "var(--vscode-textPreformat-foreground)" : "var(--vscode-dropdown-foreground)",
                   cursor: "pointer",
                   textAlign: "left",
                   fontSize: "12px",
@@ -147,11 +162,12 @@ export function ProfileList({
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
+                  onSetAsDefault(profileKey);
                   onProfileMenuToggle(null);
                 }}
               >
                 <span className="codicon codicon-star" style={{ marginRight: "6px", fontSize: "12px" }}></span>
-                Set as Default (WIP)
+                {isProfileDefault(profileKey) ? "Currently Default" : "Set as Default"}
               </button>
               <button
                 style={{

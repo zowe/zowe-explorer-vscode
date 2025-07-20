@@ -62,32 +62,40 @@ export function pathFromArray(arr: string[]): string {
 }
 
 export function extractProfileKeyFromPath(path: string[]): string {
-    if (path[0] === "profiles" && path.length > 2) {
-        // Check if this is a nested profile
-        const profilesIndices = [];
-        for (let i = 0; i < path.length; i++) {
-            if (path[i] === "profiles") {
-                profilesIndices.push(i);
-            }
-        }
-        if (profilesIndices.length > 1) {
-            // This is a nested profile - construct the full profile key
-            const profileParts = [];
-            for (let i = 1; i < path.length; i++) {
-                if (path[i] !== "profiles") {
-                    profileParts.push(path[i]);
+    if (path[0] === "profiles") {
+        if (path.length > 2) {
+            // Check if this is a nested profile
+            const profilesIndices = [];
+            for (let i = 0; i < path.length; i++) {
+                if (path[i] === "profiles") {
+                    profilesIndices.push(i);
                 }
             }
-            // Stop at the first occurrence of "properties" or "type" to get the actual profile name
-            const profileNameEndIndex = profileParts.findIndex((part) => part === "properties" || part === "type");
-            if (profileNameEndIndex !== -1) {
-                return profileParts.slice(0, profileNameEndIndex).join(".");
+            if (profilesIndices.length > 1) {
+                // This is a nested profile - construct the full profile key
+                const profileParts = [];
+                for (let i = 1; i < path.length; i++) {
+                    if (path[i] !== "profiles") {
+                        profileParts.push(path[i]);
+                    }
+                }
+                // Stop at the first occurrence of "properties" or "type" to get the actual profile name
+                const profileNameEndIndex = profileParts.findIndex((part) => part === "properties" || part === "type");
+                if (profileNameEndIndex !== -1) {
+                    return profileParts.slice(0, profileNameEndIndex).join(".");
+                } else {
+                    return profileParts.join(".");
+                }
             } else {
-                return profileParts.join(".");
+                // Top-level profile
+                return path[1];
             }
-        } else {
-            // Top-level profile
+        } else if (path.length === 2) {
+            // Top-level profile (e.g., ["profiles", "zxplore"])
             return path[1];
+        } else {
+            // Fallback
+            return path[0];
         }
     } else {
         return path[0];
