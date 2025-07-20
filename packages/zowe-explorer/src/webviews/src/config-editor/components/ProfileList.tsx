@@ -22,7 +22,15 @@ export function ProfileList({
   isProfileDefault,
 }: ProfileListProps) {
   return (
-    <div style={{ width: "250px", paddingRight: "1rem" }}>
+    <div
+      style={{
+        width: "250px",
+        paddingRight: "1rem",
+        maxHeight: "400px",
+        overflowY: "auto",
+        overflowX: "hidden",
+      }}
+    >
       {sortedProfileKeys.map((profileKey) => (
         <div
           key={profileKey}

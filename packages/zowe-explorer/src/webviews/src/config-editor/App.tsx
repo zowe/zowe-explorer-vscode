@@ -628,77 +628,79 @@ export function App() {
     const sortedProfileKeys = filteredProfileKeys.sort((a, b) => a.localeCompare(b));
 
     return (
-      <div style={{ display: "flex", gap: "2rem" }}>
-        <ProfileList
-          sortedProfileKeys={sortedProfileKeys}
-          selectedProfileKey={selectedProfileKey}
-          pendingProfiles={pendingProfiles}
-          profileMenuOpen={profileMenuOpen}
-          onProfileSelect={setSelectedProfileKey}
-          onProfileMenuToggle={setProfileMenuOpen}
-          onDeleteProfile={handleDeleteProfile}
-          onSetAsDefault={handleSetAsDefault}
-          isProfileDefault={isProfileDefault}
-        />
+      <div>
+        <div style={{ display: "flex", gap: "2rem" }}>
+          <ProfileList
+            sortedProfileKeys={sortedProfileKeys}
+            selectedProfileKey={selectedProfileKey}
+            pendingProfiles={pendingProfiles}
+            profileMenuOpen={profileMenuOpen}
+            onProfileSelect={setSelectedProfileKey}
+            onProfileMenuToggle={setProfileMenuOpen}
+            onDeleteProfile={handleDeleteProfile}
+            onSetAsDefault={handleSetAsDefault}
+            isProfileDefault={isProfileDefault}
+          />
 
-        {/* Profile Details */}
-        <div style={{ flexGrow: 1 }}>
-          {selectedProfileKey && (
-            <div>
-              {/* Add button for root-level properties */}
-              <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontWeight: "bold", marginRight: 8 }}>{selectedProfileKey}</span>
-                <button
-                  className="add-default-button"
-                  title={`Add key at root of ${selectedProfileKey}`}
-                  onClick={() => {
-                    // Build the path to the root of the selected profile
-                    const profilePathParts = selectedProfileKey.split(".");
-                    let path;
-                    if (profilePathParts.length === 1) {
-                      // Top-level profile
-                      path = ["profiles", selectedProfileKey];
-                    } else {
-                      // Nested profile - need to construct path like ["profiles", "project_base", "profiles", "tso"]
-                      path = ["profiles"];
-                      for (let i = 0; i < profilePathParts.length; i++) {
-                        path.push(profilePathParts[i]);
-                        if (i < profilePathParts.length - 1) {
-                          path.push("profiles");
+          {/* Profile Details */}
+          <div style={{ flexGrow: 1 }}>
+            {selectedProfileKey && (
+              <div>
+                {/* Add button for root-level properties */}
+                <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ fontWeight: "bold", marginRight: 8 }}>{selectedProfileKey}</span>
+                  <button
+                    className="add-default-button"
+                    title={`Add key at root of ${selectedProfileKey}`}
+                    onClick={() => {
+                      // Build the path to the root of the selected profile
+                      const profilePathParts = selectedProfileKey.split(".");
+                      let path;
+                      if (profilePathParts.length === 1) {
+                        // Top-level profile
+                        path = ["profiles", selectedProfileKey];
+                      } else {
+                        // Nested profile - need to construct path like ["profiles", "project_base", "profiles", "tso"]
+                        path = ["profiles"];
+                        for (let i = 0; i < profilePathParts.length; i++) {
+                          path.push(profilePathParts[i]);
+                          if (i < profilePathParts.length - 1) {
+                            path.push("profiles");
+                          }
                         }
                       }
-                    }
-                    openAddProfileModalAtPath(path);
-                  }}
-                  style={{ marginLeft: 4 }}
-                >
-                  <span className="codicon codicon-add"></span>
-                </button>
-              </div>
-              {(() => {
-                const profilePathParts = selectedProfileKey.split(".");
-                let path;
-                if (profilePathParts.length === 1) {
-                  // Top-level profile
-                  path = ["profiles", selectedProfileKey];
-                } else {
-                  // Nested profile - need to construct path like ["profiles", "project_base", "profiles", "tso"]
-                  path = ["profiles"];
-                  for (let i = 0; i < profilePathParts.length; i++) {
-                    path.push(profilePathParts[i]);
-                    if (i < profilePathParts.length - 1) {
-                      path.push("profiles");
+                      openAddProfileModalAtPath(path);
+                    }}
+                    style={{ marginLeft: 4 }}
+                  >
+                    <span className="codicon codicon-add"></span>
+                  </button>
+                </div>
+                {(() => {
+                  const profilePathParts = selectedProfileKey.split(".");
+                  let path;
+                  if (profilePathParts.length === 1) {
+                    // Top-level profile
+                    path = ["profiles", selectedProfileKey];
+                  } else {
+                    // Nested profile - need to construct path like ["profiles", "project_base", "profiles", "tso"]
+                    path = ["profiles"];
+                    for (let i = 0; i < profilePathParts.length; i++) {
+                      path.push(profilePathParts[i]);
+                      if (i < profilePathParts.length - 1) {
+                        path.push("profiles");
+                      }
                     }
                   }
-                }
-                // Pass the original profile object (without pending changes) to renderConfig
-                // so that renderConfig can properly combine existing and pending changes
-                // For newly created profiles, use the pending profile data as the base
-                const originalProfile = flatProfiles[selectedProfileKey] || pendingProfiles[selectedProfileKey] || {};
-                return renderConfig(originalProfile, path);
-              })()}
-            </div>
-          )}
+                  // Pass the original profile object (without pending changes) to renderConfig
+                  // so that renderConfig can properly combine existing and pending changes
+                  // For newly created profiles, use the pending profile data as the base
+                  const originalProfile = flatProfiles[selectedProfileKey] || pendingProfiles[selectedProfileKey] || {};
+                  return renderConfig(originalProfile, path);
+                })()}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -920,14 +922,6 @@ export function App() {
 
     return (
       <div>
-        {/* Add button for defaults */}
-        <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
-          <span style={{ fontWeight: "bold", marginRight: 8 }}>Defaults</span>
-          <button className="add-default-button" title="Add new default" onClick={() => setNewKeyModalOpen(true)} style={{ marginLeft: 4 }}>
-            <span className="codicon codicon-add"></span>
-          </button>
-        </div>
-
         {/* Render defaults */}
         {Object.entries(combinedDefaults).map(([key, value]) => {
           const currentPath = [key];
@@ -1435,7 +1429,13 @@ export function App() {
         }}
       />
       <Tabs configurations={configurations} selectedTab={selectedTab} onTabChange={handleTabChange} />
-      <Panels configurations={configurations} selectedTab={selectedTab} renderProfiles={renderProfiles} renderDefaults={renderDefaults} />
+      <Panels
+        configurations={configurations}
+        selectedTab={selectedTab}
+        renderProfiles={renderProfiles}
+        renderDefaults={renderDefaults}
+        onAddDefault={() => setNewKeyModalOpen(true)}
+      />
       {/* Modals */}
       <AddDefaultModal
         isOpen={newKeyModalOpen}
