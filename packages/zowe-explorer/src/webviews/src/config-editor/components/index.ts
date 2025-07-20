@@ -8,3 +8,5 @@ export { SaveModal } from "./modals/SaveModal";
 export { EditModal } from "./modals/EditModal";
 export { NewLayerModal } from "./modals/NewLayerModal";
 export { ProfileWizardModal } from "./modals/ProfileWizardModal";
+export { PreviewArgsModal } from "./modals/PreviewArgsModal";
+export { SaveConfirmationModal } from "./modals/SaveConfirmationModal";

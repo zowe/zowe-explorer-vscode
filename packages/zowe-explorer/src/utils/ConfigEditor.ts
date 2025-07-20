@@ -291,5 +291,6 @@ export class ConfigEditor extends WebView {
         const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc.join("") === path.normalize(configPath));
         const mergedArgs = profInfo.mergeArgsForProfile(profile);
         console.log(mergedArgs);
+        return mergedArgs.knownArgs;
     }
 }

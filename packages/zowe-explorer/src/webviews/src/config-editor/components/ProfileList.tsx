@@ -10,6 +10,7 @@ interface ProfileListProps {
   onDeleteProfile: (profileKey: string) => void;
   onSetAsDefault: (profileKey: string) => void;
   isProfileDefault: (profileKey: string) => boolean;
+  onPreviewArgs: (profileKey: string, configPath: string) => void;
 }
 
 export function ProfileList({
@@ -24,13 +25,10 @@ export function ProfileList({
   onDeleteProfile,
   onSetAsDefault,
   isProfileDefault,
+  onPreviewArgs,
 }: ProfileListProps) {
   const handlePreviewArgs = (profileKey: string) => {
-    vscodeApi.postMessage({
-      command: "PREVIEW_ARGS",
-      profilePath: profileKey,
-      configPath: configPath,
-    });
+    onPreviewArgs(profileKey, configPath);
   };
 
   return (
@@ -123,15 +121,24 @@ export function ProfileList({
           {profileMenuOpen === profileKey && (
             <div
               style={{
-                position: "absolute",
-                top: "28px",
-                right: "4px",
+                position: "fixed",
                 backgroundColor: "var(--vscode-dropdown-background)",
                 border: "1px solid var(--vscode-dropdown-border)",
                 borderRadius: "4px",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                zIndex: 1000,
+                zIndex: 9999,
                 minWidth: "120px",
+                maxWidth: "200px",
+              }}
+              ref={(el) => {
+                if (el) {
+                  const button = el.previousElementSibling as HTMLElement;
+                  if (button) {
+                    const rect = button.getBoundingClientRect();
+                    el.style.top = `${rect.bottom + 4}px`;
+                    el.style.left = `${rect.right - el.offsetWidth}px`;
+                  }
+                }
               }}
             >
               <button
@@ -215,7 +222,7 @@ export function ProfileList({
                 }}
               >
                 <span className="codicon codicon-eye" style={{ marginRight: "6px", fontSize: "12px" }}></span>
-                Preview Args (WIP)
+                Preview Args
               </button>
               <button
                 style={{

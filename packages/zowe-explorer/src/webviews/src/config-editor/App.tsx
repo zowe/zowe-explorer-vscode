@@ -17,6 +17,8 @@ import {
   EditModal,
   NewLayerModal,
   ProfileWizardModal,
+  PreviewArgsModal,
+  SaveConfirmationModal,
 } from "./components";
 
 // Hooks
@@ -99,6 +101,12 @@ export function App() {
   const [wizardNewPropertyValue, setWizardNewPropertyValue] = useState("");
   const [wizardNewPropertySecure, setWizardNewPropertySecure] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
+  // Preview Args Modal state
+  const [previewArgsModalOpen, setPreviewArgsModalOpen] = useState(false);
+  const [previewArgsData, setPreviewArgsData] = useState<any[]>([]);
+  // Save Confirmation Modal state
+  const [saveConfirmationModalOpen, setSaveConfirmationModalOpen] = useState(false);
+  const [pendingPreviewArgsRequest, setPendingPreviewArgsRequest] = useState<{ profilePath: string; configPath: string } | null>(null);
   // Invoked on webview load
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -135,6 +143,9 @@ export function App() {
         }
       } else if (event.data.command === "DISABLE_OVERLAY") {
         setSaveModalOpen(false);
+      } else if (event.data.command === "PREVIEW_ARGS") {
+        setPreviewArgsData(event.data.mergedArgs || []);
+        setPreviewArgsModalOpen(true);
       }
     });
 
@@ -153,9 +164,26 @@ export function App() {
   }, [selectedTab, configurations]);
 
   useEffect(() => {
-    const isModalOpen = newKeyModalOpen || newProfileModalOpen || saveModalOpen || newLayerModalOpen || editModalOpen || wizardModalOpen;
+    const isModalOpen =
+      newKeyModalOpen ||
+      newProfileModalOpen ||
+      saveModalOpen ||
+      newLayerModalOpen ||
+      editModalOpen ||
+      wizardModalOpen ||
+      previewArgsModalOpen ||
+      saveConfirmationModalOpen;
     document.body.classList.toggle("modal-open", isModalOpen);
-  }, [newKeyModalOpen, newProfileModalOpen, saveModalOpen, newLayerModalOpen, editModalOpen, wizardModalOpen]);
+  }, [
+    newKeyModalOpen,
+    newProfileModalOpen,
+    saveModalOpen,
+    newLayerModalOpen,
+    editModalOpen,
+    wizardModalOpen,
+    previewArgsModalOpen,
+    saveConfirmationModalOpen,
+  ]);
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -505,6 +533,50 @@ export function App() {
     vscodeApi.postMessage({ command: "GET_PROFILES" });
   };
 
+  const hasUnsavedChanges = (): boolean => {
+    const hasPendingChanges = Object.keys(pendingChanges).length > 0;
+    const hasDeletions = Object.keys(deletions).length > 0;
+    const hasPendingDefaults = Object.keys(pendingDefaults).length > 0;
+    const hasDefaultsDeletions = Object.keys(defaultsDeletions).length > 0;
+
+    return hasPendingChanges || hasDeletions || hasPendingDefaults || hasDefaultsDeletions;
+  };
+
+  const handlePreviewArgsWithConfirmation = (profilePath: string, configPath: string) => {
+    if (hasUnsavedChanges()) {
+      setPendingPreviewArgsRequest({ profilePath, configPath });
+      setSaveConfirmationModalOpen(true);
+    } else {
+      // No unsaved changes, proceed directly
+      vscodeApi.postMessage({
+        command: "PREVIEW_ARGS",
+        profilePath: profilePath,
+        configPath: configPath,
+      });
+    }
+  };
+
+  const handleSaveAndContinue = async () => {
+    handleSave();
+    setSaveConfirmationModalOpen(false);
+    //TODO: IMPLEMENT A REAL FIX FOR RACE CONDITION
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    // After saving, proceed with the pending preview args request
+    if (pendingPreviewArgsRequest) {
+      vscodeApi.postMessage({
+        command: "PREVIEW_ARGS",
+        profilePath: pendingPreviewArgsRequest.profilePath,
+        configPath: pendingPreviewArgsRequest.configPath,
+      });
+      setPendingPreviewArgsRequest(null);
+    }
+  };
+
+  const handleCancelPreviewArgs = () => {
+    setSaveConfirmationModalOpen(false);
+    setPendingPreviewArgsRequest(null);
+  };
+
   const handleOpenRawJson = (configPath: string) => {
     vscodeApi.postMessage({ command: "OPEN_CONFIG_FILE", filePath: configPath });
   };
@@ -642,6 +714,7 @@ export function App() {
             onDeleteProfile={handleDeleteProfile}
             onSetAsDefault={handleSetAsDefault}
             isProfileDefault={isProfileDefault}
+            onPreviewArgs={handlePreviewArgsWithConfirmation}
           />
 
           {/* Profile Details */}
@@ -1521,6 +1594,10 @@ export function App() {
         getPropertyType={getPropertyType}
         stringifyValueByType={stringifyValueByType}
       />
+
+      <PreviewArgsModal isOpen={previewArgsModalOpen} argsData={previewArgsData} onClose={() => setPreviewArgsModalOpen(false)} />
+
+      <SaveConfirmationModal isOpen={saveConfirmationModalOpen} onSaveAndContinue={handleSaveAndContinue} onCancel={handleCancelPreviewArgs} />
     </div>
   );
 }
