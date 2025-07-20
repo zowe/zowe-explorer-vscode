@@ -513,31 +513,37 @@ export function App() {
             const filteredProfileParts = profileNameParts.filter((part) => part !== "profiles");
             const profileKey = filteredProfileParts.join(".");
 
-            // Initialize the profile structure if it doesn't exist
-            if (!pendingProfiles[profileKey]) {
-              pendingProfiles[profileKey] = {};
-            }
-
-            // Add the property to the profile
+            // Only create a pending profile entry if this is a profile-level property
+            // (i.e., the property is "type" or we're adding to "properties")
             const propertyName = keyParts[keyParts.length - 1];
-            if (propertyName === "type") {
-              pendingProfiles[profileKey].type = entry.value;
-            } else if (keyParts.includes("properties")) {
-              // Only add non-secure properties to the properties object
-              if (!entry.secure) {
-                if (!pendingProfiles[profileKey].properties) {
-                  pendingProfiles[profileKey].properties = {};
-                }
-                pendingProfiles[profileKey].properties[propertyName] = entry.value;
+            const isProfileLevelProperty = propertyName === "type" || (keyParts.includes("properties") && !entry.secure);
+
+            if (isProfileLevelProperty) {
+              // Initialize the profile structure if it doesn't exist
+              if (!pendingProfiles[profileKey]) {
+                pendingProfiles[profileKey] = {};
               }
 
-              // If this is a secure property, add it to the secure array
-              if (entry.secure) {
-                if (!pendingProfiles[profileKey].secure) {
-                  pendingProfiles[profileKey].secure = [];
+              // Add the property to the profile
+              if (propertyName === "type") {
+                pendingProfiles[profileKey].type = entry.value;
+              } else if (keyParts.includes("properties")) {
+                // Only add non-secure properties to the properties object
+                if (!entry.secure) {
+                  if (!pendingProfiles[profileKey].properties) {
+                    pendingProfiles[profileKey].properties = {};
+                  }
+                  pendingProfiles[profileKey].properties[propertyName] = entry.value;
                 }
-                if (!pendingProfiles[profileKey].secure.includes(propertyName)) {
-                  pendingProfiles[profileKey].secure.push(propertyName);
+
+                // If this is a secure property, add it to the secure array
+                if (entry.secure) {
+                  if (!pendingProfiles[profileKey].secure) {
+                    pendingProfiles[profileKey].secure = [];
+                  }
+                  if (!pendingProfiles[profileKey].secure.includes(propertyName)) {
+                    pendingProfiles[profileKey].secure.push(propertyName);
+                  }
                 }
               }
             }
@@ -919,9 +925,9 @@ export function App() {
       // Define the order: type, properties, secure, others
       const getOrder = (key: string) => {
         if (key === "type") return 0;
-        if (key === "properties") return 1;
-        if (key === "secure") return 2;
-        return 3; // All others
+        if (key === "properties") return 2;
+        if (key === "secure") return 3;
+        return 1; // All others
       };
 
       return getOrder(keyA) - getOrder(keyB);
