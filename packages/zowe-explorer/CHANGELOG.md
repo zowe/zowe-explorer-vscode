@@ -18,17 +18,24 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed a bug where USS and data set workspace folders accessed via an extender (SSH, FTP, etc) are not loaded until the window is reloaded. [#3689](https://github.com/zowe/zowe-explorer-vscode/pull/3689/files#diff-cafba17e22a5c24da1eeb2601f25d6025d598f5462cce554aeca3b56bc9661cf)
 - Fixed a bug where USS files and data set VS Code editors accessed by an extender (SSH, FTP, etc) are not restored when reloading/reopening a window. [#3678](https://github.com/zowe/zowe-explorer-vscode/pull/3678)
 - Fixed an issue where an incorrect profile name is shown in the output for the "Issue Unix Command" function when an SSH profile is required to issue commands. [#3646](https://github.com/zowe/zowe-explorer-vscode/issues/3646)
 - Improved integrated terminal behavior to match standard terminal functionality. Now, users can smoothly maintain proper cursor position when typing and backspacing. [#3391](https://github.com/zowe/zowe-explorer-vscode/issues/3391)
 - Fixed an issue where cancelling multiple commands in rapid succession could render the terminal unusable. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
-- Fix issues seen with out of date profile information within Zowe Explorer tree views. [#3664](https://github.com/zowe/zowe-explorer-vscode/issues/3664)
+- Fixed an issue where a `401 Unauthorized` error is thrown by the FileSystemProvider implementations when the user cancels or closes an authentication prompt. Now, the filesystem throws a more explicit `AuthCancelledError` in this scenario. [#3662](https://github.com/zowe/zowe-explorer-vscode/issues/3662)
+
+### Bug fixes
+
+## `3.2.2`
+
+### Bug fixes
+
 - Fixed an issue where clicking the refresh icon beside a profile in the Unix System Services (USS) view had no effect. [#3693](https://github.com/zowe/zowe-explorer-vscode/issues/3693)
+- Fixed a bug where USS files and data set VS Code editors accessed by an extender (SSH, FTP, etc) are not restored when reloading/reopening a window. [#3678](https://github.com/zowe/zowe-explorer-vscode/pull/3678)
+- Fix issues seen with out of date profile information within Zowe Explorer tree views. [#3664](https://github.com/zowe/zowe-explorer-vscode/issues/3664)
 - Fixed an issue where clicking the Cancel button in the Save Credentials dialog triggered a 401 error prompting to update credentials. [#3713](https://github.com/zowe/zowe-explorer-vscode/pull/3713)
 - Resolved an issue where secure credentials were inadvertently converted to non-string data types. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)
 - Changed the jobs pagination setting to be disabled by default and the default records to fetch from 100 to 1000 due to customer feedback. [#3743](https://github.com/zowe/zowe-explorer-vscode/issues/3743)
-- Fixed an issue where a `401 Unauthorized` error is thrown by the FileSystemProvider implementations when the user cancels or closes an authentication prompt. Now, the filesystem throws a more explicit `AuthCancelledError` in this scenario. [#3662](https://github.com/zowe/zowe-explorer-vscode/issues/3662)
 
 ## `3.2.1`
 

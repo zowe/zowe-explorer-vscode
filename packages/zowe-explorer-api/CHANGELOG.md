@@ -16,7 +16,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added new option `iconPath` to `WebViewOpts` to allow extenders to specify the light and dark icon paths for the webview. [#3657](https://github.com/zowe/zowe-explorer-vscode/pull/3657)
 - Added support for asynchronous operations when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
-- Implemented graceful handling for non-existent named profiles within the loadNamedProfile function. [#3678](https://github.com/zowe/zowe-explorer-vscode/pull/3678)
 - Added an option `throwErrorOnCancel` to the `AuthPromptParams` interface (defines parameters passed to authentication prompt functions). When this option is `true`, an error is thrown when the user cancels or dismisses an authentication prompt. [#3662](https://github.com/zowe/zowe-explorer-vscode/issues/3662)
 - Updated the messages for the authentication prompts to guide the user on how to continue using their profile if they dismiss the prompt. [#3662](https://github.com/zowe/zowe-explorer-vscode/issues/3662)
 
@@ -24,6 +23,16 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - BugFix: Resolved a bug where extenders adding `ssh` or `base` to `allTypes` on `ProfileCache` will result in duplicate nodes when adding a profile of that type in Zowe Explorer. [#3625](https://github.com/zowe/zowe-explorer-vscode/pull/3625)
 - Fixed error message shown when creating a config file that already exists. [#3647](https://github.com/zowe/zowe-explorer-vscode/issues/3647)
+
+## `3.2.2`
+
+### New features and enhancements
+
+- Added an optional `profilesCache` parameter to `ZoweTreeNode.getProfile` to fix an issue seen with out of date profile information within tree views. When provided, the tree node uses that cache to obtain profile information. [#3664](https://github.com/zowe/zowe-explorer-vscode/issues/3664)
+
+### Bug fixes
+
+- Implemented graceful handling for non-existent named profiles within the loadNamedProfile function. [#3678](https://github.com/zowe/zowe-explorer-vscode/pull/3678)
 - Fixed an issue where clicking the Cancel button in the Save Credentials dialog triggered a 401 error prompting to update credentials. [#3713](https://github.com/zowe/zowe-explorer-vscode/pull/3713)
 - Resolved an issue where secure credentials were inadvertently converted to non-string data types. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)
 - Fixed an issue where the `ZoweVsCodeExtension.profilesCache` getter was creating new ProfilesCache instances instead of using the existing one from the Zowe Explorer API, which could lead to inconsistencies and synchronization issues. [#3735](https://github.com/zowe/zowe-explorer-vscode/pull/3735)
@@ -60,12 +69,12 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
-- BugFix: Fixed an issue within the `shouldRemoveTokenFromProfile()` function where a the token type check was occurring on a service profile rather than the base profile. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
+- Fixed an issue within the `shouldRemoveTokenFromProfile()` function where a the token type check was occurring on a service profile rather than the base profile. [#3575](https://github.com/zowe/zowe-explorer-vscode/pull/3575)
 - Updated dependencies for technical currency purposes. [#3576](https://github.com/zowe/zowe-explorer-vscode/pull/3576)
 - Fixed issue where webviews may register their `onDidReceiveMessage` event multiple times in the `resolveForView` function. [#3584](https://github.com/zowe/zowe-explorer-vscode/pull/3584)
 - Fixed an issue where the `BaseProvider._reopenEditorForRelocatedUri` function threw an exception when an open tab did not have a URI on its `input` property. [#3613](https://github.com/zowe/zowe-explorer-vscode/issues/3613)
 - Fixed an issue where the `onProfileUpdated` event emitter was not guaranteed to be the same across Zowe Explorer and extenders, causing some event listeners to not fire when an extender fires the event emitter. Now, the event is exposed through the API register, so that all operations on this event from the `ZoweVsCodeExtension` class are properly routed to the correct emitter. [#3622](https://github.com/zowe/zowe-explorer-vscode/issues/3622)
-- BugFix: Resolved a bug where extenders adding `ssh` or `base` to `allTypes` on `ProfileCache` will result in duplicate nodes when adding a profile of that type in Zowe Explorer. [#3625](https://github.com/zowe/zowe-explorer-vscode/pull/3625)
+- Resolved an issue where extenders adding `ssh` or `base` to `allTypes` on `ProfileCache` will result in duplicate nodes when adding a profile of that type in Zowe Explorer. [#3625](https://github.com/zowe/zowe-explorer-vscode/pull/3625)
 
 ## `3.1.2`
 
