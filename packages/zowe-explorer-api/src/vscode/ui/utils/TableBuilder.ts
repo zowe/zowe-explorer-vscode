@@ -104,7 +104,7 @@ export class TableBuilder {
     private convertColumnOpts(columns: Table.ColumnOpts[]): Table.Column[] {
         return columns.map((col) => ({
             ...col,
-            comparator: col.comparator?.toString(),
+            comparator: col.useDateComparison ? Table.getDateComparator().toString() : col.comparator?.toString(),
             colSpan: col.colSpan?.toString(),
             rowSpan: col.rowSpan?.toString(),
             valueFormatter: col.valueFormatter?.toString(),

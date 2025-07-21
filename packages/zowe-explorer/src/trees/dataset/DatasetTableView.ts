@@ -385,10 +385,12 @@ export class DatasetTableView {
         {
             field: "createdDate",
             headerName: l10n.t("Creation Date"),
+            useDateComparison: true,
         },
         {
             field: "modifiedDate",
             headerName: l10n.t("Modified Date"),
+            useDateComparison: true,
         },
         { field: "lrecl", headerName: l10n.t("Record Length") },
         { field: "migr", headerName: l10n.t("Migrated") },

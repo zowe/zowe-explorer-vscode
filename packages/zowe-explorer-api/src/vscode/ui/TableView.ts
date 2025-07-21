@@ -224,6 +224,28 @@ export namespace Table {
     export type ValueFormatter = (data: { value: ContentTypes }) => string;
     export type Positions = "left" | "right";
 
+    /**
+     * Returns a date comparison function for sorting date columns.
+     * @returns A function that compares two date values
+     */
+    export function getDateComparator(): (valueA: any, valueB: any, nodeA: any, nodeB: any, isDescending: boolean) => number {
+        return (valueA: any, valueB: any, nodeA: any, nodeB: any, isDescending: boolean): number => {
+            if (valueA == null && valueB == null) return 0;
+            if (valueA == null) return isDescending ? 1 : -1;
+            if (valueB == null) return isDescending ? -1 : 1;
+
+            const dateA = new Date(valueA);
+            const dateB = new Date(valueB);
+
+            // Handle invalid dates
+            if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0;
+            if (isNaN(dateA.getTime())) return isDescending ? 1 : -1;
+            if (isNaN(dateB.getTime())) return isDescending ? -1 : 1;
+
+            return dateA.getTime() - dateB.getTime();
+        };
+    }
+
     /** The column type definition. All available properties are offered for AG Grid columns. */
     export type Column = {
         field: string;
@@ -275,6 +297,7 @@ export namespace Table {
         sortingOrder?: ("asc" | "desc")[];
         comparator?: string;
         unSortIcon?: boolean;
+        useDateComparison?: boolean;
 
         // Column/row spanning
         colSpan?: string;
@@ -296,6 +319,7 @@ export namespace Table {
         colSpan?: (params: any) => number;
         rowSpan?: (params: any) => number;
         valueFormatter?: ValueFormatter;
+        useDateComparison?: boolean;
     };
 
     export interface SizeColumnsToFitGridStrategy {
@@ -868,7 +892,7 @@ export namespace Table {
             this.data.columns.push(
                 ...columns.map((col) => ({
                     ...col,
-                    comparator: col.comparator?.toString(),
+                    comparator: col.useDateComparison ? getDateComparator().toString() : col.comparator?.toString(),
                     colSpan: col.colSpan?.toString(),
                     rowSpan: col.rowSpan?.toString(),
                     valueFormatter: col.valueFormatter?.toString(),
@@ -897,7 +921,7 @@ export namespace Table {
         public async setColumns(columns: ColumnOpts[]): Promise<boolean> {
             this.data.columns = columns.map((col) => ({
                 ...col,
-                comparator: col.comparator?.toString(),
+                comparator: col.useDateComparison ? getDateComparator().toString() : col.comparator?.toString(),
                 colSpan: col.colSpan?.toString(),
                 rowSpan: col.rowSpan?.toString(),
                 valueFormatter: col.valueFormatter?.toString(),
