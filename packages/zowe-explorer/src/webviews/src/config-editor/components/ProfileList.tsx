@@ -36,7 +36,7 @@ export function ProfileList({
       style={{
         width: "250px",
         paddingRight: "1rem",
-        maxHeight: "400px",
+        maxHeight: "800px",
         overflowY: "auto",
         overflowX: "hidden",
       }}

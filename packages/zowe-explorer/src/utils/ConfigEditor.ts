@@ -289,8 +289,7 @@ export class ConfigEditor extends WebView {
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
         const allProfiles = profInfo.getAllProfiles();
         const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc.join("") === path.normalize(configPath));
-        const mergedArgs = profInfo.mergeArgsForProfile(profile);
-        console.log(mergedArgs);
+        const mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
         return mergedArgs.knownArgs;
     }
 }
