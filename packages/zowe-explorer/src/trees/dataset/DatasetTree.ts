@@ -1306,19 +1306,14 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 quickpick.placeholder = vscode.l10n.t("Select a filter or type to create a new one");
                 quickpick.ignoreFocusOut = true;
 
-                // Update the "Create a new filter" option as user types
+                // Callback updates the "Create a new filter" option as user types
                 quickpick.onDidChangeValue((value) => {
-                    let createPick: FilterDescriptor;
-                    if (value.trim()) {
-                        createPick = new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value}"`);
-                    } else {
-                        createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
-                    }
-                    // Refresh the items to show the updated label
+                    const createPick = value.trim()
+                        ? new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value}"`)
+                        : new FilterDescriptor(DatasetTree.defaultDialogText);
                     quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
                 });
 
-                // Initialize with default create pick
                 const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                 quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
 
