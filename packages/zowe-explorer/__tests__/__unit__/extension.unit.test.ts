@@ -223,6 +223,8 @@ async function createGlobalMocks() {
             "zowe.jobs.search",
             "zowe.jobs.startPolling",
             "zowe.jobs.stopPolling",
+            "zowe.jobs.startPollingActiveJobs",
+            "zowe.jobs.stopPollingActiveJobs",
             "zowe.jobs.cancelJob",
             "zowe.jobs.sortBy",
             "zowe.jobs.filterJobs",

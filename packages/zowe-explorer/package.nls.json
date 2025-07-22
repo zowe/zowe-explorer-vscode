@@ -39,6 +39,8 @@
   "pattern": "Search Data Sets",
   "startPolling": "Start Polling",
   "stopPolling": "Stop Polling",
+  "jobs.startPollingActiveJobs": "Start Polling Active Jobs",
+  "jobs.stopPollingActiveJobs": "Stop Polling Active Jobs",
   "refreshNode": "Pull from Mainframe",
   "refreshDataset": "Refresh Data Set",
   "refreshAll": "Refresh Data Sets View",
