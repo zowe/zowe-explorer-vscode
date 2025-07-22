@@ -231,16 +231,16 @@ export namespace Table {
     export function getDateComparator(): (valueA: any, valueB: any, nodeA: any, nodeB: any, isDescending: boolean) => number {
         return (valueA: any, valueB: any, nodeA: any, nodeB: any, isDescending: boolean): number => {
             if (valueA == null && valueB == null) return 0;
-            if (valueA == null) return isDescending ? 1 : -1;
-            if (valueB == null) return isDescending ? -1 : 1;
+            if (valueA == null) return isDescending ? -1 : 1;
+            if (valueB == null) return isDescending ? 1 : -1;
 
             const dateA = new Date(valueA);
             const dateB = new Date(valueB);
 
             // Handle invalid dates
             if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0;
-            if (isNaN(dateA.getTime())) return isDescending ? 1 : -1;
-            if (isNaN(dateB.getTime())) return isDescending ? -1 : 1;
+            if (isNaN(dateA.getTime())) return 1;
+            if (isNaN(dateB.getTime())) return -1;
 
             return dateA.getTime() - dateB.getTime();
         };
