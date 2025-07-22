@@ -230,6 +230,10 @@ export class PatternDataSource implements IDataSetSource {
         this.pattern = this.pattern.toLocaleUpperCase();
     }
 
+    public getPattern(): string {
+        return this.pattern;
+    }
+
     public async fetchDataSets(): Promise<IDataSetInfo[]> {
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(this.profile);
         const dataSets: IDataSetInfo[] = [];
@@ -539,6 +543,7 @@ export class DatasetTableView {
             table: this.table,
             gridState: await this.table.getGridState(),
             pinnedRows: pinnedRows,
+            originalPattern: this.originalPattern,
         };
 
         // Create a new data source for PDS members
@@ -561,10 +566,29 @@ export class DatasetTableView {
      */
     private async goBack(this: DatasetTableView, _view: Table.View, _data: Table.RowInfo): Promise<void> {
         if (this.previousTableData) {
+            // Check if we need to replace TreeDataSource with PatternDataSource due to pattern change
+            let dataSourceToRestore = this.previousTableData.dataSource;
+
+            if (this.previousTableData.dataSource instanceof TreeDataSource && this.previousTableData.originalPattern) {
+                const treeNode = this.previousTableData.dataSource.treeNode;
+                const currentPattern = treeNode.pattern;
+
+                // If the pattern has changed since the table was created, use PatternDataSource
+                // to preserve the original pattern that was used when the table was shown
+                if (currentPattern !== this.previousTableData.originalPattern) {
+                    const profile = treeNode.getSessionNode()?.getProfile();
+                    if (profile) {
+                        dataSourceToRestore = new PatternDataSource(profile, this.previousTableData.originalPattern);
+                    }
+                }
+            }
+
             // Restore previous table state
-            this.currentDataSource = this.previousTableData.dataSource;
+            this.currentDataSource = dataSourceToRestore;
             this.currentTableType = this.previousTableData.tableType;
             this.shouldShow = this.previousTableData.shouldShow;
+            // Restore the original pattern from when the table was first created
+            this.originalPattern = this.previousTableData.originalPattern;
 
             // Force re-generation of the table by clearing the current instance.
             // This is necessary because generateTable tries to update an existing table if one exists,
@@ -695,6 +719,7 @@ export class DatasetTableView {
     private table: Table.Instance = null;
     private currentDataSource: IDataSetSource = null;
     private context: ExtensionContext = null;
+    private originalPattern: string = null;
 
     // Store previous table state for navigation
     private previousTableData: {
@@ -704,6 +729,7 @@ export class DatasetTableView {
         table: Table.Instance;
         gridState: any;
         pinnedRows: Table.RowData[];
+        originalPattern?: string;
     } = null;
 
     // Static table identifiers for this table view
@@ -1196,6 +1222,7 @@ export class DatasetTableView {
      */
     public async handleCommand(context: ExtensionContext, node: IZoweDatasetTreeNode, nodeList: IZoweDatasetTreeNode[]): Promise<void> {
         this.shouldShow = {};
+        this.originalPattern = null;
         const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
         if (selectedNodes.length === 0) {
             selectedNodes.push(await this.selectAndAddProfile());
@@ -1223,6 +1250,7 @@ export class DatasetTableView {
      */
     public async handlePatternSearch(context: ExtensionContext): Promise<void> {
         this.shouldShow = {};
+        this.originalPattern = null;
 
         // Get available profiles
         const allProfiles = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
@@ -1264,6 +1292,7 @@ export class DatasetTableView {
         // Create the pattern-based data source
         this.currentDataSource = new PatternDataSource(profile, pattern);
         this.currentTableType = "dataSets";
+        this.originalPattern = pattern;
 
         // Generate and display the table
         await TableViewProvider.getInstance().setTableView(await this.generateTable(context));
@@ -1307,6 +1336,7 @@ export class DatasetTableView {
             }
             this.currentDataSource = new TreeDataSource(selectedNode);
             this.currentTableType = "dataSets";
+            this.originalPattern = selectedNode.pattern;
         } else if (SharedContext.isPds(selectedNode)) {
             const sessionNode = selectedNode.getSessionNode() as IZoweDatasetTreeNode;
             const profile = sessionNode!.getProfile();
@@ -1319,6 +1349,7 @@ export class DatasetTableView {
                 profile
             );
             this.currentTableType = "members";
+            this.originalPattern = sessionNode.pattern;
         }
 
         await TableViewProvider.getInstance().setTableView(await this.generateTable(context));
