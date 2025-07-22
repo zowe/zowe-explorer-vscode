@@ -15,6 +15,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for asynchronous operations when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Adjusted formatting for the certificate selection webview to make better use of space. [#3754](https://github.com/zowe/zowe-explorer-vscode/issues/3754)
+- When the user types in a data set pattern in the input box of the filter selection prompt, the "Create a new filter" option now updates to include the pattern. Once clicked, the new filter is added to the user's search history and the pattern is used for listing data sets. [#3015](https://github.com/zowe/zowe-explorer-vscode/issues/3015)
 
 ### Bug fixes
 
