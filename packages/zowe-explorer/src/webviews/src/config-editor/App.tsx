@@ -491,8 +491,8 @@ export function App() {
       return newState;
     });
 
-    // If this profile is currently selected, clear the selection
-    if (selectedProfileKey === profileKey) {
+    // If this profile is currently selected, or if the selected profile is a child of this profile, clear the selection
+    if (selectedProfileKey === profileKey || (selectedProfileKey && selectedProfileKey.startsWith(profileKey + "."))) {
       setSelectedProfileKey(null);
     }
   };
