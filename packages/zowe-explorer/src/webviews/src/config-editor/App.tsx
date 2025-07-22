@@ -69,6 +69,7 @@ export function App() {
   const [newKeyModalOpen, setNewKeyModalOpen] = useState(false);
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
+  const [selectedProfileType, setSelectedProfileType] = useState<string | null>(null);
   const [newProfileKeyPath, setNewProfileKeyPath] = useState<string[] | null>(null);
   const [newProfileKey, setNewProfileKey] = useState("");
   const [newProfileValue, setNewProfileValue] = useState("");
@@ -721,8 +722,8 @@ export function App() {
           <div style={{ flexGrow: 1 }}>
             {selectedProfileKey && (
               <div>
-                {/* Add button for root-level properties */}
-                <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+                {/* Commented out profile name and plus icon */}
+                {/* <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
                   <span style={{ fontWeight: "bold", marginRight: 8 }}>{selectedProfileKey}</span>
                   <button
                     className="add-default-button"
@@ -750,7 +751,7 @@ export function App() {
                   >
                     <span className="codicon codicon-add"></span>
                   </button>
-                </div>
+                </div> */}
                 {(() => {
                   const profilePathParts = selectedProfileKey.split(".");
                   let path;
@@ -902,7 +903,7 @@ export function App() {
                 <span className="codicon codicon-add"></span>
               </button>
             </h3>
-            {renderConfig(value, currentPath)}
+            <div style={{ paddingLeft: displayKey?.toLocaleLowerCase() === "properties" ? "16px" : "0px" }}>{renderConfig(value, currentPath)}</div>
           </div>
         );
       } else if (isArray) {
@@ -924,7 +925,7 @@ export function App() {
                 <span className="codicon codicon-add"></span>
               </button>
             </h3>
-            <div>
+            <div style={{ paddingLeft: displayKey?.toLocaleLowerCase() === "secure" ? "16px" : "0px" }}>
               {Array.from(new Set(renderValue)).map((item: any, index: number) => {
                 if (
                   tabsHiddenItems &&
@@ -961,9 +962,30 @@ export function App() {
       } else {
         return (
           <div key={fullKey} className="config-item">
-            <div className="config-item-container">
+            <div className="config-item-container" style={displayKey === "type" ? { gap: "0px" } : {}}>
               <span className="config-label">{displayKey}</span>
-              {typeof pendingValue === "string" || typeof pendingValue === "boolean" || typeof pendingValue === "number" ? (
+              {displayKey === "type" ? (
+                <select
+                  className="config-input"
+                  value={String(pendingValue)}
+                  onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
+                  style={{
+                    width: "100%",
+                    height: "28px",
+                    fontSize: "0.9em",
+                    padding: "2px",
+                    marginBottom: "0",
+                    textTransform: "lowercase",
+                  }}
+                >
+                  <option value="">{l10n.t("Select a type")}</option>
+                  {getWizardTypeOptions().map((type) => (
+                    <option key={type} value={type}>
+                      {type.toLowerCase()}
+                    </option>
+                  ))}
+                </select>
+              ) : typeof pendingValue === "string" || typeof pendingValue === "boolean" || typeof pendingValue === "number" ? (
                 <input
                   className="config-input"
                   type="text"
@@ -973,9 +995,11 @@ export function App() {
               ) : (
                 <span>{"{...}"}</span>
               )}
-              <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
-                <span className="codicon codicon-trash"></span>
-              </button>
+              {displayKey !== "type" && (
+                <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
+                  <span className="codicon codicon-trash"></span>
+                </button>
+              )}
             </div>
           </div>
         );
@@ -1062,12 +1086,25 @@ export function App() {
               <div key={fullKey} className="config-item">
                 <div className="config-item-container">
                   <span className="config-label">{key}</span>
-                  <input
+                  <select
                     className="config-input"
-                    type="text"
                     value={String(pendingValue)}
-                    onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLInputElement).value)}
-                  />
+                    onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLSelectElement).value)}
+                    style={{
+                      width: "100%",
+                      height: "28px",
+                      fontSize: "0.9em",
+                      padding: "2px 6px",
+                      marginBottom: "0",
+                    }}
+                  >
+                    <option value="">{l10n.t("Select a profile")}</option>
+                    {getAvailableProfilesByType(key).map((profile) => (
+                      <option key={profile} value={profile}>
+                        {profile === "root" ? "/" : profile}
+                      </option>
+                    ))}
+                  </select>
                   <button className="action-button" onClick={() => handleDeleteDefaultsProperty(fullKey)}>
                     <span className="codicon codicon-trash"></span>
                   </button>
@@ -1196,6 +1233,43 @@ export function App() {
     });
 
     return ["root", ...profileNames, ...Array.from(pendingProfiles)];
+  };
+
+  const getAvailableProfilesByType = (profileType: string) => {
+    if (selectedTab === null) return [];
+
+    const config = configurations[selectedTab].properties;
+    const flatProfiles = flattenProfiles(config.profiles);
+    const profileNames = Object.keys(flatProfiles);
+
+    // Filter profiles by type
+    const profilesOfType = profileNames.filter((profileKey) => {
+      const profileTypeValue = getProfileType(profileKey);
+      return profileTypeValue === profileType;
+    });
+
+    // Include pending profiles from pendingChanges that match the type
+    const pendingProfiles = new Set<string>();
+    Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([key, entry]) => {
+      if (entry.profile) {
+        // Check if the pending profile has the correct type
+        const keyParts = key.split(".");
+        const isTypeKey = keyParts[keyParts.length - 1] === "type";
+        if (isTypeKey && entry.value === profileType) {
+          // Extract the profile name from the key path
+          // Remove "profiles" prefix and get just the profile name
+          const profilePathParts = keyParts.slice(0, -1); // Remove "type" from the end
+          if (profilePathParts[0] === "profiles") {
+            // Remove "profiles" prefix and get the actual profile name
+            const profileNameParts = profilePathParts.slice(1);
+            const profileName = profileNameParts.join(".");
+            pendingProfiles.add(profileName);
+          }
+        }
+      }
+    });
+
+    return [...profilesOfType, ...Array.from(pendingProfiles)];
   };
 
   const getWizardTypeOptions = () => {
@@ -1518,7 +1592,12 @@ export function App() {
         newValue={newValue}
         showDropdown={showDropdown}
         typeOptions={typeOptions}
-        onNewKeyChange={setNewKey}
+        availableProfiles={selectedProfileType ? getAvailableProfilesByType(selectedProfileType) : []}
+        profileType={selectedProfileType}
+        onNewKeyChange={(value) => {
+          setNewKey(value);
+          setSelectedProfileType(value);
+        }}
         onNewValueChange={setNewValue}
         onShowDropdownChange={setShowDropdown}
         onAdd={handleAddNewDefault}
@@ -1526,6 +1605,7 @@ export function App() {
           setNewKeyModalOpen(false);
           setNewKey("");
           setNewValue("");
+          setSelectedProfileType(null);
         }}
       />
 

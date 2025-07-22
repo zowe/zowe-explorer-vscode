@@ -7,6 +7,8 @@ interface AddDefaultModalProps {
   newValue: string;
   showDropdown: boolean;
   typeOptions: string[];
+  availableProfiles: string[];
+  profileType: string | null;
   onNewKeyChange: (value: string) => void;
   onNewValueChange: (value: string) => void;
   onShowDropdownChange: (value: boolean) => void;
@@ -20,6 +22,8 @@ export function AddDefaultModal({
   newValue,
   showDropdown,
   typeOptions,
+  availableProfiles,
+  profileType,
   onNewKeyChange,
   onNewValueChange,
   onShowDropdownChange,
@@ -65,14 +69,32 @@ export function AddDefaultModal({
           )}
         </div>
 
-        <input
-          placeholder={l10n.t("Default Value")}
-          value={newValue}
-          onChange={(e) => onNewValueChange((e.target as HTMLInputElement).value)}
-          className="modal-input"
-        />
+        <div style={{ marginBottom: "1rem" }}>
+          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>{l10n.t("Default Value")}:</label>
+          <select
+            value={newValue}
+            onChange={(e) => onNewValueChange((e.target as HTMLSelectElement).value)}
+            className="modal-input"
+            style={{
+              width: "100%",
+              height: "36px",
+              position: "relative",
+              zIndex: 1,
+            }}
+            disabled={!profileType}
+          >
+            <option value="">{profileType ? l10n.t("Select a profile") : l10n.t("Select a type first")}</option>
+            {availableProfiles.map((profile) => (
+              <option key={profile} value={profile}>
+                {profile === "root" ? "/" : profile}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="modal-actions">
-          <VSCodeButton onClick={onAdd}>{l10n.t("Add")}</VSCodeButton>
+          <VSCodeButton onClick={onAdd} disabled={!profileType || !newValue}>
+            {l10n.t("Add")}
+          </VSCodeButton>
           <button onClick={onCancel}>{l10n.t("Cancel")}</button>
         </div>
       </div>
