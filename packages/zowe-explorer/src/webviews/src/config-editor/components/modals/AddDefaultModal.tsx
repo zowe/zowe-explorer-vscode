@@ -36,7 +36,7 @@ export function AddDefaultModal({
     <div className="modal-backdrop">
       <div className="modal">
         <h3>{l10n.t("Add New Default")}</h3>
-        <div className="dropdown-container">
+        <div className="dropdown-container" style={{ position: "relative" }}>
           <input
             id="type-input"
             value={newKey}
@@ -48,7 +48,19 @@ export function AddDefaultModal({
             onBlur={() => setTimeout(() => onShowDropdownChange(false), 100)}
             className="modal-input"
             placeholder={l10n.t("Default Key")}
+            style={{ paddingRight: "2rem" }}
           />
+          {newKey && (
+            <button onClick={() => onNewKeyChange("")} className="profile-clear-button" title="Clear input">
+              <span
+                className="codicon codicon-chrome-close"
+                style={{
+                  fontSize: "14px",
+                  lineHeight: 1,
+                }}
+              />
+            </button>
+          )}
           {showDropdown && (
             <ul className="dropdown-list">
               {typeOptions

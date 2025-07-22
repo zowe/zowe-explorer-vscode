@@ -1536,27 +1536,13 @@ export function App() {
     const { configPath, properties: baseConfig } = configurations[selectedTab!]!;
     const currentConfig = { ...baseConfig };
 
-    // Construct the type path: profiles.[...pathWithoutLastSegment].type
-    const typePath = [...path.slice(0, -1), "type"];
+    // Extract the profile key from the path
+    const profileKey = extractProfileKeyFromPath(path);
 
-    // Remove "profiles" prefix to match pendingChanges key format
-    const modifiedTypePath = typePath.slice(1).join(".");
+    // Get the profile type, which will include pending changes
+    const resolvedType = getProfileType(profileKey);
 
-    // Check for pending type overwrite
-    const pendingTypeOverwrite = pendingChanges[configPath]?.[modifiedTypePath]?.value as string;
-
-    // Traverse currentConfig only if no pending overwrite
-    let resolvedType = pendingTypeOverwrite;
-    if (!resolvedType) {
-      let valueAtPath: any = currentConfig;
-      for (const segment of typePath) {
-        valueAtPath = valueAtPath?.[segment];
-        if (valueAtPath === undefined) break;
-      }
-      resolvedType = valueAtPath;
-    }
-
-    const propertySchema = schemaValidations[configPath]?.propertySchema[resolvedType] || {};
+    const propertySchema = schemaValidations[configPath]?.propertySchema[resolvedType || ""] || {};
     return Object.keys(propertySchema);
   };
 
