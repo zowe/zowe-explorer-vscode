@@ -714,8 +714,9 @@ export class DatasetTableView {
             const uriParts = uri.substring(uri.indexOf("/") + 1).split("/");
             const [profileName, datasetName, memberName] = uriParts;
 
-            // Find the profile node
-            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+            // First, try to find in session nodes
+            let profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+            let foundInSession = false;
 
             if (profileNode) {
                 // Load children if not already loaded
@@ -733,7 +734,32 @@ export class DatasetTableView {
 
                     if (memberNode) {
                         await SharedTreeProviders.ds.getTreeView().reveal(memberNode, { focus: true });
-                        return;
+                        foundInSession = true;
+                    }
+                }
+            }
+
+            // If not found in session nodes, search in favorites
+            if (!foundInSession) {
+                for (const favProfileNode of SharedTreeProviders.ds.mFavorites) {
+                    if (favProfileNode.label.toString() === profileName) {
+                        await favProfileNode.getChildren(false);
+
+                        // Look for the PDS in favorites
+                        const favPdsNode = favProfileNode.children?.find((child) => child.label.toString() === datasetName);
+
+                        if (favPdsNode) {
+                            // Load PDS members if not already loaded
+                            await favPdsNode.getChildren(false);
+
+                            // Find the member node
+                            const favMemberNode = favPdsNode.children?.find((child) => child.label.toString() === memberName);
+
+                            if (favMemberNode) {
+                                await SharedTreeProviders.ds.getTreeView().reveal(favMemberNode, { focus: true });
+                                return;
+                            }
+                        }
                     }
                 }
             }
@@ -743,7 +769,9 @@ export class DatasetTableView {
             const uriParts = uri.substring(uri.indexOf("/") + 1).split("/");
             const [profileName, datasetName] = uriParts;
 
-            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+            // First, try to find in session nodes
+            let profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+            let foundInSession = false;
 
             if (profileNode) {
                 await profileNode.getChildren(false);
@@ -751,6 +779,24 @@ export class DatasetTableView {
 
                 if (dsNode) {
                     await SharedTreeProviders.ds.getTreeView().reveal(dsNode, { expand: true });
+                    foundInSession = true;
+                }
+            }
+
+            // If not found in session nodes, search in favorites
+            if (!foundInSession) {
+                for (const favProfileNode of SharedTreeProviders.ds.mFavorites) {
+                    if (favProfileNode.label.toString() === profileName) {
+                        await favProfileNode.getChildren(false);
+
+                        // Look for the dataset in favorites
+                        const favDsNode = favProfileNode.children?.find((child) => child.label.toString() === datasetName);
+
+                        if (favDsNode) {
+                            await SharedTreeProviders.ds.getTreeView().reveal(favDsNode, { expand: true });
+                            return;
+                        }
+                    }
                 }
             }
         }
