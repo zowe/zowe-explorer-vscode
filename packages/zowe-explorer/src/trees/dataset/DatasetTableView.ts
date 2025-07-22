@@ -95,6 +95,7 @@ export class TreeDataSource implements IDataSetSource {
 
     /**
      * Loads children for a specific parent (PDS) based on the cached children tree nodes.
+     * Falls back to using the API directly if the PDS is no longer accessible in the tree.
      *
      * @param parentId The ID of the parent dataset.
      * @returns {IDataSetInfo[]} An array of dataset information objects, each representing a dataset.
@@ -113,6 +114,32 @@ export class TreeDataSource implements IDataSetSource {
                     ?.filter((memberNode) => !SharedContext.isInformation(memberNode))
                     .map((memberNode) => this.mapNodeToInfo(memberNode, parentId)) ?? []
             );
+        }
+
+        // Fallback: If the PDS node is not found in the tree (e.g., pattern changed),
+        // use the API directly to load the members
+        const profile = this.treeNode.getSessionNode()?.getProfile();
+        if (profile) {
+            const uriSegments = parentUri.path.split("/");
+            if (uriSegments.length >= 3) {
+                // URI format: /profile/dataset.name
+                const datasetName = uriSegments[2];
+
+                try {
+                    const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+                    const membersResp = await mvsApi.allMembers(datasetName, { attributes: true });
+                    const members: IDataSetInfo[] = [];
+
+                    for (const member of membersResp.apiResponse?.items || []) {
+                        members.push(buildMemberInfo(member, parentId));
+                    }
+
+                    return members;
+                } catch (err) {
+                    await AuthUtils.handleProfileAuthOnError(err, profile);
+                    return [];
+                }
+            }
         }
 
         return [];
