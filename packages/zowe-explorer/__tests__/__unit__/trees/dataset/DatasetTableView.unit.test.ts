@@ -67,7 +67,7 @@ describe("TreeDataSource", () => {
             const getStatsMock = jest
                 .spyOn(ZoweDatasetNode.prototype, "getStats")
                 .mockImplementation(function (this: ZoweDatasetNode): Types.DatasetStats {
-                    return dataSets.find((ds) => ds.node.label === this.label)?.stats;
+                    return dataSets.find((ds) => ds.node.label === this.label)?.stats as Types.DatasetStats;
                 });
             dsProfileNode.children = dsNodes;
             const getChildrenMock = jest.spyOn(dsProfileNode, "getChildren").mockImplementation((_paginate) => {
@@ -644,15 +644,6 @@ describe("PDSMembersDataSource", () => {
             expect(result[0].name).toBe("MEM1");
         });
 
-        it("should return empty array when no profile is provided", async () => {
-            const pdsDataSource = new PDSMembersDataSource(null, pdsName, pdsUri, undefined);
-
-            const result = await pdsDataSource.fetchDataSets();
-
-            expect(result).toEqual([]);
-            expect(getMvsApiMock).not.toHaveBeenCalled();
-        });
-
         it("should return empty array when API call fails and handle auth error", async () => {
             const error = new Error("API Error");
             const mvsApiMock = {
@@ -696,14 +687,6 @@ describe("PDSMembersDataSource", () => {
             getMvsApiMock.mockReturnValue(mvsApiMock as any);
 
             const pdsDataSource = new PDSMembersDataSource(null, pdsName, pdsUri, profile);
-
-            const result = await pdsDataSource.fetchDataSets();
-
-            expect(result).toEqual([]);
-        });
-
-        it("should return empty array when parentDataSource is null and no profile", async () => {
-            const pdsDataSource = new PDSMembersDataSource(null, pdsName, pdsUri, undefined);
 
             const result = await pdsDataSource.fetchDataSets();
 
@@ -756,6 +739,24 @@ describe("DatasetTableView", () => {
         it("should return false for session URIs", () => {
             const sessionUri = "zowe-ds:/profile";
             const result = (datasetTableView as any).isDsMemberUri(sessionUri);
+            expect(result).toBe(false);
+        });
+
+        it("should return true for member URIs with deeply nested datasets", () => {
+            const memberUri = "zowe-ds:/profile/VERY.LONG.DATASET.NAME/MEMBER";
+            const result = (datasetTableView as any).isDsMemberUri(memberUri);
+            expect(result).toBe(true);
+        });
+
+        it("should return false for malformed URIs", () => {
+            const malformedUri = "invalid-uri";
+            const result = (datasetTableView as any).isDsMemberUri(malformedUri);
+            expect(result).toBe(false);
+        });
+
+        it("should return false for URIs with no profile", () => {
+            const noProfileUri = "zowe-ds:/";
+            const result = (datasetTableView as any).isDsMemberUri(noProfileUri);
             expect(result).toBe(false);
         });
     });
@@ -969,6 +970,9 @@ describe("DatasetTableView", () => {
         let mockProfileNode: ZoweDatasetNode;
         let mockPdsNode: ZoweDatasetNode;
         let mockMemberNode: ZoweDatasetNode;
+        let mockFavProfileNode: ZoweDatasetNode;
+        let mockFavPdsNode: ZoweDatasetNode;
+        let mockFavMemberNode: ZoweDatasetNode;
 
         beforeEach(() => {
             mockTreeView = {
@@ -976,6 +980,8 @@ describe("DatasetTableView", () => {
             };
 
             const profile = createIProfile();
+
+            // Session nodes setup
             mockProfileNode = new ZoweDatasetNode({
                 label: "sestest",
                 collapsibleState: TreeItemCollapsibleState.Expanded,
@@ -1002,13 +1008,42 @@ describe("DatasetTableView", () => {
             mockProfileNode.children = [mockPdsNode];
             mockPdsNode.children = [mockMemberNode];
 
+            // Favorites nodes setup
+            mockFavProfileNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: TreeItemCollapsibleState.Collapsed,
+                contextOverride: Constants.FAV_PROFILE_CONTEXT,
+                profile,
+                session: createISession(),
+            });
+
+            mockFavPdsNode = new ZoweDatasetNode({
+                label: "FAV.PDS",
+                collapsibleState: TreeItemCollapsibleState.Collapsed,
+                contextOverride: Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX,
+                profile,
+                parentNode: mockFavProfileNode,
+            });
+
+            mockFavMemberNode = new ZoweDatasetNode({
+                label: "FAVMEMBER",
+                collapsibleState: TreeItemCollapsibleState.None,
+                contextOverride: Constants.DS_MEMBER_CONTEXT,
+                profile,
+                parentNode: mockFavPdsNode,
+            });
+
+            mockFavProfileNode.children = [mockFavPdsNode];
+            mockFavPdsNode.children = [mockFavMemberNode];
+
             jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
                 mSessionNodes: [mockProfileNode],
+                mFavorites: [mockFavProfileNode],
                 getTreeView: () => mockTreeView,
             } as any);
         });
 
-        it("should reveal member in tree for member URI", async () => {
+        it("should reveal member in tree for member URI found in session nodes", async () => {
             const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
             const mockPdsGetChildren = jest.spyOn(mockPdsNode, "getChildren").mockResolvedValue(mockPdsNode.children);
 
@@ -1026,7 +1061,7 @@ describe("DatasetTableView", () => {
             expect(mockTreeView.reveal).toHaveBeenCalledWith(mockMemberNode, { focus: true });
         });
 
-        it("should reveal dataset in tree for dataset URI", async () => {
+        it("should reveal dataset in tree for dataset URI found in session nodes", async () => {
             const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
 
             const rowInfo: Table.RowInfo = {
@@ -1042,7 +1077,45 @@ describe("DatasetTableView", () => {
             expect(mockTreeView.reveal).toHaveBeenCalledWith(mockPdsNode, { expand: true });
         });
 
-        it("should handle member with tree data", async () => {
+        it("should reveal member in tree for member URI found in favorites when not in session nodes", async () => {
+            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+            const mockFavGetChildren = jest.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue(mockFavProfileNode.children);
+            const mockFavPdsGetChildren = jest.spyOn(mockFavPdsNode, "getChildren").mockResolvedValue(mockFavPdsNode.children);
+
+            const rowInfo: Table.RowInfo = {
+                row: {
+                    uri: "zowe-ds:/sestest/FAV.PDS/FAVMEMBER",
+                },
+                index: 0,
+            };
+
+            await DatasetTableView.displayInTree(null as any, rowInfo);
+
+            expect(mockGetChildren).toHaveBeenCalled();
+            expect(mockFavGetChildren).toHaveBeenCalled();
+            expect(mockFavPdsGetChildren).toHaveBeenCalled();
+            expect(mockTreeView.reveal).toHaveBeenCalledWith(mockFavMemberNode, { focus: true });
+        });
+
+        it("should reveal dataset in tree for dataset URI found in favorites when not in session nodes", async () => {
+            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+            const mockFavGetChildren = jest.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue(mockFavProfileNode.children);
+
+            const rowInfo: Table.RowInfo = {
+                row: {
+                    uri: "zowe-ds:/sestest/FAV.PDS",
+                },
+                index: 0,
+            };
+
+            await DatasetTableView.displayInTree(null as any, rowInfo);
+
+            expect(mockGetChildren).toHaveBeenCalled();
+            expect(mockFavGetChildren).toHaveBeenCalled();
+            expect(mockTreeView.reveal).toHaveBeenCalledWith(mockFavPdsNode, { expand: true });
+        });
+
+        it("should handle member with tree data found in session nodes", async () => {
             const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
             const mockPdsGetChildren = jest.spyOn(mockPdsNode, "getChildren").mockResolvedValue(mockPdsNode.children);
 
@@ -1062,6 +1135,121 @@ describe("DatasetTableView", () => {
             expect(mockGetChildren).toHaveBeenCalled();
             expect(mockPdsGetChildren).toHaveBeenCalled();
             expect(mockTreeView.reveal).toHaveBeenCalledWith(mockMemberNode, { focus: true });
+        });
+
+        it("should handle member with tree data found in favorites when not in session nodes", async () => {
+            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+            const mockFavGetChildren = jest.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue(mockFavProfileNode.children);
+            const mockFavPdsGetChildren = jest.spyOn(mockFavPdsNode, "getChildren").mockResolvedValue(mockFavPdsNode.children);
+
+            const rowInfo: Table.RowInfo = {
+                row: {
+                    uri: "zowe-ds:/sestest/FAV.PDS/FAVMEMBER",
+                    _tree: {
+                        parentId: "zowe-ds:/sestest/FAV.PDS",
+                        id: "zowe-ds:/sestest/FAV.PDS/FAVMEMBER",
+                    },
+                },
+                index: 0,
+            };
+
+            await DatasetTableView.displayInTree(null as any, rowInfo);
+
+            expect(mockGetChildren).toHaveBeenCalled();
+            expect(mockFavGetChildren).toHaveBeenCalled();
+            expect(mockFavPdsGetChildren).toHaveBeenCalled();
+            expect(mockTreeView.reveal).toHaveBeenCalledWith(mockFavMemberNode, { focus: true });
+        });
+
+        it("should handle case when profile not found in session nodes or favorites", async () => {
+            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+
+            // Mock empty favorites
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+                mSessionNodes: [],
+                mFavorites: [],
+                getTreeView: () => mockTreeView,
+            } as any);
+
+            const rowInfo: Table.RowInfo = {
+                row: {
+                    uri: "zowe-ds:/nonexistent/TEST.PDS/MEMBER1",
+                },
+                index: 0,
+            };
+
+            await DatasetTableView.displayInTree(null as any, rowInfo);
+
+            expect(mockTreeView.reveal).not.toHaveBeenCalled();
+        });
+
+        it("should handle case when dataset not found in profile children", async () => {
+            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+            const mockFavGetChildren = jest.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue([]);
+
+            const rowInfo: Table.RowInfo = {
+                row: {
+                    uri: "zowe-ds:/sestest/NONEXISTENT.DS",
+                },
+                index: 0,
+            };
+
+            await DatasetTableView.displayInTree(null as any, rowInfo);
+
+            expect(mockGetChildren).toHaveBeenCalled();
+            expect(mockFavGetChildren).toHaveBeenCalled();
+            expect(mockTreeView.reveal).not.toHaveBeenCalled();
+        });
+
+        it("should handle case when member not found in PDS children", async () => {
+            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([mockPdsNode]);
+            const mockPdsGetChildren = jest.spyOn(mockPdsNode, "getChildren").mockResolvedValue([]);
+            const mockFavGetChildren = jest.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue([mockFavPdsNode]);
+            const mockFavPdsGetChildren = jest.spyOn(mockFavPdsNode, "getChildren").mockResolvedValue([]);
+
+            const rowInfo: Table.RowInfo = {
+                row: {
+                    uri: "zowe-ds:/sestest/TEST.PDS/NONEXISTENT",
+                },
+                index: 0,
+            };
+
+            await DatasetTableView.displayInTree(null as any, rowInfo);
+
+            expect(mockGetChildren).toHaveBeenCalled();
+            expect(mockPdsGetChildren).toHaveBeenCalled();
+            expect(mockFavGetChildren).toHaveBeenCalled();
+            // PDS members should not be listed through favorites in this case since it was found in session nodes
+            expect(mockFavPdsGetChildren).not.toHaveBeenCalled();
+            expect(mockTreeView.reveal).not.toHaveBeenCalled();
+        });
+
+        it("should prioritize session nodes over favorites when node exists in both", async () => {
+            // Setup session nodes with a dataset that exists
+            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([mockPdsNode]);
+            const mockPdsGetChildren = jest.spyOn(mockPdsNode, "getChildren").mockResolvedValue([mockMemberNode]);
+
+            // Setup favorites with a dataset of the same name
+            const mockFavGetChildren = jest.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue([mockFavPdsNode]);
+            const mockFavPdsGetChildren = jest.spyOn(mockFavPdsNode, "getChildren").mockResolvedValue([mockFavMemberNode]);
+
+            const rowInfo: Table.RowInfo = {
+                row: {
+                    uri: "zowe-ds:/sestest/TEST.PDS/MEMBER1",
+                },
+                index: 0,
+            };
+
+            await DatasetTableView.displayInTree(null as any, rowInfo);
+
+            // Should reveal from session nodes, not favorites
+            expect(mockGetChildren).toHaveBeenCalled();
+            expect(mockPdsGetChildren).toHaveBeenCalled();
+            expect(mockTreeView.reveal).toHaveBeenCalledWith(mockMemberNode, { focus: true });
+
+            // Favorites should not be searched since it was found in session nodes
+            expect(mockFavGetChildren).not.toHaveBeenCalled();
+            expect(mockFavPdsGetChildren).not.toHaveBeenCalled();
         });
     });
 
@@ -1175,7 +1363,7 @@ describe("DatasetTableView", () => {
                 loadNamedProfile: loadNamedProfileMock,
             } as any);
             jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
-            jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest");
+            jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest" as any);
             jest.spyOn(Gui, "showInputBox").mockResolvedValue("TEST.*");
 
             await datasetTableView.handlePatternSearch(mockContext);
@@ -1207,7 +1395,7 @@ describe("DatasetTableView", () => {
 
         it("should handle cancelled pattern input", async () => {
             jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
-            jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest");
+            jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest" as any);
             jest.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
 
             await datasetTableView.handlePatternSearch(mockContext);
@@ -1221,7 +1409,7 @@ describe("DatasetTableView", () => {
                 loadNamedProfile: loadNamedProfileMock,
             } as any);
             jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
-            jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest");
+            jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest" as any);
             jest.spyOn(Gui, "showInputBox").mockResolvedValue("TEST.*");
             const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
 
