@@ -839,6 +839,9 @@ export function App() {
       if (!combinedConfig.hasOwnProperty("secure")) {
         combinedConfig.secure = [];
       }
+      if (!combinedConfig.hasOwnProperty("type")) {
+        combinedConfig.type = "";
+      }
     }
 
     // Sort properties according to the specified order
