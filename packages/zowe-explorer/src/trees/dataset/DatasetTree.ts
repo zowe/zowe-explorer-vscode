@@ -1308,8 +1308,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
                 // Callback updates the "Create a new filter" option as user types
                 quickpick.onDidChangeValue((value) => {
-                    const createPick = value.trim()
-                        ? new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value}"`)
+                    const trimmedValue = value.trim();
+                    const createPick = trimmedValue
+                        ? new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value.trim()}"`)
                         : new FilterDescriptor(DatasetTree.defaultDialogText);
                     quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
                 });

@@ -2220,6 +2220,304 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
             expect(mockQuickPick.placeholder).toContain("Select a filter or type to create a new one");
         });
+
+        it("should dynamically update the create filter option when user types", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            // Verify that onDidChangeValue callback was registered
+            expect(mockQuickPick.onDidChangeValue).toHaveBeenCalled();
+
+            // Test the callback function directly
+            const onDidChangeCallback = mockQuickPick.onDidChangeValue.mock.calls[0][0];
+
+            // Test with empty input - should show default text
+            onDidChangeCallback("");
+            expect(mockQuickPick.items[0].label).toContain("Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)");
+
+            // Test with user input - should show preview with user input
+            onDidChangeCallback("USER.INPUT");
+            expect(mockQuickPick.items[0].label).toContain('$(plus) Create a new filter: "USER.INPUT"');
+
+            // Test with whitespace input - should show preview
+            onDidChangeCallback("  WHITESPACE.INPUT  ");
+            expect(mockQuickPick.items[0].label).toContain('$(plus) Create a new filter: "WHITESPACE.INPUT"');
+        });
+
+        it("should skip input box when user types filter and selects FilterDescriptor", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "USER.TYPED.FILTER",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+            const filterDescriptor = new FilterDescriptor('$(plus) Create a new filter: "USER.TYPED.FILTER"');
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterDescriptor);
+
+            // Ensure input box is never called when user has typed a filter
+            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockReset();
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            // Verify input box was not called (prompt was skipped)
+            expect(showInputBoxSpy).not.toHaveBeenCalled();
+            expect(testTree.mSessionNodes[1].pattern).toEqual("USER.TYPED.FILTER");
+        });
+
+        it("should cancel operation when user dismisses quickpick without selection", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "USER.TYPED.BUT.CANCELLED",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined); // User cancelled
+
+            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            expect(showMessageSpy).toHaveBeenCalledWith("No selection made. Operation cancelled.");
+            expect(testTree.mSessionNodes[1].pattern).toBe("");
+        });
+
+        it("should maintain session node tooltip when filtering with user input", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "FILTER.PATTERN",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+            const filterDescriptor = new FilterDescriptor('$(plus) Create a new filter: "FILTER.PATTERN"');
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterDescriptor);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            // Set initial tooltip
+            blockMocks.datasetSessionNode.tooltip = "Initial tooltip";
+
+            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            expect(testTree.mSessionNodes[1].tooltip).toContain("Pattern: FILTER.PATTERN");
+        });
+
+        it("should handle whitespace-only input correctly", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "   ",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+            const filterDescriptor = new FilterDescriptor("$(plus) Create a new filter");
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterDescriptor);
+
+            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("INPUT.BOX.PATTERN");
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            // Should fall back to input box when value is only whitespace
+            expect(showInputBoxSpy).toHaveBeenCalled();
+            expect(testTree.mSessionNodes[1].pattern).toEqual("INPUT.BOX.PATTERN");
+        });
+
+        it("should handle input box cancellation when falling back from FilterDescriptor", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+            const filterDescriptor = new FilterDescriptor("$(plus) Create a new filter");
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterDescriptor);
+
+            // User cancels input box
+            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            expect(showInputBoxSpy).toHaveBeenCalled();
+            expect(showMessageSpy).toHaveBeenCalledWith("You must enter a pattern.");
+            expect(testTree.mSessionNodes[1].pattern).toBe("");
+        });
+
+        it("should preserve quickpick items structure when updating create filter option", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            const searchHistory = ["HISTORY.FILTER.1", "HISTORY.FILTER.2"];
+            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValue(searchHistory);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            // Get the callback and test it preserves items structure
+            const onDidChangeCallback = mockQuickPick.onDidChangeValue.mock.calls[0][0];
+
+            onDidChangeCallback("NEW.FILTER");
+
+            // Should have the create filter option, separator, and history items
+            expect(mockQuickPick.items).toHaveLength(4); // createPick + separator + 2 history items
+            expect(mockQuickPick.items[0]).toBeInstanceOf(FilterDescriptor);
+            expect(mockQuickPick.items[0].label).toContain('$(plus) Create a new filter: "NEW.FILTER"');
+            expect(mockQuickPick.items[1].label).toContain("Recent Filters");
+        });
+
+        it("should not modify items when callback is called with same value repeatedly", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["HISTORY.FILTER"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            const onDidChangeCallback = mockQuickPick.onDidChangeValue.mock.calls[0][0];
+
+            // Call multiple times with same value
+            onDidChangeCallback("SAME.VALUE");
+            const firstItems = [...mockQuickPick.items];
+
+            onDidChangeCallback("SAME.VALUE");
+            const secondItems = [...mockQuickPick.items];
+
+            // Items should be the same
+            expect(firstItems).toEqual(secondItems);
+            expect(mockQuickPick.items[0].label).toContain('$(plus) Create a new filter: "SAME.VALUE"');
+        });
     });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {
