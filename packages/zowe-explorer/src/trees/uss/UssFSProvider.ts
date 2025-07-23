@@ -646,28 +646,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * - `overwrite` - Overwrites the file if the new URI already exists
      */
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): Promise<void> {
-        const newUriEntry = this.lookup(newUri, true);
-        if (!options.overwrite && newUriEntry) {
-            throw vscode.FileSystemError.FileExists(
-                `Rename failed: ${path.posix.basename(newUri.path)} already exists in ${path.posix.join(newUriEntry.metadata.path, "..")}`
-            );
-        }
-
         const entry = this.lookup(oldUri, false) as UssDirectory | UssFile;
         const parentDir = this.lookupParentDirectory(oldUri);
-
         const newName = path.posix.basename(newUri.path);
-
-        // Build the new path using the previous path and new file/folder name.
         const newPath = path.posix.join(entry.metadata.path, "..", newName);
-
-        // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+
         await AuthUtils.reauthenticateIfCancelled(profile);
         await AuthHandler.waitForUnlock(entry.metadata.profile);
 
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
         if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
             ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
             return;
@@ -675,31 +662,46 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         try {
             await ZoweExplorerApiRegister.getUssApi(profile).rename(entry.metadata.path, newPath);
-        } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, profile);
-            this._handleError(err, {
-                additionalContext: vscode.l10n.t({
-                    message: "Failed to rename {0}",
-                    args: [entry.metadata.path],
-                    comment: ["File path"],
-                }),
-                retry: {
-                    fn: this.rename.bind(this),
-                    args: [oldUri, newUri, options],
-                },
-                apiType: ZoweExplorerApiType.Uss,
-                profileType: profile.type,
-                templateArgs: { profileName: profile.name ?? "" },
-            });
-            throw err;
+        } catch (err: any) {
+            if (err instanceof vscode.FileSystemError && err.code === "FileExists") {
+                try {
+                    const fileList = await this.listFiles(profile, newUri, true);
+                    if (!fileList.success) {
+                        Gui.errorMessage(err.message);
+                        return;
+                    }
+                } catch (err) {
+                    if (err.name === "Error" && Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
+                        const parent = this.lookupParentDirectory(newUri);
+                        parent.entries.delete(path.posix.basename(newUri.path));
+                        await ZoweExplorerApiRegister.getUssApi(profile).rename(entry.metadata.path, newPath);
+                    } else {
+                        throw err;
+                    }
+                }
+            } else {
+                await AuthUtils.handleProfileAuthOnError(err, profile);
+                this._handleError(err, {
+                    additionalContext: vscode.l10n.t({
+                        message: "Failed to rename {0}",
+                        args: [entry.metadata.path],
+                        comment: ["File path"],
+                    }),
+                    retry: {
+                        fn: this.rename.bind(this),
+                        args: [oldUri, newUri, options],
+                    },
+                    apiType: ZoweExplorerApiType.Uss,
+                    profileType: profile.type,
+                    templateArgs: { profileName: profile.name ?? "" },
+                });
+                throw err;
+            }
         }
 
         parentDir.entries.delete(entry.name);
         entry.name = newName;
-
         entry.metadata.path = newPath;
-        // We have to update the path for all child entries if they exist in the FileSystem
-        // This way any further API requests in readFile will use the latest paths on the LPAR
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             this._updateChildPaths(entry);
         }

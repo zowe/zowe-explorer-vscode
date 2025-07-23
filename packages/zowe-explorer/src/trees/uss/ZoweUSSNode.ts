@@ -391,26 +391,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         });
 
         try {
-            await vscode.workspace.fs.rename(oldUri, newUri, { overwrite: false });
+            await UssFSProvider.instance.rename(oldUri, newUri, { overwrite: false });
         } catch (err) {
-            if (err instanceof vscode.FileSystemError && err.code === "FileExists") {
-                try {
-                    const fileList = await UssFSProvider.instance.listFiles(this.getProfile(), newUri, true);
-                    if (!fileList.success) {
-                        Gui.errorMessage(err.message);
-                        return;
-                    }
-                } catch (err) {
-                    if ((err as any).name === "Error" && Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
-                        const parent = UssFSProvider.instance.lookupParentDirectory(newUri);
-                        parent.entries.delete(path.posix.basename(newUri.path));
-                        await vscode.workspace.fs.rename(oldUri, newUri);
-                    }
-                }
-            } else {
-                Gui.errorMessage(err.message);
-                return;
-            }
+            Gui.errorMessage(err.message);
+            return;
         }
 
         this.fullPath = newFullPath;
