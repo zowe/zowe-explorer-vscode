@@ -184,12 +184,16 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
             // read the contents from the source LPAR
             const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
+            const encodingInfo = await sourceNode.getEncoding();
+            // If the encoding is binary, we need to force upload it as binary
+            const queryString = encodingInfo?.kind === "binary"
+                ? "forceUpload=true&encoding=binary"
+                : "forceUpload=true";
             //write the contents to the destination LPAR
             try {
-                //always transfer data as binary to prevent issues with encoding
                 await DatasetFSProvider.instance.writeFile(
                     destUri.with({
-                        query: "forceUpload=true&encoding=binary",
+                        query: queryString,
                     }),
                     contents,
                     { create: true, overwrite: true }
