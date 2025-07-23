@@ -125,7 +125,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
                 // create a PDS on remote with the same attributes as source PDS
                 const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
-
                 try {
                     dsname = sourceNode.getLabel() as string;
                     await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
