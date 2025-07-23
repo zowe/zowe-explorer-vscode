@@ -412,6 +412,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             ? await Profiles.getInstance().fetchAllProfilesByType(profileType)
             : await Profiles.getInstance().fetchAllProfiles();
         for (const profile of profiles) {
+            // Skip profiles without a name or data (invalid profiles)
+            if (!profile || !profile.name) {
+                continue;
+            }
             const existingSessionNode = treeProvider.mSessionNodes.find((node) => node.label.toString().trim() === profile.name);
             const sessionInHistory = treeProvider.getSessions().some((session) => session?.trim() === profile.name);
             if (!existingSessionNode && sessionInHistory) {

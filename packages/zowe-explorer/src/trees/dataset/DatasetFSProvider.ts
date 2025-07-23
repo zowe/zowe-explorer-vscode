@@ -633,6 +633,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const forceUpload = urlQuery.has("forceUpload");
         const encodingParam = urlQuery.get("encoding") || undefined;
 
+        // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
         try {
             if (!entry) {
                 const isPdsMember = FsDatasetsUtils.isPdsEntry(parent);
@@ -667,7 +668,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
-                    // Pass encodingParam to uploadEntry
                     const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload, encodingParam);
                     entry.etag = resp.apiResponse.etag;
                 }

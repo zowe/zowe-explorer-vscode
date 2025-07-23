@@ -10,7 +10,7 @@
  */
 
 import * as imperative from "@zowe/imperative";
-import type { IDataSet, IListOptions } from "@zowe/zos-files-for-zowe-sdk";
+import type { IListOptions } from "@zowe/zos-files-for-zowe-sdk";
 
 export const CreateDefaults = {
     DATA_SET: {
