@@ -1016,7 +1016,7 @@ export class DatasetActions {
                                   }"`
                                 : ""
                         }>
-                            <td align="left" style="color: var(--vscode-editorLink-activeForeground); font-weight: bold">
+                            <td align="left" style="color: var(--vscode-settings-textInputForeground); font-weight: bold">
                                 ${info.displayName || key}:
                             </td>
                             <td align="right" style="color: ${
