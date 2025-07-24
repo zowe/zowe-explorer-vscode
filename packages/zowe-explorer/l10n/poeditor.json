@@ -113,6 +113,9 @@
   "pattern": {
     "Search Data Sets": ""
   },
+  "listDataSets": {
+    "List Data Sets": ""
+  },
   "startPolling": {
     "Start Polling": ""
   },
@@ -464,7 +467,7 @@
   "jobs.refreshSpool": {
     "Pull from Mainframe": ""
   },
-  "jobsTableView": {
+  "tableView": {
     "Show as Table": ""
   },
   "manualPoll": {
@@ -538,6 +541,12 @@
   },
   "zowe.settings.displayReleaseNotes": {
     "Should display the Zowe Explorer release notes after an update.": ""
+  },
+  "zowe.table.maxPinnedRows": {
+    "Maximum number of rows that can be pinned to the top of table views.": ""
+  },
+  "zowe.table.hidePinnedRowsWarning": {
+    "Hide the warning message when pinning many rows to table views.": ""
   },
   "Enter command here...": "",
   "Page Size:": "",
@@ -679,15 +688,6 @@
   "Uploading USS files...": "",
   "Error uploading files": "",
   "Retrieving response from USS list API": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Failed to move {0}": "",
-  "Profile does not exist for this file.": "",
-  "Saving USS file...": "",
-  "Failed to rename {0}": "",
-  "Failed to delete {0}": "",
-  "No error details given": "",
-  "Error fetching destination {0} for paste action: {1}": "",
-  "Failed to copy {0} to {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -714,6 +714,15 @@
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
   "Pulling from Mainframe...": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Failed to move {0}": "",
+  "Profile does not exist for this file.": "",
+  "Saving USS file...": "",
+  "Failed to rename {0}": "",
+  "Failed to delete {0}": "",
+  "No error details given": "",
+  "Error fetching destination {0} for paste action: {1}": "",
+  "Failed to copy {0} to {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
@@ -883,13 +892,45 @@
   "Choose the setting location to save the data set template...": "",
   "Save as User setting": "",
   "Save as Workspace setting": "",
+  "[{0}]: {1}": "",
+  "[{0}]: *": "",
+  "[{0}] Members of {1}": "",
+  "Data Set Name": "",
+  "Data Set Organization": "",
+  "Creation Date": "",
+  "Modified Date": "",
+  "Record Length": "",
+  "Migrated": "",
+  "Record Format": "",
+  "Volumes": "",
+  "Last Modified By": "",
+  "Version": "",
+  "Modification Level": "",
+  "Current Records": "",
+  "Initial Records": "",
+  "Modified Records": "",
+  "SCLM": "",
+  "Open": "",
+  "Focus": "",
+  "Back": "",
+  "Pin": "",
+  "Unpin": "",
+  "Error toggling pin state for rows: {0}": "",
+  "Member Name": "",
+  "Please select a single profile or PDS.": "",
+  "This action is only supported for session and PDS nodes. Please select a session or PDS node.": "",
+  "No profiles available.": "",
+  "Select a profile to search for data sets": "",
+  "Select a profile": "",
+  "Enter Dataset Pattern": "",
+  "e.g., USER.*, PUBLIC.DATA.*, etc.": "",
+  "Enter a dataset pattern to search for": "",
+  "Profile {0} not found.": "",
   "No search pattern applied. Search for a pattern and try again.": "",
   "Searching for \"{0}\"": "",
   "Search Results for \"{0}\"": "",
-  "Data Set Name": "",
   "Position": "",
   "Contents": "",
-  "Open": "",
   "Enter the text to search for.": "",
   "Search Options": "",
   "Select search options": "",
