@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { ZoweTreeNode } from "../../../src/tree/ZoweTreeNode";
 import { IZoweTreeNode } from "../../../src/tree/IZoweTreeNode";
 import * as imperative from "@zowe/imperative";
+import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 
 describe("ZoweTreeNode", () => {
     const innerProfile = { user: "apple", password: "banana" };
@@ -64,6 +65,89 @@ describe("ZoweTreeNode", () => {
         const parentNode = makeNode("test", vscode.TreeItemCollapsibleState.None, undefined, undefined, "parentProfile");
         const node = makeNode("test", vscode.TreeItemCollapsibleState.None, parentNode);
         expect(node.getProfile()).toBe("parentProfile");
+    });
+
+    describe("getProfile with ProfilesCache dependency injection", () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        it("should return loaded profile when ProfilesCache.loadNamedProfile succeeds", () => {
+            const node = makeNode("testNode", vscode.TreeItemCollapsibleState.None, undefined);
+            node.setProfileToChoice(fakeProfile);
+
+            const loadedProfile = { ...fakeProfile, profile: { ...fakeProfile.profile, user: "newUser" } };
+            const mockProfilesCache = {
+                loadNamedProfile: jest.fn().mockReturnValue(loadedProfile),
+            } as unknown as ProfilesCache;
+
+            const result = node.getProfile(mockProfilesCache);
+
+            expect(mockProfilesCache.loadNamedProfile).toHaveBeenCalledWith("amazingProfile");
+            expect(result).toBe(loadedProfile);
+        });
+
+        it("should log error and return last known profile when ProfilesCache.loadNamedProfile throws error", () => {
+            const node = makeNode("testNode", vscode.TreeItemCollapsibleState.None, undefined);
+            node.setProfileToChoice(fakeProfile);
+
+            const mockError = new Error("Profile not found");
+            const mockProfilesCache = {
+                loadNamedProfile: jest.fn().mockImplementation(() => {
+                    throw mockError;
+                }),
+            } as unknown as ProfilesCache;
+
+            const mockLogger = {
+                error: jest.fn(),
+            };
+            jest.spyOn(imperative.Logger, "getAppLogger").mockReturnValue(mockLogger as any);
+
+            const result = node.getProfile(mockProfilesCache);
+
+            expect(mockProfilesCache.loadNamedProfile).toHaveBeenCalledWith("amazingProfile");
+            expect(mockLogger.error).toHaveBeenCalledWith(
+                "[ZoweTreeNode.getProfile] Profile amazingProfile does not exist for node testNode, returning last known profile"
+            );
+            // If the profile no longer exists, we return the last known profile
+            expect(result).toStrictEqual(fakeProfile);
+        });
+
+        it("should return current profile when profilesCache is undefined", () => {
+            const node = makeNode("testNode", vscode.TreeItemCollapsibleState.None, undefined);
+            node.setProfileToChoice(fakeProfile);
+
+            const result = node.getProfile(undefined);
+
+            expect(result).toStrictEqual(fakeProfile);
+        });
+
+        it("should return current profile when profilesCache.loadNamedProfile is undefined", () => {
+            const node = makeNode("testNode", vscode.TreeItemCollapsibleState.None, undefined);
+            node.setProfileToChoice(fakeProfile);
+
+            const mockProfilesCache = {} as ProfilesCache;
+
+            const result = node.getProfile(mockProfilesCache);
+
+            expect(result).toStrictEqual(fakeProfile);
+        });
+
+        it("should return parent profile when current profile is null and profilesCache throws error", () => {
+            const parentNode = makeNode("parentNode", vscode.TreeItemCollapsibleState.None, undefined, undefined, "parentProfile");
+            const node = makeNode("testNode", vscode.TreeItemCollapsibleState.None, parentNode);
+
+            const mockProfilesCache = {
+                loadNamedProfile: jest.fn().mockImplementation(() => {
+                    throw new Error("Profile not found");
+                }),
+            } as unknown as ProfilesCache;
+
+            const result = node.getProfile(mockProfilesCache);
+
+            expect(mockProfilesCache.loadNamedProfile).toHaveBeenCalled();
+            expect(result).toBe("parentProfile");
+        });
     });
 
     it("getProfileName should return profile name of current node", () => {

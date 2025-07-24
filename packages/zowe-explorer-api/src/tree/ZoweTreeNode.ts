@@ -82,8 +82,9 @@ export class ZoweTreeNode extends vscode.TreeItem {
                 return profilesCache.loadNamedProfile(this.profile.name);
             } catch (err) {
                 // Profile does not exist. Log and return undefined rather than the cached, invalid profile
-                Logger.getAppLogger().error(`Profile ${this.profile.name} does not exist for node ${this.label}`);
-                return undefined;
+                Logger.getAppLogger().error(
+                    `[ZoweTreeNode.getProfile] Profile ${this.profile.name} does not exist for node ${this.label}, returning last known profile`
+                );
             }
         }
         return this.profile ?? (this.getParent() as unknown as ZoweTreeNode)?.getProfile(profilesCache);
