@@ -122,18 +122,23 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     responseTimeout: sourceInfo.profile?.profile?.responseTimeout,
                 });
                 const { dsname: dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
-
-                // create a PDS on remote with the same attributes as source PDS
+                // need to transform labels
                 const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
+                let dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
+                // if alcunit is cyl, divide primary by 15 to get the number of cylinders
+                const TRACKS_PER_CYLINDER = 15;
+                const primary = Number(transformedAttrs.primary);
+                if (!isNaN(primary) && primary > 0) {
+                    transformedAttrs.primary = Math.ceil(primary / TRACKS_PER_CYLINDER);
+                }
+                // create a PDS on remote with the same attributes as source PDS
                 try {
-                    dsname = sourceNode.getLabel() as string;
                     await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
-                        zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK,
+                        dataSetTypeEnum,
                         dsname,
                         transformedAttrs
                     );
                 } catch (err) {
-                    //error
                     if (err.errorCode.toString() === "404" || err.errorCode.toString() === "500") {
                         Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                         return;
