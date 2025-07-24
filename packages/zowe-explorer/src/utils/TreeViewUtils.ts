@@ -101,7 +101,7 @@ export class TreeViewUtils {
         await treeProvider.removeFavProfile(profileName, false);
         // Delete from Tree
         treeProvider.mSessionNodes.forEach((sessNode) => {
-            if (sessNode.getProfileName() === profileName) {
+            if ((sessNode.getProfileName() ?? sessNode.label) === profileName) {
                 treeProvider.deleteSession(sessNode);
                 sessNode.dirty = true;
                 treeProvider.refresh();
