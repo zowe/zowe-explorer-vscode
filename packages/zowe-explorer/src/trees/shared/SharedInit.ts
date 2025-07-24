@@ -446,10 +446,7 @@ export class SharedInit {
         const profileNames = new Set<string>();
 
         if (profileType) {
-            profInfo
-                .getProfiles(profileType)
-                .map((prof) => prof.name)
-                .forEach((item) => profileNames.add(item));
+            profInfo.getProfiles(profileType).forEach((prof) => profileNames.add(prof.name));
             newWorkspaces = newWorkspaces.filter((f) => {
                 const uriInfo = FsAbstractUtils.getInfoForUri(f.uri);
                 return profileNames.has(uriInfo.profileName);
