@@ -77,7 +77,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @returns {imperative.IProfileLoaded}
      */
     public getProfile(profilesCache?: ProfilesCache): imperative.IProfileLoaded {
-        if (this.profile != null && profilesCache?.loadNamedProfile != null) {
+        if (this.profile != null && profilesCache != null) {
             try {
                 return profilesCache.loadNamedProfile(this.profile.name);
             } catch (err) {

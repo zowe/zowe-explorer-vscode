@@ -122,17 +122,6 @@ describe("ZoweTreeNode", () => {
             expect(result).toStrictEqual(fakeProfile);
         });
 
-        it("should return current profile when profilesCache.loadNamedProfile is undefined", () => {
-            const node = makeNode("testNode", vscode.TreeItemCollapsibleState.None, undefined);
-            node.setProfileToChoice(fakeProfile);
-
-            const mockProfilesCache = {} as ProfilesCache;
-
-            const result = node.getProfile(mockProfilesCache);
-
-            expect(result).toStrictEqual(fakeProfile);
-        });
-
         it("should return parent profile when current profile is null and profilesCache throws error", () => {
             const parentNode = makeNode("parentNode", vscode.TreeItemCollapsibleState.None, undefined, undefined, "parentProfile");
             const node = makeNode("testNode", vscode.TreeItemCollapsibleState.None, parentNode);
