@@ -1162,6 +1162,46 @@ describe("UssFSProvider", () => {
             lookupMock.mockRestore();
             lookupParentDirMock.mockRestore();
         });
+        it("displays error message if FileExists error occurs and listFiles fails", async () => {
+            const fileExistsError = Object.assign(vscode.FileSystemError.FileExists("File already exists"), { code: "FileExists" });
+
+            const mockUssApi = {
+                rename: jest.fn().mockRejectedValueOnce(fileExistsError),
+            };
+
+            const errMsgSpy = jest.spyOn(Gui, "errorMessage");
+            const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
+            const listFilesMock = jest.spyOn(UssFSProvider.instance as any, "listFiles").mockResolvedValueOnce({ success: false });
+
+            const folderEntry = {
+                ...testEntries.folder,
+                entries: new Map(),
+                metadata: { ...testEntries.folder.metadata },
+            };
+
+            const sessionEntry = {
+                ...testEntries.session,
+                entries: new Map([[testEntries.folder.name, folderEntry]]),
+            };
+
+            (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+                return sessionEntry.entries.get("aFolder");
+            });
+
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
+
+            await UssFSProvider.instance.rename(testUris.folder, testUris.folder.with({ path: "/sestest/aFolder2" }), { overwrite: true });
+
+            expect(mockUssApi.rename).toHaveBeenCalledWith("/aFolder", "/aFolder2");
+            expect(errMsgSpy).toHaveBeenCalledWith("File already exists");
+
+            lookupMock.mockRestore();
+            lookupParentDirMock.mockRestore();
+            listFilesMock.mockRestore();
+            ussApiMock.mockRestore();
+        });
     });
 
     describe("delete", () => {
