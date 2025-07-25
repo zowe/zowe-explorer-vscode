@@ -11,6 +11,7 @@
 
 export * from "./utils/TableBuilder";
 export * from "./utils/TableMediator";
+export * from "./utils/TableProviderRegistry";
 export * from "./TableView";
 export * from "./TableViewProvider";
 export * from "./WebView";
