@@ -14,6 +14,7 @@ import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "./IZoweTreeNode";
 import type { BaseProvider } from "../fs/BaseProvider";
 import type { ProfilesCache } from "../profiles";
+import { Logger } from "@zowe/imperative";
 
 /**
  * Common implementation of functions and methods associated with the
@@ -76,8 +77,17 @@ export class ZoweTreeNode extends vscode.TreeItem {
      * @returns {imperative.IProfileLoaded}
      */
     public getProfile(profilesCache?: ProfilesCache): imperative.IProfileLoaded {
-        if (this.profile != null && profilesCache?.loadNamedProfile != null) {
-            return profilesCache.loadNamedProfile(this.profile.name);
+        if (this.profile != null && profilesCache != null) {
+            try {
+                return profilesCache.loadNamedProfile(this.profile.name);
+            } catch (err) {
+                // Profile does not exist. Log and return last known profile for backwards compatibility
+                Logger.getAppLogger().error(
+                    `[ZoweTreeNode.getProfile] Profile ${
+                        this.profile.name
+                    } does not exist for node ${this.label?.toString()}, returning last known profile`
+                );
+            }
         }
         return this.profile ?? (this.getParent() as unknown as ZoweTreeNode)?.getProfile(profilesCache);
     }
