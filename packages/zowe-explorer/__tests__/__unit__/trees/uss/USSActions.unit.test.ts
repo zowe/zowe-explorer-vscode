@@ -262,7 +262,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         await USSActions.createUSSNode(blockMocks.ussNode.getParent(), blockMocks.testUSSTree, "directory");
         expect(refreshProviderMock).toHaveBeenCalled();
         expect(createApiMock).toHaveBeenCalled();
-        expect(blockMocks.testUSSTree.refreshElement).not.toHaveBeenCalled();
+        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
         createApiMock.mockRestore();
     });
 

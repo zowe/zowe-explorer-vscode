@@ -258,7 +258,7 @@ describe("createDirectory", () => {
     it("creates a directory for a job entry", () => {
         const fakeSessionEntry = new FilterEntry("sestest");
         fakeSessionEntry.metadata = testEntries.session.metadata;
-        jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(fakeSessionEntry);
+        jest.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(fakeSessionEntry);
         JobFSProvider.instance.createDirectory(testUris.job);
         expect(fakeSessionEntry.entries.has("TESTJOB(JOB1234) - ACTIVE")).toBe(true);
     });
@@ -562,7 +562,7 @@ describe("fetchSpoolAtUri", () => {
         const lookupAsFileMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
             .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
-        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce({ ...testEntries.job });
+        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce({ ...testEntries.job });
         const mockJesApi = {
             getSpoolContentById: jest.fn((opts) => {
                 return "spool contents";
@@ -582,7 +582,7 @@ describe("fetchSpoolAtUri", () => {
         const lookupAsFileMock = jest
             .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
             .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array(), encoding: { kind: "other", codepage: "IBM-1147" } });
-        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce({ ...testEntries.job });
+        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce({ ...testEntries.job });
         const mockJesApi = {
             getSpoolContentById: jest.fn((opts) => {
                 return "spool contents";
@@ -648,7 +648,7 @@ describe("writeFile", () => {
             entries: new Map(),
             metadata: testEntries.job.metadata,
         };
-        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(jobEntry);
+        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(jobEntry);
         const newContents = new Uint8Array([3, 6, 9]);
         JobFSProvider.instance.writeFile(testUris.spool, newContents, { create: true, overwrite: false });
 
@@ -662,7 +662,7 @@ describe("writeFile", () => {
             ...testEntries.job,
             entries: new Map([[testEntries.spool.name, { ...testEntries.spool }]]),
         };
-        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(jobEntry);
+        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(jobEntry);
         const newContents = new Uint8Array([3, 6, 9]);
         JobFSProvider.instance.writeFile(testUris.spool, newContents, { create: false, overwrite: true });
 
@@ -676,7 +676,7 @@ describe("writeFile", () => {
             ...testEntries.job,
             entries: new Map([[testEntries.spool.name, { ...testEntries.spool, wasAccessed: false }]]),
         };
-        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(jobEntry);
+        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(jobEntry);
         const newContents = new Uint8Array([]);
         JobFSProvider.instance.writeFile(testUris.spool, newContents, { create: false, overwrite: true });
 
@@ -701,7 +701,7 @@ describe("writeFile", () => {
             ...testEntries.job,
             entries: new Map([[testEntries.spool.name, { ...testEntries.spool, wasAccessed: false }]]),
         };
-        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(jobEntry);
+        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(jobEntry);
         let err;
         try {
             JobFSProvider.instance.writeFile(testUris.spool, new Uint8Array([]), { create: true, overwrite: false });
@@ -730,7 +730,7 @@ describe("delete", () => {
         };
         const lookupMock = jest.spyOn(JobFSProvider.instance as any, "lookup").mockReturnValueOnce(fakeJob);
         const lookupParentDirMock = jest
-            .spyOn(JobFSProvider.instance as any, "_lookupParentDirectory")
+            .spyOn(JobFSProvider.instance as any, "lookupParentDirectory")
             .mockReturnValueOnce({ ...testEntries.session });
         const getInfoForUriMock = jest
             .spyOn(FsAbstractUtils, "getInfoForUri")
@@ -767,7 +767,7 @@ describe("delete", () => {
         };
         const lookupMock = jest.spyOn(JobFSProvider.instance as any, "lookup").mockReturnValueOnce(fakeJob);
         const lookupParentDirMock = jest
-            .spyOn(JobFSProvider.instance as any, "_lookupParentDirectory")
+            .spyOn(JobFSProvider.instance as any, "lookupParentDirectory")
             .mockReturnValueOnce({ ...testEntries.session });
         const getInfoForUriMock = jest
             .spyOn(FsAbstractUtils, "getInfoForUri")
@@ -798,7 +798,7 @@ describe("delete", () => {
         const fakeJob = new JobEntry(testEntries.job.name);
         fakeJob.job = testEntries.job.job;
         const lookupMock = jest.spyOn(JobFSProvider.instance as any, "lookup").mockReturnValueOnce(fakeSpool);
-        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(fakeJob);
+        const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(fakeJob);
         await JobFSProvider.instance.delete(testUris.spool, { recursive: true });
         expect(mockUssApi.deleteJob).not.toHaveBeenCalled();
         expect(lookupParentDirMock).not.toHaveBeenCalled();
