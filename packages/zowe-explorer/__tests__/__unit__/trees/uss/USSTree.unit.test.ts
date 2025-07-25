@@ -40,7 +40,7 @@ import { USSInit } from "../../../../src/trees/uss/USSInit";
 import { Constants, JwtCheckResult } from "../../../../src/configuration/Constants";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { IconUtils } from "../../../../src/icons/IconUtils";
-import { FilterDescriptor } from "../../../../src/management/FilterManagement";
+import { FilterDescriptor, FilterItem } from "../../../../src/management/FilterManagement";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { Icon } from "../../../../src/icons/Icon";
 import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
@@ -681,6 +681,9 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             onDidAccept: jest.fn(() => {
                 return {};
             }),
+            onDidChangeValue: jest.fn(() => {
+                return {};
+            }),
         });
 
         return newMocks;
@@ -811,6 +814,260 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         globalMocks.testTree.mSessionNodes.push(nonFavNode);
 
         await expect(globalMocks.testTree.filterPrompt(node)).resolves.not.toThrow();
+    });
+
+    it("Tests that filterPrompt() updates 'Create a new filter' option when user types", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        // Mock search history to trigger quick pick flow
+        globalMocks.testTree.mHistory.addSearchHistory("/test/path");
+
+        const mockQuickPick = {
+            placeholder: "",
+            activeItems: [],
+            ignoreFocusOut: true,
+            items: [],
+            value: "",
+            show: jest.fn(),
+            hide: jest.fn(),
+            onDidAccept: jest.fn(),
+            onDidChangeValue: jest.fn(),
+        };
+
+        globalMocks.createQuickPick.mockReturnValue(mockQuickPick);
+        blockMocks.resolveQuickPickHelper.mockResolvedValue(undefined); // User cancels
+
+        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
+
+        // Verify onDidChangeValue callback was registered
+        expect(mockQuickPick.onDidChangeValue).toHaveBeenCalled();
+
+        // Test the callback behavior
+        const callback = mockQuickPick.onDidChangeValue.mock.calls[0][0];
+
+        // Test with empty value
+        callback("");
+        expect(mockQuickPick.items[0]).toEqual(
+            expect.objectContaining({
+                label: expect.stringContaining("Create a new filter"),
+            })
+        );
+
+        // Test with user input
+        callback("/new/path");
+        expect(mockQuickPick.items[0]).toEqual(
+            expect.objectContaining({
+                label: '$(plus) Create a new filter: "/new/path"',
+            })
+        );
+    });
+
+    it("Tests that filterPrompt() skips input box when user types in quick pick and selects 'Create a new filter'", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        // Mock search history to trigger quick pick flow
+        globalMocks.testTree.mHistory.addSearchHistory("/test/path");
+
+        const userTypedValue = "/user/typed/path";
+        const mockQuickPick = {
+            placeholder: "",
+            activeItems: [],
+            ignoreFocusOut: true,
+            items: [],
+            value: userTypedValue,
+            show: jest.fn(),
+            hide: jest.fn(),
+            onDidAccept: jest.fn(),
+            onDidChangeValue: jest.fn(),
+        };
+
+        globalMocks.createQuickPick.mockReturnValue(mockQuickPick);
+
+        // User selects "Create a new filter" option
+        const createFilterDescriptor = new FilterDescriptor("Create a new filter");
+        blockMocks.resolveQuickPickHelper.mockResolvedValue(createFilterDescriptor);
+        globalMocks.showInputBox.mockReset();
+        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
+
+        // Should NOT call showInputBox since user typed value in quick pick
+        expect(globalMocks.showInputBox).not.toHaveBeenCalled();
+
+        // Should use the typed value directly
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual(userTypedValue);
+    });
+
+    it("Tests that filterPrompt() falls back to input box when user selects 'Create a new filter' without typing", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        // Mock search history to trigger quick pick flow
+        globalMocks.testTree.mHistory.addSearchHistory("/test/path");
+
+        const mockQuickPick = {
+            placeholder: "",
+            activeItems: [],
+            ignoreFocusOut: true,
+            items: [],
+            value: "", // No user input
+            show: jest.fn(),
+            hide: jest.fn(),
+            onDidAccept: jest.fn(),
+            onDidChangeValue: jest.fn(),
+        };
+
+        globalMocks.createQuickPick.mockReturnValue(mockQuickPick);
+
+        // User selects "Create a new filter" option without typing
+        const createFilterDescriptor = new FilterDescriptor("Create a new filter");
+        blockMocks.resolveQuickPickHelper.mockResolvedValue(createFilterDescriptor);
+
+        const inputBoxResult = "/input/box/path";
+        globalMocks.showInputBox.mockResolvedValue(inputBoxResult);
+
+        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
+
+        // Should call showInputBox as fallback
+        expect(globalMocks.showInputBox).toHaveBeenCalledWith({
+            placeHolder: expect.stringContaining("New filter"),
+            validateInput: expect.any(Function),
+        });
+
+        // Should use the input box result
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual(inputBoxResult);
+    });
+
+    it("Tests that filterPrompt() uses input box directly when no search history exists", async () => {
+        const globalMocks = createGlobalMocks();
+        createBlockMocks(globalMocks);
+
+        // Clear search history
+        globalMocks.testTree.mHistory.getSearchHistory = jest.fn().mockReturnValue([]);
+
+        const inputBoxResult = "/direct/input/path";
+        globalMocks.showInputBox.mockResolvedValue(inputBoxResult);
+
+        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
+
+        // Should call showInputBox directly without quick pick
+        expect(globalMocks.showInputBox).toHaveBeenCalledWith({
+            placeHolder: expect.stringContaining("New filter"),
+            validateInput: expect.any(Function),
+        });
+
+        // Should not create quick pick
+        expect(globalMocks.createQuickPick).not.toHaveBeenCalled();
+
+        // Should use the input box result
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual(inputBoxResult);
+    });
+
+    it("Tests that filterPrompt() handles user cancellation from fallback input box", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        // Mock search history to trigger quick pick flow
+        globalMocks.testTree.mHistory.addSearchHistory("/test/path");
+
+        const mockQuickPick = {
+            placeholder: "",
+            activeItems: [],
+            ignoreFocusOut: true,
+            items: [],
+            value: "", // No user input
+            show: jest.fn(),
+            hide: jest.fn(),
+            onDidAccept: jest.fn(),
+            onDidChangeValue: jest.fn(),
+        };
+
+        globalMocks.createQuickPick.mockReturnValue(mockQuickPick);
+
+        // User selects "Create a new filter" option without typing
+        const createFilterDescriptor = new FilterDescriptor("Create a new filter");
+        blockMocks.resolveQuickPickHelper.mockResolvedValue(createFilterDescriptor);
+
+        // User cancels input box
+        globalMocks.showInputBox.mockResolvedValue(null);
+
+        const originalPath = globalMocks.testTree.mSessionNodes[1].fullPath;
+
+        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
+
+        // Should call showInputBox as fallback
+        expect(globalMocks.showInputBox).toHaveBeenCalled();
+
+        // Should not change the node path
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual(originalPath);
+    });
+
+    it("Tests that filterPrompt() trims whitespace from user input in quick pick", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        // Mock search history to trigger quick pick flow
+        globalMocks.testTree.mHistory.addSearchHistory("/test/path");
+
+        const userTypedValueWithSpaces = "  /user/typed/path  ";
+        const expectedTrimmedValue = "/user/typed/path";
+
+        const mockQuickPick = {
+            placeholder: "",
+            activeItems: [],
+            ignoreFocusOut: true,
+            items: [],
+            value: userTypedValueWithSpaces,
+            show: jest.fn(),
+            hide: jest.fn(),
+            onDidAccept: jest.fn(),
+            onDidChangeValue: jest.fn(),
+        };
+
+        globalMocks.createQuickPick.mockReturnValue(mockQuickPick);
+
+        // User selects "Create a new filter" option
+        const createFilterDescriptor = new FilterDescriptor("Create a new filter");
+        blockMocks.resolveQuickPickHelper.mockResolvedValue(createFilterDescriptor);
+
+        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
+
+        // Should use the trimmed value
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual(expectedTrimmedValue);
+    });
+
+    it("Tests that filterPrompt() uses existing item when user selects from history", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const historyItem = "/historical/path";
+        globalMocks.testTree.mHistory.addSearchHistory(historyItem);
+
+        const mockQuickPick = {
+            placeholder: "",
+            activeItems: [],
+            ignoreFocusOut: true,
+            items: [],
+            value: "/some/typed/value", // User typed something but selected history item
+            show: jest.fn(),
+            hide: jest.fn(),
+            onDidAccept: jest.fn(),
+            onDidChangeValue: jest.fn(),
+        };
+
+        globalMocks.createQuickPick.mockReturnValue(mockQuickPick);
+
+        // User selects existing history item (not FilterDescriptor)
+        const historyFilterItem = new FilterItem({ text: historyItem });
+        blockMocks.resolveQuickPickHelper.mockResolvedValue(historyFilterItem);
+        globalMocks.showInputBox.mockReset();
+        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
+
+        // Should not call showInputBox
+        expect(globalMocks.showInputBox).not.toHaveBeenCalled();
+
+        // Should use the selected history item, not the typed value
+        expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual(historyItem);
     });
 });
 
