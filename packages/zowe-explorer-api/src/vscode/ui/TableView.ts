@@ -104,7 +104,7 @@ export namespace Table {
 
     /** @deprecated Use `Action` type instead. */
     export type ActionOpts = Action;
-    /** @deprecated Use `ContextMenuOpts` type instead. */
+    /** @deprecated Use `ContextMenuOption` type instead. */
     export type ContextMenuOpts = ContextMenuOption;
 
     // Context namespace for table extensibility

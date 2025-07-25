@@ -5,7 +5,7 @@ import { GridApi } from "ag-grid-community";
 import { FocusableItem, Menu, MenuGroup, MenuItem } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
 import * as l10n from "@vscode/l10n";
-import { evaluateActionState, sendActionCommand, ActionEvaluationContext, getActionTitle } from "./ActionUtils";
+import { evaluateItemsState, sendItemCommand, ActionEvaluationContext, ActionState } from "./ActionUtils";
 
 interface ActionsProps {
   actions: Table.Action[];
@@ -18,12 +18,6 @@ interface ActionsProps {
   setVisibleColumns: Dispatch<string[]>;
 }
 
-interface ActionState {
-  action: Table.Action;
-  isEnabled: boolean;
-  title: string;
-}
-
 export const ActionsBar = (props: ActionsProps) => {
   const [searchFilter, setSearchFilter] = useState<string>("");
   const [actionStates, setActionStates] = useState<ActionState[]>([]);
@@ -34,27 +28,18 @@ export const ActionsBar = (props: ActionsProps) => {
       const selectedNodes = props.gridRef.current?.api?.getSelectedNodes();
       const selectedRows = selectedNodes?.map((n: any) => n.data) ?? [];
 
-      const visibleActionStates: ActionState[] = [];
-
       const context: ActionEvaluationContext = {
         selectedNodes,
         selectedRows,
       };
 
-      for (const action of props.actions) {
-        const { shouldShow, isEnabled } = await evaluateActionState(action, context, props.selectionCount);
-        const title = await getActionTitle(action, context);
-
-        if (shouldShow) {
-          visibleActionStates.push({
-            action,
-            isEnabled,
-            title,
-          });
-        }
+      try {
+        const visibleActionStates = await evaluateItemsState(props.actions, context, props.selectionCount);
+        setActionStates(visibleActionStates);
+      } catch (error) {
+        console.warn("Failed to evaluate actions:", error);
+        setActionStates([]);
       }
-
-      setActionStates(visibleActionStates);
     };
 
     checkActionsVisibilityAndState();
@@ -126,22 +111,24 @@ export const ActionsBar = (props: ActionsProps) => {
           return (
             <VSCodeButton
               disabled={!actionState.isEnabled}
-              key={`${actionState.action.command}-action-bar-${i}`}
-              appearance={actionState.action.type}
+              key={`${actionState.item.command}-action-bar-${i}`}
+              appearance={"type" in actionState.item ? actionState.item.type : "secondary"}
               style={{ fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}
               onClick={async (_event: any) => {
                 const selectedNodes = (props.gridRef.current.api as GridApi).getSelectedNodes();
-                if (selectedNodes.length === 0 && actionState.action.callback.typ !== "no-selection") {
+                const callbackType: string =
+                  "callback" in actionState.item && actionState.item.callback ? actionState.item.callback.typ : "single-row";
+                if (selectedNodes.length === 0 && callbackType !== "no-selection") {
                   return;
                 }
 
                 const context: ActionEvaluationContext = {
                   selectedNodes,
                 };
-                sendActionCommand(actionState.action, context);
+                sendItemCommand(actionState.item, context);
 
                 // For pin/unpin actions, refresh the action states after a short delay
-                if (actionState.action.command === "pin-selected-rows") {
+                if (actionState.item.command === "pin-selected-rows") {
                   setTimeout(() => {
                     setRefreshTrigger((prev) => prev + 1);
                   }, 100);

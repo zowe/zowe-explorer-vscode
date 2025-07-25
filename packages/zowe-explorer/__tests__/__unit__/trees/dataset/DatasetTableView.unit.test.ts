@@ -20,7 +20,7 @@ import {
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import { Constants } from "../../../../src/configuration/Constants";
-import { Gui, Table, Types, TableViewProvider, Sorting } from "@zowe/zowe-explorer-api";
+import { Gui, Table, Types, TableViewProvider, Sorting, TableBuilder } from "@zowe/zowe-explorer-api";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
@@ -28,6 +28,7 @@ import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProv
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ProfileManagement } from "../../../../src/management/ProfileManagement";
 import { Profiles } from "../../../../src/configuration/Profiles";
+import { ZoweExplorerExtender } from "../../../../src/extending/ZoweExplorerExtender";
 import * as imperative from "@zowe/imperative";
 import { l10n } from "vscode";
 
@@ -1445,7 +1446,7 @@ describe("DatasetTableView", () => {
             } as any);
 
             jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
-            jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest");
+            jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest" as any);
 
             const sessionNodes: ZoweDatasetNode[] = [];
             // Mock the tree provider to return the profile node after adding
@@ -1479,7 +1480,7 @@ describe("DatasetTableView", () => {
 
         it("should handle cancelled selection", async () => {
             jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
-            jest.spyOn(Gui, "showQuickPick").mockResolvedValue(null);
+            jest.spyOn(Gui, "showQuickPick").mockResolvedValue(null as any);
 
             const result = await (datasetTableView as any).selectAndAddProfile();
 
@@ -1501,11 +1502,33 @@ describe("DatasetTableView", () => {
         describe("generateTable", () => {
             let mockContext: ExtensionContext;
             let mockDataSource: any;
+            let mockExtender: any;
+            let mockTableBuilder: any;
+            let mockTableInstance: jest.Mocked<Table.Instance>;
 
             beforeEach(() => {
                 mockContext = {
                     extensionPath: "/mock/extension/path",
                 } as ExtensionContext;
+
+                // Create a mock table instance for this test suite
+                mockTableInstance = {
+                    getPinnedRows: jest.fn().mockResolvedValue([]),
+                    getGridState: jest.fn().mockResolvedValue({}),
+                    setGridState: jest.fn().mockResolvedValue(true),
+                    setPinnedRows: jest.fn().mockResolvedValue(true),
+                    pinRows: jest.fn().mockResolvedValue(true),
+                    unpinRows: jest.fn().mockResolvedValue(true),
+                    setPage: jest.fn().mockResolvedValue(true),
+                    waitForAPI: jest.fn().mockResolvedValue(true),
+                    setTitle: jest.fn(),
+                    setColumns: jest.fn(),
+                    setContent: jest.fn(),
+                    setOptions: jest.fn(),
+                    onDisposed: jest.fn(),
+                    onDidReceiveMessage: jest.fn(),
+                } as unknown as jest.Mocked<Table.Instance>;
+
                 mockDataSource = {
                     fetchDataSets: jest.fn().mockResolvedValue([
                         {
@@ -1521,6 +1544,50 @@ describe("DatasetTableView", () => {
                     buildTable: jest.fn(),
                 };
 
+                mockTableBuilder = {
+                    options: jest.fn().mockReturnThis(),
+                    isView: jest.fn().mockReturnThis(),
+                    title: jest.fn().mockReturnThis(),
+                    addRows: jest.fn().mockReturnThis(),
+                    columns: jest.fn().mockReturnThis(),
+                    addContextOption: jest.fn().mockReturnThis(),
+                    addRowAction: jest.fn().mockReturnThis(),
+                    build: jest.fn().mockReturnValue(mockTableInstance),
+                };
+
+                mockExtender = {
+                    getTableProviderRegistry: jest.fn().mockReturnValue({
+                        getActions: jest.fn().mockResolvedValue([]),
+                        getContextMenuItems: jest.fn().mockResolvedValue([]),
+                    }),
+                };
+
+                jest.spyOn(ZoweExplorerExtender, "getInstance").mockReturnValue(mockExtender);
+
+                // Mock TableBuilder constructor to return our mockTableBuilder
+                jest.spyOn(TableBuilder.prototype, "options").mockImplementation(function () {
+                    return this;
+                });
+                jest.spyOn(TableBuilder.prototype, "isView").mockImplementation(function () {
+                    return this;
+                });
+                jest.spyOn(TableBuilder.prototype, "title").mockImplementation(function () {
+                    return this;
+                });
+                jest.spyOn(TableBuilder.prototype, "addRows").mockImplementation(function () {
+                    return this;
+                });
+                jest.spyOn(TableBuilder.prototype, "columns").mockImplementation(function () {
+                    return this;
+                });
+                jest.spyOn(TableBuilder.prototype, "addContextOption").mockImplementation(function () {
+                    return this;
+                });
+                jest.spyOn(TableBuilder.prototype, "addRowAction").mockImplementation(function () {
+                    return this;
+                });
+                jest.spyOn(TableBuilder.prototype, "build").mockImplementation(() => mockTableInstance);
+
                 (datasetTableView as any).currentDataSource = mockDataSource;
             });
 
@@ -1531,7 +1598,22 @@ describe("DatasetTableView", () => {
                 expect(mockDataSource.fetchDataSets).toHaveBeenCalled();
                 expect(mockDataSource.getTitle).toHaveBeenCalled();
                 expect(mockDataSource.supportsHierarchy).toHaveBeenCalled();
-                expect(result).toBeInstanceOf(Table.Instance);
+                expect(result).toBe(mockTableInstance);
+            });
+
+            it("should add both displayInTree and pinRow context options", async () => {
+                const addContextOptionSpy = jest.spyOn(TableBuilder.prototype, "addContextOption");
+
+                await (datasetTableView as any).generateTable(mockContext);
+
+                // Verify that addContextOption was called with the correct parameters
+                const calls = addContextOptionSpy.mock.calls;
+                expect(calls).toEqual(
+                    expect.arrayContaining([
+                        ["all", (datasetTableView as any).contextOptions.displayInTree],
+                        ["all", (datasetTableView as any).contextOptions.pinRow],
+                    ])
+                );
             });
 
             it("should set up tree mode when data source supports hierarchy", async () => {
@@ -2070,52 +2152,89 @@ describe("DatasetTableView action handlers/callbacks", () => {
         });
     });
 
-    describe("getPinActionTitle", () => {
-        it('should return "Pin" if no rows are selected', async () => {
-            const title = await (datasetTableView as any).getPinActionTitle([]);
+    describe("getPinTitle", () => {
+        it('should return "Pin" if no rows are provided', async () => {
+            const title = await (datasetTableView as any).getPinTitle([]);
             expect(title).toBe("Pin");
         });
 
-        it('should return "Unpin" if all selected rows are pinned', async () => {
+        it('should return "Unpin" if all provided rows are pinned', async () => {
             const rows = [{ dsname: "A" }, { dsname: "B" }];
             (mockTable.getPinnedRows as jest.Mock).mockResolvedValue(rows);
-            const title = await (datasetTableView as any).getPinActionTitle(rows);
+            const title = await (datasetTableView as any).getPinTitle(rows);
             expect(title).toBe("Unpin");
         });
 
-        it('should return "Pin" if some selected rows are not pinned', async () => {
+        it('should return "Pin" if some provided rows are not pinned', async () => {
             const rows = [{ dsname: "A" }, { dsname: "B" }];
             (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([{ dsname: "A" }]);
-            const title = await (datasetTableView as any).getPinActionTitle(rows);
+            const title = await (datasetTableView as any).getPinTitle(rows);
             expect(title).toBe("Pin");
         });
 
         it('should return "Pin" on error', async () => {
             (mockTable.getPinnedRows as jest.Mock).mockRejectedValue(new Error("failure"));
-            const title = await (datasetTableView as any).getPinActionTitle([{ dsname: "A" }]);
+            const title = await (datasetTableView as any).getPinTitle([{ dsname: "A" }]);
+            expect(title).toBe("Pin");
+        });
+
+        it("should work for single row (context menu case)", async () => {
+            const row = { dsname: "A" };
+            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([row]);
+            const title = await (datasetTableView as any).getPinTitle([row]);
+            expect(title).toBe("Unpin");
+        });
+
+        it('should return "Pin" for table that is null', async () => {
+            (datasetTableView as any).table = null;
+            const title = await (datasetTableView as any).getPinTitle([{ dsname: "A" }]);
             expect(title).toBe("Pin");
         });
     });
 
-    describe("togglePinSelectedRows", () => {
-        it("should unpin rows if all are pinned", async () => {
+    describe("togglePinRows", () => {
+        it("should unpin rows if all are pinned (multi-row case)", async () => {
             const rows = { 0: { dsname: "A" }, 1: { dsname: "B" } };
             const rowsArray = Object.values(rows);
             (mockTable.getPinnedRows as jest.Mock).mockResolvedValue(rowsArray);
 
-            await (datasetTableView as any).togglePinSelectedRows({} as Table.View, rows);
+            await (datasetTableView as any).togglePinRows({} as Table.View, rows);
 
             expect(mockTable.unpinRows).toHaveBeenCalledWith(rowsArray);
             expect(mockTable.pinRows).not.toHaveBeenCalled();
             expect(Gui.infoMessage).toHaveBeenCalledWith("Successfully unpinned {0} row(s) from the table.");
         });
 
-        it("should pin rows if some are not pinned", async () => {
+        it("should pin rows if some are not pinned (multi-row case)", async () => {
             const rows = { 0: { dsname: "A" }, 1: { dsname: "B" } };
             const rowsArray = Object.values(rows);
             (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([{ dsname: "A" }]);
 
-            await (datasetTableView as any).togglePinSelectedRows({} as Table.View, rows);
+            await (datasetTableView as any).togglePinRows({} as Table.View, rows);
+
+            expect(mockTable.pinRows).toHaveBeenCalledWith(rowsArray);
+            expect(mockTable.unpinRows).not.toHaveBeenCalled();
+            expect(Gui.infoMessage).toHaveBeenCalledWith("Successfully pinned {0} row(s) to the top of the table.");
+        });
+
+        it("should unpin single row if pinned (single-row case)", async () => {
+            const rowInfo = { row: { dsname: "A" }, index: 0 };
+            const rowsArray = [rowInfo.row];
+            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue(rowsArray);
+
+            await (datasetTableView as any).togglePinRows({} as Table.View, rowInfo);
+
+            expect(mockTable.unpinRows).toHaveBeenCalledWith(rowsArray);
+            expect(mockTable.pinRows).not.toHaveBeenCalled();
+            expect(Gui.infoMessage).toHaveBeenCalledWith("Successfully unpinned {0} row(s) from the table.");
+        });
+
+        it("should pin single row if not pinned (single-row case)", async () => {
+            const rowInfo = { row: { dsname: "A" }, index: 0 };
+            const rowsArray = [rowInfo.row];
+            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([]);
+
+            await (datasetTableView as any).togglePinRows({} as Table.View, rowInfo);
 
             expect(mockTable.pinRows).toHaveBeenCalledWith(rowsArray);
             expect(mockTable.unpinRows).not.toHaveBeenCalled();
@@ -2126,7 +2245,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
             const rows = { 0: { dsname: "A" } };
             (mockTable.pinRows as jest.Mock).mockResolvedValue(false);
 
-            await (datasetTableView as any).togglePinSelectedRows({} as Table.View, rows);
+            await (datasetTableView as any).togglePinRows({} as Table.View, rows);
 
             expect(Gui.errorMessage).toHaveBeenCalledWith("Failed to pin rows to the table.");
         });
@@ -2136,9 +2255,107 @@ describe("DatasetTableView action handlers/callbacks", () => {
             const error = new Error("API error");
             (mockTable.getPinnedRows as jest.Mock).mockRejectedValue(error);
 
-            await (datasetTableView as any).togglePinSelectedRows({} as Table.View, rows);
+            await (datasetTableView as any).togglePinRows({} as Table.View, rows);
 
             expect(Gui.errorMessage).toHaveBeenCalledWith("Error toggling pin state for rows: {0}");
+        });
+
+        it("should handle mixed pinned state correctly (multi-row case)", async () => {
+            const rows = { 0: { dsname: "A" }, 1: { dsname: "B" }, 2: { dsname: "C" } };
+            const rowsArray = Object.values(rows);
+            // Only row A is pinned, so it should pin all rows
+            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([{ dsname: "A" }]);
+
+            await (datasetTableView as any).togglePinRows({} as Table.View, rows);
+
+            expect(mockTable.pinRows).toHaveBeenCalledWith(rowsArray);
+            expect(mockTable.unpinRows).not.toHaveBeenCalled();
+            expect(Gui.infoMessage).toHaveBeenCalledWith("Successfully pinned {0} row(s) to the top of the table.");
+        });
+
+        it("should correctly detect single-row vs multi-row input type", async () => {
+            // Test that the function correctly identifies input types
+            const singleRowInput = { row: { dsname: "A" }, index: 0 };
+            const multiRowInput = { 0: { dsname: "A" }, 1: { dsname: "B" } };
+
+            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([]);
+
+            // Test single-row case
+            await (datasetTableView as any).togglePinRows({} as Table.View, singleRowInput);
+            expect(mockTable.pinRows).toHaveBeenCalledWith([singleRowInput.row]);
+
+            // Reset mocks
+            jest.clearAllMocks();
+            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([]);
+
+            // Test multi-row case
+            await (datasetTableView as any).togglePinRows({} as Table.View, multiRowInput);
+            expect(mockTable.pinRows).toHaveBeenCalledWith(Object.values(multiRowInput));
+        });
+    });
+
+    describe("context menu options", () => {
+        describe("pinRow contextOption", () => {
+            it("should have correct title function that calls getPinTitle", async () => {
+                const contextOptions = (datasetTableView as any).contextOptions;
+
+                expect(contextOptions.pinRow).toBeDefined();
+                expect(contextOptions.pinRow.title).toBeDefined();
+                expect(contextOptions.pinRow.command).toBe("pin-row");
+                expect(contextOptions.pinRow.callback.typ).toBe("single-row");
+
+                // Mock getPinTitle to verify it gets called
+                const getPinTitleSpy = jest.spyOn(datasetTableView as any, "getPinTitle").mockResolvedValue("Pin");
+
+                const rowData = { dsname: "TEST.DS" };
+                const title = await contextOptions.pinRow.title(rowData);
+
+                expect(getPinTitleSpy).toHaveBeenCalledWith([rowData]);
+                expect(title).toBe("Pin");
+            });
+        });
+
+        describe("displayInTree contextOption", () => {
+            it("should have correct configuration", () => {
+                const contextOptions = (datasetTableView as any).contextOptions;
+
+                expect(contextOptions.displayInTree).toBeDefined();
+                expect(contextOptions.displayInTree.title).toBe("Display in Tree");
+                expect(contextOptions.displayInTree.command).toBe("display-in-tree");
+                expect(contextOptions.displayInTree.callback.typ).toBe("single-row");
+                expect(contextOptions.displayInTree.callback.fn).toBe(DatasetTableView.displayInTree);
+            });
+        });
+    });
+
+    describe("row actions", () => {
+        describe("pinRows action", () => {
+            it("should have correct title function that calls getPinTitle", async () => {
+                const rowActions = (datasetTableView as any).rowActions;
+
+                expect(rowActions.pinRows).toBeDefined();
+                expect(rowActions.pinRows.title).toBeDefined();
+                expect(rowActions.pinRows.command).toBe("pin-selected-rows");
+                expect(rowActions.pinRows.callback.typ).toBe("multi-row");
+                expect(rowActions.pinRows.type).toBe("secondary");
+
+                // Mock getPinTitle to verify it gets called
+                const getPinTitleSpy = jest.spyOn(datasetTableView as any, "getPinTitle").mockResolvedValue("Unpin");
+
+                const rows = [{ dsname: "TEST.DS1" }, { dsname: "TEST.DS2" }];
+                const title = await rowActions.pinRows.title(rows);
+
+                expect(getPinTitleSpy).toHaveBeenCalledWith(rows);
+                expect(title).toBe("Unpin");
+            });
+
+            it("should have correct condition function", () => {
+                const rowActions = (datasetTableView as any).rowActions;
+
+                expect(rowActions.pinRows.condition([{ dsname: "A" }])).toBe(true);
+                expect(rowActions.pinRows.condition([{ dsname: "A" }, { dsname: "B" }])).toBe(true);
+                expect(rowActions.pinRows.condition([])).toBe(false);
+            });
         });
     });
 
@@ -2281,8 +2498,9 @@ describe("DatasetTableView action handlers/callbacks", () => {
             });
 
             it("should return PDS node for PDSMembersDataSource with TreeDataSource parent", () => {
+                const profile = createIProfile();
                 const parentTreeDataSource = new TreeDataSource(mockTreeNode);
-                const pdsDataSource = new PDSMembersDataSource(parentTreeDataSource, "TEST.PDS", "zowe-ds:/sestest/TEST.PDS");
+                const pdsDataSource = new PDSMembersDataSource(parentTreeDataSource, "TEST.PDS", "zowe-ds:/sestest/TEST.PDS", profile);
                 (datasetTableView as any).currentDataSource = pdsDataSource;
 
                 const result = (datasetTableView as any).getTreeNodeForSortContext();
@@ -2290,8 +2508,9 @@ describe("DatasetTableView action handlers/callbacks", () => {
             });
 
             it("should return undefined for PDSMembersDataSource without matching PDS name", () => {
+                const profile = createIProfile();
                 const parentTreeDataSource = new TreeDataSource(mockTreeNode);
-                const pdsDataSource = new PDSMembersDataSource(parentTreeDataSource, "NONEXISTENT.PDS", "zowe-ds:/sestest/NONEXISTENT.PDS");
+                const pdsDataSource = new PDSMembersDataSource(parentTreeDataSource, "NONEXISTENT.PDS", "zowe-ds:/sestest/NONEXISTENT.PDS", profile);
                 (datasetTableView as any).currentDataSource = pdsDataSource;
 
                 const result = (datasetTableView as any).getTreeNodeForSortContext();
@@ -2299,9 +2518,10 @@ describe("DatasetTableView action handlers/callbacks", () => {
             });
 
             it("should return undefined for PDSMembersDataSource without tree node children", () => {
+                const profile = createIProfile();
                 mockTreeNode.children = [];
                 const parentTreeDataSource = new TreeDataSource(mockTreeNode);
-                const pdsDataSource = new PDSMembersDataSource(parentTreeDataSource, "TEST.PDS", "zowe-ds:/sestest/TEST.PDS");
+                const pdsDataSource = new PDSMembersDataSource(parentTreeDataSource, "TEST.PDS", "zowe-ds:/sestest/TEST.PDS", profile);
                 (datasetTableView as any).currentDataSource = pdsDataSource;
 
                 const result = (datasetTableView as any).getTreeNodeForSortContext();
@@ -2311,7 +2531,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
             it("should return undefined for PDSMembersDataSource with non-TreeDataSource parent", () => {
                 const profile = createIProfile();
                 const patternDataSource = new PatternDataSource(profile, "TEST.*");
-                const pdsDataSource = new PDSMembersDataSource(patternDataSource, "TEST.PDS", "zowe-ds:/sestest/TEST.PDS");
+                const pdsDataSource = new PDSMembersDataSource(patternDataSource, "TEST.PDS", "zowe-ds:/sestest/TEST.PDS", profile);
                 (datasetTableView as any).currentDataSource = pdsDataSource;
 
                 const result = (datasetTableView as any).getTreeNodeForSortContext();
@@ -2328,7 +2548,8 @@ describe("DatasetTableView action handlers/callbacks", () => {
             });
 
             it("should return undefined for PDSMembersDataSource without parent data source", () => {
-                const pdsDataSource = new PDSMembersDataSource(null, "TEST.PDS", "zowe-ds:/sestest/TEST.PDS");
+                const profile = createIProfile();
+                const pdsDataSource = new PDSMembersDataSource(null, "TEST.PDS", "zowe-ds:/sestest/TEST.PDS", profile);
                 (datasetTableView as any).currentDataSource = pdsDataSource;
 
                 const result = (datasetTableView as any).getTreeNodeForSortContext();
