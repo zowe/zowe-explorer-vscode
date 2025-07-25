@@ -141,7 +141,7 @@ describe("TableBuilder", () => {
             const globalMocks = createGlobalMocks();
             const builder = new TableBuilder(globalMocks.context as any);
             const newCols: Table.ColumnOpts[] = [
-                { field: "cat", valueFormatter: (data: { value: Table.ContentTypes }) => `val: ${data.value.toString()}` },
+                { field: "cat", valueFormatter: (data: { value: Table.ContentTypes }) => `val: ${data.value?.toString()}` },
                 { field: "doge", filter: true, comparator: (_valueA, _valueB, _nodeA, _nodeB, _isDescending) => -1, colSpan: (_params) => 2 },
                 { field: "parrot", sort: "asc", rowSpan: (_params) => 2 },
             ];
@@ -173,7 +173,7 @@ describe("TableBuilder", () => {
                         condition: (_data) => true,
                     },
                 ],
-            } as Record<number | "all", Table.ContextMenuOpts[]>;
+            } as Record<number | "all", Table.ContextMenuOption[]>;
 
             const addCtxOptSpy = jest.spyOn(builder, "addContextOption");
             const builderCtxOpts = builder.contextOptions(ctxOpts);
@@ -191,24 +191,33 @@ describe("TableBuilder", () => {
                 title: "Delete",
                 command: "delete",
                 callback: {
-                    typ: "row",
-                    fn: (_row: Table.RowData) => {},
+                    typ: "cell",
+                    fn: (_view: Table.View, _cell: Table.ContentTypes) => {},
                 },
                 condition: (_data) => true,
-            } as Table.ContextMenuOpts;
+            } as Table.ContextMenuOption;
+            const singleCtxOpt = {
+                title: "Delete This One",
+                command: "delete-this-one",
+                callback: {
+                    typ: "cell",
+                    fn: (_view: Table.View, _cell: Table.ContentTypes) => {},
+                },
+                condition: (_data) => true,
+            } as Table.ContextMenuOption;
 
             // case 0: adding context option w/ conditional to "all" rows, index previously existed
             const builderCtxOpts = builder.addContextOption("all", ctxOpt);
             expect(builderCtxOpts).toBeInstanceOf(TableBuilder);
             expect((builderCtxOpts as any).data.contextOpts).toStrictEqual({
-                all: [{ ...ctxOpt, condition: ctxOpt.condition?.toString() }],
+                all: [ctxOpt],
             });
 
             // case 1: adding context option w/ conditional to a specific row, index did not already exist
-            const finalBuilder = builderCtxOpts.addContextOption(0, ctxOpt);
+            const finalBuilder = builderCtxOpts.addContextOption(0, singleCtxOpt);
             expect((finalBuilder as any).data.contextOpts).toStrictEqual({
-                0: [{ ...ctxOpt, condition: ctxOpt.condition?.toString() }],
-                all: [{ ...ctxOpt, condition: ctxOpt.condition?.toString() }],
+                0: [singleCtxOpt],
+                all: [ctxOpt],
             });
         });
 
@@ -220,23 +229,31 @@ describe("TableBuilder", () => {
                 title: "Add",
                 command: "add",
                 callback: {
-                    typ: "row",
-                    fn: (_row: Table.RowData) => {},
+                    typ: "cell",
+                    fn: (_view: Table.View, _cell: Table.ContentTypes) => {},
                 },
-            } as Table.ContextMenuOpts;
+            } as Table.ContextMenuOption;
+            const singleCtxOpt = {
+                title: "Add This One",
+                command: "add-this-one",
+                callback: {
+                    typ: "cell",
+                    fn: (_view: Table.View, _cell: Table.ContentTypes) => {},
+                },
+            } as Table.ContextMenuOption;
 
             // case 0: adding context option w/ condition to "all" rows, index previously existed
             const builderCtxOpts = builder.addContextOption("all", ctxOptNoCond);
             expect(builderCtxOpts).toBeInstanceOf(TableBuilder);
             expect((builderCtxOpts as any).data.contextOpts).toStrictEqual({
-                all: [{ ...ctxOptNoCond, condition: ctxOptNoCond.condition?.toString() }],
+                all: [ctxOptNoCond],
             });
 
             // case 1: adding context option w/ condition to a specific row, index did not already exist
-            const finalBuilder = builderCtxOpts.addContextOption(0, ctxOptNoCond);
+            const finalBuilder = builderCtxOpts.addContextOption(0, singleCtxOpt);
             expect((finalBuilder as any).data.contextOpts).toStrictEqual({
-                0: [{ ...ctxOptNoCond, condition: ctxOptNoCond.condition?.toString() }],
-                all: [{ ...ctxOptNoCond, condition: ctxOptNoCond.condition?.toString() }],
+                0: [singleCtxOpt],
+                all: [ctxOptNoCond],
             });
         });
     });
@@ -253,16 +270,26 @@ describe("TableBuilder", () => {
                     fn: (_cell: Table.ContentTypes) => {},
                 },
                 condition: (_data) => true,
-            } as Table.ActionOpts;
+            } as Table.Action;
+            const singleRowAction = {
+                title: "Move This One",
+                command: "move-this-one",
+                callback: {
+                    typ: "cell",
+                    fn: (_cell: Table.ContentTypes) => {},
+                },
+                condition: (_data) => true,
+            } as Table.Action;
+
             const builderAction = builder.addRowAction("all", rowAction);
             expect(builderAction).toBeInstanceOf(TableBuilder);
             expect((builderAction as any).data.actions).toStrictEqual({
-                all: [{ ...rowAction, condition: rowAction.condition?.toString() }],
+                all: [rowAction],
             });
-            const finalBuilder = builderAction.addRowAction(0, rowAction);
+            const finalBuilder = builderAction.addRowAction(0, singleRowAction);
             expect((finalBuilder as any).data.actions).toStrictEqual({
-                0: [{ ...rowAction, condition: rowAction.condition?.toString() }],
-                all: [{ ...rowAction, condition: rowAction.condition?.toString() }],
+                0: [singleRowAction],
+                all: [rowAction],
             });
         });
     });
@@ -282,7 +309,7 @@ describe("TableBuilder", () => {
                         },
                         condition: (_data) => true,
                     },
-                ] as Table.ActionOpts[],
+                ] as Table.Action[],
                 all: [
                     {
                         title: "Recall",
@@ -293,7 +320,7 @@ describe("TableBuilder", () => {
                         },
                         condition: (_data) => true,
                     },
-                ] as Table.ActionOpts[],
+                ] as Table.Action[],
             };
             const rowActionSpy = jest.spyOn(builder, "addRowAction");
             const builderAction = builder.rowActions(rowActions);

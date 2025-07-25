@@ -19,6 +19,12 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Added an option `throwErrorOnCancel` to the `AuthPromptParams` interface (defines parameters passed to authentication prompt functions). When this option is `true`, an error is thrown when the user cancels or dismisses an authentication prompt. [#3662](https://github.com/zowe/zowe-explorer-vscode/issues/3662)
 - Updated the messages for the authentication prompts to guide the user on how to continue using their profile if they dismiss the prompt. [#3662](https://github.com/zowe/zowe-explorer-vscode/issues/3662)
+- Added dynamic title support for table view actions through the `DynamicTitle` type, allowing action titles to be computed based on selected row data. Action titles can now be functions that receive row data and return a `string` or `Promise<string>`. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
+- Added dynamic hide condition support for table view actions through the `hideCondition` property on the `Table.Action` type. Actions can now be conditionally hidden from the UI based on the selected row data. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
+- Added support for no-selection actions in table views through the `NoSelectionCallback` type. Actions can now be executed without requiring any row selection by using the `"no-selection"` callback type. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
+- Added row pinning functionality to table views with new APIs: `pinRows()` to pin specific rows to the top of the grid, `unpinRows()` to unpin rows, `getPinnedRows()` to retrieve currently pinned rows, and `setPinnedRows()` to replace all pinned rows with a new set. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
+- Added `waitForAPI()` function to the `Table.View` class to allow extensions to wait for the AG Grid API to be fully initialized before performing operations on the table view. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
+- Added grid state management functions `getGridState()` and `setGridState()` to the `Table.View` class to allow extensions to save and restore the complete state of the table view, including column positions, sorting, filtering, and other grid configurations. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
 
 ### Bug fixes
 

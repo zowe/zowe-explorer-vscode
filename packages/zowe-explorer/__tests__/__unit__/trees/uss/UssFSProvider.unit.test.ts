@@ -20,6 +20,7 @@ import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import * as vscode from "vscode";
 
 const testProfile = createIProfile();
 
@@ -346,16 +347,21 @@ describe("UssFSProvider", () => {
     });
 
     describe("fetchFileAtUri", () => {
-        beforeEach(() => {
-            Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn(() => {
-                    return {
-                        loadNamedProfile: jest.fn(() => {
-                            return testProfile;
-                        }),
-                    };
-                }),
-            });
+        let mockedProfilesProp: MockedProperty;
+        beforeAll(() => {
+            mockedProfilesProp = new MockedProperty(
+                Profiles,
+                "getInstance",
+                undefined,
+                jest.fn().mockReturnValue({
+                    loadNamedProfile: jest.fn(() => {
+                        return testProfile;
+                    }),
+                })
+            );
+        });
+        afterAll(() => {
+            mockedProfilesProp[Symbol.dispose]();
         });
         it("calls getContents to get the data for a file entry", async () => {
             const fileEntry = { ...testEntries.file };
@@ -1112,37 +1118,75 @@ describe("UssFSProvider", () => {
             ussApiMock.mockRestore();
         });
 
-        // it("shows error and stops if listFiles fails after FileExists error", async () => {
-        //     const mockUssApi = {
-        //         rename: jest.fn().mockRejectedValueOnce(Object.assign(FileSystemError.FileExists("file exists"), { code: "FileExists" })),
-        //     };
-        //     // const fileExistsError = Object.assign(vscode.FileSystemError.FileExists("file exists"), { code: "FileExists" });
-        //     // const renameMock = jest.spyOn(zosfiles.Utilities, "renameUSSFile").mockRejectedValue(fileExistsError);
-        //     const errMsgSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve(undefined));
-        //     const listFilesMock = jest
-        //         .spyOn(UssFSProvider.instance, "listFiles")
-        //         .mockResolvedValueOnce({ success: false, commandResponse: "fail", apiResponse: { items: [] } });
-        //     const fileEntry = { ...testEntries.file, metadata: { ...testEntries.file.metadata } };
+        it("retries rename if FileExists error and listFiles throws 404", async () => {
+            const fileExistsError = Object.assign(vscode.FileSystemError.FileExists("file exists"), { code: "FileExists" });
+
+            const mockUssApiRename = jest.fn().mockRejectedValueOnce(fileExistsError).mockResolvedValueOnce({ success: true });
+
+            const mockUssApi = { rename: mockUssApiRename };
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
+
+            const folderEntry = {
+                ...testEntries.folder,
+                entries: new Map(),
+                metadata: { ...testEntries.folder.metadata },
+            };
+
+            const sessionEntry = {
+                ...testEntries.session,
+                entries: new Map([[testEntries.folder.name, folderEntry]]),
+            };
+            (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+                return sessionEntry.entries.get("aFolder");
+            });
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
+
+            const listFilesMock = jest.spyOn(UssFSProvider.instance as any, "listFiles").mockRejectedValue({
+                name: "Error",
+                errorCode: 404,
+            });
+
+            const oldUri = testUris.folder;
+            const newUri = testUris.folder.with({ path: "/sestest/aFolder2" });
+
+            await UssFSProvider.instance.rename(oldUri, newUri, { overwrite: true });
+
+            expect(mockUssApiRename).toHaveBeenCalledTimes(2);
+            expect(mockUssApiRename).toHaveBeenCalledWith("/aFolder", "/aFolder2");
+            expect(sessionEntry.entries.has("aFolder")).toBe(false);
+            expect(sessionEntry.entries.has("aFolder2")).toBe(true);
+
+            listFilesMock.mockRestore();
+            lookupMock.mockRestore();
+            lookupParentDirMock.mockRestore();
+        });
+
+        // it("shows error and returns if listFiles fails after FileExists error", async () => {
+        //     const fileExistsError = vscode.FileSystemError.FileExists("file exists");
+        //     const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+        //         success: false,
+        //         commandResponse: "some failure",
+        //         apiResponse: {},
+        //     });
+
+        //     const errMsgSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+
+        //     const fileEntry = { ...testEntries.file, metadata: { path: "/sestest/aFile.txt" } };
         //     const sessionEntry = {
         //         ...testEntries.session,
         //         entries: new Map([[testEntries.file.name, fileEntry]]),
         //     };
-        //     (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
-        //     const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
-        //         return sessionEntry.entries.get("aFile.txt");
-        //     });
 
-        //     const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
+        //     (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+        //     jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValue(fileEntry);
+        //     jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
 
         //     await UssFSProvider.instance.rename(testUris.file, testUris.file.with({ path: "/sestest/aFile2.txt" }), { overwrite: false });
 
         //     expect(listFilesMock).toHaveBeenCalled();
-        //     expect(mockUssApi.rename).toHaveBeenCalledTimes(1);
         //     expect(errMsgSpy).toHaveBeenCalledWith("file exists");
-
-        //     lookupMock.mockRestore();
-        //     lookupParentDirMock.mockRestore();
-        //     // renameMock.mockRestore();
         // });
 
         // it("handles FileExists error and retries rename after deleting parent entry if listFiles throws 404", async () => {

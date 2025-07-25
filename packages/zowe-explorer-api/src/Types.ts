@@ -68,6 +68,8 @@ export namespace Types {
         createdDate: Date;
         // built from "m4date", "mtime" and "msec" variables from z/OSMF API response
         modifiedDate: Date;
+        // Indexable for storing custom items
+        [key: string]: any;
     };
 
     export type KeytarModule = {

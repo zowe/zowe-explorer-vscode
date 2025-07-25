@@ -19,6 +19,7 @@ import { DatasetInit } from "../../../../src/trees/dataset/DatasetInit";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { DatasetSearch } from "../../../../src/trees/dataset/DatasetSearch";
+import { DatasetTableView } from "../../../../src/trees/dataset/DatasetTableView";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -206,6 +207,14 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.filterBy",
                 mock: [{ spy: jest.spyOn(dsProvider, "filterPdsMembersDialog"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.ds.tableView",
+                mock: [{ spy: jest.spyOn(DatasetTableView.getInstance(), "handleCommand"), arg: [test.context, test.value, undefined] }],
+            },
+            {
+                name: "zowe.ds.listDataSets",
+                mock: [{ spy: jest.spyOn(DatasetTableView.getInstance(), "handlePatternSearch"), arg: [test.context] }],
             },
             {
                 name: "onDidChangeConfiguration",
