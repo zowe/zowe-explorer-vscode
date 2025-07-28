@@ -649,12 +649,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const entry = this.lookup(oldUri, false) as UssDirectory | UssFile;
         const parentDir = this.lookupParentDirectory(oldUri);
         const newName = path.posix.basename(newUri.path);
+
+        // Build the new path using the previous path and new file/folder name.
         const newPath = path.posix.join(entry.metadata.path, "..", newName);
+
+        // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
 
         await AuthUtils.reauthenticateIfCancelled(profile);
         await AuthHandler.waitForUnlock(entry.metadata.profile);
-
+        // Check if the profile is locked (indicating an auth error is being handled)
+        // If it's locked, we should wait and not make additional requests
         if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
             ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
             return;
@@ -702,6 +707,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parentDir.entries.delete(entry.name);
         entry.name = newName;
         entry.metadata.path = newPath;
+        // We have to update the path for all child entries if they exist in the FileSystem
+        // This way any further API requests in readFile will use the latest paths on the LPAR
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             this._updateChildPaths(entry);
         }
