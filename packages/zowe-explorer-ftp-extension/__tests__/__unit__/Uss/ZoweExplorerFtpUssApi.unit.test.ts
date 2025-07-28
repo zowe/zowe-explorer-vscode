@@ -61,7 +61,7 @@ describe("FtpUssApi", () => {
         };
         const result = await UssApi.fileList(mockParams.ussFilePath);
 
-        expect(result.apiResponse.items[0].name).toContain("file1");
+        expect(result.apiResponse.items.map((item) => item.name)).toEqual([".", "..", "file1", "dir1"]);
         expect(UssUtils.listFiles).toHaveBeenCalledTimes(1);
         expect(UssApi.releaseConnection).toHaveBeenCalledTimes(0);
     });
