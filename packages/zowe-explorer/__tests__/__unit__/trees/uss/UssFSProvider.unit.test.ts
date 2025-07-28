@@ -366,16 +366,21 @@ describe("UssFSProvider", () => {
     });
 
     describe("fetchFileAtUri", () => {
-        beforeEach(() => {
-            Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn(() => {
-                    return {
-                        loadNamedProfile: jest.fn(() => {
-                            return testProfile;
-                        }),
-                    };
-                }),
-            });
+        let mockedProfilesProp: MockedProperty;
+        beforeAll(() => {
+            mockedProfilesProp = new MockedProperty(
+                Profiles,
+                "getInstance",
+                undefined,
+                jest.fn().mockReturnValue({
+                    loadNamedProfile: jest.fn(() => {
+                        return testProfile;
+                    }),
+                })
+            );
+        });
+        afterAll(() => {
+            mockedProfilesProp[Symbol.dispose]();
         });
         it("calls getContents to get the data for a file entry", async () => {
             const fileEntry = { ...testEntries.file };
