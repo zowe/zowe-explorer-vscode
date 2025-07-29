@@ -928,7 +928,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             let finalPattern = fullPattern;
             if (fullPattern.length != 0 && SharedContext.isFavoriteSearch(this)) {
                 this.patternMatches = dsTree.extractPatterns(fullPattern);
-                finalPattern = dsTree.buildFinalPattern(this.patternMatches).toUpperCase();
+                finalPattern = dsTree.buildFinalDatasetPattern(this.patternMatches).toUpperCase();
             }
             if (finalPattern !== this.pattern) {
                 // Force paginator and data to be re-initialized

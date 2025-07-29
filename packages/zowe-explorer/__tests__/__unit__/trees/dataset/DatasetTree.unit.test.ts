@@ -3818,12 +3818,13 @@ describe("Dataset Tree Unit Tests - Function extractPatterns", () => {
     });
 });
 
-describe("Dataset Tree Unit Tests - Function buildFinalPattern", () => {
+describe("Dataset Tree Unit Tests - Function buildFinalDatasetPattern", () => {
     it("Handles both patterns with member wildcards and normal patterns", () => {
         const testTree = new DatasetTree();
         const patterns = testTree.extractPatterns("HLQ.PROD.STUFF*(TEST*), HLQ.DEV.STUFF.*");
-        // The member wildcard will not appear in the final pattern, but the member pattern is attached to the PDS nodes
-        expect(testTree.buildFinalPattern(patterns)).toStrictEqual("HLQ.PROD.STUFF*, HLQ.DEV.STUFF.*");
+        // The member wildcard does not appear in the final data set pattern, but the member pattern is attached to the PDS nodes
+        // The all members API only supports a member pattern
+        expect(testTree.buildFinalDatasetPattern(patterns)).toStrictEqual("HLQ.PROD.STUFF*, HLQ.DEV.STUFF.*");
     });
 });
 
@@ -3868,6 +3869,160 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
         testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.PROD.PDS", member: "A*" }], fakeSessionNode as any);
         expect(fakeChildren[0].iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen).path);
         withProfileMock.mockRestore();
+    });
+
+    describe("Multiple pattern tests", () => {
+        let testTree: DatasetTree;
+        let withProfileMock: jest.SpyInstance;
+        let isPdsMock: jest.SpyInstance;
+
+        beforeEach(() => {
+            testTree = new DatasetTree();
+            withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+            isPdsMock = jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
+        });
+
+        afterEach(() => {
+            withProfileMock.mockRestore();
+            isPdsMock.mockRestore();
+        });
+
+        it("should apply member patterns only to exact dataset matches", () => {
+            const fakeChildren = [
+                {
+                    label: "TEST.USER1.SOURCE",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                    memberPattern: "",
+                    pattern: "",
+                },
+                {
+                    label: "TEST.USER2.SOURCE",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                    memberPattern: "",
+                    pattern: "",
+                },
+                {
+                    label: "TEST.USER1.SOURCE.FINAL",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                    memberPattern: "",
+                    pattern: "",
+                },
+            ];
+
+            const patterns = testTree.extractPatterns("TEST.USER1.SOURCE(ABC123*),TEST.USER2.SOURCE(DEF456X1)");
+            testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+            // TEST.USER1.SOURCE should get the wildcard pattern (exact match)
+            expect(fakeChildren[0].memberPattern).toBe("ABC123*");
+            expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
+
+            // TEST.USER2.SOURCE should get the specific member pattern (exact match)
+            expect(fakeChildren[1].memberPattern).toBe("DEF456X1");
+            expect(SharedContext.isFilterFolder(fakeChildren[1])).toBe(true);
+
+            // TEST.USER1.SOURCE.FINAL should appear in results but NOT with the member pattern applied
+            // (it's returned by z/OSMF due to ".**" but member pattern should only apply to exact match)
+            expect(fakeChildren[2].memberPattern).toBe("");
+            expect(SharedContext.isFilterFolder(fakeChildren[2])).toBe(false);
+        });
+
+        it("should accumulate multiple member patterns for the same PDS instead of overwriting", () => {
+            // Scenario 2: Multiple member patterns on same PDS should be accumulated
+            const fakeChildren = [
+                {
+                    label: "TEST.USER1.SOURCE",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                    memberPattern: "",
+                    pattern: "",
+                },
+                {
+                    label: "TEST.USER2.SOURCE",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                    memberPattern: "",
+                    pattern: "",
+                },
+            ];
+
+            const patterns = testTree.extractPatterns("TEST.USER1.SOURCE(ABC123B1),TEST.USER1.SOURCE(XYZ456),TEST.USER2.SOURCE(DEF789X1)");
+            testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+            // TEST.USER1.SOURCE should have both member patterns accumulated
+            expect(fakeChildren[0].memberPattern).toBe("ABC123B1,XYZ456");
+            expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
+
+            // TEST.USER2.SOURCE should have its single pattern
+            expect(fakeChildren[1].memberPattern).toBe("DEF789X1");
+            expect(SharedContext.isFilterFolder(fakeChildren[1])).toBe(true);
+        });
+
+        it("should correctly extract and apply complex mixed patterns", () => {
+            const fakeChildren = [
+                {
+                    label: "TEST.PROD.LIBRARY",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                    memberPattern: "",
+                    pattern: "",
+                },
+                {
+                    label: "TEST.DEV.LIBRARY",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                    memberPattern: "",
+                    pattern: "",
+                },
+                {
+                    label: "TEST.PROD.COPYBOOK",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                    memberPattern: "",
+                    pattern: "",
+                },
+            ];
+
+            // Mix of wildcard and exact patterns across different PDSs
+            const patterns = testTree.extractPatterns(
+                "TEST.PROD.LIBRARY(MOD*),TEST.DEV.LIBRARY(TEST123),TEST.PROD.LIBRARY(UTIL*),TEST.PROD.COPYBOOK(COPY01)"
+            );
+            testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+            // TEST.PROD.LIBRARY should have both wildcard patterns
+            expect(fakeChildren[0].memberPattern).toBe("MOD*,UTIL*");
+
+            // TEST.DEV.LIBRARY should have the specific pattern
+            expect(fakeChildren[1].memberPattern).toBe("TEST123");
+
+            // TEST.PROD.COPYBOOK should have its pattern
+            expect(fakeChildren[2].memberPattern).toBe("COPY01");
+        });
+    });
+
+    describe("Pattern matching specificity", () => {
+        let testTree: DatasetTree;
+
+        beforeEach(() => {
+            testTree = new DatasetTree();
+        });
+
+        it("should extract multiple member patterns correctly from complex filter strings", () => {
+            const result1 = testTree.extractPatterns("HLQ.USER1.SOURCE(R12345*),HLQ.USER2.SOURCE(R12345O1)");
+            expect(result1).toEqual([
+                { dsn: "HLQ.USER1.SOURCE", member: "R12345*" },
+                { dsn: "HLQ.USER2.SOURCE", member: "R12345O1" },
+            ]);
+
+            const result2 = testTree.extractPatterns("HLQ.USER1.SOURCE(ABC123B1),HLQ.USER1.SOURCE(XYZ456),HLQ.USER2.SOURCE(DEF789O1)");
+            expect(result2).toEqual([
+                { dsn: "HLQ.USER1.SOURCE", member: "ABC123B1" },
+                { dsn: "HLQ.USER1.SOURCE", member: "XYZ456" },
+                { dsn: "HLQ.USER2.SOURCE", member: "DEF789O1" },
+            ]);
+        });
+
+        it("should build final pattern correctly preserving dataset names only", () => {
+            const patterns = testTree.extractPatterns("TEST.PROD.LIB(MOD*),TEST.DEV.LIB(TEST),TEST.PROD.COPY(COPY*)");
+            const finalPattern = testTree.buildFinalDatasetPattern(patterns);
+
+            // Final pattern should only contain dataset names, not member patterns
+            expect(finalPattern).toBe("TEST.PROD.LIB, TEST.DEV.LIB, TEST.PROD.COPY");
+        });
     });
 });
 

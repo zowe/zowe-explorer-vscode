@@ -1219,7 +1219,13 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         });
     }
 
-    public buildFinalPattern(matches: DatasetMatch[]): string {
+    /**
+     * Builds the final data set pattern from the given matches
+     *
+     * @param matches - The matches to build the final pattern from
+     * @returns The final data set pattern
+     */
+    public buildFinalDatasetPattern(matches: DatasetMatch[]): string {
         return matches.reduce((all, cur) => {
             return all.length ? all + `, ${cur.dsn}` : cur.dsn;
         }, "");
@@ -1251,37 +1257,61 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
     private patternAppliesToChild(child: IZoweDatasetTreeNode, item: DatasetMatch): boolean {
         const name = (child.label as string).split(".");
-        let includes = false;
-        if (!child.pattern) {
-            let index = 0;
-            for (const each of item.dsn.split(".")) {
-                includes = this.checkFilterPattern(name[index], each);
-                child.pattern = includes ? item.dsn : "";
-                index++;
+        const patternParts = item.dsn.split(".");
+
+        // For member patterns, require exact number of parts match
+        // For dataset patterns without members, allow prefix matching for wildcards
+        if (item.member && patternParts.length !== name.length) {
+            return false;
+        }
+
+        // Check if the pattern has more parts than the dataset name
+        if (patternParts.length > name.length) {
+            return false;
+        }
+
+        // Check each part of the pattern against the corresponding part of the dataset name
+        let allPartsMatch = true;
+        for (let index = 0; index < patternParts.length; index++) {
+            if (!this.checkFilterPattern(name[index], patternParts[index])) {
+                allPartsMatch = false;
+                break;
             }
         }
 
-        return includes;
+        // Only set the pattern if all parts match and pattern isn't already set
+        if (allPartsMatch && !child.pattern) {
+            child.pattern = item.dsn;
+        }
+
+        return allPartsMatch;
     }
 
     public applyPatternsToChildren(children: IZoweDatasetTreeNode[], patterns: DatasetMatch[]): void {
         for (const child of children.filter((c) => !(c instanceof NavigationTreeItem) && c.label !== vscode.l10n.t("No data sets found"))) {
+            // Collect all member patterns that apply to this child
+            const memberPatterns: string[] = [];
             for (const item of patterns.filter((p) => p.member && this.patternAppliesToChild(child, p))) {
                 // Only apply to PDS that match the given patterns
                 if (SharedContext.isPds(child)) {
-                    child.memberPattern = item.member;
-                    if (!SharedContext.isFilterFolder(child)) {
-                        child.contextValue = String(child.contextValue) + Constants.FILTER_SEARCH;
-                    }
-                    let setIcon: IconUtils.IIconItem;
-                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-                        setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolder);
-                    } else if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
-                        setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen);
-                    }
-                    if (setIcon) {
-                        child.iconPath = setIcon.path;
-                    }
+                    memberPatterns.push(item.member);
+                }
+            }
+
+            // Apply accumulated member patterns
+            if (memberPatterns.length > 0) {
+                child.memberPattern = memberPatterns.join(",");
+                if (!SharedContext.isFilterFolder(child)) {
+                    child.contextValue = String(child.contextValue) + Constants.FILTER_SEARCH;
+                }
+                let setIcon: IconUtils.IIconItem;
+                if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                    setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolder);
+                } else if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                    setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen);
+                }
+                if (setIcon) {
+                    child.iconPath = setIcon.path;
                 }
             }
             child.contextValue = SharedContext.withProfile(child);
@@ -1354,7 +1384,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         await AuthUtils.updateNodeToolTip(node, profile);
         // looking for members in pattern
         node.patternMatches = this.extractPatterns(pattern);
-        const dsPattern = this.buildFinalPattern(node.patternMatches);
+        const dsPattern = this.buildFinalDatasetPattern(node.patternMatches);
         if (dsPattern.length != 0) {
             node.pattern = dsPattern.toUpperCase();
         } else {

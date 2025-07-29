@@ -1363,7 +1363,7 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         const warnLoggerSpy = jest.spyOn(ZoweLogger, "warn");
         const dsTreeMock = jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
             extractPatterns: jest.fn().mockReturnValue([]),
-            buildFinalPattern: jest.fn().mockReturnValue(""),
+            buildFinalDatasetPattern: jest.fn().mockReturnValue(""),
         } as any);
         const profile = createIProfile();
         const sessionNode = createDatasetSessionNode(createISession(), profile);
@@ -1386,7 +1386,7 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         const warnLoggerSpy = jest.spyOn(ZoweLogger, "warn").mockClear();
         const dsTreeMock = jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
             extractPatterns: jest.fn().mockReturnValue([]),
-            buildFinalPattern: jest.fn().mockReturnValue(""),
+            buildFinalDatasetPattern: jest.fn().mockReturnValue(""),
         } as any);
         const profile = createIProfile();
         const sessionNode = createDatasetSessionNode(createISession(), profile);
@@ -1417,7 +1417,7 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         } as any);
         const dsTreeMock = jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
             extractPatterns: jest.fn().mockReturnValue([]),
-            buildFinalPattern: jest.fn().mockReturnValue(""),
+            buildFinalDatasetPattern: jest.fn().mockReturnValue(""),
         } as any);
         const profile = createIProfile();
         const sessionNode = createDatasetSessionNode(createISession(), profile);
