@@ -1,8 +1,8 @@
-export { Header } from "./Header";
 export { Footer } from "./Footer";
 export { Tabs } from "./Tabs";
 export { Panels } from "./Panels";
 export { ProfileList } from "./ProfileList";
+export { ProfileSearchFilter } from "./ProfileSearchFilter";
 export { AddDefaultModal } from "./modals/AddDefaultModal";
 export { AddProfileModal } from "./modals/AddProfileModal";
 export { SaveModal } from "./modals/SaveModal";

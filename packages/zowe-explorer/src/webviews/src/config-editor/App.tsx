@@ -7,7 +7,6 @@ import "./App.css";
 
 // Components
 import {
-  Header,
   Footer,
   Tabs,
   Panels,
@@ -715,6 +714,7 @@ export function App() {
         onSetAsDefault={handleSetAsDefault}
         isProfileDefault={isProfileDefault}
         onPreviewArgs={handlePreviewArgsWithConfirmation}
+        getProfileType={getProfileType}
       />
     );
   };
@@ -1635,7 +1635,6 @@ export function App() {
 
   return (
     <div>
-      <Header />
       <Tabs configurations={configurations} selectedTab={selectedTab} onTabChange={handleTabChange} onOpenRawFile={handleOpenRawJson} />
       <Panels
         configurations={configurations}
