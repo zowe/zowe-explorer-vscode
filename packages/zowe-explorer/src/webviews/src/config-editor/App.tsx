@@ -8,6 +8,7 @@ import "./App.css";
 // Components
 import {
   Header,
+  Footer,
   Tabs,
   Panels,
   ProfileList,
@@ -701,83 +702,122 @@ export function App() {
     const sortedProfileKeys = filteredProfileKeys.sort((a, b) => a.localeCompare(b));
 
     return (
-      <div>
-        <div style={{ display: "flex", gap: "2rem" }}>
-          <ProfileList
-            sortedProfileKeys={sortedProfileKeys}
-            selectedProfileKey={selectedProfileKey}
-            pendingProfiles={pendingProfiles}
-            profileMenuOpen={profileMenuOpen}
-            configPath={configurations[selectedTab!]?.configPath || ""}
-            vscodeApi={vscodeApi}
-            onProfileSelect={setSelectedProfileKey}
-            onProfileMenuToggle={setProfileMenuOpen}
-            onDeleteProfile={handleDeleteProfile}
-            onSetAsDefault={handleSetAsDefault}
-            isProfileDefault={isProfileDefault}
-            onPreviewArgs={handlePreviewArgsWithConfirmation}
-          />
+      <ProfileList
+        sortedProfileKeys={sortedProfileKeys}
+        selectedProfileKey={selectedProfileKey}
+        pendingProfiles={pendingProfiles}
+        profileMenuOpen={profileMenuOpen}
+        configPath={configurations[selectedTab!]?.configPath || ""}
+        vscodeApi={vscodeApi}
+        onProfileSelect={setSelectedProfileKey}
+        onProfileMenuToggle={setProfileMenuOpen}
+        onDeleteProfile={handleDeleteProfile}
+        onSetAsDefault={handleSetAsDefault}
+        isProfileDefault={isProfileDefault}
+        onPreviewArgs={handlePreviewArgsWithConfirmation}
+      />
+    );
+  };
 
-          {/* Profile Details */}
-          <div style={{ flexGrow: 1 }}>
-            {selectedProfileKey && (
-              <div>
-                {/* Commented out profile name and plus icon */}
-                {/* <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                  <span style={{ fontWeight: "bold", marginRight: 8 }}>{selectedProfileKey}</span>
-                  <button
-                    className="add-default-button"
-                    title={`Add key at root of ${selectedProfileKey}`}
-                    onClick={() => {
-                      // Build the path to the root of the selected profile
-                      const profilePathParts = selectedProfileKey.split(".");
-                      let path;
-                      if (profilePathParts.length === 1) {
-                        // Top-level profile
-                        path = ["profiles", selectedProfileKey];
-                      } else {
-                        // Nested profile - need to construct path like ["profiles", "project_base", "profiles", "tso"]
-                        path = ["profiles"];
-                        for (let i = 0; i < profilePathParts.length; i++) {
-                          path.push(profilePathParts[i]);
-                          if (i < profilePathParts.length - 1) {
-                            path.push("profiles");
+  const renderProfileDetails = () => {
+    return (
+      <div>
+        <div className="profile-heading-container">
+          <h2>{selectedProfileKey || "Profile Details"}</h2>
+        </div>
+        {selectedProfileKey &&
+          (() => {
+            const flatProfiles = flattenProfiles(configurations[selectedTab!]!.properties.profiles);
+            const pendingProfiles: { [key: string]: any } = {};
+
+            // Get pending profiles from pendingChanges
+            const configPath = configurations[selectedTab!]!.configPath;
+
+            Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
+              if (entry.profile) {
+                // Extract the profile path from the key
+                const keyParts = key.split(".");
+                if (keyParts[0] === "profiles") {
+                  // Remove "profiles" prefix and get the profile path
+                  const profilePathParts = keyParts.slice(1);
+
+                  // Find where the profile name ends (before "type" or "properties")
+                  let profileNameEndIndex = profilePathParts.length;
+                  for (let i = 0; i < profilePathParts.length; i++) {
+                    if (profilePathParts[i] === "type" || profilePathParts[i] === "properties") {
+                      profileNameEndIndex = i;
+                      break;
+                    }
+                  }
+
+                  // Extract just the profile name parts
+                  const profileNameParts = profilePathParts.slice(0, profileNameEndIndex);
+
+                  if (profileNameParts.length > 0) {
+                    // Filter out "profiles" segments to get the actual profile name
+                    const filteredProfileParts = profileNameParts.filter((part) => part !== "profiles");
+                    const profileKey = filteredProfileParts.join(".");
+
+                    // Only create a pending profile entry if this is a profile-level property
+                    // (i.e., the property is "type" or we're adding to "properties")
+                    const propertyName = keyParts[keyParts.length - 1];
+                    const isProfileLevelProperty = propertyName === "type" || (keyParts.includes("properties") && !entry.secure);
+
+                    if (isProfileLevelProperty) {
+                      // Initialize the profile structure if it doesn't exist
+                      if (!pendingProfiles[profileKey]) {
+                        pendingProfiles[profileKey] = {};
+                      }
+
+                      // Add the property to the profile
+                      if (propertyName === "type") {
+                        pendingProfiles[profileKey].type = entry.value;
+                      } else if (keyParts.includes("properties")) {
+                        // Only add non-secure properties to the properties object
+                        if (!entry.secure) {
+                          if (!pendingProfiles[profileKey].properties) {
+                            pendingProfiles[profileKey].properties = {};
+                          }
+                          pendingProfiles[profileKey].properties[propertyName] = entry.value;
+                        }
+
+                        // If this is a secure property, add it to the secure array
+                        if (entry.secure) {
+                          if (!pendingProfiles[profileKey].secure) {
+                            pendingProfiles[profileKey].secure = [];
+                          }
+                          if (!pendingProfiles[profileKey].secure.includes(propertyName)) {
+                            pendingProfiles[profileKey].secure.push(propertyName);
                           }
                         }
                       }
-                      openAddProfileModalAtPath(path);
-                    }}
-                    style={{ marginLeft: 4 }}
-                  >
-                    <span className="codicon codicon-add"></span>
-                  </button>
-                </div> */}
-                {(() => {
-                  const profilePathParts = selectedProfileKey.split(".");
-                  let path;
-                  if (profilePathParts.length === 1) {
-                    // Top-level profile
-                    path = ["profiles", selectedProfileKey];
-                  } else {
-                    // Nested profile - need to construct path like ["profiles", "project_base", "profiles", "tso"]
-                    path = ["profiles"];
-                    for (let i = 0; i < profilePathParts.length; i++) {
-                      path.push(profilePathParts[i]);
-                      if (i < profilePathParts.length - 1) {
-                        path.push("profiles");
-                      }
                     }
                   }
-                  // Pass the original profile object (without pending changes) to renderConfig
-                  // so that renderConfig can properly combine existing and pending changes
-                  // For newly created profiles, use the pending profile data as the base
-                  const originalProfile = flatProfiles[selectedProfileKey] || pendingProfiles[selectedProfileKey] || {};
-                  return renderConfig(originalProfile, path);
-                })()}
-              </div>
-            )}
-          </div>
-        </div>
+                }
+              }
+            });
+
+            const profilePathParts = selectedProfileKey.split(".");
+            let path;
+            if (profilePathParts.length === 1) {
+              // Top-level profile
+              path = ["profiles", selectedProfileKey];
+            } else {
+              // Nested profile - need to construct path like ["profiles", "project_base", "profiles", "tso"]
+              path = ["profiles"];
+              for (let i = 0; i < profilePathParts.length; i++) {
+                path.push(profilePathParts[i]);
+                if (i < profilePathParts.length - 1) {
+                  path.push("profiles");
+                }
+              }
+            }
+            // Pass the original profile object (without pending changes) to renderConfig
+            // so that renderConfig can properly combine existing and pending changes
+            // For newly created profiles, use the pending profile data as the base
+            const originalProfile = flatProfiles[selectedProfileKey] || pendingProfiles[selectedProfileKey] || {};
+            return renderConfig(originalProfile, path);
+          })()}
       </div>
     );
   };
@@ -900,35 +940,83 @@ export function App() {
       if (isParent) {
         return (
           <div key={fullKey} className="config-item parent">
-            <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
-              {displayKey?.toLocaleLowerCase() === "properties" ? "Profile Properties" : displayKey}
-              <button className="add-default-button" title={`Add key inside \"${fullKey}\"`} onClick={() => openAddProfileModalAtPath(currentPath)}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
+                {displayKey?.toLocaleLowerCase() === "properties" ? "Profile Properties" : displayKey}
+              </h3>
+              <button
+                className="header-button"
+                title={`Add key inside \"${fullKey}\"`}
+                onClick={() => openAddProfileModalAtPath(currentPath)}
+                style={{
+                  padding: "2px",
+                  height: "20px",
+                  width: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "transparent",
+                  color: "var(--vscode-button-secondaryForeground)",
+                  borderRadius: "3px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  lineHeight: "1",
+                  border: "none",
+                }}
+              >
                 <span className="codicon codicon-add"></span>
               </button>
-            </h3>
+            </div>
             <div style={{ paddingLeft: displayKey?.toLocaleLowerCase() === "properties" ? "16px" : "0px" }}>{renderConfig(value, currentPath)}</div>
           </div>
         );
       } else if (isArray) {
         const tabsHiddenItems = hiddenItems[configurations[selectedTab!]!.configPath];
+        if (displayKey?.toLocaleLowerCase() === "secure") {
+          return (
+            <div key={fullKey} className="config-item">
+              <div style={{ paddingLeft: "16px" }}>
+                {Array.from(new Set(renderValue)).map((item: any, index: number) => {
+                  if (
+                    tabsHiddenItems &&
+                    tabsHiddenItems[item] &&
+                    tabsHiddenItems[item].path.includes(currentPath.join(".").replace("secure", "properties") + "." + item)
+                  )
+                    return;
+                  return (
+                    <div key={index} className="config-item">
+                      <div className="config-item-container">
+                        <span className="config-label">{item}</span>
+                        <input
+                          className="config-input"
+                          type="password"
+                          placeholder="••••••••"
+                          value={String(pendingChanges[configurations[selectedTab!]!.configPath]?.[fullKey + "." + item]?.value || "")}
+                          onChange={(e) => handleChange(fullKey + "." + item, (e.target as HTMLInputElement).value)}
+                          style={{ fontFamily: "monospace" }}
+                        />
+                        <button
+                          className="action-button"
+                          onClick={() => handleDeleteProperty(fullKey.replace("secure", "properties") + "." + item, true)}
+                        >
+                          <span className="codicon codicon-trash"></span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
         return (
           <div key={fullKey} className="config-item">
             <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
               <span className="config-label" style={{ fontWeight: "bold" }}>
-                {displayKey?.toLocaleLowerCase() === "secure" ? "Secure Properties" : displayKey}
+                {displayKey}
               </span>
-              <button
-                className="add-default-button"
-                title={`Add key inside \"${fullKey}\"`}
-                onClick={() => {
-                  setIsSecure(true);
-                  openAddProfileModalAtPath(currentPath);
-                }}
-              >
-                <span className="codicon codicon-add"></span>
-              </button>
             </h3>
-            <div style={{ paddingLeft: displayKey?.toLocaleLowerCase() === "secure" ? "16px" : "0px" }}>
+            <div style={{ paddingLeft: "0px" }}>
               {Array.from(new Set(renderValue)).map((item: any, index: number) => {
                 if (
                   tabsHiddenItems &&
@@ -937,25 +1025,24 @@ export function App() {
                 )
                   return;
                 return (
-                  <div className="list-item secure-item-container" key={index}>
-                    {item}
-                    <button
-                      className="action-button"
-                      style={{ marginLeft: "8px" }}
-                      onClick={() => {
-                        setEditModalOpen(true);
-                        setEditingKey(fullKey + "." + item);
-                      }}
-                    >
-                      <span className="codicon codicon-edit"></span>
-                    </button>
-                    <button
-                      className="action-button"
-                      style={{ marginLeft: "8px" }}
-                      onClick={() => handleDeleteProperty(fullKey.replace("secure", "properties") + "." + item, true)}
-                    >
-                      <span className="codicon codicon-trash"></span>
-                    </button>
+                  <div key={index} className="config-item">
+                    <div className="config-item-container">
+                      <span className="config-label">{item}</span>
+                      <input
+                        className="config-input"
+                        type="password"
+                        placeholder="••••••••"
+                        value={String(pendingChanges[configurations[selectedTab!]!.configPath]?.[fullKey + "." + item]?.value || "")}
+                        onChange={(e) => handleChange(fullKey + "." + item, (e.target as HTMLInputElement).value)}
+                        style={{ fontFamily: "monospace" }}
+                      />
+                      <button
+                        className="action-button"
+                        onClick={() => handleDeleteProperty(fullKey.replace("secure", "properties") + "." + item, true)}
+                      >
+                        <span className="codicon codicon-trash"></span>
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -1548,10 +1635,18 @@ export function App() {
 
   return (
     <div>
-      <Header
+      <Header />
+      <Tabs configurations={configurations} selectedTab={selectedTab} onTabChange={handleTabChange} onOpenRawFile={handleOpenRawJson} />
+      <Panels
+        configurations={configurations}
         selectedTab={selectedTab}
-        configPath={selectedTab !== null ? configurations[selectedTab]?.configPath : undefined}
+        renderProfiles={renderProfiles}
+        renderProfileDetails={renderProfileDetails}
+        renderDefaults={renderDefaults}
+        onAddDefault={() => setNewKeyModalOpen(true)}
         onProfileWizard={() => setWizardModalOpen(true)}
+      />
+      <Footer
         onClearChanges={() => {
           vscodeApi.postMessage({ command: "GET_PROFILES" });
           setHiddenItems({});
@@ -1560,19 +1655,10 @@ export function App() {
           setPendingDefaults({});
           setDefaultsDeletions({});
         }}
-        onOpenRawFile={handleOpenRawJson}
         onSaveAll={() => {
           handleSave();
           setSaveModalOpen(true);
         }}
-      />
-      <Tabs configurations={configurations} selectedTab={selectedTab} onTabChange={handleTabChange} />
-      <Panels
-        configurations={configurations}
-        selectedTab={selectedTab}
-        renderProfiles={renderProfiles}
-        renderDefaults={renderDefaults}
-        onAddDefault={() => setNewKeyModalOpen(true)}
       />
       {/* Modals */}
       <AddDefaultModal
@@ -1604,9 +1690,11 @@ export function App() {
         newProfileValue={newProfileValue}
         showDropdown={showDropdown}
         typeOptions={newProfileKeyPath ? fetchTypeOptions(newProfileKeyPath) : []}
+        isSecure={isSecure}
         onNewProfileKeyChange={setNewProfileKey}
         onNewProfileValueChange={setNewProfileValue}
         onShowDropdownChange={setShowDropdown}
+        onSecureToggle={() => setIsSecure(!isSecure)}
         onAdd={handleAddNewProfileKey}
         onCancel={() => {
           setNewProfileModalOpen(false);

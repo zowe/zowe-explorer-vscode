@@ -485,6 +485,17 @@ export function ProfileWizardModal({
           }}
         >
           <VSCodeButton
+            onClick={onCancel}
+            appearance="secondary"
+            style={{
+              padding: "0.5rem 1rem",
+              minWidth: "80px",
+              borderRadius: "4px",
+            }}
+          >
+            {l10n.t("Cancel")}
+          </VSCodeButton>
+          <VSCodeButton
             onClick={onCreateProfile}
             disabled={!wizardProfileName.trim() || isProfileNameTaken}
             style={{
@@ -494,16 +505,6 @@ export function ProfileWizardModal({
             }}
           >
             {l10n.t("Create Profile")}
-          </VSCodeButton>
-          <VSCodeButton
-            onClick={onCancel}
-            style={{
-              padding: "0.5rem 1rem",
-              minWidth: "80px",
-              borderRadius: "4px",
-            }}
-          >
-            {l10n.t("Cancel")}
           </VSCodeButton>
         </div>
       </div>

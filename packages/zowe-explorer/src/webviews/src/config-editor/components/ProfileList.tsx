@@ -36,7 +36,7 @@ export function ProfileList({
       style={{
         width: "250px",
         paddingRight: "1rem",
-        maxHeight: "800px",
+        maxHeight: "400px",
         overflowY: "auto",
         overflowX: "hidden",
       }}
@@ -50,8 +50,8 @@ export function ProfileList({
             margin: "8px 0",
             padding: "8px",
             borderRadius: "4px",
-            border: "2px solid var(--vscode-button-background)",
-            backgroundColor: selectedProfileKey === profileKey ? "var(--vscode-button-hoverBackground)" : "transparent",
+            border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "2px solid transparent",
+            backgroundColor: "var(--vscode-button-secondaryBackground)",
             position: "relative",
           }}
           onClick={() => onProfileSelect(profileKey)}

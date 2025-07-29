@@ -6,9 +6,11 @@ interface AddProfileModalProps {
   newProfileValue: string;
   showDropdown: boolean;
   typeOptions: string[];
+  isSecure: boolean;
   onNewProfileKeyChange: (value: string) => void;
   onNewProfileValueChange: (value: string) => void;
   onShowDropdownChange: (value: boolean) => void;
+  onSecureToggle: () => void;
   onAdd: () => void;
   onCancel: () => void;
 }
@@ -19,9 +21,11 @@ export function AddProfileModal({
   newProfileValue,
   showDropdown,
   typeOptions,
+  isSecure,
   onNewProfileKeyChange,
   onNewProfileValueChange,
   onShowDropdownChange,
+  onSecureToggle,
   onAdd,
   onCancel,
 }: AddProfileModalProps) {
@@ -76,19 +80,66 @@ export function AddProfileModal({
           )}
         </div>
 
-        <input
-          placeholder={l10n.t("Value")}
-          value={newProfileValue}
-          onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
-          className="modal-input"
-        />
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <input
+            placeholder={isSecure ? "••••••••" : l10n.t("Value")}
+            value={newProfileValue}
+            onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
+            className="modal-input"
+            type={isSecure ? "password" : "text"}
+            style={{ flex: 1, marginBottom: 0 }}
+          />
+          <button
+            type="button"
+            onClick={onSecureToggle}
+            style={{
+              background: isSecure ? "var(--vscode-button-background)" : "var(--vscode-button-secondaryBackground)",
+              border: isSecure ? "1px solid var(--vscode-button-border)" : "1px solid var(--vscode-button-secondaryBorder)",
+              cursor: "pointer",
+              padding: "8px",
+              borderRadius: "4px",
+              color: isSecure ? "var(--vscode-button-foreground)" : "var(--vscode-button-secondaryForeground)",
+              fontSize: "16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "36px",
+              minWidth: "36px",
+            }}
+            title={isSecure ? "Unlock property" : "Lock property"}
+          >
+            <span className={`codicon ${isSecure ? "codicon-lock" : "codicon-unlock"}`}></span>
+          </button>
+        </div>
         <div className="modal-actions">
-          <div style={{ display: "flex", alignItems: "center" }}>{/* Secure checkbox removed as per original code */}</div>
           <div style={{ display: "flex", justifyContent: "flex-end", flexGrow: 1 }}>
-            <button style={{ marginRight: 8 }} onClick={onAdd}>
+            <button
+              style={{
+                marginRight: 8,
+                backgroundColor: "var(--vscode-button-secondaryBackground)",
+                color: "var(--vscode-button-secondaryForeground)",
+                border: "1px solid var(--vscode-button-secondaryBorder)",
+                padding: "8px 16px",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+              onClick={onCancel}
+            >
+              {l10n.t("Cancel")}
+            </button>
+            <button
+              style={{
+                backgroundColor: "var(--vscode-button-background)",
+                color: "var(--vscode-button-foreground)",
+                border: "1px solid var(--vscode-button-border)",
+                padding: "8px 16px",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+              onClick={onAdd}
+            >
               {l10n.t("Add")}
             </button>
-            <button onClick={onCancel}>{l10n.t("Cancel")}</button>
           </div>
         </div>
       </div>

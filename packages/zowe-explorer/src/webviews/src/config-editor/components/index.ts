@@ -1,4 +1,5 @@
 export { Header } from "./Header";
+export { Footer } from "./Footer";
 export { Tabs } from "./Tabs";
 export { Panels } from "./Panels";
 export { ProfileList } from "./ProfileList";

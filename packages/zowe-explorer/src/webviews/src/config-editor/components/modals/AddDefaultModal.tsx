@@ -82,7 +82,6 @@ export function AddDefaultModal({
         </div>
 
         <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>{l10n.t("Default Value")}:</label>
           <select
             value={newValue}
             onChange={(e) => onNewValueChange((e.target as HTMLSelectElement).value)}
@@ -95,7 +94,7 @@ export function AddDefaultModal({
             }}
             disabled={!profileType}
           >
-            <option value="">{profileType ? l10n.t("Select a profile") : l10n.t("Select a type first")}</option>
+            <option value="">{profileType ? l10n.t("Select a profile") : l10n.t("Select a type")}</option>
             {availableProfiles.map((profile) => (
               <option key={profile} value={profile}>
                 {profile === "root" ? "/" : profile}
@@ -104,10 +103,27 @@ export function AddDefaultModal({
           </select>
         </div>
         <div className="modal-actions">
-          <VSCodeButton onClick={onAdd} disabled={!profileType || !newValue}>
+          <VSCodeButton
+            onClick={onCancel}
+            appearance="secondary"
+            style={{
+              padding: "0.25rem 0.5rem",
+              minWidth: "60px",
+              borderRadius: "4px",
+            }}
+          >
+            {l10n.t("Cancel")}
+          </VSCodeButton>
+          <VSCodeButton
+            onClick={onAdd}
+            disabled={!profileType || !newValue}
+            style={{
+              padding: "0.25rem 0.25rem",
+              borderRadius: "4px",
+            }}
+          >
             {l10n.t("Add")}
           </VSCodeButton>
-          <button onClick={onCancel}>{l10n.t("Cancel")}</button>
         </div>
       </div>
     </div>

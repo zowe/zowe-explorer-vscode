@@ -15,48 +15,83 @@ body {
 
 .tabs {
     display: flex;
-    border-bottom: 1px solid var(--vscode-editorWidget-border);
-    background-color: var(--vscode-editorWidget-background);
-    border-radius: 4px 4px 0 0;
+    background-color: var(--vscode-editor-background);
+    border-bottom: 1px solid var(--vscode-tab-border);
     overflow-x: auto;
+    overflow-y: hidden;
+    height: 35px;
+    position: relative;
 }
 
 .tab {
-    flex: 1;
-    padding: 8px 12px;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    max-width: 200px;
+    height: 100%;
+    padding: 0 12px;
     cursor: pointer;
-    border: 1px solid transparent;
+    background-color: var(--vscode-tab-inactiveBackground);
+    color: var(--vscode-tab-inactiveForeground);
+    border: 1px solid var(--vscode-tab-border);
     border-bottom: none;
-    border-right: 1px solid var(--vscode-editorWidget-border);
-    background-color: var(--vscode-editorWidget-background);
-    color: var(--vscode-editor-foreground);
+    font-size: 13px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: background-color 0.2s ease;
-}
-
-.tab:last-child {
-    border-right: none;
+    transition: all 0.2s ease;
+    position: relative;
+    user-select: none;
 }
 
 .tab:hover {
-    background-color: var(--vscode-editorWidget-hoverBackground);
+    background-color: var(--vscode-tab-hoverBackground);
+    color: var(--vscode-tab-hoverForeground);
 }
 
 .tab.active {
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-    font-weight: bold;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-tab-activeForeground);
+    border-color: var(--vscode-tab-border);
+    border-bottom: none;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+    border-top: 2px solid var(--vscode-tab-activeBorderTop);
+}
+
+.tab.active::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: var(--vscode-editor-background);
+}
+
+.tab.active::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: var(--vscode-tab-activeBorderTop);
+}
+
+.tab .tab-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
 }
 
 .panels {
-    border: 1px solid var(--vscode-editorWidget-border);
+    border: 1px solid var(--vscode-tab-border);
     border-top: none;
-    background-color: var(--vscode-editorWidget-background);
+    background-color: var(--vscode-editor-background);
     padding: 12px;
     border-radius: 0 0 4px 4px;
 }
@@ -76,8 +111,31 @@ body {
 .config-section h2 {
     margin-top: 0;
     font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.profile-heading-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     border-bottom: 1px solid var(--vscode-editorWidget-border);
-    padding-bottom: 4px;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+}
+
+.profile-heading-container h2 {
+    margin: 0;
+    font-size: 16px;
+    margin-bottom: 0;
+}
+
+.defaults-heading-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--vscode-editorWidget-border);
+    margin-bottom: 16px;
+    max-width: 500px;
 }
 
 .config-item {
@@ -96,13 +154,19 @@ body {
 }
 
 .config-input {
-    padding: 4px 6px;
-    font-family: monospace;
-    font-size: 13px;
-    color: var(--vscode-input-foreground);
-    background-color: var(--vscode-input-background);
+    flex: 1;
+    padding: 4px 8px;
     border: 1px solid var(--vscode-input-border);
     border-radius: 4px;
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    font-size: 13px;
+    font-family: var(--vscode-font-family);
+}
+
+.config-input::placeholder {
+    color: var(--vscode-input-foreground);
+    opacity: 0.7;
 }
 
 .config-item-container {
@@ -122,8 +186,9 @@ body {
 
 .action-button {
     font-size: 14px;
-    background-color: var(--vscode-button-background);
-    border: none;
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border: 1px solid var(--vscode-button-secondaryBorder);
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s ease;
