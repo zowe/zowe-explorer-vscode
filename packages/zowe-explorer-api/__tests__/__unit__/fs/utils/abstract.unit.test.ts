@@ -9,7 +9,7 @@
  *
  */
 
-import { DirEntry, FileEntry, FilterEntry, ZoweScheme } from "../../../../src";
+import { DirEntry, FileEntry, FilterEntry, ProfilesCache, ZoweScheme, imperative } from "../../../../src";
 import { MockedProperty } from "../../../../__mocks__/mockUtils";
 import * as vscode from "vscode";
 import { FsAbstractUtils } from "../../../../src/fs/utils/FsAbstractUtils";
@@ -33,6 +33,27 @@ describe("getInfoForUri", () => {
             profileName: "test.lpar",
             profile: null,
         });
+    });
+
+    it("returns profile properties for URI with valid profile when profiles cache is provided", () => {
+        const profilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
+        const fakeProfile: Partial<imperative.IProfileLoaded> = {
+            name: "test.lpar",
+            type: "zosmf",
+            profile: { port: 443 },
+        };
+        jest.spyOn(profilesCache, "loadNamedProfile").mockReturnValue(fakeProfile as imperative.IProfileLoaded);
+        expect(FsAbstractUtils.getInfoForUri(fakeUri, profilesCache)).toStrictEqual({
+            isRoot: false,
+            slashAfterProfilePos: fakeUri.path.indexOf("/", 1),
+            profileName: "test.lpar",
+            profile: fakeProfile,
+        });
+    });
+
+    it("throws error for URI with invalid profile when profiles cache is provided", () => {
+        const profilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
+        expect(() => FsAbstractUtils.getInfoForUri(fakeUri, profilesCache)).toThrow("Could not find profile named: test.lpar");
     });
 });
 
