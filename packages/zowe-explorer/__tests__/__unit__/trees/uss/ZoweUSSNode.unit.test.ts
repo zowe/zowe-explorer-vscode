@@ -536,6 +536,22 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         expect(lookupParentSpy).toHaveBeenCalledWith(newUri);
         expect(parentMock.entries.has("newName")).toBe(false);
     });
+    it("Throws unexpected error during rename", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const newFullPath = "/u/user/newName";
+
+        const unexpectedError = new Error("Unexpected failure");
+
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(unexpectedError);
+
+        await expect(blockMocks.ussDir.rename(newFullPath)).rejects.toThrow("Unexpected failure");
+
+        expect(renameMock).toHaveBeenCalledTimes(3);
+
+        renameMock.mockRestore();
+    });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.reopen()", () => {
