@@ -853,6 +853,15 @@ describe("DatasetFSProvider", () => {
             mvsApiMock.mockRestore();
         });
 
+        it("looks up the resource before loading profile which may fail", async () => {
+            const lookupMock = jest.spyOn((DatasetFSProvider as any).prototype, "lookup").mockReturnValueOnce(testEntries.ps);
+            jest.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementationOnce(() => {
+                throw new Error("invalid profile");
+            });
+            await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toThrow("invalid profile");
+            expect(lookupMock).toHaveBeenCalledWith(testUris.ps, false);
+        });
+
         describe("error handling", () => {
             it("API response was unsuccessful for remote lookup", async () => {
                 const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.ps);

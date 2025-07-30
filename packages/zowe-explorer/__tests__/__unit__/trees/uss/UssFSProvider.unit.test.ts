@@ -10,7 +10,18 @@
  */
 
 import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri, workspace } from "vscode";
-import { AuthHandler, BaseProvider, DirEntry, FileEntry, Gui, UssDirectory, UssFile, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
+import {
+    AuthHandler,
+    BaseProvider,
+    DirEntry,
+    FileEntry,
+    FsAbstractUtils,
+    Gui,
+    UssDirectory,
+    UssFile,
+    ZoweExplorerApiType,
+    ZoweScheme,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -139,6 +150,15 @@ describe("UssFSProvider", () => {
         it("returns a file as-is when query has inDiff parameter", async () => {
             lookupMock.mockReturnValueOnce(testEntries.file);
             await expect(UssFSProvider.instance.stat(testUris.file.with({ query: "inDiff=true" }))).resolves.toStrictEqual(testEntries.file);
+            expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
+        });
+
+        it("looks up the resource before loading profile which may fail", async () => {
+            const lookupMock = jest.spyOn((UssFSProvider as any).prototype, "lookup").mockReturnValueOnce(testEntries.file);
+            jest.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementationOnce(() => {
+                throw new Error("invalid profile");
+            });
+            await expect(UssFSProvider.instance.stat(testUris.file)).rejects.toThrow("invalid profile");
             expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
         });
     });

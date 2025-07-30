@@ -83,8 +83,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
 
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on PS or PDS members only
         if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
             return entry;
