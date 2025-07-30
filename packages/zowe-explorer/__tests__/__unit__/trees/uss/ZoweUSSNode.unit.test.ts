@@ -509,6 +509,33 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         expect(updatedChild[0].fullPath).toContain(newFullPath);
         expect(updatedChild[0].tooltip).toContain(newFullPath);
     });
+    it("Retries rename after catching FileExists error and deleting local entry", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const newFullPath = "/u/user/newName";
+        const entries = new Map();
+        entries.set("newName", { dummy: "entry" });
+
+        const parentMock = {
+            entries,
+        };
+
+        const newUri = vscode.Uri.from({
+            scheme: "zowe-uss",
+            path: "/sestest/u/user/newName",
+        });
+
+        const fileExistsError = Object.assign(vscode.FileSystemError.FileExists("file exists"), { code: "FileExists" });
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(fileExistsError).mockResolvedValueOnce(undefined);
+
+        const lookupParentSpy = jest.spyOn(UssFSProvider.instance, "lookupParentDirectory").mockReturnValue(parentMock);
+
+        await blockMocks.ussDir.rename(newFullPath);
+        expect(renameMock).toHaveBeenCalledTimes(2);
+        expect(lookupParentSpy).toHaveBeenCalledWith(newUri);
+        expect(parentMock.entries.has("newName")).toBe(false);
+    });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.reopen()", () => {
