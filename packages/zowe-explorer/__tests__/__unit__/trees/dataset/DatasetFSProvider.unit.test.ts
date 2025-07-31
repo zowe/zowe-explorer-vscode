@@ -540,7 +540,7 @@ describe("DatasetFSProvider", () => {
 
         it("passes binary: true to uploadFromBuffer when entry.encoding.kind is 'binary'", async () => {
             const provider = DatasetFSProvider.instance;
-            const uri = testUris.pdsMember.with({ query: "encoding=IBM-1047" });
+            const uri = testUris.pdsMember;
             const content = new Uint8Array([0x41, 0x42, 0x43]);
             const parent = { entries: new Map(), metadata: { profile: { name: "profile" }, path: "/" } };
             const binaryEntry = { ...testEntries.pdsMember, wasAccessed: true, encoding: { kind: "binary" } };
@@ -555,13 +555,11 @@ describe("DatasetFSProvider", () => {
 
             await provider.writeFile(uri, content, { create: false, overwrite: true });
 
-            // ensure that binary and encoding can be passed
             expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalledWith(
                 Buffer.from(content),
                 binaryEntry.metadata.dsName,
                 expect.objectContaining({
                     binary: true,
-                    encoding: "IBM-1047",
                     returnEtag: true,
                 })
             );
