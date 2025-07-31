@@ -167,31 +167,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public updateStats(item: any): void {
-        const dsStats: Partial<Types.DatasetStats> = {};
-        dsStats.user = item.user ?? item.id;
-        if ("c4date" in item && "m4date" in item) {
-            const { m4date, mtime, msec }: { m4date: string; mtime?: string; msec?: string } = item;
-            dsStats.createdDate = dayjs(item.c4date).toDate();
-            if (mtime) {
-                const [hours, minutes] = mtime.split(":");
-                dsStats.modifiedDate = dayjs(`${m4date} ${hours}:${minutes}`).toDate();
-
-                if (msec) {
-                    dsStats.modifiedDate.setSeconds(parseInt(msec, 10));
-                }
-            } else {
-                dsStats.modifiedDate = dayjs(`${m4date}`).toDate();
-            }
-        }
-
-        dsStats["dsorg"] = item.dsorg;
-        dsStats["lrecl"] = item.lrecl;
-        dsStats["migr"] = item.migr;
-        dsStats["recfm"] = item.recfm;
-        dsStats["vols"] = item.vols;
-        dsStats["vol"] = item.vol;
-
-        this.setStats(dsStats);
+        this.setStats(DatasetUtils.getDataSetStats(item));
     }
 
     public getEncodingInMap(uriPath: string): ZosEncoding {

@@ -28,6 +28,7 @@ import {
     FileEntry,
     ZoweExplorerApiType,
     AuthHandler,
+    MessageSeverity,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -254,7 +255,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
     }
 
-    private async fetchDataset(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<PdsEntry | DsEntry> {
+    private async fetchDataset(uri: vscode.Uri, uriInfo: UriFsInfo, forceFetch: boolean = false): Promise<PdsEntry | DsEntry> {
         let entry: PdsEntry | DsEntry;
         try {
             entry = this.lookup(uri, false) as PdsEntry | DsEntry;
@@ -284,7 +285,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
-        if (!entryExists) {
+        if (!entryExists || forceFetch) {
             try {
                 if (pdsMember) {
                     const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(uriPath[0]);
@@ -303,6 +304,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     });
                     if (resp.success && resp.apiResponse?.items?.length > 0) {
                         entryIsDir = resp.apiResponse.items[0].dsorg?.startsWith("PO");
+                        if (entryIsDir) {
+                            entry.stats = { ...entry.stats, ...DatasetUtils.getDataSetStats(resp.apiResponse.items[0]) };
+                        }
                     } else {
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
@@ -589,6 +593,29 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
             const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
+
+            let safeUpload = true;
+            if (entry.stats.recfm.startsWith("F") || entry.stats.recfm.startsWith("V")) {
+                const lines = content.toString().split("\n");
+                lines.forEach((line) => {
+                    if (line.length + (entry.stats.recfm.startsWith("V") ? 4 : 0) > entry.stats.lrecl) {
+                        safeUpload = false;
+                    }
+                });
+            }
+
+            if (!safeUpload) {
+                const optionCancel = vscode.l10n.t("Cancel");
+                const optionContinue = vscode.l10n.t("Continue");
+                const selectedOption = await Gui.showMessage(
+                    vscode.l10n.t("This upload operation may result in data loss. Are you sure you want to continue?"),
+                    { severity: MessageSeverity.WARN, items: [optionCancel, optionContinue] }
+                );
+                if (selectedOption === optionCancel) {
+                    throw new Error(vscode.l10n.t("Operation cancelled"));
+                }
+            }
+
             resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
                 binary: entry.encoding?.kind === "binary",
                 encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
@@ -613,7 +640,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
         const basename = path.posix.basename(uri.path);
-        const parent = this._lookupParentDirectory(uri);
+        const parent = this._lookupParentDirectory(uri) as PdsEntry;
+        const isPdsMember = FsDatasetsUtils.isPdsEntry(parent);
         let entry = parent.entries.get(basename);
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
@@ -625,6 +653,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileExists(uri);
         }
 
+        if (isPdsMember && parent.stats == null) {
+            const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+            const tempPds = await this.fetchDataset(uri.with({ path: path.posix.dirname(uri.path) }), uriInfo, true);
+            parent.stats = tempPds.stats;
+        }
+
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
         const urlQuery = new URLSearchParams(uri.query);
         const forceUpload = urlQuery.has("forceUpload");
@@ -632,7 +666,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             if (!entry) {
-                const isPdsMember = FsDatasetsUtils.isPdsEntry(parent);
                 entry = new DsEntry(basename, isPdsMember);
                 entry.data = content;
                 const profInfo = parent.metadata
@@ -645,6 +678,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
                 if (content.byteLength > 0) {
                     // Update e-tag if write was successful.
+                    entry.stats = { ...entry.stats, ...parent.stats };
                     const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
@@ -664,34 +698,37 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
+                    entry.stats = { ...entry.stats, ...parent.stats };
                     const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                 }
                 entry.data = content;
             }
         } catch (err) {
-            if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                this._handleError(err, {
-                    additionalContext: vscode.l10n.t({
-                        message: "Failed to save {0}",
-                        args: [(entry.metadata as DsEntryMetadata).dsName],
-                        comment: ["Data set name"],
-                    }),
-                    apiType: ZoweExplorerApiType.Mvs,
-                    profileType: entry.metadata.profile?.type,
-                    retry: {
-                        fn: this.writeFile.bind(this),
-                        args: [uri, content, options],
-                    },
-                    templateArgs: { profileName: entry.metadata.profile?.name ?? "" },
-                });
+            if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
+                entry.data = content;
+                // Prompt the user with the conflict dialog
+                await this._handleConflict(uri, entry);
+                return;
+            }
+            if (err.message.includes(vscode.l10n.t("Operation cancelled"))) {
                 throw err;
             }
-
-            entry.data = content;
-            // Prompt the user with the conflict dialog
-            await this._handleConflict(uri, entry);
-            return;
+            this._handleError(err, {
+                additionalContext: vscode.l10n.t({
+                    message: "Failed to save {0}",
+                    args: [(entry.metadata as DsEntryMetadata).dsName],
+                    comment: ["Data set name"],
+                }),
+                apiType: ZoweExplorerApiType.Mvs,
+                profileType: entry.metadata.profile?.type,
+                retry: {
+                    fn: this.writeFile.bind(this),
+                    args: [uri, content, options],
+                },
+                templateArgs: { profileName: entry.metadata.profile?.name ?? "" },
+            });
+            throw err;
         }
 
         entry.mtime = Date.now();
