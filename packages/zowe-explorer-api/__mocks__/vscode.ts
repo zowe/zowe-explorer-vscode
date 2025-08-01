@@ -1091,6 +1091,26 @@ export class FileSystemError extends Error {
 }
 
 /**
+ * The configuration target
+ */
+export enum ConfigurationTarget {
+    /**
+     * Global configuration
+     */
+    Global = 1,
+
+    /**
+     * Workspace configuration
+     */
+    Workspace = 2,
+
+    /**
+     * Workspace folder configuration
+     */
+    WorkspaceFolder = 3,
+}
+
+/**
  * Namespace for dealing with the current workspace. A workspace is the representation
  * of the folder that has been opened. There is no workspace when just a file but not a
  * folder has been opened.
