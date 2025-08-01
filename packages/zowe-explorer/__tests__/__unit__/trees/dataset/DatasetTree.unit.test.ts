@@ -4671,7 +4671,7 @@ describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
         mockSessionNode.children = [{ label: "MY.DATA.SET" }];
         jest.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
         const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
-        expect(testTree.filterTreeByPattern).toHaveBeenCalledWith(mockSessionNode, sessProfile, "MY.DATA.SET", false);
+        expect(testTree.filterTreeByPattern).toHaveBeenCalledWith(mockSessionNode, sessProfile, "MY.DATA.SET");
         expect(mockTreeView.reveal).toHaveBeenCalledWith(mockSessionNode.children[0], { select: true, focus: true, expand: true });
         expect(result).toBe(true);
     });
