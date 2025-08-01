@@ -207,6 +207,34 @@ export class ConfigEditor extends WebView {
         const profInfo = new ProfileInfo("zowe");
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
+        for (const item of changes) {
+            const keyParts = item.key.split(".");
+            if (keyParts[keyParts.length - 2] === "secure") {
+                keyParts[keyParts.length - 2] = "properties";
+                item.key = keyParts.join(".");
+            }
+
+            const profileParts = item.profile.split(".");
+            if (profileParts[profileParts.length - 2] === "secure") {
+                profileParts[profileParts.length - 2] = "properties";
+                item.profile = profileParts.join(".");
+            }
+        }
+
+        for (const item of deletions) {
+            const keyParts = item.key.split(".");
+            if (keyParts[keyParts.length - 2] === "secure") {
+                keyParts[keyParts.length - 2] = "properties";
+                item.key = keyParts.join(".");
+            }
+
+            const profileParts = item.profile.split(".");
+            if (profileParts[profileParts.length - 2] === "secure") {
+                profileParts[profileParts.length - 2] = "properties";
+                item.profile = profileParts.join(".");
+            }
+        }
+
         if (configPath !== profInfo.getTeamConfig().api.layers.get().path) {
             const findProfile = profInfo.getTeamConfig().layers.find((prof) => prof.path === configPath);
             profInfo.getTeamConfig().api.layers.activate(findProfile.user, findProfile.global);
@@ -227,6 +255,10 @@ export class ConfigEditor extends WebView {
                 // console.log(err);
             }
         }
+
+        const test = profInfo.getAllProfiles();
+        const zxploreProf = profInfo.getAllProfiles().find((prof) => prof.profName === "zxplore.zosmf");
+        const mergeArgs = profInfo.mergeArgsForProfile(zxploreProf);
 
         await profInfo.getTeamConfig().save();
     }
