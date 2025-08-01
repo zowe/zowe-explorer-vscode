@@ -40,7 +40,6 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ZowePersistentFilters } from "../../../../src/tools/ZowePersistentFilters";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { DatasetTree } from "../../../../src/trees/dataset/DatasetTree";
-import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";

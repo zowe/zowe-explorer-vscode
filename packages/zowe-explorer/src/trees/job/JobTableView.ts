@@ -88,9 +88,9 @@ export class JobTableView {
         { field: "job-correlator", headerName: l10n.t("Job Correlator") },
         { field: "phase", headerName: l10n.t("Phase") },
         { field: "phase-name", headerName: l10n.t("Phase Name") },
-        { field: "exec-started", headerName: l10n.t("Time Started") },
-        { field: "exec-submitted", headerName: l10n.t("Time Submitted") },
-        { field: "exec-ended", headerName: l10n.t("Time Ended") },
+        { field: "exec-started", headerName: l10n.t("Time Started"), useDateComparison: true },
+        { field: "exec-submitted", headerName: l10n.t("Time Submitted"), useDateComparison: true },
+        { field: "exec-ended", headerName: l10n.t("Time Ended"), useDateComparison: true },
         { field: "reason-not-running", headerName: l10n.t("Error Details") },
     ];
 
