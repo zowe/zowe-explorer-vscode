@@ -1358,7 +1358,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         node: IZoweDatasetTreeNode,
         profile: imperative.IProfileLoaded,
         pattern: string,
-        addToHistory: boolean
+        addToHistory?: boolean
     ): Promise<void> {
         ZoweLogger.trace("DatasetTree.filterTreeByPattern called.");
         await AuthUtils.updateNodeToolTip(node, profile);
@@ -1495,7 +1495,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             sessionNode.pattern = dsName.toUpperCase();
             sessionNode.dirty = true;
             try {
-                await this.filterTreeByPattern(sessionNode, sessProfile, dsName, false);
+                await this.filterTreeByPattern(sessionNode, sessProfile, dsName);
             } catch (error) {
                 return false;
             }
