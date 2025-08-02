@@ -104,6 +104,7 @@ export const config: Options.Testrunner = {
                 userSettings: {
                     "editor.fontSize": 14,
                     "extensions.ignoreRecommendations": true,
+                    "zowe.settings.displayReleaseNotes": false,
                 },
             },
         },
@@ -161,11 +162,9 @@ export const config: Options.Testrunner = {
     // If you are using Cucumber you need to specify the location of your step definitions.
     cucumberOpts: {
         // <string[]> (file/dir) require files before executing features
-        require: ["./step_definitions/**/*.steps.ts"],
+        import: ["./step_definitions/**/*.steps.ts"],
         // <boolean> show full backtrace for errors
         backtrace: false,
-        // <string[]> ("extension:module") require files with the given EXTENSION after requiring MODULE (repeatable)
-        requireModule: ["ts-node/register"],
         // <boolean> invoke formatters without executing steps
         dryRun: false,
         // <boolean> abort the run on first failure

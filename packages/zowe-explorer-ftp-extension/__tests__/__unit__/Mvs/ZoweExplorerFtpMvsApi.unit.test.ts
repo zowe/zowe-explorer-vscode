@@ -34,10 +34,12 @@ const readableStream = stream.Readable.from([]);
 const fs = require("fs");
 
 fs.createReadStream = jest.fn().mockReturnValue(readableStream);
-const MvsApi = new FtpMvsApi();
 
 describe("FtpMvsApi", () => {
+    let MvsApi: FtpMvsApi;
     beforeEach(() => {
+        const profile: imperative.IProfileLoaded = { message: "", type: "zftp", failNotFound: false, profile: { host: "example.com", port: 22 } };
+        MvsApi = new FtpMvsApi(profile);
         MvsApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", profile: { secureFtp: false }, failNotFound: false });
         MvsApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         MvsApi.releaseConnection = jest.fn();
@@ -66,6 +68,24 @@ describe("FtpMvsApi", () => {
         expect(MvsApi.releaseConnection).toHaveBeenCalledTimes(0);
     });
 
+    it("should list datasets with start and maxLength options", async () => {
+        const response = [
+            { name: "IBMUSER.DS1", dsOrg: "PO", volume: "MIGRATED" },
+            { name: "IBMUSER.DS2", dsOrg: "PS" },
+            { name: "IBMUSER.DS3", dsOrg: "PO" },
+        ];
+        DataSetUtils.listDataSets = jest.fn().mockReturnValue(response);
+        const mockParams = {
+            filter: "IBMUSER",
+        };
+        const result = await MvsApi.dataSet(mockParams.filter, { start: "IBMUSER.DS2", maxLength: 1 });
+
+        expect(result.apiResponse.items[0].dsname).toContain("IBMUSER.DS2");
+        expect(result.apiResponse.items.length).toBe(1);
+        expect(DataSetUtils.listDataSets).toHaveBeenCalledTimes(1);
+        expect(MvsApi.releaseConnection).toHaveBeenCalledTimes(0);
+    });
+
     it("should list dataset members.", async () => {
         const response = [{ name: "M1" }, { name: "M2" }];
         DataSetUtils.listMembers = jest.fn().mockReturnValue(response);
@@ -77,6 +97,18 @@ describe("FtpMvsApi", () => {
         expect(result.apiResponse.items[0].member).toContain("M1");
         expect(DataSetUtils.listMembers).toHaveBeenCalledTimes(1);
         expect(MvsApi.releaseConnection).toHaveBeenCalled();
+    });
+
+    it("should list dataset members with start and maxLength options", async () => {
+        const response = [{ name: "M1" }, { name: "M2" }, { name: "M3" }];
+        DataSetUtils.listMembers = jest.fn().mockReturnValue(response);
+        const mockParams = {
+            dataSetName: "IBMUSER.DS1",
+        };
+        const result = await MvsApi.allMembers(mockParams.dataSetName, { start: "M2", maxLength: 1 });
+
+        expect(result.apiResponse.items[0].member).toContain("M2");
+        expect(result.apiResponse.items.length).toBe(1);
     });
 
     it("should view dataset content.", async () => {

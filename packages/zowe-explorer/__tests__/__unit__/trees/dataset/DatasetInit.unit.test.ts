@@ -18,6 +18,8 @@ import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { DatasetInit } from "../../../../src/trees/dataset/DatasetInit";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
+import { DatasetSearch } from "../../../../src/trees/dataset/DatasetSearch";
+import { DatasetTableView } from "../../../../src/trees/dataset/DatasetTableView";
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -58,7 +60,11 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.refreshAll",
-                mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [dsProvider] }],
+                mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] }],
+            },
+            {
+                name: "zowe.ds.refresh",
+                mock: [{ spy: jest.spyOn(SharedActions, "refreshProvider"), arg: [dsProvider] }],
             },
             {
                 name: "zowe.ds.refreshNode",
@@ -98,11 +104,11 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.pdsSearchFor",
-                mock: [{ spy: jest.spyOn(DatasetActions, "search"), arg: [test.context, test.value] }],
+                mock: [{ spy: jest.spyOn(DatasetSearch, "search"), arg: [test.context, test.value] }],
             },
             {
                 name: "zowe.ds.filteredDataSetsSearchFor",
-                mock: [{ spy: jest.spyOn(DatasetActions, "search"), arg: [test.context, test.value] }],
+                mock: [{ spy: jest.spyOn(DatasetSearch, "search"), arg: [test.context, test.value] }],
             },
             {
                 name: "zowe.ds.uploadDialog",
@@ -131,6 +137,10 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(DatasetActions, "submitJcl"), arg: [dsProvider, test.value] }],
             },
             {
+                name: "zowe.ds.zoom",
+                mock: [{ spy: jest.spyOn(DatasetActions, "zoom"), arg: [] }],
+            },
+            {
                 name: "zowe.ds.submitMember",
                 mock: [{ spy: jest.spyOn(DatasetActions, "submitMember"), arg: [test.value] }],
             },
@@ -138,6 +148,7 @@ describe("Test src/dataset/extension", () => {
                 name: "zowe.ds.showAttributes",
                 mock: [
                     { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
+                    { spy: jest.spyOn(SharedContext, "isVsam"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(SharedContext, "isPds"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
                     { spy: jest.spyOn(DatasetActions, "showAttributes"), arg: [test.value, dsProvider] },
@@ -196,6 +207,14 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.filterBy",
                 mock: [{ spy: jest.spyOn(dsProvider, "filterPdsMembersDialog"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.ds.tableView",
+                mock: [{ spy: jest.spyOn(DatasetTableView.getInstance(), "handleCommand"), arg: [test.context, test.value, undefined] }],
+            },
+            {
+                name: "zowe.ds.listDataSets",
+                mock: [{ spy: jest.spyOn(DatasetTableView.getInstance(), "handlePatternSearch"), arg: [test.context] }],
             },
             {
                 name: "onDidChangeConfiguration",

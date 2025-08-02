@@ -21,6 +21,7 @@ import { MainframeInteraction } from "../extend/MainframeInteraction";
 import { FileManagement } from "../utils";
 import { Types } from "../Types";
 import { ProfilesCache } from "../profiles/ProfilesCache";
+import { VscSettings } from "../vscode/doc/VscSettings";
 
 /**
  * Implementations of Zowe Explorer API for z/OSMF profiles
@@ -45,6 +46,14 @@ export namespace ZoweExplorerZosmf {
             const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
             imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
             const sessionToUse = new imperative.Session(sessCfg);
+            sessionToUse.ISession.socketConnectTimeout = VscSettings.getDirectValue(
+                "zowe.settings.socketConnectTimeout",
+                sessionToUse.ISession.socketConnectTimeout
+            );
+            sessionToUse.ISession.requestCompletionTimeout = VscSettings.getDirectValue(
+                "zowe.settings.requestTimeout",
+                sessionToUse.ISession.requestCompletionTimeout
+            );
             return ProfilesCache.getProfileSessionWithVscProxy(sessionToUse);
         }
 
@@ -59,7 +68,7 @@ export namespace ZoweExplorerZosmf {
         }
 
         private _getSession(serviceProfile: imperative.IProfileLoaded): imperative.Session {
-            let cmdArgs: imperative.ICommandArguments = {
+            const cmdArgs: imperative.ICommandArguments = {
                 $0: "zowe",
                 _: [""],
                 host: serviceProfile.profile.host as string,
@@ -67,20 +76,13 @@ export namespace ZoweExplorerZosmf {
                 protocol: serviceProfile.profile.protocol as string,
                 basePath: serviceProfile.profile.basePath as string,
                 rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
+                tokenType: serviceProfile.profile.tokenType as string,
+                tokenValue: serviceProfile.profile.tokenValue as string,
+                user: serviceProfile.profile.user as string,
+                password: serviceProfile.profile.password as string,
+                certFile: serviceProfile.profile.certFile as string,
+                certKeyFile: serviceProfile.profile.certKeyFile as string,
             };
-            if (!serviceProfile.profile.tokenValue) {
-                cmdArgs = {
-                    ...cmdArgs,
-                    user: serviceProfile.profile.user as string,
-                    password: serviceProfile.profile.password as string,
-                };
-            } else {
-                cmdArgs = {
-                    ...cmdArgs,
-                    tokenType: serviceProfile.profile.tokenType as string,
-                    tokenValue: serviceProfile.profile.tokenValue as string,
-                };
-            }
             return this.getSessionFromCommandArgument(cmdArgs);
         }
 
@@ -430,8 +432,8 @@ export namespace ZoweExplorerZosmf {
             return zosjobs.DownloadJobs.downloadSpoolContentCommon(this.getSession(), parms);
         }
 
-        public getSpoolContentById(jobname: string, jobid: string, spoolId: number): Promise<string> {
-            return zosjobs.GetJobs.getSpoolContentById(this.getSession(), jobname, jobid, spoolId);
+        public getSpoolContentById(jobname: string, jobid: string, spoolId: number, encoding?: string): Promise<string> {
+            return zosjobs.GetJobs.getSpoolContentById(this.getSession(), jobname, jobid, spoolId, encoding);
         }
 
         public getJclForJob(job: zosjobs.IJob): Promise<string> {
@@ -459,6 +461,9 @@ export namespace ZoweExplorerZosmf {
             // use 1.0 so that all JES subsystems are supported out-of-the-box
             const jobResult = await zosjobs.CancelJobs.cancelJobForJob(session, job, "2.0");
             return jobResult.status === "0";
+        }
+        public supportSpoolPagination(): boolean {
+            return true;
         }
     }
 

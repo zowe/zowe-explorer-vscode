@@ -599,6 +599,22 @@ export namespace window {
         return new Disposable();
     }
 
+    /**
+     * Registers a webview panel serializer.
+     *
+     * Extensions that support reviving should have an `"onWebviewPanel:viewType"` activation event and
+     * make sure that `registerWebviewPanelSerializer` is called during activation.
+     *
+     * Only a single serializer may be registered at a time for a given `viewType`.
+     *
+     * @param viewType Type of the webview panel that can be serialized.
+     * @param serializer Webview serializer.
+     * @returns A {@link Disposable disposable} that unregisters the serializer.
+     */
+    export function registerWebviewPanelSerializer(viewType: string, serializer: any): Disposable {
+        return new Disposable();
+    }
+
     export const visibleTextEditors = [];
     /**
      * Options for creating a {@link TreeView}
@@ -681,7 +697,34 @@ export namespace window {
      * @returns A new {@link QuickPick}.
      */
     export function createQuickPick<T extends QuickPickItem>(): QuickPick<T> {
-        return {} as QuickPick<T>;
+        const quickPick: QuickPick<T> = {
+            activeItems: [],
+            busy: false,
+            buttons: [],
+            canSelectMany: false,
+            dispose: jest.fn(),
+            enabled: true,
+            hide: jest.fn(),
+            ignoreFocusOut: false,
+            items: [],
+            matchOnDetail: false,
+            matchOnDescription: false,
+            onDidAccept: jest.fn(),
+            onDidChangeActive: jest.fn(),
+            onDidChangeSelection: jest.fn(),
+            onDidChangeValue: jest.fn(),
+            onDidHide: jest.fn(),
+            onDidTriggerButton: jest.fn(),
+            onDidTriggerItemButton: jest.fn(),
+            placeholder: undefined,
+            selectedItems: [],
+            show: jest.fn(),
+            step: undefined,
+            title: undefined,
+            totalSteps: undefined,
+            value: "",
+        };
+        return quickPick;
     }
 
     /**
@@ -812,6 +855,9 @@ export namespace languages {
     export function setTextDocumentLanguage(document: TextDocument, languageId: string): Thenable<TextDocument> {
         return {} as Thenable<TextDocument>;
     }
+    export function registerCodeLensProvider(selector: any, provider: any): Disposable {
+        return new Disposable();
+    }
 }
 
 export namespace commands {
@@ -841,11 +887,13 @@ export class Disposable {
      * on dispose.
      * @param callOnDispose Function that disposes something.
      */
-    constructor() {}
+    constructor(private callOnDispose?: Function) {}
     /**
      * Dispose this object.
      */
-    public dispose(): any {}
+    public dispose(): any {
+        this.callOnDispose?.();
+    }
 }
 
 export function RelativePattern(base: string, pattern: string) {
@@ -1051,10 +1099,19 @@ export enum TreeItemCollapsibleState {
  * API to other extensions.
  */
 export class EventEmitter<T> {
+    private subscribers: Function[] = [];
     /**
      * The event listeners can subscribe to.
      */
-    event: Event<T>;
+    event: Event<T> = jest.fn().mockImplementation((listener) => {
+        this.subscribers.push(listener);
+        return new Disposable(() => {
+            const idx = this.subscribers.findIndex((v) => v === listener);
+            if (idx != -1) {
+                this.subscribers.splice(idx, 1);
+            }
+        });
+    });
 
     /**
      * Notify all subscribers of the [event](EventEmitter#event). Failure
@@ -1062,7 +1119,13 @@ export class EventEmitter<T> {
      *
      * @param data The event object.
      */
-    fire(data?: T): void {}
+    fire(data?: T): void {
+        for (const sub of this.subscribers) {
+            try {
+                sub(data);
+            } catch (err) {}
+        }
+    }
 
     /**
      * Dispose this object and free resources.
@@ -1317,7 +1380,7 @@ export enum FileSystemProviderErrorCode {
  * This class has factory methods for common error-cases, like `FileNotFound` when
  * a file or folder doesn't exist, use them like so: `throw vscode.FileSystemError.FileNotFound(someUri);`
  */
-export const { FileSystemError, Selection, Position } = require("jest-mock-vscode").createVSCodeMock(jest);
+export const { FileSystemError, Selection, Position, ThemeIcon, CodeLensProvider } = require("jest-mock-vscode").createVSCodeMock(jest);
 
 /**
  * Namespace for dealing with the current workspace. A workspace is the representation

@@ -24,6 +24,7 @@ import { Definitions } from "../configuration/Definitions";
 export class ZowePersistentFilters {
     private static readonly favorites: string = "favorites";
     private static readonly searchHistory: string = "searchHistory";
+    private static readonly searchedKeywordHistory: string = "searchedKeywordHistory";
     private static readonly fileHistory: string = "fileHistory";
     private static readonly sessions: string = "sessions";
     private static readonly encodingHistory: string = "encodingHistory";
@@ -37,6 +38,7 @@ export class ZowePersistentFilters {
     private mEncodingHistory: string[] = [];
     private mSortSettings: { [criteria: string]: Sorting.NodeSort } = {};
     private mFilterSettings: { [criteria: string]: Sorting.DatasetFilter } = {};
+    private mSearchedKeywordHistory: string[] = [];
 
     public constructor(
         schema: PersistenceSchemaEnum,
@@ -166,6 +168,37 @@ export class ZowePersistentFilters {
             const criteria = `${node.getProfileName()}-${node.label as string}`;
             this.mFilterSettings[criteria] = setting;
             this.updateFilterSettings();
+         }
+    }
+  
+    /**
+     * Adds one line of searched keywords to the local store and
+     * updates persistent store. The store contains a
+     * maximum number of entries as described by `maxSearchHistory`
+     *
+     * If the entry matches a previous entry it is removed from the list
+     * at that position in the stack.
+     *
+     * Once the maximum capacity has been reached the last entry is popped off
+     *
+     * @param {string} criteria - a line of search criteria
+     */
+    public addSearchedKeywordHistory(criteria: string): void {
+        ZoweLogger.trace("PersistentFilters.addSearchedKeywordHistory called.");
+        if (criteria) {
+            // Remove any entries that match
+            this.mSearchedKeywordHistory = this.mSearchedKeywordHistory.filter((element) => {
+                return element.trim() !== criteria.trim();
+            });
+
+            // Add value to front of stack
+            this.mSearchedKeywordHistory.unshift(criteria);
+
+            // If list getting too large remove last entry
+            if (this.mSearchedKeywordHistory.length > this.maxFileHistory) {
+                this.mSearchedKeywordHistory.pop();
+            }
+            this.updateSearchedKeywordHistory();
         }
     }
 
@@ -186,6 +219,11 @@ export class ZowePersistentFilters {
     public getFileHistory(): string[] {
         ZoweLogger.trace("PersistentFilters.getFileHistory called.");
         return this.mFileHistory;
+    }
+
+    public getSearchedKeywordHistory(): string[] {
+        ZoweLogger.trace("PersistentFilters.getSearchedKeywordHistory called.");
+        return this.mSearchedKeywordHistory;
     }
 
     public readFavorites(): string[] {
@@ -267,6 +305,15 @@ export class ZowePersistentFilters {
         const name = `${node.getProfileName()}-${node.label as string}`;
         delete this.mFilterSettings[name];
         this.updateFilterSettings();
+
+    public removeSearchedKeywordHistory(name: string): void {
+        const index = this.mSearchedKeywordHistory.findIndex((keyword) => {
+            return keyword.includes(name);
+        });
+        if (index >= 0) {
+            this.mSearchedKeywordHistory.splice(index, 1);
+        }
+        this.updateSearchedKeywordHistory();
     }
 
     /*********************************************************************************************************************************************/
@@ -306,6 +353,10 @@ export class ZowePersistentFilters {
         ZoweLogger.trace("PersistentFilters.resetFilterSettings called.");
         this.mFilterSettings = {};
         this.updateFilterSettings();
+
+    public resetSearchedKeywordHistory(): void {
+        this.mSearchedKeywordHistory = [];
+        this.updateSearchedKeywordHistory();
     }
 
     /*********************************************************************************************************************************************/
@@ -370,6 +421,13 @@ export class ZowePersistentFilters {
         const settings = { ...ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema) };
         if (settings.persistence) {
             settings.filterSettings = this.mFilterSettings;
+        }
+    }
+
+    private updateSearchedKeywordHistory(): void {
+        const settings = { ...ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema) };
+        if (settings.persistence) {
+            settings.searchedKeywordHistory = this.mSearchedKeywordHistory;
             ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
         }
     }
@@ -384,6 +442,7 @@ export class ZowePersistentFilters {
             this.mEncodingHistory = settings[ZowePersistentFilters.encodingHistory] ?? [];
             this.mSortSettings = settings[ZowePersistentFilters.sortSettings] ?? {};
             this.mFilterSettings = settings[ZowePersistentFilters.filterSettings] ?? {};
+            this.mSearchedKeywordHistory = settings[ZowePersistentFilters.searchedKeywordHistory] ?? [];
         }
         this.updateSearchHistory();
         this.updateSessions();
@@ -391,5 +450,6 @@ export class ZowePersistentFilters {
         this.updateEncodingHistory();
         this.updateSortSettings();
         this.updateFilterSettings();
+        this.updateSearchedKeywordHistory();
     }
 }

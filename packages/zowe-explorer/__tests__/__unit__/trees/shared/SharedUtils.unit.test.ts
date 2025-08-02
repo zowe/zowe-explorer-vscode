@@ -25,8 +25,6 @@ import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { ZoweJobNode, ZoweSpoolNode } from "../../../../src/trees/job/ZoweJobNode";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
-import { AuthUtils } from "../../../../src/utils/AuthUtils";
-import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { createIJobFile, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
@@ -66,18 +64,21 @@ describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
             label: "root",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             session: globalMocks.session,
+            profile: globalMocks.profileOne,
         });
         const childNode1 = new ZoweUSSNode({
             label: "child1",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: rootNode,
             session: globalMocks.session,
+            profile: globalMocks.profileOne,
         });
         const childNode2 = new ZoweUSSNode({
             label: "child2",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: childNode1,
             session: globalMocks.session,
+            profile: globalMocks.profileOne,
         });
 
         childNode1.children.push(childNode2);
@@ -88,94 +89,34 @@ describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     });
 });
 
-describe("syncSessionNode shared util function", () => {
-    const serviceProfile = {
-        name: "sestest",
-        profile: {},
-        type: "zosmf",
-        message: "",
-        failNotFound: false,
-    };
-
-    const sessionNode = createDatasetSessionNode(undefined, serviceProfile);
-
-    it("should update a session and a profile in the provided node", async () => {
-        const globalMocks = createGlobalMocks();
-        // given
-        Object.defineProperty(globalMocks.mockProfilesCache, "loadNamedProfile", {
-            value: jest.fn().mockReturnValue(createIProfile()),
-        });
-        const expectedSession = new imperative.Session({});
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        const sessionForProfile = (_profile) =>
-            ({
-                getSession: () => new imperative.Session({}),
-            } as any);
-        // when
-        AuthUtils.syncSessionNode(sessionForProfile, sessionNode);
-        expect(sessionNode.getSession()).toEqual(expectedSession);
-        expect(sessionNode.getProfile()).toEqual(createIProfile());
-    });
-    it("should update session node and refresh tree node if provided", async () => {
-        const globalMocks = createGlobalMocks();
-        // given
-        Object.defineProperty(globalMocks.mockProfilesCache, "loadNamedProfile", {
-            value: jest.fn().mockReturnValue(createIProfile()),
-        });
-        const getChildrenSpy = jest.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
-        const refreshElementMock = jest.fn();
-        jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValueOnce({
-            refreshElement: refreshElementMock,
-        } as any);
-        const getSessionMock = jest.fn().mockReturnValue(new imperative.Session({}));
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        const sessionForProfile = (_profile) =>
-            ({
-                getSession: getSessionMock,
-            } as any);
-        // when
-        AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
-        expect(getSessionMock).toHaveBeenCalled();
-        expect(sessionNode.dirty).toBe(true);
-        expect(await getChildrenSpy).toHaveBeenCalled();
-        expect(refreshElementMock).toHaveBeenCalledWith(sessionNode);
-    });
-    it("should do nothing, if there is no profile from provided node in the file system", () => {
-        const profiles = createInstanceOfProfile(serviceProfile);
-        profiles.loadNamedProfile = jest.fn(() =>
-            jest.fn(() => {
-                throw new Error(`There is no such profile with name: ${serviceProfile.name}`);
-            })
-        );
-        profiles.getBaseProfile = jest.fn(() => undefined);
-        // when
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        const dummyFn = (_profile) =>
-            ({
-                getSession: () => new imperative.Session({}),
-            } as any);
-        AuthUtils.syncSessionNode(dummyFn, sessionNode);
-        // then
-        const initialSession = sessionNode.getSession();
-        const initialProfile = sessionNode.getProfile();
-        expect(sessionNode.getSession()).toEqual(initialSession);
-        expect(sessionNode.getProfile()).toEqual(initialProfile);
-    });
-});
-
 describe("Positive testing", () => {
     it("should pass for ZoweDatasetTreeNode with ZoweDatasetNode node type", () => {
-        const dsNode = new ZoweDatasetNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const dsNode = new ZoweDatasetNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweDatasetTreeNode(dsNode);
         expect(value).toBeTruthy();
     });
     it("should pass for ZoweUSSTreeNode with ZoweUSSNode node type", () => {
-        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const ussNode = new ZoweUSSNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweUSSTreeNode(ussNode);
         expect(value).toBeTruthy();
     });
     it("should pass for ZoweJobTreeNode with ZoweJobNode node type", () => {
-        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const jobNode = new ZoweJobNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweJobTreeNode(jobNode);
         expect(value).toBeTruthy();
     });
@@ -183,12 +124,22 @@ describe("Positive testing", () => {
 
 describe("Negative testing for ZoweDatasetTreeNode", () => {
     it("should fail with ZoweUSSNode node type", () => {
-        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const ussNode = new ZoweUSSNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweDatasetTreeNode(ussNode);
         expect(value).toBeFalsy();
     });
     it("should fail with ZoweJobNode node type", () => {
-        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const jobNode = new ZoweJobNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweDatasetTreeNode(jobNode);
         expect(value).toBeFalsy();
     });
@@ -201,7 +152,12 @@ describe("Negative testing for ZoweUSSTreeNode", () => {
         expect(value).toBeFalsy();
     });
     it("should fail with ZoweJobNode node type", () => {
-        const jobNode = new ZoweJobNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const jobNode = new ZoweJobNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweUSSTreeNode(jobNode);
         expect(value).toBeFalsy();
     });
@@ -214,7 +170,12 @@ describe("Negative testing for ZoweJobTreeNode", () => {
         expect(value).toBeFalsy();
     });
     it("should fail with ZoweUSSNode node type", () => {
-        const ussNode = new ZoweUSSNode({ label: "", collapsibleState: vscode.TreeItemCollapsibleState.None });
+        const globalMocks = createGlobalMocks();
+        const ussNode = new ZoweUSSNode({
+            label: "",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
         const value = SharedUtils.isZoweJobTreeNode(ussNode);
         expect(value).toBeFalsy();
     });
@@ -270,6 +231,11 @@ describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
         const nodeList = SharedUtils.getSelectedNodeList(aNode, selectedNodes);
 
         expect(nodeList).toEqual(selectedNodes);
+    });
+
+    it("returns an empty array when neither node or nodeList are valid", () => {
+        const nodeList = SharedUtils.getSelectedNodeList(null as any, null as any);
+        expect(nodeList).toEqual([]);
     });
 
     function createTestNode() {
@@ -463,6 +429,26 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
     });
 
+    it("prompts for encoding for USS file when profile contains encoding as number", async () => {
+        const blockMocks = createBlockMocks();
+        (blockMocks.profile.profile as any).encoding = 1047;
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: blockMocks.session,
+            profile: blockMocks.profile,
+            parentPath: "/root",
+        });
+        blockMocks.getEncodingForFile.mockReturnValueOnce({ kind: "text" });
+        await SharedUtils.promptForEncoding(node);
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({
+            label: "1047",
+            description: `From profile ${blockMocks.profile.name}`,
+        });
+        expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is EBCDIC" }));
+    });
+
     it("prompts for encoding for USS file and shows recent values", async () => {
         const blockMocks = createBlockMocks();
         const node = new ZoweUSSNode({
@@ -555,6 +541,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
             parentNode: jobNode,
+            profile: blockMocks.profile,
         });
         JobFSProvider.instance.encodingMap[spoolNode.resourceUri?.path] = { kind: "text" };
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
@@ -1384,5 +1371,98 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
             direction: Sorting.SortDirection.Ascending,
         });
         expect(sortOptions).toEqual(["Name (default)", "Date Created", "Date Modified", "User ID"]);
+    });
+});
+
+describe("Shared utils unit tests - function debounceAsync", () => {
+    beforeAll(() => {
+        jest.useFakeTimers();
+    });
+
+    afterAll(() => {
+        jest.useRealTimers();
+    });
+
+    it("executes a function twice when time between calls is long", async () => {
+        const mockEventHandler = jest.fn().mockResolvedValue(undefined);
+        const debouncedFn = SharedUtils.debounceAsync(mockEventHandler, 100);
+        void debouncedFn();
+        jest.runAllTimers();
+        void debouncedFn();
+        jest.runAllTimers();
+        expect(mockEventHandler).toHaveBeenCalledTimes(2);
+    });
+
+    it("executes a function only once when time between calls is short", async () => {
+        const mockEventHandler = jest.fn().mockResolvedValue(undefined);
+        const debouncedFn = SharedUtils.debounceAsync(mockEventHandler, 100);
+        void debouncedFn();
+        jest.advanceTimersByTime(10);
+        void debouncedFn();
+        jest.runAllTimers();
+        expect(mockEventHandler).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("SharedUtils.handleProfileChange", () => {
+    it("iterates over tree providers and updates profile on profile nodes", async () => {
+        const profile = createIProfile();
+        const newProfile = { ...profile, profile: { ...profile, user: "newuser", password: "newpass" } };
+        const dsSession = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile,
+        });
+        const ussSession = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.USS_SESSION_CONTEXT,
+            profile,
+        });
+        const jobSession = new ZoweJobNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.JOBS_SESSION_CONTEXT,
+            profile,
+        });
+        const providers = {
+            ds: { getChildren: () => [dsSession] } as any,
+            uss: { getChildren: () => [ussSession] } as any,
+            job: { getChildren: () => [jobSession] } as any,
+        };
+        await SharedUtils.handleProfileChange(providers, newProfile);
+        // verify that nodes were updated with new data
+        expect(dsSession.getProfile().profile?.user).toBe(newProfile.profile.user);
+        expect(dsSession.getProfile().profile?.password).toBe(newProfile.profile.password);
+        expect(ussSession.getProfile().profile?.user).toBe(newProfile.profile.user);
+        expect(ussSession.getProfile().profile?.password).toBe(newProfile.profile.password);
+        expect(jobSession.getProfile().profile?.user).toBe(newProfile.profile.user);
+        expect(jobSession.getProfile().profile?.password).toBe(newProfile.profile.password);
+    });
+    it("logs an error if setProfileToChoice fails", async () => {
+        const profile = createIProfile();
+        const newProfile = { ...profile, profile: { ...profile, user: "newuser", password: "newpass" } };
+        const dsSession = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile,
+        });
+        jest.spyOn(dsSession, "setProfileToChoice").mockImplementation(() => {
+            throw new Error("error while updating profile on node");
+        });
+        const providers = {
+            ds: { getChildren: () => [dsSession] } as any,
+            uss: { getChildren: () => [] } as any,
+            job: { getChildren: () => [] } as any,
+        };
+        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        await SharedUtils.handleProfileChange(providers, newProfile);
+        // verify that nodes still have the old data as the `setProfileToChoice` function failed
+        expect(dsSession.getProfile().profile?.user).toBe(profile.profile?.user);
+        expect(dsSession.getProfile().profile?.password).toBe(profile.profile?.password);
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(errorSpy).toHaveBeenCalledWith("error while updating profile on node");
     });
 });

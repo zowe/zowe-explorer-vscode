@@ -54,4 +54,23 @@ describe("VscSettings", () => {
             expect(response).toEqual(globalMocks.testProxyVars);
         });
     });
+    describe("getDirectValue", () => {
+        it("should handle if the configuration does not exist", () => {
+            const globalMocks = createGlobalMocks();
+            globalMocks.getConfiguration.mockReturnValueOnce(null);
+            expect(VscSettings.getDirectValue("zowe.test")).toBeUndefined();
+        });
+
+        it("should handle if the configuration does not exist and a default value is specified", () => {
+            const globalMocks = createGlobalMocks();
+            globalMocks.getConfiguration.mockReturnValueOnce(null);
+            expect(VscSettings.getDirectValue("zowe.test", "testValue")).toEqual("testValue");
+        });
+
+        it("should handle if the configuration does exist", () => {
+            const globalMocks = createGlobalMocks();
+            globalMocks.getConfiguration.mockReturnValueOnce({ get: jest.fn().mockReturnValue("testReturnedValue") });
+            expect(VscSettings.getDirectValue("zowe.test", "testValue")).toEqual("testReturnedValue");
+        });
+    });
 });

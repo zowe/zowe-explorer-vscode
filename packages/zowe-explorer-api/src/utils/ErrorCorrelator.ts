@@ -221,14 +221,16 @@ export class ErrorCorrelator {
                         matches: ["Token is not valid or expired"],
                         summary:
                             "Your connection is no longer active for profile {{profileName}}. " +
-                            "Please log in to an authentication service to restore the connection.",
+                            "Please log in to an authentication service to restore the connection.\n\n" +
+                            'Selecting "Cancel" or closing this dialog blocks further actions with the {{profileName}} profile. To unblock, select the Zowe Explorer icon, right-click the {{profileName}} profile, and select "Manage Profile" to re-authenticate.',
                     },
                     {
                         errorCode: "401",
                         matches: ["Username or password are not valid or expired", "All configured authentication methods failed"],
                         summary:
                             "Invalid credentials for profile {{profileName}}. " +
-                            "Please ensure the username and password are valid or this may lead to a lock-out.",
+                            "Please ensure the username and password are valid or this may lead to a lock-out.\n\n" +
+                            'Selecting "Cancel" or closing this dialog blocks further actions with the {{profileName}} profile. To unblock, select the Zowe Explorer icon, right-click the {{profileName}} profile, and select "Manage Profile" to re-authenticate.',
                     },
                 ],
             },
@@ -309,8 +311,12 @@ export class ErrorCorrelator {
      */
     public async displayCorrelatedError(error: CorrelatedError, opts?: DisplayCorrelatedErrorOpts): Promise<string | undefined> {
         const errorCodeStr = error.properties.errorCode ? ` (Error Code ${error.properties.errorCode})` : "";
+        const additionalDetails =
+            error.initial instanceof ImperativeError && error.initial.causeErrors instanceof Error ? error.initial.causeErrors.message : undefined;
         const userSelection = await Gui.errorMessage(
-            `${opts?.additionalContext ? opts.additionalContext + ": " : ""}${error.message}${errorCodeStr}`.trim(),
+            `${opts?.additionalContext ? opts.additionalContext + ": " : ""}${error.message}${errorCodeStr}${
+                additionalDetails ? " " + additionalDetails : ""
+            }`.trim(),
             {
                 items: [opts?.allowRetry ? "Retry" : undefined, ...(error.correlationFound ? ["More info"] : ["Show log", "Troubleshoot"])].filter(
                     Boolean

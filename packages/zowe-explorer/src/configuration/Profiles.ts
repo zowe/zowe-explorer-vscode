@@ -30,7 +30,6 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./SettingsConfig";
 import { Constants } from "./Constants";
-import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
@@ -80,6 +79,7 @@ export class Profiles extends ProfilesCache {
     public async getProfileInfo(): Promise<imperative.ProfileInfo> {
         ZoweLogger.trace("Profiles.getProfileInfo called.");
         if (this.mProfileInfo == null) {
+            this.overrideWithEnv = SettingsConfig.getDirectValue(Constants.SETTINGS_OVERRIDE_WITH_ENV_VAR) ?? false;
             this.mProfileInfo = await super.getProfileInfo();
             // Cache profile info object until current thread is done executing
             setImmediate(() => (this.mProfileInfo = null));
@@ -97,9 +97,11 @@ export class Profiles extends ProfilesCache {
         void Gui.errorMessage(inactiveMsg);
     }
 
-    public async checkCurrentProfile(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {
+    public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
+        const usingBasicAuth = theProfile.profile.user && theProfile.profile.password;
+        const usingCertAuth = theProfile.profile.certFile && theProfile.profile.certKeyFile;
         let usingTokenAuth: boolean;
         try {
             usingTokenAuth = await AuthUtils.isUsingTokenAuth(theProfile.name);
@@ -126,7 +128,7 @@ export class Profiles extends ProfilesCache {
                 await AuthUtils.errorHandling(error, { profile: theProfile });
                 return profileStatus;
             }
-        } else if (!usingTokenAuth && (!theProfile.profile.user || !theProfile.profile.password)) {
+        } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth) {
             ZoweLogger.debug(`Profile ${theProfile.name} is using basic auth, prompting for missing credentials`);
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
@@ -146,6 +148,41 @@ export class Profiles extends ProfilesCache {
                 this.validProfile = Validation.ValidationType.INVALID;
                 return { ...profileStatus, status: "inactive" };
             }
+        } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
+            profileStatus.status = "active";
+            this.profilesForValidation.push(profileStatus);
+        }
+
+        if (node !== undefined) {
+            const toolTipList = (node.tooltip as string)?.split("\n") ?? [];
+
+            const autoStoreValue = (await this.getProfileInfo()).getTeamConfig().properties.autoStore ?? true;
+            const autoStoreIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auto Store: ")));
+            if (autoStoreIndex === -1) {
+                toolTipList.push(`${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()}`);
+            } else {
+                toolTipList[autoStoreIndex] = `${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()}`;
+            }
+
+            const layers = await this.uniqueExistingLayers();
+            const configFileIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Config File: ")));
+            if (configFileIndex === -1) {
+                toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")}`);
+            } else {
+                toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
+                    layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+                }`;
+            }
+
+            const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+            const secureCredentialsIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Secure Credentials Enabled: ")));
+            if (secureCredentialsIndex === -1) {
+                toolTipList.push(`${vscode.l10n.t("Secure Credentials Enabled: ")}${isSecureCredsEnabled.toString()}`);
+            } else {
+                toolTipList[secureCredentialsIndex] = `${vscode.l10n.t("Secure Credentials Enabled: ")}${isSecureCredsEnabled.toString()}`;
+            }
+
+            node.tooltip = toolTipList.join("\n");
         }
 
         // Profile should have enough information to allow validation
@@ -465,77 +502,14 @@ export class Profiles extends ProfilesCache {
     public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("Profiles.createZoweSchema called.");
         try {
-            let user = false;
-            let global = true;
-            let rootPath = FileManagement.getZoweDir();
-            const workspaceDir = ZoweVsCodeExtension.workspaceRoot;
-            if (workspaceDir != null) {
-                const choice = await this.getConfigLocationPrompt("create");
-                if (choice === undefined) {
-                    Gui.showMessage(this.profilesOpCancelled);
-                    return;
-                }
-                if (choice === "project") {
-                    rootPath = workspaceDir.uri.fsPath;
-                    global = false;
-                }
-            }
-            // call check for existing and prompt here
-            const existingFile = await this.checkExistingConfig(rootPath);
-            if (existingFile === false) {
-                // handle prompt cancellation
-                return;
-            }
-            if (existingFile != null) {
-                user = existingFile.includes("user");
-            }
-            const config = await imperative.Config.load("zowe", {
-                homeDir: FileManagement.getZoweDir(),
-                projectDir: FileManagement.getFullPath(rootPath),
-            });
-            if (workspaceDir != null) {
-                config.api.layers.activate(user, global, rootPath);
-            }
-
-            const knownCliConfig: imperative.ICommandProfileTypeConfiguration[] = this.getCoreProfileTypes();
-            knownCliConfig.push(...this.getConfigArray());
-            knownCliConfig.push(ProfileConstants.BaseProfile);
-            config.setSchema(imperative.ConfigSchema.buildSchema(knownCliConfig));
-
-            // Note: IConfigBuilderOpts not exported
-            // const opts: IConfigBuilderOpts = {
-            const opts: any = {
-                // getSecureValue: this.promptForProp.bind(this),
-                populateProperties: true,
-            };
-
-            // Build new config and merge with existing layer
-            const impConfig: Partial<imperative.IImperativeConfig> = {
-                profiles: [...this.getCoreProfileTypes(), ...this.getConfigArray(), ProfileConstants.BaseProfile],
-                baseProfile: ProfileConstants.BaseProfile,
-            };
-            const newConfig: imperative.IConfig = await imperative.ConfigBuilder.build(impConfig, global, opts);
-
-            // Create non secure profile if VS Code setting is false
-            this.createNonSecureProfile(newConfig);
-
-            config.api.layers.merge(newConfig);
-            await config.save(false);
-            let configName;
-            if (user) {
-                configName = config.userConfigName;
-            } else {
-                configName = config.configName;
-            }
-            await this.openConfigFile(path.join(rootPath, configName));
+            await ZoweVsCodeExtension.createTeamConfiguration();
         } catch (err) {
             ZoweLogger.error(err);
             ZoweExplorerExtender.showZoweConfigError(err.message);
         }
     }
 
-    public async editZoweConfigFile(): Promise<void> {
-        ZoweLogger.trace("Profiles.editZoweConfigFile called.");
+    private async uniqueExistingLayers(): Promise<imperative.IConfigLayer[]> {
         const configLayers = await this.getConfigLayers();
         const uniquePaths = new Set();
         const existingLayers = configLayers.filter((layer) => {
@@ -546,6 +520,12 @@ export class Profiles extends ProfilesCache {
             }
             return false;
         });
+        return existingLayers;
+    }
+
+    public async editZoweConfigFile(): Promise<void> {
+        ZoweLogger.trace("Profiles.editZoweConfigFile called.");
+        const existingLayers = await this.uniqueExistingLayers();
         if (existingLayers.length === 1) {
             await this.openConfigFile(existingLayers[0].path);
             Gui.showMessage(this.manualEditMsg);
@@ -685,7 +665,7 @@ export class Profiles extends ProfilesCache {
         await this.openConfigFile(filePath);
     }
 
-    public async profileValidationHelper(theProfile: imperative.IProfileLoaded, getStatus: (...args: unknown[]) => Promise<string>) {
+    public async profileValidationHelper(theProfile: imperative.IProfileLoaded, getStatus: (...args: unknown[]) => Promise<string>): Promise<string> {
         return Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -870,7 +850,8 @@ export class Profiles extends ProfilesCache {
         const profInfo = await this.getProfileInfo();
         const configApi = profInfo.getTeamConfig();
         const usingApimlToken = loginTokenType?.startsWith("apimlAuthenticationToken");
-        const profAttrs = await this.getProfileFromConfig(usingApimlToken ? "base" : profileName);
+        const baseProfile = this.getBaseProfile();
+        const profAttrs = await this.getProfileFromConfig(usingApimlToken ? baseProfile.name : profileName);
         // For users with nested profiles, we should only update the secure array if a base profile or a regular profile matching profileName exists.
         // Otherwise, we want to keep `tokenValue` in the secure array of the parent profile to avoid disconnecting child profiles
         if (profAttrs?.profLoc.jsonLoc) {
@@ -928,6 +909,7 @@ export class Profiles extends ProfilesCache {
             Gui.errorMessage(vscode.l10n.t("Cannot switch to token-based authentication for profile {0}.", serviceProfile.name));
             return;
         }
+        await this.checkCurrentProfile(serviceProfile, node);
         switch (true) {
             case AuthUtils.isProfileUsingBasicAuth(serviceProfile): {
                 let loginOk = false;
@@ -965,19 +947,25 @@ export class Profiles extends ProfilesCache {
                 break;
             }
             case await AuthUtils.isUsingTokenAuth(serviceProfile.name): {
-                const profile: string | imperative.IProfileLoaded = node.getProfile();
-                const creds = await Profiles.getInstance().promptCredentials(profile, true);
+                try {
+                    const profile: string | imperative.IProfileLoaded = node.getProfile();
+                    await this.ssoLogout(node);
+                    const creds = await Profiles.getInstance().promptCredentials(profile, true);
 
-                if (creds !== undefined) {
-                    const successMsg = vscode.l10n.t(
-                        "Changing authentication to basic was successful for profile {0}.",
-                        typeof profile === "string" ? profile : profile.name
-                    );
-                    ZoweLogger.info(successMsg);
-                    Gui.showMessage(successMsg);
-                    await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
-                    ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
-                } else {
+                    if (creds !== undefined) {
+                        const successMsg = vscode.l10n.t(
+                            "Changing authentication to basic was successful for profile {0}.",
+                            typeof profile === "string" ? profile : profile.name
+                        );
+                        ZoweLogger.info(successMsg);
+                        Gui.showMessage(successMsg);
+                        await this.tokenAuthClearSecureArray(serviceProfile.name, loginTokenType);
+                        ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
+                    } else {
+                        Gui.errorMessage(vscode.l10n.t("Unable to switch to basic authentication for profile {0}.", serviceProfile.name));
+                        return;
+                    }
+                } catch (err) {
                     Gui.errorMessage(vscode.l10n.t("Unable to switch to basic authentication for profile {0}.", serviceProfile.name));
                     return;
                 }
@@ -999,7 +987,6 @@ export class Profiles extends ProfilesCache {
         if (!dsNode) {
             return;
         }
-        dsNode.tooltip &&= node.getProfile()?.name;
         dsNode.description &&= "";
         dsNode.pattern &&= "";
         SharedTreeProviders.ds.flipState(dsNode, false);
@@ -1016,7 +1003,6 @@ export class Profiles extends ProfilesCache {
         if (!ussNode) {
             return;
         }
-        ussNode.tooltip &&= node.getProfile()?.name;
         ussNode.description &&= "";
         ussNode.fullPath &&= "";
         SharedTreeProviders.uss.flipState(ussNode, false);
@@ -1033,7 +1019,6 @@ export class Profiles extends ProfilesCache {
         if (!jobNode) {
             return;
         }
-        jobNode.tooltip &&= node.getProfile()?.name;
         jobNode.description &&= "";
         jobNode.owner &&= "";
         jobNode.prefix &&= "";
@@ -1061,7 +1046,7 @@ export class Profiles extends ProfilesCache {
 
         try {
             this.clearFilterFromAllTrees(node);
-            let logoutOk = true;
+            let logoutOk: boolean;
             const zeRegister = ZoweExplorerApiRegister.getInstance();
 
             // this will handle extenders
@@ -1113,20 +1098,25 @@ export class Profiles extends ProfilesCache {
      * @param profileName the name of the profile
      * @returns {string[]} an array with the secure properties
      */
-    public async getSecurePropsForProfile(profileName: string): Promise<string[]> {
+    public async getPropsForProfile(profileName: string, onlySecure = true): Promise<string[]> {
         if (!profileName) {
             return [];
         }
         const usingSecureCreds = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         const profInfo = await this.getProfileInfo();
-        if (usingSecureCreds && profInfo.getTeamConfig().exists) {
-            return profInfo.getTeamConfig().api.secure.securePropsForProfile(profileName);
+
+        const secureProps = profInfo.getTeamConfig().api.secure.securePropsForProfile(profileName);
+
+        if (usingSecureCreds && profInfo.getTeamConfig().exists && onlySecure) {
+            return secureProps;
         }
+
         const profAttrs = await this.getProfileFromConfig(profileName);
         const mergedArgs = profInfo.mergeArgsForProfile(profAttrs);
         return mergedArgs.knownArgs
-            .filter((arg) => arg.secure || arg.argName === "tokenType" || arg.argName === "tokenValue")
-            .map((arg) => arg.argName);
+            .filter((arg) => (onlySecure ? arg.secure : arg.argValue) || arg.argName === "tokenType" || arg.argName === "tokenValue")
+            .map((arg) => arg.argName)
+            .concat(secureProps);
     }
 
     private async getConfigLocationPrompt(action: string): Promise<string> {
@@ -1154,31 +1144,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    private async checkExistingConfig(filePath: string): Promise<string | false> {
-        ZoweLogger.trace("Profiles.checkExistingConfig called.");
-        const existingLayers = await this.getConfigLayers();
-        const foundLayer = existingLayers.find((layer) => layer.path.includes(filePath));
-        if (foundLayer == null) {
-            return null;
-        }
-        const createButton = vscode.l10n.t("Create New");
-        const message = vscode.l10n.t({
-            message:
-                `A Team Configuration File already exists in this location\n{0}\n` +
-                `Continuing may alter the existing file, would you like to proceed?`,
-            args: [foundLayer.path],
-            comment: ["File path"],
-        });
-        const response = await Gui.infoMessage(message, { items: [createButton], vsCodeOpts: { modal: true } });
-        if (response) {
-            return path.basename(foundLayer.path);
-        } else {
-            await this.openConfigFile(foundLayer.path);
-        }
-        return false;
-    }
-
-    private async getConfigLayers(): Promise<imperative.IConfigLayer[]> {
+    public async getConfigLayers(): Promise<imperative.IConfigLayer[]> {
         ZoweLogger.trace("Profiles.getConfigLayers called.");
         const existingLayers: imperative.IConfigLayer[] = [];
         const config = await imperative.Config.load("zowe", {
@@ -1205,19 +1171,6 @@ export class Profiles extends ProfilesCache {
             }
         }
         return ret;
-    }
-
-    // Temporary solution for handling unsecure profiles until CLI team's work is made
-    // Remove secure properties and set autoStore to false when vscode setting is true
-    private createNonSecureProfile(newConfig: imperative.IConfig): void {
-        ZoweLogger.trace("Profiles.createNonSecureProfile called.");
-        const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-        if (!isSecureCredsEnabled) {
-            for (const profile of Object.entries(newConfig.profiles)) {
-                delete newConfig.profiles[profile[0]].secure;
-            }
-            newConfig.autoStore = false;
-        }
     }
 
     public async refresh(apiRegister?: IRegisterClient): Promise<void> {

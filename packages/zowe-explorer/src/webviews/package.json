@@ -2,7 +2,7 @@
   "name": "webviews",
   "private": true,
   "type": "module",
-  "version": "3.2.0-SNAPSHOT",
+  "version": "3.3.0-SNAPSHOT",
   "main": "index.js",
   "license": "EPL-2.0",
   "scripts": {
@@ -23,17 +23,19 @@
     "@types/vscode-webview": "^1.57.1",
     "@vscode/codicons": "^0.0.36",
     "@vscode/webview-ui-toolkit": "^1.2.2",
-    "ag-grid-community": "^32.0.2",
-    "ag-grid-react": "^32.0.2",
+    "ag-grid-community": "^34.0.0",
+    "ag-grid-react": "^34.0.0",
+    "dompurify": "^3.2.6",
     "es-toolkit": "^1.16.0",
+    "marked": "^15.0.11",
     "preact": "^10.16.0",
     "preact-render-to-string": "^6.5.4"
   },
   "devDependencies": {
-    "@preact/preset-vite": "^2.5.0",
+    "@preact/preset-vite": "^2.10.1",
     "typescript": "^5.3.3",
-    "vite": "^4.5.6",
-    "vite-plugin-checker": "^0.6.4",
-    "vite-plugin-static-copy": "^0.17.1"
+    "vite": "^6.2.7",
+    "vite-plugin-checker": "^0.9.1",
+    "vite-plugin-static-copy": "^2.3.0"
   }
 }

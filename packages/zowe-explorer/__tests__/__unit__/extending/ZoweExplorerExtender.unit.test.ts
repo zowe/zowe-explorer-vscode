@@ -260,7 +260,6 @@ describe("ZoweExplorerExtender unit tests", () => {
                 typeInfo: { sourceApp: string; schema: any; version?: string | undefined }
             ) => any = jest.fn()
         ) => {
-            const blockMocks = await createBlockMocks();
             // bypass "if (hasSecureCredentialManagerEnabled)" check for sake of testing
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
             jest.spyOn(ZoweLogger, "trace").mockImplementation();
@@ -272,7 +271,7 @@ describe("ZoweExplorerExtender unit tests", () => {
             const addProfTypeToSchema = jest
                 .spyOn(imperative.ProfileInfo.prototype, "addProfileTypeToSchema")
                 .mockImplementation(addProfileTypeToSchemaMock as unknown as any);
-            await (blockMocks.instTest as any).updateSchema(profInfo, [
+            ProfilesUtils.updateSchema(profInfo, [
                 {
                     type: "test-type",
                     schema: {} as any,
@@ -298,7 +297,6 @@ describe("ZoweExplorerExtender unit tests", () => {
         });
 
         it("should log a message if addProfileTypeToSchema returns a warning", async () => {
-            const blockMocks = await createBlockMocks();
             const profInfo = new imperative.ProfileInfo("zowe", {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
@@ -308,7 +306,7 @@ describe("ZoweExplorerExtender unit tests", () => {
                 info: "Schema version is older than the installed version",
             });
             const warnSpy = jest.spyOn(ZoweLogger, "warn");
-            await (blockMocks.instTest as any).updateSchema(profInfo, [
+            ProfilesUtils.updateSchema(profInfo, [
                 {
                     type: "test-type",
                     schema: {} as any,
@@ -331,6 +329,128 @@ describe("ZoweExplorerExtender unit tests", () => {
         it("returns the singleton instance of LocalStorageAccess", () => {
             const blockMocks = createBlockMocks();
             expect(blockMocks.instTest.getLocalStorage()).toBe(LocalStorageAccess);
+        });
+    });
+
+    describe("registerTableActionProvider", () => {
+        it("should register a provider with the table provider registry", () => {
+            const blockMocks = createBlockMocks();
+            const mockProvider = {
+                provideActions: jest.fn(),
+                provideContextMenuItems: jest.fn(),
+            };
+            const tableId = "test-table";
+
+            // Mock the registry's registerProvider method
+            const mockRegistry = {
+                registerProvider: jest.fn(),
+                unregisterProvider: jest.fn(),
+                getActions: jest.fn(),
+                getContextMenuItems: jest.fn(),
+                getRegisteredTableIds: jest.fn(),
+            };
+            jest.spyOn(blockMocks.instTest, "getTableProviderRegistry").mockReturnValue(mockRegistry as any);
+
+            // Test the method
+            blockMocks.instTest.registerTableActionProvider(tableId, mockProvider);
+
+            // Verify the provider was registered
+            expect(mockRegistry.registerProvider).toHaveBeenCalledWith(tableId, mockProvider);
+        });
+
+        it("should pass through parameters correctly", () => {
+            const blockMocks = createBlockMocks();
+            const mockProvider = {
+                provideActions: jest.fn(),
+                provideContextMenuItems: jest.fn(),
+            };
+            const tableId = "my-custom-table";
+
+            const mockRegistry = {
+                registerProvider: jest.fn(),
+                unregisterProvider: jest.fn(),
+                getActions: jest.fn(),
+                getContextMenuItems: jest.fn(),
+                getRegisteredTableIds: jest.fn(),
+            };
+            jest.spyOn(blockMocks.instTest, "getTableProviderRegistry").mockReturnValue(mockRegistry as any);
+
+            blockMocks.instTest.registerTableActionProvider(tableId, mockProvider);
+
+            expect(mockRegistry.registerProvider).toHaveBeenCalledWith(tableId, mockProvider);
+            expect(mockRegistry.registerProvider).toHaveBeenCalledTimes(1);
+        });
+
+        it("should unregister when the disposable is disposed", () => {
+            const blockMocks = createBlockMocks();
+            const mockProvider = {
+                provideActions: jest.fn(),
+                provideContextMenuItems: jest.fn(),
+            };
+            const tableId = "test-table";
+
+            const mockRegistry = blockMocks.instTest.getTableProviderRegistry();
+            jest.spyOn(mockRegistry, "registerProvider").mockClear().mockImplementation();
+            jest.spyOn(mockRegistry, "unregisterProvider").mockImplementation();
+
+            const disposable = blockMocks.instTest.registerTableActionProvider(tableId, mockProvider);
+
+            expect(mockRegistry.registerProvider).toHaveBeenCalledWith(tableId, mockProvider);
+            expect(mockRegistry.registerProvider).toHaveBeenCalledTimes(1);
+
+            disposable.dispose();
+
+            expect(mockRegistry.unregisterProvider).toHaveBeenCalledWith(tableId, mockProvider);
+            expect(mockRegistry.unregisterProvider).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe("getTableProviderRegistry", () => {
+        it("should return the singleton instance of TableProviderRegistry", () => {
+            const blockMocks = createBlockMocks();
+
+            // Mock the TableProviderRegistry.getInstance method
+            const mockRegistryInstance = {
+                registerProvider: jest.fn(),
+                unregisterProvider: jest.fn(),
+                getActions: jest.fn(),
+                getContextMenuItems: jest.fn(),
+                getRegisteredTableIds: jest.fn(),
+            };
+
+            // We need to import and mock the TableProviderRegistry class
+            jest.doMock("@zowe/zowe-explorer-api", () => ({
+                ...jest.requireActual("@zowe/zowe-explorer-api"),
+                TableProviderRegistry: {
+                    getInstance: jest.fn(() => mockRegistryInstance),
+                },
+            }));
+
+            const result = blockMocks.instTest.getTableProviderRegistry();
+
+            expect(result).toBeDefined();
+            expect(typeof result).toBe("object");
+        });
+
+        it("should return the same instance when called multiple times", () => {
+            const blockMocks = createBlockMocks();
+
+            const result1 = blockMocks.instTest.getTableProviderRegistry();
+            const result2 = blockMocks.instTest.getTableProviderRegistry();
+
+            expect(result1).toBe(result2);
+        });
+
+        it("should return an object with expected registry methods", () => {
+            const blockMocks = createBlockMocks();
+
+            const registry = blockMocks.instTest.getTableProviderRegistry();
+
+            expect(registry).toHaveProperty("registerProvider");
+            expect(registry).toHaveProperty("unregisterProvider");
+            expect(registry).toHaveProperty("getActions");
+            expect(registry).toHaveProperty("getContextMenuItems");
+            expect(registry).toHaveProperty("getRegisteredTableIds");
         });
     });
 });

@@ -11,7 +11,16 @@
 
 import * as util from "util";
 import * as vscode from "vscode";
-import { imperative, Gui, MainframeInteraction, IZoweTreeNode, ErrorCorrelator, ZoweExplorerApiType, AuthHandler } from "@zowe/zowe-explorer-api";
+import {
+    imperative,
+    Gui,
+    MainframeInteraction,
+    IZoweTreeNode,
+    ErrorCorrelator,
+    ZoweExplorerApiType,
+    AuthHandler,
+    AuthPromptParams,
+} from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
@@ -25,18 +34,43 @@ interface ErrorContext {
 
 export class AuthUtils {
     /**
+     * Checks if a profile's authentication was previously cancelled and, if so,
+     * re-prompts the user to authenticate. This should be called before any
+     * remote operation that requires authentication.
+     * @param profile The profile to check.
+     * @throws {AuthCancelledError} If the user cancels the re-authentication prompt.
+     */
+    public static async reauthenticateIfCancelled(profile: imperative.IProfileLoaded): Promise<void> {
+        if (AuthHandler.isProfileLocked(profile) && AuthHandler.wasAuthCancelled(profile)) {
+            try {
+                // The original error doesn't matter here, we just need to trigger the flow.
+                await this.handleProfileAuthOnError(
+                    new Error("User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate."),
+                    profile
+                );
+            } catch (err) {
+                // If handleProfileAuthOnError fails (e.g., user cancels again),
+                // we should propagate that failure.
+                throw err;
+            }
+        }
+    }
+
+    /**
      * Locks the profile if an authentication error has occurred (prevents further requests in filesystem until unlocked).
      * If the error is not an authentication error, the profile is unlocked for further use.
      *
      * @param err {Error} The error that occurred
      * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
+     * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
     public static async handleProfileAuthOnError(err: Error, profile?: imperative.IProfileLoaded): Promise<void> {
         if (
-            err instanceof imperative.ImperativeError &&
-            profile != null &&
-            (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
-                err.message.includes("All configured authentication methods failed"))
+            (err instanceof imperative.ImperativeError &&
+                profile != null &&
+                (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                    err.message.includes("All configured authentication methods failed"))) ||
+            err.message.includes("HTTP(S) status 401")
         ) {
             if (!(await AuthHandler.shouldHandleAuthError(profile.name))) {
                 ZoweLogger.debug(`[AuthUtils] Skipping authentication prompt for profile ${profile.name} due to debouncing`);
@@ -50,17 +84,19 @@ export class AuthUtils {
                 },
             });
 
-            const authOpts = {
+            const authOpts: AuthPromptParams = {
                 authMethods: Constants.PROFILES_CACHE,
-                imperativeError: err,
+                imperativeError: err as unknown as imperative.ImperativeError,
                 isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
                 errorCorrelation,
+                throwErrorOnCancel: true,
             };
             // If the profile is already locked, prompt the user to re-authenticate.
             if (AuthHandler.isProfileLocked(profile)) {
                 await AuthHandler.waitForUnlock(profile);
             } else {
                 // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
+                // This may throw AuthCancelledError if the user cancels the authentication prompt
                 await AuthHandler.lockProfile(profile, authOpts);
             }
         } else if (profile != null && AuthHandler.isProfileLocked(profile)) {
@@ -102,7 +138,7 @@ export class AuthUtils {
             const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
             const httpErrorCode = Number(imperativeError.mDetails.errorCode);
             // open config file for missing hostname error
-            if (imperativeError.toString().includes("hostname")) {
+            if (imperativeError.toString().includes("hostname") && !imperativeError.toString().includes("protocol")) {
                 await AuthUtils.openConfigForMissingHostname(profile);
                 return false;
             } else if (
@@ -132,9 +168,10 @@ export class AuthUtils {
     /**
      * Prompts user to log in to authentication service.
      * @param profileName The name of the profile used to log in
+     * @returns true if the user logged in, false if they dismissed the prompt or the login failed
      */
-    public static promptForSsoLogin(profileName: string): Thenable<string> {
-        return Gui.showMessage(
+    public static async promptForSsoLogin(profileName: string): Promise<boolean> {
+        const selection = await Gui.showMessage(
             vscode.l10n.t({
                 message:
                     "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
@@ -142,12 +179,136 @@ export class AuthUtils {
                 comment: ["Profile name"],
             }),
             { items: [vscode.l10n.t("Log in to Authentication Service")], vsCodeOpts: { modal: true } }
-        ).then(async (selection) => {
-            if (selection) {
-                await Constants.PROFILES_CACHE.ssoLogin(null, profileName);
+        );
+        if (selection) {
+            if (await Constants.PROFILES_CACHE.ssoLogin(null, profileName)) {
+                AuthHandler.unlockProfile(profileName);
+                return true;
             }
-            return selection;
-        });
+        }
+        return false;
+    }
+
+    public static async updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
+        const usingBasicAuth = profile.profile.user && profile.profile.password;
+        const usingCertAuth = profile.profile.certFile && profile.profile.certKeyFile;
+        let usingTokenAuth: boolean;
+        try {
+            usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
+        } catch (err) {
+            ZoweLogger.error(err);
+        }
+        const toolTipList = sessionNode.tooltip === "" ? [] : (sessionNode.tooltip as string).split("\n");
+
+        const authMethodIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auth Method: ")));
+        if (authMethodIndex === -1) {
+            switch (true) {
+                case Boolean(usingTokenAuth): {
+                    toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Token-based Authentication")}`);
+                    break;
+                }
+                case Boolean(usingBasicAuth): {
+                    toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Basic Authentication")}`);
+                    toolTipList.push(`${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
+                    break;
+                }
+                case Boolean(usingCertAuth): {
+                    toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Certificate Authentication")}`);
+                    break;
+                }
+                default: {
+                    toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Unknown")}`);
+                    break;
+                }
+            }
+        } else {
+            switch (true) {
+                case Boolean(usingTokenAuth): {
+                    toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Token-based Authentication")}`;
+                    break;
+                }
+                case Boolean(usingBasicAuth): {
+                    toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Basic Authentication")}`;
+                    const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
+                    if (userIDIndex !== -1) {
+                        toolTipList[userIDIndex] = `${vscode.l10n.t("User: ")}${profile.profile.user as string}`;
+                    } else {
+                        toolTipList.splice(authMethodIndex + 1, 0, `${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
+                    }
+                    break;
+                }
+                case Boolean(usingCertAuth): {
+                    toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Certificate Authentication")}`;
+                    break;
+                }
+                default: {
+                    toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Unknown")}`;
+                    const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
+                    if (patternIndex !== -1) {
+                        toolTipList.splice(patternIndex, 1);
+                    }
+                    const pathIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Path: ")));
+                    if (pathIndex !== -1) {
+                        toolTipList.splice(pathIndex, 1);
+                    }
+                    const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
+                    if (searchCriteriaIndex !== -1) {
+                        toolTipList.splice(searchCriteriaIndex, 1);
+                    }
+                    const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
+                    if (jobIdIndex !== -1) {
+                        toolTipList.splice(jobIdIndex, 1);
+                    }
+                }
+            }
+            if (!usingBasicAuth) {
+                const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
+                if (userIDIndex !== -1) {
+                    toolTipList.splice(userIDIndex, 1);
+                }
+            }
+        }
+
+        if (usingTokenAuth || usingBasicAuth || usingCertAuth) {
+            switch (true) {
+                case Boolean(sessionNode.fullPath): {
+                    const pathIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Path: ")));
+                    if (pathIndex === -1) {
+                        toolTipList.push(`${vscode.l10n.t("Path: ")}${sessionNode.fullPath}`);
+                    } else {
+                        toolTipList[pathIndex] = `${vscode.l10n.t("Path: ")}${sessionNode.fullPath}`;
+                    }
+                    break;
+                }
+                case `${sessionNode.description}`.includes(vscode.l10n.t("Owner: ")): {
+                    const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
+                    if (jobIdIndex !== -1) {
+                        toolTipList.splice(jobIdIndex, 1);
+                    }
+                    const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
+                    if (searchCriteriaIndex === -1) {
+                        toolTipList.push(sessionNode.description as string);
+                    } else {
+                        toolTipList[searchCriteriaIndex] = sessionNode.description as string;
+                    }
+                    break;
+                }
+                case `${sessionNode.description}`.includes(vscode.l10n.t("JobId: ")): {
+                    const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
+                    if (searchFilterIndex !== -1) {
+                        toolTipList.splice(searchFilterIndex, 1);
+                    }
+                    const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
+                    if (jobIdIndex === -1) {
+                        toolTipList.push(sessionNode.description as string);
+                    } else {
+                        toolTipList[jobIdIndex] = sessionNode.description as string;
+                    }
+                    break;
+                }
+            }
+        }
+        sessionNode.tooltip = toolTipList.join("\n");
     }
 
     /**
@@ -156,11 +317,11 @@ export class AuthUtils {
      * @param getSessionForProfile is a function to build a valid specific session based on provided profile
      * @param sessionNode is a tree node, containing session information
      */
-    public static syncSessionNode(
+    public static async syncSessionNode(
         getCommonApi: (profile: imperative.IProfileLoaded) => MainframeInteraction.ICommon,
         sessionNode: IZoweTreeNode,
         nodeToRefresh?: IZoweTreeNode
-    ): void {
+    ): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
         const profileType = sessionNode.getProfile()?.type;
@@ -174,8 +335,17 @@ export class AuthUtils {
             return;
         }
         sessionNode.setProfileToChoice(profile);
-        const session = getCommonApi(profile).getSession();
-        sessionNode.setSessionToChoice(session);
+        try {
+            const commonApi = getCommonApi(profile);
+            await this.updateNodeToolTip(sessionNode, profile);
+            sessionNode.setSessionToChoice(commonApi.getSession());
+        } catch (err) {
+            if (err instanceof Error) {
+                // API is not yet registered, or building the session failed for this profile
+                ZoweLogger.error(`Error syncing session for ${profileName}: ${err.message}`);
+            }
+            return;
+        }
         if (nodeToRefresh) {
             nodeToRefresh.dirty = true;
             void nodeToRefresh.getChildren().then(() => SharedTreeProviders.getProviderForNode(nodeToRefresh).refreshElement(nodeToRefresh));
@@ -199,9 +369,14 @@ export class AuthUtils {
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
      */
     public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
-        const secureProps = await Constants.PROFILES_CACHE.getSecurePropsForProfile(profileName);
         const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
-        const baseSecureProps = await Constants.PROFILES_CACHE.getSecurePropsForProfile(baseProfile?.name);
-        return AuthHandler.isUsingTokenAuth(secureProps, baseSecureProps);
+        const shouldRemoveToken = Constants.PROFILES_CACHE.shouldRemoveTokenFromProfile(
+            Constants.PROFILES_CACHE.loadNamedProfile(profileName),
+            baseProfile
+        );
+        if (shouldRemoveToken) return false;
+        const props = await Constants.PROFILES_CACHE.getPropsForProfile(profileName, false);
+        const baseProps = await Constants.PROFILES_CACHE.getPropsForProfile(baseProfile?.name, false);
+        return AuthHandler.isUsingTokenAuth(props, baseProps);
     }
 }

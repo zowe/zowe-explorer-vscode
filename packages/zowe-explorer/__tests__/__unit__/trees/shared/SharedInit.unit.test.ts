@@ -26,15 +26,17 @@ import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler"
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import * as certWizard from "../../../../src/utils/CertificateWizard";
-import { Gui, imperative, ZoweScheme, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { FsAbstractUtils, Gui, imperative, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
+import { ReleaseNotes } from "../../../../src/utils/ReleaseNotes";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
+jest.mock("../../../../src/utils/ReleaseNotes");
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
@@ -65,7 +67,8 @@ describe("Test src/shared/extension", () => {
             ssoLogin: jest.fn(),
             ssoLogout: jest.fn(),
         };
-        jest.replaceProperty(ZoweVsCodeExtension, "onProfileUpdated", jest.fn());
+        const onProfileUpdated = jest.fn().mockReturnValue(new vscode.Disposable(jest.fn()));
+        const mockOnProfileUpdated = new MockedProperty(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated", undefined, onProfileUpdated);
 
         const commands: IJestIt[] = [
             {
@@ -83,6 +86,10 @@ describe("Test src/shared/extension", () => {
             {
                 name: "zowe.editHistory",
                 mock: [{ spy: jest.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders] }],
+            },
+            {
+                name: "zowe.displayReleaseNotes",
+                mock: [{ spy: jest.spyOn(ReleaseNotes, "display"), arg: [test.context, true] }],
             },
             {
                 name: "zowe.promptCredentials",
@@ -301,6 +308,11 @@ describe("Test src/shared/extension", () => {
         ];
 
         beforeAll(() => {
+            test.context.extension = {
+                packageJSON: {
+                    version: "2.3.4",
+                },
+            };
             const registerCommand = (cmd: string, fun: () => void) => {
                 return { [cmd]: fun };
             };
@@ -318,10 +330,23 @@ describe("Test src/shared/extension", () => {
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
         afterAll(() => {
+            mockOnProfileUpdated[Symbol.dispose]();
             jest.restoreAllMocks();
         });
 
         processSubscriptions(commands, test);
+        it("registers an onProfileUpdated event", () => {
+            expect(mockOnProfileUpdated.mock).toHaveBeenCalledTimes(1);
+            expect(onProfileUpdated).toHaveBeenCalledTimes(1);
+        });
+
+        it("should register setupRemoteWorkspaces", () => {
+            jest.spyOn(vscode.commands, "registerCommand").mockImplementation(() => {
+                return {} as vscode.Disposable;
+            });
+            SharedInit.registerCommonCommands(test.context, test.value.providers);
+            expect(vscode.commands.registerCommand).toHaveBeenCalledWith("zowe.setupRemoteWorkspaceFolders", expect.any(Function));
+        });
     });
 
     describe("watchConfigProfile", () => {
@@ -439,9 +464,9 @@ describe("Test src/shared/extension", () => {
     describe("initSubscribers", () => {
         const spyCollapse = jest.fn().mockImplementation((fun) => fun({ element: "collapse" }));
         const spyExpand = jest.fn().mockImplementation((fun) => fun({ element: "expand" }));
-        const spyFlipState = jest.fn();
+        const spyOnCollapsibleStateChange = jest.fn();
         let context: any;
-        const provider: any = { getTreeView: () => treeView, flipState: spyFlipState };
+        const provider: any = { getTreeView: () => treeView, onCollapsibleStateChange: spyOnCollapsibleStateChange };
         const treeView = { onDidCollapseElement: spyCollapse, onDidExpandElement: spyExpand };
 
         beforeEach(() => {
@@ -457,8 +482,7 @@ describe("Test src/shared/extension", () => {
             expect(context.subscriptions).toContain(treeView);
             expect(spyCollapse).toHaveBeenCalled();
             expect(spyExpand).toHaveBeenCalled();
-            expect(spyFlipState).toHaveBeenCalledWith("collapse", false);
-            expect(spyFlipState).toHaveBeenCalledWith("expand", true);
+            expect(spyOnCollapsibleStateChange).toHaveBeenCalled();
         });
     });
 
@@ -486,6 +510,51 @@ describe("Test src/shared/extension", () => {
             await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
             expect(addedArr).toHaveBeenCalled();
         });
+        it("should setup a remote workspace for an extender type", async () => {
+            const folderUri = {
+                $mid: 1,
+                fsPath: "/ssh_profile/u/users/user/member",
+                external: "zowe-uss:/ssh_profile/u/users/user/member",
+                path: "/ssh_profile/u/users/user/member",
+                scheme: "zowe-uss",
+            };
+
+            // Replace real workspace with controlled data
+            jest.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue([
+                {
+                    uri: folderUri as any,
+                    name: "[ssh_profile] /u/users/user/member",
+                    index: 0,
+                },
+            ]);
+
+            // Fake event fallback triggers workspaceFolders
+            const fakeEventInfo = getFakeEventInfo();
+            const addedArr = jest.fn(() => undefined);
+            Object.defineProperty(fakeEventInfo, "added", {
+                get: addedArr,
+            });
+
+            // Mock getInfoForUri to return a profile name
+            const getInfoSpy = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({ profileName: "ssh_profile" } as any);
+
+            // Match profile name
+            await Profiles.createInstance(undefined as any);
+            const getProfileSpy = jest
+                .spyOn(Profiles.getInstance(), "getProfiles")
+                .mockReturnValue([{ name: "ssh_profile", type: "ssh", message: ".", failNotFound: false }]);
+
+            // Avoid real FS lookup
+            const remoteSpy = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockResolvedValue(undefined!);
+
+            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "ssh");
+
+            expect(addedArr).toHaveBeenCalled();
+            expect(getProfileSpy).toHaveBeenCalled();
+            expect(getInfoSpy).toHaveBeenCalledWith(folderUri);
+            expect(remoteSpy).toHaveBeenCalledWith(folderUri);
+        });
+
         it("calls DatasetFSProvider for ZoweScheme.DS", async () => {
             const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/lpar.zosmf/TEST.PDS" }) }]);
             const remoteLookupMock = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockImplementation();

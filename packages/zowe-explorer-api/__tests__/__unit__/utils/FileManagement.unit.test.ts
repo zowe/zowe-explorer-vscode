@@ -58,10 +58,10 @@ describe("reloadActiveEditorForProfile", () => {
             } as any,
         } as any);
         const statMock = jest.spyOn(workspace.fs, "stat").mockResolvedValueOnce(fakeFsEntry);
-        const readFileMock = jest.spyOn(workspace.fs, "readFile").mockImplementationOnce(async (uri): Promise<Uint8Array> => {
+        const readFileMock = jest.spyOn(workspace.fs, "readFile").mockImplementationOnce((): Promise<Uint8Array> => {
             // wasAccessed flag should be false after reassigning in reloadActiveEditorForProfile
             expect(fakeFsEntry.wasAccessed).toBe(false);
-            return new Uint8Array([1, 2, 3]);
+            return Promise.resolve(new Uint8Array([1, 2, 3]));
         });
         await FileManagement.reloadActiveEditorForProfile("sestest");
         expect(statMock).toHaveBeenCalledTimes(1);

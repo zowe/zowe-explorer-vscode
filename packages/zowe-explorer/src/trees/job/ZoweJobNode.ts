@@ -14,13 +14,13 @@ import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as path from "path";
 import {
     FsJobsUtils,
-    imperative,
     IZoweJobTreeNode,
     Sorting,
     ZosEncoding,
     ZoweExplorerApiType,
     ZoweScheme,
     ZoweTreeNode,
+    imperative,
 } from "@zowe/zowe-explorer-api";
 import { JobFSProvider } from "./JobFSProvider";
 import { JobUtils } from "./JobUtils";
@@ -111,6 +111,11 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 method: sortSetting.method,
                 direction: sortSetting.direction,
             };
+
+            const toolTipList: string[] = [];
+            toolTipList.push(`${vscode.l10n.t("Profile: ")}${opts.label}`);
+            toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
+            this.tooltip = toolTipList.join("\n");
 
             if (this.getParent()?.label !== vscode.l10n.t("Favorites") && !SharedContext.isFavorite(this)) {
                 this.id = this.label as string;
@@ -312,6 +317,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         };
     }
 
+    public getProfile(): imperative.IProfileLoaded {
+        return super.getProfile(Profiles.getInstance());
+    }
+
     public getSessionNode(): IZoweJobTreeNode {
         ZoweLogger.trace("ZoweJobNode.getSessionNode called.");
         return this.session ? this : this.getParent()?.getSessionNode() ?? this;
@@ -425,11 +434,8 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 jobsInternal.push(await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJob(searchId));
             } else {
                 if (!ZoweExplorerApiRegister.getJesApi(cachedProfile).getSession(cachedProfile)) {
-                    throw new imperative.ImperativeError({
-                        msg: vscode.l10n.t("Profile auth error"),
-                        additionalDetails: vscode.l10n.t("Profile is not authenticated, please log in to continue"),
-                        errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
-                    });
+                    ZoweLogger.warn(`[ZoweJobNode.getJobs] Session undefined for profile ${cachedProfile.name}`);
+                    return undefined;
                 }
                 jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
                     owner,
@@ -460,6 +466,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from JES list API"),
             });
+            if (!updated) {
+                this.dirty = false;
+            }
             AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
             return;
         }
@@ -481,6 +490,9 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from JES list API"),
             });
+            if (!updated) {
+                this.dirty = false;
+            }
             AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
             return;
         }

@@ -13,7 +13,17 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { Gui, IZoweTreeNode, IZoweDatasetTreeNode, IZoweUSSTreeNode, IZoweJobTreeNode, Types, ZosEncoding, Sorting } from "@zowe/zowe-explorer-api";
+import {
+    Gui,
+    IZoweTreeNode,
+    IZoweDatasetTreeNode,
+    IZoweUSSTreeNode,
+    IZoweJobTreeNode,
+    Types,
+    ZosEncoding,
+    Sorting,
+    imperative,
+} from "@zowe/zowe-explorer-api";
 import { UssFSProvider } from "../uss/UssFSProvider";
 import { USSUtils } from "../uss/USSUtils";
 import { Constants } from "../../configuration/Constants";
@@ -123,7 +133,7 @@ export class SharedUtils {
         } else {
             resultNodeList = nodeList;
         }
-        return resultNodeList;
+        return resultNodeList.filter(Boolean);
     }
 
     /**
@@ -211,7 +221,7 @@ export class SharedUtils {
         const profile = node.getProfile();
         if (profile.profile?.encoding != null) {
             items.splice(0, 0, {
-                label: profile.profile?.encoding,
+                label: String(profile.profile?.encoding),
                 description: vscode.l10n.t({
                     message: "From profile {0}",
                     args: [profile.name],
@@ -281,10 +291,12 @@ export class SharedUtils {
                     }),
                     placeHolder: vscode.l10n.t("Enter a codepage (e.g., 1047, IBM-1047)"),
                 });
-                if (response != null) {
+                if (response) {
                     encoding = { kind: "other", codepage: response };
                     encodingHistory.push(encoding.codepage);
                     ZoweLocalStorage.setValue(Definitions.LocalStorageKey.ENCODING_HISTORY, encodingHistory.slice(0, Constants.MAX_FILE_HISTORY));
+                } else {
+                    Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
                 }
                 break;
             default:
@@ -358,6 +370,31 @@ export class SharedUtils {
                 clearTimeout(timeoutId);
             }
             timeoutId = setTimeout(() => callback(...args), delay);
+        };
+    }
+
+    /**
+     * Debounces an async event callback to prevent duplicate triggers.
+     * @param callback Async event callback
+     * @param delay Number of milliseconds to delay
+     */
+    public static debounceAsync<T extends (...args: any[]) => Promise<any>>(
+        callback: T,
+        delay: number
+    ): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
+        let timeoutId: ReturnType<typeof setTimeout>;
+
+        return (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+
+            // Returns a promise that is fulfilled after the debounced callback finishes
+            return new Promise<Awaited<ReturnType<T>>>((resolve, reject) => {
+                timeoutId = setTimeout(() => {
+                    callback(...args).then(resolve, reject);
+                }, delay);
+            });
         };
     }
 
@@ -446,5 +483,19 @@ export class SharedUtils {
             }
         }
         return true;
+    }
+
+    public static async handleProfileChange(treeProviders: Definitions.IZoweProviders, profile: imperative.IProfileLoaded): Promise<void> {
+        for (const provider of Object.values(treeProviders)) {
+            try {
+                const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
+                node?.setProfileToChoice?.(profile);
+            } catch (err) {
+                if (err instanceof Error) {
+                    ZoweLogger.error(err.message);
+                }
+                return;
+            }
+        }
     }
 }

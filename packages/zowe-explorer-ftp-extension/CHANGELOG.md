@@ -4,9 +4,42 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
+- Changed the response field names for the `FtpMvsApi.allMembers` function from "created" and "changed" to "c4date" and "m4date" to be consistent with the z/OSMF API response format for a PDS member list. [#3751](https://github.com/zowe/zowe-explorer-vscode/issues/3751)
+
 ### Bug fixes
 
-- Fixed issue where FTP client errors incorrectly triggered authentication prompts instead of showing appropriate error messages. [#3496](https://github.com/zowe/zowe-explorer-vscode/issues/3496)
+- Fixed an issue where USS directories could not be loaded via FTP as virtual workspaces. [#3763](https://github.com/zowe/zowe-explorer-vscode/pull/3763)
+
+## `3.2.2`
+
+### Bug fixes
+
+- Updated Zowe SDKs to `8.24.1` for technical currency. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)
+
+## `3.2.1`
+
+### New features and enhancements
+
+- Updated Zowe SDKs to `8.21.0` for technical currency. [#3668](https://github.com/zowe/zowe-explorer-vscode/pull/3668)
+
+## `3.2.0`
+
+### New features and enhancements
+
+- Updated Zowe SDKs to `8.16.0` for technical currency. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
+- Updated the zFTP profile type schema meta-data to include a version to better track changes in the schema for updates needed on disk in the profile configuration schema files. [#1642](https://github.com/zowe/zowe-explorer-vscode/issues/1642)
+- Added support for the `start` and `maxLength` options on the `dataSet` and `allMembers` functions in the `FtpMvsApi` class. [#3585](https://github.com/zowe/zowe-explorer-vscode/pull/3585)
+
+### Bug fixes
+
+- Fixed an issue with the `AbstractFtpApi.getSession` function where the wrong property was used to store a new session, specifically when the profile is provided as a parameter. [#3524](https://github.com/zowe/zowe-explorer-vscode/pull/3524)
+- Updated dependencies for technical currency purposes. [#3576](https://github.com/zowe/zowe-explorer-vscode/pull/3576)
+
+## `3.1.2`
+
+### Bug fixes
+
+- Fixed an issue where FTP client errors incorrectly triggered authentication prompts instead of showing appropriate error messages. [#3496](https://github.com/zowe/zowe-explorer-vscode/issues/3496)
 
 ## `3.1.1`
 

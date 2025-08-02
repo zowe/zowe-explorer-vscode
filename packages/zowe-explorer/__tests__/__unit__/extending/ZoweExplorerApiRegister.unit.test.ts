@@ -275,14 +275,22 @@ describe("ZoweExplorerApiRegister unit testing", () => {
     });
 
     it("provides access to the appropriate event for onResourceChanged", () => {
+        ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, DatasetFSProvider.instance.onDidChangeFile);
         expect(ZoweExplorerApiRegister.onResourceChanged(ZoweScheme.DS)).toBe(DatasetFSProvider.instance.onDidChangeFile);
     });
 
     it("provides access to the onUssChanged event", () => {
+        ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.USS, UssFSProvider.instance.onDidChangeFile);
         expect(ZoweExplorerApiRegister.onResourceChanged(ZoweScheme.USS)).toBe(UssFSProvider.instance.onDidChangeFile);
     });
 
     it("provides access to the onJobChanged event", () => {
+        ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.Jobs, JobFSProvider.instance.onDidChangeFile);
         expect(ZoweExplorerApiRegister.onResourceChanged(ZoweScheme.Jobs)).toBe(JobFSProvider.instance.onDidChangeFile);
+    });
+
+    it("allows access to the DataSetAttributesProvider instance", () => {
+        const ZEApiRegister = ZoweExplorerApiRegister.getInstance();
+        expect(ZEApiRegister.getDataSetAttrProvider()).toBeDefined();
     });
 });

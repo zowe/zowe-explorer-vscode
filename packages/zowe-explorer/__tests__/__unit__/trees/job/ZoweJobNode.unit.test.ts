@@ -35,6 +35,7 @@ import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { JobInit } from "../../../../src/trees/job/JobInit";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
 
 async function createGlobalMocks() {
     const globalMocks = {
@@ -96,6 +97,7 @@ async function createGlobalMocks() {
             createDirectory: jest.fn(),
             writeFile: jest.fn(),
         },
+        isUsingTokenAuth: jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(false),
     };
 
     jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
@@ -149,6 +151,7 @@ async function createGlobalMocks() {
         value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
+    Object.defineProperty(Constants, "PROFILES_CACHE", { value: globalMocks.mockProfileInstance!, configurable: true });
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
@@ -249,7 +252,7 @@ describe("ZoweJobNode unit tests - Function addSession", () => {
         await globalMocks.testJobsProvider.addSession("sestest");
         expect(globalMocks.testJobsProvider.mSessionNodes[1]).toBeDefined();
         expect(globalMocks.testJobsProvider.mSessionNodes[1].label).toEqual("sestest");
-        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("sestest");
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toEqual("Profile: sestest\nProfile Type: zosmf");
     });
 
     it("Tests that addSession adds the session to the tree with disabled global setting", async () => {
@@ -639,26 +642,17 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
     });
 });
 
-describe("ZoweJobNode unit tests - Function flipState", () => {
-    it("Tests that flipState is executed successfully", async () => {
+describe("ZoweJobNode unit tests - Function ZoweTreeProvider.flipState for job nodes", () => {
+    it("Tests that flipState is executed successfully for an expanded job node", async () => {
         const globalMocks = await createGlobalMocks();
-        globalMocks.testJobsProvider.addSession("fake");
-        globalMocks.testJobsProvider.mSessionNodes[1].contextValue = Constants.JOBS_SESSION_CONTEXT;
-        globalMocks.mockCreateSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
-
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], false);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobsProvider.mSessionNodes[1], true);
-        expect(JSON.stringify(globalMocks.testJobsProvider.mSessionNodes[1].iconPath)).toContain("folder-root-unverified-closed.svg");
-
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobNode, true);
         expect(JSON.stringify(globalMocks.testJobNode.iconPath)).toContain("folder-open.svg");
+    });
+
+    it("Tests that flipState is executed successfully for a collapsed job node", async () => {
+        const globalMocks = await createGlobalMocks();
         await globalMocks.testJobsProvider.flipState(globalMocks.testJobNode, false);
         expect(JSON.stringify(globalMocks.testJobNode.iconPath)).toContain("folder-closed.svg");
-        await globalMocks.testJobsProvider.flipState(globalMocks.testJobNode, true);
-        expect(JSON.stringify(globalMocks.testJobNode.iconPath)).toContain("folder-open.svg");
     });
 });
 
@@ -881,8 +875,14 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
         expect(testNode.dirty).toEqual(false);
     });
 
-    it("should error if the resource does not exist", () => {
-        const testNode = new ZoweSpoolNode({ label: "SPOOL", collapsibleState: vscode.TreeItemCollapsibleState.None, spool: createIJobFile() });
+    it("should error if the resource does not exist", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testNode = new ZoweSpoolNode({
+            label: "SPOOL",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            spool: createIJobFile(),
+            profile: globalMocks.testProfile,
+        });
         const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap");
         testNode.dirty = false;
 
@@ -903,13 +903,15 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
         expect(testNode.dirty).toEqual(false);
     });
 
-    it("should delete a null encoding from the provider", () => {
+    it("should delete a null encoding from the provider", async () => {
+        const globalMocks = await createGlobalMocks();
         const testParentNode = createJobNode(createJobSessionNode(createISession(), createIProfile()), createIProfile());
         const testNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
             parentNode: testParentNode,
+            profile: globalMocks.testProfile,
         });
         const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap").mockImplementation();
         const nodePath = testNode.resourceUri.path;
@@ -933,13 +935,15 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
         expect(testNode.dirty).toEqual(true);
     });
 
-    it("should update the encoding in the provider map", () => {
+    it("should update the encoding in the provider map", async () => {
+        const globalMocks = await createGlobalMocks();
         const testParentNode = createJobNode(createJobSessionNode(createISession(), createIProfile()), createIProfile());
         const testNode = new ZoweSpoolNode({
             label: "SPOOL",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             spool: createIJobFile(),
             parentNode: testParentNode,
+            profile: globalMocks.testProfile,
         });
         const nodePath = testNode.resourceUri.path;
         const updateEncodingSpy = jest.spyOn(testNode, "updateEncodingInMap").mockImplementation();
@@ -969,7 +973,6 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
         const addSearchHistory = jest.spyOn(globalMocks.testJobsProvider, "addSearchHistory");
         const refreshElement = jest.spyOn(globalMocks.testJobsProvider, "refreshElement");
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-        expect(globalMocks.testJobsProvider);
         expect(addSearchHistory).not.toHaveBeenCalled();
         expect(refreshElement).not.toHaveBeenCalled();
     });
@@ -978,7 +981,6 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
         jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue("Owner:kristina Prefix:* Status:*");
         const addSearchHistory = jest.spyOn(globalMocks.testJobsProvider, "addSearchHistory");
         await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
-        expect(globalMocks.testJobsProvider);
         expect(addSearchHistory).toHaveBeenCalled();
     });
     it("testing fav node to call applySearchLabelToNode", async () => {
@@ -993,6 +995,38 @@ describe("ZosJobsProvider - Function searchPrompt", () => {
         jobSessionNode.contextValue = Constants.JOBS_SESSION_CONTEXT + Constants.FAV_SUFFIX;
         await globalMocks.testJobsProvider.searchPrompt(jobSessionNode);
         expect(applySearchLabelToNode).toHaveBeenCalled();
+    });
+
+    it("To check ZoweJobNode when search criteria with Job filter is updated", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testJobsProvider.mSessionNodes[1].tooltip = "JobId: JOB0001";
+        jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue("Owner: * | Prefix: * | Status : *");
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toContain("Owner: * | Prefix: * | Status : *");
+    });
+
+    it("To check ZoweJobNode when search criteria is updated with new Job filter", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testJobsProvider.mSessionNodes[1].tooltip = "Owner: * | Prefix: * | Status : *";
+        jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue("Owner: * | Prefix: * | Status : ACTIVE");
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toContain("Owner: * | Prefix: * | Status : ACTIVE");
+    });
+
+    it("To check ZoweJobNode when search criteria with Job ID is updated", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testJobsProvider.mSessionNodes[1].tooltip = "Owner: * | Prefix: * | Status : *";
+        jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue("JobId: JOB0001");
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toContain("JobId: JOB0001");
+    });
+
+    it("To check ZoweJobNode when search criteria is updated with new Job ID ", async () => {
+        const globalMocks = await createGlobalMocks();
+        globalMocks.testJobsProvider.mSessionNodes[1].tooltip = "JobId: JOB0001";
+        jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue("JobId: JOB0002");
+        await globalMocks.testJobsProvider.searchPrompt(globalMocks.testJobsProvider.mSessionNodes[1]);
+        expect(globalMocks.testJobsProvider.mSessionNodes[1].tooltip).toContain("JobId: JOB0002");
     });
 });
 
@@ -1176,6 +1210,20 @@ describe("ZosJobsProvider - getJobs", () => {
         });
         jest.spyOn(Gui, "warningMessage").mockImplementation();
         await expect(globalMocks.testJobNode.getJobs("test", "test", "test", "test")).resolves.not.toThrow();
+    });
+
+    it("should return undefined if the session is undefined", async () => {
+        const globalMocks = await createGlobalMocks();
+        const getSessionMock = jest.fn().mockReturnValue(undefined);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce({
+            getSession: getSessionMock,
+        } as any);
+        const warnLoggerSpy = jest.spyOn(ZoweLogger, "warn");
+        await expect(globalMocks.testJobNode.getJobs("test", "test", "test", "test")).resolves.toBeUndefined();
+        expect(getSessionMock).toHaveBeenCalledTimes(1);
+        expect(warnLoggerSpy).toHaveBeenCalledTimes(1);
+        expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweJobNode.getJobs] Session undefined for profile sestest");
+        jesApiMock.mockRestore();
     });
 });
 

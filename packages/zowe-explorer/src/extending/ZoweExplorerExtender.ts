@@ -24,12 +24,14 @@ import {
     imperative,
     ZoweVsCodeExtension,
     ErrorCorrelator,
+    ILocalStorageAccess,
+    TableProviderRegistry,
+    TableActionProvider,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
-import { ILocalStorageAccess } from "@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -182,45 +184,13 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
 
         if (profileTypeConfigurations !== undefined) {
             this.getProfilesCache().addToConfigArray(profileTypeConfigurations);
-            this.updateSchema(profileInfo, profileTypeConfigurations);
+            ProfilesUtils.updateSchema(profileInfo, profileTypeConfigurations);
         }
 
         // sequentially reload the internal profiles cache to satisfy all the newly added profile types
         await ZoweExplorerExtender.refreshProfilesQueue.add(async (): Promise<void> => {
             await this.getProfilesCache().refresh();
         });
-    }
-
-    /**
-     * Adds new types to the Zowe schema.
-     * @param profileInfo the ProfileInfo object that has been prepared with `readProfilesFromDisk`, such as the one initialized in `initForZowe`.
-     * @param profileTypeConfigurations (optional) Profile type configurations to add to the schema
-     */
-    private updateSchema(profileInfo: imperative.ProfileInfo, profileTypeConfigurations?: imperative.ICommandProfileTypeConfiguration[]): void {
-        if (profileTypeConfigurations) {
-            try {
-                for (const typeConfig of profileTypeConfigurations) {
-                    const addResult = profileInfo.addProfileTypeToSchema(typeConfig.type, {
-                        schema: typeConfig.schema,
-                        sourceApp: "Zowe Explorer (for VS Code)",
-                    });
-                    if (addResult.info.length > 0) {
-                        ZoweLogger.warn(addResult.info);
-                    }
-                }
-            } catch (err) {
-                // Only show an error if we failed to update the on-disk schema.
-                if (err.code === "EACCES" || err.code === "EPERM") {
-                    Gui.errorMessage(
-                        vscode.l10n.t({
-                            message: "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
-                            args: [err.message ?? ""],
-                            comment: ["Error message"],
-                        })
-                    );
-                }
-            }
-        }
     }
 
     public getLocalStorage(): ILocalStorageAccess {
@@ -269,5 +239,28 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         await this.ussFileProvider?.refreshFavorites();
         await this.jobsProvider?.addSession({ profileType });
         await this.jobsProvider?.refreshFavorites();
+
+        // Release deferred promise for extender profile type
+        await ProfilesUtils.resolveTypePromise(profileType);
+    }
+
+    /**
+     * Register a table action provider for a specific table
+     * @param tableId The table identifier to register for
+     * @param provider The action provider implementation
+     */
+    public registerTableActionProvider(tableId: string, provider: TableActionProvider): vscode.Disposable {
+        this.getTableProviderRegistry().registerProvider(tableId, provider);
+        return new vscode.Disposable(() => this.getTableProviderRegistry().unregisterProvider(tableId, provider));
+    }
+
+    /**
+     * Get the table provider registry instance for advanced usage.
+     * Most extenders should use registerTableActionProvider instead.
+     *
+     * @returns The singleton table provider registry instance
+     */
+    public getTableProviderRegistry(): TableProviderRegistry {
+        return TableProviderRegistry.getInstance();
     }
 }

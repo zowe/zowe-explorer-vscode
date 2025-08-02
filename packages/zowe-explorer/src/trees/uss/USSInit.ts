@@ -46,11 +46,8 @@ export class USSInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.addSession", async () => ussFileProvider.createZoweSession(ussFileProvider))
         );
-        context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.uss.refreshAll", async () => {
-                await SharedActions.refreshAll(ussFileProvider);
-            })
-        );
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.refreshAll", async () => SharedActions.refreshAll()));
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.refresh", async () => SharedActions.refreshProvider(ussFileProvider)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.refreshUSS", async (node, nodeList) => {
                 const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Pulling from Mainframe...")}`);
@@ -83,14 +80,23 @@ export class USSInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.refreshDirectory", async (node, nodeList) => {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-                selectedNodes = selectedNodes.filter((x) => SharedContext.isUssDirectory(x));
+                selectedNodes = selectedNodes.filter((x) => SharedContext.isUssDirectory(x) || SharedContext.isUssSession(x));
                 for (const item of selectedNodes) {
                     await USSActions.refreshDirectory(item, ussFileProvider);
                 }
             })
         );
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.uss.cdUp", async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.cdUp(node))
+        );
+        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.fullPath", async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.filterPrompt(node))
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand(
+                "zowe.uss.filterBy",
+                async (node: IZoweUSSTreeNode): Promise<void> => ussFileProvider.filterBy(node, node.fullPath)
+            )
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.createFile", async (node: IZoweUSSTreeNode) =>
