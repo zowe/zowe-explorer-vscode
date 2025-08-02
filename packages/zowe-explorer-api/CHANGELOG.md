@@ -24,6 +24,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added row pinning functionality to table views with new APIs: `pinRows()` to pin specific rows to the top of the grid, `unpinRows()` to unpin rows, `getPinnedRows()` to retrieve currently pinned rows, and `setPinnedRows()` to replace all pinned rows with a new set. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
 - Added `waitForAPI()` function to the `Table.View` class to allow extensions to wait for the AG Grid API to be fully initialized before performing operations on the table view. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
 - Added grid state management functions `getGridState()` and `setGridState()` to the `Table.View` class to allow extensions to save and restore the complete state of the table view, including column positions, sorting, filtering, and other grid configurations. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
+- Changed `request` type in `PollRequest` to now support both asynchronous and synchronous functions. [#3764](https://github.com/zowe/zowe-explorer-vscode/pull/3764/)
 
 ### Bug fixes
 
