@@ -1134,6 +1134,37 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     }
 
     /**
+     * Updates the polling context for a node and fires the tree change event
+     * @param node The node to update
+     * @param addContext Whether to add or remove the poll context
+     */
+    private updatePollContext(node: IZoweJobTreeNode, addContext?: boolean): void {
+        if (addContext) {
+            if (!SharedContext.isPolling(node)) {
+                node.contextValue += Constants.POLL_CONTEXT;
+            }
+        } else {
+            if (SharedContext.isPolling(node)) {
+                node.contextValue = node.contextValue.replace(Constants.POLL_CONTEXT, "");
+            }
+        }
+        this.mOnDidChangeTreeData.fire(node);
+    }
+
+    /**
+     * Filter active jobs from a session's children
+     * @param session The session node containing job children
+     * @returns Array of active job nodes
+     */
+    public getActiveJobsFromSession(session: IZoweJobTreeNode): IZoweJobTreeNode[] {
+        return (
+            session.children?.filter((job) => {
+                return job.job && job.job.status && job.job.status.toUpperCase() === "ACTIVE";
+            }) || []
+        );
+    }
+
+    /**
      * Poll the currently filtered jobs on the session node, given a user-provided polling interval.
      * @param session The session node to start/stop polling active jobs for
      */
@@ -1143,26 +1174,18 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         }
 
         // If the session is already being polled, stop polling all active jobs
+        const sessionPollKey = `${session.resourceUri.path}active-jobs`;
         if (SharedContext.isPolling(session)) {
-            const sessionPollKey = `${session.resourceUri.path}-active-jobs`;
-
             // Stop the main polling request
             if (sessionPollKey in Poller.pollRequests) {
                 Poller.pollRequests[sessionPollKey].dispose = true;
             }
 
-            // Find all active jobs that are currently being polled
-            const activeJobsBeingPolled = session.children?.filter((job) => job.job && SharedContext.isPolling(job)) || [];
-
-            // Remove polling context from each active job
-            for (const job of activeJobsBeingPolled) {
-                job.contextValue = job.contextValue.replace(Constants.POLL_CONTEXT, "");
-                this.mOnDidChangeTreeData.fire(job);
-            }
+            // Remove polling context from all polling jobs
+            session.children?.forEach((job) => this.updatePollContext(job));
 
             // Remove polling context from session
-            session.contextValue = session.contextValue.replace(Constants.POLL_CONTEXT, "");
-            this.mOnDidChangeTreeData.fire(session);
+            this.updatePollContext(session);
             return;
         }
 
@@ -1213,7 +1236,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         }
 
         // Start polling each active job individually
-        const sessionPollKey = `${session.resourceUri.path}-active-jobs`;
         let activeJobCount = activeJobs.length;
         Poller.addRequest(sessionPollKey, {
             msInterval: pollInterval,
@@ -1230,45 +1252,11 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 // Refresh the session to get all current jobs (including any new ones)
                 this.refreshElement(session);
 
-                // Get current active jobs after refresh
-                const currentActiveJobs = this.getActiveJobsFromSession(session);
-
-                // Update the active job count
-                activeJobCount = currentActiveJobs.length;
-
-                // If no active jobs remain, stop polling
-                if (activeJobCount === 0) {
-                    Poller.pollRequests[sessionPollKey].dispose = true;
-                    session.contextValue = session.contextValue.replace(Constants.POLL_CONTEXT, "");
-                    this.mOnDidChangeTreeData.fire(session);
-
-                    // Remove polling context from any remaining jobs
-                    session.children?.forEach((job) => {
-                        if (SharedContext.isPolling(job)) {
-                            job.contextValue = job.contextValue.replace(Constants.POLL_CONTEXT, "");
-                            this.mOnDidChangeTreeData.fire(job);
-                        }
-                    });
-
-                    statusMsg.dispose();
-                    Gui.infoMessage(
-                        vscode.l10n.t({
-                            message: "No more active jobs for {0}. Stopping polling.",
-                            args: [session.label],
-                            comment: ["Session label"],
-                        })
-                    );
-                    return;
-                } else {
-                    // Update polling context for current active jobs
-                    session.children?.forEach((job) => {
-                        if (job.job && job.job.status && job.job.status.toLowerCase() === "active") {
-                            if (!SharedContext.isPolling(job)) {
-                                job.contextValue += Constants.POLL_CONTEXT;
-                                this.mOnDidChangeTreeData.fire(job);
-                            }
-                        } else if (SharedContext.isPolling(job)) {
-                            // Job is no longer active - show completion notification
+                // Check for job completion
+                session.children?.forEach((job) => {
+                    if (SharedContext.isPolling(job)) {
+                        // If job is no longer active, show completion notification
+                        if (!job.job || !job.job.status || job.job.status.toUpperCase() !== "ACTIVE") {
                             if (job.job && job.job.status) {
                                 const sessProfileName = session.getProfileName();
                                 const args = [sessProfileName, job.job.jobid];
@@ -1281,25 +1269,45 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                                     })
                                 );
                             }
-
-                            // Remove polling context from jobs that are no longer active
-                            job.contextValue = job.contextValue.replace(Constants.POLL_CONTEXT, "");
-                            this.mOnDidChangeTreeData.fire(job);
+                            // Remove polling context from completed jobs
+                            this.updatePollContext(job);
                         }
-                    });
+                    }
+                });
+
+                // Get current active jobs after refresh
+                const currentActiveJobs = this.getActiveJobsFromSession(session);
+                activeJobCount = currentActiveJobs.length;
+
+                // If no active jobs remain, stop polling
+                if (activeJobCount === 0) {
+                    Poller.pollRequests[sessionPollKey].dispose = true;
+                    this.updatePollContext(session);
+
+                    // Remove polling context from any remaining jobs
+                    session.children?.forEach((job) => this.updatePollContext(job));
+
+                    statusMsg.dispose();
+                    Gui.infoMessage(
+                        vscode.l10n.t({
+                            message: "No more active jobs for {0}. Stopping polling.",
+                            args: [session.label],
+                            comment: ["Session label"],
+                        })
+                    );
+                    return;
+                } else {
+                    // Update polling context for current active jobs that aren't already being polled
+                    currentActiveJobs.forEach((job) => this.updatePollContext(job, true));
                 }
             },
         });
 
         // Add polling context to initial active jobs
-        for (const job of activeJobs) {
-            job.contextValue += Constants.POLL_CONTEXT;
-            this.mOnDidChangeTreeData.fire(job);
-        }
+        activeJobs.forEach((job) => this.updatePollContext(job, true));
 
         // Add polling context to session to indicate it's managing polling
-        session.contextValue += Constants.POLL_CONTEXT;
-        this.mOnDidChangeTreeData.fire(session);
+        this.updatePollContext(session, true);
     }
 
     public sortBy(session: IZoweJobTreeNode): void {
@@ -1307,19 +1315,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             session.children.sort(ZoweJobNode.sortJobs(session.sort));
             this.nodeDataChanged(session);
         }
-    }
-
-    /**
-     * Filter active jobs from a session's children
-     * @param session The session node containing job children
-     * @returns Array of active job nodes
-     */
-    public getActiveJobsFromSession(session: IZoweJobTreeNode): IZoweJobTreeNode[] {
-        return (
-            session.children?.filter((job) => {
-                return job.job && job.job.status && job.job.status.toUpperCase() === "ACTIVE";
-            }) || []
-        );
     }
 
     /**
