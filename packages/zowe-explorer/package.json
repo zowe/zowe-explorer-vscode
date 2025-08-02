@@ -1280,12 +1280,12 @@
           "group": "000_zowe_jobsMainframeInteraction@1"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)(?!.*_polling.*)server.*/ && !listMultiSelection",
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_polling.*)server.*/ && !listMultiSelection",
           "command": "zowe.jobs.startPollingActiveJobs",
           "group": "000_zowe_jobsMainframeInteraction@1"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)(?=.*_polling.*)server.*/ && !listMultiSelection",
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?=.*_polling.*)server.*/ && !listMultiSelection",
           "command": "zowe.jobs.stopPollingActiveJobs",
           "group": "000_zowe_jobsMainframeInteraction@1"
         },

@@ -101,6 +101,7 @@ export class Constants {
     public static readonly WORKSPACE_UTIL_FILE_SAVE_MAX_ITERATION_COUNT = 25;
     public static readonly SHARED_HISTORY_PANEL_TITLE = vscode.l10n.t("Edit History");
     public static readonly RELEASE_NOTES_PANEL_TITLE = vscode.l10n.t("Release Notes");
+    public static readonly SET_JOB_SPOOL_COMMAND = "command:zowe.jobs.setJobSpool";
     public static configurationDictionary: { [k: string]: string } = {
         "Zowe-Default-Datasets-Binary": Constants.SETTINGS_DS_DEFAULT_BINARY,
         "Zowe-Default-Datasets-C": Constants.SETTINGS_DS_DEFAULT_C,

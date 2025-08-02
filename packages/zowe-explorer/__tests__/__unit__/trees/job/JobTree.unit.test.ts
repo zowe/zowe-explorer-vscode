@@ -1424,7 +1424,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         await pollRequest.request();
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringMatching("Job completed JOB001 - Retcode: CC 0000"));
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringMatching("Job completed JOB001 - CC 0000"));
         expect(mockActiveJob.contextValue).not.toContain(Constants.POLL_CONTEXT);
     });
 
@@ -1439,6 +1439,133 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         );
         expect(globalMocks.testJobsProvider.validatePollInterval("1000")).toStrictEqual(undefined);
         expect(globalMocks.testJobsProvider.validatePollInterval("1001")).toStrictEqual(undefined);
+    });
+});
+
+describe("ZosJobsProvider unit tests - Function getActiveJobsFromSession", () => {
+    it("should return empty array when session has no children", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testTree = new JobTree();
+        const sessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        sessionNode.children = undefined;
+
+        const result = testTree.getActiveJobsFromSession(sessionNode);
+
+        expect(result).toEqual([]);
+    });
+
+    it("should return empty array when session has empty children array", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testTree = new JobTree();
+        const sessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        sessionNode.children = [];
+
+        const result = testTree.getActiveJobsFromSession(sessionNode);
+
+        expect(result).toEqual([]);
+    });
+
+    it("should return only active jobs from session children", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testTree = new JobTree();
+        const sessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const activeJob1 = new ZoweJobNode({
+            label: "TESTJOB1(JOB001) - ACTIVE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session: sessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, jobid: "JOB001", status: "ACTIVE" },
+        });
+
+        const activeJob2 = new ZoweJobNode({
+            label: "TESTJOB2(JOB002) - ACTIVE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session: sessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, jobid: "JOB002", status: "active" },
+        });
+
+        const completedJob = new ZoweJobNode({
+            label: "TESTJOB3(JOB003) - OUTPUT",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session: sessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, jobid: "JOB003", status: "OUTPUT" },
+        });
+
+        sessionNode.children = [activeJob1, completedJob, activeJob2];
+
+        const result = testTree.getActiveJobsFromSession(sessionNode);
+
+        expect(result).toHaveLength(2);
+        expect(result).toContain(activeJob1);
+        expect(result).toContain(activeJob2);
+        expect(result).not.toContain(completedJob);
+    });
+
+    it("should return empty array when no jobs have ACTIVE status", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testTree = new JobTree();
+        const sessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const outputJob = new ZoweJobNode({
+            label: "TESTJOB1(JOB001) - OUTPUT",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session: sessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, jobid: "JOB001", status: "OUTPUT" },
+        });
+
+        const abendJob = new ZoweJobNode({
+            label: "TESTJOB2(JOB002) - ABEND",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session: sessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, jobid: "JOB002", status: "ABEND S222" },
+        });
+
+        sessionNode.children = [outputJob, abendJob];
+
+        const result = testTree.getActiveJobsFromSession(sessionNode);
+
+        expect(result).toEqual([]);
+    });
+
+    it("should filter out nodes without job property", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testTree = new JobTree();
+        const sessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const activeJob = new ZoweJobNode({
+            label: "TESTJOB1(JOB001) - ACTIVE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session: sessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, jobid: "JOB001", status: "ACTIVE" },
+        });
+
+        const nodeWithoutJob = new ZoweJobNode({
+            label: "Search Node",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session: sessionNode.getSession(),
+            profile: globalMocks.testProfile,
+        });
+
+        sessionNode.children = [activeJob, nodeWithoutJob];
+
+        const result = testTree.getActiveJobsFromSession(sessionNode);
+
+        expect(result).toHaveLength(1);
+        expect(result).toContain(activeJob);
+        expect(result).not.toContain(nodeWithoutJob);
     });
 });
 

@@ -1184,9 +1184,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             return;
         }
 
-        const activeJobs: IZoweJobTreeNode[] = session.children.filter((job) => {
-            return job.job && job.job.status && job.job.status.toLowerCase() === "active";
-        });
+        const activeJobs: IZoweJobTreeNode[] = this.getActiveJobsFromSession(session);
 
         if (activeJobs.length === 0) {
             Gui.infoMessage(
@@ -1201,7 +1199,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
 
         if (activeJobs.length > Constants.MIN_WARN_ACTIVE_JOBS_TO_POLL) {
             const warningMessage = vscode.l10n.t({
-                message: "Polling {0} active jobs may cause performance issues. Do you want to continue?",
+                message: "Polling {0} active jobs may cause too many requests. Do you want to continue?",
                 args: [activeJobs.length],
                 comment: ["Number of active jobs"],
             });
@@ -1219,8 +1217,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         let activeJobCount = activeJobs.length;
         Poller.addRequest(sessionPollKey, {
             msInterval: pollInterval,
-            // eslint-disable-next-line @typescript-eslint/require-await
-            request: async () => {
+            request: () => {
                 const statusMsg = Gui.setStatusBarMessage(
                     `$(sync~spin) ${vscode.l10n.t({
                         message: "Polling {0} active jobs...",
@@ -1234,10 +1231,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 this.refreshElement(session);
 
                 // Get current active jobs after refresh
-                const currentActiveJobs =
-                    session.children?.filter((job) => {
-                        return job.job && job.job.status && job.job.status.toLowerCase() === "active";
-                    }) || [];
+                const currentActiveJobs = this.getActiveJobsFromSession(session);
 
                 // Update the active job count
                 activeJobCount = currentActiveJobs.length;
@@ -1278,10 +1272,10 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                             if (job.job && job.job.status) {
                                 const sessProfileName = session.getProfileName();
                                 const args = [sessProfileName, job.job.jobid];
-                                const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+                                const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                                 Gui.showMessage(
                                     vscode.l10n.t({
-                                        message: "Job completed {0} - Retcode: {1}",
+                                        message: "Job completed {0} - {1}",
                                         args: [`[${job.job.jobid}](${setJobCmd})`, job.job.retcode],
                                         comment: ["Job ID with clickable link", "Job status"],
                                     })
@@ -1313,6 +1307,19 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             session.children.sort(ZoweJobNode.sortJobs(session.sort));
             this.nodeDataChanged(session);
         }
+    }
+
+    /**
+     * Filter active jobs from a session's children
+     * @param session The session node containing job children
+     * @returns Array of active job nodes
+     */
+    public getActiveJobsFromSession(session: IZoweJobTreeNode): IZoweJobTreeNode[] {
+        return (
+            session.children?.filter((job) => {
+                return job.job && job.job.status && job.job.status.toUpperCase() === "ACTIVE";
+            }) || []
+        );
     }
 
     /**
