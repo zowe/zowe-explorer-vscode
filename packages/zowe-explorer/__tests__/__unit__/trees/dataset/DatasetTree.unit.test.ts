@@ -1001,7 +1001,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
             mockEnableValidationContext: jest.fn(),
             mockLoadDefaultProfile: jest.fn(),
             mockProfileInstance: null,
-            mockMHistory: ZowePersistentFilters,
+            mockMPersistence: ZowePersistentFilters,
             mockGetConfiguration: jest.fn(),
             mockPersistenceSchema: createPersistentConfig(),
         };
@@ -1062,7 +1062,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = createDatasetTree(blockMocks.datasetSessionNode, blockMocks.treeView);
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        Object.defineProperty(testTree.mHistory, "getSessions", {
+        Object.defineProperty(testTree.mPersistence, "getSessions", {
             value: jest.fn(() => {
                 return ["sestest", "profile1", "profile2"];
             }),
@@ -1081,7 +1081,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = createDatasetTree(blockMocks.datasetSessionNode, blockMocks.treeView);
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        testTree.mHistory.push(blockMocks.imperativeProfile.name);
+        testTree.mPersistence.push(blockMocks.imperativeProfile.name);
 
         testTree.addSession();
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
@@ -1114,7 +1114,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
                 getProfileName: () => "sestest",
             } as any,
         ];
-        jest.spyOn((testTree as any).mHistory, "getSessions").mockReturnValue(["sestest"]);
+        jest.spyOn((testTree as any).mPersistence, "getSessions").mockReturnValue(["sestest"]);
         jest.spyOn(Profiles.getInstance(), "fetchAllProfiles").mockReturnValue(Promise.resolve([blockMocks.imperativeProfile]));
         jest.spyOn(SharedActions, "resetValidationSettings").mockImplementation();
 
@@ -2087,7 +2087,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -2121,7 +2121,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -2155,7 +2155,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
             expect(testTree.mSessionNodes[1].pattern).toEqual("TRIM.ME");
@@ -2186,7 +2186,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["EXISTING.FILTER"]);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["EXISTING.FILTER"]);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
             expect(testTree.mSessionNodes[1].pattern).toEqual("EXISTING.FILTER");
@@ -2214,7 +2214,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
             expect(mockQuickPick.placeholder).toContain("Select a filter or type to create a new one");
@@ -2242,7 +2242,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -2292,7 +2292,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -2325,7 +2325,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -2360,7 +2360,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             // Set initial tooltip
             blockMocks.datasetSessionNode.tooltip = "Initial tooltip";
 
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -2393,7 +2393,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -2430,7 +2430,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -2462,7 +2462,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
             const searchHistory = ["HISTORY.FILTER.1", "HISTORY.FILTER.2"];
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValue(searchHistory);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValue(searchHistory);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -2500,7 +2500,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
 
-            jest.spyOn(testTree.mHistory, "getSearchHistory").mockReturnValueOnce(["HISTORY.FILTER"]);
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["HISTORY.FILTER"]);
 
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
@@ -3669,7 +3669,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
             readFavorites: () => ["[test]: SAMPLE.PO.DS{pds}", "[test]: SAMPLE.PS.DS{ds}", "INVALID*"],
         });
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
@@ -3682,7 +3682,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
             readFavorites: () => ["[test]: SAMPLE.DS{ds}"],
         });
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
@@ -4069,9 +4069,9 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
     describe("removeSearchHistory", () => {
         it("removes the search item passed in from the current history", () => {
             tree.addSearchHistory("test");
-            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(1);
+            expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(1);
             tree.removeSearchHistory("test");
-            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+            expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(0);
         });
     });
 
@@ -4081,9 +4081,9 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             tree.addSearchHistory("test2");
             tree.addSearchHistory("test3");
             tree.addSearchHistory("test4");
-            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(4);
+            expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(4);
             tree.resetSearchHistory();
-            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+            expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(0);
         });
     });
 
@@ -4093,9 +4093,9 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             tree.addSearchedKeywordHistory("test2");
             tree.addSearchedKeywordHistory("test3");
             tree.addSearchedKeywordHistory("test4");
-            expect(tree["mHistory"]["mSearchedKeywordHistory"].length).toEqual(4);
+            expect(tree["mPersistence"]["mSearchedKeywordHistory"].length).toEqual(4);
             tree.resetSearchedKeywordHistory();
-            expect(tree["mHistory"]["mSearchedKeywordHistory"].length).toEqual(0);
+            expect(tree["mPersistence"]["mSearchedKeywordHistory"].length).toEqual(0);
         });
     });
 
@@ -4105,9 +4105,9 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             tree.addFileHistory("test2");
             tree.addFileHistory("test3");
             tree.addFileHistory("test4");
-            expect(tree["mHistory"]["mFileHistory"].length).toEqual(4);
+            expect(tree["mPersistence"]["mFileHistory"].length).toEqual(4);
             tree.resetFileHistory();
-            expect(tree["mHistory"]["mFileHistory"].length).toEqual(0);
+            expect(tree["mPersistence"]["mFileHistory"].length).toEqual(0);
         });
     });
 
@@ -4134,7 +4134,7 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
     describe("getSessions", () => {
         it("gets all the available sessions from persistent object", () => {
-            tree["mHistory"]["mSessions"] = ["sestest"];
+            tree["mPersistence"]["mSessions"] = ["sestest"];
             expect(tree.getSessions()).toEqual(["sestest"]);
         });
     });

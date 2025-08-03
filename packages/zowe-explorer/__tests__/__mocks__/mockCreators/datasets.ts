@@ -46,7 +46,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         mSessionNodes: [sessionNode],
         mFavorites: [],
         mFileHistory: [],
-        mHistory: [],
+        mPersistence: [],
         mOnDidChangeTreeData: {
             fire: jest.fn(),
         },
