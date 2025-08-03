@@ -974,19 +974,23 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
         }
         if (e.affectsConfiguration(Constants.SETTINGS_DS_DEFAULT_SORT)) {
-            const sortOpts = SharedUtils.getDefaultSortOptions(
+            const defaultSortOpts = SharedUtils.getDefaultSortOptions(
                 DatasetUtils.DATASET_SORT_OPTS,
                 Constants.SETTINGS_DS_DEFAULT_SORT,
                 Sorting.DatasetSortOpts
             );
             for (const sessionNode of this.mSessionNodes) {
                 const isSession = SharedContext.isDsSession(sessionNode);
+                // If the node has a sort setting in persistence, use that. Otherwise, use the default sort options
+                const sortOpts = this.getSortSetting(sessionNode) || defaultSortOpts;
                 this.updateSortForNode(sessionNode, sortOpts, isSession);
             }
             this.refresh();
             for (const favProfile of this.mFavorites) {
                 // each entry is a profile, we need to update sort order for its children
                 for (const child of favProfile.children) {
+                    // If the node has a sort setting in persistence, use that. Otherwise, use the default sort options
+                    const sortOpts = this.getSortSetting(child) || defaultSortOpts;
                     this.updateSortForNode(child, sortOpts, false);
                 }
             }
@@ -1037,6 +1041,16 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public getFileHistory(): string[] {
         ZoweLogger.trace("DatasetTree.getFileHistory called.");
         return this.mHistory.getFileHistory();
+    }
+
+    public addSortSetting(node: IZoweDatasetTreeNode, settings: Sorting.NodeSort): void {
+        ZoweLogger.trace("DatasetTree.addSortSettings called.");
+        this.mHistory.addSortSetting(node, settings);
+    }
+
+    public getSortSetting(node: IZoweDatasetTreeNode): Sorting.NodeSort | undefined {
+        ZoweLogger.trace("DatasetTree.getSortSettings called.");
+        return this.mHistory.getSortSetting(node);
     }
 
     public removeFileHistory(name: string): void {
@@ -1634,9 +1648,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         const isSession = SharedContext.isSession(node);
 
         // Read default options from settings if a user hasn't selected any sort options yet
-        const sortOpts =
+        let sortOpts =
             node.sort ??
             SharedUtils.getDefaultSortOptions(DatasetUtils.DATASET_SORT_OPTS, Constants.SETTINGS_DS_DEFAULT_SORT, Sorting.DatasetSortOpts);
+
+        // Override the default sort method if the node already has sort setting in persistence
+        const sortSetting = this.getSortSetting(node);
+        if (sortSetting) {
+            sortOpts = sortSetting;
+        }
 
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
@@ -1690,6 +1710,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         // Update sort for node based on selections
         this.updateSortForNode(node, { ...sortOpts, method: sortMethod }, isSession);
+
+        // Update sort for node in persistent storage
+        this.addSortSetting(node, { ...sortOpts, method: sortMethod });
         Gui.setStatusBarMessage(
             `$(check) ${vscode.l10n.t({
                 message: "Sorting updated for {0}",

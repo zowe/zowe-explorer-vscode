@@ -9,7 +9,7 @@
  *
  */
 
-import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { IZoweDatasetTreeNode, PersistenceSchemaEnum, Sorting } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "./ZoweLogger";
 import { ZoweLocalStorage } from "./ZoweLocalStorage";
@@ -28,6 +28,7 @@ export class ZowePersistentFilters {
     private static readonly fileHistory: string = "fileHistory";
     private static readonly sessions: string = "sessions";
     private static readonly encodingHistory: string = "encodingHistory";
+    private static readonly sortSettings: string = "sortSettings";
 
     public schema: PersistenceSchemaEnum;
     private mSearchHistory: string[] = [];
@@ -35,6 +36,7 @@ export class ZowePersistentFilters {
     private mSessions: string[] = [];
     private mEncodingHistory: string[] = [];
     private mSearchedKeywordHistory: string[] = [];
+    private mSortSettings: { [criteria: string]: Sorting.NodeSort } = {};
 
     public constructor(
         schema: PersistenceSchemaEnum,
@@ -166,6 +168,22 @@ export class ZowePersistentFilters {
         }
     }
 
+    /**
+     * Adds sort settings for a dataset to the local store and
+     * updates persistent store.
+     *
+     * @param {IZoweDatasetTreeNode} node - dataset node
+     * @param {Sorting.NodeSort} setting - sort setting
+     */
+    public addSortSetting(node: IZoweDatasetTreeNode, setting: Sorting.NodeSort): void {
+        ZoweLogger.trace("PersistentFilters.addSortSettings called.");
+        if (node && setting) {
+            const criteria = `${node.getProfileName()}-${node.label as string}`;
+            this.mSortSettings[criteria] = setting;
+            this.updateSortSettings();
+        }
+    }
+
     /*********************************************************************************************************************************************/
     /* Get/read functions, for returning the values stored in the persistent arrays
     /*********************************************************************************************************************************************/
@@ -199,6 +217,11 @@ export class ZowePersistentFilters {
         return [];
     }
 
+    public getSortSetting(node: IZoweDatasetTreeNode): Sorting.NodeSort | undefined {
+        ZoweLogger.trace("PersistentFilters.getSortSettings called.");
+        const criteria = `${node.getProfileName()}-${node.label as string}`;
+        return this.mSortSettings[criteria];
+    }
     /*********************************************************************************************************************************************/
     /* Remove functions, for removing one item from the persistent arrays
     /*********************************************************************************************************************************************/
@@ -255,6 +278,13 @@ export class ZowePersistentFilters {
         this.updateSearchedKeywordHistory();
     }
 
+    public removeSortSetting(node: IZoweDatasetTreeNode): void {
+        ZoweLogger.trace("PersistentFilters.removeSortSettings called.");
+        const name = `${node.getProfileName()}-${node.label as string}`;
+        delete this.mSortSettings[name];
+        this.updateSortSettings();
+    }
+
     /*********************************************************************************************************************************************/
     /* Reset functions, for resetting the persistent array to empty (in the extension and in settings.json)
     /*********************************************************************************************************************************************/
@@ -285,6 +315,12 @@ export class ZowePersistentFilters {
     public resetSearchedKeywordHistory(): void {
         this.mSearchedKeywordHistory = [];
         this.updateSearchedKeywordHistory();
+    }
+
+    public resetSortSettings(): void {
+        ZoweLogger.trace("PersistentFilters.resetSortSettings called.");
+        this.mSortSettings = {};
+        this.updateSortSettings();
     }
 
     /*********************************************************************************************************************************************/
@@ -343,6 +379,15 @@ export class ZowePersistentFilters {
         }
     }
 
+    private updateSortSettings(): void {
+        ZoweLogger.trace("PersistentFilters.updateSortSettings called.");
+        const settings = { ...ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema) };
+        if (settings.persistence) {
+            settings.sortSettings = this.mSortSettings;
+            ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
+        }
+    }
+
     private initialize(): void {
         ZoweLogger.trace("PersistentFilters.initialize called.");
         const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
@@ -352,11 +397,13 @@ export class ZowePersistentFilters {
             this.mFileHistory = settings[ZowePersistentFilters.fileHistory] ?? [];
             this.mEncodingHistory = settings[ZowePersistentFilters.encodingHistory] ?? [];
             this.mSearchedKeywordHistory = settings[ZowePersistentFilters.searchedKeywordHistory] ?? [];
+            this.mSortSettings = settings[ZowePersistentFilters.sortSettings] ?? {};
         }
         this.updateSearchHistory();
         this.updateSessions();
         this.updateFileHistory();
         this.updateEncodingHistory();
         this.updateSearchedKeywordHistory();
+        this.updateSortSettings();
     }
 }
