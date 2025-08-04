@@ -650,8 +650,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const document = await vscode.workspace.openTextDocument(uri);
             for (let i = 0; i < document.lineCount; i++) {
                 if (document.lineAt(i).text.length > dsStats?.lrecl) {
-                    longLines.push(i);
+                    longLines.push(i + 1);
                 }
+            }
+            if (longLines.length > 0) {
+                // internal error code to indicate unsafe upload
+                throw new Error(`Zowe Explorer: Unsafe upload | ${longLines.join(",")}`);
             }
 
             if (!entry) {
@@ -700,8 +704,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 await this._handleConflict(uri, entry);
                 return;
             }
-            if (err.message.includes(vscode.l10n.t("Operation cancelled"))) {
-                throw err;
+            if (err.message.includes("Zowe Explorer: Unsafe upload")) {
+                const longLines = err.message.split(" | ")[1].split(",");
+                const dataLossMsg = vscode.l10n.t("This upload operation may result in data loss.");
+                const linesToReview = longLines.length > 5 ? longLines.slice(0, 5).join(", ") + "..." : longLines.join(", ");
+                const shortMsg = vscode.l10n.t("Please review the following lines:");
+                const newErr = new Error(`${dataLossMsg} ${shortMsg} ${linesToReview}`);
+                newErr.stack = shortMsg + "\n - " + longLines.join("\n - ");
+                this._handleError(newErr);
+                throw newErr;
             }
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({
