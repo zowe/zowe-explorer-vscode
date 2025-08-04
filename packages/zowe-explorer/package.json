@@ -2084,6 +2084,12 @@
           "default": false,
           "description": "%zowe.table.hidePinnedRowsWarning%",
           "scope": "window"
+        },
+        "zowe.commands.tso.defaultProfile": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.commands.tso.defaultProfile%",
+          "scope": "window"
         }
       }
     },
