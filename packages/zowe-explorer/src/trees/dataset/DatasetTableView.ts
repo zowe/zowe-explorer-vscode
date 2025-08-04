@@ -505,7 +505,7 @@ export class DatasetTableView {
         if (rows.length === 0) {
             return false;
         }
-        
+
         return rows.every((r) => {
             // Check if it's a sequential dataset (PS) or a PDS member
             const dsorg = r["dsorg"] as string;
@@ -1296,7 +1296,7 @@ export class DatasetTableView {
 
         // Get the pattern from user
         const pattern = await Gui.showInputBox({
-            title: l10n.t("Enter Dataset Pattern"),
+            title: l10n.t("Enter Data Set Pattern"),
             placeHolder: l10n.t("e.g., USER.*, PUBLIC.DATA.*, etc."),
             prompt: l10n.t("Enter a dataset pattern to search for"),
             ignoreFocusOut: true,

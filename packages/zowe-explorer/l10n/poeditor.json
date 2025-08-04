@@ -922,7 +922,7 @@
   "No profiles available.": "",
   "Select a profile to search for data sets": "",
   "Select a profile": "",
-  "Enter Dataset Pattern": "",
+  "Enter Data Set Pattern": "",
   "e.g., USER.*, PUBLIC.DATA.*, etc.": "",
   "Enter a dataset pattern to search for": "",
   "Profile {0} not found.": "",
