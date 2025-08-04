@@ -139,17 +139,19 @@ export async function evaluateItemState(
             isEnabled = context.rowData !== undefined;
         }
 
-        try {
-            const evaluationData = prepareEvaluationData(item, context);
-            const conditionResult = await messageHandler.request<boolean>("check-condition-for-action", {
-                actionId: item.command,
-                row: evaluationData.row,
-                rowIndex: evaluationData.rowIndex,
-            });
-            isEnabled = conditionResult;
-        } catch (error) {
-            console.warn(`[ActionUtils.evaluateItemState] Failed to evaluate condition for item %s:`, item.command, error);
-            isEnabled = false;
+        if (isEnabled) {
+            try {
+                const evaluationData = prepareEvaluationData(item, context);
+                const conditionResult = await messageHandler.request<boolean>("check-condition-for-action", {
+                    actionId: item.command,
+                    row: evaluationData.row,
+                    rowIndex: evaluationData.rowIndex,
+                });
+                isEnabled = conditionResult;
+            } catch (error) {
+                console.warn(`[ActionUtils.evaluateItemState] Failed to evaluate condition for item %s:`, item.command, error);
+                isEnabled = false;
+            }
         }
     }
 
