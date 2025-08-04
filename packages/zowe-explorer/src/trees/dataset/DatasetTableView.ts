@@ -391,12 +391,22 @@ export class DatasetTableView {
     // Justification: Table page size options are not considered magic numbers
     // eslint-disable-next-line no-magic-numbers
     private PAGE_SIZE_OPTIONS = [10, 25, 50, 100, 500, 1000];
-    private contextOptions: Record<string, Table.ContextMenuOpts> = {
+    private contextOptions: Record<string, Table.ContextMenuOption> = {
         displayInTree: {
             title: l10n.t("Display in Tree"),
             command: "display-in-tree",
             callback: {
                 fn: DatasetTableView.displayInTree,
+                typ: "single-row",
+            },
+        },
+        pinRow: {
+            title: (data: Table.RowData): Promise<string> => {
+                return this.getPinTitle([data]);
+            },
+            command: "pin-row",
+            callback: {
+                fn: this.togglePinRows.bind(this),
                 typ: "single-row",
             },
         },
@@ -443,7 +453,7 @@ export class DatasetTableView {
     // Member-specific columns (shown when currentTableType is "members")
     private memberFields = ["dsname", "createdDate", "modifiedDate", "user", "vers", "mod", "cnorc", "inorc", "mnorc", "sclm"];
 
-    private rowActions: Record<string, Table.ActionOpts> = {
+    private rowActions: Record<string, Table.Action> = {
         openInEditor: {
             title: l10n.t("Open"),
             command: "open",
@@ -455,10 +465,10 @@ export class DatasetTableView {
         },
         pinRows: {
             title: (rows: Table.RowData[]): Promise<string> => {
-                return this.getPinActionTitle(rows as Table.RowData[]);
+                return this.getPinTitle(rows);
             },
             command: "pin-selected-rows",
-            callback: { fn: this.togglePinSelectedRows.bind(this), typ: "multi-row" },
+            callback: { fn: this.togglePinRows.bind(this), typ: "multi-row" },
             type: "secondary",
             condition: (rows: Table.RowData[]): boolean => {
                 // Allow pinning/unpinning any selected rows
@@ -614,12 +624,12 @@ export class DatasetTableView {
     }
 
     /**
-     * Get the appropriate title for the pin/unpin action based on selected rows
+     * Get the appropriate title for the pin/unpin action based on provided rows
      *
-     * @param rows The selected rows to check pin status for
+     * @param rows The rows to check pin status for (single or multiple)
      * @returns Promise resolving to "Pin" or "Unpin" based on current state
      */
-    private async getPinActionTitle(rows: Table.RowData[]): Promise<string> {
+    private async getPinTitle(rows: Table.RowData[]): Promise<string> {
         try {
             if (!this.table || rows.length === 0) {
                 return l10n.t("Pin");
@@ -627,7 +637,7 @@ export class DatasetTableView {
 
             const pinnedRows = await this.table.getPinnedRows();
 
-            // Check if all selected rows are currently pinned
+            // Check if all provided rows are currently pinned
             const allRowsPinned = rows.every((selectedRow) =>
                 pinnedRows.some((pinnedRow) => JSON.stringify(selectedRow) === JSON.stringify(pinnedRow))
             );
@@ -640,14 +650,16 @@ export class DatasetTableView {
     }
 
     /**
-     * Toggle pin/unpin for selected rows based on their current pinned state
+     * Toggle pin/unpin for rows based on their current pinned state
      *
-     * This action dynamically pins or unpins selected dataset rows. If all selected rows
-     * are currently pinned, it will unpin them. If any selected rows are not pinned,
-     * it will pin all selected rows to the top of the table view.
+     * This action dynamically pins or unpins dataset rows. If all target rows
+     * are currently pinned, it will unpin them. If any target rows are not pinned,
+     * it will pin all target rows to the top of the table view.
+     *
+     * Supports both single-row (context menu) and multi-row (action button) operations.
      *
      * @param _view The table view instance
-     * @param rows Record of selected rows to pin/unpin, indexed by row number
+     * @param data Either a single row data (for context menu) or record of selected rows (for action button)
      *
      * @example
      * // When user selects rows and clicks "Pin/Unpin" action:
@@ -655,12 +667,17 @@ export class DatasetTableView {
      * // - If rows are already pinned: they are unpinned and returned to normal position
      * // - User receives confirmation message about the action performed
      */
-    private async togglePinSelectedRows(this: DatasetTableView, _view: Table.View, rows: Record<number, Table.RowData>): Promise<void> {
+    private async togglePinRows(this: DatasetTableView, _view: Table.View, data: Table.RowInfo | Record<number, Table.RowData>): Promise<void> {
         try {
-            const rowsArray = Object.values(rows);
+            // Handle both single-row (RowInfo) and multi-row (Record) cases
+            const rowsArray: Table.RowData[] =
+                "row" in data
+                    ? [data.row] // Single-row case (context menu)
+                    : Object.values(data); // Multi-row case (action button)
+
             const pinnedRows = await this.table.getPinnedRows();
 
-            // Check if all selected rows are currently pinned
+            // Check if all target rows are currently pinned
             const allRowsPinned = rowsArray.every((selectedRow) =>
                 pinnedRows.some((pinnedRow) => JSON.stringify(selectedRow) === JSON.stringify(pinnedRow))
             );
@@ -669,11 +686,11 @@ export class DatasetTableView {
             let actionPerformed: string;
 
             if (allRowsPinned) {
-                // All selected rows are pinned, so unpin them
+                // All target rows are pinned, so unpin them
                 success = await this.table.unpinRows(rowsArray);
                 actionPerformed = "unpinned";
             } else {
-                // Some or all selected rows are not pinned, so pin them
+                // Some or all target rows are not pinned, so pin them
                 success = await this.table.pinRows(rowsArray);
                 actionPerformed = "pinned";
             }
@@ -1122,6 +1139,7 @@ export class DatasetTableView {
             .addRows(rows)
             .columns(...[...columnDefs, { field: "actions", hide: true }])
             .addContextOption("all", this.contextOptions.displayInTree)
+            .addContextOption("all", this.contextOptions.pinRow)
             .addRowAction("all", this.rowActions.openInEditor)
             .addRowAction("all", this.rowActions.pinRows)
             .addRowAction("all", this.rowActions.focusPDS)
