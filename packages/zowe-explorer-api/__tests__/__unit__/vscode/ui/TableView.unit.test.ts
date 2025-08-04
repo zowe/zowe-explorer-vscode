@@ -842,7 +842,7 @@ describe("Table.View", () => {
 
             expect(conditionFn).toHaveBeenCalledWith({ name: "test", value: 123 });
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "condition-for-action-result",
+                command: "check-condition-for-action",
                 requestId: "test-request-123",
                 payload: true,
             });
@@ -884,7 +884,7 @@ describe("Table.View", () => {
 
             expect(conditionFn).toHaveBeenCalledWith({ name: "test", value: 456 });
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "condition-for-action-result",
+                command: "check-condition-for-action",
                 requestId: "async-test-456",
                 payload: false,
             });
@@ -924,7 +924,7 @@ describe("Table.View", () => {
             await view.onMessageReceived(message);
 
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "condition-for-action-result",
+                command: "check-condition-for-action",
                 requestId: "string-test-789",
                 payload: true,
             });
@@ -966,7 +966,7 @@ describe("Table.View", () => {
 
             expect(conditionFn).toHaveBeenCalledWith({ name: "test", value: 789 });
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "condition-for-action-result",
+                command: "check-condition-for-action",
                 requestId: "context-test-789",
                 payload: true,
             });
@@ -999,7 +999,7 @@ describe("Table.View", () => {
             await view.onMessageReceived(message);
 
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "condition-for-action-result",
+                command: "check-condition-for-action",
                 requestId: "not-found-test",
                 payload: false,
             });
@@ -1042,7 +1042,7 @@ describe("Table.View", () => {
             await view.onMessageReceived(message);
 
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "condition-for-action-result",
+                command: "check-condition-for-action",
                 requestId: "error-test",
                 payload: false,
             });
@@ -1241,7 +1241,7 @@ describe("Table.View", () => {
 
             expect(hideConditionFn).toHaveBeenCalledWith({ name: "test", value: 123 });
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "hide-condition-for-action-result",
+                command: "check-hide-condition-for-action",
                 requestId: "hide-test-123",
                 payload: true,
             });
@@ -1281,7 +1281,7 @@ describe("Table.View", () => {
 
             expect(hideConditionFn).toHaveBeenCalledWith({ name: "test", value: 123 });
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "hide-condition-for-action-result",
+                command: "check-hide-condition-for-action",
                 requestId: "hide-test-async-123",
                 payload: true,
             });
@@ -1318,7 +1318,7 @@ describe("Table.View", () => {
             await view.onMessageReceived(message);
 
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "hide-condition-for-action-result",
+                command: "check-hide-condition-for-action",
                 requestId: "no-hide-test-456",
                 payload: false, // defaults to false
             });
