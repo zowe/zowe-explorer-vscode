@@ -57,9 +57,9 @@ export namespace Definitions {
         searchHistory: string[];
         fileHistory: string[];
         encodingHistory: string[];
-        sortSettings: { [criteria: string]: Sorting.NodeSort };
         templates: Types.DataSetAllocTemplate[];
         searchedKeywordHistory: string[];
+        sortSettings: { [criteria: string]: Sorting.NodeSort };
     };
     export type ReplaceDSType = "ps" | "po" | "mem";
     export type ShouldReplace = "replace" | "cancel" | "notFound";
