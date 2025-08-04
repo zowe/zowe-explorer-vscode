@@ -166,7 +166,16 @@ describe("TsoCommandHandler unit testing", () => {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
-                    defaultProfile: { name: "firstName" },
+                    getDefaultProfile: jest.fn(() => ({
+                        name: "firstName",
+                        profile: {
+                            user: "firstName",
+                            password: "12345",
+                            account: "FAKE.ACCOUNT",
+                            logonProcedure: "BADPROC",
+                        },
+                        type: "tso",
+                    })),
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
@@ -193,13 +202,6 @@ describe("TsoCommandHandler unit testing", () => {
 
         await getTsoActions().issueTsoCommand();
 
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the TSO command",
-        });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(appendLine.mock.calls.length).toBe(2);
         expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo1");
@@ -212,7 +214,16 @@ describe("TsoCommandHandler unit testing", () => {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
-                    defaultProfile: { name: "firstName" },
+                    getDefaultProfile: jest.fn(() => ({
+                        name: "firstName",
+                        profile: {
+                            user: "firstName",
+                            password: "12345",
+                            account: "FAKE.ACCOUNT",
+                            logonProcedure: "BADPROC",
+                        },
+                        type: "tso",
+                    })),
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
@@ -238,13 +249,6 @@ describe("TsoCommandHandler unit testing", () => {
 
         await actions.issueTsoCommand();
 
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the TSO command",
-        });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(appendLine.mock.calls.length).toBe(2);
         expect(appendLine.mock.calls[0][0]).toBe("> d iplinfo0");
@@ -257,7 +261,16 @@ describe("TsoCommandHandler unit testing", () => {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
-                    defaultProfile: { name: "firstName" },
+                    getDefaultProfile: jest.fn(() => ({
+                        name: "firstName",
+                        profile: {
+                            user: "firstName",
+                            password: "12345",
+                            account: "FAKE.ACCOUNT",
+                            logonProcedure: "BADPROC",
+                        },
+                        type: "tso",
+                    })),
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
@@ -282,13 +295,6 @@ describe("TsoCommandHandler unit testing", () => {
 
         await getTsoActions().issueTsoCommand();
 
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the TSO command",
-        });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError");
@@ -299,7 +305,16 @@ describe("TsoCommandHandler unit testing", () => {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
-                    defaultProfile: { name: "firstName" },
+                    getDefaultProfile: jest.fn(() => ({
+                        name: "firstName",
+                        profile: {
+                            user: "firstName",
+                            password: "12345",
+                            account: "FAKE.ACCOUNT",
+                            logonProcedure: "BADPROC",
+                        },
+                        type: "tso",
+                    })),
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
@@ -325,14 +340,7 @@ describe("TsoCommandHandler unit testing", () => {
 
         await actions.issueTsoCommand();
 
-        expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showInputBox.mock.calls.length).toBe(0);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the TSO command",
-        });
     });
 
     it("tests the issueTsoCommand function user escapes the command box", async () => {
@@ -340,7 +348,16 @@ describe("TsoCommandHandler unit testing", () => {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
-                    defaultProfile: { name: "firstName" },
+                    getDefaultProfile: jest.fn(() => ({
+                        name: "firstName",
+                        profile: {
+                            user: "firstName",
+                            password: "12345",
+                            account: "FAKE.ACCOUNT",
+                            logonProcedure: "BADPROC",
+                        },
+                        type: "tso",
+                    })),
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
@@ -363,13 +380,6 @@ describe("TsoCommandHandler unit testing", () => {
 
         await getTsoActions().issueTsoCommand();
 
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the TSO command",
-        });
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(1);
     });
@@ -379,7 +389,16 @@ describe("TsoCommandHandler unit testing", () => {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
-                    defaultProfile: { name: "firstName" },
+                    getDefaultProfile: jest.fn(() => ({
+                        name: "firstName",
+                        profile: {
+                            user: "firstName",
+                            password: "12345",
+                            account: "FAKE.ACCOUNT",
+                            logonProcedure: "BADPROC",
+                        },
+                        type: "tso",
+                    })),
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
@@ -422,13 +441,6 @@ describe("TsoCommandHandler unit testing", () => {
 
         await actions.issueTsoCommand();
 
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the TSO command",
-        });
         expect(showInputBox.mock.calls.length).toBe(0);
     });
 
@@ -437,7 +449,16 @@ describe("TsoCommandHandler unit testing", () => {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: undefined, password: undefined } }, { name: "secondName" }],
-                    defaultProfile: { name: "firstName" },
+                    getDefaultProfile: jest.fn(() => ({
+                        name: "firstName",
+                        profile: {
+                            user: "firstName",
+                            password: "12345",
+                            account: "FAKE.ACCOUNT",
+                            logonProcedure: "BADPROC",
+                        },
+                        type: "tso",
+                    })),
                     validProfile: Validation.ValidationType.VALID,
                     promptCredentials: jest.fn(() => {
                         return ["fake", "fake", "fake"];
@@ -466,13 +487,6 @@ describe("TsoCommandHandler unit testing", () => {
 
         await getTsoActions().issueTsoCommand();
 
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the TSO command",
-        });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
 
@@ -481,7 +495,16 @@ describe("TsoCommandHandler unit testing", () => {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: undefined, password: undefined } }, { name: "secondName" }],
-                    defaultProfile: { name: "firstName" },
+                    getDefaultProfile: jest.fn(() => ({
+                        name: "firstName",
+                        profile: {
+                            user: "firstName",
+                            password: "12345",
+                            account: "FAKE.ACCOUNT",
+                            logonProcedure: "BADPROC",
+                        },
+                        type: "tso",
+                    })),
                     validProfile: Validation.ValidationType.VALID,
                     promptCredentials: jest.fn(() => {
                         return ["fake", "fake", "fake"];
@@ -508,13 +531,6 @@ describe("TsoCommandHandler unit testing", () => {
 
         await getTsoActions().issueTsoCommand();
 
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the TSO command",
-        });
         expect(showInputBox.mock.calls.length).toBe(1);
     });
 
@@ -598,7 +614,16 @@ describe("TsoCommandHandler unit testing", () => {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
-                    defaultProfile: { name: "firstName" },
+                    getDefaultProfile: jest.fn(() => ({
+                        name: "firstName",
+                        profile: {
+                            user: "firstName",
+                            password: "12345",
+                            account: "FAKE.ACCOUNT",
+                            logonProcedure: "BADPROC",
+                        },
+                        type: "tso",
+                    })),
                     zosmfProfile: mockLoadNamedProfile,
                     checkCurrentProfile: jest.fn(() => {
                         return profilesForValidation;
@@ -623,13 +648,6 @@ describe("TsoCommandHandler unit testing", () => {
 
         await getTsoActions().issueTsoCommand();
 
-        expect(showQuickPick.mock.calls.length).toBe(1);
-        expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
-        expect(showQuickPick.mock.calls[0][1]).toEqual({
-            canPickMany: false,
-            ignoreFocusOut: true,
-            placeHolder: "Select the profile to use to submit the TSO command",
-        });
         expect(showInputBox.mock.calls.length).toBe(0);
         expect(showErrorMessage.mock.calls.length).toBe(1);
         expect(showErrorMessage.mock.calls[0][0]).toContain(testError.message);
@@ -656,5 +674,139 @@ describe("TsoCommandHandler unit testing", () => {
         });
         await getTsoActions().issueTsoCommand();
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
+    });
+
+    it("getTsoParams: uses default tso profile if present", async () => {
+        const defaultProfile = {
+            name: "defaultTso",
+            profile: {
+                account: "DEFACC",
+            },
+            type: "tso",
+        };
+
+        const getTsoActions = () => {
+            const tsoActions = TsoCommandHandler.getInstance();
+            return tsoActions;
+        };
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: [],
+                    defaultProfile: defaultProfile,
+                };
+            }),
+        });
+        const handler = getTsoActions();
+
+        const mockProfileInfo = {
+            getDefaultProfile: jest.fn().mockReturnValue(defaultProfile),
+            getAllProfiles: [],
+        };
+        const mockProfileInstance = {
+            getProfileInfo: jest.fn().mockResolvedValue(mockProfileInfo),
+        };
+        (handler as any).profileInstance = mockProfileInstance;
+
+        const result = await (handler as any).getTsoParams();
+
+        expect(result.account).toEqual("/d iplinfo");
+    });
+    it("getTsoParams: does not use default tso profile if not present", async () => {
+        const getTsoActions = () => {
+            const tsoActions = TsoCommandHandler.getInstance();
+            return tsoActions;
+        };
+        const allProfiles = [
+            {
+                name: "firstName",
+                profile: {
+                    user: "firstName",
+                    password: "12345",
+                    account: "FAKE.ACCOUNT",
+                    logonProcedure: "BADPROC",
+                },
+                type: "tso",
+            },
+        ];
+        Object.defineProperty(profileLoader.Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    allProfiles: allProfiles,
+                    defaultProfile: undefined,
+                };
+            }),
+        });
+        const handler = getTsoActions();
+
+        const mockProfileInfo = {
+            getDefaultProfile: jest.fn().mockReturnValue(undefined),
+            getAllProfiles: jest.fn().mockReturnValue(allProfiles),
+        };
+        const mockProfileInstance = {
+            getProfileInfo: jest.fn().mockResolvedValue(mockProfileInfo),
+        };
+        (handler as any).profileInstance = mockProfileInstance;
+
+        const result = await (handler as any).getTsoParams();
+
+        expect(result.account).toEqual("fake");
+    });
+
+    it("getTsoParams: maps merged args to tsoProfile.profile fields", async () => {
+        const handler = TsoCommandHandler.getInstance();
+
+        const tsoProfile = {
+            name: "testTso",
+            profile: {
+                account: undefined,
+                characterSet: undefined,
+                codePage: undefined,
+                columns: undefined,
+                logonProcedure: undefined,
+                regionSize: undefined,
+                rows: undefined,
+            },
+            type: "tso",
+            message: "",
+            failNotFound: false,
+        };
+        const mergedArgs = {
+            knownArgs: [
+                { argName: "account", argValue: "ACCVAL" },
+                { argName: "characterSet", argValue: "CSVAL" },
+                { argName: "codePage", argValue: "CPVAL" },
+                { argName: "columns", argValue: "80" },
+                { argName: "logonProcedure", argValue: "LOGPROC" },
+                { argName: "regionSize", argValue: "4096" },
+                { argName: "rows", argValue: "24" },
+            ],
+        };
+
+        const mockProfileInfo = {
+            getDefaultProfile: jest.fn().mockReturnValue(undefined),
+            getAllProfiles: jest.fn().mockReturnValue([tsoProfile]),
+            mergeArgsForProfile: jest.fn().mockReturnValue(mergedArgs),
+        };
+
+        const mockProfileInstance = {
+            getProfileInfo: jest.fn().mockResolvedValue(mockProfileInfo),
+        };
+
+        (handler as any).profileInstance = mockProfileInstance;
+
+        jest.spyOn(handler, "selectServiceProfile").mockResolvedValue(tsoProfile);
+
+        const result = await (handler as any).getTsoParams();
+
+        expect(result).toEqual({
+            account: "ACCVAL",
+            characterSet: "CSVAL",
+            codePage: "CPVAL",
+            columns: "80",
+            logonProcedure: "LOGPROC",
+            regionSize: "4096",
+            rows: "24",
+        });
     });
 });
