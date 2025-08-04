@@ -51,6 +51,7 @@ import { DataSetAttributesProvider } from "../../../../../zowe-explorer-api/lib/
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("../../../../src/tools/ZoweLogger");
+jest.mock("../../../../src/tools/ZoweLocalStorage");
 
 let mockClipboardData = null;
 let clipboard;

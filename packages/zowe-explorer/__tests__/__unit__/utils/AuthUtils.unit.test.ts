@@ -18,6 +18,8 @@ import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets"
 import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
 
+jest.mock("../../../src/tools/ZoweLocalStorage");
+
 describe("AuthUtils", () => {
     describe("handleProfileAuthOnError", () => {
         it("should prompt for authentication", async () => {
