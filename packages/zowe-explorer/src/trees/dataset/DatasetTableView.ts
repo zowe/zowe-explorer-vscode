@@ -495,9 +495,7 @@ export class DatasetTableView {
             type: "primary",
             command: "back",
             callback: { fn: this.goBack.bind(this), typ: "no-selection" },
-            hideCondition: () => {
-                return this.currentTableType == null || this.currentTableType === "dataSets";
-            },
+            hideCondition: () => this.currentTableType == null || this.currentTableType === "dataSets",
         },
     };
 
