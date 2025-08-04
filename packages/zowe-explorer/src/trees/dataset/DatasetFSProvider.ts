@@ -28,7 +28,7 @@ import {
     FileEntry,
     ZoweExplorerApiType,
     AuthHandler,
-    MessageSeverity,
+    Types,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -284,7 +284,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
             throw vscode.FileSystemError.FileNotFound(uri);
         }
-
+        let entryStats: Partial<Types.DatasetStats>;
         if (!entryExists || forceFetch) {
             try {
                 if (pdsMember) {
@@ -304,9 +304,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     });
                     if (resp.success && resp.apiResponse?.items?.length > 0) {
                         entryIsDir = resp.apiResponse.items[0].dsorg?.startsWith("PO");
-                        if (entryIsDir) {
-                            entry.stats = { ...entry.stats, ...DatasetUtils.getDataSetStats(resp.apiResponse.items[0]) };
-                        }
+                        entryStats = DatasetUtils.getDataSetStats(resp.apiResponse.items[0]);
                     } else {
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
@@ -335,6 +333,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry = parentDir.entries.get(dsname) as DsEntry;
         }
 
+        if (entryStats) {
+            entry.stats = { ...entry.stats, ...entryStats };
+        }
         return entry;
     }
 
@@ -594,28 +595,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
             const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
-            let safeUpload = true;
-            if (entry.stats.recfm.startsWith("F") || entry.stats.recfm.startsWith("V")) {
-                const lines = content.toString().split("\n");
-                lines.forEach((line) => {
-                    if (line.length + (entry.stats.recfm.startsWith("V") ? 4 : 0) > entry.stats.lrecl) {
-                        safeUpload = false;
-                    }
-                });
-            }
-
-            if (!safeUpload) {
-                const optionCancel = vscode.l10n.t("Cancel");
-                const optionContinue = vscode.l10n.t("Continue");
-                const selectedOption = await Gui.showMessage(
-                    vscode.l10n.t("This upload operation may result in data loss. Are you sure you want to continue?"),
-                    { severity: MessageSeverity.WARN, items: [optionCancel, optionContinue] }
-                );
-                if (selectedOption === optionCancel) {
-                    throw new Error(vscode.l10n.t("Operation cancelled"));
-                }
-            }
-
             resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
                 binary: entry.encoding?.kind === "binary",
                 encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
@@ -653,10 +632,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileExists(uri);
         }
 
-        if (isPdsMember && parent.stats == null) {
+        let dsStats: Types.DatasetStats = parent.stats;
+        if (dsStats == null) {
             const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-            const tempPds = await this.fetchDataset(uri.with({ path: path.posix.dirname(uri.path) }), uriInfo, true);
-            parent.stats = tempPds.stats;
+            const targetPath = isPdsMember ? path.posix.dirname(uri.path) : uri.path;
+            const tempEntry = await this.fetchDataset(uri.with({ path: targetPath }), uriInfo, true);
+            dsStats = tempEntry.stats;
         }
 
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
@@ -665,6 +646,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
 
         try {
+            const longLines = [];
+            const document = await vscode.workspace.openTextDocument(uri);
+            for (let i = 0; i < document.lineCount; i++) {
+                if (document.lineAt(i).text.length > dsStats?.lrecl) {
+                    longLines.push(i);
+                }
+            }
+
             if (!entry) {
                 entry = new DsEntry(basename, isPdsMember);
                 entry.data = content;
@@ -678,7 +667,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
                 if (content.byteLength > 0) {
                     // Update e-tag if write was successful.
-                    entry.stats = { ...entry.stats, ...parent.stats };
+                    entry.stats = { ...entry.stats, ...dsStats };
                     const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
@@ -698,7 +687,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
-                    entry.stats = { ...entry.stats, ...parent.stats };
+                    entry.stats = { ...entry.stats, ...dsStats };
                     const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                 }
