@@ -20,7 +20,6 @@ import { Definitions } from "../configuration/Definitions";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { Constants } from "../configuration/Constants";
-import { Profiles } from "../configuration/Profiles";
 
 /**
  * Provides a class that manages submitting a TSO command on the server
