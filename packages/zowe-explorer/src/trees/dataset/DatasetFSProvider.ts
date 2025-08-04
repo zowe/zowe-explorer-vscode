@@ -647,11 +647,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             const longLines = [];
-            const document = await vscode.workspace.openTextDocument(uri);
-            for (let i = 0; i < document.lineCount; i++) {
-                if (document.lineAt(i).text.length > dsStats?.lrecl) {
-                    longLines.push(i + 1);
+            try {
+                const document = await vscode.workspace.openTextDocument(uri);
+                for (let i = 0; i < document.lineCount; i++) {
+                    if (document.lineAt(i).text.length > dsStats?.lrecl) {
+                        longLines.push(i + 1);
+                    }
                 }
+            } catch (err) {
+                // do nothing since we may be trying to create an entry in the FS that doesn't exist yet
             }
             if (longLines.length > 0) {
                 // internal error code to indicate unsafe upload
