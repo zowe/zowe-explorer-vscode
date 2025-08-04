@@ -198,7 +198,9 @@ export class AuthUtils {
         } catch (err) {
             ZoweLogger.error(err);
         }
-        const toolTipList = sessionNode.tooltip ? (sessionNode.tooltip as string).split("\n") : [];
+        const tooltipValue: string | undefined =
+            sessionNode.tooltip instanceof vscode.MarkdownString ? sessionNode.tooltip.value : sessionNode.tooltip;
+        const toolTipList = tooltipValue ? tooltipValue.split("\n") : [];
 
         const authMethodIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auth Method: ")));
         if (authMethodIndex === -1) {

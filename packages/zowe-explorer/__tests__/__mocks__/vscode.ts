@@ -11,6 +11,10 @@
 
 import { Progress, ProgressOptions, QuickPick, QuickPickItem } from "vscode";
 
+export class MarkdownString {
+    value: string;
+}
+
 /**
  * A location in the editor at which progress information can be shown. It depends on the
  * location how progress is visually represented.
