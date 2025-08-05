@@ -435,7 +435,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
                 uss: { addSingleSession: jest.fn(), mSessionNodes: [], setStatusForSession: jest.fn(), refresh: jest.fn() } as any,
                 job: { addSingleSession: jest.fn(), mSessionNodes: [], setStatusForSession: jest.fn(), refresh: jest.fn() } as any,
             }),
-            renameSpy: jest.spyOn(vscode.workspace.fs, "rename").mockImplementation(),
+            renameSpy: jest.spyOn(UssFSProvider.instance, "rename").mockImplementation(),
             getEncodingForFile: jest.spyOn(UssFSProvider.instance as any, "getEncodingForFile").mockReturnValue(undefined),
         };
         newMocks.ussDir.contextValue = Constants.USS_DIR_CONTEXT;
@@ -448,7 +448,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
 
         const newFullPath = "/u/user/newName";
         const errMessageMock = jest.spyOn(Gui, "errorMessage").mockImplementation();
-        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(new Error("Rename error: file is busy"));
+        const renameMock = jest.spyOn(UssFSProvider.instance, "rename").mockRejectedValueOnce(new Error("Rename error: file is busy"));
         await blockMocks.ussDir.rename(newFullPath);
 
         errMessageMock.mockRestore();
@@ -508,6 +508,49 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         const updatedChild = blockMocks.ussDir.children;
         expect(updatedChild[0].fullPath).toContain(newFullPath);
         expect(updatedChild[0].tooltip).toContain(newFullPath);
+    });
+    it("Retries rename after catching FileExists error and deleting local entry", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const newFullPath = "/u/user/newName";
+        const entries = new Map();
+        entries.set("newName", { dummy: "entry" });
+
+        const parentMock = {
+            entries,
+        };
+
+        const newUri = vscode.Uri.from({
+            scheme: "zowe-uss",
+            path: "/sestest/u/user/newName",
+        });
+
+        const fileExistsError = Object.assign(vscode.FileSystemError.FileExists("file exists"), { code: "FileExists" });
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(fileExistsError).mockResolvedValueOnce(undefined);
+
+        const lookupParentSpy = jest.spyOn(UssFSProvider.instance, "lookupParentDirectory").mockReturnValue(parentMock);
+
+        await blockMocks.ussDir.rename(newFullPath);
+        expect(renameMock).toHaveBeenCalledTimes(2);
+        expect(lookupParentSpy).toHaveBeenCalledWith(newUri);
+        expect(parentMock.entries.has("newName")).toBe(false);
+    });
+    it("Throws unexpected error during rename", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const newFullPath = "/u/user/newName";
+
+        const unexpectedError = new Error("Unexpected failure");
+
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(unexpectedError);
+
+        await expect(blockMocks.ussDir.rename(newFullPath)).rejects.toThrow("Unexpected failure");
+
+        expect(renameMock).toHaveBeenCalledTimes(3);
+
+        renameMock.mockRestore();
     });
 });
 
