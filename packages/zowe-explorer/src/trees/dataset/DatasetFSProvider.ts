@@ -111,7 +111,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             if (isPdsMember) {
                 // PDS member
-                const pds = this._lookupParentDirectory(uri);
+                const pds = this.lookupParentDirectory(uri);
                 resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(pds.name, { attributes: true });
             } else {
                 // Data Set
@@ -323,7 +323,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             await this.fetchEntriesForDataset(entry as PdsEntry, uri, uriInfo);
         } else if (!entryExists) {
             this.createDirectory(uri.with({ path: path.posix.join(uri.path, "..") }));
-            const parentDir = this._lookupParentDirectory(uri);
+            const parentDir = this.lookupParentDirectory(uri);
             const dsname = uriPath[Number(pdsMember)];
             const ds = new DsEntry(dsname, pdsMember);
             ds.metadata = new DsEntryMetadata({ path: path.posix.join(parentDir.metadata.path, dsname), profile: parentDir.metadata.profile });
@@ -393,7 +393,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public createDirectory(uri: vscode.Uri): void {
         const basename = path.posix.basename(uri.path);
-        const parent = this._lookupParentDirectory(uri, false);
+        const parent = this.lookupParentDirectory(uri, false);
         if (parent.entries.has(basename)) {
             return;
         }
@@ -465,7 +465,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
                 const pdsMember = uriPath.length === 2;
                 this.createDirectory(uri.with({ path: path.posix.join(uri.path, "..") }));
-                const parentDir = this._lookupParentDirectory(uri);
+                const parentDir = this.lookupParentDirectory(uri);
                 const dsname = uriPath[Number(pdsMember)];
                 const ds = new DsEntry(dsname, pdsMember);
                 ds.metadata = new DsEntryMetadata({ path: path.posix.join(parentDir.metadata.path, dsname), profile: parentDir.metadata.profile });
@@ -565,7 +565,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     public makeEmptyDsWithEncoding(uri: vscode.Uri, encoding: ZosEncoding, isMember?: boolean): void {
-        const parentDir = this._lookupParentDirectory(uri);
+        const parentDir = this.lookupParentDirectory(uri);
         const fileName = path.posix.basename(uri.path);
         const entry = new DsEntry(fileName, isMember);
         entry.encoding = encoding;
@@ -613,7 +613,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
         const basename = path.posix.basename(uri.path);
-        const parent = this._lookupParentDirectory(uri);
+        const parent = this.lookupParentDirectory(uri);
         let entry = parent.entries.get(basename);
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
@@ -714,7 +714,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     public async delete(uri: vscode.Uri, _options: { readonly recursive: boolean }): Promise<void> {
         const entry = this.lookup(uri, false) as DsEntry | PdsEntry;
-        const parent = this._lookupParentDirectory(uri);
+        const parent = this.lookupParentDirectory(uri);
         let fullName: string = "";
         if (FsDatasetsUtils.isPdsEntry(parent)) {
             // PDS member
@@ -763,7 +763,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         const entry = this.lookup(oldUri, false) as PdsEntry | DsEntry;
-        const parentDir = this._lookupParentDirectory(oldUri);
+        const parentDir = this.lookupParentDirectory(oldUri);
 
         const oldName = entry.name;
         const newName = path.posix.basename(newUri.path);

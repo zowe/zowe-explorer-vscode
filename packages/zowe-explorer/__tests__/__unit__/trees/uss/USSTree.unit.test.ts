@@ -1493,7 +1493,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
-
+        jest.spyOn(UssFSProvider.instance, "rename").mockResolvedValue(undefined);
         globalMocks.showInputBox.mockReturnValueOnce("new name");
         globalMocks.FileSystemProvider.rename.mockClear();
 
@@ -1506,9 +1506,9 @@ describe("USSTree Unit Tests - Function rename", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         globalMocks.showInputBox.mockReturnValueOnce("new name");
-
+        jest.spyOn(UssFSProvider.instance, "rename").mockResolvedValue(undefined);
         await globalMocks.testTree.rename(blockMocks.ussFavNode);
-
+        console.log(globalMocks.showErrorMessage);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 
