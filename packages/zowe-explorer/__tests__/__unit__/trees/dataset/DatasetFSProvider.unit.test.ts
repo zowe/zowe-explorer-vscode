@@ -9,7 +9,8 @@
  *
  */
 
-import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri } from "vscode";
+import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri, workspace } from "vscode";
+import * as vscode from "vscode";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import {
     AuthHandler,
@@ -471,6 +472,7 @@ describe("DatasetFSProvider", () => {
     });
 
     describe("writeFile", () => {
+        const lrecl = 80;
         const dsResponseMock = {
             success: true,
             apiResponse: {
@@ -478,7 +480,7 @@ describe("DatasetFSProvider", () => {
                     {
                         dsorg: "PS",
                         id: "ZOWE",
-                        lrecl: 80,
+                        lrecl,
                         recfm: "FB",
                     },
                 ],
@@ -567,6 +569,54 @@ describe("DatasetFSProvider", () => {
                 returnEtag: true,
             });
             expect(handleErrorMock).toHaveBeenCalled();
+        });
+
+        it("calls _handleError when there are lines longer than the LRECL", async () => {
+            const mockMvsApi = {
+                uploadFromBuffer: jest.fn(),
+                dataSet: jest.fn().mockResolvedValue(dsResponseMock),
+            };
+            const psEntry = { ...testEntries.ps, metadata: testEntries.ps.metadata } as DsEntry;
+            const sessionEntry = { ...testEntries.session };
+            sessionEntry.entries.set("USER.DATA.PS", psEntry);
+            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            const newContents = new Uint8Array(Array(lrecl + 1).fill(90)); // ASCII value for 'Z'
+            const lineAt = () => ({ text: newContents.toString() });
+
+            // Test for 1 invalid line
+            let numberOfInvalidLines = 1;
+            const openTextDocumentMock = jest.spyOn(vscode.workspace, "openTextDocument");
+            openTextDocumentMock.mockResolvedValue({ lineCount: numberOfInvalidLines, lineAt } as any);
+            const handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
+            await expect(DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: false, overwrite: true })).rejects.toThrow();
+
+            expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+            expect(handleErrorMock).toHaveBeenCalledTimes(1);
+            let msg = (handleErrorMock.mock.calls[0][0] as Error).message;
+            expect(msg).toContain("This upload operation may result in data loss.");
+            expect(msg).toContain("Please review the following lines:");
+            expect(msg).toContain("1");
+
+            // Test for 10 invalid lines
+            numberOfInvalidLines = 10;
+            openTextDocumentMock.mockResolvedValue({ lineCount: numberOfInvalidLines, lineAt } as any);
+            await expect(DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: false, overwrite: true })).rejects.toThrow();
+
+            expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+            expect(handleErrorMock).toHaveBeenCalledTimes(2);
+            msg = (handleErrorMock.mock.calls[1][0] as Error).message;
+            expect(msg).toContain("This upload operation may result in data loss.");
+            expect(msg).toContain("Please review the following lines:");
+            for (let i = 1; i < 5; i++) {
+                // From numbers 1 to 4, we expect to see the line numbers in the error message
+                expect(msg).toContain(`${i}, `);
+            }
+            expect(msg).toContain("5...");
+            const stack = (handleErrorMock.mock.calls[1][0] as Error).stack;
+            for (let i = 1; i <= numberOfInvalidLines; i++) {
+                expect(stack).toContain(`- ${i}`);
+            }
         });
 
         it("upload changes to a remote DS even if its not yet in the FSP", async () => {
