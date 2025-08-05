@@ -9,7 +9,7 @@
  *
  */
 
-import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri, workspace } from "vscode";
+import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri } from "vscode";
 import * as vscode from "vscode";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import {
