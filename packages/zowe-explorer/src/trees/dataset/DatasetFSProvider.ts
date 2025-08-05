@@ -691,6 +691,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     entry.mtime = Date.now();
                     entry.size = content.byteLength;
                     entry.inDiffView = true;
+
+                    parent.entries.set(basename, entry);
                     return;
                 }
 
