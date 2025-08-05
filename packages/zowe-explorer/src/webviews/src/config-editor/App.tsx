@@ -105,9 +105,12 @@ export function App() {
   // Preview Args Modal state
   const [previewArgsModalOpen, setPreviewArgsModalOpen] = useState(false);
   const [previewArgsData, setPreviewArgsData] = useState<any[]>([]);
-  // Save Confirmation Modal state
-  const [saveConfirmationModalOpen, setSaveConfirmationModalOpen] = useState(false);
-  const [pendingPreviewArgsRequest, setPendingPreviewArgsRequest] = useState<{ profilePath: string; configPath: string } | null>(null);
+
+  // Merged Properties state
+  const [mergedProperties, setMergedProperties] = useState<any>(null);
+  const [showMergedProperties, setShowMergedProperties] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [pendingSaveSelection, setPendingSaveSelection] = useState<{ tab: number | null; profile: string | null } | null>(null);
   // Invoked on webview load
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -128,12 +131,20 @@ export function App() {
           newValidDefaults[config.configPath] = config.schemaValidation?.validDefaults || [];
         });
 
-        setSelectedTab((prevSelectedTab) => {
-          if (prevSelectedTab !== null && prevSelectedTab < contents.length) {
-            return prevSelectedTab;
-          }
-          return contents.length > 0 ? 0 : null;
-        });
+        // Check if we have pending save selection to restore
+        if (pendingSaveSelection) {
+          setSelectedTab(pendingSaveSelection.tab);
+          setSelectedProfileKey(pendingSaveSelection.profile);
+          setPendingSaveSelection(null);
+          setIsSaving(false);
+        } else {
+          setSelectedTab((prevSelectedTab) => {
+            if (prevSelectedTab !== null && prevSelectedTab < contents.length) {
+              return prevSelectedTab;
+            }
+            return contents.length > 0 ? 0 : null;
+          });
+        }
 
         if (contents.length > 0) {
           const indexToUse = (prev: number | null) => (prev !== null && prev < contents.length ? prev : 0);
@@ -147,6 +158,20 @@ export function App() {
       } else if (event.data.command === "PREVIEW_ARGS") {
         setPreviewArgsData(event.data.mergedArgs || []);
         setPreviewArgsModalOpen(true);
+      } else if (event.data.command === "MERGED_PROPERTIES") {
+        // Store the full merged properties data including jsonLoc information
+        const mergedPropsData: { [key: string]: any } = {};
+        if (Array.isArray(event.data.mergedArgs)) {
+          event.data.mergedArgs.forEach((item: any) => {
+            if (item.argName && item.argValue !== undefined) {
+              mergedPropsData[item.argName] = {
+                value: item.argValue,
+                jsonLoc: item.argLoc?.jsonLoc,
+              };
+            }
+          });
+        }
+        setMergedProperties(mergedPropsData);
       }
     });
 
@@ -161,30 +186,49 @@ export function App() {
       setFlattenedConfig(flattenKeys(config.profiles));
       setFlattenedDefaults(flattenKeys(config.defaults));
       setOriginalDefaults(flattenKeys(config.defaults));
+      // Clear merged properties when tab changes (but not when saving)
+      if (!isSaving) {
+        setMergedProperties(null);
+        setSelectedProfileKey(null);
+      }
     }
-  }, [selectedTab, configurations]);
+  }, [selectedTab, configurations, isSaving]);
+
+  // Refresh merged properties when pending changes change
+  useEffect(() => {
+    if (selectedProfileKey) {
+      const configPath = configurations[selectedTab!]?.configPath;
+      if (configPath) {
+        vscodeApi.postMessage({
+          command: "GET_MERGED_PROPERTIES",
+          profilePath: selectedProfileKey,
+          configPath: configPath,
+          changes: formatPendingChanges(),
+        });
+      }
+    }
+  }, [pendingChanges, pendingDefaults, deletions, defaultsDeletions, selectedProfileKey, selectedTab, configurations]);
+
+  // Refresh merged properties after save when selection is restored
+  useEffect(() => {
+    if (selectedProfileKey && !isSaving && pendingSaveSelection === null) {
+      const configPath = configurations[selectedTab!]?.configPath;
+      if (configPath) {
+        vscodeApi.postMessage({
+          command: "GET_MERGED_PROPERTIES",
+          profilePath: selectedProfileKey,
+          configPath: configPath,
+          changes: formatPendingChanges(),
+        });
+      }
+    }
+  }, [selectedProfileKey, selectedTab, configurations, isSaving, pendingSaveSelection]);
 
   useEffect(() => {
     const isModalOpen =
-      newKeyModalOpen ||
-      newProfileModalOpen ||
-      saveModalOpen ||
-      newLayerModalOpen ||
-      editModalOpen ||
-      wizardModalOpen ||
-      previewArgsModalOpen ||
-      saveConfirmationModalOpen;
+      newKeyModalOpen || newProfileModalOpen || saveModalOpen || newLayerModalOpen || editModalOpen || wizardModalOpen || previewArgsModalOpen;
     document.body.classList.toggle("modal-open", isModalOpen);
-  }, [
-    newKeyModalOpen,
-    newProfileModalOpen,
-    saveModalOpen,
-    newLayerModalOpen,
-    editModalOpen,
-    wizardModalOpen,
-    previewArgsModalOpen,
-    saveConfirmationModalOpen,
-  ]);
+  }, [newKeyModalOpen, newProfileModalOpen, saveModalOpen, newLayerModalOpen, editModalOpen, wizardModalOpen, previewArgsModalOpen]);
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -347,6 +391,94 @@ export function App() {
     });
   };
 
+  const handleUnlinkMergedProperty = (propertyKey: string | undefined, fullKey: string) => {
+    if (!propertyKey) return;
+    // Open the add profile property modal with the key prepopulated
+    setNewProfileKey(propertyKey);
+    setNewProfileValue("");
+    setNewProfileKeyPath(fullKey.split(".").slice(0, -1)); // Remove the property name from the path
+    setNewProfileModalOpen(true);
+  };
+
+  const handleNavigateToSource = (jsonLoc: string) => {
+    // Parse the jsonLoc to extract the source configuration and profile
+    // jsonLoc format: "profiles.ssh.port" or "profiles.ssh.profiles.parent.port"
+    const parts = jsonLoc.split(".");
+
+    if (parts.length >= 3 && parts[0] === "profiles") {
+      // Find the source profile by looking for the profile name in the path
+      // Handle both simple cases (profiles.ssh.port) and nested cases (profiles.ssh.profiles.parent.port)
+      let sourceProfile = "";
+      let sourceProfilePath = "";
+
+      // Look for the profile name in the path
+      for (let i = 1; i < parts.length - 1; i++) {
+        if (parts[i + 1] === "profiles") {
+          // This is a nested profile structure
+          // For nested profiles, we need to construct the full profile path
+          // e.g., "profiles.zosmf.profiles.a.profiles.b.properties.port" should navigate to "zosmf.a.b"
+          const parentProfile = parts[i]; // e.g., "zosmf"
+          let nestedProfilePath = [parentProfile];
+          let pathIndex = i + 2; // Start after the first "profiles"
+
+          // Continue building the nested profile path until we hit a non-profile part
+          while (pathIndex < parts.length - 1 && parts[pathIndex + 1] === "profiles") {
+            nestedProfilePath.push(parts[pathIndex]); // Add the profile name
+            pathIndex += 2; // Skip the "profiles" part
+          }
+
+          // Add the final profile name if we haven't reached the end
+          if (pathIndex < parts.length) {
+            nestedProfilePath.push(parts[pathIndex]);
+          }
+
+          sourceProfile = nestedProfilePath.join("."); // e.g., "zosmf.a.b"
+          sourceProfilePath = parts.slice(1, pathIndex + 1).join("."); // e.g., "zosmf.profiles.a.profiles.b"
+          break;
+        } else if (i === 1) {
+          // Simple case: profiles.ssh.port
+          sourceProfile = parts[i];
+          sourceProfilePath = parts[i];
+        }
+      }
+
+      if (sourceProfile) {
+        // Find the configuration that contains this profile
+        const sourceConfigIndex = configurations.findIndex((config) => {
+          const configProfiles = config.properties?.profiles;
+          if (!configProfiles) {
+            return false;
+          }
+
+          // Check if this config contains the source profile
+          if (sourceProfilePath.includes(".")) {
+            // Nested profile case - we need to check if the nested profile exists
+            const pathParts = sourceProfilePath.split(".");
+
+            let current = configProfiles;
+            for (const part of pathParts) {
+              if (current && current[part]) {
+                current = current[part];
+              } else {
+                return false;
+              }
+            }
+            return true;
+          } else {
+            // Simple profile case
+            return configProfiles.hasOwnProperty(sourceProfile);
+          }
+        });
+
+        if (sourceConfigIndex !== -1) {
+          // Navigate to the source configuration and profile within the config editor
+          setSelectedTab(sourceConfigIndex);
+          setSelectedProfileKey(sourceProfile);
+        }
+      }
+    }
+  };
+
   const handleDeleteDefaultsProperty = (key: string) => {
     if (selectedTab === null) return;
     const configPath = configurations[selectedTab!]!.configPath;
@@ -498,6 +630,15 @@ export function App() {
   };
 
   const handleSave = () => {
+    // Set saving flag to prevent selection clearing
+    setIsSaving(true);
+
+    // Store current selection to restore after save
+    setPendingSaveSelection({
+      tab: selectedTab,
+      profile: selectedProfileKey,
+    });
+
     const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
       Object.keys(changesForPath).map((key) => {
         const { value, path, profile, secure } = changesForPath[key];
@@ -505,16 +646,18 @@ export function App() {
       })
     );
 
-    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath })));
+    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
 
     const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
       Object.keys(changesForPath).map((key) => {
         const { value, path } = changesForPath[key];
-        return { key, value, path, configPath };
+        return { key, value, path, configPath, secure: false };
       })
     );
 
-    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath })));
+    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
+      keys.map((key) => ({ key, configPath, secure: false }))
+    );
 
     vscodeApi.postMessage({
       command: "SAVE_CHANGES",
@@ -543,39 +686,60 @@ export function App() {
     return hasPendingChanges || hasDeletions || hasPendingDefaults || hasDefaultsDeletions;
   };
 
-  const handlePreviewArgsWithConfirmation = (profilePath: string, configPath: string) => {
-    if (hasUnsavedChanges()) {
-      setPendingPreviewArgsRequest({ profilePath, configPath });
-      setSaveConfirmationModalOpen(true);
-    } else {
-      // No unsaved changes, proceed directly
+  const handleProfileSelection = (profileKey: string) => {
+    if (profileKey === "") {
+      // Deselect profile
+      setSelectedProfileKey(null);
+      setMergedProperties(null);
+      return;
+    }
+
+    setSelectedProfileKey(profileKey);
+
+    // Get merged properties for the selected profile
+    const configPath = configurations[selectedTab!]?.configPath;
+    if (configPath) {
       vscodeApi.postMessage({
-        command: "PREVIEW_ARGS",
-        profilePath: profilePath,
+        command: "GET_MERGED_PROPERTIES",
+        profilePath: profileKey,
         configPath: configPath,
+        changes: formatPendingChanges(),
       });
     }
   };
 
-  const handleSaveAndContinue = async () => {
-    handleSave();
-    setSaveConfirmationModalOpen(false);
-    //TODO: IMPLEMENT A REAL FIX FOR RACE CONDITION
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    // After saving, proceed with the pending preview args request
-    if (pendingPreviewArgsRequest) {
-      vscodeApi.postMessage({
-        command: "PREVIEW_ARGS",
-        profilePath: pendingPreviewArgsRequest.profilePath,
-        configPath: pendingPreviewArgsRequest.configPath,
-      });
-      setPendingPreviewArgsRequest(null);
-    }
+  const handleProfileDeselection = () => {
+    setSelectedProfileKey(null);
+    setMergedProperties(null);
   };
 
-  const handleCancelPreviewArgs = () => {
-    setSaveConfirmationModalOpen(false);
-    setPendingPreviewArgsRequest(null);
+  const formatPendingChanges = () => {
+    const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
+      Object.keys(changesForPath).map((key) => {
+        const { value, path, profile, secure } = changesForPath[key];
+        return { key, value, path, profile, configPath, secure };
+      })
+    );
+
+    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
+
+    const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
+      Object.keys(changesForPath).map((key) => {
+        const { value, path } = changesForPath[key];
+        return { key, value, path, configPath, secure: false };
+      })
+    );
+
+    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
+      keys.map((key) => ({ key, configPath, secure: false }))
+    );
+
+    return {
+      changes,
+      deletions: deleteKeys,
+      defaultsChanges,
+      defaultsDeleteKeys: defaultsDeleteKeys,
+    };
   };
 
   const handleOpenRawJson = (configPath: string) => {
@@ -708,12 +872,11 @@ export function App() {
         profileMenuOpen={profileMenuOpen}
         configPath={configurations[selectedTab!]?.configPath || ""}
         vscodeApi={vscodeApi}
-        onProfileSelect={setSelectedProfileKey}
+        onProfileSelect={handleProfileSelection}
         onProfileMenuToggle={setProfileMenuOpen}
         onDeleteProfile={handleDeleteProfile}
         onSetAsDefault={handleSetAsDefault}
         isProfileDefault={isProfileDefault}
-        onPreviewArgs={handlePreviewArgsWithConfirmation}
         getProfileType={getProfileType}
       />
     );
@@ -724,6 +887,72 @@ export function App() {
       <div>
         <div className="profile-heading-container">
           <h2>{selectedProfileKey || "Profile Details"}</h2>
+          {selectedProfileKey && (
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                className="action-button"
+                onClick={() => {
+                  // Rename functionality (WIP)
+                }}
+                title="Rename profile"
+                style={{
+                  padding: "4px",
+                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "transparent",
+                }}
+              >
+                <span className="codicon codicon-edit"></span>
+              </button>
+              <button
+                className="action-button"
+                onClick={() => handleSetAsDefault(selectedProfileKey)}
+                title={isProfileDefault(selectedProfileKey) ? "Currently default" : "Set as default"}
+                style={{
+                  padding: "4px",
+                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "transparent",
+                }}
+              >
+                <span className={`codicon codicon-${isProfileDefault(selectedProfileKey) ? "star-full" : "star-empty"}`}></span>
+              </button>
+              <button
+                className="action-button"
+                onClick={() => setShowMergedProperties(!showMergedProperties)}
+                title={showMergedProperties ? "Hide merged properties" : "Show merged properties"}
+                style={{
+                  padding: "4px",
+                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "transparent",
+                }}
+              >
+                <span className={`codicon codicon-${showMergedProperties ? "eye-closed" : "eye"}`}></span>
+              </button>
+              <button
+                className="action-button"
+                onClick={() => handleDeleteProfile(selectedProfileKey)}
+                title="Delete profile"
+                style={{
+                  padding: "4px",
+                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "transparent",
+                }}
+              >
+                <span className="codicon codicon-trash"></span>
+              </button>
+            </div>
+          )}
         </div>
         {selectedProfileKey &&
           (() => {
@@ -816,13 +1045,14 @@ export function App() {
             // so that renderConfig can properly combine existing and pending changes
             // For newly created profiles, use the pending profile data as the base
             const originalProfile = flatProfiles[selectedProfileKey] || pendingProfiles[selectedProfileKey] || {};
-            return renderConfig(originalProfile, path);
+
+            return renderConfig(originalProfile, path, showMergedProperties ? mergedProperties : null);
           })()}
       </div>
     );
   };
 
-  const renderConfig = (obj: any, path: string[] = []) => {
+  const renderConfig = (obj: any, path: string[] = [], mergedProps?: any) => {
     const fullPath = path.join(".");
     const baseObj = cloneDeep(obj);
     const configPath = configurations[selectedTab!]!.configPath;
@@ -869,6 +1099,40 @@ export function App() {
       ...pendingChangesAtLevel,
     };
 
+    // Track which properties were originally in the base object
+    const originalProperties = baseObj.properties || {};
+
+    // Add merged properties to the properties section when we're at the profile level
+    if (
+      mergedProps &&
+      path.length > 0 &&
+      path[path.length - 1] !== "type" &&
+      path[path.length - 1] !== "properties" &&
+      path[path.length - 1] !== "secure"
+    ) {
+      // We're at the profile level, add merged properties to the properties object
+      if (!combinedConfig.hasOwnProperty("properties")) {
+        combinedConfig.properties = {};
+      }
+
+      // Get the current profile type to filter merged properties (same logic as fetchTypeOptions)
+      const currentProfileName = extractProfileKeyFromPath(path);
+      const profileType = getProfileType(currentProfileName);
+
+      // Get the schema for this profile type (same logic as fetchTypeOptions)
+      const configPath = configurations[selectedTab!]!.configPath;
+      const propertySchema = schemaValidations[configPath]?.propertySchema[profileType || ""] || {};
+      const allowedProperties = Object.keys(propertySchema);
+
+      Object.entries(mergedProps).forEach(([key, propData]: [string, any]) => {
+        // Only add merged properties that are in the schema for this profile type
+        // This matches what would appear in the "new key" dropdown
+        if (!combinedConfig.properties.hasOwnProperty(key) && allowedProperties.includes(key)) {
+          combinedConfig.properties[key] = propData.value;
+        }
+      });
+    }
+
     // Ensure properties key exists with empty object value if not present
     // Only add properties key at the profile level (when path ends with profile name)
 
@@ -892,6 +1156,28 @@ export function App() {
       const fullKey = currentPath.join(".");
       const displayKey = key.split(".").pop();
       if ((deletions[configPath] ?? []).includes(fullKey)) return null;
+
+      // Skip rendering properties that are in the secure array to avoid duplication
+      if (key === "properties" && combinedConfig.secure && Array.isArray(combinedConfig.secure)) {
+        const secureProperties = combinedConfig.secure;
+        const filteredProperties = { ...value };
+
+        // Remove properties that are in the secure array
+        Object.keys(filteredProperties).forEach((propKey) => {
+          if (secureProperties.includes(propKey)) {
+            delete filteredProperties[propKey];
+          }
+        });
+
+        // If all properties were secure, don't render the properties section
+        if (Object.keys(filteredProperties).length === 0) {
+          return null;
+        }
+
+        // Update the value to only include non-secure properties
+        value = filteredProperties;
+      }
+
       const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
       const isArray = Array.isArray(value);
       const pendingValue = (pendingChanges[configPath] ?? {})[fullKey]?.value ?? value;
@@ -950,7 +1236,6 @@ export function App() {
                 onClick={() => openAddProfileModalAtPath(currentPath)}
                 style={{
                   padding: "2px",
-                  height: "20px",
                   width: "20px",
                   display: "flex",
                   alignItems: "center",
@@ -967,7 +1252,9 @@ export function App() {
                 <span className="codicon codicon-add"></span>
               </button>
             </div>
-            <div style={{ paddingLeft: displayKey?.toLocaleLowerCase() === "properties" ? "16px" : "0px" }}>{renderConfig(value, currentPath)}</div>
+            <div style={{ paddingLeft: displayKey?.toLocaleLowerCase() === "properties" ? "16px" : "0px" }}>
+              {renderConfig(value, currentPath, mergedProps)}
+            </div>
           </div>
         );
       } else if (isArray) {
@@ -1050,47 +1337,170 @@ export function App() {
           </div>
         );
       } else {
+        // Check if this property is from merged properties (not currently being rendered)
+        const configPath = configurations[selectedTab!]!.configPath;
+        const propertyExistsInPendingChanges = pendingChanges[configPath]?.[fullKey] !== undefined;
+
+        // Get the current profile path to compare with jsonLoc
+        const currentProfilePath = path.slice(0, -1).join("."); // Remove "properties" from the end
+        const mergedPropData =
+          mergedProps && typeof mergedProps === "object" && mergedProps[displayKey as keyof typeof mergedProps]
+            ? mergedProps[displayKey as keyof typeof mergedProps]
+            : undefined;
+        const jsonLoc = mergedPropData?.jsonLoc;
+
+        // A property should be read-only if:
+        // 1. It exists in mergedProps
+        // 2. It doesn't exist in original properties
+        // 3. It doesn't exist in pending changes
+        // 4. The jsonLoc indicates it comes from a different profile (not the current profile's properties)
+        const isFromMergedProps =
+          mergedProps &&
+          typeof mergedProps === "object" &&
+          path.length > 0 &&
+          path[path.length - 1] === "properties" &&
+          mergedProps.hasOwnProperty(displayKey) &&
+          !(originalProperties && originalProperties.hasOwnProperty(displayKey)) &&
+          !propertyExistsInPendingChanges &&
+          jsonLoc &&
+          !jsonLoc.includes(currentProfilePath + ".properties");
+
+        // Check if this merged property is secure by checking if it's in the secure array of the source profile
+        const isSecureProperty =
+          isFromMergedProps && jsonLoc
+            ? (() => {
+                // Extract the source profile path from jsonLoc
+                // jsonLoc format: "profiles.zosmf.profiles.a.properties.port"
+                const jsonLocParts = jsonLoc.split(".");
+                if (jsonLocParts.length >= 4 && jsonLocParts[0] === "profiles") {
+                  // Find the profile path by looking for the profile structure
+                  let profilePath = "";
+                  for (let i = 1; i < jsonLocParts.length - 2; i++) {
+                    if (jsonLocParts[i + 1] === "profiles") {
+                      // This is a nested profile structure
+                      const parentProfile = jsonLocParts[i];
+                      let nestedProfilePath = [parentProfile];
+                      let pathIndex = i + 2;
+
+                      // Continue building the nested profile path until we hit a non-profile part
+                      while (pathIndex < jsonLocParts.length - 2 && jsonLocParts[pathIndex + 1] === "profiles") {
+                        nestedProfilePath.push(jsonLocParts[pathIndex]);
+                        pathIndex += 2;
+                      }
+
+                      // Add the final profile name if we haven't reached the end
+                      if (pathIndex < jsonLocParts.length - 2) {
+                        nestedProfilePath.push(jsonLocParts[pathIndex]);
+                      }
+
+                      profilePath = nestedProfilePath.join(".");
+                      break;
+                    } else if (i === 1) {
+                      // Simple profile case
+                      profilePath = jsonLocParts[i];
+                      break;
+                    }
+                  }
+
+                  // Check if the property is in the secure array of the source profile
+                  if (profilePath) {
+                    const sourceProfile = configurations[selectedTab!]?.properties?.profiles?.[profilePath];
+                    if (sourceProfile?.secure && Array.isArray(sourceProfile.secure)) {
+                      return sourceProfile.secure.includes(displayKey);
+                    }
+                  }
+                }
+                return false;
+              })()
+            : false;
+
+        const readOnlyContainer = (
+          <div className="config-item-container" style={displayKey === "type" ? { gap: "0px" } : {}}>
+            <span
+              className="config-label"
+              style={
+                isFromMergedProps
+                  ? {
+                      color: "var(--vscode-descriptionForeground)",
+                      cursor: "pointer",
+                    }
+                  : {}
+              }
+            >
+              {displayKey}
+            </span>
+            {displayKey === "type" ? (
+              <select
+                className="config-input"
+                value={String(pendingValue)}
+                onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
+                style={{
+                  width: "100%",
+                  height: "28px",
+                  fontSize: "0.9em",
+                  padding: "2px",
+                  marginBottom: "0",
+                  textTransform: "lowercase",
+                }}
+              >
+                <option value="">{l10n.t("Select a type")}</option>
+                {getWizardTypeOptions().map((type) => (
+                  <option key={type} value={type}>
+                    {type.toLowerCase()}
+                  </option>
+                ))}
+              </select>
+            ) : typeof pendingValue === "string" || typeof pendingValue === "boolean" || typeof pendingValue === "number" ? (
+              <input
+                className="config-input"
+                type={isSecureProperty ? "password" : "text"}
+                placeholder={isSecureProperty ? "••••••••" : ""}
+                value={isSecureProperty && isFromMergedProps ? "••••••••" : String(pendingValue)}
+                onChange={(e) => handleChange(fullKey, (e.target as HTMLTextAreaElement).value)}
+                disabled={isFromMergedProps}
+                style={
+                  isFromMergedProps
+                    ? {
+                        backgroundColor: "var(--vscode-input-disabledBackground)",
+                        color: "var(--vscode-disabledForeground)",
+                        cursor: "pointer",
+                        fontFamily: isSecureProperty ? "monospace" : "inherit",
+                      }
+                    : {}
+                }
+              />
+            ) : (
+              <span>{"{...}"}</span>
+            )}
+            {displayKey !== "type" && !isFromMergedProps && (
+              <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
+                <span className="codicon codicon-trash"></span>
+              </button>
+            )}
+            {displayKey !== "type" && isFromMergedProps && (
+              <button
+                className="action-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleUnlinkMergedProperty(displayKey, fullKey);
+                }}
+                title="Unlink merged property"
+              >
+                <span className="codicon codicon-remove"></span>
+              </button>
+            )}
+          </div>
+        );
+
         return (
           <div key={fullKey} className="config-item">
-            <div className="config-item-container" style={displayKey === "type" ? { gap: "0px" } : {}}>
-              <span className="config-label">{displayKey}</span>
-              {displayKey === "type" ? (
-                <select
-                  className="config-input"
-                  value={String(pendingValue)}
-                  onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
-                  style={{
-                    width: "100%",
-                    height: "28px",
-                    fontSize: "0.9em",
-                    padding: "2px",
-                    marginBottom: "0",
-                    textTransform: "lowercase",
-                  }}
-                >
-                  <option value="">{l10n.t("Select a type")}</option>
-                  {getWizardTypeOptions().map((type) => (
-                    <option key={type} value={type}>
-                      {type.toLowerCase()}
-                    </option>
-                  ))}
-                </select>
-              ) : typeof pendingValue === "string" || typeof pendingValue === "boolean" || typeof pendingValue === "number" ? (
-                <input
-                  className="config-input"
-                  type="text"
-                  value={String(pendingValue)}
-                  onChange={(e) => handleChange(fullKey, (e.target as HTMLTextAreaElement).value)}
-                />
-              ) : (
-                <span>{"{...}"}</span>
-              )}
-              {displayKey !== "type" && (
-                <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
-                  <span className="codicon codicon-trash"></span>
-                </button>
-              )}
-            </div>
+            {isFromMergedProps && jsonLoc ? (
+              <div onClick={() => handleNavigateToSource(jsonLoc)} title={`Click to navigate to source: ${jsonLoc}`} style={{ cursor: "pointer" }}>
+                {readOnlyContainer}
+              </div>
+            ) : (
+              readOnlyContainer
+            )}
           </div>
         );
       }
@@ -1647,12 +2057,37 @@ export function App() {
       />
       <Footer
         onClearChanges={() => {
+          // Store current selection before clearing
+          const currentSelectedTab = selectedTab;
+          const currentSelectedProfileKey = selectedProfileKey;
+
           vscodeApi.postMessage({ command: "GET_PROFILES" });
           setHiddenItems({});
           setPendingChanges({});
           setDeletions({});
           setPendingDefaults({});
           setDefaultsDeletions({});
+
+          // Restore selection after a brief delay to allow configurations to update
+          setTimeout(() => {
+            if (currentSelectedTab !== null) {
+              setSelectedTab(currentSelectedTab);
+            }
+            if (currentSelectedProfileKey !== null) {
+              setSelectedProfileKey(currentSelectedProfileKey);
+
+              // Refresh merged properties for the selected profile after clearing changes
+              const configPath = currentSelectedTab !== null ? configurations[currentSelectedTab]?.configPath : undefined;
+              if (configPath) {
+                vscodeApi.postMessage({
+                  command: "GET_MERGED_PROPERTIES",
+                  profilePath: currentSelectedProfileKey,
+                  configPath: configPath,
+                  changes: formatPendingChanges(), // This will be empty since we just cleared changes
+                });
+              }
+            }
+          }, 100);
         }}
         onSaveAll={() => {
           handleSave();
@@ -1752,8 +2187,6 @@ export function App() {
       />
 
       <PreviewArgsModal isOpen={previewArgsModalOpen} argsData={previewArgsData} onClose={() => setPreviewArgsModalOpen(false)} />
-
-      <SaveConfirmationModal isOpen={saveConfirmationModalOpen} onSaveAndContinue={handleSaveAndContinue} onCancel={handleCancelPreviewArgs} />
     </div>
   );
 }

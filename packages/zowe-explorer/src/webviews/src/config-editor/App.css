@@ -164,6 +164,18 @@ body {
     font-family: var(--vscode-font-family);
 }
 
+.config-input:focus {
+    outline: none;
+    border-color: var(--vscode-button-background);
+    box-shadow: 0 0 0 1px var(--vscode-button-background);
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--vscode-button-background);
+    box-shadow: 0 0 0 1px var(--vscode-button-background);
+}
+
 .config-input::placeholder {
     color: var(--vscode-input-foreground);
     opacity: 0.7;

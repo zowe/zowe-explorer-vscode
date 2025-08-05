@@ -178,6 +178,15 @@ export class ConfigEditor extends WebView {
                 });
                 break;
             }
+            case "GET_MERGED_PROPERTIES": {
+                const mergedArgs = await this.getPendingMergedArgsForProfile(message.profilePath, message.configPath, message.changes);
+                await this.panel.webview.postMessage({
+                    command: "MERGED_PROPERTIES",
+                    mergedArgs,
+                });
+                await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+                break;
+            }
             default:
                 break;
         }
@@ -199,7 +208,6 @@ export class ConfigEditor extends WebView {
         for (const deletion of deletions) {
             profInfo.getTeamConfig().delete(`defaults.${deletion.key}`);
         }
-
         await profInfo.getTeamConfig().save();
     }
 
@@ -227,12 +235,6 @@ export class ConfigEditor extends WebView {
                 keyParts[keyParts.length - 2] = "properties";
                 item.key = keyParts.join(".");
             }
-
-            const profileParts = item.profile.split(".");
-            if (profileParts[profileParts.length - 2] === "secure") {
-                profileParts[profileParts.length - 2] = "properties";
-                item.profile = profileParts.join(".");
-            }
         }
 
         if (configPath !== profInfo.getTeamConfig().api.layers.get().path) {
@@ -255,11 +257,6 @@ export class ConfigEditor extends WebView {
                 // console.log(err);
             }
         }
-
-        const test = profInfo.getAllProfiles();
-        const zxploreProf = profInfo.getAllProfiles().find((prof) => prof.profName === "zxplore.zosmf");
-        const mergeArgs = profInfo.mergeArgsForProfile(zxploreProf);
-
         await profInfo.getTeamConfig().save();
     }
 
@@ -321,7 +318,100 @@ export class ConfigEditor extends WebView {
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
         const allProfiles = profInfo.getAllProfiles();
         const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc.includes(path.normalize(configPath)));
+        if (!profile) return;
         const mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
         return mergedArgs.knownArgs;
+    }
+    private async getPendingMergedArgsForProfile(profPath: string, configPath: string, changes: any): Promise<any> {
+        const profInfo = new ProfileInfo("zowe");
+        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+
+        // Create a copy of the team config to simulate changes without affecting the original
+        const teamConfig = profInfo.getTeamConfig();
+
+        // Apply changes to simulate pending modifications
+        const parsedChanges = this.parseConfigChanges(changes);
+        for (const change of parsedChanges) {
+            if (change.defaultsChanges || change.defaultsDeleteKeys) {
+                await this.simulateDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
+            }
+
+            if (change.changes || change.deletions) {
+                await this.simulateProfileChanges(change.changes, change.deletions, change.configPath, teamConfig);
+            }
+        }
+
+        const allProfiles = profInfo.getAllProfiles();
+        const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc.includes(path.normalize(configPath)));
+        if (!profile) return;
+
+        const mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
+        return mergedArgs.knownArgs;
+    }
+
+    private async simulateDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string, teamConfig: any): Promise<void> {
+        if (activeLayer !== teamConfig.api.layers.get().path) {
+            const findProfile = teamConfig.layers.find((prof: any) => prof.path === activeLayer);
+            teamConfig.api.layers.activate(findProfile.user, findProfile.global);
+        }
+
+        for (const change of changes) {
+            teamConfig.api.profiles.defaultSet(change.key, change.value);
+        }
+
+        for (const deletion of deletions) {
+            teamConfig.delete(`defaults.${deletion.key}`);
+        }
+    }
+
+    private async simulateProfileChanges(changes: ChangeEntry[], deletions: ChangeEntry[], configPath: string, teamConfig: any): Promise<void> {
+        for (const item of changes) {
+            const keyParts = item.key.split(".");
+            if (keyParts[keyParts.length - 2] === "secure") {
+                keyParts[keyParts.length - 2] = "properties";
+                item.key = keyParts.join(".");
+            }
+
+            const profileParts = item.profile.split(".");
+            if (profileParts[profileParts.length - 2] === "secure") {
+                profileParts[profileParts.length - 2] = "properties";
+                item.profile = profileParts.join(".");
+            }
+        }
+
+        for (const item of deletions) {
+            const keyParts = item.key.split(".");
+            if (keyParts[keyParts.length - 2] === "secure") {
+                keyParts[keyParts.length - 2] = "properties";
+                item.key = keyParts.join(".");
+            }
+
+            // const profileParts = item.profile.split(".");
+            // if (profileParts[profileParts.length - 2] === "secure") {
+            //     profileParts[profileParts.length - 2] = "properties";
+            //     item.profile = profileParts.join(".");
+            // }
+        }
+
+        if (configPath !== teamConfig.api.layers.get().path) {
+            const findProfile = teamConfig.layers.find((prof: any) => prof.path === configPath);
+            teamConfig.api.layers.activate(findProfile.user, findProfile.global);
+        }
+
+        for (const change of changes) {
+            try {
+                teamConfig.set(change.key, change.value, { parseString: true, secure: change.secure });
+            } catch (err) {
+                // console.log(err);
+            }
+        }
+
+        for (const deletion of deletions) {
+            try {
+                teamConfig.delete(deletion.key);
+            } catch (err) {
+                // console.log(err);
+            }
+        }
     }
 }
