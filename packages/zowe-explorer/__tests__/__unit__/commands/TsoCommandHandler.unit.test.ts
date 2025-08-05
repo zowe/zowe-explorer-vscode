@@ -19,8 +19,6 @@ import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { TsoCommandHandler } from "../../../src/commands/TsoCommandHandler";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
-import { MockedProperty } from "../../__mocks__/mockUtils";
-import { ProfileInfo } from "../../__mocks__/@zowe/imperative";
 
 jest.mock("Session");
 
