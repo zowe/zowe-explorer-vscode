@@ -48,6 +48,12 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
                         mode: element.permissions,
                     }));
                 }
+                // Assume the path is a directory if response contains zero or
+                // multiple items, or a single item with relative path.
+                const isDir = response.length !== 1 || response[0].name !== ussFilePath;
+                if (isDir) {
+                    result.apiResponse.items.unshift({ name: ".", mode: "d" }, { name: "..", mode: "d" });
+                }
             }
             return result;
         } catch (err) {

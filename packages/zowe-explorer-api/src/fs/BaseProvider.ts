@@ -102,7 +102,7 @@ export class BaseProvider {
      * @param uri The URI pointing to a local entry in the FS provider
      */
     public removeEntry(uri: vscode.Uri): boolean {
-        const parentEntry = this._lookupParentDirectory(uri, true);
+        const parentEntry = this.lookupParentDirectory(uri, true);
         if (parentEntry == null) {
             return false;
         }
@@ -154,7 +154,7 @@ export class BaseProvider {
         }
 
         entry.entries.clear();
-        this._lookupParentDirectory(uri).entries.delete(entry.name);
+        this.lookupParentDirectory(uri).entries.delete(entry.name);
         return true;
     }
 
@@ -279,7 +279,7 @@ export class BaseProvider {
 
     protected _getDeleteInfo(uri: vscode.Uri): DeleteMetadata {
         const basename = path.posix.basename(uri.path);
-        const parent = this._lookupParentDirectory(uri, false);
+        const parent = this.lookupParentDirectory(uri, false);
 
         // Throw an error if the entry does not exist
         if (!parent.entries.has(basename)) {
@@ -447,7 +447,7 @@ export class BaseProvider {
 
     protected _createFile(uri: vscode.Uri, options?: { overwrite: boolean }): FileEntry {
         const basename = path.posix.basename(uri.path);
-        const parent = this._lookupParentDirectory(uri);
+        const parent = this.lookupParentDirectory(uri);
         let entry = parent.entries.get(basename);
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
@@ -479,7 +479,13 @@ export class BaseProvider {
         return entry;
     }
 
+    /**
+     * @deprecated Please use the public version
+     */
     protected _lookupParentDirectory(uri: vscode.Uri, silent?: boolean): DirEntry {
+        return this.lookupParentDirectory(uri, silent);
+    }
+    public lookupParentDirectory(uri: vscode.Uri, silent?: boolean): DirEntry {
         return this._lookupAsDirectory(
             uri.with({
                 path: path.posix.join(uri.path, ".."),
