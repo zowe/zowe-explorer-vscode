@@ -1373,6 +1373,16 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             ZoweLogger.warn(e);
             return;
         }
+        await this.filterTreeByPattern(node, profile, pattern, true);
+    }
+
+    public async filterTreeByPattern(
+        node: IZoweDatasetTreeNode,
+        profile: imperative.IProfileLoaded,
+        pattern: string,
+        addToHistory?: boolean
+    ): Promise<void> {
+        ZoweLogger.trace("DatasetTree.filterTreeByPattern called.");
         await AuthUtils.updateNodeToolTip(node, profile);
         // looking for members in pattern
         node.patternMatches = this.extractPatterns(pattern);
@@ -1402,7 +1412,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // Refresh node in tree view to represent new data set pattern(s)
             this.nodeDataChanged(node);
         }
-        this.addSearchHistory(pattern);
+        if (addToHistory) {
+            this.addSearchHistory(pattern);
+        }
     }
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {
@@ -1462,6 +1474,60 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
         }
         return existing;
+    }
+
+    /**
+     * Focuses on a specific data set in the dataset tree based on the current state of the tree.
+     *
+     * If the data set is not currently in the data sets filter, first check if it is in favourites.
+     * If it is, open that one, if not, fall back to setting the filter to that data set and then open it in the tree.
+     * Do not add filter to history.
+     *
+     * @param dsName - The name of the data set to focus on
+     * @param sessProfile - The session profile to use for the operation
+     * @returns {boolean} - True if the data set was found and focused
+     */
+    public async focusOnDsInTree(dsName: string, sessProfile: imperative.IProfileLoaded): Promise<boolean> {
+        // Try to find in session nodes
+        for (const session of this.mSessionNodes) {
+            const children = await session.getChildren();
+            const foundNode = children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+            if (foundNode) {
+                await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
+                return true;
+            }
+        }
+
+        // Try to find in favorites
+        for (const favNode of this.mFavorites) {
+            if (favNode.children && favNode.children.length > 0) {
+                const foundNode = favNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+                if (foundNode) {
+                    // Cannot just reveal foundNode as it will not expand out fully
+                    await this.getTreeView().reveal(favNode, { expand: true });
+                    await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
+                    return true;
+                }
+            }
+        }
+
+        // Not found: set filter on the session node and reveal
+        const sessionNode = this.mSessionNodes.find((session) => session.label?.toString().toUpperCase() === sessProfile.name.toUpperCase());
+        if (sessionNode) {
+            sessionNode.pattern = dsName.toUpperCase();
+            sessionNode.dirty = true;
+            try {
+                await this.filterTreeByPattern(sessionNode, sessProfile, dsName);
+            } catch (error) {
+                return false;
+            }
+            const pdsNode = sessionNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+            if (pdsNode) {
+                await this.getTreeView().reveal(pdsNode, { select: true, focus: true, expand: true });
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
