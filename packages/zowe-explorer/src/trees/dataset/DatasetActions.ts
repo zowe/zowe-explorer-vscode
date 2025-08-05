@@ -22,6 +22,7 @@ import {
     FsAbstractUtils,
     ZoweScheme,
     ZoweExplorerApiType,
+    PdsEntry,
     type AttributeInfo,
     DataSetAttributesProvider,
 } from "@zowe/zowe-explorer-api";
@@ -41,6 +42,9 @@ import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { Definitions } from "../../configuration/Definitions";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
+import { SharedTreeProviders } from "../shared/SharedTreeProviders";
+import { DatasetTree } from "./DatasetTree";
+
 export class DatasetActions {
     public static typeEnum: zosfiles.CreateDataSetTypeEnum;
     public static newDSProperties;
@@ -1236,6 +1240,19 @@ export class DatasetActions {
         );
 
         try {
+            // If selected text is a PDS
+            if (!hasMember) {
+                const lookup = await DatasetFSProvider.instance.remoteLookupForResource(datasetUri);
+                if (lookup && lookup instanceof PdsEntry) {
+                    const datasetTree = SharedTreeProviders.ds as DatasetTree;
+                    const successful = await datasetTree.focusOnDsInTree(ds.dataSetName, sessProfile);
+                    if (!successful) {
+                        Gui.warningMessage(vscode.l10n.t("PDS {0} could not be found.", ds.dataSetName));
+                    }
+                    return;
+                }
+            }
+
             await vscode.workspace.fs.readFile(datasetUri);
             await vscode.commands.executeCommand("vscode.open", datasetUri, {
                 preview: false,

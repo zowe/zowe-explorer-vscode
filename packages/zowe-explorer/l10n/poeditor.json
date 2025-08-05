@@ -1008,6 +1008,7 @@
   "Selection is not a valid data set member name.": "",
   "Selection is not a valid data set name.": "",
   "Select the profile to use to open the data set": "",
+  "PDS {0} could not be found.": "",
   "Data set member {0} does not exist or cannot be opened in data set {1}.": "",
   "Data set {0} does not exist or cannot be opened.": "",
   "Opening data set failed.": "",
