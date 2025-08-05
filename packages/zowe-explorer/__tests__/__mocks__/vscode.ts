@@ -12,7 +12,10 @@
 import { Progress, ProgressOptions, QuickPick, QuickPickItem } from "vscode";
 
 export class MarkdownString {
-    value: string;
+    public value: string;
+    public constructor(value?: string) {
+        this.value = value || "";
+    }
 }
 
 /**
