@@ -1498,6 +1498,7 @@ export function App() {
                         color: "var(--vscode-disabledForeground)",
                         cursor: "pointer",
                         fontFamily: isSecureProperty ? "monospace" : "inherit",
+                        pointerEvents: "none",
                       }
                     : {}
                 }
@@ -1526,18 +1527,14 @@ export function App() {
         );
 
         return (
-          <div key={fullKey} className="config-item">
-            {isFromMergedProps && jsonLoc ? (
-              <div
-                onClick={() => handleNavigateToSource(jsonLoc, osLoc)}
-                title={`Click to navigate to source: ${jsonLoc}`}
-                style={{ cursor: "pointer" }}
-              >
-                {readOnlyContainer}
-              </div>
-            ) : (
-              readOnlyContainer
-            )}
+          <div
+            key={fullKey}
+            className="config-item"
+            onClick={isFromMergedProps && jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
+            title={isFromMergedProps && jsonLoc ? `Property Source: ${jsonLoc}` : undefined}
+            style={isFromMergedProps && jsonLoc ? { cursor: "pointer" } : {}}
+          >
+            {readOnlyContainer}
           </div>
         );
       }
