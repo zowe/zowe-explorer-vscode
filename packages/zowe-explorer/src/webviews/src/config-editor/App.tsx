@@ -820,116 +820,332 @@ export function App() {
     setSelectedTab(index);
   };
 
-  const renderProfiles = (profilesObj: any) => {
-    if (!profilesObj || typeof profilesObj !== "object") return null;
+  // Helper function to merge pending changes for a specific profile and path
+  const mergePendingChangesForProfile = (baseObj: any, path: string[], configPath: string): any => {
+    const fullPath = path.join(".");
+    const currentProfileKey = extractProfileKeyFromPath(path);
+    const pendingChangesAtLevel: { [key: string]: any } = {};
 
-    const flatProfiles = flattenProfiles(profilesObj);
+    Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
+      if (entry.profile === currentProfileKey && (key === fullPath || key.startsWith(fullPath + "."))) {
+        const keyParts = key.split(".");
+        const relativePath = keyParts.slice(path.length);
 
-    // Get pending profiles from pendingChanges
-    const configPath = configurations[selectedTab!]!.configPath;
+        if (relativePath.length === 1 && !entry.secure) {
+          pendingChangesAtLevel[relativePath[0]] = entry.value;
+        } else if (relativePath.length > 1 && relativePath[0] !== "profiles" && !entry.secure) {
+          let current = baseObj;
+          for (let i = 0; i < relativePath.length - 1; i++) {
+            if (!current[relativePath[i]]) {
+              current[relativePath[i]] = {};
+            }
+            current = current[relativePath[i]];
+          }
+          current[relativePath[relativePath.length - 1]] = entry.value;
+        }
+      }
+    });
+
+    return { ...baseObj, ...pendingChangesAtLevel };
+  };
+
+  // Helper function to merge merged properties into the configuration
+  const mergeMergedProperties = (combinedConfig: any, path: string[], mergedProps: any, configPath: string): any => {
+    if (
+      !mergedProps ||
+      path.length === 0 ||
+      path[path.length - 1] === "type" ||
+      path[path.length - 1] === "properties" ||
+      path[path.length - 1] === "secure"
+    ) {
+      return combinedConfig;
+    }
+
+    if (!combinedConfig.hasOwnProperty("properties")) {
+      combinedConfig.properties = {};
+    }
+
+    const currentProfileName = extractProfileKeyFromPath(path);
+    const profileType = getProfileType(currentProfileName);
+    const propertySchema = schemaValidations[configPath]?.propertySchema[profileType || ""] || {};
+    const allowedProperties = Object.keys(propertySchema);
+    const fullPath = path.join(".");
+
+    Object.entries(mergedProps).forEach(([key, propData]: [string, any]) => {
+      const pendingKey = `${fullPath}.properties.${key}`;
+      const isInPendingChanges = pendingChanges[configPath]?.[pendingKey] !== undefined;
+
+      if (!combinedConfig.properties.hasOwnProperty(key) && allowedProperties.includes(key) && !isInPendingChanges) {
+        combinedConfig.properties[key] = propData.value;
+      }
+    });
+
+    return combinedConfig;
+  };
+
+  // Helper function to ensure required profile properties exist
+  const ensureProfileProperties = (combinedConfig: any, path: string[]): any => {
+    if (path.length > 0 && path[path.length - 1] !== "type" && path[path.length - 1] !== "properties" && path[path.length - 1] !== "secure") {
+      if (!combinedConfig.hasOwnProperty("properties")) {
+        combinedConfig.properties = {};
+      }
+      if (!combinedConfig.hasOwnProperty("secure")) {
+        combinedConfig.secure = [];
+      }
+      if (!combinedConfig.hasOwnProperty("type")) {
+        combinedConfig.type = "";
+      }
+    }
+    return combinedConfig;
+  };
+
+  // Helper function to filter secure properties from the properties object
+  const filterSecureProperties = (value: any, combinedConfig: any): any => {
+    if (combinedConfig.secure && Array.isArray(combinedConfig.secure)) {
+      const secureProperties = combinedConfig.secure;
+      const filteredProperties = { ...value };
+
+      Object.keys(filteredProperties).forEach((propKey) => {
+        if (secureProperties.includes(propKey)) {
+          delete filteredProperties[propKey];
+        }
+      });
+
+      return Object.keys(filteredProperties).length === 0 ? null : filteredProperties;
+    }
+    return value;
+  };
+
+  // Helper function to merge pending secure properties into secure arrays
+  const mergePendingSecureProperties = (value: any[], path: string[], configPath: string): any[] => {
+    const pendingSecureProps: string[] = Object.entries(pendingChanges[configPath] ?? {})
+      .filter(([, entry]) => {
+        if (!entry.secure) return false;
+
+        const expectedSecurePath = pathFromArray(path.concat(["secure"]));
+        const actualPath = path.join(".");
+
+        let currentProfileName: string;
+        if (path.length >= 2 && path[0] === "profiles") {
+          const profileSegments = [];
+          for (let i = 1; i < path.length; i++) {
+            if (path[i] !== "profiles" && path[i] !== "secure") {
+              profileSegments.push(path[i]);
+            }
+          }
+          currentProfileName = profileSegments.join(".");
+        } else {
+          currentProfileName = path[1] || "";
+        }
+
+        return (
+          actualPath === expectedSecurePath &&
+          (entry.profile === currentProfileName || entry.profile.split(".").slice(0, -2).join(".") === currentProfileName)
+        );
+      })
+      .map(([, entry]) => String(entry.path[entry.path.length - 1]));
+
+    const baseArray: any[] = Array.isArray(value) ? value : [];
+    return pendingSecureProps.length > 0 ? Array.from(new Set([...baseArray, ...pendingSecureProps])) : baseArray;
+  };
+
+  // Helper function to determine if a property is from merged properties
+  const isPropertyFromMergedProps = (
+    displayKey: string | undefined,
+    path: string[],
+    mergedProps: any,
+    originalProperties: any,
+    configPath: string
+  ): boolean => {
+    if (!displayKey) return false;
+
+    const currentProfileKey = extractProfileKeyFromPath(path);
+    const propertyExistsInPendingChanges = displayKey ? isPropertyInPendingChanges(displayKey, currentProfileKey, configPath) : false;
+
+    const mergedPropData = mergedProps?.[displayKey];
+    const jsonLoc = mergedPropData?.jsonLoc;
+    const osLoc = mergedPropData?.osLoc;
+
+    if (
+      !mergedProps ||
+      typeof mergedProps !== "object" ||
+      path.length === 0 ||
+      path[path.length - 1] !== "properties" ||
+      !mergedProps.hasOwnProperty(displayKey) ||
+      (originalProperties && originalProperties.hasOwnProperty(displayKey)) ||
+      propertyExistsInPendingChanges ||
+      !osLoc
+    ) {
+      return false;
+    }
+
+    const selectedConfigPath = configurations[selectedTab!]?.configPath;
+    const osLocString = osLoc.join("");
+    const pathsEqual = selectedConfigPath === osLocString;
+    const currentProfilePathForComparison = path.slice(0, -1).join(".");
+    const jsonLocIndicatesDifferentProfile = jsonLoc && !jsonLoc.includes(currentProfilePathForComparison + ".properties");
+
+    return !pathsEqual || jsonLocIndicatesDifferentProfile;
+  };
+
+  // Helper function to check if a merged property is secure
+  const isMergedPropertySecure = (displayKey: string, jsonLoc: string): boolean => {
+    if (!jsonLoc) return false;
+
+    const jsonLocParts = jsonLoc.split(".");
+    if (jsonLocParts.length < 4 || jsonLocParts[0] !== "profiles") {
+      return false;
+    }
+
+    let profilePath = "";
+    for (let i = 1; i < jsonLocParts.length - 2; i++) {
+      if (jsonLocParts[i + 1] === "profiles") {
+        const parentProfile = jsonLocParts[i];
+        let nestedProfilePath = [parentProfile];
+        let pathIndex = i + 2;
+
+        while (pathIndex < jsonLocParts.length - 2 && jsonLocParts[pathIndex + 1] === "profiles") {
+          nestedProfilePath.push(jsonLocParts[pathIndex]);
+          pathIndex += 2;
+        }
+
+        if (pathIndex < jsonLocParts.length - 2) {
+          nestedProfilePath.push(jsonLocParts[pathIndex]);
+        }
+
+        profilePath = nestedProfilePath.join(".");
+        break;
+      } else if (i === 1) {
+        profilePath = jsonLocParts[i];
+        break;
+      }
+    }
+
+    if (profilePath) {
+      const sourceProfile = configurations[selectedTab!]?.properties?.profiles?.[profilePath];
+      return sourceProfile?.secure?.includes(displayKey) || false;
+    }
+
+    return false;
+  };
+
+  // Helper function to extract pending profiles from pending changes
+  const extractPendingProfiles = (configPath: string): { [key: string]: any } => {
     const pendingProfiles: { [key: string]: any } = {};
 
     Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-      if (entry.profile) {
-        // Extract the profile path from the key
-        const keyParts = key.split(".");
-        if (keyParts[0] === "profiles") {
-          // Remove "profiles" prefix and get the profile path
-          const profilePathParts = keyParts.slice(1);
+      if (!entry.profile) return;
 
-          // Find where the profile name ends (before "type" or "properties")
-          let profileNameEndIndex = profilePathParts.length;
-          for (let i = 0; i < profilePathParts.length; i++) {
-            if (profilePathParts[i] === "type" || profilePathParts[i] === "properties") {
-              profileNameEndIndex = i;
-              break;
-            }
+      const keyParts = key.split(".");
+      if (keyParts[0] !== "profiles") return;
+
+      // Remove "profiles" prefix and get the profile path
+      const profilePathParts = keyParts.slice(1);
+
+      // Find where the profile name ends (before "type" or "properties")
+      let profileNameEndIndex = profilePathParts.length;
+      for (let i = 0; i < profilePathParts.length; i++) {
+        if (profilePathParts[i] === "type" || profilePathParts[i] === "properties") {
+          profileNameEndIndex = i;
+          break;
+        }
+      }
+
+      // Extract just the profile name parts
+      const profileNameParts = profilePathParts.slice(0, profileNameEndIndex);
+
+      if (profileNameParts.length > 0) {
+        // Filter out "profiles" segments to get the actual profile name
+        const filteredProfileParts = profileNameParts.filter((part) => part !== "profiles");
+        const profileKey = filteredProfileParts.join(".");
+
+        // Only create a pending profile entry if this is a profile-level property
+        const propertyName = keyParts[keyParts.length - 1];
+        const isProfileLevelProperty = propertyName === "type" || (keyParts.includes("properties") && !entry.secure);
+
+        if (isProfileLevelProperty) {
+          // Initialize the profile structure if it doesn't exist
+          if (!pendingProfiles[profileKey]) {
+            pendingProfiles[profileKey] = {};
           }
 
-          // Extract just the profile name parts
-          const profileNameParts = profilePathParts.slice(0, profileNameEndIndex);
-
-          if (profileNameParts.length > 0) {
-            // Filter out "profiles" segments to get the actual profile name
-            const filteredProfileParts = profileNameParts.filter((part) => part !== "profiles");
-            const profileKey = filteredProfileParts.join(".");
-
-            // Only create a pending profile entry if this is a profile-level property
-            // (i.e., the property is "type" or we're adding to "properties")
-            const propertyName = keyParts[keyParts.length - 1];
-            const isProfileLevelProperty = propertyName === "type" || (keyParts.includes("properties") && !entry.secure);
-
-            if (isProfileLevelProperty) {
-              // Initialize the profile structure if it doesn't exist
-              if (!pendingProfiles[profileKey]) {
-                pendingProfiles[profileKey] = {};
+          // Add the property to the profile
+          if (propertyName === "type") {
+            pendingProfiles[profileKey].type = entry.value;
+          } else if (keyParts.includes("properties")) {
+            // Only add non-secure properties to the properties object
+            if (!entry.secure) {
+              if (!pendingProfiles[profileKey].properties) {
+                pendingProfiles[profileKey].properties = {};
               }
+              pendingProfiles[profileKey].properties[propertyName] = entry.value;
+            }
 
-              // Add the property to the profile
-              if (propertyName === "type") {
-                pendingProfiles[profileKey].type = entry.value;
-              } else if (keyParts.includes("properties")) {
-                // Only add non-secure properties to the properties object
-                if (!entry.secure) {
-                  if (!pendingProfiles[profileKey].properties) {
-                    pendingProfiles[profileKey].properties = {};
-                  }
-                  pendingProfiles[profileKey].properties[propertyName] = entry.value;
-                }
-
-                // If this is a secure property, add it to the secure array
-                if (entry.secure) {
-                  if (!pendingProfiles[profileKey].secure) {
-                    pendingProfiles[profileKey].secure = [];
-                  }
-                  if (!pendingProfiles[profileKey].secure.includes(propertyName)) {
-                    pendingProfiles[profileKey].secure.push(propertyName);
-                  }
-                }
+            // If this is a secure property, add it to the secure array
+            if (entry.secure) {
+              if (!pendingProfiles[profileKey].secure) {
+                pendingProfiles[profileKey].secure = [];
+              }
+              if (!pendingProfiles[profileKey].secure.includes(propertyName)) {
+                pendingProfiles[profileKey].secure.push(propertyName);
               }
             }
           }
         }
       }
     });
+
+    return pendingProfiles;
+  };
+
+  // Helper function to check if a profile or its parent is deleted
+  const isProfileOrParentDeleted = (profileKey: string, deletedProfiles: string[]): boolean => {
+    const profileParts = profileKey.split(".");
+
+    // Check each level of the profile hierarchy
+    for (let i = 0; i < profileParts.length; i++) {
+      const currentLevelProfileKey = profileParts.slice(0, i + 1).join(".");
+      let fullProfilePath: string;
+
+      if (i === 0) {
+        // Top-level profile
+        fullProfilePath = `profiles.${currentLevelProfileKey}`;
+      } else {
+        // Nested profile - construct the full path for this specific level
+        const pathArray = ["profiles"];
+        for (let j = 0; j <= i; j++) {
+          pathArray.push(profileParts[j]);
+          if (j < i) {
+            pathArray.push("profiles");
+          }
+        }
+        fullProfilePath = pathArray.join(".");
+      }
+
+      // If any parent profile is deleted, hide this profile
+      if (deletedProfiles.includes(fullProfilePath)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const renderProfiles = (profilesObj: any) => {
+    if (!profilesObj || typeof profilesObj !== "object") return null;
+
+    const flatProfiles = flattenProfiles(profilesObj);
+    const configPath = configurations[selectedTab!]!.configPath;
+
+    // Extract pending profiles using helper function
+    const pendingProfiles = extractPendingProfiles(configPath);
 
     // Combine existing and pending profiles for the profile list
     const allProfiles = { ...flatProfiles, ...pendingProfiles };
 
     // Filter out deleted profiles and their children
-    const deletedProfiles = deletions[configurations[selectedTab!]!.configPath] || [];
-    const filteredProfileKeys = Object.keys(allProfiles).filter((profileKey) => {
-      // Check if this profile or any of its parent profiles are deleted
-      const profileParts = profileKey.split(".");
-
-      // Check each level of the profile hierarchy
-      for (let i = 0; i < profileParts.length; i++) {
-        const currentLevelProfileKey = profileParts.slice(0, i + 1).join(".");
-        let fullProfilePath: string;
-
-        if (i === 0) {
-          // Top-level profile
-          fullProfilePath = `profiles.${currentLevelProfileKey}`;
-        } else {
-          // Nested profile - construct the full path for this specific level
-          const pathArray = ["profiles"];
-          for (let j = 0; j <= i; j++) {
-            pathArray.push(profileParts[j]);
-            if (j < i) {
-              pathArray.push("profiles");
-            }
-          }
-          fullProfilePath = pathArray.join(".");
-        }
-
-        // If any parent profile is deleted, hide this profile
-        if (deletedProfiles.includes(fullProfilePath)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
+    const deletedProfiles = deletions[configPath] || [];
+    const filteredProfileKeys = Object.keys(allProfiles).filter((profileKey) => !isProfileOrParentDeleted(profileKey, deletedProfiles));
 
     // Sort profile keys alphabetically
     const sortedProfileKeys = filteredProfileKeys.sort((a, b) => a.localeCompare(b));
@@ -1027,75 +1243,12 @@ export function App() {
         {selectedProfileKey &&
           (() => {
             const flatProfiles = flattenProfiles(configurations[selectedTab!]!.properties.profiles);
-            const pendingProfiles: { [key: string]: any } = {};
-
-            // Get pending profiles from pendingChanges
             const configPath = configurations[selectedTab!]!.configPath;
 
-            Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-              if (entry.profile) {
-                // Extract the profile path from the key
-                const keyParts = key.split(".");
-                if (keyParts[0] === "profiles") {
-                  // Remove "profiles" prefix and get the profile path
-                  const profilePathParts = keyParts.slice(1);
+            // Use the helper function to extract pending profiles
+            const pendingProfiles = extractPendingProfiles(configPath);
 
-                  // Find where the profile name ends (before "type" or "properties")
-                  let profileNameEndIndex = profilePathParts.length;
-                  for (let i = 0; i < profilePathParts.length; i++) {
-                    if (profilePathParts[i] === "type" || profilePathParts[i] === "properties") {
-                      profileNameEndIndex = i;
-                      break;
-                    }
-                  }
-
-                  // Extract just the profile name parts
-                  const profileNameParts = profilePathParts.slice(0, profileNameEndIndex);
-
-                  if (profileNameParts.length > 0) {
-                    // Filter out "profiles" segments to get the actual profile name
-                    const filteredProfileParts = profileNameParts.filter((part) => part !== "profiles");
-                    const profileKey = filteredProfileParts.join(".");
-
-                    // Only create a pending profile entry if this is a profile-level property
-                    // (i.e., the property is "type" or we're adding to "properties")
-                    const propertyName = keyParts[keyParts.length - 1];
-                    const isProfileLevelProperty = propertyName === "type" || (keyParts.includes("properties") && !entry.secure);
-
-                    if (isProfileLevelProperty) {
-                      // Initialize the profile structure if it doesn't exist
-                      if (!pendingProfiles[profileKey]) {
-                        pendingProfiles[profileKey] = {};
-                      }
-
-                      // Add the property to the profile
-                      if (propertyName === "type") {
-                        pendingProfiles[profileKey].type = entry.value;
-                      } else if (keyParts.includes("properties")) {
-                        // Only add non-secure properties to the properties object
-                        if (!entry.secure) {
-                          if (!pendingProfiles[profileKey].properties) {
-                            pendingProfiles[profileKey].properties = {};
-                          }
-                          pendingProfiles[profileKey].properties[propertyName] = entry.value;
-                        }
-
-                        // If this is a secure property, add it to the secure array
-                        if (entry.secure) {
-                          if (!pendingProfiles[profileKey].secure) {
-                            pendingProfiles[profileKey].secure = [];
-                          }
-                          if (!pendingProfiles[profileKey].secure.includes(propertyName)) {
-                            pendingProfiles[profileKey].secure.push(propertyName);
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            });
-
+            // Construct the profile path
             const profilePathParts = selectedProfileKey.split(".");
             let path;
             if (profilePathParts.length === 1) {
@@ -1111,6 +1264,7 @@ export function App() {
                 }
               }
             }
+
             // Pass the original profile object (without pending changes) to renderConfig
             // so that renderConfig can properly combine existing and pending changes
             // For newly created profiles, use the pending profile data as the base
@@ -1127,100 +1281,17 @@ export function App() {
     const baseObj = cloneDeep(obj);
     const configPath = configurations[selectedTab!]!.configPath;
 
-    // Prepare a copy of baseObj for this level
-    let combinedConfig = { ...baseObj };
+    // Merge pending changes
+    let combinedConfig = mergePendingChangesForProfile(baseObj, path, configPath);
 
-    // Create a map of pending changes that should be applied at this level
-    const pendingChangesAtLevel: { [key: string]: any } = {};
-
-    // Determine the current profile being rendered from the path
-    const currentProfileKey = extractProfileKeyFromPath(path);
-    Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-      // Only apply pending changes that belong to the current profile being rendered
-      if (entry.profile === currentProfileKey && (key === fullPath || key.startsWith(fullPath + "."))) {
-        const keyParts = key.split(".");
-        const relativePath = keyParts.slice(path.length);
-
-        // Handle root-level profile properties (like "type") and direct properties
-        if (relativePath.length === 1) {
-          if (!entry.secure) {
-            pendingChangesAtLevel[relativePath[0]] = entry.value;
-          }
-        } else if (relativePath.length > 1 && relativePath[0] !== "profiles") {
-          // For nested properties, only add non-secure properties
-          if (!entry.secure) {
-            let current = combinedConfig;
-            for (let i = 0; i < relativePath.length - 1; i++) {
-              if (!current[relativePath[i]]) {
-                current[relativePath[i]] = {};
-              }
-              current = current[relativePath[i]];
-            }
-            current[relativePath[relativePath.length - 1]] = entry.value;
-          }
-        }
-        // If relativePath[0] === "profiles", skip for this level
-      }
-    });
-
-    // Combine base object with pending changes at this level
-    combinedConfig = {
-      ...combinedConfig,
-      ...pendingChangesAtLevel,
-    };
-
-    // Track which properties were originally in the base object
+    // Track original properties for merged property detection
     const originalProperties = baseObj.properties || {};
 
-    // Add merged properties to the properties section when we're at the profile level
-    if (
-      mergedProps &&
-      path.length > 0 &&
-      path[path.length - 1] !== "type" &&
-      path[path.length - 1] !== "properties" &&
-      path[path.length - 1] !== "secure"
-    ) {
-      // We're at the profile level, add merged properties to the properties object
-      if (!combinedConfig.hasOwnProperty("properties")) {
-        combinedConfig.properties = {};
-      }
+    // Merge merged properties
+    combinedConfig = mergeMergedProperties(combinedConfig, path, mergedProps, configPath);
 
-      // Get the current profile type to filter merged properties (same logic as fetchTypeOptions)
-      const currentProfileName = extractProfileKeyFromPath(path);
-      const profileType = getProfileType(currentProfileName);
-
-      // Get the schema for this profile type (same logic as fetchTypeOptions)
-      const configPath = configurations[selectedTab!]!.configPath;
-      const propertySchema = schemaValidations[configPath]?.propertySchema[profileType || ""] || {};
-      const allowedProperties = Object.keys(propertySchema);
-
-      Object.entries(mergedProps).forEach(([key, propData]: [string, any]) => {
-        // Only add merged properties that are in the schema for this profile type
-        // This matches what would appear in the "new key" dropdown
-        // Check if this property is already in pending changes for this specific profile
-        const pendingKey = `${fullPath}.properties.${key}`;
-        const isInPendingChanges = pendingChanges[configPath]?.[pendingKey] !== undefined;
-
-        if (!combinedConfig.properties.hasOwnProperty(key) && allowedProperties.includes(key) && !isInPendingChanges) {
-          combinedConfig.properties[key] = propData.value;
-        }
-      });
-    }
-
-    // Ensure properties key exists with empty object value if not present
-    // Only add properties key at the profile level (when path ends with profile name)
-
-    if (path.length > 0 && path[path.length - 1] !== "type" && path[path.length - 1] !== "properties" && path[path.length - 1] !== "secure") {
-      if (!combinedConfig.hasOwnProperty("properties")) {
-        combinedConfig.properties = {};
-      }
-      if (!combinedConfig.hasOwnProperty("secure")) {
-        combinedConfig.secure = [];
-      }
-      if (!combinedConfig.hasOwnProperty("type")) {
-        combinedConfig.type = "";
-      }
-    }
+    // Ensure required profile properties exist
+    combinedConfig = ensureProfileProperties(combinedConfig, path);
 
     // Sort properties according to the specified order
     const sortedEntries = sortConfigEntries(Object.entries(combinedConfig));
@@ -1229,74 +1300,26 @@ export function App() {
       const currentPath = [...path, key];
       const fullKey = currentPath.join(".");
       const displayKey = key.split(".").pop();
+
       if ((deletions[configPath] ?? []).includes(fullKey)) return null;
 
-      // Skip rendering properties that are in the secure array to avoid duplication
-      if (key === "properties" && combinedConfig.secure && Array.isArray(combinedConfig.secure)) {
-        const secureProperties = combinedConfig.secure;
-        const filteredProperties = { ...value };
-
-        // Remove properties that are in the secure array
-        Object.keys(filteredProperties).forEach((propKey) => {
-          if (secureProperties.includes(propKey)) {
-            delete filteredProperties[propKey];
-          }
-        });
-
-        // If all properties were secure, don't render the properties section
-        if (Object.keys(filteredProperties).length === 0) {
-          return null;
-        }
-
-        // Update the value to only include non-secure properties
-        value = filteredProperties;
+      // Filter secure properties from properties object
+      if (key === "properties") {
+        const filteredValue = filterSecureProperties(value, combinedConfig);
+        if (filteredValue === null) return null;
+        value = filteredValue;
       }
 
       const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
       const isArray = Array.isArray(value);
       const pendingValue = (pendingChanges[configPath] ?? {})[fullKey]?.value ?? value;
-      // --- Fix: Merge pending secure properties when rendering a 'secure' array ---
+
+      // Merge pending secure properties for secure arrays
       let renderValue: any[] = Array.isArray(value) ? value : [];
       if (isArray && key === "secure") {
-        // Find all pending secure properties for this exact secure array path and profile
-        const pendingSecureProps: string[] = Object.entries(pendingChanges[configPath] ?? {})
-          .filter(([, entry]) => {
-            if (!entry.secure) return false;
-
-            // Check if this secure property belongs to the current profile context
-            // The path should match the current secure array path
-            const expectedSecurePath = pathFromArray(path.concat(["secure"]));
-            const actualPath = currentPath.join(".");
-
-            // Extract the profile name from the current path
-            // The path structure is ["profiles", "profile_name", "profiles", "nested_profile", ...]
-            let currentProfileName: string;
-            if (path.length >= 2 && path[0] === "profiles") {
-              // Find all profile name segments by filtering out "profiles" and "secure"
-              const profileSegments = [];
-              for (let i = 1; i < path.length; i++) {
-                if (path[i] !== "profiles" && path[i] !== "secure") {
-                  profileSegments.push(path[i]);
-                }
-              }
-              currentProfileName = profileSegments.join(".");
-            } else {
-              currentProfileName = path[1] || "";
-            }
-
-            return (
-              actualPath === expectedSecurePath &&
-              (entry.profile === currentProfileName || entry.profile.split(".").slice(0, -2).join(".") === currentProfileName)
-            );
-          })
-          .map(([, entry]) => String(entry.path[entry.path.length - 1]));
-        const baseArray: any[] = Array.isArray(value) ? value : [];
-        if (pendingSecureProps.length > 0) {
-          renderValue = Array.from(new Set([...baseArray, ...pendingSecureProps]));
-        } else {
-          renderValue = baseArray;
-        }
+        renderValue = mergePendingSecureProperties(value, path, configPath);
       }
+
       if (isParent) {
         return (
           <div key={fullKey} className="config-item parent">
@@ -1411,90 +1434,12 @@ export function App() {
           </div>
         );
       } else {
-        // Check if this property is from merged properties (not currently being rendered)
-        const configPath = configurations[selectedTab!]!.configPath;
-        const currentProfileKey = extractProfileKeyFromPath(path);
-        const propertyExistsInPendingChanges = displayKey ? isPropertyInPendingChanges(displayKey, currentProfileKey, configPath) : false;
-
-        // Get the current profile path to compare with jsonLoc
-        const currentProfilePath = path.slice(0, -1).join("."); // Remove "properties" from the end
-        const mergedPropData =
-          mergedProps && typeof mergedProps === "object" && mergedProps[displayKey as keyof typeof mergedProps]
-            ? mergedProps[displayKey as keyof typeof mergedProps]
-            : undefined;
+        // Check if this property is from merged properties
+        const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, originalProperties, configPath);
+        const mergedPropData = displayKey ? mergedProps?.[displayKey] : undefined;
         const jsonLoc = mergedPropData?.jsonLoc;
         const osLoc = mergedPropData?.osLoc;
-
-        // A property should be read-only if:
-        // 1. It exists in mergedProps
-        // 2. It doesn't exist in original properties
-        // 3. It doesn't exist in pending changes (use current state, not stale closure)
-        // 4. The osLoc indicates it comes from a different config file OR jsonLoc indicates it comes from a different profile
-        const selectedConfigPath = configurations[selectedTab!]?.configPath;
-        const osLocString = osLoc ? osLoc.join("") : "";
-        const pathsEqual = selectedConfigPath === osLocString;
-        const currentProfilePathForComparison = path.slice(0, -1).join("."); // Remove "properties" from the end
-        const jsonLocIndicatesDifferentProfile = jsonLoc && !jsonLoc.includes(currentProfilePathForComparison + ".properties");
-
-        const isFromMergedProps =
-          mergedProps &&
-          typeof mergedProps === "object" &&
-          path.length > 0 &&
-          path[path.length - 1] === "properties" &&
-          mergedProps.hasOwnProperty(displayKey) &&
-          !(originalProperties && originalProperties.hasOwnProperty(displayKey)) &&
-          !propertyExistsInPendingChanges && // This now uses current state
-          osLoc &&
-          (!pathsEqual || jsonLocIndicatesDifferentProfile); // Read-only if config OR profile doesn't match
-
-        // Check if this merged property is secure by checking if it's in the secure array of the source profile
-        const isSecureProperty =
-          isFromMergedProps && jsonLoc
-            ? (() => {
-                // Extract the source profile path from jsonLoc
-                // jsonLoc format: "profiles.zosmf.profiles.a.properties.port"
-                const jsonLocParts = jsonLoc.split(".");
-                if (jsonLocParts.length >= 4 && jsonLocParts[0] === "profiles") {
-                  // Find the profile path by looking for the profile structure
-                  let profilePath = "";
-                  for (let i = 1; i < jsonLocParts.length - 2; i++) {
-                    if (jsonLocParts[i + 1] === "profiles") {
-                      // This is a nested profile structure
-                      const parentProfile = jsonLocParts[i];
-                      let nestedProfilePath = [parentProfile];
-                      let pathIndex = i + 2;
-
-                      // Continue building the nested profile path until we hit a non-profile part
-                      while (pathIndex < jsonLocParts.length - 2 && jsonLocParts[pathIndex + 1] === "profiles") {
-                        nestedProfilePath.push(jsonLocParts[pathIndex]);
-                        pathIndex += 2;
-                      }
-
-                      // Add the final profile name if we haven't reached the end
-                      if (pathIndex < jsonLocParts.length - 2) {
-                        nestedProfilePath.push(jsonLocParts[pathIndex]);
-                      }
-
-                      profilePath = nestedProfilePath.join(".");
-                      break;
-                    } else if (i === 1) {
-                      // Simple profile case
-                      profilePath = jsonLocParts[i];
-                      break;
-                    }
-                  }
-
-                  // Check if the property is in the secure array of the source profile
-                  if (profilePath) {
-                    const sourceProfile = configurations[selectedTab!]?.properties?.profiles?.[profilePath];
-                    if (sourceProfile?.secure && Array.isArray(sourceProfile.secure)) {
-                      return sourceProfile.secure.includes(displayKey);
-                    }
-                  }
-                }
-                return false;
-              })()
-            : false;
+        const isSecureProperty = isFromMergedProps && jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc) : false;
 
         const readOnlyContainer = (
           <div className="config-item-container" style={displayKey === "type" ? { gap: "0px" } : {}}>
