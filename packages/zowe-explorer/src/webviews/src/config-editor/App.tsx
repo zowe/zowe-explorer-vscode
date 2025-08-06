@@ -111,6 +111,7 @@ export function App() {
   const [showMergedProperties, setShowMergedProperties] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [pendingSaveSelection, setPendingSaveSelection] = useState<{ tab: number | null; profile: string | null } | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
   // Invoked on webview load
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -159,7 +160,7 @@ export function App() {
         setPreviewArgsData(event.data.mergedArgs || []);
         setPreviewArgsModalOpen(true);
       } else if (event.data.command === "MERGED_PROPERTIES") {
-        // Store the full merged properties data including jsonLoc information
+        // Store the full merged properties data including jsonLoc and osLoc information
         const mergedPropsData: { [key: string]: any } = {};
         if (Array.isArray(event.data.mergedArgs)) {
           event.data.mergedArgs.forEach((item: any) => {
@@ -167,6 +168,7 @@ export function App() {
               mergedPropsData[item.argName] = {
                 value: item.argValue,
                 jsonLoc: item.argLoc?.jsonLoc,
+                osLoc: item.argLoc?.osLoc,
               };
             }
           });
@@ -186,8 +188,8 @@ export function App() {
       setFlattenedConfig(flattenKeys(config.profiles));
       setFlattenedDefaults(flattenKeys(config.defaults));
       setOriginalDefaults(flattenKeys(config.defaults));
-      // Clear merged properties when tab changes (but not when saving)
-      if (!isSaving) {
+      // Clear merged properties when tab changes (but not when saving or navigating)
+      if (!isSaving && !isNavigating) {
         setMergedProperties(null);
         setSelectedProfileKey(null);
       }
@@ -199,30 +201,20 @@ export function App() {
     if (selectedProfileKey) {
       const configPath = configurations[selectedTab!]?.configPath;
       if (configPath) {
-        vscodeApi.postMessage({
-          command: "GET_MERGED_PROPERTIES",
-          profilePath: selectedProfileKey,
-          configPath: configPath,
-          changes: formatPendingChanges(),
-        });
+        // Use a timeout to debounce rapid changes and prevent race conditions
+        const timeoutId = setTimeout(() => {
+          vscodeApi.postMessage({
+            command: "GET_MERGED_PROPERTIES",
+            profilePath: selectedProfileKey,
+            configPath: configPath,
+            changes: formatPendingChanges(),
+          });
+        }, 100); // 100ms debounce
+
+        return () => clearTimeout(timeoutId);
       }
     }
   }, [pendingChanges, pendingDefaults, deletions, defaultsDeletions, selectedProfileKey, selectedTab, configurations]);
-
-  // Refresh merged properties after save when selection is restored
-  useEffect(() => {
-    if (selectedProfileKey && !isSaving && pendingSaveSelection === null) {
-      const configPath = configurations[selectedTab!]?.configPath;
-      if (configPath) {
-        vscodeApi.postMessage({
-          command: "GET_MERGED_PROPERTIES",
-          profilePath: selectedProfileKey,
-          configPath: configPath,
-          changes: formatPendingChanges(),
-        });
-      }
-    }
-  }, [selectedProfileKey, selectedTab, configurations, isSaving, pendingSaveSelection]);
 
   useEffect(() => {
     const isModalOpen =
@@ -247,11 +239,18 @@ export function App() {
     };
   }, [profileMenuOpen]);
 
+  // Debug useEffect to track selectedProfileKey changes
+  useEffect(() => {
+    console.log(`selectedProfileKey changed to: ${selectedProfileKey}`);
+  }, [selectedProfileKey]);
+
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
     const path = flattenedConfig[key]?.path ?? key.split(".");
     const profileKey = extractProfileKeyFromPath(path);
 
+    // When a user changes a property, it should become a local property (not merged)
+    // This ensures that overwritten merged properties become editable
     setPendingChanges((prev) => ({
       ...prev,
       [configPath]: {
@@ -400,7 +399,10 @@ export function App() {
     setNewProfileModalOpen(true);
   };
 
-  const handleNavigateToSource = (jsonLoc: string) => {
+  const handleNavigateToSource = (jsonLoc: string, osLoc?: string[]) => {
+    console.log(`handleNavigateToSource called with jsonLoc: ${jsonLoc}, osLoc: ${osLoc}`);
+    console.log(`Current selectedProfileKey before navigation: ${selectedProfileKey}`);
+
     // Parse the jsonLoc to extract the source configuration and profile
     // jsonLoc format: "profiles.ssh.port" or "profiles.ssh.profiles.parent.port"
     const parts = jsonLoc.split(".");
@@ -443,38 +445,99 @@ export function App() {
       }
 
       if (sourceProfile) {
+        console.log(`Extracted sourceProfile: ${sourceProfile}`);
+        console.log(`Extracted sourceProfilePath: ${sourceProfilePath}`);
+
         // Find the configuration that contains this profile
-        const sourceConfigIndex = configurations.findIndex((config) => {
-          const configProfiles = config.properties?.profiles;
-          if (!configProfiles) {
-            return false;
-          }
+        let sourceConfigIndex = -1;
 
-          // Check if this config contains the source profile
-          if (sourceProfilePath.includes(".")) {
-            // Nested profile case - we need to check if the nested profile exists
-            const pathParts = sourceProfilePath.split(".");
+        // If osLoc is provided and indicates a different config, use it to find the correct config
+        if (osLoc && osLoc.length > 0) {
+          const osLocString = osLoc.join("");
+          sourceConfigIndex = configurations.findIndex((config) => {
+            return config.configPath === osLocString;
+          });
+          console.log(`Using osLoc to find config: ${osLocString}, found index: ${sourceConfigIndex}`);
+        }
 
-            let current = configProfiles;
-            for (const part of pathParts) {
-              if (current && current[part]) {
-                current = current[part];
-              } else {
-                return false;
-              }
+        // If we couldn't find the config using osLoc, or if osLoc wasn't provided,
+        // search through all configurations
+        if (sourceConfigIndex === -1) {
+          for (let configIndex = 0; configIndex < configurations.length; configIndex++) {
+            const config = configurations[configIndex];
+            const configProfiles = config.properties?.profiles;
+
+            if (!configProfiles) {
+              continue;
             }
-            return true;
-          } else {
-            // Simple profile case
-            return configProfiles.hasOwnProperty(sourceProfile);
-          }
-        });
 
+            // Check if this config contains the source profile
+            let profileExists = false;
+
+            if (sourceProfilePath.includes(".")) {
+              // Nested profile case - we need to check if the nested profile exists
+              const pathParts = sourceProfilePath.split(".");
+
+              let current = configProfiles;
+              for (const part of pathParts) {
+                if (current && current[part]) {
+                  current = current[part];
+                } else {
+                  current = null;
+                  break;
+                }
+              }
+              profileExists = current !== null;
+            } else {
+              // Simple profile case
+              profileExists = configProfiles.hasOwnProperty(sourceProfile);
+            }
+
+            if (profileExists) {
+              sourceConfigIndex = configIndex;
+              break;
+            }
+          }
+        }
+
+        console.log(`Found sourceConfigIndex: ${sourceConfigIndex}`);
         if (sourceConfigIndex !== -1) {
+          console.log(`Navigating to config index: ${sourceConfigIndex}, profile: ${sourceProfile}`);
+
+          // Set navigation flag to prevent useEffect from clearing selectedProfileKey
+          setIsNavigating(true);
+
           // Navigate to the source configuration and profile within the config editor
           setSelectedTab(sourceConfigIndex);
-          setSelectedProfileKey(sourceProfile);
+
+          // Use a timeout to set the profile after the tab change has been processed
+          // This prevents the useEffect from clearing the selectedProfileKey immediately
+          setTimeout(() => {
+            setSelectedProfileKey(sourceProfile);
+
+            // Clear navigation flag after setting the profile
+            setTimeout(() => {
+              setIsNavigating(false);
+            }, 100);
+          }, 0);
+
+          console.log(`SelectedProfileKey after navigation: ${sourceProfile}`);
+
+          // List all profiles in the selected configuration
+          const selectedConfig = configurations[sourceConfigIndex];
+          if (selectedConfig && selectedConfig.properties && selectedConfig.properties.profiles) {
+            const flatProfiles = flattenProfiles(selectedConfig.properties.profiles);
+            const profileNames = Object.keys(flatProfiles);
+            console.log(`Available profiles in selected config (${selectedConfig.configPath}):`, profileNames);
+            console.log(`Target profile '${sourceProfile}' exists in list:`, profileNames.includes(sourceProfile));
+          } else {
+            console.log(`No profiles found in selected config at index ${sourceConfigIndex}`);
+          }
+        } else {
+          console.log(`No matching configuration found for profile: ${sourceProfile}`);
         }
+      } else {
+        console.log(`No sourceProfile extracted from jsonLoc: ${jsonLoc}`);
       }
     }
   };
@@ -740,6 +803,13 @@ export function App() {
       defaultsChanges,
       defaultsDeleteKeys: defaultsDeleteKeys,
     };
+  };
+
+  // Helper function to check if a property is in pending changes for a specific profile
+  const isPropertyInPendingChanges = (propertyKey: string, profileKey: string, configPath: string): boolean => {
+    return Object.entries(pendingChanges[configPath] ?? {}).some(([key, entry]) => {
+      return entry.profile === profileKey && key.endsWith(`.properties.${propertyKey}`);
+    });
   };
 
   const handleOpenRawJson = (configPath: string) => {
@@ -1127,7 +1197,11 @@ export function App() {
       Object.entries(mergedProps).forEach(([key, propData]: [string, any]) => {
         // Only add merged properties that are in the schema for this profile type
         // This matches what would appear in the "new key" dropdown
-        if (!combinedConfig.properties.hasOwnProperty(key) && allowedProperties.includes(key)) {
+        // Check if this property is already in pending changes for this specific profile
+        const pendingKey = `${fullPath}.properties.${key}`;
+        const isInPendingChanges = pendingChanges[configPath]?.[pendingKey] !== undefined;
+
+        if (!combinedConfig.properties.hasOwnProperty(key) && allowedProperties.includes(key) && !isInPendingChanges) {
           combinedConfig.properties[key] = propData.value;
         }
       });
@@ -1339,7 +1413,8 @@ export function App() {
       } else {
         // Check if this property is from merged properties (not currently being rendered)
         const configPath = configurations[selectedTab!]!.configPath;
-        const propertyExistsInPendingChanges = pendingChanges[configPath]?.[fullKey] !== undefined;
+        const currentProfileKey = extractProfileKeyFromPath(path);
+        const propertyExistsInPendingChanges = displayKey ? isPropertyInPendingChanges(displayKey, currentProfileKey, configPath) : false;
 
         // Get the current profile path to compare with jsonLoc
         const currentProfilePath = path.slice(0, -1).join("."); // Remove "properties" from the end
@@ -1348,12 +1423,19 @@ export function App() {
             ? mergedProps[displayKey as keyof typeof mergedProps]
             : undefined;
         const jsonLoc = mergedPropData?.jsonLoc;
+        const osLoc = mergedPropData?.osLoc;
 
         // A property should be read-only if:
         // 1. It exists in mergedProps
         // 2. It doesn't exist in original properties
-        // 3. It doesn't exist in pending changes
-        // 4. The jsonLoc indicates it comes from a different profile (not the current profile's properties)
+        // 3. It doesn't exist in pending changes (use current state, not stale closure)
+        // 4. The osLoc indicates it comes from a different config file OR jsonLoc indicates it comes from a different profile
+        const selectedConfigPath = configurations[selectedTab!]?.configPath;
+        const osLocString = osLoc ? osLoc.join("") : "";
+        const pathsEqual = selectedConfigPath === osLocString;
+        const currentProfilePathForComparison = path.slice(0, -1).join("."); // Remove "properties" from the end
+        const jsonLocIndicatesDifferentProfile = jsonLoc && !jsonLoc.includes(currentProfilePathForComparison + ".properties");
+
         const isFromMergedProps =
           mergedProps &&
           typeof mergedProps === "object" &&
@@ -1361,9 +1443,9 @@ export function App() {
           path[path.length - 1] === "properties" &&
           mergedProps.hasOwnProperty(displayKey) &&
           !(originalProperties && originalProperties.hasOwnProperty(displayKey)) &&
-          !propertyExistsInPendingChanges &&
-          jsonLoc &&
-          !jsonLoc.includes(currentProfilePath + ".properties");
+          !propertyExistsInPendingChanges && // This now uses current state
+          osLoc &&
+          (!pathsEqual || jsonLocIndicatesDifferentProfile); // Read-only if config OR profile doesn't match
 
         // Check if this merged property is secure by checking if it's in the secure array of the source profile
         const isSecureProperty =
@@ -1455,7 +1537,13 @@ export function App() {
                 className="config-input"
                 type={isSecureProperty ? "password" : "text"}
                 placeholder={isSecureProperty ? "••••••••" : ""}
-                value={isSecureProperty && isFromMergedProps ? "••••••••" : String(pendingValue)}
+                value={
+                  isSecureProperty && isFromMergedProps
+                    ? "••••••••"
+                    : isFromMergedProps
+                    ? String(mergedPropData?.value || pendingValue)
+                    : String(pendingValue)
+                }
                 onChange={(e) => handleChange(fullKey, (e.target as HTMLTextAreaElement).value)}
                 disabled={isFromMergedProps}
                 style={
@@ -1495,7 +1583,11 @@ export function App() {
         return (
           <div key={fullKey} className="config-item">
             {isFromMergedProps && jsonLoc ? (
-              <div onClick={() => handleNavigateToSource(jsonLoc)} title={`Click to navigate to source: ${jsonLoc}`} style={{ cursor: "pointer" }}>
+              <div
+                onClick={() => handleNavigateToSource(jsonLoc, osLoc)}
+                title={`Click to navigate to source: ${jsonLoc}`}
+                style={{ cursor: "pointer" }}
+              >
                 {readOnlyContainer}
               </div>
             ) : (
