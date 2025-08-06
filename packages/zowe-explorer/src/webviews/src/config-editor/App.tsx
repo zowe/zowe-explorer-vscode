@@ -18,7 +18,6 @@ import {
   NewLayerModal,
   ProfileWizardModal,
   PreviewArgsModal,
-  SaveConfirmationModal,
 } from "./components";
 
 // Hooks
@@ -740,15 +739,6 @@ export function App() {
     vscodeApi.postMessage({ command: "GET_PROFILES" });
   };
 
-  const hasUnsavedChanges = (): boolean => {
-    const hasPendingChanges = Object.keys(pendingChanges).length > 0;
-    const hasDeletions = Object.keys(deletions).length > 0;
-    const hasPendingDefaults = Object.keys(pendingDefaults).length > 0;
-    const hasDefaultsDeletions = Object.keys(defaultsDeletions).length > 0;
-
-    return hasPendingChanges || hasDeletions || hasPendingDefaults || hasDefaultsDeletions;
-  };
-
   const handleProfileSelection = (profileKey: string) => {
     if (profileKey === "") {
       // Deselect profile
@@ -769,11 +759,6 @@ export function App() {
         changes: formatPendingChanges(),
       });
     }
-  };
-
-  const handleProfileDeselection = () => {
-    setSelectedProfileKey(null);
-    setMergedProperties(null);
   };
 
   const formatPendingChanges = () => {
@@ -1277,7 +1262,6 @@ export function App() {
   };
 
   const renderConfig = (obj: any, path: string[] = [], mergedProps?: any) => {
-    const fullPath = path.join(".");
     const baseObj = cloneDeep(obj);
     const configPath = configurations[selectedTab!]!.configPath;
 
@@ -1760,7 +1744,7 @@ export function App() {
 
     // Include pending profiles from pendingChanges
     const pendingProfiles = new Set<string>();
-    Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([key, entry]) => {
+    Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([_, entry]) => {
       if (entry.profile) {
         pendingProfiles.add(entry.profile);
       }
@@ -1846,7 +1830,7 @@ export function App() {
     });
 
     // Check pending changes
-    const pendingProfilesUnderRoot = Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).some(([key, entry]) => {
+    const pendingProfilesUnderRoot = Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).some(([_, entry]) => {
       if (entry.profile) {
         if (wizardRootProfile === "root") {
           return entry.profile === wizardProfileName.trim();
@@ -1940,7 +1924,7 @@ export function App() {
     });
 
     // Also check pending changes for profiles being created
-    const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([key, entry]) => {
+    const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([_, entry]) => {
       if (entry.profile) {
         if (wizardRootProfile === "root") {
           return entry.profile === wizardProfileName.trim();
@@ -2064,8 +2048,7 @@ export function App() {
 
   // Get options for input key for profile dropdown
   const fetchTypeOptions = (path: string[]) => {
-    const { configPath, properties: baseConfig } = configurations[selectedTab!]!;
-    const currentConfig = { ...baseConfig };
+    const { configPath } = configurations[selectedTab!]!;
 
     // Extract the profile key from the path
     const profileKey = extractProfileKeyFromPath(path);

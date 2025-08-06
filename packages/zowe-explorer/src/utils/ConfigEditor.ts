@@ -49,8 +49,9 @@ export class ConfigEditor extends WebView {
         super(vscode.l10n.t("Config Editor"), "config-editor", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
             retainContext: true,
-            viewColumn: vscode.ViewColumn.Active,
+            viewColumn: vscode.ViewColumn.One,
         });
+        this.panel.reveal(vscode.ViewColumn.One, false);
         this.panel.onDidDispose(() => {});
     }
 
@@ -318,7 +319,9 @@ export class ConfigEditor extends WebView {
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
         const allProfiles = profInfo.getAllProfiles();
         const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc.includes(path.normalize(configPath)));
-        if (!profile) return;
+        if (!profile) {
+            return;
+        }
         const mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
         return mergedArgs.knownArgs;
     }
@@ -343,13 +346,15 @@ export class ConfigEditor extends WebView {
 
         const allProfiles = profInfo.getAllProfiles();
         const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc.includes(path.normalize(configPath)));
-        if (!profile) return;
+        if (!profile) {
+            return;
+        }
 
         const mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
         return mergedArgs.knownArgs;
     }
 
-    private async simulateDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string, teamConfig: any): Promise<void> {
+    private simulateDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string, teamConfig: any): void {
         if (activeLayer !== teamConfig.api.layers.get().path) {
             const findProfile = teamConfig.layers.find((prof: any) => prof.path === activeLayer);
             teamConfig.api.layers.activate(findProfile.user, findProfile.global);
@@ -364,7 +369,7 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    private async simulateProfileChanges(changes: ChangeEntry[], deletions: ChangeEntry[], configPath: string, teamConfig: any): Promise<void> {
+    private simulateProfileChanges(changes: ChangeEntry[], deletions: ChangeEntry[], configPath: string, teamConfig: any): void {
         for (const item of changes) {
             const keyParts = item.key.split(".");
             if (keyParts[keyParts.length - 2] === "secure") {
