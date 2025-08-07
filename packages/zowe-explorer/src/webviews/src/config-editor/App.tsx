@@ -90,6 +90,7 @@ export function App() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [schemaValidations, setSchemaValidations] = useState<{ [configPath: string]: schemaValidation | undefined }>({});
   const [selectedProfileKey, setSelectedProfileKey] = useState<string | null>(null);
+  const [selectedProfilesByConfig, setSelectedProfilesByConfig] = useState<{ [configPath: string]: string | null }>({});
   // Profile Wizard state
   const [wizardModalOpen, setWizardModalOpen] = useState(false);
   const [wizardRootProfile, setWizardRootProfile] = useState("root");
@@ -108,6 +109,7 @@ export function App() {
   // Merged Properties state
   const [mergedProperties, setMergedProperties] = useState<any>(null);
   const [showMergedProperties, setShowMergedProperties] = useState<boolean>(true);
+
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [pendingSaveSelection, setPendingSaveSelection] = useState<{ tab: number | null; profile: string | null } | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -146,6 +148,16 @@ export function App() {
           });
         }
 
+        // Initialize selected profiles for each configuration if not already set
+        contents.forEach((config: any) => {
+          if (!selectedProfilesByConfig[config.configPath]) {
+            setSelectedProfilesByConfig((prev) => ({
+              ...prev,
+              [config.configPath]: null,
+            }));
+          }
+        });
+
         if (contents.length > 0) {
           const indexToUse = (prev: number | null) => (prev !== null && prev < contents.length ? prev : 0);
           const config = contents[indexToUse(selectedTab ?? 0)].properties;
@@ -168,6 +180,7 @@ export function App() {
                 value: item.argValue,
                 jsonLoc: item.argLoc?.jsonLoc,
                 osLoc: item.argLoc?.osLoc,
+                secure: item.secure,
               };
             }
           });
@@ -190,7 +203,7 @@ export function App() {
       // Clear merged properties when tab changes (but not when saving or navigating)
       if (!isSaving && !isNavigating) {
         setMergedProperties(null);
-        setSelectedProfileKey(null);
+        // Don't clear selectedProfileKey here - let handleTabChange handle it
       }
     }
   }, [selectedTab, configurations, isSaving]);
@@ -202,11 +215,12 @@ export function App() {
       if (configPath) {
         // Use a timeout to debounce rapid changes and prevent race conditions
         const timeoutId = setTimeout(() => {
+          const changes = formatPendingChanges();
           vscodeApi.postMessage({
             command: "GET_MERGED_PROPERTIES",
             profilePath: selectedProfileKey,
             configPath: configPath,
-            changes: formatPendingChanges(),
+            changes: changes,
           });
         }, 100); // 100ms debounce
 
@@ -238,15 +252,13 @@ export function App() {
     };
   }, [profileMenuOpen]);
 
-  // Debug useEffect to track selectedProfileKey changes
-  useEffect(() => {
-    console.log(`selectedProfileKey changed to: ${selectedProfileKey}`);
-  }, [selectedProfileKey]);
-
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
     const path = flattenedConfig[key]?.path ?? key.split(".");
     const profileKey = extractProfileKeyFromPath(path);
+
+    // Check if this is a secure property
+    const isSecureProperty = key.includes("secure.") || key.split(".").includes("secure");
 
     // When a user changes a property, it should become a local property (not merged)
     // This ensures that overwritten merged properties become editable
@@ -254,7 +266,7 @@ export function App() {
       ...prev,
       [configPath]: {
         ...prev[configPath],
-        [key]: { value, path, profile: profileKey },
+        [key]: { value, path, profile: profileKey, secure: isSecureProperty },
       },
     }));
 
@@ -382,10 +394,12 @@ export function App() {
       return newPendingChanges;
     });
     setDeletions((prev) => {
-      return {
+      const newDeletions = {
         ...prev,
         [configPath]: [...(prev[configPath] ?? []), fullKey],
       };
+
+      return newDeletions;
     });
   };
 
@@ -399,9 +413,6 @@ export function App() {
   };
 
   const handleNavigateToSource = (jsonLoc: string, osLoc?: string[]) => {
-    console.log(`handleNavigateToSource called with jsonLoc: ${jsonLoc}, osLoc: ${osLoc}`);
-    console.log(`Current selectedProfileKey before navigation: ${selectedProfileKey}`);
-
     // Parse the jsonLoc to extract the source configuration and profile
     // jsonLoc format: "profiles.ssh.port" or "profiles.ssh.profiles.parent.port"
     const parts = jsonLoc.split(".");
@@ -444,9 +455,6 @@ export function App() {
       }
 
       if (sourceProfile) {
-        console.log(`Extracted sourceProfile: ${sourceProfile}`);
-        console.log(`Extracted sourceProfilePath: ${sourceProfilePath}`);
-
         // Find the configuration that contains this profile
         let sourceConfigIndex = -1;
 
@@ -456,7 +464,6 @@ export function App() {
           sourceConfigIndex = configurations.findIndex((config) => {
             return config.configPath === osLocString;
           });
-          console.log(`Using osLoc to find config: ${osLocString}, found index: ${sourceConfigIndex}`);
         }
 
         // If we couldn't find the config using osLoc, or if osLoc wasn't provided,
@@ -499,10 +506,7 @@ export function App() {
           }
         }
 
-        console.log(`Found sourceConfigIndex: ${sourceConfigIndex}`);
         if (sourceConfigIndex !== -1) {
-          console.log(`Navigating to config index: ${sourceConfigIndex}, profile: ${sourceProfile}`);
-
           // Set navigation flag to prevent useEffect from clearing selectedProfileKey
           setIsNavigating(true);
 
@@ -519,24 +523,7 @@ export function App() {
               setIsNavigating(false);
             }, 100);
           }, 0);
-
-          console.log(`SelectedProfileKey after navigation: ${sourceProfile}`);
-
-          // List all profiles in the selected configuration
-          const selectedConfig = configurations[sourceConfigIndex];
-          if (selectedConfig && selectedConfig.properties && selectedConfig.properties.profiles) {
-            const flatProfiles = flattenProfiles(selectedConfig.properties.profiles);
-            const profileNames = Object.keys(flatProfiles);
-            console.log(`Available profiles in selected config (${selectedConfig.configPath}):`, profileNames);
-            console.log(`Target profile '${sourceProfile}' exists in list:`, profileNames.includes(sourceProfile));
-          } else {
-            console.log(`No profiles found in selected config at index ${sourceConfigIndex}`);
-          }
-        } else {
-          console.log(`No matching configuration found for profile: ${sourceProfile}`);
         }
-      } else {
-        console.log(`No sourceProfile extracted from jsonLoc: ${jsonLoc}`);
       }
     }
   };
@@ -587,6 +574,13 @@ export function App() {
     }
 
     return null;
+  };
+
+  // Helper function to check if current profile is untyped
+  const isCurrentProfileUntyped = (): boolean => {
+    if (!selectedProfileKey) return false;
+    const profileType = getProfileType(selectedProfileKey);
+    return !profileType || profileType.trim() === "";
   };
 
   // Helper function to check if a profile is set as default
@@ -688,6 +682,14 @@ export function App() {
     // If this profile is currently selected, or if the selected profile is a child of this profile, clear the selection
     if (selectedProfileKey === profileKey || (selectedProfileKey && selectedProfileKey.startsWith(profileKey + "."))) {
       setSelectedProfileKey(null);
+      // Also clear it from the stored profiles for this config
+      const configPath = configurations[selectedTab!]?.configPath;
+      if (configPath) {
+        setSelectedProfilesByConfig((prev) => ({
+          ...prev,
+          [configPath]: null,
+        }));
+      }
     }
   };
 
@@ -749,9 +751,14 @@ export function App() {
 
     setSelectedProfileKey(profileKey);
 
-    // Get merged properties for the selected profile
+    // Store the selected profile for this configuration
     const configPath = configurations[selectedTab!]?.configPath;
     if (configPath) {
+      setSelectedProfilesByConfig((prev) => ({
+        ...prev,
+        [configPath]: profileKey,
+      }));
+
       vscodeApi.postMessage({
         command: "GET_MERGED_PROPERTIES",
         profilePath: profileKey,
@@ -782,12 +789,14 @@ export function App() {
       keys.map((key) => ({ key, configPath, secure: false }))
     );
 
-    return {
+    const result = {
       changes,
       deletions: deleteKeys,
       defaultsChanges,
       defaultsDeleteKeys: defaultsDeleteKeys,
     };
+
+    return result;
   };
 
   // Helper function to check if a property is in pending changes for a specific profile
@@ -803,6 +812,27 @@ export function App() {
 
   const handleTabChange = (index: number) => {
     setSelectedTab(index);
+
+    // Restore the previously selected profile for this configuration
+    const configPath = configurations[index]?.configPath;
+    if (configPath) {
+      const previouslySelectedProfile = selectedProfilesByConfig[configPath];
+      if (previouslySelectedProfile) {
+        setSelectedProfileKey(previouslySelectedProfile);
+
+        // Get merged properties for the restored profile
+        vscodeApi.postMessage({
+          command: "GET_MERGED_PROPERTIES",
+          profilePath: previouslySelectedProfile,
+          configPath: configPath,
+          changes: formatPendingChanges(),
+        });
+      } else {
+        // No previously selected profile for this config, clear selection
+        setSelectedProfileKey(null);
+        setMergedProperties(null);
+      }
+    }
   };
 
   // Helper function to merge pending changes for a specific profile and path
@@ -827,6 +857,23 @@ export function App() {
             current = current[relativePath[i]];
           }
           current[relativePath[relativePath.length - 1]] = entry.value;
+        } else if (entry.secure && path[path.length - 1] !== "properties") {
+          // Handle secure properties - they should be added to the secure array
+          // Only add to parent profile's secure array, not properties object's secure array
+          // Ensure secure array exists
+          if (!baseObj.secure) {
+            baseObj.secure = [];
+          }
+
+          // For secure properties, the key format is typically "profiles.profileName.secure.propertyName"
+          // We need to extract the property name from the key
+          const keyParts = key.split(".");
+          const propertyName = keyParts[keyParts.length - 1];
+
+          // Add the secure property name to the secure array if not already present
+          if (!baseObj.secure.includes(propertyName)) {
+            baseObj.secure.push(propertyName);
+          }
         }
       }
     });
@@ -836,16 +883,16 @@ export function App() {
 
   // Helper function to merge merged properties into the configuration
   const mergeMergedProperties = (combinedConfig: any, path: string[], mergedProps: any, configPath: string): any => {
-    if (
-      !mergedProps ||
-      path.length === 0 ||
-      path[path.length - 1] === "type" ||
-      path[path.length - 1] === "properties" ||
-      path[path.length - 1] === "secure"
-    ) {
+    if (!mergedProps || path.length === 0 || path[path.length - 1] === "type" || path[path.length - 1] === "secure") {
       return combinedConfig;
     }
 
+    // Only process at profile level, not properties level
+    if (path[path.length - 1] === "properties") {
+      return combinedConfig;
+    }
+
+    // Ensure properties object exists
     if (!combinedConfig.hasOwnProperty("properties")) {
       combinedConfig.properties = {};
     }
@@ -859,9 +906,15 @@ export function App() {
     Object.entries(mergedProps).forEach(([key, propData]: [string, any]) => {
       const pendingKey = `${fullPath}.properties.${key}`;
       const isInPendingChanges = pendingChanges[configPath]?.[pendingKey] !== undefined;
+      const isInDeletions = (deletions[configPath] ?? []).includes(pendingKey);
 
-      if (!combinedConfig.properties.hasOwnProperty(key) && allowedProperties.includes(key) && !isInPendingChanges) {
-        combinedConfig.properties[key] = propData.value;
+      // If the property is in deletions, we should add the merged property to replace it
+      // For secure properties that were deleted, we still want to show the merged property in properties
+      if (allowedProperties.includes(key) && !isInPendingChanges && (isInDeletions || !combinedConfig.properties.hasOwnProperty(key))) {
+        // Only add primitive values to avoid recursion
+        if (typeof propData.value !== "object" || propData.value === null) {
+          combinedConfig.properties[key] = propData.value;
+        }
       }
     });
 
@@ -885,14 +938,18 @@ export function App() {
   };
 
   // Helper function to filter secure properties from the properties object
-  const filterSecureProperties = (value: any, combinedConfig: any): any => {
+  const filterSecureProperties = (value: any, combinedConfig: any, configPath?: string): any => {
     if (combinedConfig.secure && Array.isArray(combinedConfig.secure)) {
       const secureProperties = combinedConfig.secure;
       const filteredProperties = { ...value };
 
       Object.keys(filteredProperties).forEach((propKey) => {
         if (secureProperties.includes(propKey)) {
-          delete filteredProperties[propKey];
+          // Don't filter out properties that are in the deletions list (they should be shown as merged properties)
+          const isInDeletions = configPath && (deletions[configPath] ?? []).some((deletion) => deletion.includes(`properties.${propKey}`));
+          if (!isInDeletions) {
+            delete filteredProperties[propKey];
+          }
         }
       });
 
@@ -931,7 +988,11 @@ export function App() {
       .map(([, entry]) => String(entry.path[entry.path.length - 1]));
 
     const baseArray: any[] = Array.isArray(value) ? value : [];
-    return pendingSecureProps.length > 0 ? Array.from(new Set([...baseArray, ...pendingSecureProps])) : baseArray;
+    // Only add pending secure props that aren't already in the base array
+    const newSecureProps = pendingSecureProps.filter((prop) => !baseArray.includes(prop));
+    const result = newSecureProps.length > 0 ? [...baseArray, ...newSecureProps] : baseArray;
+    // Sort alphabetically
+    return result.sort();
   };
 
   // Helper function to determine if a property is from merged properties
@@ -942,7 +1003,14 @@ export function App() {
     originalProperties: any,
     configPath: string
   ): boolean => {
-    if (!displayKey) return false;
+    // Only consider properties as merged if showMergedProperties is true and profile is not untyped
+    if (!showMergedProperties || isCurrentProfileUntyped()) {
+      return false;
+    }
+
+    if (!displayKey) {
+      return false;
+    }
 
     const currentProfileKey = extractProfileKeyFromPath(path);
     const propertyExistsInPendingChanges = displayKey ? isPropertyInPendingChanges(displayKey, currentProfileKey, configPath) : false;
@@ -974,8 +1042,13 @@ export function App() {
   };
 
   // Helper function to check if a merged property is secure
-  const isMergedPropertySecure = (displayKey: string, jsonLoc: string): boolean => {
+  const isMergedPropertySecure = (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean): boolean => {
     if (!jsonLoc) return false;
+
+    // If we have the secure status from the merged properties data, use it
+    if (secure !== undefined) {
+      return secure;
+    }
 
     const jsonLocParts = jsonLoc.split(".");
     if (jsonLocParts.length < 4 || jsonLocParts[0] !== "profiles") {
@@ -1271,8 +1344,10 @@ export function App() {
     // Track original properties for merged property detection
     const originalProperties = baseObj.properties || {};
 
-    // Merge merged properties
-    combinedConfig = mergeMergedProperties(combinedConfig, path, mergedProps, configPath);
+    // Only merge merged properties if showMergedProperties is true and profile is not untyped
+    if (showMergedProperties && mergedProps && !isCurrentProfileUntyped()) {
+      combinedConfig = mergeMergedProperties(combinedConfig, path, mergedProps, configPath);
+    }
 
     // Ensure required profile properties exist
     combinedConfig = ensureProfileProperties(combinedConfig, path);
@@ -1285,11 +1360,17 @@ export function App() {
       const fullKey = currentPath.join(".");
       const displayKey = key.split(".").pop();
 
-      if ((deletions[configPath] ?? []).includes(fullKey)) return null;
+      // Check if this is a merged property that should be shown even if the original was deleted
+      const isMergedProperty = showMergedProperties && mergedProps && displayKey && mergedProps[displayKey];
+      const isInDeletions = (deletions[configPath] ?? []).includes(fullKey);
+
+      if (isInDeletions && !isMergedProperty) {
+        return null;
+      }
 
       // Filter secure properties from properties object
       if (key === "properties") {
-        const filteredValue = filterSecureProperties(value, combinedConfig);
+        const filteredValue = filterSecureProperties(value, combinedConfig, configPath);
         if (filteredValue === null) return null;
         value = filteredValue;
       }
@@ -1423,7 +1504,8 @@ export function App() {
         const mergedPropData = displayKey ? mergedProps?.[displayKey] : undefined;
         const jsonLoc = mergedPropData?.jsonLoc;
         const osLoc = mergedPropData?.osLoc;
-        const isSecureProperty = isFromMergedProps && jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc) : false;
+        const secure = mergedPropData?.secure;
+        const isSecureProperty = isFromMergedProps && jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure) : false;
 
         const readOnlyContainer = (
           <div className="config-item-container" style={displayKey === "type" ? { gap: "0px" } : {}}>
@@ -1441,26 +1523,31 @@ export function App() {
               {displayKey}
             </span>
             {displayKey === "type" ? (
-              <select
-                className="config-input"
-                value={String(pendingValue)}
-                onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
-                style={{
-                  width: "100%",
-                  height: "28px",
-                  fontSize: "0.9em",
-                  padding: "2px",
-                  marginBottom: "0",
-                  textTransform: "lowercase",
-                }}
-              >
-                <option value="">{l10n.t("Select a type")}</option>
-                {getWizardTypeOptions().map((type) => (
-                  <option key={type} value={type}>
-                    {type.toLowerCase()}
-                  </option>
-                ))}
-              </select>
+              <div style={{ position: "relative", width: "100%" }}>
+                <select
+                  className="config-input"
+                  value={String(pendingValue)}
+                  onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
+                  style={{
+                    width: "100%",
+                    height: "28px",
+                    fontSize: "0.9em",
+                    padding: "2px",
+                    marginBottom: "0",
+                    textTransform: "lowercase",
+                    border: showMergedProperties && isCurrentProfileUntyped() ? "2px solid var(--vscode-warningForeground)" : "none",
+                    outline: showMergedProperties && isCurrentProfileUntyped() ? "2px solid var(--vscode-warningForeground)" : "none",
+                    boxShadow: showMergedProperties && isCurrentProfileUntyped() ? "0 0 0 2px var(--vscode-warningForeground)" : "none",
+                  }}
+                >
+                  <option value="">{l10n.t("Select a type")}</option>
+                  {getWizardTypeOptions().map((type) => (
+                    <option key={type} value={type}>
+                      {type.toLowerCase()}
+                    </option>
+                  ))}
+                </select>
+              </div>
             ) : typeof pendingValue === "string" || typeof pendingValue === "boolean" || typeof pendingValue === "number" ? (
               <input
                 className="config-input"
@@ -1540,97 +1627,101 @@ export function App() {
     return (
       <div>
         {/* Render defaults */}
-        {Object.entries(combinedDefaults).map(([key, value]) => {
-          const currentPath = [key];
-          const fullKey = currentPath.join(".");
-          if (defaultsDeletions[configurations[selectedTab!]!.configPath]?.includes(fullKey)) return null;
-          const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
-          const isArray = Array.isArray(value);
-          const pendingValue = (pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})[fullKey]?.value ?? value;
+        {Object.entries(combinedDefaults)
+          .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+          .map(([key, value]) => {
+            const currentPath = [key];
+            const fullKey = currentPath.join(".");
+            if (defaultsDeletions[configurations[selectedTab!]!.configPath]?.includes(fullKey)) return null;
+            const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
+            const isArray = Array.isArray(value);
+            const pendingValue = (pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})[fullKey]?.value ?? value;
 
-          if (isParent) {
-            return (
-              <div key={fullKey} className="config-item parent">
-                <h3 className={`header-level-${currentPath.length}`}>
-                  {key}
-                  <button
-                    className="add-default-button"
-                    title={`Add key inside "${fullKey}"`}
-                    onClick={() => {
-                      setNewKeyModalOpen(true);
-                      setNewKey(key + ".");
-                    }}
-                    style={{ marginLeft: 8 }}
-                  >
-                    <span className="codicon codicon-add"></span>
-                  </button>
-                </h3>
-                {renderDefaults(value)}
-              </div>
-            );
-          } else if (isArray) {
-            return (
-              <div key={fullKey} className="config-item">
-                <h3 className={`header-level-${currentPath.length}`}>
-                  <span className="config-label" style={{ fontWeight: "bold" }}>
+            if (isParent) {
+              return (
+                <div key={fullKey} className="config-item parent">
+                  <h3 className={`header-level-${currentPath.length}`}>
                     {key}
-                  </span>
-                  <button
-                    className="add-default-button"
-                    title={`Add item to "${fullKey}"`}
-                    onClick={() => {
-                      setNewKeyModalOpen(true);
-                      setNewKey(key);
-                    }}
-                    style={{ marginLeft: 8 }}
-                  >
-                    <span className="codicon codicon-add"></span>
-                  </button>
-                </h3>
-                <div>
-                  {value.map((item: any, index: number) => (
-                    <div className="list-item" key={index}>
-                      {item}
-                      <button className="action-button" style={{ marginLeft: "8px" }} onClick={() => handleDeleteDefaultsProperty(fullKey)}>
-                        <span className="codicon codicon-trash"></span>
-                      </button>
-                    </div>
-                  ))}
+                    <button
+                      className="add-default-button"
+                      title={`Add key inside "${fullKey}"`}
+                      onClick={() => {
+                        setNewKeyModalOpen(true);
+                        setNewKey(key + ".");
+                      }}
+                      style={{ marginLeft: 8 }}
+                    >
+                      <span className="codicon codicon-add"></span>
+                    </button>
+                  </h3>
+                  {renderDefaults(value)}
                 </div>
-              </div>
-            );
-          } else {
-            return (
-              <div key={fullKey} className="config-item">
-                <div className="config-item-container">
-                  <span className="config-label">{key}</span>
-                  <select
-                    className="config-input"
-                    value={String(pendingValue)}
-                    onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLSelectElement).value)}
-                    style={{
-                      width: "100%",
-                      height: "28px",
-                      fontSize: "0.9em",
-                      padding: "2px 6px",
-                      marginBottom: "0",
-                    }}
-                  >
-                    <option value="">{l10n.t("Select a profile")}</option>
-                    {getAvailableProfilesByType(key).map((profile) => (
-                      <option key={profile} value={profile}>
-                        {profile === "root" ? "/" : profile}
-                      </option>
-                    ))}
-                  </select>
-                  <button className="action-button" onClick={() => handleDeleteDefaultsProperty(fullKey)}>
-                    <span className="codicon codicon-trash"></span>
-                  </button>
+              );
+            } else if (isArray) {
+              return (
+                <div key={fullKey} className="config-item">
+                  <h3 className={`header-level-${currentPath.length}`}>
+                    <span className="config-label" style={{ fontWeight: "bold" }}>
+                      {key}
+                    </span>
+                    <button
+                      className="add-default-button"
+                      title={`Add item to "${fullKey}"`}
+                      onClick={() => {
+                        setNewKeyModalOpen(true);
+                        setNewKey(key);
+                      }}
+                      style={{ marginLeft: 8 }}
+                    >
+                      <span className="codicon codicon-add"></span>
+                    </button>
+                  </h3>
+                  <div>
+                    {value
+                      .sort((a: any, b: any) => String(a).localeCompare(String(b)))
+                      .map((item: any, index: number) => (
+                        <div className="list-item" key={index}>
+                          {item}
+                          <button className="action-button" style={{ marginLeft: "8px" }} onClick={() => handleDeleteDefaultsProperty(fullKey)}>
+                            <span className="codicon codicon-trash"></span>
+                          </button>
+                        </div>
+                      ))}
+                  </div>
                 </div>
-              </div>
-            );
-          }
-        })}
+              );
+            } else {
+              return (
+                <div key={fullKey} className="config-item">
+                  <div className="config-item-container">
+                    <span className="config-label">{key}</span>
+                    <select
+                      className="config-input"
+                      value={String(pendingValue)}
+                      onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLSelectElement).value)}
+                      style={{
+                        width: "100%",
+                        height: "28px",
+                        fontSize: "0.9em",
+                        padding: "2px 6px",
+                        marginBottom: "0",
+                      }}
+                    >
+                      <option value="">{l10n.t("Select a profile")}</option>
+                      {getAvailableProfilesByType(key).map((profile) => (
+                        <option key={profile} value={profile}>
+                          {profile === "root" ? "/" : profile}
+                        </option>
+                      ))}
+                    </select>
+                    <button className="action-button" onClick={() => handleDeleteDefaultsProperty(fullKey)}>
+                      <span className="codicon codicon-trash"></span>
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+          })}
       </div>
     );
   };
@@ -1787,7 +1878,7 @@ export function App() {
       }
     });
 
-    return [...profilesOfType, ...Array.from(pendingProfiles)];
+    return [...profilesOfType, ...Array.from(pendingProfiles)].sort((a, b) => a.localeCompare(b));
   };
 
   const getWizardTypeOptions = () => {
@@ -1801,7 +1892,9 @@ export function App() {
     const allOptions = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || {};
     // Filter out properties that are already added
     const usedKeys = new Set(wizardProperties.map((prop) => prop.key));
-    return Object.keys(allOptions).filter((option) => !usedKeys.has(option));
+    return Object.keys(allOptions)
+      .filter((option) => !usedKeys.has(option))
+      .sort((a, b) => a.localeCompare(b));
   };
 
   const getPropertyType = (propertyKey: string): string | undefined => {

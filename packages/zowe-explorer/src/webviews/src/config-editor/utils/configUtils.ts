@@ -1,5 +1,3 @@
-import { cloneDeep } from "es-toolkit";
-
 export interface FlattenedConfig {
     [key: string]: { value: string; path: string[] };
 }
@@ -112,7 +110,15 @@ export function sortConfigEntries(entries: [string, any][]): [string, any][] {
             return 1; // All others
         };
 
-        return getOrder(keyA) - getOrder(keyB);
+        const orderA = getOrder(keyA);
+        const orderB = getOrder(keyB);
+
+        // If they're in the same section, sort alphabetically
+        if (orderA === orderB) {
+            return keyA.localeCompare(keyB);
+        }
+
+        return orderA - orderB;
     });
 }
 
