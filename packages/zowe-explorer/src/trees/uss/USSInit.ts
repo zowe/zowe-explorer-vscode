@@ -123,6 +123,11 @@ export class USSInit {
         };
         context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.uploadDialog", uploadDialogHandler(false)));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.uploadDialogBinary", uploadDialogHandler(true)));
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.uss.uploadDialogWithEncoding", async (node: IZoweUSSTreeNode): Promise<void> => {
+                await USSActions.uploadDialogWithEncoding(node, ussFileProvider);
+            })
+        );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.copyPath", (node: IZoweUSSTreeNode): void => USSActions.copyPath(node)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.editFile", async (node: IZoweUSSTreeNode): Promise<void> => {

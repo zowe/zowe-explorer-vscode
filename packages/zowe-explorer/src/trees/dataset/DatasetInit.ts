@@ -96,6 +96,11 @@ export class DatasetInit {
             vscode.commands.registerCommand("zowe.ds.uploadDialog", async (node) => DatasetActions.uploadDialog(node, datasetProvider))
         );
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.uploadDialogWithEncoding", async (node) =>
+                DatasetActions.uploadDialogWithEncoding(node, datasetProvider)
+            )
+        );
+        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.deleteMember", async (node?) => DatasetActions.deleteDatasetPrompt(datasetProvider, node))
         );
         context.subscriptions.push(

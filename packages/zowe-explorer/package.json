@@ -352,6 +352,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.uploadDialogWithEncoding",
+        "title": "%uploadDialogWithEncoding%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.editDataSet",
         "title": "%editDataSet%",
         "category": "Zowe Explorer",
@@ -517,6 +522,11 @@
       {
         "command": "zowe.uss.uploadDialogBinary",
         "title": "%uss.uploadDialogBinary%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.uploadDialogWithEncoding",
+        "title": "%uss.uploadDialogWithEncoding%",
         "category": "Zowe Explorer"
       },
       {
@@ -900,14 +910,19 @@
           "group": "001_zowe_ussCreate@4"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "command": "zowe.uss.uploadDialogWithEncoding",
+          "group": "001_zowe_ussCreate@5"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
           "command": "zowe.uss.copyUssFile",
-          "group": "001_zowe_ussCreate@5"
+          "group": "001_zowe_ussCreate@6"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*|ussSession.*_isFilterSearch)/",
           "command": "zowe.uss.pasteUssFile",
-          "group": "001_zowe_ussCreate@6"
+          "group": "001_zowe_ussCreate@7"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
@@ -1091,18 +1106,23 @@
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
-          "command": "zowe.ds.pdsSearchFor",
+          "command": "zowe.ds.uploadDialogWithEncoding",
           "group": "001_zowe_dsCreate@6"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
+          "command": "zowe.ds.pdsSearchFor",
+          "group": "001_zowe_dsCreate@7"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(ds|member|pds).*/",
           "command": "zowe.ds.copyDataSets",
-          "group": "001_zowe_dsCreate@7"
+          "group": "001_zowe_dsCreate@8"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)(session|pds).*/ && !listMultiSelection",
           "command": "zowe.ds.pasteDataSets",
-          "group": "001_zowe_dsCreate@8"
+          "group": "001_zowe_dsCreate@9"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
@@ -1451,6 +1471,10 @@
         },
         {
           "command": "zowe.ds.uploadDialog",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.uploadDialogWithEncoding",
           "when": "never"
         },
         {
