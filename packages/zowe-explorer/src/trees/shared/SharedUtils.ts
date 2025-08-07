@@ -202,12 +202,13 @@ export class SharedUtils {
     }
 
     /**
-     * Helper function to create encoding selection items for the prompt
+     * Builds the options for an encoding selection prompt.
+     *
+     * @param {imperative.IProfileLoaded} profile - The profile loaded
+     * @param {string} taggedEncoding - The tagged encoding
+     * @returns {vscode.QuickPickItem[]} The encoding options for the prompt
      */
-    private static createEncodingSelectionItems(
-        profile: imperative.IProfileLoaded,
-        taggedEncoding?: string
-    ): { items: vscode.QuickPickItem[]; ebcdicItem: vscode.QuickPickItem; binaryItem: vscode.QuickPickItem; otherItem: vscode.QuickPickItem } {
+    private static buildEncodingOptions(profile: imperative.IProfileLoaded, taggedEncoding?: string): vscode.QuickPickItem[] {
         const ebcdicItem: vscode.QuickPickItem = {
             label: vscode.l10n.t("EBCDIC"),
             description: vscode.l10n.t("z/OS default codepage"),
@@ -249,11 +250,15 @@ export class SharedUtils {
             items.push({ label: "IBM-1047" }, { label: "ISO8859-1" });
         }
 
-        return { items, ebcdicItem, binaryItem, otherItem };
+        return items;
     }
 
     /**
-     * Helper function to process encoding selection response
+     * Processes the encoding selection response and returns the appropriate `ZosEncoding` object.
+     *
+     * @param {string} response - The response from the user
+     * @param {string} contextLabel - The context label of the node
+     * @returns {Promise<ZosEncoding | undefined>} The {@link ZosEncoding} object or `undefined` if the user dismisses the prompt
      */
     private static async processEncodingResponse(response: string | undefined, contextLabel: string): Promise<ZosEncoding | undefined> {
         if (!response) {
@@ -313,14 +318,19 @@ export class SharedUtils {
     }
 
     /**
-     * Prompts user for encoding selection for uploads
+     * Prompts user for encoding selection for upload operations.
+     *
+     * @param {imperative.IProfileLoaded} profile - The profile loaded
+     * @param {string} contextLabel - The context label of the node (e.g. USS directory path, PDS name)
+     * @param {string} taggedEncoding - The tagged encoding (optional), specifically used for USS files
+     * @returns {Promise<ZosEncoding | undefined>} The {@link ZosEncoding} object or `undefined` if the user dismisses the prompt
      */
     public static async promptForUploadEncoding(
         profile: imperative.IProfileLoaded,
         contextLabel: string,
         taggedEncoding?: string
     ): Promise<ZosEncoding | undefined> {
-        const { items } = SharedUtils.createEncodingSelectionItems(profile, taggedEncoding);
+        const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding);
 
         // For uploads, default to profile encoding or EBCDIC
         const defaultEncoding = profile.profile?.encoding ?? vscode.l10n.t("EBCDIC");
@@ -347,7 +357,7 @@ export class SharedUtils {
         taggedEncoding?: string
     ): Promise<ZosEncoding | undefined> {
         const profile = node.getProfile();
-        const { items } = SharedUtils.createEncodingSelectionItems(profile, taggedEncoding);
+        const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding);
 
         let zosEncoding = await node.getEncoding();
         if (zosEncoding === undefined && SharedUtils.isZoweUSSTreeNode(node)) {
