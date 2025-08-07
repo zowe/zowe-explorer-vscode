@@ -278,13 +278,6 @@ export class ZowePersistentFilters {
         this.updateSearchedKeywordHistory();
     }
 
-    public removeSortSetting(node: IZoweDatasetTreeNode): void {
-        ZoweLogger.trace("PersistentFilters.removeSortSettings called.");
-        const name = `${node.getProfileName()}-${node.label as string}`;
-        delete this.mSortSettings[name];
-        this.updateSortSettings();
-    }
-
     /*********************************************************************************************************************************************/
     /* Reset functions, for resetting the persistent array to empty (in the extension and in settings.json)
     /*********************************************************************************************************************************************/
@@ -315,12 +308,6 @@ export class ZowePersistentFilters {
     public resetSearchedKeywordHistory(): void {
         this.mSearchedKeywordHistory = [];
         this.updateSearchedKeywordHistory();
-    }
-
-    public resetSortSettings(): void {
-        ZoweLogger.trace("PersistentFilters.resetSortSettings called.");
-        this.mSortSettings = {};
-        this.updateSortSettings();
     }
 
     /*********************************************************************************************************************************************/
