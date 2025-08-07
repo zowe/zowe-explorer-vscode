@@ -1371,8 +1371,13 @@ export function App() {
       // Filter secure properties from properties object
       if (key === "properties") {
         const filteredValue = filterSecureProperties(value, combinedConfig, configPath);
-        if (filteredValue === null) return null;
-        value = filteredValue;
+        // Always render the properties section, even if empty, so users can add properties
+        if (filteredValue === null) {
+          // Return an empty properties object instead of null so the header still renders
+          value = {};
+        } else {
+          value = filteredValue;
+        }
       }
 
       const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
@@ -2150,7 +2155,42 @@ export function App() {
     const resolvedType = getProfileType(profileKey);
 
     const propertySchema = schemaValidations[configPath]?.propertySchema[resolvedType || ""] || {};
-    return Object.keys(propertySchema);
+    const allPropertyKeys = Object.keys(propertySchema);
+
+    // Get existing properties for this profile (both from current profile and pending changes)
+    const existingProperties = new Set<string>();
+
+    // Get properties from the current profile
+    const config = configurations[selectedTab!].properties;
+    const flatProfiles = flattenProfiles(config.profiles);
+    const currentProfile = flatProfiles[profileKey];
+    if (currentProfile && currentProfile.properties) {
+      Object.keys(currentProfile.properties).forEach((key) => existingProperties.add(key));
+    }
+
+    // Get secure properties from the current profile
+    if (currentProfile && currentProfile.secure && Array.isArray(currentProfile.secure)) {
+      currentProfile.secure.forEach((key: string) => existingProperties.add(key));
+    }
+
+    // Get properties from pending changes for this profile
+    Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
+      if (entry.profile === profileKey) {
+        const keyParts = key.split(".");
+        if (keyParts.includes("properties")) {
+          const propertyName = keyParts[keyParts.length - 1];
+          existingProperties.add(propertyName);
+        }
+        // Also check for secure properties in pending changes
+        if (entry.secure) {
+          const propertyName = keyParts[keyParts.length - 1];
+          existingProperties.add(propertyName);
+        }
+      }
+    });
+
+    // Filter out existing properties from the available options
+    return allPropertyKeys.filter((key) => !existingProperties.has(key));
   };
 
   return (

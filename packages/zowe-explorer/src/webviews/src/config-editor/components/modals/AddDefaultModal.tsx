@@ -104,10 +104,28 @@ export function AddDefaultModal({
           </select>
         </div>
         <div className="modal-actions">
-          <VSCodeButton onClick={onAdd} disabled={!profileType || !newValue}>
+          <VSCodeButton
+            onClick={onCancel}
+            appearance="secondary"
+            style={{
+              padding: "0.25rem 0.75rem",
+              minWidth: "60px",
+              borderRadius: "4px",
+            }}
+          >
+            {l10n.t("Cancel")}
+          </VSCodeButton>
+          <VSCodeButton
+            onClick={onAdd}
+            disabled={!profileType || !newValue}
+            style={{
+              padding: "0.25rem 0.75rem",
+              minWidth: "60px",
+              borderRadius: "4px",
+            }}
+          >
             {l10n.t("Add")}
           </VSCodeButton>
-          <button onClick={onCancel}>{l10n.t("Cancel")}</button>
         </div>
       </div>
     </div>

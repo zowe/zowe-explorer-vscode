@@ -451,6 +451,12 @@ export function ProfileWizardModal({
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
+                          backgroundColor: "var(--vscode-button-secondaryBackground)",
+                          color: "var(--vscode-button-secondaryForeground)",
+                          border: "1px solid var(--vscode-button-border)",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
                         }}
                       >
                         <span className="codicon codicon-trash" style={{ marginTop: "0" }}></span>
