@@ -1825,7 +1825,7 @@ describe("DatasetTableView", () => {
                 const rows: Table.RowData[] = [];
 
                 const result = (datasetTableView as any).canOpenInEditor(rows);
-                expect(result).toBe(true); // every() returns true for empty arrays
+                expect(result).toBe(false); // can't open in editor if no rows
             });
 
             it("should return true for PDS member with undefined dsorg", () => {

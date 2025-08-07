@@ -51,7 +51,7 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
     elems.forEach((elem) => elem.classList.remove("focused-ctx-menu"));
   };
 
-  // Evaluate menu items when context changes
+  // Evaluate menu items when context menu is opened
   useEffect(() => {
     const evaluateMenuItems = async () => {
       if (!open || !gridRefs.current.clickedRow) {
@@ -73,8 +73,10 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
       }
     };
 
-    evaluateMenuItems();
-  }, [open, contextMenu.options, gridRefs.current.clickedRow, gridRefs.current.rowIndex]);
+    if (open) {
+      evaluateMenuItems();
+    }
+  }, [open]);
 
   const cellMenu = useCallback(
     (event: CellContextMenuEvent) => {

@@ -1,7 +1,7 @@
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { Table } from "@zowe/zowe-explorer-api";
 import { useEffect, useState } from "preact/hooks";
-import { evaluateActionState, sendActionCommand, ActionEvaluationContext, getActionTitle } from "./ActionUtils";
+import { ActionEvaluationContext, getItemTitle, evaluateItemState, sendItemCommand } from "./ActionUtils";
 
 export interface ActionButtonProps {
   action: Table.Action;
@@ -26,8 +26,8 @@ export const ActionButton = ({ action, params, keyPrefix }: ActionButtonProps) =
           rowIndex: params.node.rowIndex,
         };
 
-        const { shouldShow, isEnabled } = await evaluateActionState(action, context);
-        const dynamicTitle = await getActionTitle(action, context);
+        const { shouldShow, isEnabled } = await evaluateItemState(action, context);
+        const dynamicTitle = await getItemTitle(action, context);
         setIsVisible(shouldShow);
         setIsEnabled(isEnabled);
         setTitle(dynamicTitle);
@@ -63,7 +63,7 @@ export const ActionButton = ({ action, params, keyPrefix }: ActionButtonProps) =
             : params.data[params.colDef.field],
         };
 
-        sendActionCommand(action, context, additionalData);
+        sendItemCommand(action, context, additionalData);
 
         // For pin/unpin actions, refresh the action states after a short delay
         if (action.command === "pin-selected-rows") {
