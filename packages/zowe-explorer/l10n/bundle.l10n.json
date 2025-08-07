@@ -469,6 +469,37 @@
       "Unique spool name"
     ]
   },
+  "No active jobs found for session: {0}/Session label": {
+    "message": "No active jobs found for session: {0}",
+    "comment": [
+      "Session label"
+    ]
+  },
+  "Polling {0} active jobs may cause performance issues. Do you want to continue?/Number of active jobs": {
+    "message": "Polling {0} active jobs may cause performance issues. Do you want to continue?",
+    "comment": [
+      "Number of active jobs"
+    ]
+  },
+  "Polling {0} active jobs.../Number of active jobs": {
+    "message": "Polling {0} active jobs...",
+    "comment": [
+      "Number of active jobs"
+    ]
+  },
+  "No more active jobs for {0}. Stopping polling./Session label": {
+    "message": "No more active jobs for {0}. Stopping polling.",
+    "comment": [
+      "Session label"
+    ]
+  },
+  "Job completed {0} - Retcode: {1}/Job ID with clickable linkJob status": {
+    "message": "Job completed {0} - Retcode: {1}",
+    "comment": [
+      "Job ID with clickable link",
+      "Job status"
+    ]
+  },
   "Filter: {0}/The new filter": {
     "message": "Filter: {0}",
     "comment": [
