@@ -498,8 +498,19 @@ export class DatasetActions {
         }
     }
 
+    /**
+     * Prompts the user to select an encoding and then the files to upload.
+     *
+     * @param {ZoweDatasetNode} node - The PDS node that serves as the parent
+     * @param {datasetTree} datasetProvider - Data set tree provider instance
+     */
     public static async uploadDialogWithEncoding(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
         ZoweLogger.trace("dataset.actions.uploadDialogWithEncoding called.");
+
+        if (!SharedContext.isPds(node)) {
+            Gui.showMessage(vscode.l10n.t("This action is only supported for PDS members."));
+            return;
+        }
 
         const profile = node.getProfile();
         const encoding = await SharedUtils.promptForUploadEncoding(profile, node.label as string);

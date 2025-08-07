@@ -186,10 +186,20 @@ export class USSActions {
         }
     }
 
+    /**
+     * Prompts the user to select an encoding and then the files to upload.
+     *
+     * @param {ZoweUSSNode} node - The session or directory node that serves as the parent
+     * @param {ussTree} ussFileProvider - USS tree provider instance
+     */
     public static async uploadDialogWithEncoding(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
         ZoweLogger.trace("uss.actions.uploadDialogWithEncoding called.");
 
-        // First, prompt for encoding
+        if (!SharedContext.isUssDirectory(node)) {
+            Gui.showMessage(vscode.l10n.t("This action is only supported for USS directories."));
+            return;
+        }
+
         const profile = node.getProfile();
         const encoding = await SharedUtils.promptForUploadEncoding(profile, node.fullPath);
 
