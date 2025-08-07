@@ -295,10 +295,7 @@ export class USSActions {
             };
 
             // Set encoding based on the user's selection
-            if (encoding.kind === "text") {
-                // Use default EBCDIC
-                options.encoding = undefined;
-            } else if (encoding.kind === "other" && encoding.codepage) {
+            if (encoding.kind === "other" && encoding.codepage) {
                 options.encoding = encoding.codepage;
             }
 
