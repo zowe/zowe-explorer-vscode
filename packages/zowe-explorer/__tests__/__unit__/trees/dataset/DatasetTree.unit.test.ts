@@ -4870,3 +4870,77 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         draggedNodeMock[Symbol.dispose]();
     });
 });
+
+describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
+    let testTree: DatasetTree;
+    let mockTreeView: any;
+    let mockSessionNode: any;
+    let mockFavNode: any;
+    let sessProfile: any;
+
+    beforeEach(() => {
+        testTree = new DatasetTree();
+        mockTreeView = { reveal: jest.fn().mockResolvedValue(undefined) };
+        jest.spyOn(testTree, "getTreeView").mockReturnValue(mockTreeView);
+
+        mockSessionNode = {
+            label: "SESSION1",
+            getChildren: jest.fn(),
+            children: [],
+        };
+        mockFavNode = {
+            label: "FAV1",
+            children: [],
+        };
+        sessProfile = { name: "SESSION1" };
+        testTree.mSessionNodes = [mockSessionNode];
+        testTree.mFavorites = [mockFavNode];
+    });
+
+    it("returns true and reveals node if dataset is found in session nodes", async () => {
+        const dsNode = { label: "MY.DATA.SET" };
+        mockSessionNode.getChildren.mockResolvedValue([dsNode]);
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(result).toBe(true);
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(dsNode, { select: true, focus: true, expand: true });
+    });
+
+    it("returns true and reveals node if dataset is found in favorites", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        const favChild = { label: "MY.DATA.SET" };
+        mockFavNode.children = [favChild];
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(result).toBe(true);
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(mockFavNode, { expand: true });
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(favChild, { select: true, focus: true, expand: true });
+    });
+
+    it("sets filter and reveals node if dataset is not found in session or favorites", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        mockFavNode.children = [];
+        mockSessionNode.children = [{ label: "MY.DATA.SET" }];
+        jest.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(testTree.filterTreeByPattern).toHaveBeenCalledWith(mockSessionNode, sessProfile, "MY.DATA.SET");
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(mockSessionNode.children[0], { select: true, focus: true, expand: true });
+        expect(result).toBe(true);
+    });
+
+    it("returns false if dataset is not found anywhere", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        mockFavNode.children = [];
+        mockSessionNode.children = [];
+        jest.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
+        const result = await testTree.focusOnDsInTree("NOT.FOUND", sessProfile);
+        expect(result).toBe(false);
+    });
+
+    it("returns false if filterTreeByPattern throws", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        mockFavNode.children = [];
+        mockSessionNode.children = [];
+        jest.spyOn(testTree, "filterTreeByPattern").mockRejectedValue(new Error("fail"));
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(result).toBe(false);
+    });
+});

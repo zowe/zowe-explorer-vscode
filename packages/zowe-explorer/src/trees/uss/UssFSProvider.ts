@@ -241,12 +241,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
         if (entry == null && resp?.success) {
             // if entry is null, listFiles did not create a new directory entry - this is a file
-            let parentDir = this._lookupParentDirectory(uri, true);
+            let parentDir = this.lookupParentDirectory(uri, true);
             if (parentDir == null) {
                 const parentPath = path.posix.join(uri.path, "..");
                 const parentUri = uri.with({ path: parentPath, query: "" });
                 await vscode.workspace.fs.createDirectory(parentUri);
-                parentDir = this._lookupParentDirectory(uri, false);
+                parentDir = this.lookupParentDirectory(uri, false);
                 parentDir.metadata = this._getInfoFromUri(parentUri);
             }
             const filename = path.posix.basename(uri.path);
@@ -456,7 +456,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
 
             // check if parent directory exists; if not, do a remote lookup
-            const parent = this._lookupParentDirectory(uri, true);
+            const parent = this.lookupParentDirectory(uri, true);
             if (parent == null) {
                 file = await this.remoteLookupForResource(uri);
             }
@@ -549,7 +549,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         options: { create: boolean; overwrite: boolean; noStatusMsg?: boolean }
     ): Promise<void> {
         const fileName = path.posix.basename(uri.path);
-        const parentDir = this._lookupParentDirectory(uri);
+        const parentDir = this.lookupParentDirectory(uri);
 
         let entry = parentDir.entries.get(fileName);
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
@@ -626,7 +626,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     public makeEmptyFileWithEncoding(uri: vscode.Uri, encoding: ZosEncoding): void {
-        const parentDir = this._lookupParentDirectory(uri);
+        const parentDir = this.lookupParentDirectory(uri);
         const fileName = path.posix.basename(uri.path);
         const entry = new UssFile(fileName);
         entry.encoding = encoding;
@@ -646,16 +646,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * - `overwrite` - Overwrites the file if the new URI already exists
      */
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): Promise<void> {
-        const newUriEntry = this.lookup(newUri, true);
-        if (!options.overwrite && newUriEntry) {
-            throw vscode.FileSystemError.FileExists(
-                `Rename failed: ${path.posix.basename(newUri.path)} already exists in ${path.posix.join(newUriEntry.metadata.path, "..")}`
-            );
-        }
-
         const entry = this.lookup(oldUri, false) as UssDirectory | UssFile;
-        const parentDir = this._lookupParentDirectory(oldUri);
-
+        const parentDir = this.lookupParentDirectory(oldUri);
         const newName = path.posix.basename(newUri.path);
 
         // Build the new path using the previous path and new file/folder name.
@@ -663,9 +655,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+
         await AuthUtils.reauthenticateIfCancelled(profile);
         await AuthHandler.waitForUnlock(entry.metadata.profile);
-
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
         if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
@@ -675,28 +667,45 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         try {
             await ZoweExplorerApiRegister.getUssApi(profile).rename(entry.metadata.path, newPath);
-        } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, profile);
-            this._handleError(err, {
-                additionalContext: vscode.l10n.t({
-                    message: "Failed to rename {0}",
-                    args: [entry.metadata.path],
-                    comment: ["File path"],
-                }),
-                retry: {
-                    fn: this.rename.bind(this),
-                    args: [oldUri, newUri, options],
-                },
-                apiType: ZoweExplorerApiType.Uss,
-                profileType: profile.type,
-                templateArgs: { profileName: profile.name ?? "" },
-            });
-            throw err;
+        } catch (err: any) {
+            if (err instanceof vscode.FileSystemError && err.code === "FileExists") {
+                try {
+                    const fileList = await this.listFiles(profile, newUri, true);
+                    if (!fileList.success) {
+                        Gui.errorMessage(err.message);
+                        return;
+                    }
+                } catch (err) {
+                    if (err.name === "Error" && Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
+                        const parent = this.lookupParentDirectory(newUri);
+                        parent.entries.delete(path.posix.basename(newUri.path));
+                        await ZoweExplorerApiRegister.getUssApi(profile).rename(entry.metadata.path, newPath);
+                    } else {
+                        throw err;
+                    }
+                }
+            } else {
+                await AuthUtils.handleProfileAuthOnError(err, profile);
+                this._handleError(err, {
+                    additionalContext: vscode.l10n.t({
+                        message: "Failed to rename {0}",
+                        args: [entry.metadata.path],
+                        comment: ["File path"],
+                    }),
+                    retry: {
+                        fn: this.rename.bind(this),
+                        args: [oldUri, newUri, options],
+                    },
+                    apiType: ZoweExplorerApiType.Uss,
+                    profileType: profile.type,
+                    templateArgs: { profileName: profile.name ?? "" },
+                });
+                throw err;
+            }
         }
 
         parentDir.entries.delete(entry.name);
         entry.name = newName;
-
         entry.metadata.path = newPath;
         // We have to update the path for all child entries if they exist in the FileSystem
         // This way any further API requests in readFile will use the latest paths on the LPAR
@@ -889,7 +898,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public createDirectory(uri: vscode.Uri): void {
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const basename = path.posix.basename(uri.path);
-        const parent = this._lookupParentDirectory(uri, false);
+        const parent = this.lookupParentDirectory(uri, false);
         if (parent.entries.has(basename)) {
             return;
         }
