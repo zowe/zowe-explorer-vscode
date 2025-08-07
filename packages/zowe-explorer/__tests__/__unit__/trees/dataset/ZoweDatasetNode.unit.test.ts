@@ -50,6 +50,7 @@ import { AuthUtils } from "../../../../src/utils/AuthUtils";
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
 jest.mock("vscode");
+jest.mock("../../../../src/tools/ZoweLocalStorage");
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;

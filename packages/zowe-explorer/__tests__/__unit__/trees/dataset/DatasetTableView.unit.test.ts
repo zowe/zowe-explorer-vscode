@@ -32,6 +32,8 @@ import { ZoweExplorerExtender } from "../../../../src/extending/ZoweExplorerExte
 import * as imperative from "@zowe/imperative";
 import { l10n } from "vscode";
 
+jest.mock("../../../../src/tools/ZoweLocalStorage");
+
 describe("TreeDataSource", () => {
     describe("fetchDatasets", () => {
         it("returns a map of data set info based on the result of getChildren", async () => {

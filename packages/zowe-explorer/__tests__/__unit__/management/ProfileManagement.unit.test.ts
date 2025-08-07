@@ -30,6 +30,7 @@ import { Definitions } from "../../../src/configuration/Definitions";
 
 jest.mock("fs");
 jest.mock("vscode");
+jest.mock("../../../src/tools/ZoweLocalStorage");
 
 describe("ProfileManagement unit tests", () => {
     afterEach(() => {

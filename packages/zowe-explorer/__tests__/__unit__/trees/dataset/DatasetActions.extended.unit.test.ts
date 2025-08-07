@@ -21,6 +21,8 @@ import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 
+jest.mock("../../../../src/tools/ZoweLocalStorage");
+
 async function createGlobalMocks() {
     const newMocks = {
         mockRefresh: jest.fn(),

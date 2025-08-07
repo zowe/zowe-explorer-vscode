@@ -22,6 +22,8 @@ import { createUSSSessionNode } from "../../__mocks__/mockCreators/uss";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { IconGenerator } from "../../../src/icons/IconGenerator";
 
+jest.mock("../../../src/tools/ZoweLocalStorage");
+
 describe("TreeViewUtils Unit Tests", () => {
     function createGlobalMocks(): { [key: string]: any } {
         const newMocks = {
@@ -49,18 +51,30 @@ describe("TreeViewUtils Unit Tests", () => {
     it("should remove session from treeView", async () => {
         const globalMocks = createGlobalMocks();
         const originalLength = globalMocks.testDatasetTree.mSessionNodes.length;
+        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+            sessions: ["SESTEST"],
+            favorites: [],
+        });
         await TreeViewUtils.removeSession(globalMocks.testDatasetTree, globalMocks.imperativeProfile.name);
         expect(globalMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength - 1);
     });
     it("should not find session in treeView", async () => {
         const globalMocks = createGlobalMocks();
         const originalLength = globalMocks.testDatasetTree.mSessionNodes.length;
+        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+            sessions: ["SESTEST"],
+            favorites: [],
+        });
         await TreeViewUtils.removeSession(globalMocks.testDatasetTree, "fake");
         expect(globalMocks.testDatasetTree.mSessionNodes.length).toEqual(originalLength);
     });
     it("should not run treeProvider.removeFileHistory when job is returned for type", async () => {
         const globalMocks = createGlobalMocks();
         jest.spyOn(globalMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.Job);
+        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+            sessions: ["SESTEST"],
+            favorites: [],
+        });
         await TreeViewUtils.removeSession(globalMocks.testDatasetTree, "SESTEST");
         expect(globalMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(0);
     });
@@ -68,6 +82,10 @@ describe("TreeViewUtils Unit Tests", () => {
         const globalMocks = createGlobalMocks();
         jest.spyOn(globalMocks.testDatasetTree, "getTreeType").mockReturnValue(PersistenceSchemaEnum.USS);
         jest.spyOn(globalMocks.testDatasetTree, "getFileHistory").mockReturnValue(["[SESTEST]: /u/test/test.txt"]);
+        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+            sessions: ["SESTEST"],
+            favorites: [],
+        });
         await TreeViewUtils.removeSession(globalMocks.testDatasetTree, "SESTEST");
         expect(globalMocks.testDatasetTree.removeFileHistory).toHaveBeenCalledTimes(1);
     });

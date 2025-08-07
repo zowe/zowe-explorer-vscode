@@ -22,6 +22,7 @@ import { LocalFileManagement } from "../../../src/management/LocalFileManagement
 import { createISession, createIProfile } from "../../__mocks__/mockCreators/shared";
 
 jest.mock("vscode");
+jest.mock("../../../src/tools/ZoweLocalStorage");
 
 describe("LocalFileManagement unit tests", () => {
     afterEach(() => {

@@ -21,6 +21,8 @@ import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { DatasetSearch } from "../../../../src/trees/dataset/DatasetSearch";
 import { DatasetTableView } from "../../../../src/trees/dataset/DatasetTableView";
 
+jest.mock("../../../../src/tools/ZoweLocalStorage");
+
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
         let registerCommand;

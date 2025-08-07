@@ -21,6 +21,8 @@ import { MarkdownString, TreeItemCollapsibleState } from "vscode";
 import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
 import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
 
+jest.mock("../../../src/tools/ZoweLocalStorage");
+
 describe("AuthUtils", () => {
     describe("handleProfileAuthOnError", () => {
         it("should prompt for authentication", async () => {

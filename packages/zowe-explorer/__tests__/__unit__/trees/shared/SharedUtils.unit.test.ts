@@ -29,6 +29,8 @@ import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { createIJobFile, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
 
+jest.mock("../../../../src/tools/ZoweLocalStorage");
+
 function createGlobalMocks() {
     const newMocks = {
         session: createISession(),

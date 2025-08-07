@@ -36,6 +36,7 @@ import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets"
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
 
 jest.mock("../../../src/tools/ZoweLogger");
+jest.mock("../../../src/tools/ZoweLocalStorage");
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("@zowe/imperative");
