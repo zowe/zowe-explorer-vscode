@@ -51,7 +51,11 @@ export class ConfigEditor extends WebView {
             retainContext: true,
             viewColumn: vscode.ViewColumn.One,
         });
+
         this.panel.reveal(vscode.ViewColumn.One, false);
+
+        vscode.commands.executeCommand("workbench.action.keepEditor");
+
         this.panel.onDidDispose(() => {});
     }
 
