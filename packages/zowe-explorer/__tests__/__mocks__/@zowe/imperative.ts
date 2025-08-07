@@ -15,6 +15,7 @@
 
 import * as os from "os";
 import * as path from "path";
+
 const log4js = require("log4js");
 
 export class EventProcessor {
@@ -218,6 +219,13 @@ export class ProfileInfo {
             version?: string;
         }
     ): any {
+        return;
+    }
+    public static profAttrsToProfLoaded(): any {
+        return true;
+    }
+
+    public mergeArgsForProfile(): any {
         return;
     }
 }
