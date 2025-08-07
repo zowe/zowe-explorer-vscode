@@ -9,7 +9,7 @@ interface EditModalProps {
   onCancel: () => void;
 }
 
-export function EditModal({ isOpen, editingKey, editingValue, onEditingValueChange, onSave, onCancel }: EditModalProps) {
+export function EditModal({ isOpen, editingKey, onEditingValueChange, onSave, onCancel }: EditModalProps) {
   if (!isOpen) return null;
 
   return (

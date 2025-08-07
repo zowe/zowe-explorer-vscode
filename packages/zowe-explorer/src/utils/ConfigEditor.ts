@@ -203,7 +203,9 @@ export class ConfigEditor extends WebView {
 
         if (activeLayer !== profInfo.getTeamConfig().api.layers.get().path) {
             const findProfile = profInfo.getTeamConfig().layers.find((prof) => prof.path === activeLayer);
-            profInfo.getTeamConfig().api.layers.activate(findProfile.user, findProfile.global);
+            if (findProfile) {
+                profInfo.getTeamConfig().api.layers.activate(findProfile.user, findProfile.global);
+            }
         }
 
         for (const change of changes) {
@@ -227,10 +229,12 @@ export class ConfigEditor extends WebView {
                 item.key = keyParts.join(".");
             }
 
-            const profileParts = item.profile.split(".");
-            if (profileParts[profileParts.length - 2] === "secure") {
-                profileParts[profileParts.length - 2] = "properties";
-                item.profile = profileParts.join(".");
+            if (item.profile) {
+                const profileParts = item.profile.split(".");
+                if (profileParts[profileParts.length - 2] === "secure") {
+                    profileParts[profileParts.length - 2] = "properties";
+                    item.profile = profileParts.join(".");
+                }
             }
         }
 
@@ -244,7 +248,9 @@ export class ConfigEditor extends WebView {
 
         if (configPath !== profInfo.getTeamConfig().api.layers.get().path) {
             const findProfile = profInfo.getTeamConfig().layers.find((prof) => prof.path === configPath);
-            profInfo.getTeamConfig().api.layers.activate(findProfile.user, findProfile.global);
+            if (findProfile) {
+                profInfo.getTeamConfig().api.layers.activate(findProfile.user, findProfile.global);
+            }
         }
 
         for (const change of changes) {
@@ -322,7 +328,7 @@ export class ConfigEditor extends WebView {
         const profInfo = new ProfileInfo("zowe");
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
         const allProfiles = profInfo.getAllProfiles();
-        const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc.includes(path.normalize(configPath)));
+        const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
         if (!profile) {
             return;
         }
@@ -349,7 +355,7 @@ export class ConfigEditor extends WebView {
         }
 
         const allProfiles = profInfo.getAllProfiles();
-        const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc.includes(path.normalize(configPath)));
+        const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
         if (!profile) {
             return;
         }
@@ -380,11 +386,12 @@ export class ConfigEditor extends WebView {
                 keyParts[keyParts.length - 2] = "properties";
                 item.key = keyParts.join(".");
             }
-
-            const profileParts = item.profile.split(".");
-            if (profileParts[profileParts.length - 2] === "secure") {
-                profileParts[profileParts.length - 2] = "properties";
-                item.profile = profileParts.join(".");
+            if (item.profile) {
+                const profileParts = item.profile.split(".");
+                if (profileParts[profileParts.length - 2] === "secure") {
+                    profileParts[profileParts.length - 2] = "properties";
+                    item.profile = profileParts.join(".");
+                }
             }
         }
 

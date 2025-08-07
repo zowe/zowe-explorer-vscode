@@ -1,5 +1,3 @@
-import * as l10n from "@vscode/l10n";
-
 interface FooterProps {
   onClearChanges: () => void;
   onSaveAll: () => void;

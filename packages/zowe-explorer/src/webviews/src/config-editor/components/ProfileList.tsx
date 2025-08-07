@@ -20,13 +20,7 @@ export function ProfileList({
   sortedProfileKeys,
   selectedProfileKey,
   pendingProfiles,
-  profileMenuOpen,
-  configPath,
-  vscodeApi,
   onProfileSelect,
-  onProfileMenuToggle,
-  onDeleteProfile,
-  onSetAsDefault,
   isProfileDefault,
   getProfileType,
 }: ProfileListProps) {
