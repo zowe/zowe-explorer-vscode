@@ -324,8 +324,8 @@ importers:
         specifier: 3.3.0-SNAPSHOT
         version: link:../zowe-explorer-api
       tmp:
-        specifier: 0.2.3
-        version: 0.2.3
+        specifier: ^0.2.4
+        version: 0.2.4
     devDependencies:
       '@types/tmp':
         specifier: 0.2.6
@@ -3354,7 +3354,7 @@ packages:
       read: 1.0.7
       secretlint: 9.3.3
       semver: 7.7.2
-      tmp: 0.2.3
+      tmp: 0.2.4
       typed-rest-client: 1.8.11
       url-join: 4.0.1
       xml2js: 0.5.0
@@ -12211,7 +12211,7 @@ packages:
   /tmp-promise@3.0.3:
     resolution: {integrity: sha512-RwM7MoPojPxsOBYnyd2hy0bxtIlVrihNs9pj5SUvY8Zz1sQcQG2tG1hSr8PDxfgEB8RNKDhqbIlroIarSNDNsQ==}
     dependencies:
-      tmp: 0.2.3
+      tmp: 0.2.4
     dev: true
 
   /tmp@0.0.33:
@@ -12223,6 +12223,11 @@ packages:
 
   /tmp@0.2.3:
     resolution: {integrity: sha512-nZD7m9iCPC5g0pYmcaxogYKggSfLsdxl8of3Q/oIbqCqLLIO9IAF0GWjX1z9NZRHPiXv8Wex4yDCaZsgEw0Y8w==}
+    engines: {node: '>=14.14'}
+    dev: true
+
+  /tmp@0.2.4:
+    resolution: {integrity: sha512-UdiSoX6ypifLmrfQ/XfiawN6hkjSBpCjhKxxZcWlUUmoXLaCKQU0bx4HF/tdDK2uzRuchf1txGvrWBzYREssoQ==}
     engines: {node: '>=14.14'}
 
   /tmpl@1.0.5:
