@@ -42,7 +42,7 @@ export function AddProfileModal({
     }
 
     // Keys that are file paths
-    const filePaths = ["privateKey"];
+    const filePaths = ["privateKey", "certFile", "certKeyFile"];
     for (const path of filePaths) {
       if (key.toLowerCase() === path.toLowerCase()) {
         return true;
