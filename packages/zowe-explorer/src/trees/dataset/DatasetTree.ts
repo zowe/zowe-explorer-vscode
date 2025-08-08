@@ -181,7 +181,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             } catch (err) {
                 //file might already exist. Ignore the error and try to write it to lpar
-                if (err.errorCode.toString() === "404" || err.errorCode.toString() === "500") {
+                // only bail out on a real 404/500 – guard against undefined
+                const code = err?.errorCode?.toString?.();
+                if (code === "404" || code === "500") {
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                     return;
                 }
@@ -213,9 +215,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (!recursiveCall) {
                 // Delete any files from the selection on the source LPAR
                 await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
+                //dialog message for successful move of pds and members
+                Gui.infoMessage(vscode.l10n.t("Data set(s) moved successfully."));
             }
-            //dialog message for successful move of pds and members
-            Gui.infoMessage(vscode.l10n.t("Data set(s) moved successfully."));
+
         }
     }
 
@@ -1323,12 +1326,23 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         if (SharedContext.isSessionNotFav(node)) {
             ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
             if (this.mHistory.getSearchHistory().length > 0) {
-                const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                 const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
                 const quickpick = Gui.createQuickPick();
-                quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
-                quickpick.placeholder = vscode.l10n.t("Select a filter");
+                quickpick.placeholder = vscode.l10n.t("Select a filter or type to create a new one");
                 quickpick.ignoreFocusOut = true;
+
+                // Callback updates the "Create a new filter" option as user types
+                quickpick.onDidChangeValue((value) => {
+                    const trimmedValue = value.trim();
+                    const createPick = trimmedValue
+                        ? new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value.trim()}"`)
+                        : new FilterDescriptor(DatasetTree.defaultDialogText);
+                    quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+                });
+
+                const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
+                quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+
                 quickpick.show();
                 const choice = await Gui.resolveQuickPick(quickpick);
                 quickpick.hide();
@@ -1337,22 +1351,33 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     return;
                 }
                 if (choice instanceof FilterDescriptor) {
-                    if (quickpick.value) {
-                        pattern = quickpick.value;
+                    // If user typed something and selected "Create a new filter", use that input
+                    if (quickpick.value && quickpick.value.trim()) {
+                        pattern = quickpick.value.trim();
+                    } else {
+                        // Fall back to input box if no text was entered
+                        const options: vscode.InputBoxOptions = {
+                            prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
+                        };
+                        pattern = await Gui.showInputBox(options);
+                        if (!pattern) {
+                            Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
+                            return;
+                        }
                     }
                 } else {
                     pattern = choice.label;
                 }
-            }
-            const options: vscode.InputBoxOptions = {
-                prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
-                value: pattern,
-            };
-            // get user input
-            pattern = await Gui.showInputBox(options);
-            if (!pattern) {
-                Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
-                return;
+            } else {
+                // No search history, use input box directly
+                const options: vscode.InputBoxOptions = {
+                    prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
+                };
+                pattern = await Gui.showInputBox(options);
+                if (!pattern) {
+                    Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
+                    return;
+                }
             }
         } else {
             // executing search from saved search in favorites
