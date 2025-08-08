@@ -545,6 +545,8 @@ describe("DatasetFSProvider", () => {
             const parent = { entries: new Map(), metadata: { profile: { name: "profile" }, path: "/" } };
             const binaryEntry = { ...testEntries.pdsMember, wasAccessed: true, encoding: { kind: "binary" } };
             parent.entries.set("MEMBER1", binaryEntry);
+            const entry = { encoding: { kind: "binary" } } as any;
+            jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(entry);
             jest.spyOn(provider as any, "_lookupParentDirectory").mockReturnValue(parent);
 
             const mockMvsApi = {
