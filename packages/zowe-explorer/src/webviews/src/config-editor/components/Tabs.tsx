@@ -1,5 +1,5 @@
 interface TabsProps {
-  configurations: { configPath: string; properties: any; secure: string[] }[];
+  configurations: { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean }[];
   selectedTab: number | null;
   onTabChange: (index: number) => void;
   onOpenRawFile: (filePath: string) => void;
@@ -12,12 +12,23 @@ export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile }
     return parts[parts.length - 1] || configPath;
   };
 
+  const getConfigIcon = (config: { global?: boolean; user?: boolean }) => {
+    if (config.global) {
+      return "codicon-globe";
+    } else if (config.user) {
+      return "codicon-folder";
+    } else {
+      return "codicon-folder";
+    }
+  };
+
   return (
     <div className="tabs">
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {configurations.map((config, index) => (
           <div key={index} className={`tab ${selectedTab === index ? "active" : ""}`} onClick={() => onTabChange(index)}>
-            <span className="tab-label" title={config.configPath}>
+            <span className="tab-label" title={config.configPath} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span className={`codicon ${getConfigIcon(config)}`} style={{ fontSize: "14px" }}></span>
               {getTabLabel(config.configPath)}
             </span>
           </div>

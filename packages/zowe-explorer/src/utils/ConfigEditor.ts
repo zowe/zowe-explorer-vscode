@@ -192,6 +192,36 @@ export class ConfigEditor extends WebView {
                 await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
                 break;
             }
+            case "GET_WIZARD_MERGED_PROPERTIES": {
+                const mergedArgs = await this.getWizardMergedProperties(message.rootProfile, message.profileType, message.configPath);
+                await this.panel.webview.postMessage({
+                    command: "WIZARD_MERGED_PROPERTIES",
+                    mergedArgs,
+                });
+                break;
+            }
+            case "SELECT_FILE": {
+                const options: vscode.OpenDialogOptions = {
+                    canSelectMany: false,
+                    openLabel: "Select File",
+                    filters: {
+                        "All Files": ["*"],
+                    },
+                };
+
+                const fileUri = await vscode.window.showOpenDialog(options);
+                if (fileUri && fileUri.length > 0) {
+                    const filePath = fileUri[0].fsPath;
+                    await this.panel.webview.postMessage({
+                        command: "FILE_SELECTED",
+                        filePath: filePath,
+                        propertyIndex: message.propertyIndex,
+                        isNewProperty: message.isNewProperty,
+                        source: message.source,
+                    });
+                }
+                break;
+            }
             default:
                 break;
         }
@@ -346,11 +376,11 @@ export class ConfigEditor extends WebView {
         const parsedChanges = this.parseConfigChanges(changes);
         for (const change of parsedChanges) {
             if (change.defaultsChanges || change.defaultsDeleteKeys) {
-                await this.simulateDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
+                this.simulateDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
             }
 
             if (change.changes || change.deletions) {
-                await this.simulateProfileChanges(change.changes, change.deletions, change.configPath, teamConfig);
+                this.simulateProfileChanges(change.changes, change.deletions, change.configPath, teamConfig);
             }
         }
 
@@ -401,12 +431,6 @@ export class ConfigEditor extends WebView {
                 keyParts[keyParts.length - 2] = "properties";
                 item.key = keyParts.join(".");
             }
-
-            // const profileParts = item.profile.split(".");
-            // if (profileParts[profileParts.length - 2] === "secure") {
-            //     profileParts[profileParts.length - 2] = "properties";
-            //     item.profile = profileParts.join(".");
-            // }
         }
 
         if (configPath !== teamConfig.api.layers.get().path) {
@@ -428,6 +452,54 @@ export class ConfigEditor extends WebView {
             } catch (err) {
                 // console.log(err);
             }
+        }
+    }
+
+    private async getWizardMergedProperties(rootProfile: string, profileType: string, configPath: string): Promise<any> {
+        const profInfo = new ProfileInfo("zowe");
+        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+
+        const teamConfig = profInfo.getTeamConfig();
+
+        if (configPath !== teamConfig.api.layers.get().path) {
+            const findProfile = teamConfig.layers.find((prof: any) => prof.path === configPath);
+            if (findProfile) {
+                teamConfig.api.layers.activate(findProfile.user, findProfile.global);
+            }
+        }
+
+        if (rootProfile === "root") {
+            if (profileType) {
+                // Create a temporary profile instance with the type
+                const tempProfileName = `temp_${Date.now()}`;
+                const profilePath = `profiles.${tempProfileName}`;
+
+                // Set the type for the temporary profile
+                teamConfig.set(`${profilePath}.type`, profileType, { parseString: true });
+
+                // Get the merged args for this temporary profile
+                const allProfiles = profInfo.getAllProfiles();
+                const tempProfile = allProfiles.find((prof) => prof.profName === tempProfileName);
+
+                if (tempProfile) {
+                    const mergedArgs = profInfo.mergeArgsForProfile(tempProfile, { getSecureVals: true });
+                    return mergedArgs.knownArgs || [];
+                }
+            }
+        } else {
+            // Find the specified root profile
+            const allProfiles = profInfo.getAllProfiles();
+            const rootProfileInstance = allProfiles.find(
+                (prof) => prof.profName === rootProfile && prof.profLoc.osLoc?.includes(path.normalize(configPath))
+            );
+
+            if (!rootProfileInstance) {
+                return [];
+            }
+
+            // Get merged properties for the root profile
+            const mergedArgs = profInfo.mergeArgsForProfile(rootProfileInstance, { getSecureVals: true });
+            return mergedArgs.knownArgs || [];
         }
     }
 }

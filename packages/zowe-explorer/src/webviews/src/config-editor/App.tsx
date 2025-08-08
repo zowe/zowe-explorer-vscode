@@ -37,7 +37,9 @@ const vscodeApi = acquireVsCodeApi();
 
 export function App() {
   const [localizationState] = useState(null);
-  const [configurations, setConfigurations] = useState<{ configPath: string; properties: any; secure: string[] }[]>([]);
+  const [configurations, setConfigurations] = useState<{ configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean }[]>(
+    []
+  );
   const [selectedTab, setSelectedTab] = useState<number | null>(null);
   const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
   const [flattenedDefaults, setFlattenedDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
@@ -101,6 +103,7 @@ export function App() {
   const [wizardNewPropertyKey, setWizardNewPropertyKey] = useState("");
   const [wizardNewPropertyValue, setWizardNewPropertyValue] = useState("");
   const [wizardNewPropertySecure, setWizardNewPropertySecure] = useState(false);
+  const [wizardMergedProperties, setWizardMergedProperties] = useState<{ [key: string]: any }>({});
   const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
   // Preview Args Modal state
   const [previewArgsModalOpen, setPreviewArgsModalOpen] = useState(false);
@@ -186,6 +189,45 @@ export function App() {
           });
         }
         setMergedProperties(mergedPropsData);
+      } else if (event.data.command === "WIZARD_MERGED_PROPERTIES") {
+        // Store the merged properties for the profile wizard - convert array to object format
+        const mergedPropsData: { [key: string]: any } = {};
+        if (Array.isArray(event.data.mergedArgs)) {
+          event.data.mergedArgs.forEach((item: any) => {
+            if (item.argName && item.argValue !== undefined) {
+              mergedPropsData[item.argName] = {
+                value: item.argValue,
+                dataType: item.dataType,
+                secure: item.secure,
+              };
+            }
+          });
+        }
+        setWizardMergedProperties(mergedPropsData);
+      } else if (event.data.command === "FILE_SELECTED") {
+        // Handle file selection response from VS Code
+        if (event.data.filePath) {
+          if (event.data.isNewProperty) {
+            // Check if this is for the wizard or the add profile modal
+            if (event.data.source === "wizard") {
+              setWizardNewPropertyValue(event.data.filePath);
+            } else {
+              // Update the add profile modal value
+              setNewProfileValue(event.data.filePath);
+            }
+          } else {
+            // Update existing property value
+            const propertyIndex = event.data.propertyIndex;
+            if (propertyIndex !== undefined && propertyIndex >= 0) {
+              const updatedProperties = [...wizardProperties];
+              updatedProperties[propertyIndex] = {
+                ...updatedProperties[propertyIndex],
+                value: event.data.filePath,
+              };
+              setWizardProperties(updatedProperties);
+            }
+          }
+        }
       }
     });
 
@@ -251,6 +293,13 @@ export function App() {
       document.removeEventListener("click", handleClickOutside);
     };
   }, [profileMenuOpen]);
+
+  // Trigger wizard merged properties request when root profile or type changes
+  useEffect(() => {
+    if (wizardModalOpen && selectedTab !== null && (wizardRootProfile || wizardSelectedType)) {
+      requestWizardMergedProperties();
+    }
+  }, [wizardRootProfile, wizardSelectedType, wizardModalOpen, selectedTab]);
 
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
@@ -413,8 +462,6 @@ export function App() {
   };
 
   const handleNavigateToSource = (jsonLoc: string, osLoc?: string[]) => {
-    // Parse the jsonLoc to extract the source configuration and profile
-    // jsonLoc format: "profiles.ssh.port" or "profiles.ssh.profiles.parent.port"
     const parts = jsonLoc.split(".");
 
     if (parts.length >= 3 && parts[0] === "profiles") {
@@ -429,9 +476,10 @@ export function App() {
           // This is a nested profile structure
           // For nested profiles, we need to construct the full profile path
           // e.g., "profiles.zosmf.profiles.a.profiles.b.properties.port" should navigate to "zosmf.a.b"
-          const parentProfile = parts[i]; // e.g., "zosmf"
+          const parentProfile = parts[i];
           let nestedProfilePath = [parentProfile];
-          let pathIndex = i + 2; // Start after the first "profiles"
+          // Start after the first "profiles"
+          let pathIndex = i + 2;
 
           // Continue building the nested profile path until we hit a non-profile part
           while (pathIndex < parts.length - 1 && parts[pathIndex + 1] === "profiles") {
@@ -507,14 +555,10 @@ export function App() {
         }
 
         if (sourceConfigIndex !== -1) {
-          // Set navigation flag to prevent useEffect from clearing selectedProfileKey
           setIsNavigating(true);
-
-          // Navigate to the source configuration and profile within the config editor
           setSelectedTab(sourceConfigIndex);
 
           // Use a timeout to set the profile after the tab change has been processed
-          // This prevents the useEffect from clearing the selectedProfileKey immediately
           setTimeout(() => {
             setSelectedProfileKey(sourceProfile);
 
@@ -607,7 +651,6 @@ export function App() {
   const handleSetAsDefault = (profileKey: string) => {
     const profileType = getProfileType(profileKey);
     if (!profileType) {
-      // Could show an error message here
       return;
     }
 
@@ -643,7 +686,7 @@ export function App() {
       // Construct the full profile path
       let fullProfilePath: string;
       if (profileKey.includes(".")) {
-        // Nested profile - construct the full path
+        // Nested profile, construct the full path
         const profileParts = profileKey.split(".");
         const pathArray = ["profiles"];
         for (let i = 0; i < profileParts.length; i++) {
@@ -1696,13 +1739,17 @@ export function App() {
                 </div>
               );
             } else {
+              const availableProfiles = getAvailableProfilesByType(key);
+              const selectedProfileExists = availableProfiles.includes(String(pendingValue));
+              const displayValue = selectedProfileExists ? String(pendingValue) : "";
+
               return (
                 <div key={fullKey} className="config-item">
                   <div className="config-item-container">
                     <span className="config-label">{key}</span>
                     <select
                       className="config-input"
-                      value={String(pendingValue)}
+                      value={displayValue}
                       onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLSelectElement).value)}
                       style={{
                         width: "100%",
@@ -1713,7 +1760,7 @@ export function App() {
                       }}
                     >
                       <option value="">{l10n.t("Select a profile")}</option>
-                      {getAvailableProfilesByType(key).map((profile) => (
+                      {availableProfiles.map((profile) => (
                         <option key={profile} value={profile}>
                           {profile === "root" ? "/" : profile}
                         </option>
@@ -1907,6 +1954,31 @@ export function App() {
     if (!wizardSelectedType) return undefined;
     const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || {};
     return propertySchema[propertyKey]?.type;
+  };
+
+  const getPropertyTypeForAddProfile = (propertyKey: string): string | undefined => {
+    if (selectedTab === null) return undefined;
+
+    // Try to get the profile type from the current selected profile
+    const currentProfileType = selectedProfileKey ? getProfileType(selectedProfileKey) : null;
+    if (currentProfileType) {
+      const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[currentProfileType] || {};
+      return propertySchema[propertyKey]?.type;
+    }
+
+    // Fallback: check all profile types for this property
+    const configPath = configurations[selectedTab].configPath;
+    const schemaValidation = schemaValidations[configPath];
+    if (schemaValidation?.propertySchema) {
+      for (const profileType in schemaValidation.propertySchema) {
+        const propertySchema = schemaValidation.propertySchema[profileType];
+        if (propertySchema[propertyKey]?.type) {
+          return propertySchema[propertyKey].type;
+        }
+      }
+    }
+
+    return undefined;
   };
 
   const isProfileNameTaken = () => {
@@ -2139,6 +2211,19 @@ export function App() {
     setWizardNewPropertyValue("");
     setWizardNewPropertySecure(false);
     setWizardShowKeyDropdown(false);
+    setWizardMergedProperties({});
+  };
+
+  const requestWizardMergedProperties = () => {
+    if (selectedTab !== null) {
+      const configPath = configurations[selectedTab].configPath;
+      vscodeApi.postMessage({
+        command: "GET_WIZARD_MERGED_PROPERTIES",
+        rootProfile: wizardRootProfile,
+        profileType: wizardSelectedType,
+        configPath: configPath,
+      });
+    }
   };
 
   // Enhanced datalist hook
@@ -2187,6 +2272,28 @@ export function App() {
           existingProperties.add(propertyName);
         }
       }
+    });
+
+    // Get deleted properties for this profile and remove them from existing properties
+    const deletedProperties = new Set<string>();
+    (deletions[configPath] ?? []).forEach((deletedKey) => {
+      const keyParts = deletedKey.split(".");
+      if (keyParts.includes("profiles")) {
+        // Extract the profile from the deleted key
+        const profileIndex = keyParts.indexOf("profiles");
+        const deletedProfileKey = keyParts[profileIndex + 1];
+
+        // Check if this deletion is for the current profile
+        if (deletedProfileKey === profileKey) {
+          const propertyName = keyParts[keyParts.length - 1];
+          deletedProperties.add(propertyName);
+        }
+      }
+    });
+
+    // Remove deleted properties from existing properties (so they become available again)
+    deletedProperties.forEach((deletedProperty) => {
+      existingProperties.delete(deletedProperty);
     });
 
     // Filter out existing properties from the available options
@@ -2275,6 +2382,8 @@ export function App() {
         showDropdown={showDropdown}
         typeOptions={newProfileKeyPath ? fetchTypeOptions(newProfileKeyPath) : []}
         isSecure={isSecure}
+        getPropertyType={getPropertyTypeForAddProfile}
+        vscodeApi={vscodeApi}
         onNewProfileKeyChange={setNewProfileKey}
         onNewProfileValueChange={setNewProfileValue}
         onShowDropdownChange={setShowDropdown}
@@ -2315,6 +2424,7 @@ export function App() {
         wizardNewPropertyKey={wizardNewPropertyKey}
         wizardNewPropertyValue={wizardNewPropertyValue}
         wizardNewPropertySecure={wizardNewPropertySecure}
+        wizardMergedProperties={wizardMergedProperties}
         availableProfiles={getAvailableProfiles()}
         typeOptions={getWizardTypeOptions()}
         propertyOptions={getWizardPropertyOptions()}
@@ -2334,6 +2444,7 @@ export function App() {
         onCancel={handleWizardCancel}
         getPropertyType={getPropertyType}
         stringifyValueByType={stringifyValueByType}
+        vscodeApi={vscodeApi}
       />
 
       <PreviewArgsModal isOpen={previewArgsModalOpen} argsData={previewArgsData} onClose={() => setPreviewArgsModalOpen(false)} />
