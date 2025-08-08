@@ -15,14 +15,23 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for asynchronous operations when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Added support for TTY-dependent scripts when using integrated terminals. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Adjusted formatting for the certificate selection webview to make better use of space. [#3754](https://github.com/zowe/zowe-explorer-vscode/issues/3754)
+- Added "Show as Table" option for profiles with search patterns in the Data Sets tree. Users can now right-click on a profile in the Data Sets tree with a search pattern set and select "Show as Table" to view matching data sets in a tabular format. [#3583](https://github.com/zowe/zowe-explorer-vscode/issues/3583)
+- Added "Show as Table" option for partitioned data sets. Users can now right-click on a partitioned data set in the Data Sets tree and select "Show as Table" to view its members in a tabular format. [#3583](https://github.com/zowe/zowe-explorer-vscode/issues/3583)
+- Added "Zowe Explorer: List Data Sets" command. Users can now run this command from the command palette to be prompted for a search pattern and display the matching data sets in a table view. [#3583](https://github.com/zowe/zowe-explorer-vscode/issues/3583)
+- When the user types in a data set pattern in the input box of the filter selection prompt, the "Create a new filter" option now updates to include the pattern. Once clicked, the new filter is added to the user's search history and the pattern is used for listing data sets. [#3015](https://github.com/zowe/zowe-explorer-vscode/issues/3015)
+- When the user types in a USS file path in the input box of the filter selection prompt, the "Create a new filter" option now updates to include the file path. Once clicked, the new filter is added to the user's search history and the path is used for listing a USS directory. [#3015](https://github.com/zowe/zowe-explorer-vscode/issues/3015)
 
 ### Bug fixes
 
+- Fixed a bug where renaming a USS file that used to exist but was deleted in z/OS resulted in an error. [#3485](https://github.com/zowe/zowe-explorer-vscode/issues/3485).
+- Fixed a bug where USS and data set workspace folders accessed via an extender (SSH, FTP, etc) are not loaded until the window is reloaded. [#3689](https://github.com/zowe/zowe-explorer-vscode/pull/3689/files#diff-cafba17e22a5c24da1eeb2601f25d6025d598f5462cce554aeca3b56bc9661cf)
 - Fixed a bug where USS files and data set VS Code editors accessed by an extender (SSH, FTP, etc) are not restored when reloading/reopening a window. [#3678](https://github.com/zowe/zowe-explorer-vscode/pull/3678)
 - Fixed an issue where an incorrect profile name is shown in the output for the "Issue Unix Command" function when an SSH profile is required to issue commands. [#3646](https://github.com/zowe/zowe-explorer-vscode/issues/3646)
 - Improved integrated terminal behavior to match standard terminal functionality. Now, users can smoothly maintain proper cursor position when typing and backspacing. [#3391](https://github.com/zowe/zowe-explorer-vscode/issues/3391)
 - Fixed an issue where cancelling multiple commands in rapid succession could render the terminal unusable. [#3640](https://github.com/zowe/zowe-explorer-vscode/issues/3640)
 - Fixed an issue where a `401 Unauthorized` error is thrown by the FileSystemProvider implementations when the user cancels or closes an authentication prompt. Now, the filesystem throws a more explicit `AuthCancelledError` in this scenario. [#3662](https://github.com/zowe/zowe-explorer-vscode/issues/3662)
+- Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. [#3772](https://github.com/zowe/zowe-explorer-vscode/issues/3772)
+- Fixed a regression with the `AuthUtils.syncSessionNode` function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. [#3795](https://github.com/zowe/zowe-explorer-vscode/pull/3795)
 - Fixed cross-LPAR PDS transfers to preserve original DCB attributes and prevent binary data corruption. Data is now transferred as binary, and encoding is user-selected at file open time. The encoding query parameter is now respected during write operations. [#3731](https://github.com/zowe/zowe-explorer-vscode/pull/3731)
 
 ### Bug fixes
