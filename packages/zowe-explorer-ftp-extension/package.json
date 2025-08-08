@@ -56,7 +56,7 @@
     "@zowe/zos-ftp-for-zowe-cli": "^3.0.0",
     "@zowe/zos-jobs-for-zowe-sdk": "^8.24.1",
     "@zowe/zowe-explorer-api": "3.3.0-SNAPSHOT",
-    "tmp": "^0.2.4"
+    "tmp": "0.2.3"
   },
   "devDependencies": {
     "@types/tmp": "0.2.6"
