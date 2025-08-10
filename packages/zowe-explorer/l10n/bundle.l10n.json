@@ -264,7 +264,7 @@
   "Prompting the user to choose a member from the filtered list": "Prompting the user to choose a member from the filtered list",
   "You are already at the root directory.": "You are already at the root directory.",
   "Prompting the user for a USS path": "Prompting the user for a USS path",
-  "Select a filter": "Select a filter",
+  "Select a filter or type to create a new one": "Select a filter or type to create a new one",
   "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
   "New filter": "New filter",
   "Please enter a valid USS path.": "Please enter a valid USS path.",
@@ -453,6 +453,7 @@
       "Profile name"
     ]
   },
+  "Select a filter": "Select a filter",
   "Enter a job ID": "Enter a job ID",
   "Job search cancelled.": "Job search cancelled.",
   "The polling interval must be greater than or equal to 1000ms.": "The polling interval must be greater than or equal to 1000ms.",
@@ -790,7 +791,7 @@
   "No profiles available.": "No profiles available.",
   "Select a profile to search for data sets": "Select a profile to search for data sets",
   "Select a profile": "Select a profile",
-  "Enter Dataset Pattern": "Enter Dataset Pattern",
+  "Enter Data Set Pattern": "Enter Data Set Pattern",
   "e.g., USER.*, PUBLIC.DATA.*, etc.": "e.g., USER.*, PUBLIC.DATA.*, etc.",
   "Enter a dataset pattern to search for": "Enter a dataset pattern to search for",
   "Profile {0} not found./Name of the selected profile": {
