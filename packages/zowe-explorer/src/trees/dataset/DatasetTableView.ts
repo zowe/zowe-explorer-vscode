@@ -497,11 +497,15 @@ export class DatasetTableView {
             type: "primary",
             command: "back",
             callback: { fn: this.goBack.bind(this), typ: "no-selection" },
-            hideCondition: () => this.previousTableData == null || this.currentTableType !== "members",
+            hideCondition: () => this.currentTableType == null || this.currentTableType === "dataSets",
         },
     };
 
     private canOpenInEditor(rows: Table.RowData[]): boolean {
+        if (rows.length === 0) {
+            return false;
+        }
+
         return rows.every((r) => {
             // Check if it's a sequential dataset (PS) or a PDS member
             const dsorg = r["dsorg"] as string;
@@ -597,7 +601,7 @@ export class DatasetTableView {
 
             // Restore previous table state
             this.currentDataSource = dataSourceToRestore;
-            this.currentTableType = this.previousTableData.tableType;
+            this.currentTableType = "dataSets";
             this.shouldShow = this.previousTableData.shouldShow;
             // Restore the original pattern from when the table was first created
             this.originalPattern = this.previousTableData.originalPattern;
@@ -1286,7 +1290,7 @@ export class DatasetTableView {
 
         // Get the pattern from user
         const pattern = await Gui.showInputBox({
-            title: l10n.t("Enter Dataset Pattern"),
+            title: l10n.t("Enter Data Set Pattern"),
             placeHolder: l10n.t("e.g., USER.*, PUBLIC.DATA.*, etc."),
             prompt: l10n.t("Enter a dataset pattern to search for"),
             ignoreFocusOut: true,

@@ -842,7 +842,7 @@ describe("Table.View", () => {
 
             expect(conditionFn).toHaveBeenCalledWith({ name: "test", value: 123 });
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "condition-for-action-result",
+                command: "check-condition-for-action",
                 requestId: "test-request-123",
                 payload: true,
             });
@@ -884,7 +884,7 @@ describe("Table.View", () => {
 
             expect(conditionFn).toHaveBeenCalledWith({ name: "test", value: 456 });
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "condition-for-action-result",
+                command: "check-condition-for-action",
                 requestId: "async-test-456",
                 payload: false,
             });
@@ -924,7 +924,7 @@ describe("Table.View", () => {
             await view.onMessageReceived(message);
 
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "condition-for-action-result",
+                command: "check-condition-for-action",
                 requestId: "string-test-789",
                 payload: true,
             });
@@ -966,42 +966,9 @@ describe("Table.View", () => {
 
             expect(conditionFn).toHaveBeenCalledWith({ name: "test", value: 789 });
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "condition-for-action-result",
+                command: "check-condition-for-action",
                 requestId: "context-test-789",
                 payload: true,
-            });
-        });
-
-        it("handles check-condition-for-action when action not found", async () => {
-            const globalMocks = createGlobalMocks();
-            const data = {
-                title: "Table w/ no actions",
-                actions: { all: [] },
-                contextOpts: { all: [] },
-                columns: [{ field: "name" }, { field: "value" }],
-                rows: [{ name: "test", value: 123 }],
-            };
-            const view = new Table.View(globalMocks.context as any, false, data);
-
-            const mockPostMessage = jest.fn();
-            (view as any).panel = { webview: { postMessage: mockPostMessage } };
-
-            const message = {
-                command: "check-condition-for-action",
-                requestId: "not-found-test",
-                payload: {
-                    actionId: "non-existent-action",
-                    row: { name: "test", value: 123 },
-                    rowIndex: 0,
-                },
-            };
-
-            await view.onMessageReceived(message);
-
-            expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "condition-for-action-result",
-                requestId: "not-found-test",
-                payload: false,
             });
         });
 
@@ -1042,7 +1009,7 @@ describe("Table.View", () => {
             await view.onMessageReceived(message);
 
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "condition-for-action-result",
+                command: "check-condition-for-action",
                 requestId: "error-test",
                 payload: false,
             });
@@ -1083,7 +1050,7 @@ describe("Table.View", () => {
 
             expect(titleFn).toHaveBeenCalledWith({ name: "test", value: 123 });
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "dynamic-title-for-action-result",
+                command: "get-dynamic-title-for-action",
                 requestId: "dynamic-title-test-123",
                 payload: "Dynamic Title",
             });
@@ -1122,7 +1089,7 @@ describe("Table.View", () => {
 
             expect(titleFn).toHaveBeenCalledWith({ name: "test", value: 456 });
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "dynamic-title-for-action-result",
+                command: "get-dynamic-title-for-action",
                 requestId: "async-dynamic-title-test-456",
                 payload: "Async Dynamic Title",
             });
@@ -1159,7 +1126,7 @@ describe("Table.View", () => {
             await view.onMessageReceived(message);
 
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "dynamic-title-for-action-result",
+                command: "get-dynamic-title-for-action",
                 requestId: "static-title-test-789",
                 payload: "Static Title",
             });
@@ -1199,7 +1166,7 @@ describe("Table.View", () => {
             await view.onMessageReceived(message);
 
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "dynamic-title-for-action-result",
+                command: "get-dynamic-title-for-action",
                 requestId: "error-title-test",
                 payload: "error-title-action", // falls back to command
             });
@@ -1241,7 +1208,7 @@ describe("Table.View", () => {
 
             expect(hideConditionFn).toHaveBeenCalledWith({ name: "test", value: 123 });
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "hide-condition-for-action-result",
+                command: "check-hide-condition-for-action",
                 requestId: "hide-test-123",
                 payload: true,
             });
@@ -1281,7 +1248,7 @@ describe("Table.View", () => {
 
             expect(hideConditionFn).toHaveBeenCalledWith({ name: "test", value: 123 });
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "hide-condition-for-action-result",
+                command: "check-hide-condition-for-action",
                 requestId: "hide-test-async-123",
                 payload: true,
             });
@@ -1318,7 +1285,7 @@ describe("Table.View", () => {
             await view.onMessageReceived(message);
 
             expect(mockPostMessage).toHaveBeenCalledWith({
-                command: "hide-condition-for-action-result",
+                command: "check-hide-condition-for-action",
                 requestId: "no-hide-test-456",
                 payload: false, // defaults to false
             });

@@ -17,6 +17,9 @@ import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
 import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
+import { MarkdownString, TreeItemCollapsibleState } from "vscode";
+import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
+import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
 
 jest.mock("../../../src/tools/ZoweLocalStorage");
 
@@ -1049,6 +1052,95 @@ describe("AuthUtils", () => {
                 }),
                 profile
             );
+        });
+    });
+
+    describe("updateNodeToolTip", () => {
+        let mockProfile: imperative.IProfileLoaded;
+        let isUsingTokenAuthSpy: jest.SpyInstance;
+        let loggerErrorSpy: jest.SpyInstance;
+        let createDirectoryMock: jest.SpyInstance;
+
+        beforeEach(() => {
+            mockProfile = {
+                name: "testProfile",
+                profile: {
+                    user: "testUser",
+                    password: "testPassword",
+                },
+                type: "zosmf",
+                message: "",
+                failNotFound: false,
+            };
+            isUsingTokenAuthSpy = jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(false);
+            loggerErrorSpy = jest.spyOn(ZoweLogger, "error").mockImplementation();
+            createDirectoryMock = jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation();
+        });
+
+        afterEach(() => {
+            jest.clearAllMocks();
+        });
+
+        it("should not throw when sessionNode has an undefined tooltip", async () => {
+            const mockSessionNode = new ZoweUSSNode({
+                label: "sestest",
+                collapsibleState: TreeItemCollapsibleState.Collapsed,
+                contextOverride: Constants.USS_SESSION_CONTEXT,
+                parentNode: undefined,
+                session: createISession(),
+                profile: mockProfile,
+            });
+            mockSessionNode.fullPath = "/test/path";
+
+            await expect(AuthUtils.updateNodeToolTip(mockSessionNode, mockProfile)).resolves.not.toThrow();
+            expect(mockSessionNode.tooltip).toBeDefined();
+            expect(typeof mockSessionNode.tooltip).toBe("string");
+            expect(mockSessionNode.tooltip).toContain("Auth Method: Basic Authentication");
+            expect(mockSessionNode.tooltip).toContain("User: testUser");
+            expect(mockSessionNode.tooltip).toContain("Path: /test/path");
+        });
+
+        it("should not throw when sessionNode has a MarkdownString tooltip", async () => {
+            const mockMarkdownString = new MarkdownString("Existing tooltip content");
+            const mockSessionNode = new ZoweUSSNode({
+                label: "sestest",
+                collapsibleState: TreeItemCollapsibleState.Collapsed,
+                contextOverride: Constants.USS_SESSION_CONTEXT,
+                parentNode: undefined,
+                session: createISession(),
+                profile: mockProfile,
+            });
+            mockSessionNode.tooltip = mockMarkdownString;
+            mockSessionNode.fullPath = "/test/path";
+
+            await expect(AuthUtils.updateNodeToolTip(mockSessionNode, mockProfile)).resolves.not.toThrow();
+            expect(mockSessionNode.tooltip).toBeDefined();
+            expect(typeof mockSessionNode.tooltip).toBe("string");
+            expect(mockSessionNode.tooltip).toContain("Existing tooltip content");
+            expect(mockSessionNode.tooltip).toContain("Auth Method: Basic Authentication");
+            expect(mockSessionNode.tooltip).toContain("User: testUser");
+            expect(mockSessionNode.tooltip).toContain("Path: /test/path");
+        });
+
+        it("should not throw when sessionNode has a string tooltip", async () => {
+            const mockSessionNode = new ZoweUSSNode({
+                label: "sestest",
+                collapsibleState: TreeItemCollapsibleState.Collapsed,
+                contextOverride: Constants.USS_SESSION_CONTEXT,
+                parentNode: undefined,
+                session: createISession(),
+                profile: mockProfile,
+            });
+            mockSessionNode.fullPath = "/test/path";
+            mockSessionNode.tooltip = "Existing string tooltip";
+
+            await expect(AuthUtils.updateNodeToolTip(mockSessionNode, mockProfile)).resolves.not.toThrow();
+            expect(mockSessionNode.tooltip).toBeDefined();
+            expect(typeof mockSessionNode.tooltip).toBe("string");
+            expect(mockSessionNode.tooltip).toContain("Existing string tooltip");
+            expect(mockSessionNode.tooltip).toContain("Auth Method: Basic Authentication");
+            expect(mockSessionNode.tooltip).toContain("User: testUser");
+            expect(mockSessionNode.tooltip).toContain("Path: /test/path");
         });
     });
 });
