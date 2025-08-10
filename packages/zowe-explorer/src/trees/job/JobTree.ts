@@ -1195,6 +1195,10 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             return;
         }
 
+        if (!session.filtered) {
+            await this.filterPrompt(session);
+        }
+
         // Filter all jobs on the session node for active jobs
         if (!session.children || session.children.length === 0) {
             Gui.infoMessage(
@@ -1222,7 +1226,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
 
         if (activeJobs.length > Constants.MIN_WARN_ACTIVE_JOBS_TO_POLL) {
             const warningMessage = vscode.l10n.t({
-                message: "Polling {0} active jobs may cause too many requests. Do you want to continue?",
+                message: "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?",
                 args: [activeJobs.length],
                 comment: ["Number of active jobs"],
             });
@@ -1256,19 +1260,19 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 session.children?.forEach((job) => {
                     if (SharedContext.isPolling(job)) {
                         // If job is no longer active, show completion notification
-                        if (!job.job || !job.job.status || job.job.status.toUpperCase() !== "ACTIVE") {
-                            if (job.job && job.job.status) {
-                                const sessProfileName = session.getProfileName();
-                                const args = [sessProfileName, job.job.jobid];
-                                const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
-                                Gui.showMessage(
-                                    vscode.l10n.t({
-                                        message: "Job completed {0} - {1}",
-                                        args: [`[${job.job.jobid}](${setJobCmd})`, job.job.retcode],
-                                        comment: ["Job ID with clickable link", "Job status"],
-                                    })
-                                );
-                            }
+                        const status = job.job?.status?.toUpperCase();
+                        if (status && status !== "ACTIVE") {
+                            const sessProfileName = session.getProfileName();
+                            const args = [sessProfileName, job.job.jobid];
+                            const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND as string}?${encodeURIComponent(JSON.stringify(args))}`;
+                            Gui.showMessage(
+                                vscode.l10n.t({
+                                    message: "Job completed {0} - {1}",
+                                    args: [`[${job.job.jobid}](${setJobCmd})`, job.job.retcode],
+                                    comment: ["Job ID with clickable link", "Job status"],
+                                })
+                            );
+
                             // Remove polling context from completed jobs
                             this.updatePollContext(job);
                         }

@@ -1243,10 +1243,51 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         expect(Poller.pollRequests).toStrictEqual({});
     });
 
+    it("should prompt user for a filter if filter is not set", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const mockProfilesCache = {
+            getDefaultProfile: jest.fn().mockReturnValue(globalMocks.testProfile),
+            shouldRemoveTokenFromProfile: jest.fn().mockReturnValue(false),
+            loadNamedProfile: jest.fn().mockReturnValue(globalMocks.testProfile),
+            getPropsForProfile: jest.fn().mockResolvedValue({}),
+        };
+        Object.defineProperty(Constants, "PROFILES_CACHE", {
+            value: mockProfilesCache,
+            configurable: true,
+        });
+
+        globalMocks.mockProfileInstance.validProfile = 1;
+
+        const mockQuickPick = {
+            items: [],
+            placeholder: "",
+            ignoreFocusOut: false,
+            show: jest.fn(),
+            hide: jest.fn(),
+            onDidAccept: jest.fn(),
+            onDidHide: jest.fn(),
+        };
+        globalMocks.mockCreateQuickPick.mockReturnValue(mockQuickPick);
+
+        jest.spyOn(globalMocks.testJobsProvider.mHistory, "getSearchHistory").mockReturnValue(["Owner:test Prefix:* Status:*"]);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue(undefined);
+
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        const filterPromptSpy = jest.spyOn(globalMocks.testJobsProvider, "filterPrompt").mockResolvedValue();
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        expect(inputBoxSpy).toHaveBeenCalled();
+        expect(filterPromptSpy).toHaveBeenCalled();
+    });
+
     it("should show info message when no children exist", async () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
         testSessionNode.children = [];
+        testSessionNode.filtered = true;
 
         const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
         const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
@@ -1260,6 +1301,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
     it("should show info message when no active jobs found", async () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        testSessionNode.filtered = true;
 
         const mockCompletedJob = new ZoweJobNode({
             label: "TESTJOB(JOB001) - CC 0000",
@@ -1283,6 +1325,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
     it("should show warning and return if user cancels when too many active jobs", async () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        testSessionNode.filtered = true;
 
         const activeJobs = [];
         for (let i = 0; i < Constants.MIN_WARN_ACTIVE_JOBS_TO_POLL + 1; i++) {
@@ -1316,6 +1359,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
     it("should start polling active jobs successfully", async () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        testSessionNode.filtered = true;
 
         const mockActiveJob1 = new ZoweJobNode({
             label: "TESTJOB1(JOB001) - ACTIVE",
@@ -1358,6 +1402,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
     it("should stop polling when no active jobs remain", async () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        testSessionNode.filtered = true;
 
         const mockActiveJob = new ZoweJobNode({
             label: "TESTJOB(JOB001) - ACTIVE",
@@ -1393,6 +1438,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
     it("should handle job completion of only one job during polling", async () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        testSessionNode.filtered = true;
 
         const mockActiveJob = new ZoweJobNode({
             label: "TESTJOB(JOB001) - ACTIVE",
@@ -1431,6 +1477,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
     it("should handle job completion of one job while another stays active during polling", async () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        testSessionNode.filtered = true;
 
         const mockActiveJob1 = new ZoweJobNode({
             label: "TESTJOB1(JOB001) - ACTIVE",
@@ -1480,6 +1527,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
     it("should handle multiple job status changes in a single polling cycle", async () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        testSessionNode.filtered = true;
 
         const mockActiveJob1 = new ZoweJobNode({
             label: "TESTJOB1(JOB001) - ACTIVE",
@@ -1530,6 +1578,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
     it("should handle new active jobs appearing during polling", async () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        testSessionNode.filtered = true;
 
         const mockActiveJob1 = new ZoweJobNode({
             label: "TESTJOB1(JOB001) - ACTIVE",
@@ -1582,6 +1631,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
     it("should dispose status message when no active jobs remain", async () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        testSessionNode.filtered = true;
 
         const mockActiveJob = new ZoweJobNode({
             label: "TESTJOB(JOB001) - ACTIVE",

@@ -475,8 +475,8 @@
       "Session label"
     ]
   },
-  "Polling {0} active jobs may cause performance issues. Do you want to continue?/Number of active jobs": {
-    "message": "Polling {0} active jobs may cause performance issues. Do you want to continue?",
+  "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?/Number of active jobs": {
+    "message": "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?",
     "comment": [
       "Number of active jobs"
     ]
@@ -487,17 +487,17 @@
       "Number of active jobs"
     ]
   },
+  "Job completed {0} - {1}/Job ID with clickable linkJob status": {
+    "message": "Job completed {0} - {1}",
+    "comment": [
+      "Job ID with clickable link",
+      "Job status"
+    ]
+  },
   "No more active jobs for {0}. Stopping polling./Session label": {
     "message": "No more active jobs for {0}. Stopping polling.",
     "comment": [
       "Session label"
-    ]
-  },
-  "Job completed {0} - Retcode: {1}/Job ID with clickable linkJob status": {
-    "message": "Job completed {0} - Retcode: {1}",
-    "comment": [
-      "Job ID with clickable link",
-      "Job status"
     ]
   },
   "Filter: {0}/The new filter": {
