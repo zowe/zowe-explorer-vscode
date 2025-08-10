@@ -18,6 +18,7 @@ import {
   NewLayerModal,
   ProfileWizardModal,
   PreviewArgsModal,
+  AddConfigModal,
 } from "./components";
 
 // Hooks
@@ -98,6 +99,7 @@ export function App() {
   const [wizardRootProfile, setWizardRootProfile] = useState("root");
   const [wizardSelectedType, setWizardSelectedType] = useState("");
   const [wizardProfileName, setWizardProfileName] = useState("");
+  const [addConfigModalOpen, setAddConfigModalOpen] = useState(false);
   const [wizardProperties, setWizardProperties] = useState<{ key: string; value: string | boolean | number | Object; secure?: boolean }[]>([]);
   const [wizardShowKeyDropdown, setWizardShowKeyDropdown] = useState(false);
   const [wizardNewPropertyKey, setWizardNewPropertyKey] = useState("");
@@ -116,6 +118,7 @@ export function App() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [pendingSaveSelection, setPendingSaveSelection] = useState<{ tab: number | null; profile: string | null } | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [viewMode, setViewMode] = useState<"flat" | "tree">("tree");
   // Invoked on webview load
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -294,12 +297,12 @@ export function App() {
     };
   }, [profileMenuOpen]);
 
-  // Trigger wizard merged properties request when root profile or type changes
+  // Trigger wizard merged properties request when root profile, type, or pending changes change
   useEffect(() => {
     if (wizardModalOpen && selectedTab !== null && (wizardRootProfile || wizardSelectedType)) {
       requestWizardMergedProperties();
     }
-  }, [wizardRootProfile, wizardSelectedType, wizardModalOpen, selectedTab]);
+  }, [wizardRootProfile, wizardSelectedType, wizardModalOpen, selectedTab, pendingChanges, pendingDefaults, deletions, defaultsDeletions]);
 
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
@@ -1130,6 +1133,85 @@ export function App() {
     return false;
   };
 
+  // Helper function to determine if a property is currently secure
+  const isPropertySecure = (fullKey: string, displayKey: string, path: string[], mergedProps?: any, originalProperties?: any): boolean => {
+    const configPath = configurations[selectedTab!]!.configPath;
+
+    // Check if this property is from merged properties
+    const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, originalProperties, configPath);
+
+    if (isFromMergedProps) {
+      const mergedPropData = displayKey ? mergedProps?.[displayKey] : undefined;
+      const jsonLoc = mergedPropData?.jsonLoc;
+      const osLoc = mergedPropData?.osLoc;
+      const secure = mergedPropData?.secure;
+      return isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure);
+    }
+
+    // Check if this property is in pending changes with secure flag
+    const pendingChange = pendingChanges[configPath]?.[fullKey];
+    if (pendingChange) {
+      return pendingChange.secure || false;
+    }
+
+    // Check if this property is in the original configuration's secure array
+    const profileKey = extractProfileKeyFromPath(path);
+    if (profileKey) {
+      const profile = configurations[selectedTab!]?.properties?.profiles?.[profileKey];
+      return profile?.secure?.includes(displayKey) || false;
+    }
+
+    return false;
+  };
+
+  // Helper function to toggle the secure state of a property
+  const handleToggleSecure = (fullKey: string, displayKey: string, path: string[]) => {
+    const configPath = configurations[selectedTab!]!.configPath;
+    const profileKey = extractProfileKeyFromPath(path);
+    const currentSecure = isPropertySecure(fullKey, displayKey, path);
+    const newSecure = !currentSecure;
+
+    // Get the current value
+    const currentValue =
+      pendingChanges[configPath]?.[fullKey]?.value ??
+      configurations[selectedTab!]?.properties?.profiles?.[profileKey]?.properties?.[displayKey] ??
+      "";
+
+    // Update the pending changes with the new secure state
+    setPendingChanges((prev) => ({
+      ...prev,
+      [configPath]: {
+        ...prev[configPath],
+        [fullKey]: {
+          value: currentValue,
+          path,
+          profile: profileKey,
+          secure: newSecure,
+        },
+      },
+    }));
+  };
+
+  // Helper function to check if a profile has any pending secure state changes
+  const hasPendingSecureChanges = (profileKey: string): boolean => {
+    const configPath = configurations[selectedTab!]!.configPath;
+    const pendingChangesForConfig = pendingChanges[configPath] || {};
+
+    // Check if any property in this profile has a pending secure state change
+    return Object.entries(pendingChangesForConfig).some(([key, entry]) => {
+      if (entry.profile !== profileKey) return false;
+
+      // Check if this is a property (not type or other profile-level properties)
+      const keyParts = key.split(".");
+      if (!keyParts.includes("properties")) return false;
+
+      // Check if the secure state has changed from the original
+      const originalSecure =
+        configurations[selectedTab!]?.properties?.profiles?.[profileKey]?.secure?.includes(keyParts[keyParts.length - 1]) || false;
+      return entry.secure !== originalSecure;
+    });
+  };
+
   // Helper function to extract pending profiles from pending changes
   const extractPendingProfiles = (configPath: string): { [key: string]: any } => {
     const pendingProfiles: { [key: string]: any } = {};
@@ -1265,6 +1347,8 @@ export function App() {
         onSetAsDefault={handleSetAsDefault}
         isProfileDefault={isProfileDefault}
         getProfileType={getProfileType}
+        viewMode={viewMode}
+        hasPendingSecureChanges={hasPendingSecureChanges}
       />
     );
   };
@@ -1295,8 +1379,50 @@ export function App() {
               </button>
               <button
                 className="action-button"
-                onClick={() => handleSetAsDefault(selectedProfileKey)}
-                title={isProfileDefault(selectedProfileKey) ? "Currently default" : "Set as default"}
+                onClick={() => {
+                  const configPath = configurations[selectedTab!]?.configPath;
+                  if (configPath) {
+                    vscodeApi.postMessage({
+                      command: "OPEN_CONFIG_FILE_WITH_PROFILE",
+                      filePath: configPath,
+                      profileKey: selectedProfileKey,
+                    });
+                  }
+                }}
+                title="Open config file with profile highlighted"
+                style={{
+                  padding: "4px",
+                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "transparent",
+                }}
+              >
+                <span className="codicon codicon-go-to-file"></span>
+              </button>
+              <button
+                className="action-button"
+                onClick={() => {
+                  if (isProfileDefault(selectedProfileKey)) {
+                    // If already default, deselect it by setting to empty
+                    const profileType = getProfileType(selectedProfileKey);
+                    if (profileType) {
+                      const configPath = configurations[selectedTab!]!.configPath;
+                      setPendingDefaults((prev) => ({
+                        ...prev,
+                        [configPath]: {
+                          ...prev[configPath],
+                          [profileType]: { value: "", path: [profileType] },
+                        },
+                      }));
+                    }
+                  } else {
+                    // Set as default
+                    handleSetAsDefault(selectedProfileKey);
+                  }
+                }}
+                title={isProfileDefault(selectedProfileKey) ? "Click to remove default" : "Set as default"}
                 style={{
                   padding: "4px",
                   fontSize: "12px",
@@ -1625,11 +1751,26 @@ export function App() {
             ) : (
               <span>{"{...}"}</span>
             )}
-            {displayKey !== "type" && !isFromMergedProps && (
-              <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
-                <span className="codicon codicon-trash"></span>
-              </button>
-            )}
+            {displayKey !== "type" &&
+              displayKey &&
+              !isFromMergedProps &&
+              (() => {
+                const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties);
+                return (
+                  <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                    <button
+                      className="action-button"
+                      onClick={() => handleToggleSecure(fullKey, displayKey, path)}
+                      title={isSecure ? "Make property non-secure" : "Make property secure"}
+                    >
+                      <span className={`codicon codicon-${isSecure ? "lock" : "unlock"}`}></span>
+                    </button>
+                    <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
+                      <span className="codicon codicon-trash"></span>
+                    </button>
+                  </div>
+                );
+              })()}
             {displayKey !== "type" && isFromMergedProps && (
               <button
                 className="action-button"
@@ -1893,7 +2034,15 @@ export function App() {
       }
     });
 
-    return ["root", ...profileNames, ...Array.from(pendingProfiles)];
+    // Combine all profiles and ensure uniqueness
+    const allProfiles = new Set(["root", ...profileNames, ...Array.from(pendingProfiles)]);
+    return Array.from(allProfiles).sort((a, b) => {
+      // Always put "root" first
+      if (a === "root") return -1;
+      if (b === "root") return 1;
+      // Sort other profiles alphabetically
+      return a.localeCompare(b);
+    });
   };
 
   const getAvailableProfilesByType = (profileType: string) => {
@@ -2214,14 +2363,33 @@ export function App() {
     setWizardMergedProperties({});
   };
 
+  const handleAddNewConfig = () => {
+    setAddConfigModalOpen(true);
+  };
+
+  const handleAddConfig = (configType: string) => {
+    // Send message to create new config file
+    vscodeApi.postMessage({
+      command: "CREATE_NEW_CONFIG",
+      configType: configType,
+    });
+    setAddConfigModalOpen(false);
+  };
+
+  const handleCancelAddConfig = () => {
+    setAddConfigModalOpen(false);
+  };
+
   const requestWizardMergedProperties = () => {
     if (selectedTab !== null) {
       const configPath = configurations[selectedTab].configPath;
+      const changes = formatPendingChanges();
       vscodeApi.postMessage({
         command: "GET_WIZARD_MERGED_PROPERTIES",
         rootProfile: wizardRootProfile,
         profileType: wizardSelectedType,
         configPath: configPath,
+        changes: changes,
       });
     }
   };
@@ -2302,7 +2470,14 @@ export function App() {
 
   return (
     <div>
-      <Tabs configurations={configurations} selectedTab={selectedTab} onTabChange={handleTabChange} onOpenRawFile={handleOpenRawJson} />
+      <Tabs
+        configurations={configurations}
+        selectedTab={selectedTab}
+        onTabChange={handleTabChange}
+        onOpenRawFile={handleOpenRawJson}
+        onAddNewConfig={handleAddNewConfig}
+        pendingChanges={pendingChanges}
+      />
       <Panels
         configurations={configurations}
         selectedTab={selectedTab}
@@ -2311,6 +2486,8 @@ export function App() {
         renderDefaults={renderDefaults}
         onAddDefault={() => setNewKeyModalOpen(true)}
         onProfileWizard={() => setWizardModalOpen(true)}
+        viewMode={viewMode}
+        onViewModeToggle={() => setViewMode(viewMode === "tree" ? "flat" : "tree")}
       />
       <Footer
         onClearChanges={() => {
@@ -2448,6 +2625,14 @@ export function App() {
       />
 
       <PreviewArgsModal isOpen={previewArgsModalOpen} argsData={previewArgsData} onClose={() => setPreviewArgsModalOpen(false)} />
+
+      <AddConfigModal
+        isOpen={addConfigModalOpen}
+        configurations={configurations}
+        hasWorkspace={true} // TODO: Get this from VS Code API
+        onAdd={handleAddConfig}
+        onCancel={handleCancelAddConfig}
+      />
     </div>
   );
 }

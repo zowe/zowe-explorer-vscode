@@ -9,11 +9,12 @@
  *
  */
 
-import { DeferredPromise, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { DeferredPromise, WebView, ZoweVsCodeExtension, FileManagement } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { ProfileInfo } from "@zowe/imperative";
+import { ProfileInfo, Config, ConfigBuilder, ConfigSchema } from "@zowe/imperative";
 import * as path from "path";
 import * as fs from "fs";
+import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
 
 type ChangeEntry = {
     key: string;
@@ -175,6 +176,127 @@ export class ConfigEditor extends WebView {
                 }
                 break;
             }
+            case "OPEN_CONFIG_FILE_WITH_PROFILE": {
+                try {
+                    const document = await vscode.workspace.openTextDocument(vscode.Uri.file(message.filePath));
+                    const editor = await vscode.window.showTextDocument(document);
+
+                    // Find and place cursor at the beginning of the profile in the JSON file
+                    const profileKey = message.profileKey;
+                    const text = document.getText();
+                    const lines = text.split("\n");
+
+                    // Handle nested profiles by splitting the profile key
+                    const profileParts = profileKey.split(".");
+                    let currentLine = -1;
+                    let currentColumn = 0;
+                    let foundProfile = false;
+                    let globalBraceCount = 0;
+                    let inProfilesSection = false;
+                    let profileDepth = 0;
+                    let inTargetProfile = false;
+                    let targetProfileBraceCount = 0;
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i];
+                        const trimmedLine = line.trim();
+                        // Count global braces
+                        for (const char of line) {
+                            if (char === "{") globalBraceCount++;
+                            if (char === "}") globalBraceCount--;
+                        }
+                        // Check if we're entering the profiles section
+                        if (trimmedLine.includes('"profiles"')) {
+                            if (!inTargetProfile) {
+                                // Main profiles section
+                                inProfilesSection = true;
+                                profileDepth = 0;
+                                inTargetProfile = false;
+                                targetProfileBraceCount = 0;
+                            } else {
+                                // Nested profiles section within a target profile
+                                profileDepth++;
+                                inTargetProfile = false;
+                                targetProfileBraceCount = 0;
+                            }
+                            continue;
+                        }
+                        if (inProfilesSection) {
+                            // If we're inside a target profile, track its brace count
+                            if (inTargetProfile) {
+                                for (const char of line) {
+                                    if (char === "{") targetProfileBraceCount++;
+                                    if (char === "}") targetProfileBraceCount--;
+                                }
+
+                                // Check if we found a profile within the target profile
+                                const profileMatch = trimmedLine.match(/"([^"]+)":\s*\{/);
+                                if (profileMatch) {
+                                    const foundProfileName = profileMatch[1];
+
+                                    // Check if this is the profile we're looking for at the current depth
+                                    if (profileParts[profileDepth] === foundProfileName) {
+                                        if (profileDepth === profileParts.length - 1) {
+                                            // This is the final profile we're looking for
+                                            foundProfile = true;
+                                            currentLine = i;
+                                            // Find the column position at the end of the profile name
+                                            const profileNameIndex = line.indexOf(`"${foundProfileName}"`);
+                                            currentColumn = profileNameIndex >= 0 ? profileNameIndex + foundProfileName.length + 2 : 0; // +2 for the quotes
+                                            break;
+                                        }
+                                    }
+                                }
+                                // If we exit the target profile, reset
+                                if (targetProfileBraceCount === 0) {
+                                    inTargetProfile = false;
+                                    profileDepth = 0;
+                                }
+                            } else {
+                                // Check if we found a profile (any profile)
+                                const profileMatch = trimmedLine.match(/"([^"]+)":\s*\{/);
+                                if (profileMatch) {
+                                    const foundProfileName = profileMatch[1];
+
+                                    // Check if this is the profile we're looking for at the current depth
+                                    if (profileParts[profileDepth] === foundProfileName) {
+                                        if (profileDepth === profileParts.length - 1) {
+                                            // This is the final profile we're looking for
+                                            foundProfile = true;
+                                            currentLine = i;
+                                            // Find the column position at the end of the profile name
+                                            const profileNameIndex = line.indexOf(`"${foundProfileName}"`);
+                                            currentColumn = profileNameIndex >= 0 ? profileNameIndex + foundProfileName.length + 2 : 0; // +2 for the quotes
+                                            break;
+                                        } else {
+                                            // This is a nested profile, start tracking within this profile
+                                            inTargetProfile = true;
+                                            targetProfileBraceCount = 1; // Start with 1 for the opening brace
+                                            continue;
+                                        }
+                                    }
+                                }
+                            }
+                            // If we exit the profiles section, reset
+                            if (globalBraceCount === 0) {
+                                inProfilesSection = false;
+                                profileDepth = 0;
+                                inTargetProfile = false;
+                                targetProfileBraceCount = 0;
+                            }
+                        }
+                    }
+                    if (foundProfile && currentLine !== -1) {
+                        const position = new vscode.Position(currentLine, currentColumn);
+                        editor.selection = new vscode.Selection(position, position);
+                        editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
+                    } else {
+                        vscode.window.showInformationMessage(`Profile "${profileKey}" not found in the config file.`);
+                    }
+                } catch (error) {
+                    vscode.window.showErrorMessage(`Error opening file: ${message.filePath as string}: ${error.message}`);
+                }
+                break;
+            }
             case "PREVIEW_ARGS": {
                 const mergedArgs = await this.getMergedArgsForProfile(message.profilePath, message.configPath);
                 await this.panel.webview.postMessage({
@@ -193,7 +315,12 @@ export class ConfigEditor extends WebView {
                 break;
             }
             case "GET_WIZARD_MERGED_PROPERTIES": {
-                const mergedArgs = await this.getWizardMergedProperties(message.rootProfile, message.profileType, message.configPath);
+                const mergedArgs = await this.getWizardMergedProperties(
+                    message.rootProfile,
+                    message.profileType,
+                    message.configPath,
+                    message.changes
+                );
                 await this.panel.webview.postMessage({
                     command: "WIZARD_MERGED_PROPERTIES",
                     mergedArgs,
@@ -219,6 +346,101 @@ export class ConfigEditor extends WebView {
                         isNewProperty: message.isNewProperty,
                         source: message.source,
                     });
+                }
+                break;
+            }
+            case "CREATE_NEW_CONFIG": {
+                try {
+                    const configType = message.configType;
+                    let global = false;
+                    let user = false;
+                    let rootPath = "";
+
+                    // Parse config type
+                    if (configType === "global-team") {
+                        global = true;
+                        user = false;
+                        rootPath = FileManagement.getZoweDir();
+                    } else if (configType === "global-user") {
+                        global = true;
+                        user = true;
+                        rootPath = FileManagement.getZoweDir();
+                    } else if (configType === "project-team") {
+                        global = false;
+                        user = false;
+                        rootPath = ZoweVsCodeExtension.workspaceRoot?.uri.fsPath || "";
+                    } else if (configType === "project-user") {
+                        global = false;
+                        user = true;
+                        rootPath = ZoweVsCodeExtension.workspaceRoot?.uri.fsPath || "";
+                    }
+
+                    if (!rootPath) {
+                        vscode.window.showErrorMessage("Cannot create project configuration: No workspace is open.");
+                        break;
+                    }
+
+                    // Check for existing configuration and handle conflicts
+                    const existingFile = await this.checkExistingConfig(rootPath, user);
+                    if (existingFile === false) {
+                        // User cancelled the operation
+                        return;
+                    }
+                    if (existingFile != null) {
+                        user = existingFile.includes("user");
+                    }
+
+                    // Load the configuration
+                    const config = await Config.load("zowe", {
+                        homeDir: FileManagement.getZoweDir(),
+                        projectDir: FileManagement.getFullPath(rootPath),
+                    });
+
+                    // Activate the appropriate layer
+                    if (ZoweVsCodeExtension.workspaceRoot != null) {
+                        config.api.layers.activate(user, global, rootPath);
+                    }
+
+                    // Get known CLI configurations
+                    const knownCliConfig: any[] = ZoweVsCodeExtension.profilesCache.getCoreProfileTypes();
+                    knownCliConfig.push(...ZoweVsCodeExtension.profilesCache.getConfigArray());
+                    knownCliConfig.push(ProfileConstants.BaseProfile);
+                    config.setSchema(ConfigSchema.buildSchema(knownCliConfig));
+
+                    // Build options for configuration creation
+                    const opts: any = {
+                        populateProperties: true,
+                    };
+
+                    // Build new config and merge with existing layer
+                    const impConfig: any = {
+                        profiles: [...knownCliConfig],
+                        baseProfile: ProfileConstants.BaseProfile,
+                    };
+                    const newConfig: any = await ConfigBuilder.build(impConfig, global, opts);
+
+                    // Merge and save the configuration
+                    config.api.layers.merge(newConfig);
+                    await config.save(false);
+
+                    // Get the config file name
+                    let configName;
+                    if (user) {
+                        configName = config.userConfigName;
+                    } else {
+                        configName = config.configName;
+                    }
+
+                    // Open the config file
+                    await ZoweVsCodeExtension.openConfigFile(path.join(rootPath, configName));
+
+                    // Refresh the configurations in the webview
+                    await this.panel.webview.postMessage({
+                        command: "CONFIGURATIONS",
+                        contents: await this.getLocalConfigs(),
+                    });
+                } catch (error) {
+                    vscode.window.showErrorMessage(`Error creating new configuration: ${error.message}`);
                 }
                 break;
             }
@@ -455,11 +677,25 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    private async getWizardMergedProperties(rootProfile: string, profileType: string, configPath: string): Promise<any> {
+    private async getWizardMergedProperties(rootProfile: string, profileType: string, configPath: string, changes?: any): Promise<any> {
         const profInfo = new ProfileInfo("zowe");
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         const teamConfig = profInfo.getTeamConfig();
+
+        // Apply pending changes if provided
+        if (changes) {
+            const parsedChanges = this.parseConfigChanges(changes);
+            for (const change of parsedChanges) {
+                if (change.defaultsChanges || change.defaultsDeleteKeys) {
+                    this.simulateDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
+                }
+
+                if (change.changes || change.deletions) {
+                    this.simulateProfileChanges(change.changes, change.deletions, change.configPath, teamConfig);
+                }
+            }
+        }
 
         if (configPath !== teamConfig.api.layers.get().path) {
             const findProfile = teamConfig.layers.find((prof: any) => prof.path === configPath);
@@ -501,5 +737,31 @@ export class ConfigEditor extends WebView {
             const mergedArgs = profInfo.mergeArgsForProfile(rootProfileInstance, { getSecureVals: true });
             return mergedArgs.knownArgs || [];
         }
+    }
+
+    private async checkExistingConfig(filePath: string, user: boolean): Promise<string | false | null> {
+        const existingLayers = await ZoweVsCodeExtension.getConfigLayers();
+
+        // Check for both zowe.config.json and zowe.config.user.json in the directory
+        const configFiles = user ? ["zowe.config.user.json"] : ["zowe.config.json"];
+        const foundLayer = existingLayers.find((layer) => {
+            const layerDir = path.dirname(layer.path);
+            const layerFile = path.basename(layer.path);
+            return layerDir === filePath && configFiles.includes(layerFile);
+        });
+
+        if (foundLayer == null) {
+            return null;
+        }
+        const createButton = "Create New";
+        const message =
+            `A Team Configuration File already exists in this location\n{0}\n` + `Continuing may alter the existing file, would you like to proceed?`;
+        const response = await vscode.window.showInformationMessage(message, { modal: true }, createButton);
+        if (response) {
+            return path.basename(foundLayer.path);
+        } else {
+            await ZoweVsCodeExtension.openConfigFile(foundLayer.path);
+        }
+        return false;
     }
 }

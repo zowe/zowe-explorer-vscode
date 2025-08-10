@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ProfileSearchFilter } from "./ProfileSearchFilter";
+import { ProfileTree } from "./ProfileTree";
 
 interface ProfileListProps {
   sortedProfileKeys: string[];
@@ -14,6 +15,8 @@ interface ProfileListProps {
   onSetAsDefault: (profileKey: string) => void;
   isProfileDefault: (profileKey: string) => boolean;
   getProfileType: (profileKey: string) => string | null;
+  viewMode: "flat" | "tree";
+  hasPendingSecureChanges: (profileKey: string) => boolean;
 }
 
 export function ProfileList({
@@ -23,6 +26,8 @@ export function ProfileList({
   onProfileSelect,
   isProfileDefault,
   getProfileType,
+  viewMode,
+  hasPendingSecureChanges,
 }: ProfileListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string | null>(null);
@@ -77,53 +82,68 @@ export function ProfileList({
         <ProfileSearchFilter onSearchChange={setSearchTerm} onFilterChange={setFilterType} availableTypes={availableTypes} />
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {filteredProfileKeys.map((profileKey) => (
-          <div
-            key={profileKey}
-            className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""}`}
-            style={{
-              cursor: "pointer",
-              margin: "8px 0",
-              padding: "8px",
-              borderRadius: "4px",
-              border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "2px solid transparent",
-              backgroundColor: "var(--vscode-button-secondaryBackground)",
-              position: "relative",
-            }}
-            onClick={() => {
-              if (selectedProfileKey === profileKey) {
-                // If clicking on the already selected profile, deselect it
-                onProfileSelect("");
-              } else {
-                onProfileSelect(profileKey);
-              }
-            }}
-            title={profileKey}
-          >
-            <strong
+        {viewMode === "tree" ? (
+          <ProfileTree
+            profileKeys={filteredProfileKeys}
+            selectedProfileKey={selectedProfileKey}
+            pendingProfiles={pendingProfiles}
+            onProfileSelect={onProfileSelect}
+            isProfileDefault={isProfileDefault}
+            getProfileType={getProfileType}
+            hasPendingSecureChanges={hasPendingSecureChanges}
+          />
+        ) : (
+          filteredProfileKeys.map((profileKey) => (
+            <div
+              key={profileKey}
+              className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""}`}
               style={{
-                display: "block",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                opacity: pendingProfiles[profileKey] ? 0.7 : 1,
+                cursor: "pointer",
+                margin: "2px 0",
+                padding: "6px 8px",
+                borderRadius: "4px",
+                border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "2px solid transparent",
+                backgroundColor: "var(--vscode-button-secondaryBackground)",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "0.9em",
               }}
+              onClick={() => {
+                if (selectedProfileKey === profileKey) {
+                  // If clicking on the already selected profile, deselect it
+                  onProfileSelect("");
+                } else {
+                  onProfileSelect(profileKey);
+                }
+              }}
+              title={profileKey}
             >
-              {profileKey}
+              <span
+                style={{
+                  flex: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  opacity: pendingProfiles[profileKey] || hasPendingSecureChanges(profileKey) ? 0.7 : 1,
+                }}
+              >
+                {profileKey}
+              </span>
               {isProfileDefault(profileKey) && (
                 <span
                   className="codicon codicon-star-full"
                   style={{
-                    marginLeft: "4px",
                     fontSize: "12px",
                     color: "var(--vscode-textPreformat-foreground)",
+                    flexShrink: 0,
                   }}
                   title="Default profile"
                 />
               )}
-            </strong>
-          </div>
-        ))}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

@@ -3,9 +3,11 @@ interface TabsProps {
   selectedTab: number | null;
   onTabChange: (index: number) => void;
   onOpenRawFile: (filePath: string) => void;
+  onAddNewConfig: () => void;
+  pendingChanges: { [configPath: string]: any };
 }
 
-export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile }: TabsProps) {
+export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile, onAddNewConfig, pendingChanges }: TabsProps) {
   const getTabLabel = (configPath: string) => {
     // Extract just the filename from the full path
     const parts = configPath.split(/[/\\]/);
@@ -25,14 +27,31 @@ export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile }
   return (
     <div className="tabs">
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {configurations.map((config, index) => (
-          <div key={index} className={`tab ${selectedTab === index ? "active" : ""}`} onClick={() => onTabChange(index)}>
-            <span className="tab-label" title={config.configPath} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span className={`codicon ${getConfigIcon(config)}`} style={{ fontSize: "14px" }}></span>
-              {getTabLabel(config.configPath)}
-            </span>
-          </div>
-        ))}
+        {configurations.map((config, index) => {
+          const hasPendingChanges = pendingChanges[config.configPath] && Object.keys(pendingChanges[config.configPath]).length > 0;
+          return (
+            <div key={index} className={`tab ${selectedTab === index ? "active" : ""}`} onClick={() => onTabChange(index)}>
+              <span className="tab-label" title={config.configPath} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span className={`codicon ${getConfigIcon(config)}`} style={{ fontSize: "14px" }}></span>
+                {getTabLabel(config.configPath)}
+                {hasPendingChanges && (
+                  <span
+                    className="codicon codicon-circle-filled"
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--vscode-foreground)",
+                      marginLeft: "4px",
+                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                    title="Unsaved changes"
+                  />
+                )}
+              </span>
+            </div>
+          );
+        })}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingRight: "8px" }}>
         {selectedTab !== null && configurations[selectedTab]?.configPath && (
@@ -62,6 +81,7 @@ export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile }
         <button
           className="header-button"
           title="Add new configuration"
+          onClick={onAddNewConfig}
           style={{
             padding: "2px",
             height: "20px",
@@ -78,7 +98,7 @@ export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile }
             border: "none",
           }}
         >
-          <span className="codicon codicon-add" title="Add new configuration file (WIP)"></span>
+          <span className="codicon codicon-add" title="Add new configuration file"></span>
         </button>
       </div>
     </div>

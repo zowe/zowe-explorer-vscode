@@ -6,6 +6,8 @@ interface PanelsProps {
   renderProfileDetails: () => React.ReactNode;
   onAddDefault: () => void;
   onProfileWizard: () => void;
+  viewMode: "flat" | "tree";
+  onViewModeToggle: () => void;
 }
 
 export function Panels({
@@ -16,6 +18,8 @@ export function Panels({
   renderProfileDetails,
   onAddDefault,
   onProfileWizard,
+  viewMode,
+  onViewModeToggle,
 }: PanelsProps) {
   return (
     <div className="panels">
@@ -25,28 +29,52 @@ export function Panels({
             <div className="config-section">
               <div className="profile-heading-container">
                 <h2>Profiles</h2>
-                <button
-                  className="header-button"
-                  title="Profile Wizard"
-                  onClick={onProfileWizard}
-                  style={{
-                    padding: "2px",
-                    height: "20px",
-                    width: "20px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: "transparent",
-                    color: "var(--vscode-button-secondaryForeground)",
-                    borderRadius: "3px",
-                    cursor: "pointer",
-                    fontSize: "12px",
-                    lineHeight: "1",
-                    border: "none",
-                  }}
-                >
-                  <span className="codicon codicon-add"></span>
-                </button>
+                <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                  <button
+                    className="header-button"
+                    title={viewMode === "tree" ? "Switch to flat view" : "Switch to tree view"}
+                    onClick={onViewModeToggle}
+                    style={{
+                      padding: "2px",
+                      height: "20px",
+                      width: "20px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "transparent",
+                      color: "var(--vscode-button-secondaryForeground)",
+                      borderRadius: "3px",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      lineHeight: "1",
+                      border: "none",
+                    }}
+                  >
+                    <span className={`codicon ${viewMode === "tree" ? "codicon-list-flat" : "codicon-list-tree"}`}></span>
+                  </button>
+                  <button
+                    className="header-button"
+                    title="Profile Wizard"
+                    onClick={onProfileWizard}
+                    style={{
+                      padding: "2px",
+                      height: "20px",
+                      width: "20px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "transparent",
+                      color: "var(--vscode-button-secondaryForeground)",
+                      borderRadius: "3px",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      lineHeight: "1",
+                      border: "none",
+                    }}
+                  >
+                    <span className="codicon codicon-add"></span>
+                  </button>
+                </div>
               </div>
               {selectedTab === index && renderProfiles(config.properties.profiles)}
             </div>
