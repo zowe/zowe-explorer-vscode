@@ -730,6 +730,27 @@ describe("USS Action Unit Tests - upload with encoding", () => {
         expect(options.binary).toBe(false);
         expect(options.encoding).toBe("ISO8859-1");
     });
+
+    it("uploadDialogWithEncoding should handle cancellation", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "binary" } as any);
+        const fileUri = { fsPath: "/tmp/foo.zip" } as any;
+        globalMocks.showOpenDialog.mockReturnValue([fileUri]);
+        const uploadBinarySpy = jest.spyOn(USSActions, "uploadBinaryFile").mockResolvedValue();
+
+        blockMocks.withProgress.mockImplementation((progLocation, callback) => {
+            const progress = { report: jest.fn() };
+            const token = {
+                isCancellationRequested: true, // Simulate cancellation
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+
+        await USSActions.uploadDialogWithEncoding(blockMocks.ussNode, blockMocks.testUSSTree);
+        expect(uploadBinarySpy).not.toHaveBeenCalled();
+    });
 });
 
 describe("USS Action Unit Tests - copy file / directory", () => {
