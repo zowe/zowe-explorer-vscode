@@ -181,7 +181,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             } catch (err) {
                 //file might already exist. Ignore the error and try to write it to lpar
                 // only bail out on a real 404/500 – guard against undefined
-                const code = err?.errorCode?.toString?.();
+                const code = err.errorCode?.toString();
                 if (code === "404" || code === "500") {
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                     return;
