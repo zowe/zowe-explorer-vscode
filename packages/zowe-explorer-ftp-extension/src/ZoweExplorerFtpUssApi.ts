@@ -127,7 +127,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         const inputIsBuffer = input instanceof Buffer;
         const transferOptions = {
             content: inputIsBuffer ? input : undefined,
-            localFile: inputIsBuffer ? undefined : (input as string),
+            localFile: inputIsBuffer ? undefined : input,
             transferType: CoreUtils.getBinaryTransferModeOrDefault(options?.binary),
         };
         const result = this.getDefaultResponse();
@@ -302,7 +302,9 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
                 fs.rmSync(tmpFileName, { force: true });
                 fs.rmSync(tmpDir, { force: true, recursive: true });
             } catch (cleanupError) {
-                LOGGER.logImperativeMessage(`Failed to clean up temporary files: ${cleanupError}`, MessageSeverity.WARN);
+                if (cleanupError instanceof Error) {
+                    LOGGER.logImperativeMessage(`Failed to clean up temporary files: ${cleanupError.message}`, MessageSeverity.WARN);
+                }
             }
         }
     }
