@@ -301,7 +301,7 @@ export class ConfigEditor extends WebView {
                         vscode.window.showInformationMessage(`Profile "${profileKey as string}" not found in the config file.`);
                     }
                 } catch (error) {
-                    vscode.window.showErrorMessage(`Error opening file: ${message.filePath as string}: ${error.message as string}`);
+                    vscode.window.showErrorMessage(`Error opening file: ${message.filePath as string}`);
                 }
                 break;
             }
@@ -410,8 +410,8 @@ export class ConfigEditor extends WebView {
                     }
 
                     // Get known CLI configurations
-                    const knownCliConfig: any[] = ZoweVsCodeExtension.profilesCache.getCoreProfileTypes();
-                    knownCliConfig.push(...ZoweVsCodeExtension.profilesCache.getConfigArray());
+                    const knownCliConfig: any[] = (ZoweVsCodeExtension as any).profilesCache.getCoreProfileTypes();
+                    knownCliConfig.push(...(ZoweVsCodeExtension as any).profilesCache.getConfigArray());
                     knownCliConfig.push(ProfileConstants.BaseProfile);
                     config.setSchema(ConfigSchema.buildSchema(knownCliConfig));
 
@@ -448,7 +448,7 @@ export class ConfigEditor extends WebView {
                         contents: await this.getLocalConfigs(),
                     });
                 } catch (error) {
-                    vscode.window.showErrorMessage(`Error creating new configuration: ${error.message as string}`);
+                    vscode.window.showErrorMessage("Error creating new configuration");
                 }
                 break;
             }
