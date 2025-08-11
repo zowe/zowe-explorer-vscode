@@ -170,8 +170,8 @@ export class ZoweVsCodeExtension {
         const updSession = new imperative.Session({
             hostname: serviceProfile.profile.host,
             port: serviceProfile.profile.port,
-            user: opts.profileNode.getSession().ISession.user ?? "Username",
-            password: opts.profileNode.getSession().ISession.password ?? "Password",
+            user: opts.profileNode?.getSession().ISession.user ?? "Username",
+            password: opts.profileNode?.getSession().ISession.password ?? "Password",
             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
             tokenType,
         });
@@ -253,10 +253,14 @@ export class ZoweVsCodeExtension {
         serviceProfile.profile = { ...serviceProfile.profile, ...updBaseProfile };
         cache.updateCachedProfile(serviceProfile, opts.profileNode);
 
-        imperative.AuthOrder.putNewAuthsFirstInSess(opts.profileNode.getSession().ISession, [
-            imperative.SessConstants.AUTH_TYPE_TOKEN,
-            imperative.SessConstants.AUTH_TYPE_BEARER,
-        ]);
+        if (opts.profileNode) {
+            imperative.AuthOrder.putNewAuthsFirstInSess(opts.profileNode.getSession().ISession, [
+                imperative.SessConstants.AUTH_TYPE_TOKEN,
+                imperative.SessConstants.AUTH_TYPE_BEARER,
+            ]);
+            serviceProfile.profile.authOrder = opts.profileNode.getSession().ISession.authTypeOrder.join(", ");
+        }
+
         await imperative.AuthOrder.putNewAuthsFirstOnDisk(
             serviceProfile.name,
             [imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER],

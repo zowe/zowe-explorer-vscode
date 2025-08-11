@@ -1,0 +1,14 @@
+{
+    "profiles": {
+        "lpar": {
+            "profiles": {
+                "service": {
+                    "type": "service",
+                    "properties": []
+                }
+            },
+            "properties": []
+        }
+    },
+    "defaults": {}
+}
