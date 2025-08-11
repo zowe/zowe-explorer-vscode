@@ -622,7 +622,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const basename = path.posix.basename(uri.path);
         const parent = this.lookupParentDirectory(uri);
         const isPdsMember = FsDatasetsUtils.isPdsEntry(parent);
-        let entry = parent.entries.get(basename);
+        let entry: FileEntry = parent.entries.get(basename);
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
         }
