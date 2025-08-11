@@ -23,7 +23,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed a bug where a password prompt appeared when validating SSH profiles even if a valid privateKey is provided. [#3645] (https://github.com/zowe/zowe-explorer-vscode/issues/3645)
+- Fixed a bug where a password prompt appeared when validating SSH profiles even if a valid `privateKey` is provided. [#3645](https://github.com/zowe/zowe-explorer-vscode/issues/3645)
 - Fixed a bug where renaming a USS file that used to exist but was deleted in z/OS resulted in an error. [#3485](https://github.com/zowe/zowe-explorer-vscode/issues/3485).
 - Fixed a bug where USS and data set workspace folders accessed via an extender (SSH, FTP, etc) are not loaded until the window is reloaded. [#3689](https://github.com/zowe/zowe-explorer-vscode/pull/3689/files#diff-cafba17e22a5c24da1eeb2601f25d6025d598f5462cce554aeca3b56bc9661cf)
 - Fixed a bug where USS files and data set VS Code editors accessed by an extender (SSH, FTP, etc) are not restored when reloading/reopening a window. [#3678](https://github.com/zowe/zowe-explorer-vscode/pull/3678)
