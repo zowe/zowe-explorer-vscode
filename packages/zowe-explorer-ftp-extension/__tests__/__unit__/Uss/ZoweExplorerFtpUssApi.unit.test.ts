@@ -137,17 +137,23 @@ describe("FtpUssApi", () => {
 
     it("should upload uss directory.", async () => {
         const localpath = "/tmp";
-        const files = ["file1", "file2"];
-        zosfiles.ZosFilesUtils.getFileListFromPath = jest.fn().mockReturnValue(files);
+        const files = ["/tmp/file1", "/tmp/file2"];
+        const getFileListFromPathMock = jest.spyOn(zosfiles.ZosFilesUtils, "getFileListFromPath").mockReturnValue(files);
         const mockParams = {
             inputDirectoryPath: localpath,
             ussDirectoryPath: "/a/b/c",
             options: {},
         };
         const response = {};
-        jest.spyOn(UssApi, "putContent").mockResolvedValue(response as any);
+        const putContentMock = jest
+            .spyOn(UssApi, "putContent")
+            .mockReset()
+            .mockResolvedValue(response as any);
         await UssApi.uploadDirectory(mockParams.inputDirectoryPath, mockParams.ussDirectoryPath, mockParams.options);
-        expect(UssApi.putContent).toHaveBeenCalledTimes(3);
+        // putContent is called for each file in the directory
+        expect(putContentMock).toHaveBeenCalledWith("/tmp/file1", "/a/b/c/file1");
+        expect(putContentMock).toHaveBeenCalledWith("/tmp/file2", "/a/b/c/file2");
+        expect(getFileListFromPathMock).toHaveBeenCalledTimes(1);
     });
 
     it("should create uss directory.", async () => {
