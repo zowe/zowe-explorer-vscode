@@ -537,17 +537,14 @@ describe("DatasetFSProvider", () => {
     });
 
     describe("writeFile", () => {
-
         it("passes binary: true to uploadFromBuffer when entry.encoding.kind is 'binary'", async () => {
             const provider = DatasetFSProvider.instance;
             const uri = testUris.pdsMember;
             const content = new Uint8Array([0x41, 0x42, 0x43]);
             const parent = { entries: new Map(), metadata: { profile: { name: "profile" }, path: "/" } };
-            const binaryEntry = { ...testEntries.pdsMember, wasAccessed: true, encoding: { kind: "binary" } };
+            const binaryEntry = { ...testEntries.pdsMember, wasAccessed: true, encoding: { kind: "binary" } } as DsEntry;
             parent.entries.set("MEMBER1", binaryEntry);
-            const entry = { encoding: { kind: "binary" } } as any;
-            jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(entry);
-            jest.spyOn(provider as any, "_lookupParentDirectory").mockReturnValue(parent);
+            jest.spyOn(provider as any, "lookupParentDirectory").mockReturnValueOnce(parent);
 
             const mockMvsApi = {
                 uploadFromBuffer: jest.fn().mockResolvedValue({ apiResponse: { etag: "etag" } }),

@@ -150,7 +150,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const children = await sourceNode.getChildren();
             for (const childNode of children) {
                 // move members within the folder to the destination
-                childNode.contextValue = 'member'; //force casting binary members to member context
                 await this.crossLparMove(
                     childNode,
                     sourceUri.with({
