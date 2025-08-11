@@ -201,8 +201,12 @@ export class ConfigEditor extends WebView {
                         const trimmedLine = line.trim();
                         // Count global braces
                         for (const char of line) {
-                            if (char === "{") globalBraceCount++;
-                            if (char === "}") globalBraceCount--;
+                            if (char === "{") {
+                                globalBraceCount++;
+                            }
+                            if (char === "}") {
+                                globalBraceCount--;
+                            }
                         }
                         // Check if we're entering the profiles section
                         if (trimmedLine.includes('"profiles"')) {
@@ -224,8 +228,12 @@ export class ConfigEditor extends WebView {
                             // If we're inside a target profile, track its brace count
                             if (inTargetProfile) {
                                 for (const char of line) {
-                                    if (char === "{") targetProfileBraceCount++;
-                                    if (char === "}") targetProfileBraceCount--;
+                                    if (char === "{") {
+                                        targetProfileBraceCount++;
+                                    }
+                                    if (char === "}") {
+                                        targetProfileBraceCount--;
+                                    }
                                 }
 
                                 // Check if we found a profile within the target profile
@@ -241,7 +249,7 @@ export class ConfigEditor extends WebView {
                                             currentLine = i;
                                             // Find the column position at the end of the profile name
                                             const profileNameIndex = line.indexOf(`"${foundProfileName}"`);
-                                            currentColumn = profileNameIndex >= 0 ? profileNameIndex + foundProfileName.length + 2 : 0; // +2 for the quotes
+                                            currentColumn = profileNameIndex >= 0 ? profileNameIndex + foundProfileName.length + 2 : 0;
                                             break;
                                         }
                                     }
@@ -265,7 +273,7 @@ export class ConfigEditor extends WebView {
                                             currentLine = i;
                                             // Find the column position at the end of the profile name
                                             const profileNameIndex = line.indexOf(`"${foundProfileName}"`);
-                                            currentColumn = profileNameIndex >= 0 ? profileNameIndex + foundProfileName.length + 2 : 0; // +2 for the quotes
+                                            currentColumn = profileNameIndex >= 0 ? profileNameIndex + foundProfileName.length + 2 : 0;
                                             break;
                                         } else {
                                             // This is a nested profile, start tracking within this profile
@@ -290,10 +298,10 @@ export class ConfigEditor extends WebView {
                         editor.selection = new vscode.Selection(position, position);
                         editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
                     } else {
-                        vscode.window.showInformationMessage(`Profile "${profileKey}" not found in the config file.`);
+                        vscode.window.showInformationMessage(`Profile "${profileKey as string}" not found in the config file.`);
                     }
                 } catch (error) {
-                    vscode.window.showErrorMessage(`Error opening file: ${message.filePath as string}: ${error.message}`);
+                    vscode.window.showErrorMessage(`Error opening file: ${message.filePath as string}: ${error.message as string}`);
                 }
                 break;
             }
@@ -440,7 +448,7 @@ export class ConfigEditor extends WebView {
                         contents: await this.getLocalConfigs(),
                     });
                 } catch (error) {
-                    vscode.window.showErrorMessage(`Error creating new configuration: ${error.message}`);
+                    vscode.window.showErrorMessage(`Error creating new configuration: ${error.message as string}`);
                 }
                 break;
             }
