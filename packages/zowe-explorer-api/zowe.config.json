@@ -1,14 +1,14 @@
 {
-    "profiles": {
-        "lpar": {
-            "profiles": {
-                "service": {
-                    "type": "service",
-                    "properties": []
-                }
-            },
-            "properties": []
+  "profiles": {
+    "lpar": {
+      "profiles": {
+        "service": {
+          "type": "service",
+          "properties": []
         }
-    },
-    "defaults": {}
+      },
+      "properties": []
+    }
+  },
+  "defaults": {}
 }

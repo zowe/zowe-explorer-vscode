@@ -408,3 +408,10 @@ export class EventOperator {
 export class DeferredPromise {
     public resolve(value: any): void {}
 }
+
+export class AuthOrder {
+    public static addCredsToSession(session: Session, creds: any): void {}
+    public static putNewAuthsFirstInSess(session: Session, authTypes: string[]): void {}
+    public static putNewAuthsFirstOnDisk(profileName: string, authTypes: string[]): void {}
+    public static makingRequestForToken(session: Session, authTypes: string[]): void {}
+}
