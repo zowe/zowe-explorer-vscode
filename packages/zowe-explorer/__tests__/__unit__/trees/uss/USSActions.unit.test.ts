@@ -607,15 +607,12 @@ describe("USS Action Unit Tests - function uploadFile", () => {
 
 describe("USS Action Unit Tests - upload with encoding", () => {
     function createBlockMocks(globalMocks) {
-        Object.defineProperty(vscode.window, "withProgress", {
-            value: jest.fn().mockImplementation((progLocation, callback) => {
+        const newMocks = {
+            withProgress: jest.spyOn(vscode.window, "withProgress").mockImplementation((progLocation, callback) => {
                 const progress = { report: jest.fn() };
                 const token = { isCancellationRequested: false, onCancellationRequested: jest.fn() };
                 return callback(progress, token);
             }),
-            configurable: true,
-        });
-        const newMocks = {
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
             testUSSTree: null as unknown as USSTree,
         };
