@@ -60,6 +60,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
             jest.spyOn(SharedContext, "isSessionNotFav").mockReturnValue(true);
         });
         it("should check current profile and perform the case when status is 'active'", async () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
             const profileStatus = { name: "test", status: "active" };
             jest.spyOn(Profiles, "getInstance").mockReturnValue({
                 checkCurrentProfile: jest.fn().mockResolvedValue(profileStatus),
