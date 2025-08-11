@@ -508,7 +508,7 @@ export class DatasetActions {
         ZoweLogger.trace("dataset.actions.uploadDialogWithEncoding called.");
 
         if (!SharedContext.isPds(node)) {
-            Gui.showMessage(vscode.l10n.t("This action is only supported for PDS members."));
+            Gui.showMessage(vscode.l10n.t("This action is only supported for partitioned data sets."));
             return;
         }
 
@@ -516,7 +516,6 @@ export class DatasetActions {
         const encoding = await SharedUtils.promptForUploadEncoding(profile, node.label as string);
 
         if (!encoding) {
-            Gui.showMessage(vscode.l10n.t("Operation cancelled"));
             return;
         }
 
@@ -526,51 +525,50 @@ export class DatasetActions {
             canSelectMany: true,
             defaultUri: LocalFileManagement.getDefaultUri(),
         };
-        const value = await Gui.showOpenDialog(fileOpenOptions);
-        if (value?.length > 0) {
-            await Gui.withProgress(
-                {
-                    location: vscode.ProgressLocation.Notification,
-                    title: vscode.l10n.t("Uploading to data set..."),
-                    cancellable: true,
-                },
-                async (progress, token) => {
-                    let index = 0;
-                    for (const item of value) {
-                        if (token.isCancellationRequested) {
-                            Gui.showMessage(vscode.l10n.t("Upload action was cancelled."));
-                            break;
-                        }
-                        Gui.reportProgress(progress, value.length, index, "Uploading");
-                        const response = await DatasetActions.uploadFileWithEncoding(node, item.fsPath, encoding);
-                        if (!response?.success) {
-                            await AuthUtils.errorHandling(response?.commandResponse, {
-                                apiType: ZoweExplorerApiType.Mvs,
-                                profile: node.getProfile(),
-                            });
-                            break;
-                        }
-                        index++;
-                    }
-                }
-            );
+        const selectedFiles = await Gui.showOpenDialog(fileOpenOptions);
+        if (!selectedFiles || selectedFiles.length === 0) {
+            return;
+        }
 
-            // refresh Tree View & favorites
-            datasetProvider.refreshElement(node);
-            datasetProvider.getTreeView().reveal(node, { expand: true, focus: true });
-            if (SharedContext.isFavorite(node) || SharedContext.isFavoriteContext(node.getParent())) {
-                const nonFavNode = datasetProvider.findNonFavoritedNode(node);
-                if (nonFavNode) {
-                    datasetProvider.refreshElement(nonFavNode);
-                }
-            } else {
-                const favNode = datasetProvider.findFavoritedNode(node);
-                if (favNode) {
-                    datasetProvider.refreshElement(favNode);
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: vscode.l10n.t("Uploading to data set..."),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                let index = 0;
+                for (const item of selectedFiles) {
+                    if (token.isCancellationRequested) {
+                        break;
+                    }
+                    Gui.reportProgress(progress, selectedFiles.length, index, "Uploading");
+                    const response = await DatasetActions.uploadFileWithEncoding(node, item.fsPath, encoding);
+                    if (!response?.success) {
+                        await AuthUtils.errorHandling(response?.commandResponse, {
+                            apiType: ZoweExplorerApiType.Mvs,
+                            profile: node.getProfile(),
+                        });
+                        break;
+                    }
+                    index++;
                 }
             }
+        );
+
+        // refresh Tree View & favorites
+        datasetProvider.refreshElement(node);
+        datasetProvider.getTreeView().reveal(node, { expand: true, focus: true });
+        if (SharedContext.isFavorite(node) || SharedContext.isFavoriteContext(node.getParent())) {
+            const nonFavNode = datasetProvider.findNonFavoritedNode(node);
+            if (nonFavNode) {
+                datasetProvider.refreshElement(nonFavNode);
+            }
         } else {
-            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+            const favNode = datasetProvider.findFavoritedNode(node);
+            if (favNode) {
+                datasetProvider.refreshElement(favNode);
+            }
         }
     }
 

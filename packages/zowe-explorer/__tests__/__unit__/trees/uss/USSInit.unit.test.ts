@@ -102,6 +102,10 @@ describe("Test src/uss/extension", () => {
                 mock: [{ spy: jest.spyOn(USSActions, "uploadDialog"), arg: [test.value, ussFileProvider, true] }],
             },
             {
+                name: "zowe.uss.uploadDialogWithEncoding",
+                mock: [{ spy: jest.spyOn(USSActions, "uploadDialogWithEncoding"), arg: [test.value, ussFileProvider] }],
+            },
+            {
                 name: "zowe.uss.copyPath",
                 mock: [{ spy: jest.spyOn(USSActions, "copyPath"), arg: [test.value] }],
             },

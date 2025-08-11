@@ -633,6 +633,43 @@ describe("USS Action Unit Tests - upload with encoding", () => {
         jest.clearAllMocks();
     });
 
+    it("uploadDialogWithEncoding returns early if node is not a directory", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        const fileNode = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.USS_TEXT_FILE_CONTEXT,
+            parentNode: blockMocks.ussNode,
+            parentPath: blockMocks.ussNode.fullPath,
+        });
+        await USSActions.uploadDialogWithEncoding(fileNode, blockMocks.testUSSTree);
+        expect(infoMessageSpy).toHaveBeenCalledWith("This action is only supported for USS directories.");
+    });
+
+    it("uploadDialogWithEncoding returns early if promptForUploadEncoding returns falsy value", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValueOnce(undefined);
+        const showOpenDialogSpy = jest.spyOn(Gui, "showOpenDialog");
+        await USSActions.uploadDialogWithEncoding(blockMocks.ussNode, blockMocks.testUSSTree);
+        expect(showOpenDialogSpy).not.toHaveBeenCalled();
+    });
+
+    it("uploadDialogWithEncoding returns early if showOpenDialog returns falsy value", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const showProgressSpy = jest.spyOn(Gui, "withProgress");
+        const showOpenDialogSpy = jest.spyOn(Gui, "showOpenDialog");
+        const promptForUploadEncodingMock = jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValueOnce({ kind: "binary" });
+        await USSActions.uploadDialogWithEncoding(blockMocks.ussNode, blockMocks.testUSSTree);
+        expect(showOpenDialogSpy).toHaveBeenCalled();
+        expect(showProgressSpy).not.toHaveBeenCalled();
+        expect(promptForUploadEncodingMock).toHaveBeenCalled();
+        expect(promptForUploadEncodingMock).toHaveBeenCalledWith(blockMocks.ussNode.getProfile(), blockMocks.ussNode.fullPath);
+    });
+
     it("uploadDialogWithEncoding uploads as binary when binary is selected", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);

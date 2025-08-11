@@ -196,7 +196,7 @@ export class USSActions {
         ZoweLogger.trace("uss.actions.uploadDialogWithEncoding called.");
 
         if (!SharedContext.isUssDirectory(node)) {
-            Gui.showMessage(vscode.l10n.t("This action is only supported for USS directories."));
+            Gui.infoMessage(vscode.l10n.t("This action is only supported for USS directories."));
             return;
         }
 
@@ -204,7 +204,6 @@ export class USSActions {
         const encoding = await SharedUtils.promptForUploadEncoding(profile, node.fullPath);
 
         if (!encoding) {
-            Gui.showMessage(vscode.l10n.t("Operation cancelled"));
             return;
         }
 
@@ -216,38 +215,36 @@ export class USSActions {
         };
 
         const selectedFiles = await Gui.showOpenDialog(fileOpenOptions);
-
-        if (selectedFiles?.length > 0) {
-            await Gui.withProgress(
-                {
-                    location: vscode.ProgressLocation.Notification,
-                    title: vscode.l10n.t("Uploading file..."),
-                    cancellable: true,
-                },
-                async (progress, token) => {
-                    let index = 0;
-                    for (const item of selectedFiles) {
-                        if (token.isCancellationRequested) {
-                            Gui.showMessage(vscode.l10n.t("Upload action was cancelled."));
-                            break;
-                        }
-                        Gui.reportProgress(progress, selectedFiles.length, index, "Uploading");
-
-                        if (encoding.kind === "binary") {
-                            await USSActions.uploadBinaryFile(node, item.fsPath);
-                        } else {
-                            const doc = await vscode.workspace.openTextDocument(item);
-                            await USSActions.uploadFileWithEncoding(node, doc, encoding);
-                        }
-                        index++;
-                    }
-                }
-            );
-            ussFileProvider.refreshElement(node);
-            ussFileProvider.getTreeView().reveal(node, { expand: true, focus: true });
-        } else {
-            Gui.showMessage(vscode.l10n.t("Operation cancelled"));
+        if (!selectedFiles || selectedFiles.length === 0) {
+            return;
         }
+
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: vscode.l10n.t("Uploading file..."),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                let index = 0;
+                for (const item of selectedFiles) {
+                    if (token.isCancellationRequested) {
+                        break;
+                    }
+                    Gui.reportProgress(progress, selectedFiles.length, index, "Uploading");
+
+                    if (encoding.kind === "binary") {
+                        await USSActions.uploadBinaryFile(node, item.fsPath);
+                    } else {
+                        const doc = await vscode.workspace.openTextDocument(item);
+                        await USSActions.uploadFileWithEncoding(node, doc, encoding);
+                    }
+                    index++;
+                }
+            }
+        );
+        ussFileProvider.refreshElement(node);
+        ussFileProvider.getTreeView().reveal(node, { expand: true, focus: true });
     }
 
     public static async uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string): Promise<void> {
