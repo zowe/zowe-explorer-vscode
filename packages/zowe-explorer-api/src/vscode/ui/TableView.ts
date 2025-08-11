@@ -590,12 +590,10 @@ export namespace Table {
                         if (action?.condition) {
                             const conditionData = this.getConditionData(payload);
                             result = await this.evaluateCondition(action.condition, conditionData, action.command, false);
-                        } else if (!action) {
-                            result = false;
                         }
 
                         (this.panel ?? this.view).webview.postMessage({
-                            command: "condition-for-action-result",
+                            command: "check-condition-for-action",
                             requestId,
                             payload: result,
                         });
@@ -625,7 +623,7 @@ export namespace Table {
                         }
 
                         (this.panel ?? this.view).webview.postMessage({
-                            command: "dynamic-title-for-action-result",
+                            command: "get-dynamic-title-for-action",
                             requestId,
                             payload: result,
                         });
@@ -647,7 +645,7 @@ export namespace Table {
                         }
 
                         (this.panel ?? this.view).webview.postMessage({
-                            command: "hide-condition-for-action-result",
+                            command: "check-hide-condition-for-action",
                             requestId,
                             payload: result,
                         });
