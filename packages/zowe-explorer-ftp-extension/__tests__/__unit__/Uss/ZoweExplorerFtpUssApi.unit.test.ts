@@ -156,6 +156,31 @@ describe("FtpUssApi", () => {
         expect(getFileListFromPathMock).toHaveBeenCalledTimes(1);
     });
 
+    if (os.platform() === "win32") {
+        it("should upload uss directory on Windows with proper input file paths.", async () => {
+            const localpath = "C:\\Windows\\Temp";
+            const files = ["C:\\Windows\\Temp\\file1", "C:\\Windows\\Temp\\file2"];
+            // Mock out the isDir result in case the drive letter is not present on the system where the test is running
+            jest.spyOn(imperative.IO, "isDir").mockReturnValueOnce(true);
+            const getFileListFromPathMock = jest.spyOn(zosfiles.ZosFilesUtils, "getFileListFromPath").mockReturnValue(files);
+            const mockParams = {
+                inputDirectoryPath: localpath,
+                ussDirectoryPath: "/a/b/c",
+                options: {},
+            };
+            const response = {};
+            const putContentMock = jest
+                .spyOn(UssApi, "putContent")
+                .mockReset()
+                .mockResolvedValue(response as any);
+            await UssApi.uploadDirectory(mockParams.inputDirectoryPath, mockParams.ussDirectoryPath, mockParams.options);
+            // putContent is called for each file in the directory
+            expect(putContentMock).toHaveBeenCalledWith("C:\\Windows\\Temp\\file1", "/a/b/c/file1");
+            expect(putContentMock).toHaveBeenCalledWith("C:\\Windows\\Temp\\file2", "/a/b/c/file2");
+            expect(getFileListFromPathMock).toHaveBeenCalledTimes(1);
+        });
+    }
+
     it("should create uss directory.", async () => {
         UssUtils.makeDirectory = jest.fn();
         UssUtils.uploadFile = jest.fn();
