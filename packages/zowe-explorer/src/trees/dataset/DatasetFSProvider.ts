@@ -29,6 +29,7 @@ import {
     ZoweExplorerApiType,
     AuthHandler,
     Types,
+    imperative,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -62,7 +63,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     public watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
-        return new vscode.Disposable(() => {});
+        return new vscode.Disposable(() => { });
     }
 
     /**
@@ -255,7 +256,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
     }
 
-    private async fetchDataset(uri: vscode.Uri, uriInfo: UriFsInfo, forceFetch: boolean = false): Promise<PdsEntry | DsEntry> {
+    private async fetchDataset(uri: vscode.Uri, uriInfo: UriFsInfo, forceFetch?: boolean): Promise<PdsEntry | DsEntry> {
         let entry: PdsEntry | DsEntry;
         try {
             entry = this.lookup(uri, false) as PdsEntry | DsEntry;
@@ -405,10 +406,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profInfo =
             parent !== this.root
                 ? new DsEntryMetadata({
-                      profile: parent.metadata.profile,
-                      // we can strip profile name from path because its not involved in API calls
-                      path: path.posix.join(parent.metadata.path, basename),
-                  })
+                    profile: parent.metadata.profile,
+                    // we can strip profile name from path because its not involved in API calls
+                    path: path.posix.join(parent.metadata.path, basename),
+                })
                 : this._getInfoFromUri(uri);
 
         if (FsAbstractUtils.isFilterEntry(parent)) {
@@ -619,7 +620,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
         const basename = path.posix.basename(uri.path);
-        const parent = this.lookupParentDirectory(uri) as PdsEntry;
+        const parent = this.lookupParentDirectory(uri);
         const isPdsMember = FsDatasetsUtils.isPdsEntry(parent);
         let entry = parent.entries.get(basename);
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
@@ -632,7 +633,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileExists(uri);
         }
 
-        let dsStats: Types.DatasetStats = parent.stats;
+        let dsStats: Types.DatasetStats = isPdsMember ? parent.stats : undefined;
         if (dsStats == null) {
             const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
             const targetPath = isPdsMember ? path.posix.dirname(uri.path) : uri.path;
@@ -659,7 +660,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
             if (longLines.length > 0) {
                 // internal error code to indicate unsafe upload
-                throw new Error(`Zowe Explorer: Unsafe upload | ${longLines.join(",")}`);
+                throw new imperative.ImperativeError({
+                    msg: "Zowe Explorer: Unsafe upload",
+                    additionalDetails: longLines.join(","),
+                });
             }
 
             if (!entry) {
@@ -667,15 +671,17 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry.data = content;
                 const profInfo = parent.metadata
                     ? new DsEntryMetadata({
-                          profile: parent.metadata.profile,
-                          path: path.posix.join(parent.metadata.path, basename),
-                      })
+                        profile: parent.metadata.profile,
+                        path: path.posix.join(parent.metadata.path, basename),
+                    })
                     : this._getInfoFromUri(uri);
                 entry.metadata = profInfo;
 
                 if (content.byteLength > 0) {
                     // Update e-tag if write was successful.
-                    entry.stats = { ...entry.stats, ...dsStats };
+                    if (entry instanceof DsEntry) {
+                        entry.stats = { ...entry.stats, ...dsStats };
+                    }
                     const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
@@ -697,7 +703,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
-                    entry.stats = { ...entry.stats, ...dsStats };
+                    if (entry instanceof DsEntry) {
+                        entry.stats = { ...entry.stats, ...dsStats };
+                    }
                     const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                 }
@@ -710,8 +718,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 await this._handleConflict(uri, entry);
                 return;
             }
-            if (err.message.includes("Zowe Explorer: Unsafe upload")) {
-                const longLines = err.message.split(" | ")[1].split(",");
+            if (err instanceof imperative.ImperativeError && err.message.includes("Zowe Explorer: Unsafe upload")) {
+                const longLines = err.additionalDetails.split(",");
                 const dataLossMsg = vscode.l10n.t("This upload operation may result in data loss.");
                 const linesToReview = longLines.length > 5 ? longLines.slice(0, 5).join(", ") + "..." : longLines.join(", ");
                 const shortMsg = vscode.l10n.t("Please review the following lines:");
