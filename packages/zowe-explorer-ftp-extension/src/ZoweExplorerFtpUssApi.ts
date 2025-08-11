@@ -181,7 +181,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
             await this.putContent(inputDirectoryPath, ussDirectoryPath);
 
             // getting list of files from directory
-            const files = zosfiles.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
+            const files = zosfiles.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, true);
             // TODO: this solution will not perform very well; rewrite this and putContent methods
             for (const file of files) {
                 const relativePath = path.relative(inputDirectoryPath, file).replace(/\\/g, "/");
