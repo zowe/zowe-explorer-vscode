@@ -581,8 +581,9 @@ describe("DatasetFSProvider", () => {
             sessionEntry.entries.set("USER.DATA.PS", psEntry);
             jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
-            const newContents = new Uint8Array(Array(lrecl + 1).fill(90)); // ASCII value for 'Z'
-            const lineAt = () => ({ text: newContents.toString() });
+            const newContents = new Uint8Array(Array(lrecl + 1).fill(0));
+            const okContents = new Uint8Array(Array(lrecl - 1).fill(0));
+            const lineAt = (i: number) => ({ text: i === 1 ? okContents : newContents });
 
             // Test for 1 invalid line
             let numberOfInvalidLines = 1;
@@ -608,15 +609,10 @@ describe("DatasetFSProvider", () => {
             msg = (handleErrorMock.mock.calls[1][0] as Error).message;
             expect(msg).toContain("This upload operation may result in data loss.");
             expect(msg).toContain("Please review the following lines:");
-            for (let i = 1; i < 5; i++) {
-                // From numbers 1 to 4, we expect to see the line numbers in the error message
-                expect(msg).toContain(`${i}, `);
-            }
-            expect(msg).toContain("5...");
+            expect(msg).toContain("1, 3, 4, 5, 6...");
             const stack = (handleErrorMock.mock.calls[1][0] as Error).stack;
-            for (let i = 1; i <= numberOfInvalidLines; i++) {
-                expect(stack).toContain(`- ${i}`);
-            }
+            expect(stack).toContain("Line: 1");
+            expect(stack).toContain("Lines: 3-10");
         });
 
         it("upload changes to a remote DS even if its not yet in the FSP", async () => {

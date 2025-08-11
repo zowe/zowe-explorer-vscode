@@ -63,7 +63,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     public watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
-        return new vscode.Disposable(() => { });
+        return new vscode.Disposable(() => {});
     }
 
     /**
@@ -406,10 +406,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profInfo =
             parent !== this.root
                 ? new DsEntryMetadata({
-                    profile: parent.metadata.profile,
-                    // we can strip profile name from path because its not involved in API calls
-                    path: path.posix.join(parent.metadata.path, basename),
-                })
+                      profile: parent.metadata.profile,
+                      // we can strip profile name from path because its not involved in API calls
+                      path: path.posix.join(parent.metadata.path, basename),
+                  })
                 : this._getInfoFromUri(uri);
 
         if (FsAbstractUtils.isFilterEntry(parent)) {
@@ -647,22 +647,22 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
 
         try {
-            const longLines = [];
+            const longLines = {};
             try {
                 const document = await vscode.workspace.openTextDocument(uri);
                 for (let i = 0; i < document.lineCount; i++) {
                     if (document.lineAt(i).text.length > dsStats?.lrecl) {
-                        longLines.push(i + 1);
+                        longLines[i + 1] = document.lineAt(i).text;
                     }
                 }
             } catch (err) {
                 // do nothing since we may be trying to create an entry in the FS that doesn't exist yet
             }
-            if (longLines.length > 0) {
+            if (Object.keys(longLines).length > 0) {
                 // internal error code to indicate unsafe upload
                 throw new imperative.ImperativeError({
                     msg: "Zowe Explorer: Unsafe upload",
-                    additionalDetails: longLines.join(","),
+                    causeErrors: longLines,
                 });
             }
 
@@ -671,9 +671,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry.data = content;
                 const profInfo = parent.metadata
                     ? new DsEntryMetadata({
-                        profile: parent.metadata.profile,
-                        path: path.posix.join(parent.metadata.path, basename),
-                    })
+                          profile: parent.metadata.profile,
+                          path: path.posix.join(parent.metadata.path, basename),
+                      })
                     : this._getInfoFromUri(uri);
                 entry.metadata = profInfo;
 
@@ -719,12 +719,38 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 return;
             }
             if (err instanceof imperative.ImperativeError && err.message.includes("Zowe Explorer: Unsafe upload")) {
-                const longLines = err.additionalDetails.split(",");
+                const longLines = Object.keys(err.causeErrors);
                 const dataLossMsg = vscode.l10n.t("This upload operation may result in data loss.");
                 const linesToReview = longLines.length > 5 ? longLines.slice(0, 5).join(", ") + "..." : longLines.join(", ");
                 const shortMsg = vscode.l10n.t("Please review the following lines:");
                 const newErr = new Error(`${dataLossMsg} ${shortMsg} ${linesToReview}`);
-                newErr.stack = shortMsg + "\n - " + longLines.join("\n - ");
+                newErr.stack = shortMsg + "\n";
+                // group consecutive lines that are next to each other
+                const groupedLines: { lines: number[]; text: string }[] = [];
+                for (const [line, text] of Object.entries(err.causeErrors)) {
+                    if (groupedLines.length > 0) {
+                        const poppedLine = groupedLines.pop();
+                        if (poppedLine && Number(line) - 1 === Number(poppedLine.lines[poppedLine.lines.length - 1])) {
+                            poppedLine.lines.push(Number(line));
+                            poppedLine.text += ("\n" + text) as string;
+                            groupedLines.push(poppedLine);
+                        } else {
+                            groupedLines.push(poppedLine);
+                            groupedLines.push({ lines: [Number(line)], text: text as string });
+                        }
+                    } else {
+                        groupedLines.push({ lines: [Number(line)], text: text as string });
+                    }
+                }
+                for (const lines of groupedLines) {
+                    let lineRange = "";
+                    if (lines.lines.length > 1) {
+                        lineRange = `Lines: ${lines.lines[0]}-${lines.lines[lines.lines.length - 1]}`;
+                    } else {
+                        lineRange = `Line: ${lines.lines[0]}`;
+                    }
+                    newErr.stack += `\n${lineRange}\n${lines.text}\n`;
+                }
                 this._handleError(newErr);
                 throw newErr;
             }
