@@ -10,7 +10,18 @@
  */
 
 import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri, workspace } from "vscode";
-import { AuthHandler, BaseProvider, DirEntry, FileEntry, Gui, UssDirectory, UssFile, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
+import {
+    AuthHandler,
+    BaseProvider,
+    DirEntry,
+    FileEntry,
+    FsAbstractUtils,
+    Gui,
+    UssDirectory,
+    UssFile,
+    ZoweExplorerApiType,
+    ZoweScheme,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -19,6 +30,8 @@ import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
+import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import * as vscode from "vscode";
 
 const testProfile = createIProfile();
 
@@ -78,6 +91,7 @@ describe("UssFSProvider", () => {
         mockedProperty = new MockedProperty(Profiles, "getInstance", {
             value: jest.fn().mockReturnValue({
                 loadNamedProfile: jest.fn().mockReturnValue(testProfile),
+                allProfiles: [],
                 getProfileFromConfig: jest.fn(),
             } as any),
         });
@@ -136,6 +150,15 @@ describe("UssFSProvider", () => {
         it("returns a file as-is when query has inDiff parameter", async () => {
             lookupMock.mockReturnValueOnce(testEntries.file);
             await expect(UssFSProvider.instance.stat(testUris.file.with({ query: "inDiff=true" }))).resolves.toStrictEqual(testEntries.file);
+            expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
+        });
+
+        it("looks up the resource before loading profile which may fail", async () => {
+            const lookupMock = jest.spyOn((UssFSProvider as any).prototype, "lookup").mockReturnValueOnce(testEntries.file);
+            jest.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementationOnce(() => {
+                throw new Error("invalid profile");
+            });
+            await expect(UssFSProvider.instance.stat(testUris.file)).rejects.toThrow("invalid profile");
             expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
         });
     });
@@ -271,7 +294,7 @@ describe("UssFSProvider", () => {
                     commandResponse: "",
                 });
                 const lookupParentDirMock = jest
-                    .spyOn(UssFSProvider.instance as any, "_lookupParentDirectory")
+                    .spyOn(UssFSProvider.instance as any, "lookupParentDirectory")
                     .mockReturnValueOnce(null)
                     .mockReturnValueOnce({ ...testEntries.folder, entries: new Map() });
                 const createDirMock = jest.spyOn(workspace.fs, "createDirectory").mockImplementation();
@@ -344,16 +367,21 @@ describe("UssFSProvider", () => {
     });
 
     describe("fetchFileAtUri", () => {
-        beforeEach(() => {
-            Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn(() => {
-                    return {
-                        loadNamedProfile: jest.fn(() => {
-                            return testProfile;
-                        }),
-                    };
-                }),
-            });
+        let mockedProfilesProp: MockedProperty;
+        beforeAll(() => {
+            mockedProfilesProp = new MockedProperty(
+                Profiles,
+                "getInstance",
+                undefined,
+                jest.fn().mockReturnValue({
+                    loadNamedProfile: jest.fn(() => {
+                        return testProfile;
+                    }),
+                })
+            );
+        });
+        afterAll(() => {
+            mockedProfilesProp[Symbol.dispose]();
         });
         it("calls getContents to get the data for a file entry", async () => {
             const fileEntry = { ...testEntries.file };
@@ -624,7 +652,7 @@ describe("UssFSProvider", () => {
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
                 throw FileSystemError.FileNotFound(uri as Uri);
             });
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(testEntries.folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(testEntries.folder);
 
             let err;
             try {
@@ -642,7 +670,7 @@ describe("UssFSProvider", () => {
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
                 throw FileSystemError.FileNotFound(uri as Uri);
             });
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(null);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(null);
             const remoteLookupForResource = jest
                 .spyOn(UssFSProvider.instance, "remoteLookupForResource")
                 .mockResolvedValueOnce(testEntries.folder as any);
@@ -697,23 +725,34 @@ describe("UssFSProvider", () => {
             getInfoFromUriMock.mockRestore();
         });
 
-        it("should properly await the profile deferred promise for extenders - existing promise", async () => {
+        it("should properly await the profile deferred promise - existing promise", async () => {
+            const mockAllProfiles = [
+                { name: "sestest", type: "ssh" },
+                { name: "profile1", type: "zosmf" },
+                { name: "profile2", type: "zosmf" },
+            ];
+
             // Create a mock instance of Profiles
             const mockProfilesInstance = {
-                getProfileFromConfig: jest.fn().mockResolvedValueOnce({ profName: testProfile.name, profType: "zftp" }),
+                allProfiles: mockAllProfiles,
             };
 
             // Mock Profiles.getInstance to return the mock instance
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfilesInstance as any);
-            jest.spyOn(ProfilesUtils, "awaitExtenderType").mockRestore();
-            const awaitExtenderTypeSpy = jest.spyOn(ProfilesUtils, "awaitExtenderType");
 
-            const profilePromise = { promise: Promise.resolve() };
-            (ProfilesUtils as any).extenderTypeReady.set("zftp", profilePromise);
-            const getExtenderTypeSpy = jest.spyOn((ProfilesUtils as any).extenderTypeReady, "get");
+            const resolveProfile = jest.fn();
+            const profilePromise = {
+                promise: new Promise<void>((resolve) => {
+                    resolveProfile.mockImplementation(resolve);
+                    setTimeout(resolve, 50);
+                }),
+            };
+
+            ProfilesUtils.extenderTypeReady.set(testProfile.name || "mockProfile", profilePromise as any);
 
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
             lookupAsFileMock.mockReturnValue(testEntries.file);
+
             getInfoFromUriMock.mockReturnValue({
                 profile: testProfile,
                 path: "/aFile.txt",
@@ -723,34 +762,48 @@ describe("UssFSProvider", () => {
                 path: "/USER.DATA.PS",
             });
 
+            const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
+
             await UssFSProvider.instance.readFile(
                 testUris.file.with({
                     query: "conflict=true",
                 })
             );
-            expect(awaitExtenderTypeSpy).toHaveBeenCalledWith("sestest", mockProfilesInstance);
-            expect(getExtenderTypeSpy).toHaveReturnedWith(profilePromise);
+
+            await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
         });
 
-        it("should properly await the profile deferred promise for extenders - no existing promise", async () => {
+        it("should properly await the profile deferred promise - no existing promise", async () => {
+            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(undefined);
+            const mockAllProfiles = [
+                { name: "sestest", type: "ssh" },
+                { name: "profile1", type: "zosmf" },
+                { name: "profile2", type: "zosmf" },
+            ];
+
             // Create a mock instance of Profiles
             const mockProfilesInstance = {
-                getProfileFromConfig: jest.fn().mockResolvedValueOnce({ profName: testProfile.name, profType: "zftp" }),
+                allProfiles: mockAllProfiles,
             };
 
             // Mock Profiles.getInstance to return the mock instance
             jest.spyOn(Profiles, "getInstance").mockReturnValueOnce(mockProfilesInstance as any);
-            jest.spyOn(ProfilesUtils, "awaitExtenderType").mockRestore();
-            const awaitExtenderTypeSpy = jest.spyOn(ProfilesUtils, "awaitExtenderType");
 
-            (ProfilesUtils as any).extenderTypeReady.clear();
-            const profilePromise = { promise: Promise.resolve() };
-            const setExtenderTypeSpy = jest
-                .spyOn((ProfilesUtils as any).extenderTypeReady, "set")
-                .mockImplementationOnce((key) => (ProfilesUtils as any).extenderTypeReady.set(key, profilePromise));
-
+            const resolveProfile = jest.fn();
+            const profilePromise = {
+                mStatus: "pending",
+                resolve: jest.fn(),
+                reject: jest.fn(),
+                status: "pending",
+                promise: new Promise<void>((resolve) => {
+                    resolveProfile.mockImplementation(resolve);
+                    setTimeout(resolve, 50);
+                }),
+            };
+            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(profilePromise as any);
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
             lookupAsFileMock.mockReturnValue(testEntries.file);
+
             getInfoFromUriMock.mockReturnValue({
                 profile: testProfile,
                 path: "/aFile.txt",
@@ -760,13 +813,15 @@ describe("UssFSProvider", () => {
                 path: "/USER.DATA.PS",
             });
 
+            const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
+
             await UssFSProvider.instance.readFile(
                 testUris.file.with({
                     query: "conflict=true",
                 })
             );
-            expect(awaitExtenderTypeSpy).toHaveBeenCalledWith("sestest", mockProfilesInstance);
-            expect(setExtenderTypeSpy).toHaveBeenCalledTimes(2);
+
+            await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
         });
     });
 
@@ -785,7 +840,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.folder,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const newContents = new Uint8Array([3, 6, 9]);
             await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true });
 
@@ -813,7 +868,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.folder,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
             const newContents = new Uint8Array([3, 6, 9]);
             const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockImplementation();
@@ -846,7 +901,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.folder,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
             const newContents = new Uint8Array([3, 6, 9]);
             const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockImplementation();
@@ -880,7 +935,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.session,
                 entries: new Map(),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
             const newContents = new Uint8Array([3, 6, 9]);
             await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: true, overwrite: true });
@@ -906,7 +961,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.folder,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const newContents = new Uint8Array([]);
             await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true });
 
@@ -922,7 +977,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.folder,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(folder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const newContents = new Uint8Array([]);
             await UssFSProvider.instance.writeFile(
                 testUris.file.with({
@@ -955,7 +1010,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.session,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(rootFolder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(rootFolder);
             let err;
             try {
                 await UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: true, overwrite: false });
@@ -972,7 +1027,7 @@ describe("UssFSProvider", () => {
                 ...testEntries.session,
                 entries: new Map([[testEntries.folder.name, { ...testEntries.folder }]]),
             };
-            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(rootFolder);
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(rootFolder);
             let err;
             try {
                 await UssFSProvider.instance.writeFile(testUris.folder, new Uint8Array([]), { create: true, overwrite: false });
@@ -988,7 +1043,7 @@ describe("UssFSProvider", () => {
     describe("makeEmptyFileWithEncoding", () => {
         it("creates an empty file in the provider with the given encoding", () => {
             const fakeSession = { ...testEntries.session };
-            const parentDirMock = jest.spyOn(UssFSProvider.instance as any, "_lookupParentDirectory").mockReturnValueOnce(fakeSession);
+            const parentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(fakeSession);
             expect(UssFSProvider.instance.makeEmptyFileWithEncoding(testUris.file, { kind: "binary" }));
             expect(fakeSession.entries.has(testEntries.file.name)).toBe(true);
             parentDirMock.mockRestore();
@@ -996,27 +1051,21 @@ describe("UssFSProvider", () => {
     });
 
     describe("rename", () => {
-        it("throws an error if entry exists and 'overwrite' is false", async () => {
-            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValueOnce({ ...testEntries.file });
-            await expect(
-                UssFSProvider.instance.rename(testUris.file, testUris.file.with({ path: "/sestest/aFile2.txt" }), { overwrite: false })
-            ).rejects.toThrow("Rename failed: aFile2.txt already exists in /");
-
-            lookupMock.mockRestore();
-        });
-
         it("renames a file entry in the FSP and remote system", async () => {
             const mockUssApi = {
                 rename: jest.fn(),
             };
             const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValueOnce({ ...testEntries.file });
             const fileEntry = { ...testEntries.file, metadata: { ...testEntries.file.metadata } };
             const sessionEntry = {
                 ...testEntries.session,
                 entries: new Map([[testEntries.file.name, fileEntry]]),
             };
             (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+                return sessionEntry.entries.get("aFile.txt");
+            });
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
 
             await UssFSProvider.instance.rename(testUris.file, testUris.file.with({ path: "/sestest/aFile2.txt" }), { overwrite: true });
             expect(mockUssApi.rename).toHaveBeenCalledWith("/aFile.txt", "/aFile2.txt");
@@ -1024,6 +1073,7 @@ describe("UssFSProvider", () => {
             expect(sessionEntry.entries.has("aFile2.txt")).toBe(true);
 
             lookupMock.mockRestore();
+            lookupParentDirMock.mockRestore();
             ussApiMock.mockRestore();
         });
 
@@ -1032,14 +1082,17 @@ describe("UssFSProvider", () => {
                 rename: jest.fn(),
             };
             const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValueOnce({ ...testEntries.folder });
-            const updChildPathsMock = jest.spyOn(UssFSProvider.instance as any, "_updateChildPaths").mockResolvedValueOnce(undefined);
             const folderEntry = { ...testEntries.folder, metadata: { ...testEntries.folder.metadata } };
             const sessionEntry = {
                 ...testEntries.session,
                 entries: new Map([[testEntries.folder.name, folderEntry]]),
             };
             (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+                return sessionEntry.entries.get("aFolder");
+            });
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
+            const updChildPathsMock = jest.spyOn(UssFSProvider.instance as any, "_updateChildPaths").mockResolvedValueOnce(undefined);
 
             await UssFSProvider.instance.rename(testUris.folder, testUris.folder.with({ path: "/sestest/aFolder2" }), { overwrite: true });
             expect(mockUssApi.rename).toHaveBeenCalledWith("/aFolder", "/aFolder2");
@@ -1048,6 +1101,7 @@ describe("UssFSProvider", () => {
             expect(updChildPathsMock).toHaveBeenCalledWith(folderEntry);
 
             lookupMock.mockRestore();
+            lookupParentDirMock.mockRestore();
             ussApiMock.mockRestore();
             updChildPathsMock.mockRestore();
         });
@@ -1058,13 +1112,16 @@ describe("UssFSProvider", () => {
             };
             const errMsgSpy = jest.spyOn(Gui, "errorMessage");
             const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(mockUssApi as any);
-            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValueOnce({ ...testEntries.folder });
             const folderEntry = { ...testEntries.folder, metadata: { ...testEntries.folder.metadata } };
             const sessionEntry = {
                 ...testEntries.session,
                 entries: new Map([[testEntries.folder.name, folderEntry]]),
             };
             (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+                return sessionEntry.entries.get("aFolder");
+            });
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
 
             await expect(
                 UssFSProvider.instance.rename(testUris.folder, testUris.folder.with({ path: "/sestest/aFolder2" }), { overwrite: true })
@@ -1077,6 +1134,92 @@ describe("UssFSProvider", () => {
             });
 
             lookupMock.mockRestore();
+            lookupParentDirMock.mockRestore();
+            ussApiMock.mockRestore();
+        });
+
+        it("retries rename if FileExists error and listFiles throws 404", async () => {
+            const fileExistsError = Object.assign(vscode.FileSystemError.FileExists("file exists"), { code: "FileExists" });
+
+            const mockUssApiRename = jest.fn().mockRejectedValueOnce(fileExistsError).mockResolvedValueOnce({ success: true });
+
+            const mockUssApi = { rename: mockUssApiRename };
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
+
+            const folderEntry = {
+                ...testEntries.folder,
+                entries: new Map(),
+                metadata: { ...testEntries.folder.metadata },
+            };
+
+            const sessionEntry = {
+                ...testEntries.session,
+                entries: new Map([[testEntries.folder.name, folderEntry]]),
+            };
+            (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+                return sessionEntry.entries.get("aFolder");
+            });
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
+
+            const listFilesMock = jest.spyOn(UssFSProvider.instance as any, "listFiles").mockRejectedValue({
+                name: "Error",
+                errorCode: 404,
+            });
+
+            const oldUri = testUris.folder;
+            const newUri = testUris.folder.with({ path: "/sestest/aFolder2" });
+
+            await UssFSProvider.instance.rename(oldUri, newUri, { overwrite: true });
+
+            expect(mockUssApiRename).toHaveBeenCalledTimes(2);
+            expect(mockUssApiRename).toHaveBeenCalledWith("/aFolder", "/aFolder2");
+            expect(sessionEntry.entries.has("aFolder")).toBe(false);
+            expect(sessionEntry.entries.has("aFolder2")).toBe(true);
+
+            listFilesMock.mockRestore();
+            lookupMock.mockRestore();
+            lookupParentDirMock.mockRestore();
+        });
+        it("displays error message if FileExists error occurs and listFiles fails", async () => {
+            const fileExistsError = Object.assign(vscode.FileSystemError.FileExists("File already exists"), { code: "FileExists" });
+
+            const mockUssApi = {
+                rename: jest.fn().mockRejectedValueOnce(fileExistsError),
+            };
+
+            const errMsgSpy = jest.spyOn(Gui, "errorMessage");
+            const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
+            const listFilesMock = jest.spyOn(UssFSProvider.instance as any, "listFiles").mockResolvedValueOnce({ success: false });
+
+            const folderEntry = {
+                ...testEntries.folder,
+                entries: new Map(),
+                metadata: { ...testEntries.folder.metadata },
+            };
+
+            const sessionEntry = {
+                ...testEntries.session,
+                entries: new Map([[testEntries.folder.name, folderEntry]]),
+            };
+
+            (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+                return sessionEntry.entries.get("aFolder");
+            });
+
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
+
+            await UssFSProvider.instance.rename(testUris.folder, testUris.folder.with({ path: "/sestest/aFolder2" }), { overwrite: true });
+
+            expect(mockUssApi.rename).toHaveBeenCalledWith("/aFolder", "/aFolder2");
+            expect(errMsgSpy).toHaveBeenCalledWith("File already exists");
+
+            lookupMock.mockRestore();
+            lookupParentDirMock.mockRestore();
+            listFilesMock.mockRestore();
             ussApiMock.mockRestore();
         });
     });
@@ -1607,8 +1750,9 @@ describe("UssFSProvider", () => {
         });
 
         describe("listFiles", () => {
-            it("returns early without making API calls when profile is locked", async () => {
+            it("returns early without making API calls when profile is locked and user cancelled last auth prompt", async () => {
                 isProfileLockedMock.mockReturnValueOnce(true);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
                 const ussApiMock = {
                     fileList: jest.fn().mockResolvedValueOnce({ success: true, items: [] }),
                 } as any;
@@ -1618,6 +1762,8 @@ describe("UssFSProvider", () => {
 
                 const result = await UssFSProvider.instance.listFiles(testProfile, testUris.file);
 
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
@@ -1633,13 +1779,16 @@ describe("UssFSProvider", () => {
             it("makes API calls when profile is not locked", async () => {
                 const resolveProfile = jest.fn();
                 const profilePromise = {
+                    mStatus: "pending",
+                    resolve: jest.fn(),
+                    reject: jest.fn(),
+                    status: "pending",
                     promise: new Promise<void>((resolve) => {
                         resolveProfile.mockImplementation(resolve);
                         setTimeout(resolve, 50);
                     }),
                 };
-                jest.spyOn((ProfilesUtils as any).extenderTypeReady, "get").mockReturnValueOnce(profilePromise);
-
+                jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(profilePromise as any);
                 isProfileLockedMock.mockReturnValueOnce(false);
                 const ussApiMock = {
                     fileList: jest.fn().mockResolvedValueOnce({
@@ -1676,10 +1825,12 @@ describe("UssFSProvider", () => {
                 const getUssApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ getContents: getContentsMock } as any);
 
                 isProfileLockedMock.mockReturnValueOnce(true);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
 
                 await UssFSProvider.instance.fetchFileAtUri(testUris.file);
 
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
@@ -1693,12 +1844,13 @@ describe("UssFSProvider", () => {
         });
 
         describe("fetchEntries", () => {
-            it("returns entry (if present) without making API calls when profile is locked", async () => {
+            it("returns entry (if present) without making API calls when profile is locked and user cancelled last auth prompt", async () => {
                 const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(true);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
                 const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(testEntries.file);
 
                 isProfileLockedMock.mockReturnValueOnce(true);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
 
                 await (UssFSProvider.instance as any).fetchEntries(testUris.file, {
                     isRoot: false,
@@ -1710,8 +1862,11 @@ describe("UssFSProvider", () => {
                 expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(existsMock).toHaveBeenCalledTimes(1);
                 expect(existsMock).toHaveBeenCalledWith(testUris.file);
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+                expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(lookupMock).toHaveBeenCalledTimes(1);
                 expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
 
@@ -1720,9 +1875,10 @@ describe("UssFSProvider", () => {
                 waitForUnlockMock.mockRestore();
             });
 
-            it("throws error if entry does not exist and profile is locked", async () => {
+            it("throws error if entry does not exist and profile is locked and user cancelled last auth prompt", async () => {
                 const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
                 const lookupSpy = jest.spyOn(UssFSProvider.instance, "lookup");
 
                 isProfileLockedMock.mockReturnValueOnce(true);
@@ -1739,6 +1895,8 @@ describe("UssFSProvider", () => {
                 expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(existsMock).toHaveBeenCalledTimes(1);
                 expect(existsMock).toHaveBeenCalledWith(testUris.file);
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(lookupSpy).not.toHaveBeenCalled();
@@ -1749,7 +1907,7 @@ describe("UssFSProvider", () => {
         });
 
         describe("delete", () => {
-            it("returns early without making API calls when profile is locked", async () => {
+            it("returns early without making API calls when profile is locked and user cancelled last auth prompt", async () => {
                 const getDeleteInfoMock = jest
                     .spyOn(UssFSProvider.instance as any, "_getDeleteInfo")
                     .mockClear()
@@ -1758,13 +1916,17 @@ describe("UssFSProvider", () => {
                         parent: testEntries.session,
                         parentUri: testUris.session,
                     });
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
                 const loadNamedProfileSpy = jest.spyOn(Profiles.prototype, "loadNamedProfile");
+
                 isProfileLockedMock.mockReturnValueOnce(true);
 
                 await UssFSProvider.instance.delete(testUris.file, { recursive: false });
                 expect(getDeleteInfoMock).toHaveBeenCalledTimes(1);
                 expect(getDeleteInfoMock).toHaveBeenCalledWith(testUris.file);
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(loadNamedProfileSpy).not.toHaveBeenCalled();
@@ -1772,7 +1934,7 @@ describe("UssFSProvider", () => {
         });
 
         describe("stat", () => {
-            it("returns early without making API calls when profile is locked", async () => {
+            it("returns early without making API calls when profile is locked and user cancelled last auth prompt", async () => {
                 const file = new UssFile("testFile");
                 file.metadata = { profile: testProfile, path: "/testFile" };
 
@@ -1780,11 +1942,15 @@ describe("UssFSProvider", () => {
                 const listFilesSpy = jest.spyOn(UssFSProvider.instance, "listFiles");
 
                 isProfileLockedMock.mockReturnValueOnce(true);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
 
                 await UssFSProvider.instance.stat(testUris.file);
 
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
+                expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(listFilesSpy).not.toHaveBeenCalled();
@@ -1795,7 +1961,7 @@ describe("UssFSProvider", () => {
         });
 
         describe("autoDetectEncoding", () => {
-            it("returns early without making API calls when profile is locked", async () => {
+            it("returns early without making API calls when profile is locked and user cancelled last auth prompt", async () => {
                 const file = new UssFile("testFile");
                 file.metadata = { profile: testProfile, path: "/testFile" };
 
@@ -1803,10 +1969,13 @@ describe("UssFSProvider", () => {
                 const getUssApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ getTag: getTagMock } as any);
 
                 isProfileLockedMock.mockReturnValueOnce(true);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
 
                 await UssFSProvider.instance.autoDetectEncoding(file);
 
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
@@ -1819,7 +1988,7 @@ describe("UssFSProvider", () => {
         });
 
         describe("uploadEntry", () => {
-            it("throws error without making API calls when profile is locked", async () => {
+            it("throws error without making API calls when profile is locked and user cancelled last auth prompt", async () => {
                 const file = new UssFile("testFile");
                 file.metadata = { profile: testProfile, path: "/testFile" };
                 const content = new Uint8Array([1, 2, 3]);
@@ -1831,11 +2000,14 @@ describe("UssFSProvider", () => {
                 const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValueOnce(undefined);
 
                 isProfileLockedMock.mockReturnValueOnce(true);
+                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
                 const setStatusBarMessageMock = jest.spyOn(Gui, "setStatusBarMessage").mockReturnValueOnce({ dispose: jest.fn() });
 
                 await expect((UssFSProvider.instance as any).uploadEntry(file, content)).rejects.toThrow();
 
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
+                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);

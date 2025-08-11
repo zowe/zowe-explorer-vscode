@@ -36,11 +36,35 @@ interface ErrorContext {
 
 export class AuthUtils {
     /**
+     * Checks if a profile's authentication was previously cancelled and, if so,
+     * re-prompts the user to authenticate. This should be called before any
+     * remote operation that requires authentication.
+     * @param profile The profile to check.
+     * @throws {AuthCancelledError} If the user cancels the re-authentication prompt.
+     */
+    public static async reauthenticateIfCancelled(profile: imperative.IProfileLoaded): Promise<void> {
+        if (AuthHandler.isProfileLocked(profile) && AuthHandler.wasAuthCancelled(profile)) {
+            try {
+                // The original error doesn't matter here, we just need to trigger the flow.
+                await this.handleProfileAuthOnError(
+                    new Error("User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate."),
+                    profile
+                );
+            } catch (err) {
+                // If handleProfileAuthOnError fails (e.g., user cancels again),
+                // we should propagate that failure.
+                throw err;
+            }
+        }
+    }
+
+    /**
      * Locks the profile if an authentication error has occurred (prevents further requests in filesystem until unlocked).
      * If the error is not an authentication error, the profile is unlocked for further use.
      *
      * @param err {Error} The error that occurred
      * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
+     * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
     public static async handleProfileAuthOnError(err: Error, profile?: imperative.IProfileLoaded): Promise<void> {
         if (
@@ -69,12 +93,14 @@ export class AuthUtils {
                 isUsingTokenAuth:
                     sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                 errorCorrelation,
+                throwErrorOnCancel: true,
             };
             // If the profile is already locked, prompt the user to re-authenticate.
             if (AuthHandler.isProfileLocked(profile)) {
                 await AuthHandler.waitForUnlock(profile);
             } else {
                 // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
+                // This may throw AuthCancelledError if the user cancels the authentication prompt
                 await AuthHandler.lockProfile(profile, authOpts);
             }
         } else if (profile != null && AuthHandler.isProfileLocked(profile)) {
@@ -216,8 +242,9 @@ export class AuthUtils {
                 usingCertAuth = true;
                 break;
         }
-
-        const toolTipList = sessionNode.tooltip === "" ? [] : (sessionNode.tooltip as string).split("\n");
+        const tooltipValue: string | undefined =
+            sessionNode.tooltip instanceof vscode.MarkdownString ? sessionNode.tooltip.value : sessionNode.tooltip;
+        const toolTipList = tooltipValue ? tooltipValue.split("\n") : [];
 
         const authMethodIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auth Method: ")));
         if (authMethodIndex === -1) {

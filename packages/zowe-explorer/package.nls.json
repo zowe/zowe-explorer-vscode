@@ -7,6 +7,7 @@
   "zowe.resources.name": "Zowe Resources",
   "zosconsole": "z/OS Console",
   "zowe.placeholderCommand": "Placeholder",
+  "zowe.setupRemoteWorkspaceFolders": "Setup Remote Workspace Folders",
   "zowe.promptCredentials": "Update Credentials",
   "zowe.profileManagement": "Manage Profile",
   "zowe.updateSchema": "Update Profile Configuration Schema",
@@ -36,6 +37,7 @@
   "issueMvsCmd": "Issue MVS Command",
   "uploadDialog": "Upload Member...",
   "pattern": "Search Data Sets",
+  "listDataSets": "List Data Sets",
   "startPolling": "Start Polling",
   "stopPolling": "Stop Polling",
   "refreshNode": "Pull from Mainframe",
@@ -153,7 +155,7 @@
   "showFileErrorDetails": "Show Error Details",
   "jobs.refreshJob": "Refresh Job",
   "jobs.refreshSpool": "Pull from Mainframe",
-  "jobsTableView": "Show as Table",
+  "tableView": "Show as Table",
   "manualPoll": "Poll Content in Active Editor",
   "downloadSingleSpool": "Download",
   "downloadSingleSpoolBinary": "Download (Binary)",
@@ -177,5 +179,7 @@
   "zowe.settings.overrideWithEnvironmentVariables": "Indicates if environment variables should override values stored in Zowe configuration profiles on disk.",
   "zowe.settings.socketConnectTimeout": "The amount of time to wait for a connection to be initiated with the server, in milliseconds.",
   "zowe.settings.requestTimeout": "The amount of time to wait for a REST request to complete, in milliseconds.",
-  "zowe.settings.displayReleaseNotes": "Should display the Zowe Explorer release notes after an update."
+  "zowe.settings.displayReleaseNotes": "Should display the Zowe Explorer release notes after an update.",
+  "zowe.table.maxPinnedRows": "Maximum number of rows that can be pinned to the top of table views.",
+  "zowe.table.hidePinnedRowsWarning": "Hide the warning message when pinning many rows to table views."
 }

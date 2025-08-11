@@ -183,8 +183,18 @@
         }
       },
       {
+        "command": "zowe.ds.tableView",
+        "title": "%tableView%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.ds.listDataSets",
+        "title": "%listDataSets%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.tableView",
-        "title": "%jobsTableView%",
+        "title": "%tableView%",
         "category": "Zowe Explorer"
       },
       {
@@ -710,6 +720,10 @@
         "enablement": "false"
       },
       {
+        "command": "zowe.setupRemoteWorkspaceFolders",
+        "title": "%zowe.setupRemoteWorkspaceFolders%"
+      },
+      {
         "command": "zowe.openRecentMember",
         "title": "%zowe.openRecentMember%",
         "category": "Zowe Explorer"
@@ -979,6 +993,11 @@
           "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
           "command": "zowe.ds.sortBy",
           "group": "inline@1"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(session|pds).*/ && !listMultiSelection",
+          "command": "zowe.ds.tableView",
+          "group": "100_zowe_tableview"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
@@ -1491,6 +1510,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.ds.tableView",
+          "when": "never"
+        },
+        {
           "command": "zowe.jobs.tableView",
           "when": "never"
         },
@@ -1660,6 +1683,10 @@
         },
         {
           "command": "zowe.deleteProfile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.setupRemoteWorkspaceFolders",
           "when": "never"
         },
         {
@@ -2010,13 +2037,13 @@
         },
         "zowe.jobs.paginate.enabled": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "%zowe.jobs.paginate.enabled%",
           "scope": "window"
         },
         "zowe.jobs.paginate.recordsToFetch": {
           "type": "integer",
-          "default": 100,
+          "default": 1000,
           "description": "%zowe.jobs.paginate.recordsToFetch%",
           "scope": "window",
           "minimum": 2
@@ -2043,6 +2070,19 @@
           "type": "boolean",
           "default": true,
           "description": "%zowe.settings.displayReleaseNotes%",
+          "scope": "window"
+        },
+        "zowe.table.maxPinnedRows": {
+          "type": "integer",
+          "default": 10,
+          "description": "%zowe.table.maxPinnedRows%",
+          "scope": "window",
+          "minimum": 1
+        },
+        "zowe.table.hidePinnedRowsWarning": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.table.hidePinnedRowsWarning%",
           "scope": "window"
         }
       }

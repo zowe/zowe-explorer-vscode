@@ -178,8 +178,9 @@ export class Profiles extends ProfilesCache {
             if (configFileIndex === -1) {
                 toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")}`);
             } else {
-                toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
-                    }`;
+                toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
+                    layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+                }`;
             }
 
             const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);

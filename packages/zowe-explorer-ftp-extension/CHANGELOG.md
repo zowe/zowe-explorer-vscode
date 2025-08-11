@@ -4,6 +4,14 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
+- Changed the response field names for the `FtpMvsApi.allMembers` function from "created" and "changed" to "c4date" and "m4date" to be consistent with the z/OSMF API response format for a PDS member list. [#3751](https://github.com/zowe/zowe-explorer-vscode/issues/3751)
+
+### Bug fixes
+
+- Fixed an issue where USS directories could not be loaded via FTP as virtual workspaces. [#3763](https://github.com/zowe/zowe-explorer-vscode/pull/3763)
+
+## `3.2.2`
+
 ### Bug fixes
 
 - Updated Zowe SDKs to `8.24.1` for technical currency. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)

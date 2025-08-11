@@ -740,12 +740,23 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             if (SharedContext.isSessionNotFav(node)) {
                 ZoweLogger.debug(vscode.l10n.t("Prompting the user for a USS path"));
                 if (this.mHistory.getSearchHistory().length > 0) {
-                    const createPick = new FilterDescriptor(USSTree.defaultDialogText);
                     const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
                     const quickpick = Gui.createQuickPick();
-                    quickpick.placeholder = vscode.l10n.t("Select a filter");
-                    quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+                    quickpick.placeholder = vscode.l10n.t("Select a filter or type to create a new one");
                     quickpick.ignoreFocusOut = true;
+
+                    // Callback updates the "Create a new filter" option as user types
+                    quickpick.onDidChangeValue((value) => {
+                        const trimmedValue = value.trim();
+                        const createPick = trimmedValue
+                            ? new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value.trim()}"`)
+                            : new FilterDescriptor(USSTree.defaultDialogText);
+                        quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+                    });
+
+                    const createPick = new FilterDescriptor(USSTree.defaultDialogText);
+                    quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+
                     quickpick.show();
                     const choice = await Gui.resolveQuickPick(quickpick);
                     quickpick.hide();
@@ -754,23 +765,33 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                         return;
                     }
                     if (choice instanceof FilterDescriptor) {
-                        if (quickpick.value) {
-                            remotepath = quickpick.value;
+                        // If user typed something and selected "Create a new filter", use that input
+                        if (quickpick.value && quickpick.value.trim()) {
+                            remotepath = quickpick.value.trim();
+                        } else {
+                            // Fall back to input box if no text was entered
+                            const options: vscode.InputBoxOptions = {
+                                placeHolder: vscode.l10n.t("New filter"),
+                                validateInput: (input: string) => (input.length > 0 ? null : vscode.l10n.t("Please enter a valid USS path.")),
+                            };
+                            remotepath = await Gui.showInputBox(options);
+                            if (remotepath == null) {
+                                return;
+                            }
                         }
                     } else {
                         remotepath = choice.label;
                     }
-                }
-                // manually entering a search - switch to an input box
-                const options: vscode.InputBoxOptions = {
-                    placeHolder: vscode.l10n.t("New filter"),
-                    value: remotepath,
-                    validateInput: (input: string) => (input.length > 0 ? null : vscode.l10n.t("Please enter a valid USS path.")),
-                };
-                // get user input
-                remotepath = await Gui.showInputBox(options);
-                if (remotepath == null) {
-                    return;
+                } else {
+                    // No search history, use input box directly
+                    const options: vscode.InputBoxOptions = {
+                        placeHolder: vscode.l10n.t("New filter"),
+                        validateInput: (input: string) => (input.length > 0 ? null : vscode.l10n.t("Please enter a valid USS path.")),
+                    };
+                    remotepath = await Gui.showInputBox(options);
+                    if (remotepath == null) {
+                        return;
+                    }
                 }
             } else {
                 // executing search from saved search in favorites

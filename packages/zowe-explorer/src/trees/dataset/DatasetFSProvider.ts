@@ -83,15 +83,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
 
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on PS or PDS members only
         if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
             return entry;
         }
 
         ZoweLogger.trace(`[DatasetFSProvider] stat is locating resource ${uri.toString()}`);
-        const profile = Profiles.getInstance().loadNamedProfile(uriInfo.profile.name);
 
         // Locate the resource using the profile in the given URI.
         let resp;
@@ -100,6 +99,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             // Wait for any ongoing authentication process to complete
+            await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
             await AuthHandler.waitForUnlock(uriInfo.profile);
 
             // Check if the profile is locked (indicating an auth error is being handled)
@@ -111,11 +111,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             if (isPdsMember) {
                 // PDS member
-                const pds = this._lookupParentDirectory(uri);
-                resp = await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(pds.name, { attributes: true });
+                const pds = this.lookupParentDirectory(uri);
+                resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(pds.name, { attributes: true });
             } else {
                 // Data Set
-                resp = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(path.posix.basename(dsPath), {
+                resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(dsPath), {
                     attributes: true,
                 });
             }
@@ -123,7 +123,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             if (err instanceof Error) {
                 ZoweLogger.error(err.message);
             }
-            await AuthUtils.handleProfileAuthOnError(err, profile);
+            await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile);
             throw err;
         }
 
@@ -149,6 +149,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profileEntry = this._lookupAsDirectory(uri, false) as FilterEntry;
 
         // Wait for any ongoing authentication process to complete
+        await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -158,8 +159,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             return profileEntry;
         }
 
-        const profile = Profiles.getInstance().loadNamedProfile(uriInfo.profile.name);
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
         const datasetResponses: IZosFilesResponse[] = [];
         const dsPatterns = [
             ...new Set(
@@ -223,7 +223,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     private async fetchEntriesForDataset(entry: PdsEntry, uri: vscode.Uri, uriInfo: UriFsInfo): Promise<void> {
         let members: IZosFilesResponse;
         try {
+            const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
             // Wait for any ongoing authentication process to complete
+            await AuthUtils.reauthenticateIfCancelled(profile);
             await AuthHandler.waitForUnlock(entry.metadata.profile);
 
             // Check if the profile is locked (indicating an auth error is being handled)
@@ -233,8 +235,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 return;
             }
 
-            const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            members = await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(path.posix.basename(uri.path));
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+            members = await mvsApi.allMembers(path.posix.basename(uri.path));
         } catch (err) {
             await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile);
             throw err;
@@ -269,6 +271,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const pdsMember = uriPath.length === 2;
 
         // Wait for any ongoing authentication process to complete
+        await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -283,9 +286,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         if (!entryExists) {
             try {
-                const profile = Profiles.getInstance().loadNamedProfile(uriInfo.profile.name);
                 if (pdsMember) {
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(profile).allMembers(uriPath[0]);
+                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(uriPath[0]);
                     entryIsDir = false;
                     const memberName = path.parse(uriPath[1]).name;
                     if (
@@ -296,7 +298,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
                 } else {
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(uriPath[0], {
+                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(uriPath[0], {
                         attributes: true,
                     });
                     if (resp.success && resp.apiResponse?.items?.length > 0) {
@@ -321,7 +323,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             await this.fetchEntriesForDataset(entry as PdsEntry, uri, uriInfo);
         } else if (!entryExists) {
             this.createDirectory(uri.with({ path: path.posix.join(uri.path, "..") }));
-            const parentDir = this._lookupParentDirectory(uri);
+            const parentDir = this.lookupParentDirectory(uri);
             const dsname = uriPath[Number(pdsMember)];
             const ds = new DsEntry(dsname, pdsMember);
             ds.metadata = new DsEntryMetadata({ path: path.posix.join(parentDir.metadata.path, dsname), profile: parentDir.metadata.profile });
@@ -391,7 +393,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public createDirectory(uri: vscode.Uri): void {
         const basename = path.posix.basename(uri.path);
-        const parent = this._lookupParentDirectory(uri, false);
+        const parent = this.lookupParentDirectory(uri, false);
         if (parent.entries.has(basename)) {
             return;
         }
@@ -439,6 +441,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profileEncoding = dsEntry?.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
         try {
             // Wait for any ongoing authentication process to complete
+            await AuthUtils.reauthenticateIfCancelled(profile);
             await AuthHandler.waitForUnlock(metadata.profile);
 
             // Check if the profile is locked (indicating an auth error is being handled)
@@ -462,7 +465,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
                 const pdsMember = uriPath.length === 2;
                 this.createDirectory(uri.with({ path: path.posix.join(uri.path, "..") }));
-                const parentDir = this._lookupParentDirectory(uri);
+                const parentDir = this.lookupParentDirectory(uri);
                 const dsname = uriPath[Number(pdsMember)];
                 const ds = new DsEntry(dsname, pdsMember);
                 ds.metadata = new DsEntryMetadata({ path: path.posix.join(parentDir.metadata.path, dsname), profile: parentDir.metadata.profile });
@@ -562,7 +565,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     public makeEmptyDsWithEncoding(uri: vscode.Uri, encoding: ZosEncoding, isMember?: boolean): void {
-        const parentDir = this._lookupParentDirectory(uri);
+        const parentDir = this.lookupParentDirectory(uri);
         const fileName = path.posix.basename(uri.path);
         const entry = new DsEntry(fileName, isMember);
         entry.encoding = encoding;
@@ -577,6 +580,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     private async uploadEntry(entry: DsEntry, content: Uint8Array, forceUpload?: boolean): Promise<IZosFilesResponse> {
         const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Saving data set...")}`);
         let resp: IZosFilesResponse;
+        const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+
+        await AuthUtils.reauthenticateIfCancelled(profile);
+        await AuthHandler.waitForUnlock(entry.metadata.profile);
+
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
@@ -605,7 +613,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
         const basename = path.posix.basename(uri.path);
-        const parent = this._lookupParentDirectory(uri);
+        const parent = this.lookupParentDirectory(uri);
         let entry = parent.entries.get(basename);
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
@@ -706,7 +714,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     public async delete(uri: vscode.Uri, _options: { readonly recursive: boolean }): Promise<void> {
         const entry = this.lookup(uri, false) as DsEntry | PdsEntry;
-        const parent = this._lookupParentDirectory(uri);
+        const parent = this.lookupParentDirectory(uri);
         let fullName: string = "";
         if (FsDatasetsUtils.isPdsEntry(parent)) {
             // PDS member
@@ -718,6 +726,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         try {
+            const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+            await AuthUtils.reauthenticateIfCancelled(profile);
+            await AuthHandler.waitForUnlock(entry.metadata.profile);
             await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).deleteDataSet(fullName, {
                 responseTimeout: entry.metadata.profile.profile?.responseTimeout,
             });
@@ -752,12 +763,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         const entry = this.lookup(oldUri, false) as PdsEntry | DsEntry;
-        const parentDir = this._lookupParentDirectory(oldUri);
+        const parentDir = this.lookupParentDirectory(oldUri);
 
         const oldName = entry.name;
         const newName = path.posix.basename(newUri.path);
 
         try {
+            const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+            await AuthUtils.reauthenticateIfCancelled(profile);
+            await AuthHandler.waitForUnlock(entry.metadata.profile);
             if (FsDatasetsUtils.isPdsEntry(entry) || !entry.isMember) {
                 await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(oldName, newName);
             } else {

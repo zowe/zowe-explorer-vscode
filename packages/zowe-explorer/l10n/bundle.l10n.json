@@ -318,7 +318,7 @@
   "Prompting the user to choose a member from the filtered list": "Prompting the user to choose a member from the filtered list",
   "You are already at the root directory.": "You are already at the root directory.",
   "Prompting the user for a USS path": "Prompting the user for a USS path",
-  "Select a filter": "Select a filter",
+  "Select a filter or type to create a new one": "Select a filter or type to create a new one",
   "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
   "New filter": "New filter",
   "Please enter a valid USS path.": "Please enter a valid USS path.",
@@ -471,6 +471,7 @@
       "Profile name"
     ]
   },
+  "Select a filter": "Select a filter",
   "Enter a job ID": "Enter a job ID",
   "Job search cancelled.": "Job search cancelled.",
   "The polling interval must be greater than or equal to 1000ms.": "The polling interval must be greater than or equal to 1000ms.",
@@ -730,6 +731,62 @@
   "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
+  "[{0}]: {1}/Profile NameData Set Search Pattern": {
+    "message": "[{0}]: {1}",
+    "comment": [
+      "Profile Name",
+      "Data Set Search Pattern"
+    ]
+  },
+  "[{0}]: *": "[{0}]: *",
+  "[{0}] Members of {1}/Profile namePDS name": {
+    "message": "[{0}] Members of {1}",
+    "comment": [
+      "Profile name",
+      "PDS name"
+    ]
+  },
+  "Data Set Name": "Data Set Name",
+  "Data Set Organization": "Data Set Organization",
+  "Creation Date": "Creation Date",
+  "Modified Date": "Modified Date",
+  "Record Length": "Record Length",
+  "Migrated": "Migrated",
+  "Record Format": "Record Format",
+  "Volumes": "Volumes",
+  "Last Modified By": "Last Modified By",
+  "Version": "Version",
+  "Modification Level": "Modification Level",
+  "Current Records": "Current Records",
+  "Initial Records": "Initial Records",
+  "Modified Records": "Modified Records",
+  "SCLM": "SCLM",
+  "Open": "Open",
+  "Focus": "Focus",
+  "Back": "Back",
+  "Pin": "Pin",
+  "Unpin": "Unpin",
+  "Error toggling pin state for rows: {0}/Error message": {
+    "message": "Error toggling pin state for rows: {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Member Name": "Member Name",
+  "Please select a single profile or PDS.": "Please select a single profile or PDS.",
+  "This action is only supported for session and PDS nodes. Please select a session or PDS node.": "This action is only supported for session and PDS nodes. Please select a session or PDS node.",
+  "No profiles available.": "No profiles available.",
+  "Select a profile to search for data sets": "Select a profile to search for data sets",
+  "Select a profile": "Select a profile",
+  "Enter Data Set Pattern": "Enter Data Set Pattern",
+  "e.g., USER.*, PUBLIC.DATA.*, etc.": "e.g., USER.*, PUBLIC.DATA.*, etc.",
+  "Enter a dataset pattern to search for": "Enter a dataset pattern to search for",
+  "Profile {0} not found./Name of the selected profile": {
+    "message": "Profile {0} not found.",
+    "comment": [
+      "Name of the selected profile"
+    ]
+  },
   "No search pattern applied. Search for a pattern and try again.": "No search pattern applied. Search for a pattern and try again.",
   "Searching for \"{0}\"/The string to search data sets for.": {
     "message": "Searching for \"{0}\"",
@@ -743,10 +800,8 @@
       "The string to search data sets for."
     ]
   },
-  "Data Set Name": "Data Set Name",
   "Position": "Position",
   "Contents": "Contents",
-  "Open": "Open",
   "Enter the text to search for.": "Enter the text to search for.",
   "Search Options": "Search Options",
   "Select search options": "Select search options",
@@ -900,6 +955,7 @@
   "Selection is not a valid data set member name.": "Selection is not a valid data set member name.",
   "Selection is not a valid data set name.": "Selection is not a valid data set name.",
   "Select the profile to use to open the data set": "Select the profile to use to open the data set",
+  "PDS {0} could not be found.": "PDS {0} could not be found.",
   "Data set member {0} does not exist or cannot be opened in data set {1}.": "Data set member {0} does not exist or cannot be opened in data set {1}.",
   "Data set {0} does not exist or cannot be opened.": "Data set {0} does not exist or cannot be opened.",
   "Opening data set failed.": "Opening data set failed.",
@@ -1109,7 +1165,6 @@
       "The profile name"
     ]
   },
-  "This profile is using basic authentication and does not support token authentication.": "This profile is using basic authentication and does not support token authentication.",
   "Error getting supported tokenType value for profile {0}/Service profile name": {
     "message": "Error getting supported tokenType value for profile {0}",
     "comment": [

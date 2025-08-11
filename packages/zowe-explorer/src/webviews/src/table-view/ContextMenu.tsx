@@ -1,9 +1,10 @@
 import type { Table } from "@zowe/zowe-explorer-api";
-import { useCallback, useRef, useState } from "preact/hooks";
+import { useCallback, useRef, useState, useEffect } from "preact/hooks";
 import { CellContextMenuEvent, ColDef } from "ag-grid-community";
-import { ControlledMenu, MenuItem } from "@szhsin/react-menu";
+import { ControlledMenu } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
-import { wrapFn } from "./types";
+import { ContextMenuItem } from "./ContextMenuItem";
+import { evaluateItemsState, ActionEvaluationContext, ActionState } from "./ActionUtils";
 
 type MousePt = { x: number; y: number };
 
@@ -13,7 +14,6 @@ export type ContextMenuProps = {
   clickedRow: Table.RowData;
   options: Table.ContextMenuOption[];
   colDef: ColDef;
-  vscodeApi: any;
 };
 
 /**
@@ -25,6 +25,7 @@ export type ContextMenuProps = {
 export const useContextMenu = (contextMenu: ContextMenuProps) => {
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<MousePt>({ x: 0, y: 0 });
+  const [menuItemStates, setMenuItemStates] = useState<ActionState[]>([]);
 
   const gridRefs = useRef<any>({
     colDef: null,
@@ -50,6 +51,33 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
     elems.forEach((elem) => elem.classList.remove("focused-ctx-menu"));
   };
 
+  // Evaluate menu items when context menu is opened
+  useEffect(() => {
+    const evaluateMenuItems = async () => {
+      if (!open || !gridRefs.current.clickedRow) {
+        return;
+      }
+
+      const context: ActionEvaluationContext = {
+        rowData: gridRefs.current.clickedRow,
+        rowIndex: gridRefs.current.rowIndex,
+        selectedRows: gridRefs.current.selectedRows,
+      };
+
+      try {
+        const states = await evaluateItemsState(contextMenu.options, context, 0);
+        setMenuItemStates(states);
+      } catch (error) {
+        console.warn("Failed to evaluate context menu items:", error);
+        setMenuItemStates([]);
+      }
+    };
+
+    if (open) {
+      evaluateMenuItems();
+    }
+  }, [open]);
+
   const cellMenu = useCallback(
     (event: CellContextMenuEvent) => {
       // Check if a cell is focused. If so, keep the border around the grid cell by adding a "focused cell" class.
@@ -73,7 +101,7 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
 
       openMenu(event.event as PointerEvent);
     },
-    [contextMenu.selectRow, gridRefs.current.selectedRows]
+    [contextMenu.selectRow]
   );
 
   return {
@@ -87,9 +115,10 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
         onClose={() => {
           removeContextMenuClass();
           setOpen(false);
+          setMenuItemStates([]);
         }}
       >
-        {ContextMenu(gridRefs.current, contextMenu.options, contextMenu.vscodeApi)}
+        {ContextMenu(gridRefs.current, menuItemStates)}
       </ControlledMenu>
     ) : null,
   };
@@ -97,41 +126,16 @@ export const useContextMenu = (contextMenu: ContextMenuProps) => {
 
 export type ContextMenuElemProps = {
   anchor: MousePt;
-  menuItems: Table.ContextMenuOption[];
-  vscodeApi: any;
+  menuItems: ActionState[];
 };
 
-export const ContextMenu = (gridRefs: any, menuItems: Table.ContextMenuOption[], vscodeApi: any) => {
-  return menuItems
-    ?.filter((item) => {
-      if (item.condition == null) {
-        return true;
-      }
-
-      // Wrap function to properly handle named parameters
-      const cond = new Function(wrapFn(item.condition));
-      // Invoke the wrapped function once to get the built function, then invoke it again with the parameters
-      return cond()(gridRefs.clickedRow);
-    })
-    .map((item, i) => (
-      <MenuItem
-        key={`${item.command}-ctx-menu-${i}`}
-        onClick={(_e: any) => {
-          vscodeApi.postMessage({
-            command: item.command,
-            data: {
-              rowIndex: gridRefs.rowIndex,
-              row: { ...gridRefs.clickedRow, actions: undefined },
-              field: gridRefs.field,
-              cell: gridRefs.colDef.valueFormatter
-                ? gridRefs.colDef.valueFormatter({ value: gridRefs.clickedRow[gridRefs.field] })
-                : gridRefs.clickedRow[gridRefs.field],
-            },
-          });
-        }}
-        style={{ borderBottom: "var(--vscode-menu-border)" }}
-      >
-        {item.title}
-      </MenuItem>
-    ));
+export const ContextMenu = (gridRefs: any, menuItemStates: ActionState[]) => {
+  return menuItemStates?.map((itemState, i) => (
+    <ContextMenuItem
+      key={`${itemState.item.command}-ctx-menu-${i}`}
+      itemState={itemState}
+      gridRefs={gridRefs}
+      keyPrefix={`${itemState.item.command}-ctx-menu-${i}`}
+    />
+  ));
 };
