@@ -69,6 +69,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
             await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
         });
         it("should check current profile and perform the case when status is 'unverified'", async () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             const profileStatus = { name: "test", status: "unverified" };
             jest.spyOn(Profiles, "getInstance").mockReturnValue({
                 checkCurrentProfile: jest.fn().mockResolvedValue(profileStatus),
@@ -78,6 +79,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
             await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
         });
         it("should check current profile and perform the case when status is 'inactive'", async () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             Object.defineProperty(ZoweCommandProvider, "mOnDidChangeTreeData", {
                 value: {
                     debug: jest.fn(),
