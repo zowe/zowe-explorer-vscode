@@ -100,57 +100,46 @@ export async function evaluateItemState(
     let shouldShow = true;
     let isEnabled = true;
 
-    // Step 1: Check hideCondition for visibility
-    if ("hideCondition" in item && item.hideCondition) {
-        try {
-            const evaluationData = prepareEvaluationData(item, context);
-            const hideResult = await messageHandler.request<boolean>("check-hide-condition-for-action", {
-                actionId: item.command,
-                row: evaluationData.row,
-                rowIndex: evaluationData.rowIndex,
-            });
-            shouldShow = !hideResult;
-        } catch (error) {
-            console.warn(`[ActionUtils.evaluateItemState] Failed to evaluate hide condition for item %s:`, item.command, error);
-            // Default to visible if evaluation fails
-            shouldShow = true;
-        }
+    try {
+        const evaluationData = prepareEvaluationData(item, context);
+        const hideResult = await messageHandler.request<boolean>("check-hide-condition-for-action", {
+            actionId: item.command,
+            row: evaluationData.row,
+            rowIndex: evaluationData.rowIndex,
+        });
+        shouldShow = !hideResult;
+    } catch (error) {
+        console.warn(`[ActionUtils.evaluateItemState] Failed to evaluate hide condition for item %s:`, item.command, error);
+        // Default to visible if evaluation fails
+        shouldShow = true;
     }
 
-    // Step 2: Only evaluate enabled condition if item is visible
     if (shouldShow) {
         // Check if this is a Table.Action (has 'type' property) or Table.ContextMenuOption
         const isTableAction = "type" in item;
 
-        // First check selection requirements if callback exists
-        if ("callback" in item && item.callback) {
-            const callbackType = item.callback.typ;
+        const callbackType = item.callback.typ;
 
-            if (isTableAction) {
-                // Table Actions require specific selection counts
-                if (callbackType === "single-row") {
-                    isEnabled = selectionCount !== 0 && selectionCount === 1;
-                } else if (callbackType === "multi-row") {
-                    isEnabled = selectionCount > 0;
-                } else if (callbackType === "cell") {
-                    isEnabled = false;
-                } else if (callbackType === "no-selection") {
-                    isEnabled = true;
-                } else {
-                    isEnabled = true;
-                }
+        if (isTableAction) {
+            // Table Actions require specific selection counts
+            if (callbackType === "single-row") {
+                isEnabled = selectionCount !== 0 && selectionCount === 1;
+            } else if (callbackType === "multi-row") {
+                isEnabled = selectionCount > 0;
+            } else if (callbackType === "cell") {
+                isEnabled = false;
+            } else if (callbackType === "no-selection") {
+                isEnabled = true;
             } else {
-                // Context Menu Options operate on the clicked row, so they're generally enabled
-                // when they appear (except for cell actions which need special handling)
-                isEnabled = context.rowData !== undefined;
+                isEnabled = true;
             }
         } else {
-            // For items without callbacks, default to enabled
-            isEnabled = true;
+            // Context Menu Options operate on the clicked row, so they're generally enabled
+            // when they appear (except for cell actions which need special handling)
+            isEnabled = context.rowData !== undefined;
         }
 
-        // Then check custom condition if enabled and condition exists
-        if (isEnabled && item.condition) {
+        if (isEnabled) {
             try {
                 const evaluationData = prepareEvaluationData(item, context);
                 const conditionResult = await messageHandler.request<boolean>("check-condition-for-action", {

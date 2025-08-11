@@ -503,9 +503,6 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       }
     };
 
-    // Set up the message listeners using a more modern approach
-    // Note: We'll use the existing window event listener temporarily until MessageHandler supports
-    // command-based message handling properly
     window.addEventListener("message", (event: any): void => {
       if (!isSecureOrigin(event.origin)) {
         return;
@@ -517,11 +514,18 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
       const response = event.data;
       switch (response.command) {
+        // Handle extension layer requests/events
         case "ondatachanged":
           handleDataChanged(response.data);
           break;
         case "treeChildrenLoaded":
           handleTreeChildrenLoaded(response.data);
+          break;
+        case "check-condition-for-action":
+        case "check-hide-condition-for-action":
+        case "get-dynamic-title-for-action":
+        case "GET_LOCALIZATION":
+          // Commands handled at extension layer by MessageHandler.request
           break;
         default:
           if (response.requestId && response.command) {

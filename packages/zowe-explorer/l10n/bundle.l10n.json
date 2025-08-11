@@ -760,7 +760,7 @@
   "No profiles available.": "No profiles available.",
   "Select a profile to search for data sets": "Select a profile to search for data sets",
   "Select a profile": "Select a profile",
-  "Enter Dataset Pattern": "Enter Dataset Pattern",
+  "Enter Data Set Pattern": "Enter Data Set Pattern",
   "e.g., USER.*, PUBLIC.DATA.*, etc.": "e.g., USER.*, PUBLIC.DATA.*, etc.",
   "Enter a dataset pattern to search for": "Enter a dataset pattern to search for",
   "Profile {0} not found./Name of the selected profile": {
