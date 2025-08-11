@@ -3492,5 +3492,6 @@ describe("Dataset Actions Unit Tests - upload with encoding", () => {
 
         expect(uploadFileWithEncodingSpy).not.toHaveBeenCalled();
         expect(withProgressMock).toHaveBeenCalled();
+        getTreeViewMock.mockRestore();
     });
 });
