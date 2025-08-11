@@ -2182,6 +2182,8 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             // Example of existing filter from user history
             const filterItem = { label: "EXISTING.FILTER", description: "" };
             jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterItem);
+            // Confirm user selection of existing filter
+            jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("EXISTING.FILTER");
 
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
