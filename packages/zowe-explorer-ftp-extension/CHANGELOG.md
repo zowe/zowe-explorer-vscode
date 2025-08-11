@@ -10,6 +10,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 ### Bug fixes
 
 - Fixed an issue where USS directories could not be loaded via FTP as virtual workspaces. [#3763](https://github.com/zowe/zowe-explorer-vscode/pull/3763)
+- Fixed an issue where the `UssApi.uploadDirectory` function did not properly parse the file name from the input file paths, causing incorrect file paths to be used for the USS destination path.
 
 ## `3.2.2`
 
