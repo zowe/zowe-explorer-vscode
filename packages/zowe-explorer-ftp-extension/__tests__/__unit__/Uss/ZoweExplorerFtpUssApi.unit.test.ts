@@ -19,7 +19,9 @@ import TestUtils from "../utils/TestUtils";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
-import * as tmp from "tmp";
+import * as path from "path";
+import * as os from "os";
+import * as crypto from "crypto";
 import { imperative } from "@zowe/zowe-explorer-api";
 import { mocked } from "../../../__mocks__/mockUtils";
 
@@ -33,6 +35,12 @@ const readableStream = stream.Readable.from([]);
 const fs = require("fs");
 
 fs.createReadStream = jest.fn().mockReturnValue(readableStream);
+
+// Helper function to create temporary file names using Node.js built-ins
+function createTempFileName(): string {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "zowe-test-uss-"));
+    return path.join(tmpDir, `temp-${crypto.randomUUID()}.dat`);
+}
 
 describe("FtpUssApi", () => {
     let UssApi: FtpUssApi;
@@ -67,7 +75,7 @@ describe("FtpUssApi", () => {
     });
 
     it("should view uss files.", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const localFile = createTempFileName();
         const response = TestUtils.getSingleLineStream();
         UssUtils.downloadFile = jest.fn().mockReturnValue(response);
 
@@ -98,10 +106,10 @@ describe("FtpUssApi", () => {
     });
 
     it("should upload uss files.", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const localFile = createTempFileName();
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
-        const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
+        const mkdtempSyncSpy = jest.spyOn(fs, "mkdtempSync");
         const rmSyncSpy = jest.spyOn(fs, "rmSync");
         jest.spyOn(UssApi, "getContents").mockResolvedValue({ apiResponse: { etag: "test" } } as any);
         const mockParams = {
@@ -122,8 +130,8 @@ describe("FtpUssApi", () => {
         expect(UssUtils.downloadFile).toHaveBeenCalledTimes(1);
         expect(UssUtils.uploadFile).toHaveBeenCalledTimes(1);
         expect(UssApi.releaseConnection).toHaveBeenCalled();
-        // check that correct function is called from node-tmp
-        expect(tmpNameSyncSpy).toHaveBeenCalled();
+        // check that correct Node.js built-in functions are called
+        expect(mkdtempSyncSpy).toHaveBeenCalled();
         expect(rmSyncSpy).toHaveBeenCalled();
     });
 
@@ -229,7 +237,7 @@ describe("FtpUssApi", () => {
         jest.spyOn(UssUtils, "downloadFile").mockImplementationOnce(() => {
             throw new Error("Download file failed.");
         });
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const localFile = createTempFileName();
         const mockParams = {
             ussFilePath: "/a/b/d.txt",
             options: {
@@ -313,7 +321,7 @@ describe("FtpUssApi", () => {
             return {
                 processNewlinesSpy: jest.spyOn(imperative.IO, "processNewlines"),
                 putContent: jest.spyOn(UssApi, "putContent").mockImplementation(),
-                tmpFileSyncMock: jest.spyOn(tmp, "fileSync").mockReturnValueOnce({ fd: 12345 } as any),
+                mkdtempSyncMock: jest.spyOn(fs, "mkdtempSync").mockReturnValueOnce("/tmp/zowe-test-uss-12345"),
                 writeSyncMock: jest.spyOn(fs, "writeSync").mockImplementation(),
             };
         }
