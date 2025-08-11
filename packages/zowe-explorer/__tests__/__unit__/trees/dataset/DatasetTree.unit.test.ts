@@ -35,7 +35,7 @@ import { Profiles } from "../../../../src/configuration/Profiles";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
-import { FilterDescriptor } from "../../../../src/management/FilterManagement";
+import { FilterDescriptor, FilterItem } from "../../../../src/management/FilterManagement";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ZowePersistentFilters } from "../../../../src/tools/ZowePersistentFilters";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
@@ -2437,7 +2437,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
 
             expect(showInputBoxSpy).toHaveBeenCalled();
-            expect(showMessageSpy).toHaveBeenCalledWith("You must enter a pattern.");
             expect(testTree.mSessionNodes[1].pattern).toBe("");
         });
 
@@ -2519,6 +2518,51 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             expect(firstItems).toEqual(secondItems);
             expect(mockQuickPick.items[0].label).toContain('$(plus) Create a new filter: "SAME.VALUE"');
         });
+    });
+
+    it("should return early when user selects existing filter but cancels the edit input box", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        // Add search history to trigger quick pick
+        const existingFilter = "HLQ.EXISTING.FILTER";
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.addSearchHistory(existingFilter);
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+        // Mock the quick pick functionality following the existing pattern
+        const mockQuickPick = {
+            placeholder: "",
+            activeItems: [],
+            ignoreFocusOut: true,
+            items: [],
+            value: "",
+            show: jest.fn(),
+            hide: jest.fn(),
+            onDidAccept: jest.fn(),
+            onDidChangeValue: jest.fn(),
+            onDidHide: jest.fn(),
+        };
+
+        jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+        const existingFilterItem = new FilterItem({ text: existingFilter });
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(existingFilterItem);
+
+        // Mock the input box to return undefined (simulate user cancelling)
+        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+
+        const filterTreeSpy = jest.spyOn(testTree, "filterTreeByPattern").mockImplementation();
+
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+        expect(Gui.showInputBox).toHaveBeenCalledWith({
+            prompt: expect.any(String),
+            value: existingFilter,
+        });
+        expect(filterTreeSpy).not.toHaveBeenCalled();
     });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {

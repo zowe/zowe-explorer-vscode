@@ -1336,7 +1336,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         };
                         pattern = await Gui.showInputBox(options);
                         if (!pattern) {
-                            Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
                             return;
                         }
                     }

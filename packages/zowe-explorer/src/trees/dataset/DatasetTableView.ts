@@ -33,7 +33,6 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { AuthUtils } from "../../utils/AuthUtils";
 import * as imperative from "@zowe/imperative";
 import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
-import { ZoweLogger } from "../../tools/ZoweLogger";
 
 /**
  * Tree-based data source that uses existing tree nodes
@@ -547,7 +546,7 @@ export class DatasetTableView {
         try {
             pinnedRows = await this.table.getPinnedRows();
         } catch (error) {
-            ZoweLogger.warn(`Failed to get pinned rows: ${error}`);
+            console.warn("Failed to get pinned rows:", error);
         }
 
         // Store current table state before navigating
@@ -619,7 +618,7 @@ export class DatasetTableView {
                 try {
                     await this.table.setPinnedRows(this.previousTableData.pinnedRows);
                 } catch (error) {
-                    ZoweLogger.warn(`Failed to restore pinned rows: ${error}`);
+                    console.warn("Failed to restore pinned rows:", error);
                 }
             }
 
