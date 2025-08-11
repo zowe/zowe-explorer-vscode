@@ -5,6 +5,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 ### New features and enhancements
 
 - Changed the response field names for the `FtpMvsApi.allMembers` function from "created" and "changed" to "c4date" and "m4date" to be consistent with the z/OSMF API response format for a PDS member list. [#3751](https://github.com/zowe/zowe-explorer-vscode/issues/3751)
+- Replaced use of `tmp` dependency with Node.js functions for temporary file creation when downloading data sets and USS file contents. [#3805](https://github.com/zowe/zowe-explorer-vscode/pull/3805)
 
 ### Bug fixes
 
