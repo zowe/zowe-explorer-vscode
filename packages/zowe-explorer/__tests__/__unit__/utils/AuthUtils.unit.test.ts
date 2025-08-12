@@ -1126,4 +1126,40 @@ describe("AuthUtils", () => {
             expect(mockSessionNode.tooltip).toContain("Path: /test/path");
         });
     });
+
+    describe("errorHandling", () => {
+        let profilesCacheMock: MockedProperty;
+        const loadNamedProfileMock = jest.fn().mockReturnValue(createIProfile());
+        beforeAll(() => {
+            profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    loadNamedProfile: loadNamedProfileMock,
+                    promptCredentials: jest.fn().mockImplementation(),
+                } as any,
+                configurable: true,
+            });
+        });
+
+        afterAll(() => {
+            profilesCacheMock[Symbol.dispose]();
+        });
+        it("should properly format Imperative errors with additional details", async () => {
+            const testError = new imperative.ImperativeError({
+                msg: "Test error message",
+                errorCode: "401",
+                additionalDetails: "\nAuth order: token,basic\nAuth type: token\nAvailable creds: token,basic\n",
+            });
+            const promptForAuthenticationMock = jest.spyOn(AuthHandler, "promptForAuthentication").mockResolvedValue(true);
+            const moreInfo = {
+                profile: "testProfile",
+                apiType: ZoweExplorerApiType.Mvs,
+            };
+            await expect(AuthUtils.errorHandling(testError, moreInfo)).resolves.toBe(true);
+            expect(promptForAuthenticationMock.mock.calls[0][1]).toEqual(
+                expect.objectContaining({
+                    imperativeError: testError,
+                })
+            );
+        });
+    });
 });

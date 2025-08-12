@@ -132,7 +132,7 @@ export class AuthUtils {
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, ...{ ...moreInfo, profile: undefined } }, { depth: null }));
 
-        const profile = typeof moreInfo.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo?.profile;
+        const profile = typeof moreInfo?.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo?.profile;
         const errorCorrelation = ErrorCorrelator.getInstance().correlateError(moreInfo?.apiType ?? ZoweExplorerApiType.All, errorDetails, {
             profileType: profile?.type,
             ...Object.keys(moreInfo).reduce((all, k) => (typeof moreInfo[k] === "string" ? { ...all, [k]: moreInfo[k] } : all), {}),
@@ -224,13 +224,7 @@ export class AuthUtils {
     }
 
     public static updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): void {
-        let iSessFromProf: imperative.ISession;
-        try {
-            iSessFromProf = AuthUtils.getSessFromProfile(profile).ISession;
-        } catch (error) {
-            ZoweLogger.error(error);
-            return;
-        }
+        const iSessFromProf = AuthUtils.getSessFromProfile(profile).ISession;
         imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
 
         let usingBasicAuth: boolean = false;
@@ -409,15 +403,11 @@ export class AuthUtils {
      *
      * @param {imperative.IProfileLoaded} profile The profile to be inspected.
      *
-     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES}
-     *      The session type for the session associated with the specified profile
+     * @returns {imperative.Session}
+     *      The session associated with the specified profile
      */
     public static getSessFromProfile(profile: imperative.IProfileLoaded): imperative.Session {
-        if (!profile) {
-            throw new Error("Supplied profile was null or undefined.");
-        }
         return new ZoweExplorerZosmf.CommonApi(profile).getSession();
-        // return ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getSession();
     }
 
     /**
@@ -429,9 +419,6 @@ export class AuthUtils {
      *      The session type for the session associated with the specified profile
      */
     public static sessTypeFromProfile(profile: imperative.IProfileLoaded): imperative.SessConstants.AUTH_TYPE_CHOICES {
-        if (!profile) {
-            return imperative.SessConstants.AUTH_TYPE_NONE;
-        }
         return AuthUtils.sessTypeFromSession(AuthUtils.getSessFromProfile(profile));
     }
 

@@ -176,12 +176,6 @@ export class ZoweVsCodeExtension {
             tokenType,
         });
 
-        // remember the existing authOrder from the session
-        let prevAuthOrder: imperative.SessConstants.AUTH_TYPE_CHOICES[] = null;
-        if (updSession.ISession.authTypeOrder) {
-            prevAuthOrder = [...updSession.ISession.authTypeOrder];
-        }
-
         // record that this request is to get a token
         imperative.AuthOrder.makingRequestForToken(updSession.ISession);
 
@@ -227,12 +221,8 @@ export class ZoweVsCodeExtension {
         };
         updSession.ISession.storeCookie = false;
 
-        // Now that we did the login, restore the authOrder in session to its previous state
-        if (prevAuthOrder) {
-            updSession.ISession.authTypeOrder = [...prevAuthOrder];
-        } else {
-            delete updSession.ISession.authTypeOrder;
-        }
+        // Remove authTypeOrder from session to avoid it being stored in the profile
+        delete updSession.ISession.authTypeOrder;
 
         // A simplified version of the ProfilesCache.shouldRemoveTokenFromProfile `private` method
         const connOk =
