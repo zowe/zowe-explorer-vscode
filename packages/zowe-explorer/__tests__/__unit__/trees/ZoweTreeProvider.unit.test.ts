@@ -60,7 +60,6 @@ async function createGlobalMocks() {
         mockDisableValidationContext: jest.fn(),
         mockEnableValidationContext: jest.fn(),
         getConfiguration: jest.fn(),
-        isUsingTokenAuth: jest.fn(),
         refresh: jest.fn(),
         testProfile: profile,
         testSession: createISession(),
@@ -109,7 +108,6 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
-    Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: globalMocks.isUsingTokenAuth, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue({
@@ -348,10 +346,10 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
 
         return newMocks;
     }
-    // beforeEach(() => {
-    //     // we should always try to start with a clean state
-    //     jest.restoreAllMocks();
-    // });
+    beforeEach(() => {
+        // we should always try to start with a clean state
+        jest.restoreAllMocks();
+    });
 
     it("Tests that checkCurrentProfile is executed successfully with active status", async () => {
         const globalMocks = await createGlobalMocks();
@@ -385,7 +383,6 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
                 };
             }),
         });
-        // jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
 
         await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
         expect(globalMocks.mockCheckCurrentProfile).toHaveBeenCalled();
@@ -480,8 +477,10 @@ describe("Tree Provider Unit Tests - function ssoLogin", () => {
         };
     };
 
-    const blockMocks = createBlockMocks();
-
+    let blockMocks;
+    beforeEach(() => {
+        blockMocks = createBlockMocks();
+    });
     afterEach(() => {
         blockMocks.executeCommandSpy.mockClear();
     });
@@ -528,8 +527,10 @@ describe("Tree Provider Unit Tests - function ssoLogout", () => {
         };
     };
 
-    const blockMocks = createBlockMocks();
-
+    let blockMocks;
+    beforeEach(() => {
+        blockMocks = createBlockMocks();
+    });
     afterEach(() => {
         blockMocks.executeCommandSpy.mockClear();
     });

@@ -215,11 +215,11 @@ function createGlobalMocks(): { [key: string]: any } {
         configurable: true,
     });
     Object.defineProperty(vscode.workspace, "openTextDocument", {
-        value: () => { },
+        value: () => {},
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showTextDocument", {
-        value: () => { },
+        value: () => {},
         configurable: true,
     });
 

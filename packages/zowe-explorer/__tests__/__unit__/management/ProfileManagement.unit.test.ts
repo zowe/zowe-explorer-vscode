@@ -33,8 +33,7 @@ jest.mock("vscode");
 
 describe("ProfileManagement unit tests", () => {
     afterEach(() => {
-        jest.clearAllMocks();
-        jest.resetAllMocks();
+        jest.restoreAllMocks();
     });
     function createGlobalMocks(): any {
         const newMocks = {
@@ -128,7 +127,7 @@ describe("ProfileManagement unit tests", () => {
 
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockBasicAuthProfile.name as string} is using basic authentication.`;
-            Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(false), configurable: true });
+            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockBasicAuthProfile);
             return globalMocks;
         }
@@ -183,7 +182,7 @@ describe("ProfileManagement unit tests", () => {
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockTokenAuthProfile.name as string} is using token authentication.`;
             globalMocks.mockUnixSessionNode = unixMock.createUSSSessionNode(globalMocks.mockSession, globalMocks.mockBasicAuthProfile) as any;
-            Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(true), configurable: true });
+            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
             globalMocks.mockUnixSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
             return globalMocks;
@@ -235,7 +234,7 @@ describe("ProfileManagement unit tests", () => {
         });
         it("profile using token authentication should see handleSwitchAuthentication called when Change the Authentication method chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(true);
+            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockSwitchAuthChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
@@ -244,7 +243,7 @@ describe("ProfileManagement unit tests", () => {
     describe("unit tests around no auth declared selections", () => {
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name as string} authentication method is unkown.`;
-            Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(false), configurable: true });
+            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "none" } } as any);
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockNoAuthProfile);
             return globalMocks;
         }

@@ -104,8 +104,8 @@ function createGlobalMocks() {
             createDirectory: jest.fn(),
             rename: jest.fn(),
         },
-        isUsingTokenAuth: jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(false),
     };
+    jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
     globalMocks.createSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
@@ -1116,7 +1116,8 @@ describe("USSTree Unit Tests - Function filterBy", () => {
     it("Tests that filterBy() works correctly for favorited search nodes with credentials", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks();
-        globalMocks.isUsingTokenAuth.mockResolvedValueOnce(true);
+        jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
+
         const sessionWithCred = createISession();
         const profile = createIProfile();
         profile.name = "ussTestSess2";
