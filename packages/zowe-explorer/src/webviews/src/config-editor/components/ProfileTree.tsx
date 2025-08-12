@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 interface ProfileTreeProps {
   profileKeys: string[];
   selectedProfileKey: string | null;
@@ -8,6 +6,9 @@ interface ProfileTreeProps {
   isProfileDefault: (profileKey: string) => boolean;
   getProfileType: (profileKey: string) => string | null;
   hasPendingSecureChanges: (profileKey: string) => boolean;
+  isFilteringActive?: boolean;
+  expandedNodes: Set<string>;
+  setExpandedNodes: React.Dispatch<React.SetStateAction<Set<string>>>;
 }
 
 interface ProfileNode {
@@ -26,13 +27,36 @@ export function ProfileTree({
   onProfileSelect,
   isProfileDefault,
   hasPendingSecureChanges,
+  isFilteringActive,
+  expandedNodes,
+  setExpandedNodes,
 }: ProfileTreeProps) {
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const hasNestedProfiles = profileKeys.some((key) => key.includes("."));
 
-  // Build the tree structure from flat profile keys
+  const getEffectiveExpandedNodes = (): Set<string> => {
+    if (!isFilteringActive || !hasNestedProfiles) {
+      return expandedNodes;
+    }
+
+    const autoExpanded = new Set(expandedNodes);
+
+    profileKeys.forEach((key) => {
+      const parts = key.split(".");
+      for (let i = 1; i < parts.length; i++) {
+        const parentKey = parts.slice(0, i).join(".");
+        if (profileKeys.includes(parentKey)) {
+          autoExpanded.add(parentKey);
+        }
+      }
+    });
+
+    return autoExpanded;
+  };
+
   const buildTree = (keys: string[]): ProfileNode[] => {
     const nodes: ProfileNode[] = [];
     const nodeMap = new Map<string, ProfileNode>();
+    const effectiveExpandedNodes = getEffectiveExpandedNodes();
 
     // First pass: create all nodes
     keys.forEach((key) => {
@@ -46,25 +70,22 @@ export function ProfileTree({
         children: [],
         level,
         hasChildren: false,
-        isExpanded: expandedNodes.has(key),
+        isExpanded: effectiveExpandedNodes.has(key),
       };
 
       nodeMap.set(key, node);
 
-      // Add to root level if it's a top-level profile
       if (level === 0) {
         nodes.push(node);
       }
     });
 
-    // Second pass: build parent-child relationships
     keys.forEach((key) => {
       const node = nodeMap.get(key);
       if (!node) return;
 
       const parts = key.split(".");
       if (parts.length > 1) {
-        // This is a nested profile, find its parent
         const parentKey = parts.slice(0, -1).join(".");
         const parentNode = nodeMap.get(parentKey);
         if (parentNode) {

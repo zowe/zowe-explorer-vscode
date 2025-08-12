@@ -15,7 +15,6 @@ import { ProfileInfo, Config, ConfigBuilder, ConfigSchema } from "@zowe/imperati
 import * as path from "path";
 import * as fs from "fs";
 import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
-
 type ChangeEntry = {
     key: string;
     value: string;
@@ -174,6 +173,23 @@ export class ConfigEditor extends WebView {
                 } catch {
                     vscode.window.showErrorMessage(`Error opening file: ${message.filePath as string}:`);
                 }
+                break;
+            }
+            case "REVEAL_IN_FINDER": {
+                try {
+                    const fileUri = vscode.Uri.file(message.filePath);
+                    await vscode.commands.executeCommand("revealFileInOS", fileUri);
+                } catch (error) {
+                    vscode.window.showErrorMessage(`Error revealing file in explorer: ${message.filePath}`);
+                }
+                break;
+            }
+            case "GET_ENV_INFORMATION": {
+                const hasWorkspace = ZoweVsCodeExtension.workspaceRoot != null;
+                await this.panel.webview.postMessage({
+                    command: "ENV_INFORMATION",
+                    hasWorkspace: hasWorkspace,
+                });
                 break;
             }
             case "OPEN_CONFIG_FILE_WITH_PROFILE": {

@@ -17,6 +17,11 @@ interface ProfileListProps {
   getProfileType: (profileKey: string) => string | null;
   viewMode: "flat" | "tree";
   hasPendingSecureChanges: (profileKey: string) => boolean;
+  // Search and filter props
+  searchTerm: string;
+  filterType: string | null;
+  onSearchChange: (searchTerm: string) => void;
+  onFilterChange: (filterType: string | null) => void;
 }
 
 export function ProfileList({
@@ -28,10 +33,14 @@ export function ProfileList({
   getProfileType,
   viewMode,
   hasPendingSecureChanges,
+  searchTerm,
+  filterType,
+  onSearchChange,
+  onFilterChange,
 }: ProfileListProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<string | null>(null);
   const [filteredProfileKeys, setFilteredProfileKeys] = useState<string[]>(sortedProfileKeys);
+  const [isFilteringActive, setIsFilteringActive] = useState<boolean>(false);
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
   // Get unique profile types for filter dropdown
   const availableTypes = Array.from(
@@ -41,19 +50,76 @@ export function ProfileList({
   // Filter profiles based on search term and type filter
   useEffect(() => {
     let filtered = sortedProfileKeys;
+    let isFiltering = false;
 
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter((profileKey) => profileKey.toLowerCase().includes(searchTerm.toLowerCase()));
+      isFiltering = true;
     }
 
     // Filter by type
     if (filterType) {
       filtered = filtered.filter((profileKey) => getProfileType(profileKey) === filterType);
+      isFiltering = true;
+    }
+
+    // For tree view, expand filtered results to include parent profiles of matching children
+    if (viewMode === "tree") {
+      filtered = expandFilteredResultsForTree(filtered, sortedProfileKeys);
     }
 
     setFilteredProfileKeys(filtered);
-  }, [sortedProfileKeys, searchTerm, filterType, getProfileType]);
+    setIsFilteringActive(isFiltering);
+  }, [sortedProfileKeys, searchTerm, filterType, getProfileType, viewMode]);
+
+  // Auto-expand parent nodes of selected profile to ensure it's visible
+  useEffect(() => {
+    if (viewMode === "tree" && selectedProfileKey) {
+      const newExpandedNodes = new Set(expandedNodes);
+      const parts = selectedProfileKey.split(".");
+
+      // Add all parent nodes of the selected profile
+      for (let i = 1; i < parts.length; i++) {
+        const parentKey = parts.slice(0, i).join(".");
+        if (sortedProfileKeys.includes(parentKey)) {
+          newExpandedNodes.add(parentKey);
+        }
+      }
+
+      setExpandedNodes(newExpandedNodes);
+    }
+  }, [selectedProfileKey, viewMode, sortedProfileKeys]);
+
+  // Helper function to expand filtered results for tree view
+  const expandFilteredResultsForTree = (filteredKeys: string[], allKeys: string[]): string[] => {
+    const expandedKeys = new Set(filteredKeys);
+
+    // For each filtered key, add all its parent profiles
+    filteredKeys.forEach((profileKey) => {
+      const parts = profileKey.split(".");
+      for (let i = 1; i < parts.length; i++) {
+        const parentKey = parts.slice(0, i).join(".");
+        if (allKeys.includes(parentKey)) {
+          expandedKeys.add(parentKey);
+        }
+      }
+    });
+
+    // Sort the expanded keys to maintain hierarchy order
+    return Array.from(expandedKeys).sort((a, b) => {
+      const aParts = a.split(".");
+      const bParts = b.split(".");
+
+      // First sort by level (shorter paths first)
+      if (aParts.length !== bParts.length) {
+        return aParts.length - bParts.length;
+      }
+
+      // Then sort alphabetically within the same level
+      return a.localeCompare(b);
+    });
+  };
 
   return (
     <div
@@ -79,7 +145,13 @@ export function ProfileList({
           borderBottom: "1px solid var(--vscode-tab-border)",
         }}
       >
-        <ProfileSearchFilter onSearchChange={setSearchTerm} onFilterChange={setFilterType} availableTypes={availableTypes} />
+        <ProfileSearchFilter
+          onSearchChange={onSearchChange}
+          onFilterChange={onFilterChange}
+          availableTypes={availableTypes}
+          searchTerm={searchTerm}
+          filterType={filterType}
+        />
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
         {viewMode === "tree" ? (
@@ -91,6 +163,9 @@ export function ProfileList({
             isProfileDefault={isProfileDefault}
             getProfileType={getProfileType}
             hasPendingSecureChanges={hasPendingSecureChanges}
+            isFilteringActive={isFilteringActive}
+            expandedNodes={expandedNodes}
+            setExpandedNodes={setExpandedNodes}
           />
         ) : (
           filteredProfileKeys.map((profileKey) => (

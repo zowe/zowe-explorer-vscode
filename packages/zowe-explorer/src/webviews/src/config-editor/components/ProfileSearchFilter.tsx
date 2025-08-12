@@ -1,34 +1,24 @@
-import { useState, useEffect } from "react";
-
 interface ProfileSearchFilterProps {
   onSearchChange: (searchTerm: string) => void;
   onFilterChange: (filterType: string | null) => void;
   availableTypes: string[];
+  // Current values as props
+  searchTerm: string;
+  filterType: string | null;
 }
 
-export function ProfileSearchFilter({ onSearchChange, onFilterChange, availableTypes }: ProfileSearchFilterProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-
-  useEffect(() => {
-    onSearchChange(searchTerm);
-  }, [searchTerm, onSearchChange]);
-
-  useEffect(() => {
-    onFilterChange(selectedFilter);
-  }, [selectedFilter, onFilterChange]);
-
+export function ProfileSearchFilter({ onSearchChange, onFilterChange, availableTypes, searchTerm, filterType }: ProfileSearchFilterProps) {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm((e.target as HTMLInputElement).value);
+    onSearchChange((e.target as HTMLInputElement).value);
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = (e.target as HTMLSelectElement).value;
-    setSelectedFilter(value === "all" ? null : value);
+    onFilterChange(value === "all" ? null : value);
   };
 
   const clearSearch = () => {
-    setSearchTerm("");
+    onSearchChange("");
   };
 
   return (
@@ -97,7 +87,7 @@ export function ProfileSearchFilter({ onSearchChange, onFilterChange, availableT
 
       {/* Filter Dropdown */}
       <select
-        value={selectedFilter || "all"}
+        value={filterType || "all"}
         onChange={handleFilterChange}
         style={{
           padding: "8px 8px",

@@ -119,6 +119,12 @@ export function App() {
   const [pendingSaveSelection, setPendingSaveSelection] = useState<{ tab: number | null; profile: string | null } | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [viewMode, setViewMode] = useState<"flat" | "tree">("tree");
+  // Profile search and filter state - persisted across tab changes
+  const [profileSearchTerm, setProfileSearchTerm] = useState("");
+  const [profileFilterType, setProfileFilterType] = useState<string | null>(null);
+  // Workspace state
+  const [hasWorkspace, setHasWorkspace] = useState<boolean>(false);
+
   // Invoked on webview load
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -231,6 +237,8 @@ export function App() {
             }
           }
         }
+      } else if (event.data.command === "ENV_INFORMATION") {
+        setHasWorkspace(event.data.hasWorkspace);
       }
     });
 
@@ -303,6 +311,33 @@ export function App() {
       requestWizardMergedProperties();
     }
   }, [wizardRootProfile, wizardSelectedType, wizardModalOpen, selectedTab, pendingChanges, pendingDefaults, deletions, defaultsDeletions]);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check for Cmd+S (Mac) or Ctrl+S (Windows/Linux)
+      if ((event.metaKey || event.ctrlKey) && event.key === "s") {
+        event.preventDefault();
+
+        const hasPendingChanges =
+          Object.keys(pendingChanges).length > 0 ||
+          Object.keys(deletions).length > 0 ||
+          Object.keys(pendingDefaults).length > 0 ||
+          Object.keys(defaultsDeletions).length > 0;
+
+        if (hasPendingChanges) {
+          handleSave();
+          setSaveModalOpen(true);
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions]);
 
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
@@ -856,6 +891,10 @@ export function App() {
     vscodeApi.postMessage({ command: "OPEN_CONFIG_FILE", filePath: configPath });
   };
 
+  const handleRevealInFinder = (configPath: string) => {
+    vscodeApi.postMessage({ command: "REVEAL_IN_FINDER", filePath: configPath });
+  };
+
   const handleTabChange = (index: number) => {
     setSelectedTab(index);
 
@@ -1349,9 +1388,40 @@ export function App() {
         getProfileType={getProfileType}
         viewMode={viewMode}
         hasPendingSecureChanges={hasPendingSecureChanges}
+        searchTerm={profileSearchTerm}
+        filterType={profileFilterType}
+        onSearchChange={setProfileSearchTerm}
+        onFilterChange={setProfileFilterType}
       />
     );
   };
+
+  // Validate filter type when switching tabs - reset to null if current filter type doesn't exist
+  useEffect(() => {
+    if (selectedTab !== null && profileFilterType) {
+      const configPath = configurations[selectedTab]?.configPath;
+      if (configPath) {
+        const profilesObj = configurations[selectedTab]?.properties?.profiles;
+        if (profilesObj) {
+          const flatProfiles = flattenProfiles(profilesObj);
+          const pendingProfiles = extractPendingProfiles(configPath);
+          const allProfiles = { ...flatProfiles, ...pendingProfiles };
+          const deletedProfiles = deletions[configPath] || [];
+          const filteredProfileKeys = Object.keys(allProfiles).filter((profileKey) => !isProfileOrParentDeleted(profileKey, deletedProfiles));
+
+          // Get available types for current tab
+          const availableTypes = Array.from(
+            new Set(filteredProfileKeys.map((key) => getProfileType(key)).filter((type): type is string => type !== null))
+          );
+
+          // If current filter type is not available, reset to null
+          if (!availableTypes.includes(profileFilterType)) {
+            setProfileFilterType(null);
+          }
+        }
+      }
+    }
+  }, [selectedTab, configurations, profileFilterType, deletions, pendingChanges, getProfileType]);
 
   const renderProfileDetails = () => {
     return (
@@ -1360,7 +1430,7 @@ export function App() {
           <h2>{selectedProfileKey || "Profile Details"}</h2>
           {selectedProfileKey && (
             <div style={{ display: "flex", gap: "8px" }}>
-              <button
+              {/* <button
                 className="action-button"
                 onClick={() => {
                   // Rename functionality (WIP)
@@ -1376,7 +1446,7 @@ export function App() {
                 }}
               >
                 <span className="codicon codicon-edit"></span>
-              </button>
+              </button> */}
               <button
                 className="action-button"
                 onClick={() => {
@@ -1728,11 +1798,7 @@ export function App() {
                 type={isSecureProperty ? "password" : "text"}
                 placeholder={isSecureProperty ? "••••••••" : ""}
                 value={
-                  isSecureProperty && isFromMergedProps
-                    ? "••••••••"
-                    : isFromMergedProps
-                    ? String(mergedPropData?.value || pendingValue)
-                    : String(pendingValue)
+                  isSecureProperty && isFromMergedProps ? "••••••••" : isFromMergedProps ? String(mergedPropData?.value ?? "") : String(pendingValue)
                 }
                 onChange={(e) => handleChange(fullKey, (e.target as HTMLTextAreaElement).value)}
                 disabled={isFromMergedProps}
@@ -2366,7 +2432,6 @@ export function App() {
   const handleAddNewConfig = () => {
     setAddConfigModalOpen(true);
   };
-
   const handleAddConfig = (configType: string) => {
     // Send message to create new config file
     vscodeApi.postMessage({
@@ -2475,6 +2540,7 @@ export function App() {
         selectedTab={selectedTab}
         onTabChange={handleTabChange}
         onOpenRawFile={handleOpenRawJson}
+        onRevealInFinder={handleRevealInFinder}
         onAddNewConfig={handleAddNewConfig}
         pendingChanges={pendingChanges}
       />
@@ -2629,7 +2695,7 @@ export function App() {
       <AddConfigModal
         isOpen={addConfigModalOpen}
         configurations={configurations}
-        hasWorkspace={true} // TODO: Get this from VS Code API
+        hasWorkspace={hasWorkspace}
         onAdd={handleAddConfig}
         onCancel={handleCancelAddConfig}
       />

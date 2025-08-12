@@ -81,6 +81,21 @@ body {
     background-color: var(--vscode-tab-activeBorderTop);
 }
 
+.tab.add-tab {
+    min-width: 32px;
+    max-width: 32px;
+    padding: 0;
+    border-left: none;
+    background-color: var(--vscode-tab-inactiveBackground);
+    color: var(--vscode-tab-inactiveForeground);
+    transition: all 0.2s ease;
+}
+
+.tab.add-tab:hover {
+    background-color: var(--vscode-tab-hoverBackground);
+    color: var(--vscode-tab-hoverForeground);
+}
+
 .tab .tab-label {
     overflow: hidden;
     text-overflow: ellipsis;

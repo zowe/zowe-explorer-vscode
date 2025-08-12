@@ -11,46 +11,62 @@ interface AddConfigModalProps {
 export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, onCancel }: AddConfigModalProps) {
   if (!isOpen) return null;
 
-  // Determine available configuration types based on current state
-  const getAvailableConfigTypes = () => {
-    const types = [];
+  // Get all configuration types with their availability status
+  const getAllConfigTypes = () => {
     const currentConfigs = configurations.length;
-
-    // Check if we can add more configs (max 4)
-    if (currentConfigs >= 4) {
-      return [];
-    }
-
-    // Check existing config types
     const hasGlobalTeam = configurations.some((c) => c.global && !c.user);
     const hasGlobalUser = configurations.some((c) => c.global && c.user);
     const hasProjectTeam = configurations.some((c) => !c.global && !c.user);
     const hasProjectUser = configurations.some((c) => !c.global && c.user);
 
-    // Global Team config
-    if (!hasGlobalTeam) {
-      types.push({ value: "global-team", label: "Global Team Configuration", description: "Shared across all users on this machine" });
-    }
-
-    // Global User config
-    if (!hasGlobalUser) {
-      types.push({ value: "global-user", label: "Global User Configuration", description: "Personal configuration for this user" });
-    }
-
-    // Project Team config (only if workspace is open)
-    if (hasWorkspace && !hasProjectTeam) {
-      types.push({ value: "project-team", label: "Project Team Configuration", description: "Shared configuration for this project" });
-    }
-
-    // Project User config (only if workspace is open)
-    if (hasWorkspace && !hasProjectUser) {
-      types.push({ value: "project-user", label: "Project User Configuration", description: "Personal configuration for this project" });
-    }
+    const types = [
+      {
+        value: "global-team",
+        label: "Global Team Configuration",
+        description: "Shared across all workspaces",
+        disabled: hasGlobalTeam || currentConfigs >= 4,
+        reason: hasGlobalTeam ? "Already exists" : currentConfigs >= 4 ? "Maximum configurations reached" : null,
+      },
+      {
+        value: "global-user",
+        label: "Global User Configuration",
+        description: "Global team configuration overwrites",
+        disabled: hasGlobalUser || currentConfigs >= 4,
+        reason: hasGlobalUser ? "Already exists" : currentConfigs >= 4 ? "Maximum configurations reached" : null,
+      },
+      {
+        value: "project-team",
+        label: "Project Team Configuration",
+        description: "Team configuration overwrites for this project",
+        disabled: hasProjectTeam || currentConfigs >= 4 || !hasWorkspace,
+        reason: hasProjectTeam
+          ? "Already exists"
+          : currentConfigs >= 4
+          ? "Maximum configurations reached"
+          : !hasWorkspace
+          ? "No current workspace"
+          : null,
+      },
+      {
+        value: "project-user",
+        label: "Project User Configuration",
+        description: "User configuration overwrites for this project",
+        disabled: hasProjectUser || currentConfigs >= 4 || !hasWorkspace,
+        reason: hasProjectUser
+          ? "Already exists"
+          : currentConfigs >= 4
+          ? "Maximum configurations reached"
+          : !hasWorkspace
+          ? "No current workspace"
+          : null,
+      },
+    ];
 
     return types;
   };
 
-  const availableTypes = getAvailableConfigTypes();
+  const allConfigTypes = getAllConfigTypes();
+  const availableTypes = allConfigTypes.filter((type) => !type.disabled);
 
   return (
     <div
@@ -87,45 +103,89 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
           <div style={{ color: "var(--vscode-errorForeground)", marginBottom: "16px" }}>
             {l10n.t("Maximum of 4 configuration files allowed. Please remove an existing configuration before adding a new one.")}
           </div>
-        ) : !hasWorkspace && !configurations.some((c) => !c.global) ? (
-          <div style={{ color: "var(--vscode-errorForeground)", marginBottom: "16px" }}>
-            {l10n.t("No workspace is currently open. Project configurations can only be created when a workspace is open.")}
-          </div>
-        ) : availableTypes.length === 0 ? (
-          <div style={{ color: "var(--vscode-errorForeground)", marginBottom: "16px" }}>
-            {l10n.t("All available configuration types are already in use.")}
-          </div>
         ) : (
           <>
+            {availableTypes.length === 0 && (
+              <div
+                style={{
+                  color: "var(--vscode-warningForeground)",
+                  marginBottom: "16px",
+                  padding: "8px 12px",
+                  backgroundColor: "var(--vscode-inputValidation-warningBackground)",
+                  border: "1px solid var(--vscode-inputValidation-warningBorder)",
+                  borderRadius: "4px",
+                  fontSize: "13px",
+                }}
+              >
+                {l10n.t(
+                  "All configuration types are currently unavailable. Remove existing configurations or open a workspace to enable more options."
+                )}
+              </div>
+            )}
+
             <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "var(--vscode-descriptionForeground)" }}>
               {l10n.t("Select the type of configuration file to create:")}
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-              {availableTypes.map((type) => (
+              {allConfigTypes.map((type) => (
                 <button
                   key={type.value}
-                  onClick={() => onAdd(type.value)}
+                  onClick={() => !type.disabled && onAdd(type.value)}
+                  disabled={type.disabled}
                   style={{
                     padding: "12px",
                     border: "1px solid var(--vscode-button-border)",
                     borderRadius: "4px",
-                    backgroundColor: "var(--vscode-button-secondaryBackground)",
-                    color: "var(--vscode-button-secondaryForeground)",
-                    cursor: "pointer",
+                    backgroundColor: type.disabled ? "var(--vscode-input-disabledBackground)" : "var(--vscode-button-secondaryBackground)",
+                    color: type.disabled ? "var(--vscode-disabledForeground)" : "var(--vscode-button-secondaryForeground)",
+                    cursor: type.disabled ? "not-allowed" : "pointer",
                     textAlign: "left",
                     fontSize: "14px",
                     transition: "all 0.2s ease",
+                    opacity: type.disabled ? 0.6 : 1,
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "var(--vscode-button-secondaryHoverBackground)";
+                    if (!type.disabled) {
+                      e.currentTarget.style.backgroundColor = "var(--vscode-button-secondaryHoverBackground)";
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "var(--vscode-button-secondaryBackground)";
+                    if (!type.disabled) {
+                      e.currentTarget.style.backgroundColor = "var(--vscode-button-secondaryBackground)";
+                    }
                   }}
                 >
-                  <div style={{ fontWeight: "500", marginBottom: "4px" }}>{type.label}</div>
-                  <div style={{ fontSize: "12px", color: "var(--vscode-descriptionForeground)" }}>{type.description}</div>
+                  <div
+                    style={{
+                      fontWeight: "500",
+                      marginBottom: "4px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span>{type.label}</span>
+                    {type.disabled && type.reason && (
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          color: "var(--vscode-errorForeground)",
+                          fontWeight: "normal",
+                        }}
+                      >
+                        {type.reason}
+                      </span>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: type.disabled ? "var(--vscode-disabledForeground)" : "var(--vscode-descriptionForeground)",
+                    }}
+                  >
+                    {type.description}
+                  </div>
                 </button>
               ))}
             </div>
