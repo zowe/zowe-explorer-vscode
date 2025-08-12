@@ -138,6 +138,7 @@ describe("FtpUssApi", () => {
     it("should upload uss directory.", async () => {
         const localpath = "/tmp";
         const files = ["/tmp/file1", "/tmp/file2"];
+        const isDirMock = jest.spyOn(imperative.IO, "isDir").mockReturnValue(true);
         const getFileListFromPathMock = jest.spyOn(zosfiles.ZosFilesUtils, "getFileListFromPath").mockReturnValue(files);
         const mockParams = {
             inputDirectoryPath: localpath,
@@ -154,6 +155,9 @@ describe("FtpUssApi", () => {
         expect(putContentMock).toHaveBeenCalledWith("/tmp/file1", "/a/b/c/file1");
         expect(putContentMock).toHaveBeenCalledWith("/tmp/file2", "/a/b/c/file2");
         expect(getFileListFromPathMock).toHaveBeenCalledTimes(1);
+        expect(isDirMock).toHaveBeenCalledTimes(1);
+        expect(isDirMock).toHaveBeenCalledWith(localpath);
+        isDirMock.mockRestore();
     });
 
     if (os.platform() === "win32") {
