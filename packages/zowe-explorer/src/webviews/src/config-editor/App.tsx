@@ -20,9 +20,6 @@ import {
   AddConfigModal,
 } from "./components";
 
-// Hooks
-import { useEnhancedDatalist } from "./hooks";
-
 // Utils
 import {
   flattenKeys,
@@ -67,7 +64,6 @@ export function App() {
   const [defaultsDeletions, setDefaultsDeletions] = useState<{
     [configPath: string]: string[];
   }>({});
-  const [selectedProfileType, setSelectedProfileType] = useState<string | null>(null);
   const [newProfileKeyPath, setNewProfileKeyPath] = useState<string[] | null>(null);
   const [newProfileKey, setNewProfileKey] = useState("");
   const [newProfileValue, setNewProfileValue] = useState("");
@@ -1002,7 +998,19 @@ export function App() {
         if (secureProperties.includes(propKey)) {
           // Don't filter out properties that are in the deletions list (they should be shown as merged properties)
           const isInDeletions = configPath && (deletions[configPath] ?? []).some((deletion) => deletion.includes(`properties.${propKey}`));
-          if (!isInDeletions) {
+
+          // Don't filter out secure properties if there's a pending insecure property with the same key
+          // This prevents the secure property from being rendered when it will be replaced
+          const hasPendingInsecureProperty =
+            configPath &&
+            pendingChanges[configPath] &&
+            Object.entries(pendingChanges[configPath]).some(([key, entry]) => {
+              const keyParts = key.split(".");
+              const propertyName = keyParts[keyParts.length - 1];
+              return propertyName === propKey && !entry.secure && key.includes("properties");
+            });
+
+          if (!isInDeletions && !hasPendingInsecureProperty) {
             delete filteredProperties[propKey];
           }
         }
@@ -1043,9 +1051,20 @@ export function App() {
       .map(([, entry]) => String(entry.path[entry.path.length - 1]));
 
     const baseArray: any[] = Array.isArray(value) ? value : [];
-    // Only add pending secure props that aren't already in the base array
-    const newSecureProps = pendingSecureProps.filter((prop) => !baseArray.includes(prop));
-    const result = newSecureProps.length > 0 ? [...baseArray, ...newSecureProps] : baseArray;
+
+    // Filter out secure properties from the base array if there's a pending insecure property with the same key
+    const filteredBaseArray = baseArray.filter((prop) => {
+      const hasPendingInsecureProperty = Object.entries(pendingChanges[configPath] ?? {}).some(([key, entry]) => {
+        const keyParts = key.split(".");
+        const propertyName = keyParts[keyParts.length - 1];
+        return propertyName === prop && !entry.secure && key.includes("properties");
+      });
+      return !hasPendingInsecureProperty;
+    });
+
+    // Only add pending secure props that aren't already in the filtered base array
+    const newSecureProps = pendingSecureProps.filter((prop) => !filteredBaseArray.includes(prop));
+    const result = newSecureProps.length > 0 ? [...filteredBaseArray, ...newSecureProps] : filteredBaseArray;
     // Sort alphabetically
     return result.sort();
   };
@@ -2039,8 +2058,6 @@ export function App() {
     setNewLayerModalOpen(false);
   };
 
-  const typeOptions = selectedTab !== null ? schemaValidations[configurations[selectedTab].configPath]?.validDefaults || [] : [];
-
   // Profile Wizard helper functions
   const getAvailableProfiles = () => {
     if (selectedTab === null) return ["root"];
@@ -2075,8 +2092,30 @@ export function App() {
     const flatProfiles = flattenProfiles(config.profiles);
     const profileNames = Object.keys(flatProfiles);
 
-    // Filter profiles by type
+    // Get all profiles that have pending type changes
+    const profilesWithPendingTypeChanges = new Set<string>();
+    Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([key, entry]) => {
+      if (entry.profile) {
+        const keyParts = key.split(".");
+        const isTypeKey = keyParts[keyParts.length - 1] === "type";
+        if (isTypeKey) {
+          // Extract the profile name from the key path
+          const profilePathParts = keyParts.slice(0, -1); // Remove "type" from the end
+          if (profilePathParts[0] === "profiles") {
+            const profileNameParts = profilePathParts.slice(1);
+            const profileName = profileNameParts.join(".");
+            profilesWithPendingTypeChanges.add(profileName);
+          }
+        }
+      }
+    });
+
+    // Filter profiles by type, excluding those with pending type changes
     const profilesOfType = profileNames.filter((profileKey) => {
+      // Skip profiles that have pending type changes
+      if (profilesWithPendingTypeChanges.has(profileKey)) {
+        return false;
+      }
       const profileTypeValue = getProfileType(profileKey);
       return profileTypeValue === profileType;
     });
