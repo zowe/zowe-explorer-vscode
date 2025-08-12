@@ -57,7 +57,6 @@ import { FilterDescriptor } from "../../../src/management/FilterManagement";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../../src/trees/uss/USSTree";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
-import { mocked } from "../../__mocks__/mockUtils";
 
 jest.mock("child_process");
 jest.mock("fs");
@@ -216,11 +215,11 @@ function createGlobalMocks(): { [key: string]: any } {
         configurable: true,
     });
     Object.defineProperty(vscode.workspace, "openTextDocument", {
-        value: () => {},
+        value: () => { },
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showTextDocument", {
-        value: () => {},
+        value: () => { },
         configurable: true,
     });
 
