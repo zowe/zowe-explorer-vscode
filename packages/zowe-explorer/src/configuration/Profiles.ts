@@ -105,7 +105,13 @@ export class Profiles extends ProfilesCache {
         let usingCertAuth: boolean = false;
         let usingTokenAuth: boolean = false;
 
-        const iSessFromProf = AuthUtils.getSessFromProfile(theProfile).ISession;
+        let iSessFromProf: imperative.ISession;
+        try {
+            iSessFromProf = AuthUtils.getSessFromProfile(theProfile).ISession;
+        } catch (error) {
+            ZoweLogger.error(error);
+            return profileStatus;
+        }
         imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(theProfile));
         switch (iSessFromProf.type) {
             case imperative.SessConstants.AUTH_TYPE_BASIC:
@@ -120,22 +126,25 @@ export class Profiles extends ProfilesCache {
                 break;
         }
 
-        if (usingTokenAuth && !theProfile.profile.tokenValue) {
-            ZoweLogger.debug(`Profile ${theProfile.name} is using token auth, prompting for missing credentials`);
+        if (usingTokenAuth) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
             );
-            try {
-                const loggedIn = await Profiles.getInstance().ssoLogin(null, theProfile.name);
-                theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
 
-                if (!loggedIn) {
-                    return { ...profileStatus, status: "inactive" };
+            if (!theProfile.profile.tokenValue) {
+                ZoweLogger.debug(`Profile ${theProfile.name} is using token auth, prompting for missing credentials`);
+                try {
+                    const loggedIn = await Profiles.getInstance().ssoLogin(null, theProfile.name);
+                    theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
+
+                    if (!loggedIn) {
+                        return { ...profileStatus, status: "inactive" };
+                    }
+                } catch (error) {
+                    await AuthUtils.errorHandling(error, { profile: theProfile });
+                    return profileStatus;
                 }
-            } catch (error) {
-                await AuthUtils.errorHandling(error, { profile: theProfile });
-                return profileStatus;
             }
         } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth) {
             ZoweLogger.debug(`Profile ${theProfile.name} is using basic auth, prompting for missing credentials`);

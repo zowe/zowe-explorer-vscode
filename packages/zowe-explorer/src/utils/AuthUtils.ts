@@ -224,7 +224,13 @@ export class AuthUtils {
     }
 
     public static updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): void {
-        const iSessFromProf = AuthUtils.getSessFromProfile(profile).ISession;
+        let iSessFromProf: imperative.ISession;
+        try {
+            iSessFromProf = AuthUtils.getSessFromProfile(profile).ISession;
+        } catch (error) {
+            ZoweLogger.error(error);
+            return;
+        }
         imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
 
         let usingBasicAuth: boolean = false;

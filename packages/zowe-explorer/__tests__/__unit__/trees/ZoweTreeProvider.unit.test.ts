@@ -348,6 +348,10 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
 
         return newMocks;
     }
+    // beforeEach(() => {
+    //     // we should always try to start with a clean state
+    //     jest.restoreAllMocks();
+    // });
 
     it("Tests that checkCurrentProfile is executed successfully with active status", async () => {
         const globalMocks = await createGlobalMocks();
@@ -360,7 +364,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     it("Tests that checkCurrentProfile is executed successfully with active status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(true);
+        jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
         const checkJwtSpy = jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile");
 
         await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
@@ -381,6 +385,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
                 };
             }),
         });
+        // jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
 
         await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
         expect(globalMocks.mockCheckCurrentProfile).toHaveBeenCalled();

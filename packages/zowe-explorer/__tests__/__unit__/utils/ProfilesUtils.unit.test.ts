@@ -165,7 +165,7 @@ describe("ProfilesUtils unit tests", () => {
             expect(errorCorrelatorGetInstanceMock).toHaveBeenCalled();
         });
 
-        xit("should handle error for invalid credentials and prompt for authentication - credentials entered", async () => {
+        it("should handle error for invalid credentials and prompt for authentication - credentials entered", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
                 errorCode: Number(401).toString(),
@@ -196,7 +196,6 @@ describe("ProfilesUtils unit tests", () => {
 
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(promptCredsSpy).toHaveBeenCalledTimes(1);
-            // expect(promptCredsSpy).not.toHaveBeenCalled();
 
             expect(ssoLoginSpy).not.toHaveBeenCalled();
             // ensure profile is unlocked after successful credential update
