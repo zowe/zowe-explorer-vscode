@@ -15,7 +15,7 @@ export { Panels } from "./Panels";
 export { ProfileList } from "./ProfileList";
 export { ProfileTree } from "./ProfileTree";
 export { ProfileSearchFilter } from "./ProfileSearchFilter";
-export { AddDefaultModal } from "./modals/AddDefaultModal";
+
 export { AddProfileModal } from "./modals/AddProfileModal";
 export { SaveModal } from "./modals/SaveModal";
 export { EditModal } from "./modals/EditModal";

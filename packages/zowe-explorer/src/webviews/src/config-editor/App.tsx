@@ -11,7 +11,6 @@ import {
   Tabs,
   Panels,
   ProfileList,
-  AddDefaultModal,
   AddProfileModal,
   SaveModal,
   EditModal,
@@ -68,9 +67,6 @@ export function App() {
   const [defaultsDeletions, setDefaultsDeletions] = useState<{
     [configPath: string]: string[];
   }>({});
-  const [newKeyModalOpen, setNewKeyModalOpen] = useState(false);
-  const [newKey, setNewKey] = useState("");
-  const [newValue, setNewValue] = useState("");
   const [selectedProfileType, setSelectedProfileType] = useState<string | null>(null);
   const [newProfileKeyPath, setNewProfileKeyPath] = useState<string[] | null>(null);
   const [newProfileKey, setNewProfileKey] = useState("");
@@ -283,10 +279,9 @@ export function App() {
   }, [pendingChanges, pendingDefaults, deletions, defaultsDeletions, selectedProfileKey, selectedTab, configurations]);
 
   useEffect(() => {
-    const isModalOpen =
-      newKeyModalOpen || newProfileModalOpen || saveModalOpen || newLayerModalOpen || editModalOpen || wizardModalOpen || previewArgsModalOpen;
+    const isModalOpen = newProfileModalOpen || saveModalOpen || newLayerModalOpen || editModalOpen || wizardModalOpen || previewArgsModalOpen;
     document.body.classList.toggle("modal-open", isModalOpen);
-  }, [newKeyModalOpen, newProfileModalOpen, saveModalOpen, newLayerModalOpen, editModalOpen, wizardModalOpen, previewArgsModalOpen]);
+  }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, editModalOpen, wizardModalOpen, previewArgsModalOpen]);
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -434,31 +429,6 @@ export function App() {
     setNewProfileKeyPath(null);
     setNewProfileModalOpen(false);
     setIsSecure(false);
-  };
-
-  const handleAddNewDefault = () => {
-    if (newKey.trim() && newValue.trim()) {
-      const configPath = configurations[selectedTab!]!.configPath;
-      const path = newKey.split(".");
-      const fullKey = path.join(".");
-
-      setPendingDefaults((prev) => ({
-        ...prev,
-        [configPath]: {
-          ...prev[configPath],
-          [fullKey]: { value: newValue, path },
-        },
-      }));
-
-      setDefaultsDeletions((prev) => ({
-        ...prev,
-        [configPath]: prev[configPath]?.filter((k) => k !== fullKey) ?? [],
-      }));
-    }
-
-    setNewKey("");
-    setNewValue("");
-    setNewKeyModalOpen(false);
   };
 
   const handleDeleteProperty = (fullKey: string, secure?: boolean) => {
@@ -1870,11 +1840,22 @@ export function App() {
   const renderDefaults = (defaults: { [key: string]: any }) => {
     if (!defaults || typeof defaults !== "object") return null;
 
+    // Get all available property types from the schema
+    const availableTypes = getWizardTypeOptions();
+
+    // Create a complete defaults object with all available types
+    const completeDefaults = { ...defaults };
+    availableTypes.forEach((type) => {
+      if (!(type in completeDefaults)) {
+        completeDefaults[type] = "";
+      }
+    });
+
     const combinedDefaults = {
-      ...defaults,
+      ...completeDefaults,
       ...Object.fromEntries(
         Object.entries(pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})
-          .filter(([key]) => !(key in defaults))
+          .filter(([key]) => !(key in completeDefaults))
           .map(([key, entry]) => [key, entry.value])
       ),
     };
@@ -1895,20 +1876,7 @@ export function App() {
             if (isParent) {
               return (
                 <div key={fullKey} className="config-item parent">
-                  <h3 className={`header-level-${currentPath.length}`}>
-                    {key}
-                    <button
-                      className="add-default-button"
-                      title={`Add key inside "${fullKey}"`}
-                      onClick={() => {
-                        setNewKeyModalOpen(true);
-                        setNewKey(key + ".");
-                      }}
-                      style={{ marginLeft: 8 }}
-                    >
-                      <span className="codicon codicon-add"></span>
-                    </button>
-                  </h3>
+                  <h3 className={`header-level-${currentPath.length}`}>{key}</h3>
                   {renderDefaults(value)}
                 </div>
               );
@@ -1919,17 +1887,6 @@ export function App() {
                     <span className="config-label" style={{ fontWeight: "bold" }}>
                       {key}
                     </span>
-                    <button
-                      className="add-default-button"
-                      title={`Add item to "${fullKey}"`}
-                      onClick={() => {
-                        setNewKeyModalOpen(true);
-                        setNewKey(key);
-                      }}
-                      style={{ marginLeft: 8 }}
-                    >
-                      <span className="codicon codicon-add"></span>
-                    </button>
                   </h3>
                   <div>
                     {value
@@ -2459,9 +2416,6 @@ export function App() {
     }
   };
 
-  // Enhanced datalist hook
-  useEnhancedDatalist(newKeyModalOpen ? "type-input" : null, "type-options");
-
   // Get options for input key for profile dropdown
   const fetchTypeOptions = (path: string[]) => {
     const { configPath } = configurations[selectedTab!]!;
@@ -2550,7 +2504,6 @@ export function App() {
         renderProfiles={renderProfiles}
         renderProfileDetails={renderProfileDetails}
         renderDefaults={renderDefaults}
-        onAddDefault={() => setNewKeyModalOpen(true)}
         onProfileWizard={() => setWizardModalOpen(true)}
         viewMode={viewMode}
         onViewModeToggle={() => setViewMode(viewMode === "tree" ? "flat" : "tree")}
@@ -2595,28 +2548,6 @@ export function App() {
         }}
       />
       {/* Modals */}
-      <AddDefaultModal
-        isOpen={newKeyModalOpen}
-        newKey={newKey}
-        newValue={newValue}
-        showDropdown={showDropdown}
-        typeOptions={typeOptions}
-        availableProfiles={selectedProfileType ? getAvailableProfilesByType(selectedProfileType) : []}
-        profileType={selectedProfileType}
-        onNewKeyChange={(value) => {
-          setNewKey(value);
-          setSelectedProfileType(value);
-        }}
-        onNewValueChange={setNewValue}
-        onShowDropdownChange={setShowDropdown}
-        onAdd={handleAddNewDefault}
-        onCancel={() => {
-          setNewKeyModalOpen(false);
-          setNewKey("");
-          setNewValue("");
-          setSelectedProfileType(null);
-        }}
-      />
 
       <AddProfileModal
         isOpen={newProfileModalOpen}
