@@ -69,7 +69,7 @@ export function App() {
   const [newProfileValue, setNewProfileValue] = useState("");
   const [newProfileModalOpen, setNewProfileModalOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
-  const [originalDefaults, setOriginalDefaults] = useState<{ [key: string]: any }>({});
+  // const [originalDefaults, setOriginalDefaults] = useState<{ [key: string]: any }>({});
   const [newLayerModalOpen, setNewLayerModalOpen] = useState(false);
   const [newLayerName, setNewLayerName] = useState("");
   const [newLayerPath, setNewLayerPath] = useState<string[] | null>(null);
@@ -167,7 +167,7 @@ export function App() {
           const config = contents[indexToUse(selectedTab ?? 0)].properties;
           setFlattenedConfig(flattenKeys(config.profiles));
           setFlattenedDefaults(flattenKeys(config.defaults));
-          setOriginalDefaults(flattenKeys(config.defaults));
+          // setOriginalDefaults(flattenKeys(config.defaults));
         }
       } else if (event.data.command === "DISABLE_OVERLAY") {
         setSaveModalOpen(false);
@@ -244,7 +244,8 @@ export function App() {
       const config = configurations[selectedTab].properties;
       setFlattenedConfig(flattenKeys(config.profiles));
       setFlattenedDefaults(flattenKeys(config.defaults));
-      setOriginalDefaults(flattenKeys(config.defaults));
+      // setOriginalDefaults(
+      // flattenKeys(config.defaults));
       // Clear merged properties when tab changes (but not when saving or navigating)
       if (!isSaving && !isNavigating) {
         setMergedProperties(null);
@@ -576,25 +577,25 @@ export function App() {
     }
   };
 
-  const handleDeleteDefaultsProperty = (key: string) => {
-    if (selectedTab === null) return;
-    const configPath = configurations[selectedTab!]!.configPath;
+  // const handleDeleteDefaultsProperty = (key: string) => {
+  //   if (selectedTab === null) return;
+  //   const configPath = configurations[selectedTab!]!.configPath;
 
-    setPendingDefaults((prev) => {
-      const newState = { ...prev };
-      if (newState[configPath]) {
-        delete newState[configPath][key];
-      }
-      return newState;
-    });
+  //   setPendingDefaults((prev) => {
+  //     const newState = { ...prev };
+  //     if (newState[configPath]) {
+  //       delete newState[configPath][key];
+  //     }
+  //     return newState;
+  //   });
 
-    if (Object.prototype.hasOwnProperty.call(originalDefaults, key)) {
-      setDefaultsDeletions((prev) => ({
-        ...prev,
-        [configPath]: [...(prev[configPath] ?? []), key],
-      }));
-    }
-  };
+  //   if (Object.prototype.hasOwnProperty.call(originalDefaults, key)) {
+  //     setDefaultsDeletions((prev) => ({
+  //       ...prev,
+  //       [configPath]: [...(prev[configPath] ?? []), key],
+  //     }));
+  //   }
+  // };
 
   // Helper function to get a profile's type
   const getProfileType = (profileKey: string): string | null => {
@@ -1913,9 +1914,9 @@ export function App() {
                       .map((item: any, index: number) => (
                         <div className="list-item" key={index}>
                           {item}
-                          <button className="action-button" style={{ marginLeft: "8px" }} onClick={() => handleDeleteDefaultsProperty(fullKey)}>
+                          {/* <button className="action-button" style={{ marginLeft: "8px" }} onClick={() => handleDeleteDefaultsProperty(fullKey)}>
                             <span className="codicon codicon-trash"></span>
-                          </button>
+                          </button> */}
                         </div>
                       ))}
                   </div>
@@ -1949,9 +1950,9 @@ export function App() {
                         </option>
                       ))}
                     </select>
-                    <button className="action-button" onClick={() => handleDeleteDefaultsProperty(fullKey)}>
+                    {/* <button className="action-button" onClick={() => handleDeleteDefaultsProperty(fullKey)}>
                       <span className="codicon codicon-trash"></span>
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               );
