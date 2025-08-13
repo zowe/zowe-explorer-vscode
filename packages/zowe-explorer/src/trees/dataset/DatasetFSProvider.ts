@@ -682,9 +682,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
                 if (content.byteLength > 0) {
                     // Update e-tag if write was successful.
-                    if (entry instanceof DsEntry) {
-                        entry.stats = { ...entry.stats, ...dsStats };
-                    }
+                    (entry as DsEntry).stats = { ...(entry as DsEntry).stats, ...dsStats };
                     const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
