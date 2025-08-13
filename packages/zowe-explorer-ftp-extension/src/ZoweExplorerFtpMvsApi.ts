@@ -419,7 +419,6 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         } finally {
             // Clean up temporary file and directory
             try {
-                fs.rmSync(tmpFileName, { force: true });
                 fs.rmSync(tmpDir, { force: true, recursive: true });
             } catch (cleanupError) {
                 if (cleanupError instanceof Error) {
