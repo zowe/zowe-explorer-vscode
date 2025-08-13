@@ -1350,12 +1350,20 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         };
                         pattern = await Gui.showInputBox(options);
                         if (!pattern) {
-                            Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
                             return;
                         }
                     }
                 } else {
-                    pattern = choice.label;
+                    // User selected an existing filter - show input box with the filter pre-filled for editing
+                    const options: vscode.InputBoxOptions = {
+                        prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
+                        value: choice.label, // Pre-fill with the selected filter
+                    };
+                    pattern = await Gui.showInputBox(options);
+                    if (!pattern) {
+                        Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
+                        return;
+                    }
                 }
             } else {
                 // No search history, use input box directly
