@@ -1457,6 +1457,7 @@ export function App() {
                   alignItems: "center",
                   justifyContent: "center",
                   backgroundColor: "transparent",
+                  border: "none",
                 }}
               >
                 <span className="codicon codicon-go-to-file"></span>
@@ -1490,6 +1491,7 @@ export function App() {
                   alignItems: "center",
                   justifyContent: "center",
                   backgroundColor: "transparent",
+                  border: "none",
                 }}
               >
                 <span className={`codicon codicon-${isProfileDefault(selectedProfileKey) ? "star-full" : "star-empty"}`}></span>
@@ -1505,6 +1507,7 @@ export function App() {
                   alignItems: "center",
                   justifyContent: "center",
                   backgroundColor: "transparent",
+                  border: "none",
                 }}
               >
                 <span className={`codicon codicon-${showMergedProperties ? "eye-closed" : "eye"}`}></span>
@@ -1520,6 +1523,7 @@ export function App() {
                   alignItems: "center",
                   justifyContent: "center",
                   backgroundColor: "transparent",
+                  border: "none",
                 }}
               >
                 <span className="codicon codicon-trash"></span>
@@ -1769,7 +1773,10 @@ export function App() {
                     padding: "2px",
                     marginBottom: "0",
                     textTransform: "lowercase",
-                    border: showMergedProperties && isCurrentProfileUntyped() ? "2px solid var(--vscode-warningForeground)" : "none",
+                    border:
+                      showMergedProperties && isCurrentProfileUntyped()
+                        ? "2px solid var(--vscode-warningForeground)"
+                        : "1px solid var(--vscode-input-border)",
                     outline: showMergedProperties && isCurrentProfileUntyped() ? "2px solid var(--vscode-warningForeground)" : "none",
                     boxShadow: showMergedProperties && isCurrentProfileUntyped() ? "0 0 0 2px var(--vscode-warningForeground)" : "none",
                   }}
@@ -1813,7 +1820,7 @@ export function App() {
               (() => {
                 const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties);
                 return (
-                  <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+                  <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
                     <button
                       className="action-button"
                       onClick={() => handleToggleSecure(fullKey, displayKey, path)}
@@ -1932,7 +1939,7 @@ export function App() {
                   <div className="config-item-container">
                     <span className="config-label">{key}</span>
                     <select
-                      className="config-input"
+                      className={`config-input ${!displayValue ? "placeholder-style" : ""}`}
                       value={displayValue}
                       onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLSelectElement).value)}
                       style={{
@@ -1950,9 +1957,6 @@ export function App() {
                         </option>
                       ))}
                     </select>
-                    {/* <button className="action-button" onClick={() => handleDeleteDefaultsProperty(fullKey)}>
-                      <span className="codicon codicon-trash"></span>
-                    </button> */}
                   </div>
                 </div>
               );

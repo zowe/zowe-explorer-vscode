@@ -1,5 +1,4 @@
 import * as l10n from "@vscode/l10n";
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 
 interface ProfileWizardModalProps {
   isOpen: boolean;
@@ -352,10 +351,14 @@ export function ProfileWizardModal({
                         borderRadius: "4px",
                         cursor: "pointer",
                         transition: "all 0.2s ease",
+                        marginBottom: "4px",
                       }}
                       title={wizardNewPropertySecure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
                     >
-                      <span className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}></span>
+                      <span
+                        className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}
+                        style={{ transform: "translateY(-2px)" }}
+                      ></span>
                     </button>
                     {wizardNewPropertyKey && isFileProperty(wizardNewPropertyKey.trim()) && (
                       <button
@@ -431,7 +434,7 @@ export function ProfileWizardModal({
           </div>
 
           {/* Right Column - Properties List */}
-          <div style={{ flex: "0 0 60%", display: "flex", flexDirection: "column", minHeight: 0 }}>
+          <div style={{ flex: "1", display: "flex", flexDirection: "column", minHeight: 0 }}>
             <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold", fontSize: "0.9em" }}>
               {l10n.t("Properties")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}:
             </label>
@@ -635,7 +638,10 @@ export function ProfileWizardModal({
                                   }}
                                   title={prop.secure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
                                 >
-                                  <span className={`codicon ${prop.secure ? "codicon-lock" : "codicon-unlock"}`} style={{ fontSize: "1em" }}></span>
+                                  <span
+                                    className={`codicon ${prop.secure ? "codicon-lock" : "codicon-unlock"}`}
+                                    style={{ fontSize: "1em", transform: "translateY(-2px)" }}
+                                  ></span>
                                 </button>
                                 <button
                                   onClick={() => onRemoveProperty(index)}
@@ -701,30 +707,60 @@ export function ProfileWizardModal({
             display: "flex",
             justifyContent: "flex-end",
             gap: "0.5rem",
+            marginLeft: "auto",
+            width: "fit-content",
           }}
         >
-          <VSCodeButton
+          <button
             onClick={onCancel}
-            appearance="secondary"
             style={{
               padding: "0.5rem 1rem",
               minWidth: "80px",
               borderRadius: "4px",
+              backgroundColor: "var(--vscode-button-secondaryBackground)",
+              color: "var(--vscode-button-secondaryForeground)",
+              border: "1px solid var(--vscode-button-border)",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontFamily: "var(--vscode-font-family)",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--vscode-button-secondaryHoverBackground)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--vscode-button-secondaryBackground)";
             }}
           >
             {l10n.t("Cancel")}
-          </VSCodeButton>
-          <VSCodeButton
+          </button>
+          <button
             onClick={onCreateProfile}
             disabled={!wizardProfileName.trim() || isProfileNameTaken}
             style={{
               padding: "0.5rem 1rem",
               minWidth: "120px",
               borderRadius: "4px",
+              backgroundColor: "var(--vscode-button-background)",
+              color: "var(--vscode-button-foreground)",
+              border: "1px solid var(--vscode-button-border)",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontFamily: "var(--vscode-font-family)",
+              transition: "all 0.2s ease",
+              opacity: !wizardProfileName.trim() || isProfileNameTaken ? "0.5" : "1",
+            }}
+            onMouseEnter={(e) => {
+              if (!(!wizardProfileName.trim() || isProfileNameTaken)) {
+                e.currentTarget.style.backgroundColor = "var(--vscode-button-hoverBackground)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--vscode-button-background)";
             }}
           >
             {l10n.t("Create Profile")}
-          </VSCodeButton>
+          </button>
         </div>
       </div>
     </div>

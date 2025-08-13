@@ -141,8 +141,6 @@ export function ProfileList({
           top: 0,
           backgroundColor: "var(--vscode-editor-background)",
           zIndex: 10,
-          paddingBottom: "8px",
-          borderBottom: "1px solid var(--vscode-tab-border)",
         }}
       >
         <ProfileSearchFilter

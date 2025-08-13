@@ -133,8 +133,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--vscode-editorWidget-border);
-    padding-bottom: 8px;
     margin-bottom: 16px;
 }
 
@@ -148,7 +146,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--vscode-editorWidget-border);
     margin-bottom: 16px;
     max-width: 500px;
 }
@@ -187,7 +184,7 @@ body {
 
 select:focus {
     outline: none;
-    border-color: var(--vscode-button-background);
+    border-color: var(--vscode-input-border);
     box-shadow: 0 0 0 1px var(--vscode-button-background);
 }
 
@@ -215,7 +212,7 @@ select:focus {
     font-size: 14px;
     background-color: var(--vscode-button-secondaryBackground);
     color: var(--vscode-button-secondaryForeground);
-    border: 1px solid var(--vscode-button-secondaryBorder);
+    border: 1px solid var(--vscode-button-border);
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -376,7 +373,6 @@ ul {
     background-repeat: no-repeat;
     background-size: contain;
     margin-top: 3px;
-    color: var(--vscode-button-foreground);
 }
 
 .secure-checkbox-label {
@@ -448,4 +444,16 @@ ul {
     height: "100vh";
     width: "100vw";
     background: "#f9f9f9";
+}
+
+/* Select placeholder styling - only affects the displayed value, not dropdown options */
+.config-input.placeholder-style {
+    color: #666 !important;
+    font-style: italic !important;
+}
+
+/* Ensure dropdown options maintain their normal styling */
+.config-input.placeholder-style option {
+    color: var(--vscode-input-foreground) !important;
+    font-style: normal !important;
 }
