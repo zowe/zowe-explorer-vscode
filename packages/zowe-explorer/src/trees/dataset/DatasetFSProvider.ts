@@ -639,7 +639,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const targetPath = isPdsMember ? path.posix.dirname(uri.path) : uri.path;
             const tempEntry = await this.fetchDataset(uri.with({ path: targetPath }), uriInfo, true);
             dsStats = tempEntry.stats;
-            entry = tempEntry;
+            if (entry) {
+                entry = tempEntry;
+            }
         }
 
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
@@ -702,9 +704,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
-                    if (entry instanceof DsEntry) {
-                        entry.stats = { ...entry.stats, ...dsStats };
-                    }
+                    (entry as DsEntry).stats = { ...(entry as DsEntry).stats, ...dsStats };
                     const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                 }
