@@ -52,8 +52,8 @@ export function AddProfileModal({
   };
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal">
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h3>{l10n.t("Add New Profile Property")}</h3>
         <div className="dropdown-container" style={{ position: "relative" }}>
           <input

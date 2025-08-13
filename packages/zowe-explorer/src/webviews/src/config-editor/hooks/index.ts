@@ -10,3 +10,4 @@
  */
 
 export * from "./useEnhancedDatalist";
+export * from "./useProfileWizard";

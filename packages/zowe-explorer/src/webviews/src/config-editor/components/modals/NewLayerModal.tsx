@@ -12,8 +12,8 @@ export function NewLayerModal({ isOpen, newLayerName, onNewLayerNameChange, onAd
   if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal">
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h3>{l10n.t("Add New Layer")}</h3>
         <input
           placeholder={l10n.t("New Layer Name")}

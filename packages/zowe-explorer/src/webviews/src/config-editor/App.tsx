@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
 import { isSecureOrigin } from "../utils";
@@ -6,30 +6,13 @@ import { schemaValidation } from "../../../utils/ConfigEditor";
 import "./App.css";
 
 // Components
-import {
-  Footer,
-  Tabs,
-  Panels,
-  ProfileList,
-  AddProfileModal,
-  SaveModal,
-  EditModal,
-  NewLayerModal,
-  ProfileWizardModal,
-  PreviewArgsModal,
-  AddConfigModal,
-} from "./components";
+import { Footer, Tabs, Panels, ProfileList, AddProfileModal, SaveModal, NewLayerModal, ProfileWizardModal, AddConfigModal } from "./components";
 
 // Utils
-import {
-  flattenKeys,
-  flattenProfiles,
-  extractProfileKeyFromPath,
-  sortConfigEntries,
-  parseValueByType,
-  stringifyValueByType,
-  pathFromArray,
-} from "./utils";
+import { flattenKeys, flattenProfiles, extractProfileKeyFromPath, sortConfigEntries, stringifyValueByType, pathFromArray } from "./utils";
+
+// Hooks
+import { useProfileWizard } from "./hooks";
 const vscodeApi = acquireVsCodeApi();
 
 export function App() {
@@ -74,9 +57,7 @@ export function App() {
   const [newLayerName, setNewLayerName] = useState("");
   const [newLayerPath, setNewLayerPath] = useState<string[] | null>(null);
   const [isSecure, setIsSecure] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingKey, setEditingKey] = useState("");
-  const [editingValue, setEditingValue] = useState("");
+
   const [hiddenItems, setHiddenItems] = useState<{
     [configPath: string]: {
       [key: string]: { path: string };
@@ -86,22 +67,162 @@ export function App() {
   const [schemaValidations, setSchemaValidations] = useState<{ [configPath: string]: schemaValidation | undefined }>({});
   const [selectedProfileKey, setSelectedProfileKey] = useState<string | null>(null);
   const [selectedProfilesByConfig, setSelectedProfilesByConfig] = useState<{ [configPath: string]: string | null }>({});
-  // Profile Wizard state
-  const [wizardModalOpen, setWizardModalOpen] = useState(false);
-  const [wizardRootProfile, setWizardRootProfile] = useState("root");
-  const [wizardSelectedType, setWizardSelectedType] = useState("");
-  const [wizardProfileName, setWizardProfileName] = useState("");
   const [addConfigModalOpen, setAddConfigModalOpen] = useState(false);
-  const [wizardProperties, setWizardProperties] = useState<{ key: string; value: string | boolean | number | Object; secure?: boolean }[]>([]);
-  const [wizardShowKeyDropdown, setWizardShowKeyDropdown] = useState(false);
-  const [wizardNewPropertyKey, setWizardNewPropertyKey] = useState("");
-  const [wizardNewPropertyValue, setWizardNewPropertyValue] = useState("");
-  const [wizardNewPropertySecure, setWizardNewPropertySecure] = useState(false);
-  const [wizardMergedProperties, setWizardMergedProperties] = useState<{ [key: string]: any }>({});
   const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
+
+  // Memoize functions to prevent unnecessary re-renders
+  const formatPendingChanges = useCallback(() => {
+    const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
+      Object.keys(changesForPath).map((key) => {
+        const { value, path, profile, secure } = changesForPath[key];
+        return { key, value, path, profile, configPath, secure };
+      })
+    );
+
+    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
+
+    const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
+      Object.keys(changesForPath).map((key) => {
+        const { value, path } = changesForPath[key];
+        return { key, value, path, configPath, secure: false };
+      })
+    );
+
+    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
+      keys.map((key) => ({ key, configPath, secure: false }))
+    );
+
+    const result = {
+      changes,
+      deletions: deleteKeys,
+      defaultsChanges,
+      defaultsDeleteKeys: defaultsDeleteKeys,
+    };
+
+    return result;
+  }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions]);
+
+  const getAvailableProfiles = useCallback(() => {
+    if (selectedTab === null) return ["root"];
+
+    const config = configurations[selectedTab].properties;
+    const flatProfiles = flattenProfiles(config.profiles);
+    const profileNames = Object.keys(flatProfiles);
+
+    // Include pending profiles from pendingChanges
+    const pendingProfiles = new Set<string>();
+    Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([_, entry]) => {
+      if (entry.profile) {
+        pendingProfiles.add(entry.profile);
+      }
+    });
+
+    // Combine all profiles and ensure uniqueness
+    const allProfiles = new Set(["root", ...profileNames, ...Array.from(pendingProfiles)]);
+    return Array.from(allProfiles).sort((a, b) => {
+      // Always put "root" first
+      if (a === "root") return -1;
+      if (b === "root") return 1;
+      // Sort other profiles alphabetically
+      return a.localeCompare(b);
+    });
+  }, [selectedTab, configurations, pendingChanges]);
+
+  // Profile Wizard hook
+  const {
+    wizardModalOpen,
+    wizardRootProfile,
+    wizardSelectedType,
+    wizardProfileName,
+    wizardProperties,
+    wizardShowKeyDropdown,
+    wizardNewPropertyKey,
+    wizardNewPropertyValue,
+    wizardNewPropertySecure,
+    wizardMergedProperties,
+    setWizardModalOpen,
+    setWizardRootProfile,
+    setWizardSelectedType,
+    setWizardProfileName,
+    setWizardProperties,
+    setWizardShowKeyDropdown,
+    setWizardNewPropertyKey,
+    setWizardNewPropertyValue,
+    setWizardNewPropertySecure,
+    setWizardMergedProperties,
+    getWizardTypeOptions,
+    getWizardPropertyOptions,
+    getPropertyType,
+    isProfileNameTaken,
+    handleWizardAddProperty,
+    handleWizardRemoveProperty,
+    handleWizardPropertyValueChange,
+    handleWizardPropertySecureToggle,
+    handleWizardCreateProfile,
+    handleWizardCancel,
+    requestWizardMergedProperties,
+  } = useProfileWizard({
+    selectedTab,
+    configurations,
+    schemaValidations,
+    pendingChanges,
+    setPendingChanges,
+    setSelectedProfileKey,
+    vscodeApi,
+    formatPendingChanges,
+    getAvailableProfiles,
+  });
+
+  // Memoize handleSave to prevent unnecessary re-renders
+  const handleSave = useCallback(() => {
+    // Set saving flag to prevent selection clearing
+    setIsSaving(true);
+
+    // Store current selection to restore after save
+    setPendingSaveSelection({
+      tab: selectedTab,
+      profile: selectedProfileKey,
+    });
+
+    const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
+      Object.keys(changesForPath).map((key) => {
+        const { value, path, profile, secure } = changesForPath[key];
+        return { key, value, path, profile, configPath, secure };
+      })
+    );
+
+    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
+
+    const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
+      Object.keys(changesForPath).map((key) => {
+        const { value, path } = changesForPath[key];
+        return { key, value, path, configPath, secure: false };
+      })
+    );
+
+    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
+      keys.map((key) => ({ key, configPath, secure: false }))
+    );
+
+    vscodeApi.postMessage({
+      command: "SAVE_CHANGES",
+      changes,
+      deletions: deleteKeys,
+      defaultsChanges,
+      defaultsDeleteKeys: defaultsDeleteKeys,
+    });
+
+    setHiddenItems({});
+    setPendingChanges({});
+    setDeletions({});
+    setPendingDefaults({});
+    setDefaultsDeletions({});
+
+    // Refresh configurations after save
+    vscodeApi.postMessage({ command: "GET_PROFILES" });
+  }, [selectedTab, selectedProfileKey, pendingChanges, deletions, pendingDefaults, defaultsDeletions]);
+
   // Preview Args Modal state
-  const [previewArgsModalOpen, setPreviewArgsModalOpen] = useState(false);
-  const [previewArgsData, setPreviewArgsData] = useState<any[]>([]);
 
   // Merged Properties state
   const [mergedProperties, setMergedProperties] = useState<any>(null);
@@ -171,9 +292,6 @@ export function App() {
         }
       } else if (event.data.command === "DISABLE_OVERLAY") {
         setSaveModalOpen(false);
-      } else if (event.data.command === "PREVIEW_ARGS") {
-        setPreviewArgsData(event.data.mergedArgs || []);
-        setPreviewArgsModalOpen(true);
       } else if (event.data.command === "MERGED_PROPERTIES") {
         // Store the full merged properties data including jsonLoc and osLoc information
         const mergedPropsData: { [key: string]: any } = {};
@@ -252,7 +370,7 @@ export function App() {
         // Don't clear selectedProfileKey here - let handleTabChange handle it
       }
     }
-  }, [selectedTab, configurations, isSaving]);
+  }, [selectedTab, configurations, isSaving, isNavigating]);
 
   // Refresh merged properties when pending changes change
   useEffect(() => {
@@ -273,12 +391,12 @@ export function App() {
         return () => clearTimeout(timeoutId);
       }
     }
-  }, [pendingChanges, pendingDefaults, deletions, defaultsDeletions, selectedProfileKey, selectedTab, configurations]);
+  }, [selectedProfileKey, selectedTab, formatPendingChanges]);
 
   useEffect(() => {
-    const isModalOpen = newProfileModalOpen || saveModalOpen || newLayerModalOpen || editModalOpen || wizardModalOpen || previewArgsModalOpen;
+    const isModalOpen = newProfileModalOpen || saveModalOpen || newLayerModalOpen || wizardModalOpen;
     document.body.classList.toggle("modal-open", isModalOpen);
-  }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, editModalOpen, wizardModalOpen, previewArgsModalOpen]);
+  }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, wizardModalOpen]);
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -302,7 +420,7 @@ export function App() {
     if (wizardModalOpen && selectedTab !== null && (wizardRootProfile || wizardSelectedType)) {
       requestWizardMergedProperties();
     }
-  }, [wizardRootProfile, wizardSelectedType, wizardModalOpen, selectedTab, pendingChanges, pendingDefaults, deletions, defaultsDeletions]);
+  }, [wizardRootProfile, wizardSelectedType, wizardModalOpen, selectedTab, requestWizardMergedProperties]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -329,7 +447,7 @@ export function App() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions]);
+  }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, handleSave]);
 
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
@@ -577,26 +695,6 @@ export function App() {
     }
   };
 
-  // const handleDeleteDefaultsProperty = (key: string) => {
-  //   if (selectedTab === null) return;
-  //   const configPath = configurations[selectedTab!]!.configPath;
-
-  //   setPendingDefaults((prev) => {
-  //     const newState = { ...prev };
-  //     if (newState[configPath]) {
-  //       delete newState[configPath][key];
-  //     }
-  //     return newState;
-  //   });
-
-  //   if (Object.prototype.hasOwnProperty.call(originalDefaults, key)) {
-  //     setDefaultsDeletions((prev) => ({
-  //       ...prev,
-  //       [configPath]: [...(prev[configPath] ?? []), key],
-  //     }));
-  //   }
-  // };
-
   // Helper function to get a profile's type
   const getProfileType = (profileKey: string): string | null => {
     if (selectedTab === null) return null;
@@ -741,54 +839,6 @@ export function App() {
     }
   };
 
-  const handleSave = () => {
-    // Set saving flag to prevent selection clearing
-    setIsSaving(true);
-
-    // Store current selection to restore after save
-    setPendingSaveSelection({
-      tab: selectedTab,
-      profile: selectedProfileKey,
-    });
-
-    const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
-      Object.keys(changesForPath).map((key) => {
-        const { value, path, profile, secure } = changesForPath[key];
-        return { key, value, path, profile, configPath, secure };
-      })
-    );
-
-    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
-
-    const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
-      Object.keys(changesForPath).map((key) => {
-        const { value, path } = changesForPath[key];
-        return { key, value, path, configPath, secure: false };
-      })
-    );
-
-    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
-      keys.map((key) => ({ key, configPath, secure: false }))
-    );
-
-    vscodeApi.postMessage({
-      command: "SAVE_CHANGES",
-      changes,
-      deletions: deleteKeys,
-      defaultsChanges,
-      defaultsDeleteKeys: defaultsDeleteKeys,
-    });
-
-    setHiddenItems({});
-    setPendingChanges({});
-    setDeletions({});
-    setPendingDefaults({});
-    setDefaultsDeletions({});
-
-    // Refresh configurations after save
-    vscodeApi.postMessage({ command: "GET_PROFILES" });
-  };
-
   const handleProfileSelection = (profileKey: string) => {
     if (profileKey === "") {
       // Deselect profile
@@ -814,37 +864,6 @@ export function App() {
         changes: formatPendingChanges(),
       });
     }
-  };
-
-  const formatPendingChanges = () => {
-    const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
-      Object.keys(changesForPath).map((key) => {
-        const { value, path, profile, secure } = changesForPath[key];
-        return { key, value, path, profile, configPath, secure };
-      })
-    );
-
-    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
-
-    const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
-      Object.keys(changesForPath).map((key) => {
-        const { value, path } = changesForPath[key];
-        return { key, value, path, configPath, secure: false };
-      })
-    );
-
-    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
-      keys.map((key) => ({ key, configPath, secure: false }))
-    );
-
-    const result = {
-      changes,
-      deletions: deleteKeys,
-      defaultsChanges,
-      defaultsDeleteKeys: defaultsDeleteKeys,
-    };
-
-    return result;
   };
 
   // Helper function to check if a property is in pending changes for a specific profile
@@ -1411,7 +1430,7 @@ export function App() {
         }
       }
     }
-  }, [selectedTab, configurations, profileFilterType, deletions, pendingChanges, getProfileType]);
+  }, [selectedTab, configurations, profileFilterType, deletions, pendingChanges]);
 
   const renderProfileDetails = () => {
     return (
@@ -1420,23 +1439,6 @@ export function App() {
           <h2>{selectedProfileKey || "Profile Details"}</h2>
           {selectedProfileKey && (
             <div style={{ display: "flex", gap: "8px" }}>
-              {/* <button
-                className="action-button"
-                onClick={() => {
-                  // Rename functionality (WIP)
-                }}
-                title="Rename profile"
-                style={{
-                  padding: "4px",
-                  fontSize: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "transparent",
-                }}
-              >
-                <span className="codicon codicon-edit"></span>
-              </button> */}
               <button
                 className="action-button"
                 onClick={() => {
@@ -1782,7 +1784,7 @@ export function App() {
                   }}
                 >
                   <option value="">{l10n.t("Select a type")}</option>
-                  {getWizardTypeOptions().map((type) => (
+                  {getWizardTypeOptions().map((type: string) => (
                     <option key={type} value={type}>
                       {type.toLowerCase()}
                     </option>
@@ -1872,7 +1874,7 @@ export function App() {
 
     // Create a complete defaults object with all available types
     const completeDefaults = { ...defaults };
-    availableTypes.forEach((type) => {
+    availableTypes.forEach((type: string) => {
       if (!(type in completeDefaults)) {
         completeDefaults[type] = "";
       }
@@ -1973,76 +1975,6 @@ export function App() {
     setNewProfileModalOpen(true);
   };
 
-  const handleSaveEdit = () => {
-    setEditModalOpen(false);
-    setPendingChanges((prev) => {
-      const configPath = configurations[selectedTab!]!.configPath;
-      const updatedKey = editingKey.replace("secure", "properties");
-      // For nested profiles, we need to extract the actual profile name from the path
-      const pathParts = updatedKey.split(".");
-      let profileKey;
-      if (pathParts[0] === "profiles" && pathParts.length > 2) {
-        // Check if this is a nested profile
-        const profilesIndices = [];
-        for (let i = 0; i < pathParts.length; i++) {
-          if (pathParts[i] === "profiles") {
-            profilesIndices.push(i);
-          }
-        }
-        if (profilesIndices.length > 1) {
-          // This is a nested profile - construct the full profile key
-          const profileParts = [];
-          for (let i = 1; i < pathParts.length; i++) {
-            if (pathParts[i] !== "profiles") {
-              profileParts.push(pathParts[i]);
-            }
-          }
-          profileKey = profileParts.join(".");
-        } else {
-          // Top-level profile
-          profileKey = pathParts[1];
-        }
-      } else {
-        profileKey = pathParts[0];
-      }
-
-      const value = editingValue;
-      // Create a new object with the updated value
-      const newPendingChanges = {
-        ...prev,
-        [configPath]: {
-          ...prev[configPath],
-          [updatedKey]: {
-            value,
-            profile: profileKey,
-            path: updatedKey.split(".").slice(-1),
-            configPath,
-            secure: true,
-          },
-        },
-      };
-
-      // Ensure that only one entry for the secure credential exists
-      // by deleting any existing secure entry that matches the updatedKey
-      for (const key in newPendingChanges[configPath]) {
-        if (key.includes("secure") && newPendingChanges[configPath][key].path.join(".") === updatedKey) {
-          delete newPendingChanges[configPath][key];
-        }
-      }
-
-      return newPendingChanges;
-    });
-    setDeletions((prev) => {
-      const configPath = configurations[selectedTab!]!.configPath;
-      return {
-        ...prev,
-        [configPath]: (prev[configPath] ?? []).filter((key) => key !== editingKey),
-      };
-    });
-    setEditingKey("");
-    setNewProfileValue("");
-  };
-
   const handleAddNewLayer = () => {
     if (!newLayerName.trim() || !newLayerPath) return;
 
@@ -2061,33 +1993,6 @@ export function App() {
     setNewLayerName("");
     setNewLayerPath(null);
     setNewLayerModalOpen(false);
-  };
-
-  // Profile Wizard helper functions
-  const getAvailableProfiles = () => {
-    if (selectedTab === null) return ["root"];
-
-    const config = configurations[selectedTab].properties;
-    const flatProfiles = flattenProfiles(config.profiles);
-    const profileNames = Object.keys(flatProfiles);
-
-    // Include pending profiles from pendingChanges
-    const pendingProfiles = new Set<string>();
-    Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([_, entry]) => {
-      if (entry.profile) {
-        pendingProfiles.add(entry.profile);
-      }
-    });
-
-    // Combine all profiles and ensure uniqueness
-    const allProfiles = new Set(["root", ...profileNames, ...Array.from(pendingProfiles)]);
-    return Array.from(allProfiles).sort((a, b) => {
-      // Always put "root" first
-      if (a === "root") return -1;
-      if (b === "root") return 1;
-      // Sort other profiles alphabetically
-      return a.localeCompare(b);
-    });
   };
 
   const getAvailableProfilesByType = (profileType: string) => {
@@ -2149,29 +2054,6 @@ export function App() {
     return [...profilesOfType, ...Array.from(pendingProfiles)].sort((a, b) => a.localeCompare(b));
   };
 
-  const getWizardTypeOptions = () => {
-    if (selectedTab === null) return [];
-    return schemaValidations[configurations[selectedTab].configPath]?.validDefaults || [];
-  };
-
-  const getWizardPropertyOptions = () => {
-    if (selectedTab === null) return [];
-    if (!wizardSelectedType) return [];
-    const allOptions = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || {};
-    // Filter out properties that are already added
-    const usedKeys = new Set(wizardProperties.map((prop) => prop.key));
-    return Object.keys(allOptions)
-      .filter((option) => !usedKeys.has(option))
-      .sort((a, b) => a.localeCompare(b));
-  };
-
-  const getPropertyType = (propertyKey: string): string | undefined => {
-    if (selectedTab === null) return undefined;
-    if (!wizardSelectedType) return undefined;
-    const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || {};
-    return propertySchema[propertyKey]?.type;
-  };
-
   const getPropertyTypeForAddProfile = (propertyKey: string): string | undefined => {
     if (selectedTab === null) return undefined;
 
@@ -2197,239 +2079,6 @@ export function App() {
     return undefined;
   };
 
-  const isProfileNameTaken = () => {
-    if (!wizardProfileName.trim() || selectedTab === null) return false;
-
-    const config = configurations[selectedTab].properties;
-    const flatProfiles = flattenProfiles(config.profiles);
-
-    // Check existing profiles
-    const existingProfilesUnderRoot = Object.keys(flatProfiles).some((profileKey) => {
-      if (wizardRootProfile === "root") {
-        return profileKey === wizardProfileName.trim();
-      } else {
-        return (
-          profileKey === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
-          profileKey.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
-        );
-      }
-    });
-
-    // Check pending changes
-    const pendingProfilesUnderRoot = Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).some(([_, entry]) => {
-      if (entry.profile) {
-        if (wizardRootProfile === "root") {
-          return entry.profile === wizardProfileName.trim();
-        } else {
-          return (
-            entry.profile === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
-            entry.profile.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
-          );
-        }
-      }
-      return false;
-    });
-
-    return existingProfilesUnderRoot || pendingProfilesUnderRoot;
-  };
-
-  const handleWizardAddProperty = () => {
-    if (!wizardNewPropertyKey.trim() || !wizardNewPropertyValue.trim()) return;
-
-    // Check if the key already exists
-    const keyExists = wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim());
-    if (keyExists) {
-      return; // Don't add duplicate keys
-    }
-
-    const propertyType = getPropertyType(wizardNewPropertyKey.trim());
-    const parsedValue = parseValueByType(wizardNewPropertyValue, propertyType);
-
-    setWizardProperties((prev) => [
-      ...prev,
-      {
-        key: wizardNewPropertyKey,
-        value: parsedValue,
-        secure: wizardNewPropertySecure,
-      },
-    ]);
-    setWizardNewPropertyKey("");
-    setWizardNewPropertyValue("");
-    setWizardNewPropertySecure(false);
-    setWizardShowKeyDropdown(false);
-  };
-
-  const handleWizardRemoveProperty = (index: number) => {
-    setWizardProperties((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleWizardPropertyValueChange = (index: number, newValue: string) => {
-    setWizardProperties((prev) => {
-      const updated = [...prev];
-      const propertyType = getPropertyType(updated[index].key);
-      updated[index] = {
-        ...updated[index],
-        value: parseValueByType(newValue, propertyType),
-      };
-      return updated;
-    });
-  };
-
-  const handleWizardPropertySecureToggle = (index: number) => {
-    setWizardProperties((prev) => {
-      const updated = [...prev];
-      updated[index] = {
-        ...updated[index],
-        secure: !updated[index].secure,
-      };
-      return updated;
-    });
-  };
-
-  const handleWizardCreateProfile = () => {
-    if (!wizardProfileName.trim()) return;
-
-    const configPath = configurations[selectedTab!]!.configPath;
-
-    // Check if profile already exists under the selected root
-    const config = configurations[selectedTab!].properties;
-    const flatProfiles = flattenProfiles(config.profiles);
-
-    // Get all existing profile names under the selected root
-    const existingProfilesUnderRoot = Object.keys(flatProfiles).filter((profileKey) => {
-      if (wizardRootProfile === "root") {
-        // For root, check if the profile name exists as a top-level profile
-        return profileKey === wizardProfileName.trim();
-      } else {
-        // For nested profiles, check if the profile exists under the selected root
-        return (
-          profileKey === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
-          profileKey.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
-        );
-      }
-    });
-
-    // Also check pending changes for profiles being created
-    const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([_, entry]) => {
-      if (entry.profile) {
-        if (wizardRootProfile === "root") {
-          return entry.profile === wizardProfileName.trim();
-        } else {
-          return (
-            entry.profile === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
-            entry.profile.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
-          );
-        }
-      }
-      return false;
-    });
-
-    if (existingProfilesUnderRoot.length > 0 || pendingProfilesUnderRoot) {
-      // Profile already exists, don't create it
-      return;
-    }
-
-    // Create the profile path
-    let profilePath: string[];
-    let newProfileKey: string;
-    if (wizardRootProfile === "root") {
-      profilePath = ["profiles", wizardProfileName];
-      newProfileKey = wizardProfileName;
-    } else {
-      // For nested profiles, we need to build the path to the selected profile
-      // and then add "profiles" and the new profile name
-      const profileParts = wizardRootProfile.split(".");
-      profilePath = ["profiles"];
-
-      // Build the path to the selected profile
-      for (let i = 0; i < profileParts.length; i++) {
-        profilePath.push(profileParts[i]);
-        // Add "profiles" between each level
-        if (i < profileParts.length - 1) {
-          profilePath.push("profiles");
-        }
-      }
-
-      // Add "profiles" after the selected profile, then the new profile name
-      profilePath.push("profiles", wizardProfileName);
-      newProfileKey = `${wizardRootProfile}.${wizardProfileName}`;
-    }
-
-    // Add type property only if selected
-    if (wizardSelectedType) {
-      const typePath = [...profilePath, "type"];
-      const typeKey = typePath.join(".");
-
-      setPendingChanges((prev) => ({
-        ...prev,
-        [configPath]: {
-          ...prev[configPath],
-          [typeKey]: {
-            value: wizardSelectedType,
-            path: typePath.slice(-1),
-            profile: newProfileKey,
-          },
-        },
-      }));
-    }
-
-    // Add properties
-
-    // If no properties/type are set, set an empty properties object on the profile
-    if (wizardProperties.length === 0 && !wizardSelectedType) {
-      wizardProperties.push({ key: "", value: {} });
-    }
-    wizardProperties.forEach((prop) => {
-      // Always use properties path, but set secure flag if needed
-      const propertyPath = [...profilePath, "properties"];
-
-      // Logic for setting empty properties
-      if (prop.key !== "") propertyPath.push(prop.key);
-
-      const propertyKey = propertyPath.join(".");
-
-      setPendingChanges((prev) => ({
-        ...prev,
-        [configPath]: {
-          ...prev[configPath],
-          [propertyKey]: {
-            value: prop.value,
-            path: propertyPath.slice(-1),
-            profile: newProfileKey,
-            secure: prop.secure,
-          },
-        },
-      }));
-    });
-
-    // Automatically select the newly created profile
-    setSelectedProfileKey(newProfileKey);
-
-    // Reset wizard state
-    setWizardModalOpen(false);
-    setWizardRootProfile("root");
-    setWizardSelectedType("");
-    setWizardProfileName("");
-    setWizardProperties([]);
-    setWizardNewPropertyKey("");
-    setWizardNewPropertyValue("");
-    setWizardNewPropertySecure(false);
-    setWizardShowKeyDropdown(false);
-  };
-
-  const handleWizardCancel = () => {
-    setWizardModalOpen(false);
-    setWizardRootProfile("root");
-    setWizardSelectedType("");
-    setWizardProfileName("");
-    setWizardProperties([]);
-    setWizardNewPropertyKey("");
-    setWizardNewPropertyValue("");
-    setWizardNewPropertySecure(false);
-    setWizardShowKeyDropdown(false);
-    setWizardMergedProperties({});
-  };
-
   const handleAddNewConfig = () => {
     setAddConfigModalOpen(true);
   };
@@ -2444,20 +2093,6 @@ export function App() {
 
   const handleCancelAddConfig = () => {
     setAddConfigModalOpen(false);
-  };
-
-  const requestWizardMergedProperties = () => {
-    if (selectedTab !== null) {
-      const configPath = configurations[selectedTab].configPath;
-      const changes = formatPendingChanges();
-      vscodeApi.postMessage({
-        command: "GET_WIZARD_MERGED_PROPERTIES",
-        rootProfile: wizardRootProfile,
-        profileType: wizardSelectedType,
-        configPath: configPath,
-        changes: changes,
-      });
-    }
   };
 
   // Get options for input key for profile dropdown
@@ -2615,15 +2250,6 @@ export function App() {
 
       <SaveModal isOpen={saveModalOpen} />
 
-      <EditModal
-        isOpen={editModalOpen}
-        editingKey={editingKey}
-        editingValue={editingValue}
-        onEditingValueChange={setEditingValue}
-        onSave={handleSaveEdit}
-        onCancel={() => setEditModalOpen(false)}
-      />
-
       <NewLayerModal
         isOpen={newLayerModalOpen}
         newLayerName={newLayerName}
@@ -2664,8 +2290,6 @@ export function App() {
         stringifyValueByType={stringifyValueByType}
         vscodeApi={vscodeApi}
       />
-
-      <PreviewArgsModal isOpen={previewArgsModalOpen} argsData={previewArgsData} onClose={() => setPreviewArgsModalOpen(false)} />
 
       <AddConfigModal
         isOpen={addConfigModalOpen}

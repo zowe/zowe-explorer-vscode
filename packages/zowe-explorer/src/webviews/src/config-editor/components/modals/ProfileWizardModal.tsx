@@ -85,9 +85,23 @@ export function ProfileWizardModal({
   };
 
   return (
-    <div className="modal-backdrop">
-      <style>
-        {`
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div
+        className="modal"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: "900px",
+          width: "900px",
+          maxHeight: "85vh",
+          overflow: "visible",
+          display: "flex",
+          flexDirection: "column",
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
+        <style>
+          {`
           .wizard-select {
             position: relative;
             z-index: 1;
@@ -106,20 +120,7 @@ export function ProfileWizardModal({
             line-height: 1.2;
           }
         `}
-      </style>
-      <div
-        className="modal"
-        style={{
-          maxWidth: "900px",
-          width: "900px",
-          maxHeight: "85vh",
-          overflow: "visible",
-          display: "flex",
-          flexDirection: "column",
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
+        </style>
         <h3 style={{ margin: "0 0 1rem 0", paddingBottom: "0.5rem" }}>{l10n.t("Profile Wizard")}</h3>
 
         <div style={{ flex: 1, display: "flex", gap: "1rem", overflow: "visible" }}>
