@@ -125,7 +125,7 @@ export namespace List {
     }
 
     export class Items {
-        constructor(public dsname: string, public dsorg: string, public member: string, public migr?: string) {}
+        constructor(public dsname: string, public dsorg: string, public member: string, public migr?: string) { }
     }
 
     export function fileList(session: imperative.Session, hlq: string, options: IListOptions): Promise<IZosFilesResponse> {
