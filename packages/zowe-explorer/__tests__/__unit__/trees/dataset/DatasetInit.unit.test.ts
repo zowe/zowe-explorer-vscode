@@ -21,6 +21,8 @@ import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { DatasetSearch } from "../../../../src/trees/dataset/DatasetSearch";
 import { DatasetTableView } from "../../../../src/trees/dataset/DatasetTableView";
 
+jest.mock("../../../../src/tools/ZoweLocalStorage");
+
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
         let registerCommand;
@@ -113,6 +115,10 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.uploadDialog",
                 mock: [{ spy: jest.spyOn(DatasetActions, "uploadDialog"), arg: [test.value, dsProvider] }],
+            },
+            {
+                name: "zowe.ds.uploadDialogWithEncoding",
+                mock: [{ spy: jest.spyOn(DatasetActions, "uploadDialogWithEncoding"), arg: [test.value, dsProvider] }],
             },
             {
                 name: "zowe.ds.deleteMember",

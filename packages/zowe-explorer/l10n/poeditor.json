@@ -110,6 +110,9 @@
   "uploadDialog": {
     "Upload Member...": ""
   },
+  "uploadDialogWithEncoding": {
+    "Upload Member with Encoding...": ""
+  },
   "pattern": {
     "Search Data Sets": ""
   },
@@ -178,6 +181,9 @@
   },
   "uss.uploadDialogBinary": {
     "Upload Files (Binary)...": ""
+  },
+  "uss.uploadDialogWithEncoding": {
+    "Upload Files with Encoding...": ""
   },
   "uss.text": {
     "Toggle Text": ""
@@ -732,7 +738,10 @@
   "Unable to create node:": "",
   "Uploading file to USS tree": "",
   "Upload action was cancelled.": "",
+  "This action is only supported for USS directories.": "",
+  "Uploading file...": "",
   "Uploading USS file": "",
+  "Uploading USS file with encoding": "",
   "Delete action was canceled.": "",
   "Copying file structure...": "",
   "The paste operation is not supported for this node.": "",
@@ -749,8 +758,10 @@
   "From profile {0}": "",
   "USS file tag": "",
   "Choose encoding for {0}": "",
-  "Current encoding is {0}": "",
   "Enter a codepage (e.g., 1047, IBM-1047)": "",
+  "Choose encoding for upload to {0}": "",
+  "Default encoding is {0}": "",
+  "Current encoding is {0}": "",
   "A search must be set for {0} before it can be added to a workspace.": "",
   "(default)": "",
   "Confirm": "",
@@ -975,6 +986,8 @@
   "Unable to create data set.": "",
   "{0} was created like {1}.": "",
   "Uploading to data set": "",
+  "This action is only supported for partitioned data sets.": "",
+  "Uploading to data set...": "",
   "No data sets selected for deletion, cancelling...": "",
   "Deleting data set(s): {0}": "",
   "Deleting items": "",

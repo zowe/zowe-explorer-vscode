@@ -21,6 +21,8 @@ import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { Constants } from "../../../src/configuration/Constants";
 
+jest.mock("../../../src/tools/ZoweLocalStorage");
+
 const globalMocks = {
     testSession: createISession(),
     testProfile: createIProfile(),
