@@ -508,6 +508,37 @@
       "Unique spool name"
     ]
   },
+  "No active jobs found for session: {0}/Session label": {
+    "message": "No active jobs found for session: {0}",
+    "comment": [
+      "Session label"
+    ]
+  },
+  "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?/Number of active jobs": {
+    "message": "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?",
+    "comment": [
+      "Number of active jobs"
+    ]
+  },
+  "Polling {0} active jobs.../Number of active jobs": {
+    "message": "Polling {0} active jobs...",
+    "comment": [
+      "Number of active jobs"
+    ]
+  },
+  "Job completed {0} - {1}/Job ID with clickable linkJob status": {
+    "message": "Job completed {0} - {1}",
+    "comment": [
+      "Job ID with clickable link",
+      "Job status"
+    ]
+  },
+  "No more active jobs for {0}. Stopping polling./Session label": {
+    "message": "No more active jobs for {0}. Stopping polling.",
+    "comment": [
+      "Session label"
+    ]
+  },
   "Filter: {0}/The new filter": {
     "message": "Filter: {0}",
     "comment": [
@@ -853,6 +884,8 @@
     ]
   },
   "Saving data set...": "Saving data set...",
+  "This upload operation may result in data loss.": "This upload operation may result in data loss.",
+  "Please review the following lines:": "Please review the following lines:",
   "Failed to save {0}/Data set name": {
     "message": "Failed to save {0}",
     "comment": [

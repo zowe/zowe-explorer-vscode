@@ -160,14 +160,20 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         // Keys in the IStartTsoParms interface
         // TODO(zFernand0): Request the CLI squad that all interfaces are also exported as values that we can iterate
         const iStartTso = ["account", "characterSet", "codePage", "columns", "logonProcedure", "regionSize", "rows"];
-        const profiles = profileInfo.getAllProfiles("tso");
+        const defProfile = profileInfo.getDefaultProfile("tso");
         let tsoProfile: imperative.IProfileLoaded;
-        if (profiles.length > 0) {
-            tsoProfile = await this.selectServiceProfile(profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p)));
-            if (tsoProfile != null) {
-                const prof = profileInfo.mergeArgsForProfile(tsoProfile.profile as imperative.IProfAttrs);
-                iStartTso.forEach((p) => (tsoProfile.profile[p] = prof.knownArgs.find((a) => a.argName === p)?.argValue));
+        const defProfileSetting = SettingsConfig.getDirectValue<boolean>("zowe.commands.tso.defaultProfile");
+        if (defProfileSetting && defProfile) {
+            tsoProfile = imperative.ProfileInfo.profAttrsToProfLoaded(defProfile);
+        } else {
+            const profiles = profileInfo.getAllProfiles("tso");
+            if (profiles.length > 0) {
+                tsoProfile = await this.selectServiceProfile(profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p)));
             }
+        }
+        if (tsoProfile != null) {
+            const prof = profileInfo.mergeArgsForProfile(tsoProfile.profile as imperative.IProfAttrs);
+            iStartTso.forEach((p) => (tsoProfile.profile[p] = prof.knownArgs.find((a) => a.argName === p)?.argValue));
         }
         if (tsoProfile) {
             tsoParms = {

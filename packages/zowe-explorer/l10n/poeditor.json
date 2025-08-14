@@ -125,6 +125,12 @@
   "stopPolling": {
     "Stop Polling": ""
   },
+  "jobs.startPollingActiveJobs": {
+    "Start Polling Active Jobs": ""
+  },
+  "jobs.stopPollingActiveJobs": {
+    "Stop Polling Active Jobs": ""
+  },
   "refreshNode": {
     "Pull from Mainframe": ""
   },
@@ -817,6 +823,11 @@
   "The polling interval must be greater than or equal to 1000ms.": "",
   "Poll interval (in ms) for: {0}": "",
   "Polling: {0}...": "",
+  "No active jobs found for session: {0}": "",
+  "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?": "",
+  "Polling {0} active jobs...": "",
+  "Job completed {0} - {1}": "",
+  "No more active jobs for {0}. Stopping polling.": "",
   "Filter: {0}": "",
   "Set a filter...": "",
   "Filter cleared for {0}": "",
@@ -960,6 +971,8 @@
   "Failed to list datasets": "",
   "Failed to read {0}": "",
   "Saving data set...": "",
+  "This upload operation may result in data loss.": "",
+  "Please review the following lines:": "",
   "Failed to save {0}": "",
   "Partitioned Data Set: Binary": "",
   "Partitioned Data Set: C": "",

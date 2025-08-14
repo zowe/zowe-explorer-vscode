@@ -60,7 +60,7 @@ export class Profiles extends ProfilesCache {
     protected static loader: Profiles;
 
     public loadedProfile: imperative.IProfileLoaded;
-    public validProfile: Validation.ValidationType = Validation.ValidationType.INVALID;
+    public validProfile: Validation.ValidationType = Validation.ValidationType.UNVERIFIED;
     private mProfileInfo: imperative.ProfileInfo;
     private profilesOpCancelled = vscode.l10n.t(`Operation cancelled`);
     private manualEditMsg = vscode.l10n.t(
