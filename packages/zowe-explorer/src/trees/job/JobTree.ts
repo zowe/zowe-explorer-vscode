@@ -1264,7 +1264,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                         if (status && status !== "ACTIVE") {
                             const sessProfileName = session.getProfileName();
                             const args = [sessProfileName, job.job.jobid];
-                            const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND as string}?${encodeURIComponent(JSON.stringify(args))}`;
+                            const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                             Gui.showMessage(
                                 vscode.l10n.t({
                                     message: "Job completed {0} - {1}",
