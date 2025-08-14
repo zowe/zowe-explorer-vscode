@@ -12,7 +12,7 @@
 const path = require("path");
 const fs = require("fs");
 const process = require("process");
-const tmp = require("tmp");
+const os = require("os");
 const admZip = require("adm-zip");
 
 /**
@@ -48,7 +48,7 @@ async function downloadArtifact(downloadUrl) {
     try {
         const zipFileResponse = await fetch(downloadUrl);
         const zipFileData = Buffer.from(await zipFileResponse.arrayBuffer());
-        const zipFilePath = tmp.fileSync({ postfix: ".zip" }).name;
+        const zipFilePath = path.join(os.tmpdir(), `zowe-explorer-translations-${Date.now()}.zip`);
         console.log(`Writing zip file to ${zipFilePath}`);
         fs.writeFileSync(zipFilePath, zipFileData);
         return zipFilePath;
