@@ -41,7 +41,7 @@ export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile, 
     }
   };
 
-  const handleTabRightClick = (e: React.MouseEvent<HTMLDivElement>, index: number) => {
+  const handleTabRightClick = (e: any, index: number) => {
     e.preventDefault();
 
     // Ensure context menu stays within viewport bounds
