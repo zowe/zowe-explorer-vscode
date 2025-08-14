@@ -1438,9 +1438,9 @@ export function App() {
         <div className="profile-heading-container">
           <h2>{selectedProfileKey || "Profile Details"}</h2>
           {selectedProfileKey && (
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className="profile-actions">
               <button
-                className="action-button"
+                className="profile-action-button"
                 onClick={() => {
                   const configPath = configurations[selectedTab!]?.configPath;
                   if (configPath) {
@@ -1452,20 +1452,11 @@ export function App() {
                   }
                 }}
                 title="Open config file with profile highlighted"
-                style={{
-                  padding: "4px",
-                  fontSize: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "transparent",
-                  border: "none",
-                }}
               >
                 <span className="codicon codicon-go-to-file"></span>
               </button>
               <button
-                className="action-button"
+                className="profile-action-button"
                 onClick={() => {
                   if (isProfileDefault(selectedProfileKey)) {
                     // If already default, deselect it by setting to empty
@@ -1486,48 +1477,17 @@ export function App() {
                   }
                 }}
                 title={isProfileDefault(selectedProfileKey) ? "Click to remove default" : "Set as default"}
-                style={{
-                  padding: "4px",
-                  fontSize: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "transparent",
-                  border: "none",
-                }}
               >
                 <span className={`codicon codicon-${isProfileDefault(selectedProfileKey) ? "star-full" : "star-empty"}`}></span>
               </button>
               <button
-                className="action-button"
+                className="profile-action-button"
                 onClick={() => setShowMergedProperties(!showMergedProperties)}
                 title={showMergedProperties ? "Hide merged properties" : "Show merged properties"}
-                style={{
-                  padding: "4px",
-                  fontSize: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "transparent",
-                  border: "none",
-                }}
               >
                 <span className={`codicon codicon-${showMergedProperties ? "eye-closed" : "eye"}`}></span>
               </button>
-              <button
-                className="action-button"
-                onClick={() => handleDeleteProfile(selectedProfileKey)}
-                title="Delete profile"
-                style={{
-                  padding: "4px",
-                  fontSize: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "transparent",
-                  border: "none",
-                }}
-              >
+              <button className="profile-action-button" onClick={() => handleDeleteProfile(selectedProfileKey)} title="Delete profile">
                 <span className="codicon codicon-trash"></span>
               </button>
             </div>

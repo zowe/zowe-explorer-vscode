@@ -100,7 +100,7 @@ export function AddProfileModal({
           )}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", height: "36px" }}>
+        <div className="add-profile-input-row">
           {(() => {
             const propertyType = getPropertyType(newProfileKey.trim());
             if (isSecure) {
@@ -109,9 +109,8 @@ export function AddProfileModal({
                   placeholder="••••••••"
                   value={newProfileValue}
                   onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
-                  className="modal-input"
+                  className="modal-input add-profile-input"
                   type="password"
-                  style={{ flex: 1, height: "36px", margin: 0 }}
                 />
               );
             } else if (propertyType === "boolean") {
@@ -119,8 +118,7 @@ export function AddProfileModal({
                 <select
                   value={newProfileValue}
                   onChange={(e) => onNewProfileValueChange((e.target as HTMLSelectElement).value)}
-                  className="modal-input"
-                  style={{ flex: 1, height: "36px", margin: 0 }}
+                  className="modal-input add-profile-input"
                 >
                   <option value="true">true</option>
                   <option value="false">false</option>
@@ -132,9 +130,8 @@ export function AddProfileModal({
                   type="number"
                   value={newProfileValue}
                   onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
-                  className="modal-input"
+                  className="modal-input add-profile-input"
                   placeholder={l10n.t("Value")}
-                  style={{ flex: 1, height: "36px", margin: 0 }}
                 />
               );
             } else {
@@ -143,14 +140,13 @@ export function AddProfileModal({
                   type="text"
                   value={newProfileValue}
                   onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
-                  className="modal-input"
+                  className="modal-input add-profile-input"
                   placeholder={l10n.t("Value")}
-                  style={{ flex: 1, height: "36px", margin: 0 }}
                 />
               );
             }
           })()}
-          <div style={{ display: "flex", gap: "4px", alignItems: "center", height: "36px" }}>
+          <div className="add-profile-buttons">
             {newProfileKey && isFileProperty(newProfileKey.trim()) && (
               <button
                 onClick={() => {
@@ -184,21 +180,7 @@ export function AddProfileModal({
                     input.click();
                   }
                 }}
-                style={{
-                  padding: "6px",
-                  height: "36px",
-                  width: "36px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "var(--vscode-button-secondaryBackground)",
-                  color: "var(--vscode-button-secondaryForeground)",
-                  border: "1px solid var(--vscode-button-border)",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  margin: 0,
-                }}
+                className="wizard-file-picker"
                 title="Select file"
               >
                 <span className="codicon codicon-folder-opened"></span>
@@ -207,21 +189,7 @@ export function AddProfileModal({
             <button
               type="button"
               onClick={onSecureToggle}
-              style={{
-                background: isSecure ? "var(--vscode-button-background)" : "var(--vscode-button-secondaryBackground)",
-                border: isSecure ? "1px solid var(--vscode-button-border)" : "1px solid var(--vscode-button-secondaryBorder)",
-                cursor: "pointer",
-                padding: "6px",
-                borderRadius: "4px",
-                color: isSecure ? "var(--vscode-button-foreground)" : "var(--vscode-button-secondaryForeground)",
-                fontSize: "16px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "36px",
-                minWidth: "36px",
-                margin: 0,
-              }}
+              className={`wizard-secure-toggle ${isSecure ? "active" : "inactive"}`}
               title={isSecure ? "Unlock property" : "Lock property"}
             >
               <span className={`codicon ${isSecure ? "codicon-lock" : "codicon-unlock"}`}></span>
@@ -229,32 +197,11 @@ export function AddProfileModal({
           </div>
         </div>
         <div className="modal-actions">
-          <div style={{ display: "flex", justifyContent: "flex-end", flexGrow: 1 }}>
-            <button
-              style={{
-                marginRight: 8,
-                backgroundColor: "var(--vscode-button-secondaryBackground)",
-                color: "var(--vscode-button-secondaryForeground)",
-                border: "1px solid var(--vscode-button-secondaryBorder)",
-                padding: "8px 16px",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-              onClick={onCancel}
-            >
+          <div className="add-profile-actions">
+            <button className="wizard-button secondary" onClick={onCancel}>
               {l10n.t("Cancel")}
             </button>
-            <button
-              style={{
-                backgroundColor: "var(--vscode-button-background)",
-                color: "var(--vscode-button-foreground)",
-                border: "1px solid var(--vscode-button-border)",
-                padding: "8px 16px",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-              onClick={onAdd}
-            >
+            <button className="wizard-button primary" onClick={onAdd}>
               {l10n.t("Add")}
             </button>
           </div>

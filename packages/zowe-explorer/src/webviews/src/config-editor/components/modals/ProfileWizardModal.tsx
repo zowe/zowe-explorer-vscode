@@ -86,63 +86,19 @@ export function ProfileWizardModal({
 
   return (
     <div className="modal-backdrop" onClick={onCancel}>
-      <div
-        className="modal"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          maxWidth: "900px",
-          width: "900px",
-          maxHeight: "85vh",
-          overflow: "visible",
-          display: "flex",
-          flexDirection: "column",
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
-        <style>
-          {`
-          .wizard-select {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            padding: 0 8px;
-            line-height: 32px;
-          }
-          .wizard-select:focus {
-            z-index: 10;
-          }
-          .wizard-select option {
-            background-color: var(--vscode-dropdown-background);
-            color: var(--vscode-dropdown-foreground);
-            padding: 4px 8px;
-            line-height: 1.2;
-          }
-        `}
-        </style>
-        <h3 style={{ margin: "0 0 1rem 0", paddingBottom: "0.5rem" }}>{l10n.t("Profile Wizard")}</h3>
+      <div className="modal wizard-modal" onClick={(e) => e.stopPropagation()}>
+        <h3 className="wizard-title">{l10n.t("Profile Wizard")}</h3>
 
-        <div style={{ flex: 1, display: "flex", gap: "1rem", overflow: "visible" }}>
+        <div className="wizard-content">
           {/* Left Column */}
-          <div style={{ flex: "0 0 300px", display: "flex", flexDirection: "column", gap: "1rem", position: "relative" }}>
+          <div className="wizard-left-column">
             {/* Root Profile Selection */}
             <div>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold", fontSize: "0.9em" }}>{l10n.t("Root Profile")}:</label>
+              <label className="wizard-label">{l10n.t("Root Profile")}:</label>
               <select
                 value={wizardRootProfile}
                 onChange={(e) => onRootProfileChange((e.target as HTMLSelectElement).value)}
                 className="modal-input wizard-select"
-                style={{
-                  width: "100%",
-                  height: "32px",
-                  position: "relative",
-                  zIndex: 1,
-                  padding: "0 8px",
-                  lineHeight: "32px",
-                  display: "flex",
-                  alignItems: "center",
-                }}
               >
                 {availableProfiles.map((profile) => (
                   <option key={profile} value={profile}>
@@ -154,7 +110,7 @@ export function ProfileWizardModal({
 
             {/* Profile Name */}
             <div>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold", fontSize: "0.9em" }}>{l10n.t("Profile Name")}:</label>
+              <label className="wizard-label">{l10n.t("Profile Name")}:</label>
               <input
                 type="text"
                 value={wizardProfileName}
@@ -171,44 +127,19 @@ export function ProfileWizardModal({
                   e.preventDefault();
                 }}
                 onChange={(e) => onProfileNameChange((e.target as HTMLInputElement).value)}
-                className="modal-input"
+                className={`modal-input wizard-input ${isProfileNameTaken ? "error" : ""}`}
                 placeholder={l10n.t("Enter profile name")}
-                style={{
-                  width: "100%",
-                  height: "32px",
-                  borderColor: isProfileNameTaken ? "#ff6b6b" : undefined,
-                }}
               />
-              {isProfileNameTaken && (
-                <div
-                  style={{
-                    fontSize: "0.8em",
-                    color: "#ff6b6b",
-                    marginTop: "2px",
-                  }}
-                >
-                  {l10n.t("Profile name already exists under this root")}
-                </div>
-              )}
+              {isProfileNameTaken && <div className="wizard-error">{l10n.t("Profile name already exists under this root")}</div>}
             </div>
 
             {/* Type Selection */}
             <div>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold", fontSize: "0.9em" }}>{l10n.t("Profile Type")}:</label>
+              <label className="wizard-label">{l10n.t("Profile Type")}:</label>
               <select
                 value={wizardSelectedType}
                 onChange={(e) => onSelectedTypeChange((e.target as HTMLSelectElement).value)}
                 className="modal-input wizard-select"
-                style={{
-                  width: "100%",
-                  height: "32px",
-                  position: "relative",
-                  zIndex: 1,
-                  padding: "0 8px",
-                  lineHeight: "32px",
-                  display: "flex",
-                  alignItems: "center",
-                }}
               >
                 <option value="">{l10n.t("Select a type")}</option>
                 {typeOptions.map((type) => (
@@ -220,12 +151,12 @@ export function ProfileWizardModal({
             </div>
 
             {/* Add New Property */}
-            <div style={{ marginTop: "auto" }}>
-              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold", fontSize: "0.9em" }}>
+            <div className="wizard-add-property-section">
+              <label className="wizard-label">
                 {l10n.t("Add Property")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}:
               </label>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                <div style={{ position: "relative" }}>
+              <div className="wizard-property-form">
+                <div className="wizard-property-input-container">
                   <input
                     type="text"
                     value={wizardNewPropertyKey}
@@ -235,57 +166,22 @@ export function ProfileWizardModal({
                     }}
                     onFocus={() => onShowKeyDropdownChange(true)}
                     onBlur={() => setTimeout(() => onShowKeyDropdownChange(false), 100)}
-                    className="modal-input"
+                    className={`modal-input wizard-input ${
+                      wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) ? "error" : ""
+                    }`}
                     placeholder={l10n.t("Property key")}
-                    style={{
-                      height: "32px",
-                      borderColor:
-                        wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim())
-                          ? "#ff6b6b"
-                          : undefined,
-                    }}
                   />
                   {wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) && (
-                    <div
-                      style={{
-                        fontSize: "0.8em",
-                        color: "#ff6b6b",
-                        marginTop: "2px",
-                      }}
-                    >
-                      {l10n.t("Property key already exists")}
-                    </div>
+                    <div className="wizard-error">{l10n.t("Property key already exists")}</div>
                   )}
                   {wizardShowKeyDropdown && (
-                    <ul
-                      className="dropdown-list"
-                      style={{
-                        position: "absolute",
-                        top: "100%",
-                        left: 0,
-                        right: 0,
-                        zIndex: 10000,
-                        maxHeight: "200px",
-                        overflow: "auto",
-                        backgroundColor: "var(--vscode-dropdown-background)",
-                        margin: 0,
-                        padding: 0,
-                        listStyle: "none",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                        border: "1px solid var(--vscode-dropdown-border)",
-                        borderRadius: "4px",
-                      }}
-                    >
+                    <ul className="dropdown-list">
                       {propertyOptions
                         .filter((opt) => opt.toLowerCase().includes(wizardNewPropertyKey.toLowerCase()))
                         .map((option, index) => (
                           <li
                             key={index}
                             className="dropdown-item"
-                            style={{
-                              padding: "8px 12px",
-                              cursor: "pointer",
-                            }}
                             onMouseDown={() => {
                               onNewPropertyKeyChange(option);
                               onShowKeyDropdownChange(false);
@@ -297,7 +193,7 @@ export function ProfileWizardModal({
                     </ul>
                   )}
                 </div>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
+                <div className="wizard-property-value-row">
                   {(() => {
                     const propertyType = getPropertyType(wizardNewPropertyKey.trim());
                     if (propertyType === "boolean") {
@@ -305,8 +201,7 @@ export function ProfileWizardModal({
                         <select
                           value={wizardNewPropertyValue}
                           onChange={(e) => onNewPropertyValueChange((e.target as HTMLSelectElement).value)}
-                          className="modal-input"
-                          style={{ flex: 1, height: "32px" }}
+                          className="modal-input wizard-property-value-input"
                         >
                           <option value="true">true</option>
                           <option value="false">false</option>
@@ -318,9 +213,8 @@ export function ProfileWizardModal({
                           type="number"
                           value={wizardNewPropertyValue}
                           onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
-                          className="modal-input"
+                          className="modal-input wizard-property-value-input"
                           placeholder={l10n.t("Property value")}
-                          style={{ flex: 1, height: "32px" }}
                         />
                       );
                     } else {
@@ -329,37 +223,19 @@ export function ProfileWizardModal({
                           type="text"
                           value={wizardNewPropertyValue}
                           onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
-                          className="modal-input"
+                          className="modal-input wizard-property-value-input"
                           placeholder={l10n.t("Property value")}
-                          style={{ flex: 1, height: "32px" }}
                         />
                       );
                     }
                   })()}
-                  <div style={{ display: "flex", gap: "0.25rem" }}>
+                  <div className="wizard-property-buttons">
                     <button
                       onClick={onNewPropertySecureToggle}
-                      style={{
-                        padding: "0.25rem",
-                        height: "32px",
-                        width: "32px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: wizardNewPropertySecure ? "var(--vscode-button-background)" : "var(--vscode-button-secondaryBackground)",
-                        color: wizardNewPropertySecure ? "var(--vscode-button-foreground)" : "var(--vscode-button-secondaryForeground)",
-                        border: "1px solid var(--vscode-button-border)",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease",
-                        marginBottom: "4px",
-                      }}
+                      className={`wizard-secure-toggle ${wizardNewPropertySecure ? "active" : "inactive"}`}
                       title={wizardNewPropertySecure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
                     >
-                      <span
-                        className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}
-                        style={{ transform: "translateY(-2px)" }}
-                      ></span>
+                      <span className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}></span>
                     </button>
                     {wizardNewPropertyKey && isFileProperty(wizardNewPropertyKey.trim()) && (
                       <button
@@ -394,20 +270,7 @@ export function ProfileWizardModal({
                             input.click();
                           }
                         }}
-                        style={{
-                          padding: "0.25rem",
-                          height: "32px",
-                          width: "32px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "var(--vscode-button-secondaryBackground)",
-                          color: "var(--vscode-button-secondaryForeground)",
-                          border: "1px solid var(--vscode-button-border)",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                        }}
+                        className="wizard-file-picker"
                         title="Select file"
                       >
                         <span className="codicon codicon-folder-opened"></span>
@@ -422,11 +285,7 @@ export function ProfileWizardModal({
                     !wizardNewPropertyValue.trim() ||
                     wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim())
                   }
-                  style={{
-                    padding: "0.5rem",
-                    height: "32px",
-                    width: "100%",
-                  }}
+                  className="wizard-add-property-button"
                 >
                   {l10n.t("Add Property")}
                 </button>
@@ -435,22 +294,11 @@ export function ProfileWizardModal({
           </div>
 
           {/* Right Column - Properties List */}
-          <div style={{ flex: "1", display: "flex", flexDirection: "column", minHeight: 0 }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold", fontSize: "0.9em" }}>
+          <div className="wizard-right-column">
+            <label className="wizard-label">
               {l10n.t("Properties")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}:
             </label>
-            <div
-              style={{
-                flex: 1,
-                border: "1px solid var(--vscode-input-border)",
-                borderRadius: "4px",
-                padding: "0.5rem",
-                overflow: "auto",
-                backgroundColor: "transparent",
-                minHeight: "200px",
-                maxHeight: "400px",
-              }}
-            >
+            <div className="wizard-properties-container">
               {/* Combined Properties - User properties take precedence over inherited ones */}
               {(() => {
                 // Get user property keys to check for overrides
@@ -469,70 +317,13 @@ export function ProfileWizardModal({
                   <>
                     {/* Inherited Properties (not overridden) */}
                     {filteredInheritedProperties.map(([key, propData]) => (
-                      <div
-                        key={`inherited-${key}`}
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          minHeight: "32px",
-                          padding: "6px 8px",
-                          marginBottom: "4px",
-                          backgroundColor: "var(--vscode-input-background)",
-                          borderRadius: "4px",
-                          opacity: 0.6,
-                          border: "1px solid var(--vscode-input-border)",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontWeight: "bold",
-                            flex: "0 0 180px",
-                            fontSize: "1em",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {key}:
-                        </span>
-                        <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+                      <div key={`inherited-${key}`} className="wizard-property-item inherited">
+                        <span className="wizard-property-key">{key}:</span>
+                        <div className="wizard-property-value-container">
                           {propData.secure ? (
-                            <span
-                              style={{
-                                flex: 1,
-                                height: "28px",
-                                display: "flex",
-                                alignItems: "center",
-                                padding: "0 8px",
-                                backgroundColor: "var(--vscode-input-background)",
-                                border: "1px solid var(--vscode-input-border)",
-                                borderRadius: "2px",
-                                fontSize: "0.95em",
-                                color: "var(--vscode-descriptionForeground)",
-                                cursor: "not-allowed",
-                                opacity: 0.8,
-                              }}
-                            >
-                              ********
-                            </span>
+                            <span className="wizard-property-value-display">********</span>
                           ) : (
-                            <span
-                              style={{
-                                flex: 1,
-                                height: "28px",
-                                display: "flex",
-                                alignItems: "center",
-                                padding: "0 8px",
-                                backgroundColor: "var(--vscode-input-background)",
-                                border: "1px solid var(--vscode-input-border)",
-                                borderRadius: "2px",
-                                fontSize: "0.95em",
-                                color: "var(--vscode-descriptionForeground)",
-                                cursor: "not-allowed",
-                                opacity: 0.8,
-                              }}
-                            >
+                            <span className="wizard-property-value-display">
                               {typeof propData.value === "object" ? JSON.stringify(propData.value) : String(propData.value)}
                             </span>
                           )}
@@ -545,48 +336,17 @@ export function ProfileWizardModal({
                       ? wizardProperties.map((prop, index) => {
                           const propertyType = getPropertyType(prop.key);
                           return (
-                            <div
-                              key={index}
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                minHeight: "32px",
-                                padding: "6px 8px",
-                                marginBottom: "4px",
-                                backgroundColor: "var(--vscode-input-background)",
-                                borderRadius: "4px",
-                                border: "1px solid var(--vscode-input-border)",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  fontWeight: "bold",
-                                  flex: "0 0 180px",
-                                  fontSize: "1em",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {prop.key}:
-                              </span>
-                              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+                            <div key={index} className="wizard-property-item">
+                              <span className="wizard-property-key">{prop.key}:</span>
+                              <div className="wizard-property-actions">
+                                <div className="wizard-property-value-container">
                                   {prop.secure ? (
                                     <span style={{ display: "flex", alignItems: "center", height: "28px", fontSize: "0.95em" }}>********</span>
                                   ) : propertyType === "boolean" ? (
                                     <select
                                       value={stringifyValueByType(prop.value)}
                                       onChange={(e) => onPropertyValueChange(index, (e.target as HTMLSelectElement).value)}
-                                      className="modal-input"
-                                      style={{
-                                        height: "28px",
-                                        fontSize: "0.95em",
-                                        padding: "2px 6px",
-                                        marginBottom: "0",
-                                        flex: 1,
-                                      }}
+                                      className="modal-input wizard-property-value-input-small"
                                     >
                                       <option value="true">true</option>
                                       <option value="false">false</option>
@@ -596,72 +356,26 @@ export function ProfileWizardModal({
                                       type="number"
                                       value={stringifyValueByType(prop.value)}
                                       onChange={(e) => onPropertyValueChange(index, (e.target as HTMLInputElement).value)}
-                                      className="modal-input"
-                                      style={{
-                                        height: "28px",
-                                        fontSize: "0.95em",
-                                        padding: "2px 6px",
-                                        marginBottom: "0",
-                                        flex: 1,
-                                      }}
+                                      className="modal-input wizard-property-value-input-small"
                                     />
                                   ) : (
                                     <input
                                       type="text"
                                       value={stringifyValueByType(prop.value)}
                                       onChange={(e) => onPropertyValueChange(index, (e.target as HTMLInputElement).value)}
-                                      className="modal-input"
-                                      style={{
-                                        height: "28px",
-                                        fontSize: "0.95em",
-                                        padding: "2px 6px",
-                                        marginBottom: "0",
-                                        flex: 1,
-                                      }}
+                                      className="modal-input wizard-property-value-input-small"
                                     />
                                   )}
                                 </div>
                                 <button
                                   onClick={() => onPropertySecureToggle(index)}
-                                  style={{
-                                    padding: "0.25rem",
-                                    height: "28px",
-                                    width: "28px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    backgroundColor: prop.secure ? "var(--vscode-button-background)" : "var(--vscode-button-secondaryBackground)",
-                                    color: prop.secure ? "var(--vscode-button-foreground)" : "var(--vscode-button-secondaryForeground)",
-                                    border: "1px solid var(--vscode-button-border)",
-                                    borderRadius: "4px",
-                                    cursor: "pointer",
-                                    transition: "all 0.2s ease",
-                                  }}
+                                  className={`wizard-property-secure-toggle ${prop.secure ? "active" : "inactive"}`}
                                   title={prop.secure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
                                 >
-                                  <span
-                                    className={`codicon ${prop.secure ? "codicon-lock" : "codicon-unlock"}`}
-                                    style={{ fontSize: "1em", transform: "translateY(-2px)" }}
-                                  ></span>
+                                  <span className={`codicon ${prop.secure ? "codicon-lock" : "codicon-unlock"}`}></span>
                                 </button>
-                                <button
-                                  onClick={() => onRemoveProperty(index)}
-                                  style={{
-                                    padding: "0.25rem",
-                                    height: "28px",
-                                    width: "28px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    backgroundColor: "var(--vscode-button-secondaryBackground)",
-                                    color: "var(--vscode-button-secondaryForeground)",
-                                    border: "1px solid var(--vscode-button-border)",
-                                    borderRadius: "4px",
-                                    cursor: "pointer",
-                                    transition: "all 0.2s ease",
-                                  }}
-                                >
-                                  <span className="codicon codicon-trash" style={{ fontSize: "1em" }}></span>
+                                <button onClick={() => onRemoveProperty(index)} className="wizard-property-remove">
+                                  <span className="codicon codicon-trash"></span>
                                 </button>
                               </div>
                             </div>
@@ -683,83 +397,17 @@ export function ProfileWizardModal({
 
                 const hasAnyProperties = wizardProperties.length > 0 || filteredInheritedProperties.length > 0;
 
-                return !hasAnyProperties ? (
-                  <div
-                    style={{
-                      color: "#666",
-                      fontStyle: "italic",
-                      textAlign: "center",
-                      padding: "1rem",
-                    }}
-                  >
-                    {l10n.t("No properties added yet")}
-                  </div>
-                ) : null;
+                return !hasAnyProperties ? <div className="wizard-no-properties">{l10n.t("No properties added yet")}</div> : null;
               })()}
             </div>
           </div>
         </div>
 
-        <div
-          className="modal-actions"
-          style={{
-            marginTop: "0.5rem",
-            paddingTop: "0.5rem",
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "0.5rem",
-            marginLeft: "auto",
-            width: "fit-content",
-          }}
-        >
-          <button
-            onClick={onCancel}
-            style={{
-              padding: "0.5rem 1rem",
-              minWidth: "80px",
-              borderRadius: "4px",
-              backgroundColor: "var(--vscode-button-secondaryBackground)",
-              color: "var(--vscode-button-secondaryForeground)",
-              border: "1px solid var(--vscode-button-border)",
-              cursor: "pointer",
-              fontSize: "13px",
-              fontFamily: "var(--vscode-font-family)",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--vscode-button-secondaryHoverBackground)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--vscode-button-secondaryBackground)";
-            }}
-          >
+        <div className="wizard-actions">
+          <button onClick={onCancel} className="wizard-button secondary">
             {l10n.t("Cancel")}
           </button>
-          <button
-            onClick={onCreateProfile}
-            disabled={!wizardProfileName.trim() || isProfileNameTaken}
-            style={{
-              padding: "0.5rem 1rem",
-              minWidth: "120px",
-              borderRadius: "4px",
-              backgroundColor: "var(--vscode-button-background)",
-              color: "var(--vscode-button-foreground)",
-              border: "1px solid var(--vscode-button-border)",
-              cursor: "pointer",
-              fontSize: "13px",
-              fontFamily: "var(--vscode-font-family)",
-              transition: "all 0.2s ease",
-              opacity: !wizardProfileName.trim() || isProfileNameTaken ? "0.5" : "1",
-            }}
-            onMouseEnter={(e) => {
-              if (!(!wizardProfileName.trim() || isProfileNameTaken)) {
-                e.currentTarget.style.backgroundColor = "var(--vscode-button-hoverBackground)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--vscode-button-background)";
-            }}
-          >
+          <button onClick={onCreateProfile} disabled={!wizardProfileName.trim() || isProfileNameTaken} className="wizard-button primary">
             {l10n.t("Create Profile")}
           </button>
         </div>
