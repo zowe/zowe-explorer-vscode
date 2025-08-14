@@ -30,6 +30,7 @@ import {
     Paginator,
     IFetchResult,
     NavigationTreeItem,
+    PersistenceSchemaEnum,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -45,6 +46,7 @@ import type { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
+import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -67,6 +69,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public sort?: Sorting.NodeSort;
     public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
+    public persistence = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
 
     private paginator?: Paginator<IZosFilesResponse>;
     private paginatorData?: {
@@ -107,15 +110,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         if (this.getParent() == null || this.getParent().label === vscode.l10n.t("Favorites")) {
-            // read sort options from settings file
-            const sortSetting = SharedUtils.getDefaultSortOptions(
+            // read default sort options from settings file
+            const defaultSortOpts = SharedUtils.getDefaultSortOptions(
                 DatasetUtils.DATASET_SORT_OPTS,
                 Constants.SETTINGS_DS_DEFAULT_SORT,
                 Sorting.DatasetSortOpts
             );
             this.sort = {
-                method: sortSetting.method,
-                direction: sortSetting.direction,
+                method: defaultSortOpts.method,
+                direction: defaultSortOpts.direction,
             };
         }
 
@@ -463,11 +466,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
                 .map((label) => elementChildren[label]);
 
-            // get sort settings for session
-            const sessionSort = SharedContext.isSession(this) ? this.sort : this.getSessionNode().sort;
-
-            // use the PDS sort settings if defined; otherwise, use session sort method
-            const sortOpts = this.sort ?? sessionSort;
+            // Determine sort options: persistence > node > session
+            const sortOpts = this.persistence.getSortSetting(this) ?? this.sort ?? this.getSessionNode().sort;
 
             // use the PDS filter if one is set, otherwise try using the session filter
             const sessionFilter = SharedContext.isSession(this) ? this.filter : this.getSessionNode().filter;
