@@ -35,8 +35,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed a regression with the `AuthUtils.syncSessionNode` function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. [#3795](https://github.com/zowe/zowe-explorer-vscode/pull/3795)
 - Prevented data loss by modifying the save process to handle data sets with records that exceeded the logical record length. [#3791](https://github.com/zowe/zowe-explorer-vscode/issues/3791)
 
-### Bug fixes
-
 ## `3.2.2`
 
 ### Bug fixes
