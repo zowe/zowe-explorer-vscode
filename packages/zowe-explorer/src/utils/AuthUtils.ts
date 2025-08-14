@@ -146,7 +146,12 @@ export class AuthUtils {
                 (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                     imperativeError.message.includes("All configured authentication methods failed"))
             ) {
-                await AuthUtils.handleProfileAuthOnError(imperativeError, profile);
+                try {
+                    await AuthUtils.handleProfileAuthOnError(imperativeError, profile);
+                } catch {
+                    // User cancelled authentication prompt
+                    return false;
+                }
                 return true;
             }
         }
