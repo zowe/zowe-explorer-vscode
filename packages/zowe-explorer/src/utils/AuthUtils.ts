@@ -19,11 +19,13 @@ import {
     ErrorCorrelator,
     ZoweExplorerApiType,
     AuthHandler,
+    ZoweExplorerZosmf,
     AuthPromptParams,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
+// import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -84,10 +86,12 @@ export class AuthUtils {
                 },
             });
 
+            const sessTypeFromProf = AuthUtils.sessTypeFromProfile(profile);
             const authOpts: AuthPromptParams = {
                 authMethods: Constants.PROFILES_CACHE,
                 imperativeError: err as unknown as imperative.ImperativeError,
-                isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
+                isUsingTokenAuth:
+                    sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                 errorCorrelation,
                 throwErrorOnCancel: true,
             };
@@ -128,7 +132,7 @@ export class AuthUtils {
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, ...{ ...moreInfo, profile: undefined } }, { depth: null }));
 
-        const profile = typeof moreInfo.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo?.profile;
+        const profile = typeof moreInfo?.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo?.profile;
         const errorCorrelation = ErrorCorrelator.getInstance().correlateError(moreInfo?.apiType ?? ZoweExplorerApiType.All, errorDetails, {
             profileType: profile?.type,
             ...Object.keys(moreInfo).reduce((all, k) => (typeof moreInfo[k] === "string" ? { ...all, [k]: moreInfo[k] } : all), {}),
@@ -149,10 +153,40 @@ export class AuthUtils {
                 if (!AuthHandler.isProfileLocked(profile)) {
                     await AuthHandler.lockProfile(profile);
                 }
+                const addDet = imperativeError.mDetails.additionalDetails;
+                if (addDet.includes("Auth order:") && addDet.includes("Auth type:") && addDet.includes("Available creds:")) {
+                    const additionalDetails = [addDet.split("\n")[0]];
+                    additionalDetails.push(
+                        vscode.l10n.t({
+                            message: "Your available creds: {0}",
+                            args: [addDet.match(/\nAvailable creds:(.*?)(?=\n|$)/)?.[1]?.trim()],
+                            comment: ["Available credentials"],
+                        })
+                    );
+                    additionalDetails.push(
+                        vscode.l10n.t({
+                            message: "Your authOrder: {0}",
+                            args: [addDet.match(/\nAuth order:(.*?)(?=\n|$)/)?.[1]?.trim()],
+                            comment: ["Authentication order"],
+                        })
+                    );
+                    additionalDetails.push(
+                        vscode.l10n.t({
+                            message: "Selected auth type: {0}",
+                            args: [addDet.match(/\nAuth type:(.*?)(?=\n|$)/)?.[1]?.trim()],
+                            comment: ["Selected authentication method"],
+                        })
+                    );
+                    imperativeError.mDetails.additionalDetails = additionalDetails.join("\n");
+                }
+
+                const sessTypeFromProf = AuthUtils.sessTypeFromProfile(profile);
                 return await AuthHandler.promptForAuthentication(profile, {
                     authMethods: Constants.PROFILES_CACHE,
                     imperativeError,
-                    isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
+                    isUsingTokenAuth:
+                        sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
+                        sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                     errorCorrelation,
                 });
             }
@@ -189,14 +223,24 @@ export class AuthUtils {
         return false;
     }
 
-    public static async updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
-        const usingBasicAuth = profile.profile.user && profile.profile.password;
-        const usingCertAuth = profile.profile.certFile && profile.profile.certKeyFile;
-        let usingTokenAuth: boolean;
-        try {
-            usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
-        } catch (err) {
-            ZoweLogger.error(err);
+    public static updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): void {
+        const iSessFromProf = AuthUtils.getSessFromProfile(profile).ISession;
+        imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
+
+        let usingBasicAuth: boolean = false;
+        let usingTokenAuth: boolean = false;
+        let usingCertAuth: boolean = false;
+        switch (iSessFromProf.type) {
+            case imperative.SessConstants.AUTH_TYPE_BASIC:
+                usingBasicAuth = true;
+                break;
+            case imperative.SessConstants.AUTH_TYPE_TOKEN:
+            case imperative.SessConstants.AUTH_TYPE_BEARER:
+                usingTokenAuth = true;
+                break;
+            case imperative.SessConstants.AUTH_TYPE_CERT_PEM:
+                usingCertAuth = true;
+                break;
         }
         const tooltipValue: string | undefined =
             sessionNode.tooltip instanceof vscode.MarkdownString ? sessionNode.tooltip.value : sessionNode.tooltip;
@@ -319,11 +363,11 @@ export class AuthUtils {
      * @param getSessionForProfile is a function to build a valid specific session based on provided profile
      * @param sessionNode is a tree node, containing session information
      */
-    public static async syncSessionNode(
+    public static syncSessionNode(
         getCommonApi: (profile: imperative.IProfileLoaded) => MainframeInteraction.ICommon,
         sessionNode: IZoweTreeNode,
         nodeToRefresh?: IZoweTreeNode
-    ): Promise<void> {
+    ): void {
         ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
         const profileType = sessionNode.getProfile()?.type;
@@ -339,7 +383,7 @@ export class AuthUtils {
         sessionNode.setProfileToChoice(profile);
         try {
             const commonApi = getCommonApi(profile);
-            await this.updateNodeToolTip(sessionNode, profile);
+            this.updateNodeToolTip(sessionNode, profile);
             sessionNode.setSessionToChoice(commonApi.getSession());
         } catch (err) {
             if (err instanceof Error) {
@@ -355,7 +399,47 @@ export class AuthUtils {
     }
 
     /**
+     * Function that returns the session associated with the specified profile.
+     *
+     * @param {imperative.IProfileLoaded} profile The profile to be inspected.
+     *
+     * @returns {imperative.Session}
+     *      The session associated with the specified profile
+     */
+    public static getSessFromProfile(profile: imperative.IProfileLoaded): imperative.Session {
+        return new ZoweExplorerZosmf.CommonApi(profile).getSession();
+    }
+
+    /**
+     * Function that returns the session type for the session associated with the specified profile.
+     *
+     * @param {imperative.IProfileLoaded} profile The profile to be inspected.
+     *
+     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES}
+     *      The session type for the session associated with the specified profile
+     */
+    public static sessTypeFromProfile(profile: imperative.IProfileLoaded): imperative.SessConstants.AUTH_TYPE_CHOICES {
+        return AuthUtils.sessTypeFromSession(AuthUtils.getSessFromProfile(profile));
+    }
+
+    /**
+     * Function that returns the session type for the specified session.
+     *
+     * @param {imperative.Session} session The session to be inspected.
+     *
+     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES}
+     *      The session type for the specified session
+     */
+    public static sessTypeFromSession(session: imperative.Session): imperative.SessConstants.AUTH_TYPE_CHOICES {
+        if (session?.ISession?.type) {
+            return session.ISession.type;
+        }
+        return imperative.SessConstants.AUTH_TYPE_NONE;
+    }
+
+    /**
      * Function that checks whether a profile is using basic authentication
+     * @deprecated Use sessTypeFromProfile and/or sessTypeFromSession, which will adhere to authOrder.
      * @param profile
      * @returns {Promise<boolean>} a boolean representing whether basic auth is being used or not
      */
@@ -367,16 +451,12 @@ export class AuthUtils {
 
     /**
      * Function that checks whether a profile is using token based authentication
+     * @deprecated Use sessTypeFromProfile and/or sessTypeFromSession, which will adhere to authOrder.
      * @param profileName the name of the profile to check
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
      */
     public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
         const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
-        const shouldRemoveToken = Constants.PROFILES_CACHE.shouldRemoveTokenFromProfile(
-            Constants.PROFILES_CACHE.loadNamedProfile(profileName),
-            baseProfile
-        );
-        if (shouldRemoveToken) return false;
         const props = await Constants.PROFILES_CACHE.getPropsForProfile(profileName, false);
         const baseProps = await Constants.PROFILES_CACHE.getPropsForProfile(baseProfile?.name, false);
         return AuthHandler.isUsingTokenAuth(props, baseProps);

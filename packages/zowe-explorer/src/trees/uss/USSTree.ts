@@ -229,7 +229,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      */
     public async rename(originalNode: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.rename called.");
-        await Profiles.getInstance().checkCurrentProfile(originalNode.getProfile());
+        await Profiles.getInstance().checkCurrentProfile(originalNode.getProfile(), originalNode);
         if (await TreeViewUtils.errorForUnsavedResource(originalNode)) {
             return;
         }
@@ -1021,7 +1021,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                await Profiles.getInstance().checkCurrentProfile(profile);
+                await Profiles.getInstance().checkCurrentProfile(profile, parentNode);
                 if (Profiles.getInstance().validProfile === Validation.ValidationType.VALID || !SharedContext.isValidationEnabled(parentNode)) {
                     session = await ZoweExplorerApiRegister.getUssApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);
