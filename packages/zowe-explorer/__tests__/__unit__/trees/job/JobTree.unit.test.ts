@@ -474,7 +474,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavorites", () => {
         await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
             readFavorites: () => ["[test]: SAMPLE1{job}", "[test]: SAMPLE2(JOBID){job}", "INVALID"],
         });
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
@@ -487,7 +487,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavorites", () => {
         await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
             readFavorites: () => ["[test]: SAMPLE{job}"],
         });
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
@@ -947,7 +947,7 @@ describe("ZosJobsProvider unit tests - Function getUserJobsMenuChoice", () => {
             onDidAccept: () => Promise.resolve(undefined),
             onDidHide: () => Promise.resolve(undefined),
         });
-        jest.spyOn(globalMocks.testJobsProvider.mHistory, "getSearchHistory").mockReturnValue(["JobId:123"]);
+        jest.spyOn(globalMocks.testJobsProvider.mPersistence, "getSearchHistory").mockReturnValue(["JobId:123"]);
     });
     it("should return undefined and warn if user did not select a menu", async () => {
         jest.spyOn(Gui, "resolveQuickPick").mockReturnValue(undefined);
@@ -1188,9 +1188,9 @@ describe("removeSearchHistory", () => {
     it("removes the search item passed in from the current history", () => {
         const tree = new JobTree();
         tree.addSearchHistory("test");
-        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(1);
+        expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(1);
         tree.removeSearchHistory("test");
-        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+        expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(0);
     });
 });
 
@@ -1201,16 +1201,16 @@ describe("resetSearchHistory", () => {
         tree.addSearchHistory("test2");
         tree.addSearchHistory("test3");
         tree.addSearchHistory("test4");
-        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(4);
+        expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(4);
         tree.resetSearchHistory();
-        expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+        expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(0);
     });
 });
 
 describe("getSessions", () => {
     it("gets all the available sessions from persistent object", () => {
         const tree = new JobTree();
-        tree["mHistory"]["mSessions"] = ["sestest"];
+        tree["mPersistence"]["mSessions"] = ["sestest"];
         expect(tree.getSessions()).toEqual(["sestest"]);
     });
 });
@@ -1218,7 +1218,7 @@ describe("getSessions", () => {
 describe("getFileHistory", () => {
     it("gets all the file history from persistent object", () => {
         const tree = new JobTree();
-        tree["mHistory"]["mFileHistory"] = ["test1", "test2", "test3"];
+        tree["mPersistence"]["mFileHistory"] = ["test1", "test2", "test3"];
         expect(tree.getFileHistory()).toEqual(["test1", "test2", "test3"]);
     });
 });
