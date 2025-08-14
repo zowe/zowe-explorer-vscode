@@ -23,6 +23,9 @@
   "zowe.placeholderCommand": {
     "Placeholder": ""
   },
+  "zowe.setupRemoteWorkspaceFolders": {
+    "Setup Remote Workspace Folders": ""
+  },
   "zowe.promptCredentials": {
     "Update Credentials": ""
   },
@@ -107,14 +110,26 @@
   "uploadDialog": {
     "Upload Member...": ""
   },
+  "uploadDialogWithEncoding": {
+    "Upload Member with Encoding...": ""
+  },
   "pattern": {
     "Search Data Sets": ""
+  },
+  "listDataSets": {
+    "List Data Sets": ""
   },
   "startPolling": {
     "Start Polling": ""
   },
   "stopPolling": {
     "Stop Polling": ""
+  },
+  "jobs.startPollingActiveJobs": {
+    "Start Polling Active Jobs": ""
+  },
+  "jobs.stopPollingActiveJobs": {
+    "Stop Polling Active Jobs": ""
   },
   "refreshNode": {
     "Pull from Mainframe": ""
@@ -172,6 +187,9 @@
   },
   "uss.uploadDialogBinary": {
     "Upload Files (Binary)...": ""
+  },
+  "uss.uploadDialogWithEncoding": {
+    "Upload Files with Encoding...": ""
   },
   "uss.text": {
     "Toggle Text": ""
@@ -461,7 +479,7 @@
   "jobs.refreshSpool": {
     "Pull from Mainframe": ""
   },
-  "jobsTableView": {
+  "tableView": {
     "Show as Table": ""
   },
   "manualPoll": {
@@ -535,6 +553,12 @@
   },
   "zowe.settings.displayReleaseNotes": {
     "Should display the Zowe Explorer release notes after an update.": ""
+  },
+  "zowe.table.maxPinnedRows": {
+    "Maximum number of rows that can be pinned to the top of table views.": ""
+  },
+  "zowe.table.hidePinnedRowsWarning": {
+    "Hide the warning message when pinning many rows to table views.": ""
   },
   "Enter command here...": "",
   "Page Size:": "",
@@ -699,7 +723,7 @@
   "Prompting the user to choose a member from the filtered list": "",
   "You are already at the root directory.": "",
   "Prompting the user for a USS path": "",
-  "Select a filter": "",
+  "Select a filter or type to create a new one": "",
   "No selection made. Operation cancelled.": "",
   "New filter": "",
   "Please enter a valid USS path.": "",
@@ -717,7 +741,10 @@
   "Unable to create node:": "",
   "Uploading file to USS tree": "",
   "Upload action was cancelled.": "",
+  "This action is only supported for USS directories.": "",
+  "Uploading file...": "",
   "Uploading USS file": "",
+  "Uploading USS file with encoding": "",
   "Delete action was canceled.": "",
   "Copying file structure...": "",
   "The paste operation is not supported for this node.": "",
@@ -734,8 +761,10 @@
   "From profile {0}": "",
   "USS file tag": "",
   "Choose encoding for {0}": "",
-  "Current encoding is {0}": "",
   "Enter a codepage (e.g., 1047, IBM-1047)": "",
+  "Choose encoding for upload to {0}": "",
+  "Default encoding is {0}": "",
+  "Current encoding is {0}": "",
   "A search must be set for {0} before it can be added to a workspace.": "",
   "(default)": "",
   "Confirm": "",
@@ -785,11 +814,17 @@
   "Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}": "",
   "Remove": "",
   "This will remove all favorited jobs items for profile {0}. Continue?": "",
+  "Select a filter": "",
   "Enter a job ID": "",
   "Job search cancelled.": "",
   "The polling interval must be greater than or equal to 1000ms.": "",
   "Poll interval (in ms) for: {0}": "",
   "Polling: {0}...": "",
+  "No active jobs found for session: {0}": "",
+  "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?": "",
+  "Polling {0} active jobs...": "",
+  "Job completed {0} - {1}": "",
+  "No more active jobs for {0}. Stopping polling.": "",
   "Filter: {0}": "",
   "Set a filter...": "",
   "Filter cleared for {0}": "",
@@ -880,13 +915,45 @@
   "Choose the setting location to save the data set template...": "",
   "Save as User setting": "",
   "Save as Workspace setting": "",
+  "[{0}]: {1}": "",
+  "[{0}]: *": "",
+  "[{0}] Members of {1}": "",
+  "Data Set Name": "",
+  "Data Set Organization": "",
+  "Creation Date": "",
+  "Modified Date": "",
+  "Record Length": "",
+  "Migrated": "",
+  "Record Format": "",
+  "Volumes": "",
+  "Last Modified By": "",
+  "Version": "",
+  "Modification Level": "",
+  "Current Records": "",
+  "Initial Records": "",
+  "Modified Records": "",
+  "SCLM": "",
+  "Open": "",
+  "Focus": "",
+  "Back": "",
+  "Pin": "",
+  "Unpin": "",
+  "Error toggling pin state for rows: {0}": "",
+  "Member Name": "",
+  "Please select a single profile or PDS.": "",
+  "This action is only supported for session and PDS nodes. Please select a session or PDS node.": "",
+  "No profiles available.": "",
+  "Select a profile to search for data sets": "",
+  "Select a profile": "",
+  "Enter Data Set Pattern": "",
+  "e.g., USER.*, PUBLIC.DATA.*, etc.": "",
+  "Enter a dataset pattern to search for": "",
+  "Profile {0} not found.": "",
   "No search pattern applied. Search for a pattern and try again.": "",
   "Searching for \"{0}\"": "",
   "Search Results for \"{0}\"": "",
-  "Data Set Name": "",
   "Position": "",
   "Contents": "",
-  "Open": "",
   "Enter the text to search for.": "",
   "Search Options": "",
   "Select search options": "",
@@ -901,6 +968,8 @@
   "Failed to list datasets": "",
   "Failed to read {0}": "",
   "Saving data set...": "",
+  "This upload operation may result in data loss.": "",
+  "Please review the following lines:": "",
   "Failed to save {0}": "",
   "Partitioned Data Set: Binary": "",
   "Partitioned Data Set: C": "",
@@ -927,6 +996,8 @@
   "Unable to create data set.": "",
   "{0} was created like {1}.": "",
   "Uploading to data set": "",
+  "This action is only supported for partitioned data sets.": "",
+  "Uploading to data set...": "",
   "No data sets selected for deletion, cancelling...": "",
   "Deleting data set(s): {0}": "",
   "Deleting items": "",
@@ -953,6 +1024,7 @@
   "Selection is not a valid data set member name.": "",
   "Selection is not a valid data set name.": "",
   "Select the profile to use to open the data set": "",
+  "PDS {0} could not be found.": "",
   "Data set member {0} does not exist or cannot be opened in data set {1}.": "",
   "Data set {0} does not exist or cannot be opened.": "",
   "Opening data set failed.": "",

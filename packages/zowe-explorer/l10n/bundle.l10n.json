@@ -300,7 +300,7 @@
   "Prompting the user to choose a member from the filtered list": "Prompting the user to choose a member from the filtered list",
   "You are already at the root directory.": "You are already at the root directory.",
   "Prompting the user for a USS path": "Prompting the user for a USS path",
-  "Select a filter": "Select a filter",
+  "Select a filter or type to create a new one": "Select a filter or type to create a new one",
   "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
   "New filter": "New filter",
   "Please enter a valid USS path.": "Please enter a valid USS path.",
@@ -339,7 +339,10 @@
   "Unable to create node:": "Unable to create node:",
   "Uploading file to USS tree": "Uploading file to USS tree",
   "Upload action was cancelled.": "Upload action was cancelled.",
+  "This action is only supported for USS directories.": "This action is only supported for USS directories.",
+  "Uploading file...": "Uploading file...",
   "Uploading USS file": "Uploading USS file",
+  "Uploading USS file with encoding": "Uploading USS file with encoding",
   "Delete action was canceled.": "Delete action was canceled.",
   "Copying file structure...": "Copying file structure...",
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
@@ -370,6 +373,25 @@
     ]
   },
   "USS file tag": "USS file tag",
+  "Choose encoding for {0}/Context label": {
+    "message": "Choose encoding for {0}",
+    "comment": [
+      "Context label"
+    ]
+  },
+  "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
+  "Choose encoding for upload to {0}/Context label": {
+    "message": "Choose encoding for upload to {0}",
+    "comment": [
+      "Context label"
+    ]
+  },
+  "Default encoding is {0}/Encoding name": {
+    "message": "Default encoding is {0}",
+    "comment": [
+      "Encoding name"
+    ]
+  },
   "Choose encoding for {0}/Node label": {
     "message": "Choose encoding for {0}",
     "comment": [
@@ -382,7 +404,6 @@
       "Encoding name"
     ]
   },
-  "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
   "A search must be set for {0} before it can be added to a workspace./Name of USS session": {
     "message": "A search must be set for {0} before it can be added to a workspace.",
     "comment": [
@@ -453,6 +474,7 @@
       "Profile name"
     ]
   },
+  "Select a filter": "Select a filter",
   "Enter a job ID": "Enter a job ID",
   "Job search cancelled.": "Job search cancelled.",
   "The polling interval must be greater than or equal to 1000ms.": "The polling interval must be greater than or equal to 1000ms.",
@@ -466,6 +488,37 @@
     "message": "Polling: {0}...",
     "comment": [
       "Unique spool name"
+    ]
+  },
+  "No active jobs found for session: {0}/Session label": {
+    "message": "No active jobs found for session: {0}",
+    "comment": [
+      "Session label"
+    ]
+  },
+  "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?/Number of active jobs": {
+    "message": "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?",
+    "comment": [
+      "Number of active jobs"
+    ]
+  },
+  "Polling {0} active jobs.../Number of active jobs": {
+    "message": "Polling {0} active jobs...",
+    "comment": [
+      "Number of active jobs"
+    ]
+  },
+  "Job completed {0} - {1}/Job ID with clickable linkJob status": {
+    "message": "Job completed {0} - {1}",
+    "comment": [
+      "Job ID with clickable link",
+      "Job status"
+    ]
+  },
+  "No more active jobs for {0}. Stopping polling./Session label": {
+    "message": "No more active jobs for {0}. Stopping polling.",
+    "comment": [
+      "Session label"
     ]
   },
   "Filter: {0}/The new filter": {
@@ -712,6 +765,62 @@
   "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
+  "[{0}]: {1}/Profile NameData Set Search Pattern": {
+    "message": "[{0}]: {1}",
+    "comment": [
+      "Profile Name",
+      "Data Set Search Pattern"
+    ]
+  },
+  "[{0}]: *": "[{0}]: *",
+  "[{0}] Members of {1}/Profile namePDS name": {
+    "message": "[{0}] Members of {1}",
+    "comment": [
+      "Profile name",
+      "PDS name"
+    ]
+  },
+  "Data Set Name": "Data Set Name",
+  "Data Set Organization": "Data Set Organization",
+  "Creation Date": "Creation Date",
+  "Modified Date": "Modified Date",
+  "Record Length": "Record Length",
+  "Migrated": "Migrated",
+  "Record Format": "Record Format",
+  "Volumes": "Volumes",
+  "Last Modified By": "Last Modified By",
+  "Version": "Version",
+  "Modification Level": "Modification Level",
+  "Current Records": "Current Records",
+  "Initial Records": "Initial Records",
+  "Modified Records": "Modified Records",
+  "SCLM": "SCLM",
+  "Open": "Open",
+  "Focus": "Focus",
+  "Back": "Back",
+  "Pin": "Pin",
+  "Unpin": "Unpin",
+  "Error toggling pin state for rows: {0}/Error message": {
+    "message": "Error toggling pin state for rows: {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Member Name": "Member Name",
+  "Please select a single profile or PDS.": "Please select a single profile or PDS.",
+  "This action is only supported for session and PDS nodes. Please select a session or PDS node.": "This action is only supported for session and PDS nodes. Please select a session or PDS node.",
+  "No profiles available.": "No profiles available.",
+  "Select a profile to search for data sets": "Select a profile to search for data sets",
+  "Select a profile": "Select a profile",
+  "Enter Data Set Pattern": "Enter Data Set Pattern",
+  "e.g., USER.*, PUBLIC.DATA.*, etc.": "e.g., USER.*, PUBLIC.DATA.*, etc.",
+  "Enter a dataset pattern to search for": "Enter a dataset pattern to search for",
+  "Profile {0} not found./Name of the selected profile": {
+    "message": "Profile {0} not found.",
+    "comment": [
+      "Name of the selected profile"
+    ]
+  },
   "No search pattern applied. Search for a pattern and try again.": "No search pattern applied. Search for a pattern and try again.",
   "Searching for \"{0}\"/The string to search data sets for.": {
     "message": "Searching for \"{0}\"",
@@ -725,10 +834,8 @@
       "The string to search data sets for."
     ]
   },
-  "Data Set Name": "Data Set Name",
   "Position": "Position",
   "Contents": "Contents",
-  "Open": "Open",
   "Enter the text to search for.": "Enter the text to search for.",
   "Search Options": "Search Options",
   "Select search options": "Select search options",
@@ -759,6 +866,8 @@
     ]
   },
   "Saving data set...": "Saving data set...",
+  "This upload operation may result in data loss.": "This upload operation may result in data loss.",
+  "Please review the following lines:": "Please review the following lines:",
   "Failed to save {0}/Data set name": {
     "message": "Failed to save {0}",
     "comment": [
@@ -813,6 +922,8 @@
     ]
   },
   "Uploading to data set": "Uploading to data set",
+  "This action is only supported for partitioned data sets.": "This action is only supported for partitioned data sets.",
+  "Uploading to data set...": "Uploading to data set...",
   "No data sets selected for deletion, cancelling...": "No data sets selected for deletion, cancelling...",
   "Deleting data set(s): {0}/Data Sets to delete": {
     "message": "Deleting data set(s): {0}",
@@ -882,6 +993,7 @@
   "Selection is not a valid data set member name.": "Selection is not a valid data set member name.",
   "Selection is not a valid data set name.": "Selection is not a valid data set name.",
   "Select the profile to use to open the data set": "Select the profile to use to open the data set",
+  "PDS {0} could not be found.": "PDS {0} could not be found.",
   "Data set member {0} does not exist or cannot be opened in data set {1}.": "Data set member {0} does not exist or cannot be opened in data set {1}.",
   "Data set {0} does not exist or cannot be opened.": "Data set {0} does not exist or cannot be opened.",
   "Opening data set failed.": "Opening data set failed.",

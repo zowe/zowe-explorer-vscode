@@ -305,7 +305,7 @@ describe("TsoCommandHandler unit testing", () => {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: "firstName", password: "12345" } }, { name: "secondName" }],
-                    dgetDefaultProfile: jest.fn(() => ({
+                    getDefaultProfile: jest.fn(() => ({
                         name: "firstName",
                         profile: {
                             user: "firstName",
@@ -495,7 +495,7 @@ describe("TsoCommandHandler unit testing", () => {
             value: jest.fn(() => {
                 return {
                     allProfiles: [{ name: "firstName", profile: { user: undefined, password: undefined } }, { name: "secondName" }],
-                    dgetDefaultProfile: jest.fn(() => ({
+                    getDefaultProfile: jest.fn(() => ({
                         name: "firstName",
                         profile: {
                             user: "firstName",
@@ -676,32 +676,33 @@ describe("TsoCommandHandler unit testing", () => {
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
     });
 
-    it("getTsoParams: uses default tso profile if present", async () => {
-        const defaultProfile = {
-            name: "defaultTso",
-            profile: {
-                account: "DEFACC",
-            },
+    it("getTsoParams: uses default tso profile if setting is true", async () => {
+        const defaultProfileAttrs = {
+            account: "DEFACC",
+            properties: {},
             type: "tso",
         };
 
-        const getTsoActions = () => {
-            const tsoActions = TsoCommandHandler.getInstance();
-            return tsoActions;
+        const mergedArgs = {
+            knownArgs: [{ argName: "account", argValue: "DEFACC" }],
         };
-        Object.defineProperty(profileLoader.Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    allProfiles: [],
-                    defaultProfile: defaultProfile,
-                };
-            }),
-        });
-        const handler = getTsoActions();
 
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+
+        jest.spyOn(imperative.ProfileInfo, "profAttrsToProfLoaded").mockReturnValue({
+            profile: { account: undefined },
+            name: "defaultTso",
+            type: "tso",
+            message: "",
+            failNotFound: false,
+        });
+
+        const handler = TsoCommandHandler.getInstance();
+        // const mockedProperty;
         const mockProfileInfo = {
-            getDefaultProfile: jest.fn().mockReturnValue(defaultProfile),
-            getAllProfiles: [],
+            getDefaultProfile: jest.fn().mockReturnValue(defaultProfileAttrs),
+            getAllProfiles: jest.fn(),
+            mergeArgsForProfile: jest.fn().mockReturnValue(mergedArgs),
         };
         const mockProfileInstance = {
             getProfileInfo: jest.fn().mockResolvedValue(mockProfileInfo),
@@ -710,8 +711,9 @@ describe("TsoCommandHandler unit testing", () => {
 
         const result = await (handler as any).getTsoParams();
 
-        expect(result.account).toEqual("/d iplinfo");
+        expect(result.account).toEqual("DEFACC");
     });
+
     it("getTsoParams: does not use default tso profile if not present", async () => {
         const getTsoActions = () => {
             const tsoActions = TsoCommandHandler.getInstance();
@@ -729,6 +731,17 @@ describe("TsoCommandHandler unit testing", () => {
                 type: "tso",
             },
         ];
+        const mergedArgs = {
+            knownArgs: [
+                { argName: "account", argValue: "ACCVAL" },
+                { argName: "characterSet", argValue: "CSVAL" },
+                { argName: "codePage", argValue: "CPVAL" },
+                { argName: "columns", argValue: "80" },
+                { argName: "logonProcedure", argValue: "LOGPROC" },
+                { argName: "regionSize", argValue: "4096" },
+                { argName: "rows", argValue: "24" },
+            ],
+        };
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: jest.fn(() => {
                 return {
@@ -742,6 +755,7 @@ describe("TsoCommandHandler unit testing", () => {
         const mockProfileInfo = {
             getDefaultProfile: jest.fn().mockReturnValue(undefined),
             getAllProfiles: jest.fn().mockReturnValue(allProfiles),
+            mergeArgsForProfile: jest.fn().mockReturnValue(mergedArgs),
         };
         const mockProfileInstance = {
             getProfileInfo: jest.fn().mockResolvedValue(mockProfileInfo),
@@ -750,7 +764,7 @@ describe("TsoCommandHandler unit testing", () => {
 
         const result = await (handler as any).getTsoParams();
 
-        expect(result.account).toEqual("fake");
+        expect(result.account).toEqual("ACCVAL");
     });
 
     it("getTsoParams: maps merged args to tsoProfile.profile fields", async () => {

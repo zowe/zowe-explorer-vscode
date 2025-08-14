@@ -162,7 +162,8 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         const iStartTso = ["account", "characterSet", "codePage", "columns", "logonProcedure", "regionSize", "rows"];
         const defProfile = profileInfo.getDefaultProfile("tso");
         let tsoProfile: imperative.IProfileLoaded;
-        if (defProfile) {
+        const defProfileSetting = SettingsConfig.getDirectValue<boolean>("zowe.commands.tso.defaultProfile");
+        if (defProfileSetting && defProfile) {
             tsoProfile = imperative.ProfileInfo.profAttrsToProfLoaded(defProfile);
         } else {
             const profiles = profileInfo.getAllProfiles("tso");

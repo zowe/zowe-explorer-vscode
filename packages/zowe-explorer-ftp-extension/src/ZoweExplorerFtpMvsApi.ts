@@ -11,13 +11,14 @@
 
 import * as fs from "fs";
 import * as crypto from "crypto";
-import * as tmp from "tmp";
+import * as path from "path";
+import * as os from "os";
 
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { BufferBuilder, Gui, imperative, MainframeInteraction, MessageSeverity } from "@zowe/zowe-explorer-api";
 import { CoreUtils, DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
-import * as globals from "./globals";
+import { LOGGER } from "./globals";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
 // The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -77,8 +78,8 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
                     // Ideally we could just do `result.apiResponse.items = response;`
                     result.apiResponse.items = response.map((element) => ({
                         member: element.name,
-                        changed: element.changed,
-                        created: element.created,
+                        m4date: element.changed,
+                        c4date: element.created,
                         size: element.size,
                         version: element.version,
                         // id: element.id, // Removed in zos-node-accessor v2
@@ -117,7 +118,7 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         try {
             connection = await this.ftpClient(this.checkedProfile());
             if (!connection || !fileOrStreamSpecified) {
-                globals.LOGGER.logImperativeMessage(result.commandResponse, MessageSeverity.ERROR);
+                LOGGER.logImperativeMessage(result.commandResponse, MessageSeverity.ERROR);
                 throw new Error(result.commandResponse);
             }
             if (options.file) {
@@ -181,7 +182,7 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         try {
             connection = await this.ftpClient(profile);
             if (!connection) {
-                globals.LOGGER.logImperativeMessage(result.commandResponse, MessageSeverity.ERROR);
+                LOGGER.logImperativeMessage(result.commandResponse, MessageSeverity.ERROR);
                 throw new Error(result.commandResponse);
             }
             const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;
@@ -404,14 +405,27 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
             return loadResult.apiResponse.etag as string;
         }
 
-        const tmpFileName = tmp.tmpNameSync();
-        const options: zosfiles.IDownloadOptions = {
-            binary: false,
-            file: tmpFileName,
-        };
-        const loadResult = await this.getContents(dataSetName, options);
-        fs.rmSync(tmpFileName, { force: true });
-        return loadResult.apiResponse.etag as string;
+        // Create a temporary directory and unique filename
+        const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "zowe-ftp-mvs-"));
+        const tmpFileName = path.join(tmpDir, `temp-${crypto.randomUUID()}.dat`);
+
+        try {
+            const options: zosfiles.IDownloadOptions = {
+                binary: false,
+                file: tmpFileName,
+            };
+            const loadResult = await this.getContents(dataSetName, options);
+            return loadResult.apiResponse.etag as string;
+        } finally {
+            // Clean up temporary file and directory
+            try {
+                fs.rmSync(tmpDir, { force: true, recursive: true });
+            } catch (cleanupError) {
+                if (cleanupError instanceof Error) {
+                    LOGGER.logImperativeMessage(`Failed to clean up temporary files: ${cleanupError.message}`, MessageSeverity.WARN);
+                }
+            }
+        }
     }
     private getDefaultResponse(): zosfiles.IZosFilesResponse {
         return {

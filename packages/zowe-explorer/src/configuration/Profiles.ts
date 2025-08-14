@@ -59,7 +59,7 @@ export class Profiles extends ProfilesCache {
     protected static loader: Profiles;
 
     public loadedProfile: imperative.IProfileLoaded;
-    public validProfile: Validation.ValidationType = Validation.ValidationType.INVALID;
+    public validProfile: Validation.ValidationType = Validation.ValidationType.UNVERIFIED;
     private mProfileInfo: imperative.ProfileInfo;
     private profilesOpCancelled = vscode.l10n.t(`Operation cancelled`);
     private manualEditMsg = vscode.l10n.t(
@@ -102,6 +102,7 @@ export class Profiles extends ProfilesCache {
         let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
         const usingBasicAuth = theProfile.profile.user && theProfile.profile.password;
         const usingCertAuth = theProfile.profile.certFile && theProfile.profile.certKeyFile;
+        const usingPrivateKey = theProfile.type === "ssh" && theProfile.profile.privateKey;
         let usingTokenAuth: boolean;
         try {
             usingTokenAuth = await AuthUtils.isUsingTokenAuth(theProfile.name);
@@ -128,7 +129,7 @@ export class Profiles extends ProfilesCache {
                 await AuthUtils.errorHandling(error, { profile: theProfile });
                 return profileStatus;
             }
-        } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth) {
+        } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth && !usingPrivateKey) {
             ZoweLogger.debug(`Profile ${theProfile.name} is using basic auth, prompting for missing credentials`);
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(

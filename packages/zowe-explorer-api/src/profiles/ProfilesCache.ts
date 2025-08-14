@@ -20,6 +20,8 @@ import { Types } from "../Types";
 import { VscSettings } from "../vscode/doc/VscSettings";
 
 export class ProfilesCache {
+    private profileInfo: imperative.ProfileInfo;
+
     public profilesForValidation: Validation.IValidationProfile[] = [];
     public profilesValidationSetting: Validation.IValidationSetting[] = [];
     public allProfiles: imperative.IProfileLoaded[] = [];
@@ -79,14 +81,15 @@ export class ProfilesCache {
     }
 
     public async getProfileInfo(_envTheia = false): Promise<imperative.ProfileInfo> {
-        const mProfileInfo = new imperative.ProfileInfo("zowe", {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            overrideWithEnv: this.overrideWithEnv,
-            credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-        });
-        await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd ?? undefined });
+        if (this.profileInfo == null) {
+            this.profileInfo = new imperative.ProfileInfo("zowe", {
+                overrideWithEnv: this.overrideWithEnv,
+                credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            });
+        }
+        await this.profileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd });
         this.checkForEnvVarAndUpdate();
-        return mProfileInfo;
+        return this.profileInfo;
     }
 
     /**
@@ -129,21 +132,17 @@ export class ProfilesCache {
         }
     }
 
-    public async updateCachedProfile(
+    public updateCachedProfile(
         profileLoaded: imperative.IProfileLoaded,
         profileNode?: Types.IZoweNodeType,
-        zeRegister?: Types.IApiRegisterClient
-    ): Promise<void> {
-        if ((await this.getProfileInfo()).getTeamConfig().properties.autoStore) {
-            await this.refresh(zeRegister);
-        } else {
-            // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
-            const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
-            this.allProfiles[profIndex].profile = profileLoaded.profile;
-            const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
-            if (defaultProf != null && defaultProf.name === profileLoaded.name) {
-                this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
-            }
+        _zeRegister?: Types.IApiRegisterClient
+    ): void {
+        // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
+        const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
+        this.allProfiles[profIndex].profile = profileLoaded.profile;
+        const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
+        if (defaultProf != null && defaultProf.name === profileLoaded.name) {
+            this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
         }
         profileNode?.setProfileToChoice(profileLoaded);
     }

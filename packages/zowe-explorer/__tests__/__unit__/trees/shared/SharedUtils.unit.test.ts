@@ -29,6 +29,8 @@ import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { createIJobFile, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
 
+jest.mock("../../../../src/tools/ZoweLocalStorage");
+
 function createGlobalMocks() {
     const newMocks = {
         session: createISession(),
@@ -231,6 +233,11 @@ describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
         const nodeList = SharedUtils.getSelectedNodeList(aNode, selectedNodes);
 
         expect(nodeList).toEqual(selectedNodes);
+    });
+
+    it("returns an empty array when neither node or nodeList are valid", () => {
+        const nodeList = SharedUtils.getSelectedNodeList(null as any, null as any);
+        expect(nodeList).toEqual([]);
     });
 
     function createTestNode() {
@@ -648,6 +655,52 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showInputBox).toHaveBeenCalled();
         expect(encoding).toBeUndefined();
+    });
+});
+
+describe("Shared utils unit tests - function promptForUploadEncoding", () => {
+    beforeEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    it("returns binary when Binary is selected", async () => {
+        const profile = createIProfile();
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
+            value: { get: jest.fn().mockReturnValue(undefined), update: jest.fn() },
+            configurable: true,
+        });
+        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Binary") } as any);
+        const enc = await SharedUtils.promptForUploadEncoding(profile as any, "some/path");
+        expect(showQuickPick).toHaveBeenCalled();
+        expect(enc).toEqual({ kind: "binary" });
+    });
+
+    it("returns text when EBCDIC is selected", async () => {
+        const profile = createIProfile();
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
+            value: { get: jest.fn().mockReturnValue(undefined), update: jest.fn() },
+            configurable: true,
+        });
+        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("EBCDIC") } as any);
+        const enc = await SharedUtils.promptForUploadEncoding(profile as any, "some/path");
+        expect(enc).toEqual({ kind: "text" });
+        expect(showQuickPick).toHaveBeenCalled();
+    });
+
+    it("prompts for codepage when Other is selected and stores it in history", async () => {
+        const profile = createIProfile();
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
+            value: { get: jest.fn().mockReturnValue([]), update: jest.fn() },
+            configurable: true,
+        });
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
+        jest.spyOn(Gui, "showInputBox").mockResolvedValue("IBM-1047");
+        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValueOnce(undefined);
+        const enc = await SharedUtils.promptForUploadEncoding(profile as any, "some/path");
+        expect(enc).toEqual({ kind: "other", codepage: "IBM-1047" });
+        expect(setValueSpy).toHaveBeenCalled();
     });
 });
 

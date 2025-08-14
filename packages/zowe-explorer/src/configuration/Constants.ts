@@ -16,13 +16,15 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static readonly COMMAND_COUNT = 115;
+    public static readonly COMMAND_COUNT = 122;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
     public static readonly MAX_DISPLAYED_DELETE_NAMES = 10;
     public static readonly MS_PER_SEC = 1000;
     public static readonly DEFAULT_ITEMS_PER_PAGE = 100;
     public static readonly STATUS_BAR_TIMEOUT_MS = 5000;
+    public static readonly ACTIVE_JOBS_POLLING_TIMEOUT_MS = 1000;
+    public static readonly MIN_WARN_ACTIVE_JOBS_TO_POLL = 10;
     public static readonly CONTEXT_PREFIX = "_";
     public static readonly FAV_SUFFIX = Constants.CONTEXT_PREFIX + "fav";
     public static readonly HOME_SUFFIX = Constants.CONTEXT_PREFIX + "home";
@@ -99,6 +101,7 @@ export class Constants {
     public static readonly WORKSPACE_UTIL_FILE_SAVE_MAX_ITERATION_COUNT = 25;
     public static readonly SHARED_HISTORY_PANEL_TITLE = vscode.l10n.t("Edit History");
     public static readonly RELEASE_NOTES_PANEL_TITLE = vscode.l10n.t("Release Notes");
+    public static readonly SET_JOB_SPOOL_COMMAND = "command:zowe.jobs.setJobSpool";
     public static configurationDictionary: { [k: string]: string } = {
         "Zowe-Default-Datasets-Binary": Constants.SETTINGS_DS_DEFAULT_BINARY,
         "Zowe-Default-Datasets-C": Constants.SETTINGS_DS_DEFAULT_C,

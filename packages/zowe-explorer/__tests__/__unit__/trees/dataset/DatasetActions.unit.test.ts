@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, Validation, ProfilesCache, ZoweExplorerApiType, Sorting } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, Validation, ProfilesCache, ZoweExplorerApiType, Sorting, PdsEntry, DirEntry } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import {
@@ -38,18 +38,23 @@ import { FilterDescriptor } from "../../../../src/management/FilterManagement";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
-import { mocked } from "../../../__mocks__/mockUtils";
+import { mocked, MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
 import { ProfileManagement } from "../../../../src/management/ProfileManagement";
+import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
+import { DataSetAttributesProvider } from "../../../../../zowe-explorer-api/lib/dataset/DatasetAttributesProvider";
+import { DatasetTree } from "../../../../src/trees/dataset/DatasetTree";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("../../../../src/tools/ZoweLogger");
+jest.mock("../../../../src/tools/ZoweLocalStorage");
 
 let mockClipboardData = null;
 let clipboard;
@@ -78,6 +83,7 @@ function createGlobalMocks() {
         getConfiguration: jest
             .spyOn(vscode.workspace, "getConfiguration")
             .mockReturnValue({ has: jest.fn(), get: jest.fn().mockImplementation((_key, def) => def), inspect: jest.fn(), update: jest.fn() }),
+        fetchAllMock: jest.fn().mockReturnValue([]),
     };
     newMocks.fspDelete.mockClear();
 
@@ -97,6 +103,11 @@ function createGlobalMocks() {
             "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
         }),
     });
+
+    jest.spyOn(DataSetAttributesProvider, "getInstance").mockReturnValue({
+        fetchAll: newMocks.fetchAllMock,
+    } as Partial<DataSetAttributesProvider> as any);
+
     Object.defineProperty(zosfiles, "Upload", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosfiles.Upload, "bufferToDataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosfiles.Upload, "pathToDataSet", { value: jest.fn(), configurable: true });
@@ -3041,6 +3052,29 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         };
     }
 
+    function setupMocksForZoom(
+        blockMocks,
+        selectionText: string,
+        datasetName: string,
+        memberName: string,
+        isValidDataSet: boolean,
+        isValidMember: boolean,
+        profileNames?: string[]
+    ) {
+        blockMocks.document.getText.mockReturnValue(selectionText);
+        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
+        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: datasetName, memberName: memberName });
+        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(isValidDataSet);
+        jest.spyOn(DatasetUtils, "validateMemberName").mockReturnValue(isValidMember);
+
+        if (profileNames !== undefined) {
+            Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
+                value: jest.fn().mockReturnValue(profileNames),
+                configurable: true,
+            });
+        }
+    }
+
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -3070,10 +3104,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should show a warning if selection is not a valid dataset name", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("INVALID@DATASET");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "INVALID@DATASET", memberName: "" });
-        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(false);
+        setupMocksForZoom(blockMocks, "INVALID@DATASET", "INVALID@DATASET", "", false, true);
         const errorSpy = jest.spyOn(Gui, "warningMessage");
 
         await DatasetActions.zoom();
@@ -3084,10 +3115,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should show a warning if selection is not a valid member name", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET(INVALID@MEM)");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "INVALID@MEM" });
-        jest.spyOn(DatasetUtils, "validateMemberName").mockReturnValue(false);
+        setupMocksForZoom(blockMocks, "MY.DATASET(INVALID@MEM)", "MY.DATASET", "INVALID@MEM", true, false);
         const errorSpy = jest.spyOn(Gui, "warningMessage");
 
         await DatasetActions.zoom();
@@ -3098,15 +3126,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should show a message if no profiles are available", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "" });
-        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(true);
-
-        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue([]),
-            configurable: true,
-        });
+        setupMocksForZoom(blockMocks, "MY.DATASET", "MY.DATASET", "", true, true, []);
         const showMsgSpy = jest.spyOn(Gui, "showMessage");
 
         await DatasetActions.zoom();
@@ -3117,15 +3137,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should cancel if user does not select a profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "" });
-        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(true);
-
-        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["prof1", "prof2"]),
-            configurable: true,
-        });
+        setupMocksForZoom(blockMocks, "MY.DATASET", "MY.DATASET", "", true, true, ["prof1", "prof2"]);
         jest.spyOn(Gui, "showQuickPick").mockResolvedValueOnce(undefined);
         const infoMsgSpy = jest.spyOn(Gui, "infoMessage");
 
@@ -3137,15 +3149,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should show an error if profile is invalid", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "" });
-        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(true);
-
-        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["prof1"]),
-            configurable: true,
-        });
+        setupMocksForZoom(blockMocks, "MY.DATASET", "MY.DATASET", "", true, true, ["prof1"]);
         jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "prof1" }],
             loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
@@ -3163,15 +3167,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should show a warning if dataset/member does not exist (FileSystemError)", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET(MEMBER1)");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "MEMBER1" });
-        jest.spyOn(DatasetUtils, "validateMemberName").mockReturnValue(true);
-
-        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["prof1"]),
-            configurable: true,
-        });
+        setupMocksForZoom(blockMocks, "MY.DATASET(MEMBER1)", "MY.DATASET", "MEMBER1", true, true, ["prof1"]);
         jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "prof1" }],
             loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
@@ -3190,15 +3186,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
     it("should call AuthUtils.errorHandling on other errors", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "" });
-        jest.spyOn(DatasetUtils, "validateDataSetName").mockReturnValue(true);
-
-        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["prof1"]),
-            configurable: true,
-        });
+        setupMocksForZoom(blockMocks, "MY.DATASET", "MY.DATASET", "", true, true, ["prof1"]);
         jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "prof1" }],
             loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
@@ -3207,33 +3195,29 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         } as any);
 
         const testError = new Error("Some error");
-        jest.spyOn(vscode.workspace.fs, "readFile").mockRejectedValueOnce(testError);
+        const readFileMock = jest.spyOn(vscode.workspace.fs, "readFile").mockRejectedValueOnce(testError);
         const authUtilsSpy = jest.spyOn(AuthUtils, "errorHandling").mockResolvedValue(undefined);
 
         await DatasetActions.zoom();
 
         expect(authUtilsSpy).toHaveBeenCalledWith(
-            testError,
+            expect.objectContaining({
+                name: "TypeError",
+                message: expect.stringContaining("Cannot read properties of undefined"),
+            }),
             expect.objectContaining({
                 apiType: ZoweExplorerApiType.Mvs,
                 profile: { name: "prof1" },
                 scenario: "Opening data set failed.",
             })
         );
+        readFileMock.mockRestore();
     });
 
     it("should open the dataset/member if all is valid", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        blockMocks.document.getText.mockReturnValue("MY.DATASET(MEMBER1)");
-        Object.defineProperty(vscode.window, "activeTextEditor", { value: blockMocks.editor, configurable: true });
-        jest.spyOn(DatasetUtils, "extractDataSetAndMember").mockReturnValue({ dataSetName: "MY.DATASET", memberName: "MEMBER1" });
-        jest.spyOn(DatasetUtils, "validateMemberName").mockReturnValue(true);
-
-        Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["prof1"]),
-            configurable: true,
-        });
+        setupMocksForZoom(blockMocks, "MY.DATASET(MEMBER1)", "MY.DATASET", "MEMBER1", true, true, ["prof1"]);
         jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "prof1" }],
             loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
@@ -3243,6 +3227,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
 
         jest.spyOn(vscode.workspace.fs, "readFile").mockResolvedValueOnce(Buffer.from("data"));
         const execCmdSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+        const mockedEditor = new MockedProperty(vscode.window, "activeTextEditor", undefined, blockMocks.editor);
 
         await DatasetActions.zoom();
 
@@ -3250,5 +3235,264 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
             preview: false,
             viewColumn: 1,
         });
+        mockedEditor[Symbol.dispose]();
+    });
+
+    it("should focus on PDS in tree if selected text is a PDS and found", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        setupMocksForZoom(blockMocks, "MY.PDS", "MY.PDS", "", true, true);
+
+        jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce(new PdsEntry());
+        const datasetTree = blockMocks.testDatasetTree;
+        datasetTree.focusOnDsInTree = jest.fn().mockResolvedValue(true);
+        Object.defineProperty(SharedTreeProviders, "ds", { value: datasetTree, configurable: true });
+
+        await DatasetActions.zoom();
+
+        expect(datasetTree.focusOnDsInTree).toHaveBeenCalledWith("MY.PDS", expect.anything());
+    });
+
+    it("should show warning if PDS could not be found in tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        setupMocksForZoom(blockMocks, "MY.PDS", "MY.PDS", "", true, true);
+
+        jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce(new PdsEntry());
+        const datasetTree = blockMocks.testDatasetTree;
+        datasetTree.focusOnDsInTree = jest.fn().mockResolvedValue(false);
+        Object.defineProperty(SharedTreeProviders, "ds", { value: datasetTree, configurable: true });
+
+        const warningSpy = jest.spyOn(Gui, "warningMessage");
+
+        await DatasetActions.zoom();
+
+        expect(datasetTree.focusOnDsInTree).toHaveBeenCalledWith("MY.PDS", expect.anything());
+        expect(warningSpy).toHaveBeenCalledWith("PDS {0} could not be found.");
+    });
+
+    it("should open the dataset if not a PDS", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        setupMocksForZoom(blockMocks, "MY.DATASET", "MY.DATASET", "", true, true);
+
+        jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce(new DirEntry());
+        jest.spyOn(vscode.workspace.fs, "readFile").mockResolvedValueOnce(Buffer.from("data"));
+        const execCmdSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+
+        await DatasetActions.zoom();
+
+        expect(execCmdSpy).toHaveBeenCalledWith("vscode.open", expect.anything(), {
+            preview: false,
+            viewColumn: 1,
+        });
+    });
+});
+
+describe("Dataset Actions Unit Tests - upload with encoding", () => {
+    function createBlockMocks() {
+        Object.defineProperty(vscode.window, "withProgress", {
+            value: jest.fn().mockImplementation((progLocation, callback) => {
+                const progress = { report: jest.fn() };
+                const token = { isCancellationRequested: false, onCancellationRequested: jest.fn() };
+                return callback(progress, token);
+            }),
+            configurable: true,
+        });
+
+        const testSession = createISession();
+        const testProfile = createIProfile();
+        const newMocks = {
+            datasetSessionNode: createDatasetSessionNode(testSession, testProfile),
+            testDatasetTree: null as unknown as DatasetTree,
+            showOpenDialog: jest.spyOn(Gui, "showOpenDialog").mockImplementation(),
+        };
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, testProfile);
+
+        return newMocks;
+    }
+
+    afterEach(() => {
+        jest.resetAllMocks();
+        jest.restoreAllMocks();
+        jest.clearAllMocks();
+    });
+
+    it("uploadDialogWithEncoding returns early if node is not a PDS", async () => {
+        const blockMocks = createBlockMocks();
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        const sequentialDataset = new ZoweDatasetNode({
+            label: "TEST.PS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_DS_CONTEXT,
+        });
+        await DatasetActions.uploadDialogWithEncoding(sequentialDataset, blockMocks.testDatasetTree);
+        expect(showMessageSpy).toHaveBeenCalledWith("This action is only supported for partitioned data sets.");
+    });
+
+    it("uploadDialogWithEncoding returns early if promptForUploadEncoding returns falsy value", async () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValueOnce(undefined);
+        const showOpenDialogSpy = jest.spyOn(Gui, "showOpenDialog");
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+        await DatasetActions.uploadDialogWithEncoding(pdsNode, blockMocks.testDatasetTree);
+        expect(showOpenDialogSpy).not.toHaveBeenCalled();
+    });
+
+    it("uploadDialogWithEncoding returns early if showOpenDialog returns falsy value", async () => {
+        const blockMocks = createBlockMocks();
+        const showProgressSpy = jest.spyOn(Gui, "withProgress");
+        const showOpenDialogSpy = jest.spyOn(Gui, "showOpenDialog");
+        const promptForUploadEncodingMock = jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValueOnce({ kind: "binary" });
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+        await DatasetActions.uploadDialogWithEncoding(pdsNode, blockMocks.testDatasetTree);
+        expect(showOpenDialogSpy).toHaveBeenCalled();
+        expect(showProgressSpy).not.toHaveBeenCalled();
+        expect(promptForUploadEncodingMock).toHaveBeenCalled();
+        expect(promptForUploadEncodingMock).toHaveBeenCalledWith(pdsNode.getProfile(), pdsNode.label);
+    });
+
+    it("uploadDialogWithEncoding uploads as binary when binary is selected", async () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "binary" } as any);
+        const fileUri = { fsPath: "/tmp/foo.zip" } as any;
+        blockMocks.showOpenDialog.mockResolvedValueOnce([fileUri]);
+        const uploadFileWithEncodingSpy = jest.spyOn(DatasetActions, "uploadFileWithEncoding").mockResolvedValue({
+            success: true,
+            commandResponse: "Upload completed.",
+        });
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        const getTreeViewMock = jest.spyOn(blockMocks.testDatasetTree, "getTreeView").mockReturnValue({
+            reveal: jest.fn(),
+        } as any);
+        await DatasetActions.uploadDialogWithEncoding(pdsNode, blockMocks.testDatasetTree);
+
+        expect(SharedUtils.promptForUploadEncoding).toHaveBeenCalled();
+        expect(blockMocks.showOpenDialog).toHaveBeenCalled();
+        expect(uploadFileWithEncodingSpy).toHaveBeenCalledWith(pdsNode, fileUri.fsPath, { kind: "binary" });
+        expect(blockMocks.testDatasetTree.refreshElement).toHaveBeenCalledWith(pdsNode);
+        getTreeViewMock.mockRestore();
+    });
+
+    it("uploadDialogWithEncoding uploads as text/other when a codepage is selected", async () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" } as any);
+        const fileUri = { fsPath: "/tmp/foo.txt" } as any;
+        blockMocks.showOpenDialog.mockResolvedValueOnce([fileUri]);
+        const putContents = jest.fn();
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ putContents } as any);
+        const getTreeViewMock = jest.spyOn(blockMocks.testDatasetTree, "getTreeView").mockReturnValue({
+            reveal: jest.fn(),
+        } as any);
+        const uploadFileWithEncodingSpy = jest.spyOn(DatasetActions, "uploadFileWithEncoding").mockResolvedValue({
+            success: true,
+            commandResponse: "Upload completed.",
+        });
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        await DatasetActions.uploadDialogWithEncoding(pdsNode, blockMocks.testDatasetTree);
+
+        expect(SharedUtils.promptForUploadEncoding).toHaveBeenCalled();
+        expect(uploadFileWithEncodingSpy).toHaveBeenCalledWith(pdsNode, fileUri.fsPath, { kind: "other", codepage: "IBM-1047" });
+        expect(blockMocks.testDatasetTree.refreshElement).toHaveBeenCalledWith(pdsNode);
+        mvsApiMock.mockRestore();
+        getTreeViewMock.mockRestore();
+    });
+
+    it("uploadFileWithEncoding passes correct options to API for text", async () => {
+        const blockMocks = createBlockMocks();
+        const putContents = jest.fn();
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ putContents } as any);
+        const memberNode = new ZoweDatasetNode({
+            label: "MEMBER1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+        });
+
+        await DatasetActions.uploadFileWithEncoding(memberNode, "/tmp/bar.txt", { kind: "text" } as any);
+
+        expect(putContents).toHaveBeenCalled();
+        const options = putContents.mock.calls[0][2];
+        expect(options.binary).toBe(false);
+        // encoding should not be set for text
+        expect(options.encoding).toBeUndefined();
+        mvsApiMock.mockRestore();
+    });
+
+    it("uploadFileWithEncoding passes correct options to API for other/codepage", async () => {
+        const blockMocks = createBlockMocks();
+        const putContents = jest.fn();
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ putContents } as any);
+        const memberNode = new ZoweDatasetNode({
+            label: "MEMBER1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+        });
+
+        await DatasetActions.uploadFileWithEncoding(memberNode, "/tmp/bar.txt", { kind: "other", codepage: "ISO8859-1" } as any);
+
+        const options = putContents.mock.calls[0][2];
+        expect(options.binary).toBe(false);
+        expect(options.encoding).toBe("ISO8859-1");
+        mvsApiMock.mockRestore();
+    });
+
+    it("uploadDialogWithEncoding should handle cancellation", async () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "binary" } as any);
+        const fileUri = { fsPath: "/tmp/foo.zip" } as any;
+        blockMocks.showOpenDialog.mockResolvedValueOnce([fileUri]);
+        const uploadFileWithEncodingSpy = jest.spyOn(DatasetActions, "uploadFileWithEncoding").mockResolvedValue({
+            success: true,
+            commandResponse: "Upload completed.",
+        });
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        const withProgressMock = jest.spyOn(Gui, "withProgress").mockImplementation((progLocation, callback) => {
+            const progress = { report: jest.fn() };
+            const token = {
+                isCancellationRequested: true, // Simulate cancellation
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+        const getTreeViewMock = jest.spyOn(blockMocks.testDatasetTree, "getTreeView").mockReturnValue({
+            reveal: jest.fn(),
+        } as any);
+
+        await DatasetActions.uploadDialogWithEncoding(pdsNode, blockMocks.testDatasetTree);
+
+        expect(uploadFileWithEncodingSpy).not.toHaveBeenCalled();
+        expect(withProgressMock).toHaveBeenCalled();
+        getTreeViewMock.mockRestore();
     });
 });
