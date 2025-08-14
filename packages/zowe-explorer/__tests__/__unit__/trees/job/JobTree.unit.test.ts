@@ -1271,7 +1271,11 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         };
         globalMocks.mockCreateQuickPick.mockReturnValue(mockQuickPick);
 
-        jest.spyOn(globalMocks.testJobsProvider.mHistory, "getSearchHistory").mockReturnValue(["Owner:test Prefix:* Status:*"]);
+        const mockHistory = {
+            getSearchHistory: jest.fn().mockReturnValue(["Owner:test Prefix:* Status:*"]),
+        };
+        globalMocks.testJobsProvider.mHistory = mockHistory;
+
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue(undefined);
 
         const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
