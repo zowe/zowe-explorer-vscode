@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
 import { createConfigInstance, createConfigLoad, createTeamConfigMock } from "../../../__mocks__/mockCreators/shared";
-import { ZoweVsCodeExtension, FileManagement, Gui } from "../../../src";
+import { FileManagement, Gui, ProfilesCache, ZoweVsCodeExtension } from "../../../src";
 
 jest.mock("@zowe/imperative");
 
@@ -84,7 +84,11 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
                 user: true,
             },
             mockError: new Error(),
+            profilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
+            profilesCacheMock: jest.spyOn(ZoweVsCodeExtension, "profilesCache", "get"),
         };
+
+        newMocks.profilesCacheMock.mockReturnValue(newMocks.profilesCache);
 
         newMocks.baseProfile.profile = { ...newMocks.testProfile };
         newMocks.serviceProfile.profile = { ...newMocks.testProfile };
@@ -175,6 +179,7 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
             spyLayers.mockClear();
             spyInfoMessage.mockClear();
             spyOpenFile.mockClear();
+            blockMocks.profilesCacheMock.mockRestore();
         });
 
         it("Test that createTeamConfiguration will create project if VSC in project", async () => {
@@ -191,6 +196,7 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
             spyQuickPick.mockClear();
             spyLayers.mockClear();
             spyOpenFile.mockClear();
+            blockMocks.profilesCacheMock.mockRestore();
         });
 
         it("Test that createTeamConfiguration will create unsecure global", async () => {
@@ -212,6 +218,100 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
             spyLayers.mockClear();
             spyInfoMessage.mockClear();
             spyOpenFile.mockClear();
+            blockMocks.profilesCacheMock.mockRestore();
+        });
+    });
+
+    describe("profilesCache", () => {
+        it("should create new ProfilesCache: getZoweExplorerApi returns undefined", () => {
+            // Mock getZoweExplorerApi to return undefined to trigger fallback path
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue(null as any);
+
+            // Mock workspaceRoot to return a workspace folder with uri.fsPath
+            const mockWorkspaceFolder = {
+                uri: { fsPath: "/test/workspace/path" },
+                name: "test-workspace",
+                index: 0,
+            } as vscode.WorkspaceFolder;
+            const workspaceRootMock = jest.spyOn(ZoweVsCodeExtension, "workspaceRoot", "get").mockReturnValue(mockWorkspaceFolder);
+
+            // Mock Logger.getAppLogger
+            const mockLogger = { debug: jest.fn() } as unknown as imperative.Logger;
+            jest.spyOn(imperative.Logger, "getAppLogger").mockReturnValue(mockLogger);
+
+            // Access the profilesCache getter to trigger the code path
+            expect(ZoweVsCodeExtension.profilesCache.allProfiles).toBeDefined();
+
+            // Verify that the workspacePath and app logger were grabbed for ProfilesCache constructor
+            expect(imperative.Logger.getAppLogger).toHaveBeenCalled();
+            expect(workspaceRootMock).toHaveBeenCalled();
+        });
+
+        it("should create new ProfilesCache: workspaceRoot is undefined", () => {
+            // Mock getZoweExplorerApi to return undefined to trigger fallback path
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue(null as any);
+
+            // Mock workspaceRoot to return undefined
+            const workspaceRootMock = jest.spyOn(ZoweVsCodeExtension, "workspaceRoot", "get").mockReturnValue(undefined);
+
+            // Mock Logger.getAppLogger
+            const mockLogger = { debug: jest.fn() } as unknown as imperative.Logger;
+            jest.spyOn(imperative.Logger, "getAppLogger").mockClear().mockReturnValue(mockLogger);
+
+            // Access the profilesCache getter to trigger the code path
+            expect(ZoweVsCodeExtension.profilesCache.allProfiles).toBeDefined();
+
+            expect(imperative.Logger.getAppLogger).toHaveBeenCalled();
+            expect(workspaceRootMock).toHaveBeenCalled();
+            // Verify that the workspacePath and app logger were grabbed for ProfilesCache constructor
+        });
+
+        it("should create new ProfilesCache with correct constructor parameters if api is not available", () => {
+            // Mock getZoweExplorerApi to return undefined to trigger fallback path (line 46)
+            const apiMock = jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue(null as any);
+
+            // Mock workspaceRoot to return a workspace folder with uri.fsPath
+            const mockWorkspaceFolder = {
+                uri: { fsPath: "/test/workspace/path" },
+                name: "test-workspace",
+                index: 0,
+            } as vscode.WorkspaceFolder;
+            const workspaceRootMock = jest.spyOn(ZoweVsCodeExtension, "workspaceRoot", "get").mockReturnValue(mockWorkspaceFolder);
+
+            // Mock Logger.getAppLogger
+            const mockLogger = { debug: jest.fn() } as unknown as imperative.Logger;
+            const appLoggerSpy = jest.spyOn(imperative.Logger, "getAppLogger").mockReturnValue(mockLogger);
+
+            // Access the profilesCache getter to trigger line 46
+            expect(ZoweVsCodeExtension.profilesCache.allProfiles).toBeDefined();
+
+            // Verify that the workspacePath and app logger were grabbed for ProfilesCache constructor
+            expect(appLoggerSpy).toHaveBeenCalled();
+            expect(workspaceRootMock).toHaveBeenCalled();
+            apiMock.mockRestore();
+            workspaceRootMock.mockRestore();
+        });
+
+        it("should return profiles cache from API when getZoweExplorerApi is available", () => {
+            const mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
+            const mockExplorerExtenderApi = {
+                getProfilesCache: jest.fn().mockReturnValue(mockProfilesCache),
+            };
+            const mockApiObject = {
+                getExplorerExtenderApi: jest.fn().mockReturnValue(mockExplorerExtenderApi),
+            };
+
+            const apiMock = jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue(mockApiObject as any);
+
+            // Grab cache to trigger logic for getter
+            const result = ZoweVsCodeExtension.profilesCache;
+
+            expect(apiMock).toHaveBeenCalled();
+            expect(mockApiObject.getExplorerExtenderApi).toHaveBeenCalled();
+            expect(mockExplorerExtenderApi.getProfilesCache).toHaveBeenCalled();
+            expect(result).toBe(mockProfilesCache);
+
+            apiMock.mockRestore();
         });
     });
 });

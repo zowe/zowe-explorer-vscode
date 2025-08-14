@@ -167,21 +167,31 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public updateStats(item: any): void {
+        const dsStats: Partial<Types.DatasetStats> = {};
+        dsStats.user = item.user ?? item.id;
         if ("c4date" in item && "m4date" in item) {
-            const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = item;
-            this.setStats({
-                user: item.user,
-                createdDate: dayjs(item.c4date).toDate(),
-                modifiedDate: dayjs(`${m4date} ${mtime}:${msec}`).toDate(),
-            });
-        } else if ("id" in item || "changed" in item) {
-            // missing keys from API response; check for FTP keys
-            this.setStats({
-                user: item.id,
-                createdDate: item.created ? dayjs(item.created).toDate() : undefined,
-                modifiedDate: item.changed ? dayjs(item.changed).toDate() : undefined,
-            });
+            const { m4date, mtime, msec }: { m4date: string; mtime?: string; msec?: string } = item;
+            dsStats.createdDate = dayjs(item.c4date).toDate();
+            if (mtime) {
+                const [hours, minutes] = mtime.split(":");
+                dsStats.modifiedDate = dayjs(`${m4date} ${hours}:${minutes}`).toDate();
+
+                if (msec) {
+                    dsStats.modifiedDate.setSeconds(parseInt(msec, 10));
+                }
+            } else {
+                dsStats.modifiedDate = dayjs(`${m4date}`).toDate();
+            }
         }
+
+        dsStats["dsorg"] = item.dsorg;
+        dsStats["lrecl"] = item.lrecl;
+        dsStats["migr"] = item.migr;
+        dsStats["recfm"] = item.recfm;
+        dsStats["vols"] = item.vols;
+        dsStats["vol"] = item.vol;
+
+        this.setStats(dsStats);
     }
 
     public getEncodingInMap(uriPath: string): ZosEncoding {
@@ -202,7 +212,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public setStats(stats: Partial<Types.DatasetStats>): void {
         const dsEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DsEntry | PdsEntry;
-        if (dsEntry == null || FsDatasetsUtils.isPdsEntry(dsEntry)) {
+        if (dsEntry == null) {
             return;
         }
 
@@ -210,8 +220,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public getStats(): Types.DatasetStats {
+        // Migrated data sets don't have stats in the z/OSMF response
+        if (this.resourceUri == null) {
+            return;
+        }
+
         const dsEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DsEntry | PdsEntry;
-        if (dsEntry == null || FsDatasetsUtils.isPdsEntry(dsEntry)) {
+        if (dsEntry == null) {
             return;
         }
 
@@ -664,6 +679,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         };
     }
 
+    public getProfile(): imperative.IProfileLoaded {
+        return super.getProfile(Profiles.getInstance());
+    }
+
     public getSessionNode(): IZoweDatasetTreeNode {
         ZoweLogger.trace("ZoweDatasetNode.getSessionNode called.");
         return this.session ? this : (this.getParent()?.getSessionNode() as IZoweDatasetTreeNode) ?? this;
@@ -796,7 +815,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     .filter((r) => r.success)
                     .reduce((arr: IZosmfListResponse[], r) => {
                         const items: IZosmfListResponse[] = r.apiResponse?.items;
-                        totalItems += items.length;
+                        totalItems += items?.length ?? 0;
                         return items ? [...arr, ...items] : arr;
                     }, []);
 
@@ -984,6 +1003,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from MVS list API"),
             });
+            if (!updated) {
+                this.dirty = false;
+            }
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
             return;
         }

@@ -14,7 +14,7 @@ pub fn trim_newline(line: &mut String) {
 }
 
 /// Searches upward from the current directory for the given list of patterns.
-/// 
+///
 /// # Arguments
 /// * `patterns` - A `&str` slice containing the patterns to search upwards for.
 pub fn find_dir_match(patterns: &[&str]) -> anyhow::Result<Option<PathBuf>> {

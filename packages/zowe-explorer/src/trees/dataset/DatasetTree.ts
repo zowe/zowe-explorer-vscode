@@ -208,30 +208,31 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         }
 
         let target = targetNode;
-        for (const item of droppedItems.value) {
-            const node = this.draggedNodes[item.uri.path];
+        if (target) {
+            for (const item of droppedItems.value) {
+                const node = this.draggedNodes[item.uri.path];
 
-            if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
-                if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
-                    Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset."));
+                if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
+                    if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
+                        Gui.errorMessage(
+                            vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.")
+                        );
+                        return;
+                    }
+                }
+
+                if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
+                    Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member into a sequential dataset."));
                     return;
                 }
-            }
-
-            if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
-                Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member into a sequential dataset."));
-                return;
-            }
-            const parent = target?.getParent();
-            if (
-                (SharedContext.isPds(node) && parent && SharedContext.isPds(parent)) ||
-                (SharedContext.isDs(node) && parent && SharedContext.isPds(parent))
-            ) {
-                const message = SharedContext.isPds(node)
-                    ? "Cannot drop a partitioned dataset into another partitioned dataset."
-                    : "Cannot drop a sequential dataset into a partitioned dataset.";
-                Gui.errorMessage(vscode.l10n.t(message));
-                return;
+                const parent = target.getParent();
+                if ((SharedContext.isPds(node) || SharedContext.isDs(node)) && parent && SharedContext.isPds(parent)) {
+                    const message = SharedContext.isPds(node)
+                        ? "Cannot drop a partitioned dataset into another partitioned dataset."
+                        : "Cannot drop a sequential dataset into a partitioned dataset.";
+                    Gui.errorMessage(vscode.l10n.t(message));
+                    return;
+                }
             }
         }
 
@@ -1005,7 +1006,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public addSearchHistory(criteria: string): void {
         ZoweLogger.trace("DatasetTree.addSearchHistory called.");
         this.mHistory.addSearchHistory(criteria);
-        this.refresh();
     }
 
     public getSearchHistory(): string[] {
@@ -1301,12 +1301,23 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         if (SharedContext.isSessionNotFav(node)) {
             ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
             if (this.mHistory.getSearchHistory().length > 0) {
-                const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                 const items: vscode.QuickPickItem[] = this.mHistory.getSearchHistory().map((element) => new FilterItem({ text: element }));
                 const quickpick = Gui.createQuickPick();
-                quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
-                quickpick.placeholder = vscode.l10n.t("Select a filter");
+                quickpick.placeholder = vscode.l10n.t("Select a filter or type to create a new one");
                 quickpick.ignoreFocusOut = true;
+
+                // Callback updates the "Create a new filter" option as user types
+                quickpick.onDidChangeValue((value) => {
+                    const trimmedValue = value.trim();
+                    const createPick = trimmedValue
+                        ? new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value.trim()}"`)
+                        : new FilterDescriptor(DatasetTree.defaultDialogText);
+                    quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+                });
+
+                const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
+                quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+
                 quickpick.show();
                 const choice = await Gui.resolveQuickPick(quickpick);
                 quickpick.hide();
@@ -1315,22 +1326,41 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     return;
                 }
                 if (choice instanceof FilterDescriptor) {
-                    if (quickpick.value) {
-                        pattern = quickpick.value;
+                    // If user typed something and selected "Create a new filter", use that input
+                    if (quickpick.value && quickpick.value.trim()) {
+                        pattern = quickpick.value.trim();
+                    } else {
+                        // Fall back to input box if no text was entered
+                        const options: vscode.InputBoxOptions = {
+                            prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
+                        };
+                        pattern = await Gui.showInputBox(options);
+                        if (!pattern) {
+                            return;
+                        }
                     }
                 } else {
-                    pattern = choice.label;
+                    // User selected an existing filter - show input box with the filter pre-filled for editing
+                    const options: vscode.InputBoxOptions = {
+                        prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
+                        value: choice.label, // Pre-fill with the selected filter
+                    };
+                    pattern = await Gui.showInputBox(options);
+                    if (!pattern) {
+                        Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
+                        return;
+                    }
                 }
-            }
-            const options: vscode.InputBoxOptions = {
-                prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
-                value: pattern,
-            };
-            // get user input
-            pattern = await Gui.showInputBox(options);
-            if (!pattern) {
-                Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
-                return;
+            } else {
+                // No search history, use input box directly
+                const options: vscode.InputBoxOptions = {
+                    prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
+                };
+                pattern = await Gui.showInputBox(options);
+                if (!pattern) {
+                    Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
+                    return;
+                }
             }
         } else {
             // executing search from saved search in favorites
@@ -1351,6 +1381,16 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             ZoweLogger.warn(e);
             return;
         }
+        await this.filterTreeByPattern(node, profile, pattern, true);
+    }
+
+    public async filterTreeByPattern(
+        node: IZoweDatasetTreeNode,
+        profile: imperative.IProfileLoaded,
+        pattern: string,
+        addToHistory?: boolean
+    ): Promise<void> {
+        ZoweLogger.trace("DatasetTree.filterTreeByPattern called.");
         await AuthUtils.updateNodeToolTip(node, profile);
         // looking for members in pattern
         node.patternMatches = this.extractPatterns(pattern);
@@ -1380,7 +1420,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // Refresh node in tree view to represent new data set pattern(s)
             this.nodeDataChanged(node);
         }
-        this.addSearchHistory(pattern);
+        if (addToHistory) {
+            this.addSearchHistory(pattern);
+        }
     }
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {
@@ -1440,6 +1482,60 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
         }
         return existing;
+    }
+
+    /**
+     * Focuses on a specific data set in the dataset tree based on the current state of the tree.
+     *
+     * If the data set is not currently in the data sets filter, first check if it is in favourites.
+     * If it is, open that one, if not, fall back to setting the filter to that data set and then open it in the tree.
+     * Do not add filter to history.
+     *
+     * @param dsName - The name of the data set to focus on
+     * @param sessProfile - The session profile to use for the operation
+     * @returns {boolean} - True if the data set was found and focused
+     */
+    public async focusOnDsInTree(dsName: string, sessProfile: imperative.IProfileLoaded): Promise<boolean> {
+        // Try to find in session nodes
+        for (const session of this.mSessionNodes) {
+            const children = await session.getChildren();
+            const foundNode = children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+            if (foundNode) {
+                await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
+                return true;
+            }
+        }
+
+        // Try to find in favorites
+        for (const favNode of this.mFavorites) {
+            if (favNode.children && favNode.children.length > 0) {
+                const foundNode = favNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+                if (foundNode) {
+                    // Cannot just reveal foundNode as it will not expand out fully
+                    await this.getTreeView().reveal(favNode, { expand: true });
+                    await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
+                    return true;
+                }
+            }
+        }
+
+        // Not found: set filter on the session node and reveal
+        const sessionNode = this.mSessionNodes.find((session) => session.label?.toString().toUpperCase() === sessProfile.name.toUpperCase());
+        if (sessionNode) {
+            sessionNode.pattern = dsName.toUpperCase();
+            sessionNode.dirty = true;
+            try {
+                await this.filterTreeByPattern(sessionNode, sessProfile, dsName);
+            } catch (error) {
+                return false;
+            }
+            const pdsNode = sessionNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+            if (pdsNode) {
+                await this.getTreeView().reveal(pdsNode, { select: true, focus: true, expand: true });
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

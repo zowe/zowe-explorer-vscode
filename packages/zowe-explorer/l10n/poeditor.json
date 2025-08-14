@@ -23,6 +23,9 @@
   "zowe.placeholderCommand": {
     "Placeholder": ""
   },
+  "zowe.setupRemoteWorkspaceFolders": {
+    "Setup Remote Workspace Folders": ""
+  },
   "zowe.promptCredentials": {
     "Update Credentials": ""
   },
@@ -110,6 +113,9 @@
   "pattern": {
     "Search Data Sets": ""
   },
+  "listDataSets": {
+    "List Data Sets": ""
+  },
   "startPolling": {
     "Start Polling": ""
   },
@@ -133,6 +139,9 @@
   },
   "submitJcl": {
     "Submit as JCL": ""
+  },
+  "zoom": {
+    "Open Selected Data Set": ""
   },
   "submitMember": {
     "Submit Job": ""
@@ -425,6 +434,9 @@
   "zowe.openRecentMember": {
     "Open Recent Member": ""
   },
+  "zowe.displayReleaseNotes": {
+    "Display Release Notes": ""
+  },
   "issueTsoCmd": {
     "Issue TSO Command": ""
   },
@@ -455,7 +467,7 @@
   "jobs.refreshSpool": {
     "Pull from Mainframe": ""
   },
-  "jobsTableView": {
+  "tableView": {
     "Show as Table": ""
   },
   "manualPoll": {
@@ -527,6 +539,15 @@
   "zowe.settings.requestTimeout": {
     "The amount of time to wait for a REST request to complete, in milliseconds.": ""
   },
+  "zowe.settings.displayReleaseNotes": {
+    "Should display the Zowe Explorer release notes after an update.": ""
+  },
+  "zowe.table.maxPinnedRows": {
+    "Maximum number of rows that can be pinned to the top of table views.": ""
+  },
+  "zowe.table.hidePinnedRowsWarning": {
+    "Hide the warning message when pinning many rows to table views.": ""
+  },
   "Enter command here...": "",
   "Page Size:": "",
   "Page": "",
@@ -534,6 +555,14 @@
   "items": "",
   "item": "",
   "selected": "",
+  "What's New in Zowe Explorer {0}": "",
+  "You can find the latest updates and features here.": "",
+  "Select the version to display release notes for": "",
+  "Display release notes after an update": "",
+  "Release Notes": "",
+  "Changelog": "",
+  "Loading release notes...": "",
+  "Loading changelog...": "",
   "Data Sets": "",
   "Unix System Services (USS)": "",
   "Jobs": "",
@@ -578,6 +607,9 @@
   "Cancel": "",
   "Troubleshoot Error": "",
   "rename": "",
+  "No release notes found for this version.": "",
+  "No changelog entries found for this version.": "",
+  "No {0} entries found for this version.": "",
   "Zowe Explorer profiles are being set as unsecured.": "",
   "Zowe Explorer profiles are being set as secured.": "",
   "Custom credential manager failed to activate": "",
@@ -603,6 +635,7 @@
   "Enter a name for the connection.": "",
   "Operation cancelled": "",
   "Credentials for {0} were successfully updated": "",
+  "User: ": "",
   "Zowe home directory is located at {0}": "",
   "Reading imperative.json failed. Will try to create file.": "",
   "Reading imperative.json credential manager.\n {0}": "",
@@ -634,7 +667,6 @@
   "Auth Method: ": "",
   "Token-based Authentication": "",
   "Basic Authentication": "",
-  "User: ": "",
   "Certificate Authentication": "",
   "Unknown": "",
   "Pattern: ": "",
@@ -656,15 +688,6 @@
   "Uploading USS files...": "",
   "Error uploading files": "",
   "Retrieving response from USS list API": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Failed to move {0}": "",
-  "Profile does not exist for this file.": "",
-  "Saving USS file...": "",
-  "Failed to rename {0}": "",
-  "Failed to delete {0}": "",
-  "No error details given": "",
-  "Error fetching destination {0} for paste action: {1}": "",
-  "Failed to copy {0} to {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -679,7 +702,7 @@
   "Prompting the user to choose a member from the filtered list": "",
   "You are already at the root directory.": "",
   "Prompting the user for a USS path": "",
-  "Select a filter": "",
+  "Select a filter or type to create a new one": "",
   "No selection made. Operation cancelled.": "",
   "New filter": "",
   "Please enter a valid USS path.": "",
@@ -691,6 +714,15 @@
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
   "Pulling from Mainframe...": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Failed to move {0}": "",
+  "Profile does not exist for this file.": "",
+  "Saving USS file...": "",
+  "Failed to rename {0}": "",
+  "Failed to delete {0}": "",
+  "No error details given": "",
+  "Error fetching destination {0} for paste action: {1}": "",
+  "Failed to copy {0} to {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
@@ -765,6 +797,7 @@
   "Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}": "",
   "Remove": "",
   "This will remove all favorited jobs items for profile {0}. Continue?": "",
+  "Select a filter": "",
   "Enter a job ID": "",
   "Job search cancelled.": "",
   "The polling interval must be greater than or equal to 1000ms.": "",
@@ -827,8 +860,8 @@
   "User ID": "",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "",
   "Failed to move {0}: {1}": "",
-  "Cannot drop a sequential dataset or a partitioned dataset onto another PDS.": "",
-  "Cannot drop a member onto a sequential dataset.": "",
+  "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "",
+  "Cannot drop a partitioned dataset or member into a sequential dataset.": "",
   "Moving MVS files...": "",
   "Initializing profiles with data set favorites.": "",
   "No data set favorites found.": "",
@@ -860,13 +893,45 @@
   "Choose the setting location to save the data set template...": "",
   "Save as User setting": "",
   "Save as Workspace setting": "",
+  "[{0}]: {1}": "",
+  "[{0}]: *": "",
+  "[{0}] Members of {1}": "",
+  "Data Set Name": "",
+  "Data Set Organization": "",
+  "Creation Date": "",
+  "Modified Date": "",
+  "Record Length": "",
+  "Migrated": "",
+  "Record Format": "",
+  "Volumes": "",
+  "Last Modified By": "",
+  "Version": "",
+  "Modification Level": "",
+  "Current Records": "",
+  "Initial Records": "",
+  "Modified Records": "",
+  "SCLM": "",
+  "Open": "",
+  "Focus": "",
+  "Back": "",
+  "Pin": "",
+  "Unpin": "",
+  "Error toggling pin state for rows: {0}": "",
+  "Member Name": "",
+  "Please select a single profile or PDS.": "",
+  "This action is only supported for session and PDS nodes. Please select a session or PDS node.": "",
+  "No profiles available.": "",
+  "Select a profile to search for data sets": "",
+  "Select a profile": "",
+  "Enter Data Set Pattern": "",
+  "e.g., USER.*, PUBLIC.DATA.*, etc.": "",
+  "Enter a dataset pattern to search for": "",
+  "Profile {0} not found.": "",
   "No search pattern applied. Search for a pattern and try again.": "",
   "Searching for \"{0}\"": "",
   "Search Results for \"{0}\"": "",
-  "Data Set Name": "",
   "Position": "",
   "Contents": "",
-  "Open": "",
   "Enter the text to search for.": "",
   "Search Options": "",
   "Select search options": "",
@@ -928,6 +993,15 @@
   "Job submitted {0}": "",
   "Job submitted {0} using profile {1}.": "",
   "Job submission failed.": "",
+  "No active editor open. Please open a file and select text to open a data set.": "",
+  "No selection to open.": "",
+  "Selection is not a valid data set member name.": "",
+  "Selection is not a valid data set name.": "",
+  "Select the profile to use to open the data set": "",
+  "PDS {0} could not be found.": "",
+  "Data set member {0} does not exist or cannot be opened in data set {1}.": "",
+  "Data set {0} does not exist or cannot be opened.": "",
+  "Opening data set failed.": "",
   "Are you sure you want to submit the following job?\n\n{0}": "",
   "Cannot submit, item invalid.": "",
   "Cannot delete, item invalid.": "",
@@ -1027,6 +1101,7 @@
   "Do you wish to apply this for all trees?": "",
   "Apply to all trees": "",
   "Apply to current tree selected": "",
+  "Edit History": "",
   "Enter an allocation unit": "",
   "Enter the average block length (if allocation unit = BLK)": "",
   "Enter a block size": "",

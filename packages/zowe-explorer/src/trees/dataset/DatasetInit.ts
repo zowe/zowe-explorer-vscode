@@ -22,6 +22,7 @@ import { SharedInit } from "../shared/SharedInit";
 import { SharedUtils } from "../shared/SharedUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import { DatasetSearch } from "./DatasetSearch";
+import { DatasetTableView } from "./DatasetTableView";
 
 export class DatasetInit {
     public static async createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
@@ -118,6 +119,7 @@ export class DatasetInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.submitJcl", async (file) => DatasetActions.submitJcl(datasetProvider, file))
         );
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.zoom", async () => DatasetActions.zoom()));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.submitMember", async (node) => DatasetActions.submitMember(node)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.showAttributes", async (node, nodeList) => {
@@ -202,6 +204,16 @@ export class DatasetInit {
             vscode.commands.registerCommand("zowe.ds.filteredDataSetsSearchFor", async (node: IZoweDatasetTreeNode) =>
                 DatasetSearch.search(context, node)
             )
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.tableView", async (node, nodeList) =>
+                DatasetTableView.getInstance().handleCommand(context, node, nodeList)
+            )
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.listDataSets", async () => DatasetTableView.getInstance().handlePatternSearch(context))
         );
 
         SharedInit.initSubscribers(context, datasetProvider);

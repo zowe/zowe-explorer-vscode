@@ -4,7 +4,31 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
-- Updated Zowe SDKs to `8.20.0` for technical currency. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
+- Changed the response field names for the `FtpMvsApi.allMembers` function from "created" and "changed" to "c4date" and "m4date" to be consistent with the z/OSMF API response format for a PDS member list. [#3751](https://github.com/zowe/zowe-explorer-vscode/issues/3751)
+- Replaced use of `tmp` dependency with Node.js functions for temporary file creation when downloading data sets and USS file contents. [#3805](https://github.com/zowe/zowe-explorer-vscode/pull/3805)
+
+### Bug fixes
+
+- Fixed an issue where USS directories could not be loaded via FTP as virtual workspaces. [#3763](https://github.com/zowe/zowe-explorer-vscode/pull/3763)
+- Fixed an issue where the `UssApi.uploadDirectory` function did not properly parse the file name from the input file paths, causing incorrect file paths to be used for the USS destination path. [#3805](https://github.com/zowe/zowe-explorer-vscode/pull/3805)
+
+## `3.2.2`
+
+### Bug fixes
+
+- Updated Zowe SDKs to `8.24.1` for technical currency. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)
+
+## `3.2.1`
+
+### New features and enhancements
+
+- Updated Zowe SDKs to `8.21.0` for technical currency. [#3668](https://github.com/zowe/zowe-explorer-vscode/pull/3668)
+
+## `3.2.0`
+
+### New features and enhancements
+
+- Updated Zowe SDKs to `8.16.0` for technical currency. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
 - Updated the zFTP profile type schema meta-data to include a version to better track changes in the schema for updates needed on disk in the profile configuration schema files. [#1642](https://github.com/zowe/zowe-explorer-vscode/issues/1642)
 - Added support for the `start` and `maxLength` options on the `dataSet` and `allMembers` functions in the `FtpMvsApi` class. [#3585](https://github.com/zowe/zowe-explorer-vscode/pull/3585)
 
