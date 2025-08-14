@@ -140,10 +140,27 @@ export class SharedInit {
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.configEditor", async (opts) => {
-                const configEditor = new ConfigEditor(context);
-                const ret = await configEditor.userSubmission.promise;
-                configEditor.panel.dispose();
-                return ret;
+                // Check if there's already an open ConfigEditor
+                if (existingConfigEditor && existingConfigEditor.panel && existingConfigEditor.panel.visible) {
+                    // Reuse existing ConfigEditor
+                    existingConfigEditor.panel.reveal();
+                    return existingConfigEditor;
+                } else {
+                    // Create new ConfigEditor
+                    const configEditor = new ConfigEditor(context);
+
+                    // Track this instance
+                    existingConfigEditor = configEditor;
+
+                    // Set up disposal tracking
+                    configEditor.panel.onDidDispose(() => {
+                        existingConfigEditor = null;
+                    });
+
+                    const ret = await configEditor.userSubmission.promise;
+                    configEditor.panel.dispose();
+                    return ret;
+                }
             })
         );
 
