@@ -19,7 +19,7 @@ import * as path from "path";
 const log4js = require("log4js");
 
 export class EventProcessor {
-    public emitZoweEvent(eventName: string): void { }
+    public emitZoweEvent(eventName: string): void {}
 }
 
 export enum ProfLocType {
@@ -192,16 +192,16 @@ export interface ICredentialManagerNameMap {
 }
 
 export class Session {
-    constructor(public ISession: ISessionOptions) { }
+    constructor(public ISession: ISessionOptions) {}
 }
 
 export class Profile {
-    constructor(public name: string, public type: string) { }
+    constructor(public name: string, public type: string) {}
 }
 
 export class ProfileInfo {
     public onlyV1ProfilesExist = false;
-    constructor(appName: string, profInfoOpts?: IProfOpts) { }
+    constructor(appName: string, profInfoOpts?: IProfOpts) {}
 
     public readProfilesFromDisk(teamCfgOpts?: IConfigOpts) {
         return;
@@ -356,23 +356,23 @@ export class ConfigBuilder {
     }
 }
 
-export class CredentialManagerFactory { }
+export class CredentialManagerFactory {}
 
 export class DefaultCredentialManager {
     public test: "test";
 }
 
-export class AbstractCredentialManager { }
+export class AbstractCredentialManager {}
 
 export class Logger {
-    public static initLogger(loggingConfig: IConfigLogging): any { }
+    public static initLogger(loggingConfig: IConfigLogging): any {}
     public static getAppLogger(): Logger {
         return log4js.getLogger("app");
     }
 }
 
 export class ConnectionPropsForSessCfg {
-    public static resolveSessCfgProps(): void { }
+    public static resolveSessCfgProps(): void {}
 }
 
 export class TextUtils {
@@ -411,12 +411,12 @@ export class ZoweSharedEvents {
 export class EventOperator {
     public static getWatcher() {
         return {
-            subscribeUser: () => ({ close: () => { } }),
-            subscribeShared: () => ({ close: () => { } }),
+            subscribeUser: () => ({ close: () => {} }),
+            subscribeShared: () => ({ close: () => {} }),
         };
     }
 }
 
 export class DeferredPromise {
-    public resolve(value: any): void { }
+    public resolve(value: any): void {}
 }
