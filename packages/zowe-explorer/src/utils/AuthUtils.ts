@@ -146,15 +146,8 @@ export class AuthUtils {
                 (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                     imperativeError.message.includes("All configured authentication methods failed"))
             ) {
-                if (!AuthHandler.isProfileLocked(profile)) {
-                    await AuthHandler.lockProfile(profile);
-                }
-                return await AuthHandler.promptForAuthentication(profile, {
-                    authMethods: Constants.PROFILES_CACHE,
-                    imperativeError,
-                    isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
-                    errorCorrelation,
-                });
+                await AuthUtils.handleProfileAuthOnError(imperativeError, profile);
+                return true;
             }
         }
         if (errorDetails.toString().includes("Could not find profile")) {
