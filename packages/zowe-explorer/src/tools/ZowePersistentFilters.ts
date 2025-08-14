@@ -177,11 +177,9 @@ export class ZowePersistentFilters {
      */
     public addSortSetting(node: IZoweDatasetTreeNode, setting: Sorting.NodeSort): void {
         ZoweLogger.trace("PersistentFilters.addSortSettings called.");
-        if (node && setting) {
-            const criteria = `${node.getProfileName()}-${node.label as string}`;
-            this.mSortSettings[criteria] = setting;
-            this.updateSortSettings();
-        }
+        const criteria = `${node.getProfileName()}-${node.label as string}`;
+        this.mSortSettings[criteria] = setting;
+        this.updateSortSettings();
     }
 
     /*********************************************************************************************************************************************/
