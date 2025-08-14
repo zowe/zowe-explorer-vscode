@@ -780,7 +780,16 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                             }
                         }
                     } else {
-                        remotepath = choice.label;
+                        // User selected an existing filter - show input box with the filter pre-filled for editing
+                        const options: vscode.InputBoxOptions = {
+                            placeHolder: vscode.l10n.t("New filter"),
+                            value: choice.label, // Pre-fill with the selected filter
+                            validateInput: (input: string) => (input.length > 0 ? null : vscode.l10n.t("Please enter a valid USS path.")),
+                        };
+                        remotepath = await Gui.showInputBox(options);
+                        if (remotepath == null) {
+                            return;
+                        }
                     }
                 } else {
                     // No search history, use input box directly

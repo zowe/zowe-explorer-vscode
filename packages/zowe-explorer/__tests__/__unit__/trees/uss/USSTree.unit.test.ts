@@ -96,7 +96,7 @@ function createGlobalMocks() {
         testSession: createISession(),
         testResponse: createFileResponse({ items: [] }),
         testUSSNode: null,
-        testTree: null,
+        testTree: null as unknown as USSTree,
         profilesForValidation: { status: "active", name: "fake" },
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         mockTreeProviders: createTreeProviders(),
@@ -1061,13 +1061,41 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         const historyFilterItem = new FilterItem({ text: historyItem });
         blockMocks.resolveQuickPickHelper.mockResolvedValue(historyFilterItem);
         globalMocks.showInputBox.mockReset();
+        // Simulate user confirming input for history item
+        globalMocks.showInputBox.mockResolvedValueOnce(historyItem);
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
 
-        // Should not call showInputBox
-        expect(globalMocks.showInputBox).not.toHaveBeenCalled();
+        // Should call showInputBox to allow user to confirm/edit existing filter
+        expect(globalMocks.showInputBox).toHaveBeenCalled();
 
         // Should use the selected history item, not the typed value
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual(historyItem);
+    });
+
+    it("should return early when user selects existing filter but cancels the edit input box", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        // Add search history to trigger quick pick
+        const existingFilter = "/u/existing/path";
+        globalMocks.testTree.addSearchHistory(existingFilter);
+
+        const existingFilterItem = new FilterItem({ text: existingFilter });
+        blockMocks.resolveQuickPickHelper.mockResolvedValueOnce(existingFilterItem);
+
+        // Mock the input box to return null (simulate user cancelling)
+        globalMocks.showInputBox.mockResolvedValueOnce(undefined);
+
+        const updateTreeViewSpy = jest.spyOn(globalMocks.testTree as any, "updateTreeView").mockImplementation();
+
+        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
+
+        expect(globalMocks.showInputBox).toHaveBeenCalledWith({
+            placeHolder: expect.any(String),
+            value: existingFilter,
+            validateInput: expect.any(Function),
+        });
+        expect(updateTreeViewSpy).not.toHaveBeenCalled();
     });
 });
 
@@ -1509,7 +1537,6 @@ describe("USSTree Unit Tests - Function rename", () => {
         globalMocks.showInputBox.mockReturnValueOnce("new name");
         jest.spyOn(UssFSProvider.instance, "rename").mockResolvedValue(undefined);
         await globalMocks.testTree.rename(blockMocks.ussFavNode);
-        console.log(globalMocks.showErrorMessage);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 

@@ -106,6 +106,7 @@ export class Profiles extends ProfilesCache {
         let usingTokenAuth: boolean = false;
 
         let iSessFromProf: imperative.ISession;
+        const usingPrivateKey = theProfile.type === "ssh" && theProfile.profile.privateKey;
         try {
             iSessFromProf = AuthUtils.getSessFromProfile(theProfile).ISession;
         } catch (error) {
@@ -146,7 +147,7 @@ export class Profiles extends ProfilesCache {
                     return profileStatus;
                 }
             }
-        } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth) {
+        } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth && !usingPrivateKey) {
             ZoweLogger.debug(`Profile ${theProfile.name} is using basic auth, prompting for missing credentials`);
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
