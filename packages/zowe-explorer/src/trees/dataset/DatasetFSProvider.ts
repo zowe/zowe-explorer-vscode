@@ -589,12 +589,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
         const isPdsMember = uriPath.length === 2;
 
-        let dsStats: Types.DatasetStats;
-        if (dsStats == null && !uriInfo.isRoot) {
+        let dsStats: Types.DatasetStats = entry.stats;
+        if (dsStats == null) {
             const targetPath = isPdsMember ? path.posix.dirname(uri.path) : uri.path;
             const tempEntry = await this.fetchDataset(uri.with({ path: targetPath }), uriInfo, true);
             dsStats = tempEntry.stats;
-            entry = tempEntry as DsEntry;
+            if (isPdsMember) {
+                entry.stats = tempEntry.stats;
+            } else {
+                entry = tempEntry as DsEntry;
+            }
         }
         if (dsStats) {
             const longLines = {};
