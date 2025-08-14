@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
+import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { Constants } from "../../../../src/configuration/Constants";
 import { createIProfile, createISession, createTreeView } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
@@ -68,15 +69,8 @@ async function createGlobalMocks() {
         configurable: true,
     });
 
-    const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(newMocks.profileOne);
-    const getMvsApiMock = jest.fn();
-    getMvsApiMock.mockReturnValue(mockMvsApi);
-    ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
-    jest.spyOn(mockMvsApi, "putContents").mockResolvedValue({
-        success: true,
-        commandResponse: "",
-        apiResponse: {},
-    });
+    const putContents = jest.fn().mockResolvedValue({ success: true, commandResponse: "", apiResponse: {} });
+    ZoweExplorerApiRegister.getMvsApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getMvsApi>>().mockReturnValue({ putContents });
 
     return newMocks;
 }
@@ -245,6 +239,66 @@ describe("mvsNodeActions", () => {
         const errHandlerSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
         await DatasetActions.uploadDialog(node, testTree);
         expect(errHandlerSpy).toHaveBeenCalledWith(testError, { apiType: ZoweExplorerApiType.Mvs, profile: globalMocks.profileOne });
+    });
+});
+
+describe("Dataset Actions - upload with encoding", () => {
+    function createBlockMocks(globalMocks) {
+        Object.defineProperty(vscode.window, "withProgress", {
+            value: jest.fn().mockImplementation((progLocation, callback) => {
+                const progress = { report: jest.fn() };
+                const token = { isCancellationRequested: false, onCancellationRequested: jest.fn() };
+                return callback(progress, token);
+            }),
+            configurable: true,
+        });
+        const parentNode = new ZoweDatasetNode({
+            label: "PDS.DATA",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: globalMocks.profileOne,
+            session: globalMocks.session,
+        });
+        const node = new ZoweDatasetNode({
+            label: "PDS.DATA",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode,
+            profile: globalMocks.profileOne,
+        });
+        return { node };
+    }
+
+    afterEach(() => {
+        jest.resetAllMocks();
+        jest.restoreAllMocks();
+        jest.clearAllMocks();
+    });
+
+    it("uploadDialogWithEncoding calls uploadFileWithEncoding with user codepage", async () => {
+        const globalMocks = await createGlobalMocks();
+        const { node } = createBlockMocks(globalMocks);
+        const dsTree = createDatasetTree(node, globalMocks.treeView);
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" } as any);
+        const fileUri = { fsPath: "/tmp/foo.txt" } as any;
+        globalMocks.showOpenDialog.mockReturnValue([fileUri]);
+        const uploadWithEncSpy = jest.spyOn(DatasetActions, "uploadFileWithEncoding").mockResolvedValue({ success: true } as any);
+
+        await DatasetActions.uploadDialogWithEncoding(node as any, dsTree as any);
+
+        expect(SharedUtils.promptForUploadEncoding).toHaveBeenCalled();
+        expect(uploadWithEncSpy).toHaveBeenCalledWith(node, fileUri.fsPath, { kind: "other", codepage: "IBM-1047" });
+    });
+
+    it("uploadFileWithEncoding maps binary and codepage options correctly", async () => {
+        const globalMocks = await createGlobalMocks();
+        const { node } = createBlockMocks(globalMocks);
+        const putContents = jest.fn().mockResolvedValue({ success: true });
+        ZoweExplorerApiRegister.getMvsApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getMvsApi>>().mockReturnValue({ putContents });
+
+        await DatasetActions.uploadFileWithEncoding(node as any, "/tmp/a.txt", { kind: "binary" } as any);
+        expect(putContents).toHaveBeenLastCalledWith("/tmp/a.txt", "PDS.DATA", expect.objectContaining({ binary: true }));
+
+        await DatasetActions.uploadFileWithEncoding(node as any, "/tmp/b.txt", { kind: "other", codepage: "ISO8859-1" } as any);
+        expect(putContents).toHaveBeenLastCalledWith("/tmp/b.txt", "PDS.DATA", expect.objectContaining({ binary: false, encoding: "ISO8859-1" }));
     });
 });
 

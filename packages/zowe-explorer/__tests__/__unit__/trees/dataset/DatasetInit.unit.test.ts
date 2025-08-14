@@ -117,6 +117,10 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(DatasetActions, "uploadDialog"), arg: [test.value, dsProvider] }],
             },
             {
+                name: "zowe.ds.uploadDialogWithEncoding",
+                mock: [{ spy: jest.spyOn(DatasetActions, "uploadDialogWithEncoding"), arg: [test.value, dsProvider] }],
+            },
+            {
                 name: "zowe.ds.deleteMember",
                 mock: [{ spy: jest.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value] }],
             },

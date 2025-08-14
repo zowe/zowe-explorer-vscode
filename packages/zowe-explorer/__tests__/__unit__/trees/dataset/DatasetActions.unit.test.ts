@@ -47,6 +47,8 @@ import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
 import { ProfileManagement } from "../../../../src/management/ProfileManagement";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { DataSetAttributesProvider } from "../../../../../zowe-explorer-api/lib/dataset/DatasetAttributesProvider";
+import { DatasetTree } from "../../../../src/trees/dataset/DatasetTree";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -3284,5 +3286,213 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
             preview: false,
             viewColumn: 1,
         });
+    });
+});
+
+describe("Dataset Actions Unit Tests - upload with encoding", () => {
+    function createBlockMocks() {
+        Object.defineProperty(vscode.window, "withProgress", {
+            value: jest.fn().mockImplementation((progLocation, callback) => {
+                const progress = { report: jest.fn() };
+                const token = { isCancellationRequested: false, onCancellationRequested: jest.fn() };
+                return callback(progress, token);
+            }),
+            configurable: true,
+        });
+
+        const testSession = createISession();
+        const testProfile = createIProfile();
+        const newMocks = {
+            datasetSessionNode: createDatasetSessionNode(testSession, testProfile),
+            testDatasetTree: null as unknown as DatasetTree,
+            showOpenDialog: jest.spyOn(Gui, "showOpenDialog").mockImplementation(),
+        };
+        newMocks.testDatasetTree = createDatasetTree(newMocks.datasetSessionNode, testProfile);
+
+        return newMocks;
+    }
+
+    afterEach(() => {
+        jest.resetAllMocks();
+        jest.restoreAllMocks();
+        jest.clearAllMocks();
+    });
+
+    it("uploadDialogWithEncoding returns early if node is not a PDS", async () => {
+        const blockMocks = createBlockMocks();
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        const sequentialDataset = new ZoweDatasetNode({
+            label: "TEST.PS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_DS_CONTEXT,
+        });
+        await DatasetActions.uploadDialogWithEncoding(sequentialDataset, blockMocks.testDatasetTree);
+        expect(showMessageSpy).toHaveBeenCalledWith("This action is only supported for partitioned data sets.");
+    });
+
+    it("uploadDialogWithEncoding returns early if promptForUploadEncoding returns falsy value", async () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValueOnce(undefined);
+        const showOpenDialogSpy = jest.spyOn(Gui, "showOpenDialog");
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+        await DatasetActions.uploadDialogWithEncoding(pdsNode, blockMocks.testDatasetTree);
+        expect(showOpenDialogSpy).not.toHaveBeenCalled();
+    });
+
+    it("uploadDialogWithEncoding returns early if showOpenDialog returns falsy value", async () => {
+        const blockMocks = createBlockMocks();
+        const showProgressSpy = jest.spyOn(Gui, "withProgress");
+        const showOpenDialogSpy = jest.spyOn(Gui, "showOpenDialog");
+        const promptForUploadEncodingMock = jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValueOnce({ kind: "binary" });
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+        await DatasetActions.uploadDialogWithEncoding(pdsNode, blockMocks.testDatasetTree);
+        expect(showOpenDialogSpy).toHaveBeenCalled();
+        expect(showProgressSpy).not.toHaveBeenCalled();
+        expect(promptForUploadEncodingMock).toHaveBeenCalled();
+        expect(promptForUploadEncodingMock).toHaveBeenCalledWith(pdsNode.getProfile(), pdsNode.label);
+    });
+
+    it("uploadDialogWithEncoding uploads as binary when binary is selected", async () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "binary" } as any);
+        const fileUri = { fsPath: "/tmp/foo.zip" } as any;
+        blockMocks.showOpenDialog.mockResolvedValueOnce([fileUri]);
+        const uploadFileWithEncodingSpy = jest.spyOn(DatasetActions, "uploadFileWithEncoding").mockResolvedValue({
+            success: true,
+            commandResponse: "Upload completed.",
+        });
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        const getTreeViewMock = jest.spyOn(blockMocks.testDatasetTree, "getTreeView").mockReturnValue({
+            reveal: jest.fn(),
+        } as any);
+        await DatasetActions.uploadDialogWithEncoding(pdsNode, blockMocks.testDatasetTree);
+
+        expect(SharedUtils.promptForUploadEncoding).toHaveBeenCalled();
+        expect(blockMocks.showOpenDialog).toHaveBeenCalled();
+        expect(uploadFileWithEncodingSpy).toHaveBeenCalledWith(pdsNode, fileUri.fsPath, { kind: "binary" });
+        expect(blockMocks.testDatasetTree.refreshElement).toHaveBeenCalledWith(pdsNode);
+        getTreeViewMock.mockRestore();
+    });
+
+    it("uploadDialogWithEncoding uploads as text/other when a codepage is selected", async () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" } as any);
+        const fileUri = { fsPath: "/tmp/foo.txt" } as any;
+        blockMocks.showOpenDialog.mockResolvedValueOnce([fileUri]);
+        const putContents = jest.fn();
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ putContents } as any);
+        const getTreeViewMock = jest.spyOn(blockMocks.testDatasetTree, "getTreeView").mockReturnValue({
+            reveal: jest.fn(),
+        } as any);
+        const uploadFileWithEncodingSpy = jest.spyOn(DatasetActions, "uploadFileWithEncoding").mockResolvedValue({
+            success: true,
+            commandResponse: "Upload completed.",
+        });
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        await DatasetActions.uploadDialogWithEncoding(pdsNode, blockMocks.testDatasetTree);
+
+        expect(SharedUtils.promptForUploadEncoding).toHaveBeenCalled();
+        expect(uploadFileWithEncodingSpy).toHaveBeenCalledWith(pdsNode, fileUri.fsPath, { kind: "other", codepage: "IBM-1047" });
+        expect(blockMocks.testDatasetTree.refreshElement).toHaveBeenCalledWith(pdsNode);
+        mvsApiMock.mockRestore();
+        getTreeViewMock.mockRestore();
+    });
+
+    it("uploadFileWithEncoding passes correct options to API for text", async () => {
+        const blockMocks = createBlockMocks();
+        const putContents = jest.fn();
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ putContents } as any);
+        const memberNode = new ZoweDatasetNode({
+            label: "MEMBER1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+        });
+
+        await DatasetActions.uploadFileWithEncoding(memberNode, "/tmp/bar.txt", { kind: "text" } as any);
+
+        expect(putContents).toHaveBeenCalled();
+        const options = putContents.mock.calls[0][2];
+        expect(options.binary).toBe(false);
+        // encoding should not be set for text
+        expect(options.encoding).toBeUndefined();
+        mvsApiMock.mockRestore();
+    });
+
+    it("uploadFileWithEncoding passes correct options to API for other/codepage", async () => {
+        const blockMocks = createBlockMocks();
+        const putContents = jest.fn();
+        const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ putContents } as any);
+        const memberNode = new ZoweDatasetNode({
+            label: "MEMBER1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+        });
+
+        await DatasetActions.uploadFileWithEncoding(memberNode, "/tmp/bar.txt", { kind: "other", codepage: "ISO8859-1" } as any);
+
+        const options = putContents.mock.calls[0][2];
+        expect(options.binary).toBe(false);
+        expect(options.encoding).toBe("ISO8859-1");
+        mvsApiMock.mockRestore();
+    });
+
+    it("uploadDialogWithEncoding should handle cancellation", async () => {
+        const blockMocks = createBlockMocks();
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "binary" } as any);
+        const fileUri = { fsPath: "/tmp/foo.zip" } as any;
+        blockMocks.showOpenDialog.mockResolvedValueOnce([fileUri]);
+        const uploadFileWithEncodingSpy = jest.spyOn(DatasetActions, "uploadFileWithEncoding").mockResolvedValue({
+            success: true,
+            commandResponse: "Upload completed.",
+        });
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        const withProgressMock = jest.spyOn(Gui, "withProgress").mockImplementation((progLocation, callback) => {
+            const progress = { report: jest.fn() };
+            const token = {
+                isCancellationRequested: true, // Simulate cancellation
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+        const getTreeViewMock = jest.spyOn(blockMocks.testDatasetTree, "getTreeView").mockReturnValue({
+            reveal: jest.fn(),
+        } as any);
+
+        await DatasetActions.uploadDialogWithEncoding(pdsNode, blockMocks.testDatasetTree);
+
+        expect(uploadFileWithEncodingSpy).not.toHaveBeenCalled();
+        expect(withProgressMock).toHaveBeenCalled();
+        getTreeViewMock.mockRestore();
     });
 });

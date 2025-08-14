@@ -20,6 +20,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added "Zowe Explorer: List Data Sets" command. Users can now run this command from the command palette to be prompted for a search pattern and display the matching data sets in a table view. [#3583](https://github.com/zowe/zowe-explorer-vscode/issues/3583)
 - When the user types in a data set pattern in the input box of the filter selection prompt, the "Create a new filter" option now updates to include the pattern. Once clicked, the new filter is added to the user's search history and the pattern is used for listing data sets. [#3015](https://github.com/zowe/zowe-explorer-vscode/issues/3015)
 - When the user types in a USS file path in the input box of the filter selection prompt, the "Create a new filter" option now updates to include the file path. Once clicked, the new filter is added to the user's search history and the path is used for listing a USS directory. [#3015](https://github.com/zowe/zowe-explorer-vscode/issues/3015)
+- Added "Upload with Encoding" option for USS directories and partitioned data sets. Users can now right-click on a directory or PDS in the USS or Data Sets tree and select "Upload with Encoding..." to choose a character encoding for the uploaded files. [#3193](https://github.com/zowe/zowe-explorer-vscode/issues/3193)
 - The selected sort order for a data set is now persisted between sessions. [#3798](https://github.com/zowe/zowe-explorer-vscode/pull/3798)
 
 ### Bug fixes
