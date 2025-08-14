@@ -147,6 +147,57 @@ export class SharedInit {
             })
         );
 
+        // Track the existing ConfigEditor instance
+        let existingConfigEditor: ConfigEditor | null = null;
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.configEditorWithProfile", async (profileName: string, configPath: string, profileType: string) => {
+                // Check if there's already an open ConfigEditor
+                if (existingConfigEditor && existingConfigEditor.panel && existingConfigEditor.panel.visible) {
+                    // Reuse existing ConfigEditor
+                    existingConfigEditor.initialSelection = {
+                        profileName: profileName,
+                        configPath: configPath,
+                        profileType: profileType,
+                    };
+
+                    // Reveal the existing panel
+                    existingConfigEditor.panel.reveal();
+
+                    // Send the initial selection to the existing webview
+                    await existingConfigEditor.panel.webview.postMessage({
+                        command: "INITIAL_SELECTION",
+                        profileName: profileName,
+                        configPath: configPath,
+                        profileType: profileType,
+                    });
+
+                    return existingConfigEditor;
+                } else {
+                    // Create new ConfigEditor
+                    const configEditor = new ConfigEditor(context);
+
+                    // Store the initial selection data in the ConfigEditor instance
+                    configEditor.initialSelection = {
+                        profileName: profileName,
+                        configPath: configPath,
+                        profileType: profileType,
+                    };
+
+                    // Track this instance
+                    existingConfigEditor = configEditor;
+
+                    // Set up disposal tracking
+                    configEditor.panel.onDidDispose(() => {
+                        existingConfigEditor = null;
+                    });
+
+                    // Keep the webview open for editing
+                    return configEditor;
+                }
+            })
+        );
+
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.executeNavCallback", async (callback: () => void | PromiseLike<void>) => {
                 await callback();

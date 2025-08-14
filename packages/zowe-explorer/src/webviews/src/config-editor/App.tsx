@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
 import { isSecureOrigin } from "../utils";
@@ -20,6 +20,7 @@ export function App() {
   const [configurations, setConfigurations] = useState<{ configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean }[]>(
     []
   );
+  const configurationsRef = useRef<{ configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean }[]>([]);
   const [selectedTab, setSelectedTab] = useState<number | null>(null);
   const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
   const [flattenedDefaults, setFlattenedDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
@@ -247,6 +248,7 @@ export function App() {
       if (event.data.command === "CONFIGURATIONS") {
         const { contents } = event.data;
         setConfigurations(contents);
+        configurationsRef.current = contents;
         const newSchemaValidations: { [configPath: string]: schemaValidation | undefined } = {};
         contents.forEach((config: any) => {
           newSchemaValidations[config.configPath] = config.schemaValidation;
@@ -290,6 +292,9 @@ export function App() {
           setFlattenedDefaults(flattenKeys(config.defaults));
           // setOriginalDefaults(flattenKeys(config.defaults));
         }
+
+        // Send ready message to ConfigEditor after configurations are processed
+        vscodeApi.postMessage({ command: "CONFIGURATIONS_READY" });
       } else if (event.data.command === "DISABLE_OVERLAY") {
         setSaveModalOpen(false);
       } else if (event.data.command === "MERGED_PROPERTIES") {
@@ -349,6 +354,33 @@ export function App() {
         }
       } else if (event.data.command === "ENV_INFORMATION") {
         setHasWorkspace(event.data.hasWorkspace);
+      } else if (event.data.command === "INITIAL_SELECTION") {
+        // Handle initial profile selection when opening the config editor
+        const { profileName, configPath } = event.data;
+
+        // Use the configurations from the ref to avoid state timing issues
+        const currentConfigs = configurationsRef.current;
+
+        // Find the config tab that contains this profile
+        // Normalize paths for comparison to handle different path formats
+        const normalizedTargetPath = configPath.replace(/\\/g, "/").toLowerCase();
+        const configIndex = currentConfigs.findIndex((config: any) => {
+          const normalizedConfigPath = config.configPath.replace(/\\/g, "/").toLowerCase();
+          return normalizedConfigPath === normalizedTargetPath;
+        });
+
+        if (configIndex !== -1) {
+          setSelectedTab(configIndex);
+
+          // Set the selected profile key
+          setSelectedProfileKey(profileName);
+
+          // Update selected profiles by config
+          setSelectedProfilesByConfig((prev) => ({
+            ...prev,
+            [configPath]: profileName,
+          }));
+        }
       }
     });
 

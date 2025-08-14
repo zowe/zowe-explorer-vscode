@@ -478,7 +478,9 @@ export class Profiles extends ProfilesCache {
             return;
         }
         const filePath = currentProfile.profLoc.osLoc[0];
-        await this.openConfigFile(filePath);
+
+        // Open the ConfigEditor webview with the selected profile pre-selected
+        await vscode.commands.executeCommand("zowe.configEditorWithProfile", profileLoaded.name, filePath, profileLoaded.type);
     }
 
     public async getProfileType(): Promise<string> {

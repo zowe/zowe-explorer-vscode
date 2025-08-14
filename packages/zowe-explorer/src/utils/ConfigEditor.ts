@@ -45,6 +45,12 @@ export class ConfigEditor extends WebView {
         certKey: string;
     }> = new DeferredPromise();
 
+    public initialSelection?: {
+        profileName: string;
+        configPath: string;
+        profileType: string;
+    };
+
     public constructor(context: vscode.ExtensionContext) {
         super(vscode.l10n.t("Config Editor"), "config-editor", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
@@ -142,6 +148,8 @@ export class ConfigEditor extends WebView {
                     command: "CONFIGURATIONS",
                     contents: configurations,
                 });
+
+                // Initial selection will be sent when the webview sends CONFIGURATIONS_READY
                 break;
             }
             case "SAVE_CHANGES": {
@@ -190,6 +198,28 @@ export class ConfigEditor extends WebView {
                     command: "ENV_INFORMATION",
                     hasWorkspace: hasWorkspace,
                 });
+                break;
+            }
+            case "INITIAL_SELECTION": {
+                this.initialSelection = {
+                    profileName: message.profileName,
+                    configPath: message.configPath,
+                    profileType: message.profileType,
+                };
+                break;
+            }
+            case "CONFIGURATIONS_READY": {
+                // If there's initial selection data, send it to the webview now that it's ready
+                if (this.initialSelection) {
+                    await this.panel.webview.postMessage({
+                        command: "INITIAL_SELECTION",
+                        profileName: this.initialSelection.profileName,
+                        configPath: this.initialSelection.configPath,
+                        profileType: this.initialSelection.profileType,
+                    });
+                    // Clear the initial selection after sending it
+                    this.initialSelection = undefined;
+                }
                 break;
             }
             case "OPEN_CONFIG_FILE_WITH_PROFILE": {
