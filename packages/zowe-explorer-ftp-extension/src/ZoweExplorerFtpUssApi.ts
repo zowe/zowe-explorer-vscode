@@ -12,7 +12,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
-import * as tmp from "tmp";
+import * as os from "os";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 
 import { CoreUtils, UssUtils, TransferMode } from "@zowe/zos-ftp-for-zowe-cli";
@@ -181,7 +181,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
             await this.putContent(inputDirectoryPath, ussDirectoryPath);
 
             // getting list of files from directory
-            const files = zosfiles.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, false);
+            const files = zosfiles.ZosFilesUtils.getFileListFromPath(inputDirectoryPath, true);
             // TODO: this solution will not perform very well; rewrite this and putContent methods
             for (const file of files) {
                 const relativePath = path.relative(inputDirectoryPath, file).replace(/\\/g, "/");
@@ -285,14 +285,27 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
             return loadResult.apiResponse.etag as string;
         }
 
-        const tmpFileName = tmp.tmpNameSync();
-        const options: zosfiles.IDownloadOptions = {
-            binary: false,
-            file: tmpFileName,
-        };
-        const loadResult = await this.getContents(ussFilePath, options);
-        fs.rmSync(tmpFileName, { force: true });
-        return loadResult.apiResponse.etag as string;
+        // Create a temporary directory and unique filename
+        const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "zowe-ftp-uss-"));
+        const tmpFileName = path.join(tmpDir, `temp-${crypto.randomUUID()}.dat`);
+
+        try {
+            const options: zosfiles.IDownloadOptions = {
+                binary: false,
+                file: tmpFileName,
+            };
+            const loadResult = await this.getContents(ussFilePath, options);
+            return loadResult.apiResponse.etag as string;
+        } finally {
+            // Clean up temporary file and directory
+            try {
+                fs.rmSync(tmpDir, { force: true, recursive: true });
+            } catch (cleanupError) {
+                if (cleanupError instanceof Error) {
+                    LOGGER.logImperativeMessage(`Failed to clean up temporary files: ${cleanupError.message}`, MessageSeverity.WARN);
+                }
+            }
+        }
     }
 
     private getDefaultResponse(): zosfiles.IZosFilesResponse {
