@@ -110,6 +110,9 @@
   "uploadDialog": {
     "Upload Member...": ""
   },
+  "uploadDialogWithEncoding": {
+    "Upload Member with Encoding...": ""
+  },
   "pattern": {
     "Search Data Sets": ""
   },
@@ -184,6 +187,9 @@
   },
   "uss.uploadDialogBinary": {
     "Upload Files (Binary)...": ""
+  },
+  "uss.uploadDialogWithEncoding": {
+    "Upload Files with Encoding...": ""
   },
   "uss.text": {
     "Toggle Text": ""
@@ -694,6 +700,15 @@
   "Uploading USS files...": "",
   "Error uploading files": "",
   "Retrieving response from USS list API": "",
+  "The 'move' function is not implemented for this USS API.": "",
+  "Failed to move {0}": "",
+  "Profile does not exist for this file.": "",
+  "Saving USS file...": "",
+  "Failed to rename {0}": "",
+  "Failed to delete {0}": "",
+  "No error details given": "",
+  "Error fetching destination {0} for paste action: {1}": "",
+  "Failed to copy {0} to {1}": "",
   "Downloaded: {0}": "",
   "Encoding: {0}": "",
   "Binary": "",
@@ -720,22 +735,16 @@
   "initializeUSSFavorites.error.buttonRemove": "",
   "File does not exist. It may have been deleted.": "",
   "Pulling from Mainframe...": "",
-  "The 'move' function is not implemented for this USS API.": "",
-  "Failed to move {0}": "",
-  "Profile does not exist for this file.": "",
-  "Saving USS file...": "",
-  "Failed to rename {0}": "",
-  "Failed to delete {0}": "",
-  "No error details given": "",
-  "Error fetching destination {0} for paste action: {1}": "",
-  "Failed to copy {0} to {1}": "",
   "{0} location": "",
   "Choose a location to create the {0}": "",
   "Name of file or directory": "",
   "Unable to create node:": "",
   "Uploading file to USS tree": "",
   "Upload action was cancelled.": "",
+  "This action is only supported for USS directories.": "",
+  "Uploading file...": "",
   "Uploading USS file": "",
+  "Uploading USS file with encoding": "",
   "Delete action was canceled.": "",
   "Copying file structure...": "",
   "The paste operation is not supported for this node.": "",
@@ -752,8 +761,10 @@
   "From profile {0}": "",
   "USS file tag": "",
   "Choose encoding for {0}": "",
-  "Current encoding is {0}": "",
   "Enter a codepage (e.g., 1047, IBM-1047)": "",
+  "Choose encoding for upload to {0}": "",
+  "Default encoding is {0}": "",
+  "Current encoding is {0}": "",
   "A search must be set for {0} before it can be added to a workspace.": "",
   "(default)": "",
   "Confirm": "",
@@ -957,6 +968,8 @@
   "Failed to list datasets": "",
   "Failed to read {0}": "",
   "Saving data set...": "",
+  "This upload operation may result in data loss.": "",
+  "Please review the following lines:": "",
   "Failed to save {0}": "",
   "Partitioned Data Set: Binary": "",
   "Partitioned Data Set: C": "",
@@ -983,6 +996,8 @@
   "Unable to create data set.": "",
   "{0} was created like {1}.": "",
   "Uploading to data set": "",
+  "This action is only supported for partitioned data sets.": "",
+  "Uploading to data set...": "",
   "No data sets selected for deletion, cancelling...": "",
   "Deleting data set(s): {0}": "",
   "Deleting items": "",

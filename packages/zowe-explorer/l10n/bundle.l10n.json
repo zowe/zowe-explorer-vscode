@@ -225,6 +225,42 @@
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
+    ]
+  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -287,42 +323,6 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Failed to move {0}/File path": {
-    "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to delete {0}/File name": {
-    "message": "Failed to delete {0}",
-    "comment": [
-      "File name"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
-  "Failed to copy {0} to {1}/Source pathDestination path": {
-    "message": "Failed to copy {0} to {1}",
-    "comment": [
-      "Source path",
-      "Destination path"
-    ]
-  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -339,7 +339,10 @@
   "Unable to create node:": "Unable to create node:",
   "Uploading file to USS tree": "Uploading file to USS tree",
   "Upload action was cancelled.": "Upload action was cancelled.",
+  "This action is only supported for USS directories.": "This action is only supported for USS directories.",
+  "Uploading file...": "Uploading file...",
   "Uploading USS file": "Uploading USS file",
+  "Uploading USS file with encoding": "Uploading USS file with encoding",
   "Delete action was canceled.": "Delete action was canceled.",
   "Copying file structure...": "Copying file structure...",
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
@@ -370,6 +373,25 @@
     ]
   },
   "USS file tag": "USS file tag",
+  "Choose encoding for {0}/Context label": {
+    "message": "Choose encoding for {0}",
+    "comment": [
+      "Context label"
+    ]
+  },
+  "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
+  "Choose encoding for upload to {0}/Context label": {
+    "message": "Choose encoding for upload to {0}",
+    "comment": [
+      "Context label"
+    ]
+  },
+  "Default encoding is {0}/Encoding name": {
+    "message": "Default encoding is {0}",
+    "comment": [
+      "Encoding name"
+    ]
+  },
   "Choose encoding for {0}/Node label": {
     "message": "Choose encoding for {0}",
     "comment": [
@@ -382,7 +404,6 @@
       "Encoding name"
     ]
   },
-  "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
   "A search must be set for {0} before it can be added to a workspace./Name of USS session": {
     "message": "A search must be set for {0} before it can be added to a workspace.",
     "comment": [
@@ -845,6 +866,8 @@
     ]
   },
   "Saving data set...": "Saving data set...",
+  "This upload operation may result in data loss.": "This upload operation may result in data loss.",
+  "Please review the following lines:": "Please review the following lines:",
   "Failed to save {0}/Data set name": {
     "message": "Failed to save {0}",
     "comment": [
@@ -899,6 +922,8 @@
     ]
   },
   "Uploading to data set": "Uploading to data set",
+  "This action is only supported for partitioned data sets.": "This action is only supported for partitioned data sets.",
+  "Uploading to data set...": "Uploading to data set...",
   "No data sets selected for deletion, cancelling...": "No data sets selected for deletion, cancelling...",
   "Deleting data set(s): {0}/Data Sets to delete": {
     "message": "Deleting data set(s): {0}",

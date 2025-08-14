@@ -31,6 +31,7 @@ import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProv
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("../../../../src/tools/ZoweLogger");
+jest.mock("../../../../src/tools/ZoweLocalStorage");
 
 describe("Dataset Search Unit Tests - function search", () => {
     beforeEach(() => {
