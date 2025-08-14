@@ -16,7 +16,9 @@
 import { FtpMvsApi } from "../../../src/ZoweExplorerFtpMvsApi";
 import { DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
-import * as tmp from "tmp";
+import * as path from "path";
+import * as os from "os";
+import * as crypto from "crypto";
 import { Gui, imperative } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
@@ -34,6 +36,12 @@ const readableStream = stream.Readable.from([]);
 const fs = require("fs");
 
 fs.createReadStream = jest.fn().mockReturnValue(readableStream);
+
+// Helper function to create temporary file names using Node.js built-ins
+function createTempFileName(): string {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "zowe-test-mvs-"));
+    return path.join(tmpDir, `temp-${crypto.randomUUID()}.dat`);
+}
 
 describe("FtpMvsApi", () => {
     let MvsApi: FtpMvsApi;
@@ -112,7 +120,7 @@ describe("FtpMvsApi", () => {
     });
 
     it("should view dataset content.", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const localFile = createTempFileName();
         const response = TestUtils.getSingleLineStream();
         DataSetUtils.downloadDataSet = jest.fn().mockReturnValue(response);
 
@@ -134,8 +142,8 @@ describe("FtpMvsApi", () => {
     });
 
     it("should upload content to dataset - sequential data set", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
-        const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
+        const localFile = createTempFileName();
+        const mkdtempSyncSpy = jest.spyOn(fs, "mkdtempSync");
         const rmSyncSpy = jest.spyOn(fs, "rmSync");
 
         fs.writeFileSync(localFile, "hello");
@@ -158,14 +166,14 @@ describe("FtpMvsApi", () => {
         expect(DataSetUtils.listDataSets).toHaveBeenCalledTimes(1);
         expect(DataSetUtils.uploadDataSet).toHaveBeenCalledTimes(1);
         expect(MvsApi.releaseConnection).toHaveBeenCalled();
-        // check that correct function is called from node-tmp
-        expect(tmpNameSyncSpy).toHaveBeenCalled();
+        // check that correct Node.js built-in functions are called
+        expect(mkdtempSyncSpy).toHaveBeenCalled();
         expect(rmSyncSpy).toHaveBeenCalled();
     });
 
     it("should generate a member name for PDS upload if one wasn't provided", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
-        const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
+        const localFile = createTempFileName();
+        const mkdtempSyncSpy = jest.spyOn(fs, "mkdtempSync");
         const rmSyncSpy = jest.spyOn(fs, "rmSync");
 
         fs.writeFileSync(localFile, "helloPdsMember");
@@ -190,13 +198,13 @@ describe("FtpMvsApi", () => {
         expect(dataSetMock).toHaveBeenCalledTimes(1);
         expect(uploadDataSetMock).toHaveBeenCalledTimes(1);
         expect(MvsApi.releaseConnection).toHaveBeenCalled();
-        // check that correct function is called from node-tmp
-        expect(tmpNameSyncSpy).toHaveBeenCalled();
+        // check that correct Node.js built-in functions are called
+        expect(mkdtempSyncSpy).toHaveBeenCalled();
         expect(rmSyncSpy).toHaveBeenCalled();
     });
 
     it("should upload single space to dataset when secureFtp is true and contents are empty", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const localFile = createTempFileName();
 
         fs.writeFileSync(localFile, "");
         const response = TestUtils.getSingleLineStream();
@@ -233,7 +241,7 @@ describe("FtpMvsApi", () => {
     });
 
     it("should upload single space to dataset when secureFtp is true and contents are empty", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const localFile = createTempFileName();
 
         fs.writeFileSync(localFile, "");
         const response = TestUtils.getSingleLineStream();
@@ -433,7 +441,7 @@ describe("FtpMvsApi", () => {
                 throw new Error("Upload dataset failed.");
             })
         );
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const localFile = createTempFileName();
         const mockParams = {
             inputFilePath: localFile,
             dataSetName: "IBMUSER.DS2",
@@ -514,7 +522,7 @@ describe("FtpMvsApi", () => {
             return {
                 processNewlinesSpy: jest.spyOn(imperative.IO, "processNewlines"),
                 putContents: jest.spyOn(MvsApi, "putContents").mockImplementation(),
-                tmpFileSyncMock: jest.spyOn(tmp, "fileSync").mockReturnValueOnce({ fd: 12345 } as any),
+                mkdtempSyncMock: jest.spyOn(fs, "mkdtempSync").mockReturnValueOnce("/tmp/zowe-test-mvs-12345"),
                 writeSyncMock: jest.spyOn(fs, "writeSync").mockImplementation(),
             };
         }
