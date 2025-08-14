@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, IZoweUSSTreeNode, Types, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweUSSTreeNode, Types, ZoweExplorerApiType, ZosEncoding } from "@zowe/zowe-explorer-api";
 import { isBinaryFileSync } from "isbinaryfile";
 import { USSAttributeView } from "./USSAttributeView";
 import { USSFileStructure } from "./USSFileStructure";
@@ -186,6 +186,67 @@ export class USSActions {
         }
     }
 
+    /**
+     * Prompts the user to select an encoding and then the files to upload.
+     *
+     * @param {ZoweUSSNode} node - The session or directory node that serves as the parent
+     * @param {ussTree} ussFileProvider - USS tree provider instance
+     */
+    public static async uploadDialogWithEncoding(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
+        ZoweLogger.trace("uss.actions.uploadDialogWithEncoding called.");
+
+        if (!SharedContext.isUssDirectory(node)) {
+            Gui.infoMessage(vscode.l10n.t("This action is only supported for USS directories."));
+            return;
+        }
+
+        const profile = node.getProfile();
+        const encoding = await SharedUtils.promptForUploadEncoding(profile, node.fullPath);
+
+        if (!encoding) {
+            return;
+        }
+
+        const fileOpenOptions = {
+            canSelectFiles: true,
+            openLabel: "Upload Files with Encoding",
+            canSelectMany: true,
+            defaultUri: LocalFileManagement.getDefaultUri(),
+        };
+
+        const selectedFiles = await Gui.showOpenDialog(fileOpenOptions);
+        if (!selectedFiles || selectedFiles.length === 0) {
+            return;
+        }
+
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: vscode.l10n.t("Uploading file..."),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                let index = 0;
+                for (const item of selectedFiles) {
+                    if (token.isCancellationRequested) {
+                        break;
+                    }
+                    Gui.reportProgress(progress, selectedFiles.length, index, "Uploading");
+
+                    if (encoding.kind === "binary") {
+                        await USSActions.uploadBinaryFile(node, item.fsPath);
+                    } else {
+                        const doc = await vscode.workspace.openTextDocument(item);
+                        await USSActions.uploadFileWithEncoding(node, doc, encoding);
+                    }
+                    index++;
+                }
+            }
+        );
+        ussFileProvider.refreshElement(node);
+        ussFileProvider.getTreeView().reveal(node, { expand: true, focus: true });
+    }
+
     public static async uploadBinaryFile(node: IZoweUSSTreeNode, filePath: string): Promise<void> {
         ZoweLogger.trace("uss.actions.uploadBinaryFile called.");
         try {
@@ -216,6 +277,35 @@ export class USSActions {
             if (prof.profile.encoding) {
                 options.encoding = prof.profile.encoding;
             }
+            await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, options);
+        } catch (e) {
+            await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile: node.getProfile() });
+        }
+    }
+
+    public static async uploadFileWithEncoding(node: IZoweUSSTreeNode, doc: vscode.TextDocument, encoding: ZosEncoding): Promise<void> {
+        ZoweLogger.trace("uss.actions.uploadFileWithEncoding called.");
+        try {
+            const localFileName = path.parse(doc.fileName).base;
+            const ussName = path.posix.join(node.fullPath, localFileName);
+            const prof = node.getProfile();
+
+            const task: imperative.ITaskWithStatus = {
+                percentComplete: 0,
+                statusMessage: vscode.l10n.t("Uploading USS file with encoding"),
+                stageName: 0, // TaskStage.IN_PROGRESS - https://github.com/kulshekhar/ts-jest/issues/281
+            };
+            const options: zosfiles.IUploadOptions = {
+                task,
+                responseTimeout: prof.profile?.responseTimeout,
+                binary: encoding.kind === "binary",
+            };
+
+            // Set encoding based on the user's selection
+            if (encoding.kind === "other" && encoding.codepage) {
+                options.encoding = encoding.codepage;
+            }
+
             await ZoweExplorerApiRegister.getUssApi(prof).putContent(doc.fileName, ussName, options);
         } catch (e) {
             await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile: node.getProfile() });

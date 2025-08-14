@@ -28,6 +28,8 @@ import {
     FileEntry,
     ZoweExplorerApiType,
     AuthHandler,
+    Types,
+    imperative,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -254,7 +256,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
     }
 
-    private async fetchDataset(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<PdsEntry | DsEntry> {
+    private async fetchDataset(uri: vscode.Uri, uriInfo: UriFsInfo, forceFetch?: boolean): Promise<PdsEntry | DsEntry> {
         let entry: PdsEntry | DsEntry;
         try {
             entry = this.lookup(uri, false) as PdsEntry | DsEntry;
@@ -283,8 +285,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
             throw vscode.FileSystemError.FileNotFound(uri);
         }
-
-        if (!entryExists) {
+        let entryStats: Partial<Types.DatasetStats>;
+        if (!entryExists || forceFetch) {
             try {
                 if (pdsMember) {
                     const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(uriPath[0]);
@@ -303,6 +305,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     });
                     if (resp.success && resp.apiResponse?.items?.length > 0) {
                         entryIsDir = resp.apiResponse.items[0].dsorg?.startsWith("PO");
+                        entryStats = DatasetUtils.getDataSetStats(resp.apiResponse.items[0]);
                     } else {
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
@@ -331,6 +334,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry = parentDir.entries.get(dsname) as DsEntry;
         }
 
+        if (entryStats) {
+            entry.stats = { ...entry.stats, ...entryStats };
+        }
         return entry;
     }
 
@@ -589,6 +595,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
             const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
+
             resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
                 binary: entry.encoding?.kind === "binary",
                 encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
@@ -614,7 +621,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
         const basename = path.posix.basename(uri.path);
         const parent = this.lookupParentDirectory(uri);
-        let entry = parent.entries.get(basename);
+        const isPdsMember = FsDatasetsUtils.isPdsEntry(parent);
+        let entry: FileEntry = parent.entries.get(basename);
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
         }
@@ -625,14 +633,43 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileExists(uri);
         }
 
+        let dsStats: Types.DatasetStats = isPdsMember ? parent.stats : undefined;
+        if (dsStats == null) {
+            const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+            const targetPath = isPdsMember ? path.posix.dirname(uri.path) : uri.path;
+            const tempEntry = await this.fetchDataset(uri.with({ path: targetPath }), uriInfo, true);
+            dsStats = tempEntry.stats;
+            if (entry) {
+                entry = tempEntry;
+            }
+        }
+
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
         const urlQuery = new URLSearchParams(uri.query);
         const forceUpload = urlQuery.has("forceUpload");
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
 
         try {
+            const longLines = {};
+            try {
+                const document = await vscode.workspace.openTextDocument(uri);
+                for (let i = 0; i < document.lineCount; i++) {
+                    if (document.lineAt(i).text.length > dsStats?.lrecl) {
+                        longLines[i + 1] = document.lineAt(i).text;
+                    }
+                }
+            } catch (err) {
+                // do nothing since we may be trying to create an entry in the FS that doesn't exist yet
+            }
+            if (Object.keys(longLines).length > 0) {
+                // internal error code to indicate unsafe upload
+                throw new imperative.ImperativeError({
+                    msg: "Zowe Explorer: Unsafe upload",
+                    causeErrors: longLines,
+                });
+            }
+
             if (!entry) {
-                const isPdsMember = FsDatasetsUtils.isPdsEntry(parent);
                 entry = new DsEntry(basename, isPdsMember);
                 entry.data = content;
                 const profInfo = parent.metadata
@@ -645,6 +682,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
                 if (content.byteLength > 0) {
                     // Update e-tag if write was successful.
+                    (entry as DsEntry).stats = { ...(entry as DsEntry).stats, ...dsStats };
                     const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
@@ -664,34 +702,70 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
+                    (entry as DsEntry).stats = { ...(entry as DsEntry).stats, ...dsStats };
                     const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                 }
                 entry.data = content;
             }
         } catch (err) {
-            if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                this._handleError(err, {
-                    additionalContext: vscode.l10n.t({
-                        message: "Failed to save {0}",
-                        args: [(entry.metadata as DsEntryMetadata).dsName],
-                        comment: ["Data set name"],
-                    }),
-                    apiType: ZoweExplorerApiType.Mvs,
-                    profileType: entry.metadata.profile?.type,
-                    retry: {
-                        fn: this.writeFile.bind(this),
-                        args: [uri, content, options],
-                    },
-                    templateArgs: { profileName: entry.metadata.profile?.name ?? "" },
-                });
-                throw err;
+            if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
+                entry.data = content;
+                // Prompt the user with the conflict dialog
+                await this._handleConflict(uri, entry);
+                return;
             }
-
-            entry.data = content;
-            // Prompt the user with the conflict dialog
-            await this._handleConflict(uri, entry);
-            return;
+            if (err instanceof imperative.ImperativeError && err.message.includes("Zowe Explorer: Unsafe upload")) {
+                const longLines = Object.keys(err.causeErrors);
+                const dataLossMsg = vscode.l10n.t("This upload operation may result in data loss.");
+                const linesToReview = longLines.length > 5 ? longLines.slice(0, 5).join(", ") + "..." : longLines.join(", ");
+                const shortMsg = vscode.l10n.t("Please review the following lines:");
+                const newErr = new Error(`${dataLossMsg} ${shortMsg} ${linesToReview}`);
+                newErr.stack = shortMsg + "\n";
+                // group consecutive lines that are next to each other
+                const groupedLines: { lines: number[]; text: string }[] = [];
+                for (const [line, text] of Object.entries(err.causeErrors)) {
+                    if (groupedLines.length > 0) {
+                        const poppedLine = groupedLines.pop();
+                        if (poppedLine && Number(line) - 1 === Number(poppedLine.lines[poppedLine.lines.length - 1])) {
+                            poppedLine.lines.push(Number(line));
+                            poppedLine.text += ("\n" + text) as string;
+                            groupedLines.push(poppedLine);
+                        } else {
+                            groupedLines.push(poppedLine);
+                            groupedLines.push({ lines: [Number(line)], text: text as string });
+                        }
+                    } else {
+                        groupedLines.push({ lines: [Number(line)], text: text as string });
+                    }
+                }
+                for (const lines of groupedLines) {
+                    let lineRange = "";
+                    if (lines.lines.length > 1) {
+                        lineRange = `Lines: ${lines.lines[0]}-${lines.lines[lines.lines.length - 1]}`;
+                    } else {
+                        lineRange = `Line: ${lines.lines[0]}`;
+                    }
+                    newErr.stack += `\n${lineRange}\n${lines.text}\n`;
+                }
+                this._handleError(newErr);
+                throw newErr;
+            }
+            this._handleError(err, {
+                additionalContext: vscode.l10n.t({
+                    message: "Failed to save {0}",
+                    args: [(entry.metadata as DsEntryMetadata).dsName],
+                    comment: ["Data set name"],
+                }),
+                apiType: ZoweExplorerApiType.Mvs,
+                profileType: entry.metadata.profile?.type,
+                retry: {
+                    fn: this.writeFile.bind(this),
+                    args: [uri, content, options],
+                },
+                templateArgs: { profileName: entry.metadata.profile?.name ?? "" },
+            });
+            throw err;
         }
 
         entry.mtime = Date.now();

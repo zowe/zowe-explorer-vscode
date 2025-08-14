@@ -21,6 +21,7 @@ import {
     IDataSetTableEvent,
     DataSetTableEventType,
     Sorting,
+    PersistenceSchemaEnum,
 } from "@zowe/zowe-explorer-api";
 import { commands, Event, EventEmitter, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -33,6 +34,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { AuthUtils } from "../../utils/AuthUtils";
 import * as imperative from "@zowe/imperative";
 import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
+import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
 
 /**
  * Tree-based data source that uses existing tree nodes
@@ -741,6 +743,7 @@ export class DatasetTableView {
     private currentDataSource: IDataSetSource = null;
     private context: ExtensionContext = null;
     private originalPattern: string = null;
+    private persistence = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
 
     // Store previous table state for navigation
     private previousTableData: {
@@ -1030,21 +1033,14 @@ export class DatasetTableView {
     }
 
     /**
-     * Gets the effective sort settings for a tree node, falling back to session sort if needed
+     * Gets the effective sort settings for a tree node, preferring persisted settings.
      */
     private getEffectiveSortSettings(treeNode: IZoweDatasetTreeNode): Sorting.NodeSort | undefined {
-        // Use the PDS sort settings if defined; otherwise, use session sort method
-        if (treeNode.sort) {
-            return treeNode.sort;
-        }
-
-        // Fall back to session node sort settings
-        const sessionNode = treeNode.getSessionNode?.();
-        if (sessionNode && sessionNode.sort) {
-            return sessionNode.sort;
-        }
-
-        return undefined;
+        return (
+            this.persistence.getSortSetting(treeNode) ??
+            treeNode.sort ??
+            (SharedContext.isSession(treeNode) ? undefined : treeNode.getSessionNode()?.sort)
+        );
     }
 
     /**
