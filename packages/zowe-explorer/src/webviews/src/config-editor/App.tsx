@@ -1752,27 +1752,96 @@ export function App() {
                 </select>
               </div>
             ) : typeof pendingValue === "string" || typeof pendingValue === "boolean" || typeof pendingValue === "number" ? (
-              <input
-                className="config-input"
-                type={isSecureProperty ? "password" : "text"}
-                placeholder={isSecureProperty ? "••••••••" : ""}
-                value={
-                  isSecureProperty && isFromMergedProps ? "••••••••" : isFromMergedProps ? String(mergedPropData?.value ?? "") : String(pendingValue)
-                }
-                onChange={(e) => handleChange(fullKey, (e.target as HTMLTextAreaElement).value)}
-                disabled={isFromMergedProps}
-                style={
-                  isFromMergedProps
-                    ? {
-                        backgroundColor: "var(--vscode-input-disabledBackground)",
-                        color: "var(--vscode-disabledForeground)",
-                        cursor: "pointer",
-                        fontFamily: isSecureProperty ? "monospace" : "inherit",
-                        pointerEvents: "none",
+              (() => {
+                const propertyType = displayKey ? getPropertyTypeForConfigEditor(displayKey, path) : undefined;
+
+                if (isSecureProperty) {
+                  return (
+                    <input
+                      className="config-input"
+                      type="password"
+                      placeholder="••••••••"
+                      value="••••••••"
+                      onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
+                      disabled={isFromMergedProps}
+                      style={
+                        isFromMergedProps
+                          ? {
+                              backgroundColor: "var(--vscode-input-disabledBackground)",
+                              color: "var(--vscode-disabledForeground)",
+                              cursor: "pointer",
+                              fontFamily: "monospace",
+                              pointerEvents: "none",
+                            }
+                          : { fontFamily: "monospace" }
                       }
-                    : {}
+                    />
+                  );
+                } else if (propertyType === "boolean") {
+                  return (
+                    <select
+                      className="config-input"
+                      value={stringifyValueByType(pendingValue)}
+                      onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
+                      disabled={isFromMergedProps}
+                      style={
+                        isFromMergedProps
+                          ? {
+                              backgroundColor: "var(--vscode-input-disabledBackground)",
+                              color: "var(--vscode-disabledForeground)",
+                              cursor: "pointer",
+                              pointerEvents: "none",
+                            }
+                          : {}
+                      }
+                    >
+                      <option value="true">true</option>
+                      <option value="false">false</option>
+                    </select>
+                  );
+                } else if (propertyType === "number") {
+                  return (
+                    <input
+                      className="config-input"
+                      type="number"
+                      value={stringifyValueByType(pendingValue)}
+                      onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
+                      disabled={isFromMergedProps}
+                      style={
+                        isFromMergedProps
+                          ? {
+                              backgroundColor: "var(--vscode-input-disabledBackground)",
+                              color: "var(--vscode-disabledForeground)",
+                              cursor: "pointer",
+                              pointerEvents: "none",
+                            }
+                          : {}
+                      }
+                    />
+                  );
+                } else {
+                  return (
+                    <input
+                      className="config-input"
+                      type="text"
+                      placeholder=""
+                      value={isFromMergedProps ? String(mergedPropData?.value ?? "") : stringifyValueByType(pendingValue)}
+                      onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
+                      disabled={isFromMergedProps}
+                      style={
+                        isFromMergedProps
+                          ? {
+                              backgroundColor: "var(--vscode-input-disabledBackground)",
+                              color: "var(--vscode-disabledForeground)",
+                              cursor: "pointer",
+                              pointerEvents: "none",
+                            }
+                          : {}
+                      }
+                    />
+                  );
                 }
-              />
+              })()
             ) : (
               <span>{"{...}"}</span>
             )}
@@ -2021,6 +2090,36 @@ export function App() {
     const currentProfileType = selectedProfileKey ? getProfileType(selectedProfileKey) : null;
     if (currentProfileType) {
       const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[currentProfileType] || {};
+      return propertySchema[propertyKey]?.type;
+    }
+
+    // Fallback: check all profile types for this property
+    const configPath = configurations[selectedTab].configPath;
+    const schemaValidation = schemaValidations[configPath];
+    if (schemaValidation?.propertySchema) {
+      for (const profileType in schemaValidation.propertySchema) {
+        const propertySchema = schemaValidation.propertySchema[profileType];
+        if (propertySchema[propertyKey]?.type) {
+          return propertySchema[propertyKey].type;
+        }
+      }
+    }
+
+    return undefined;
+  };
+
+  // Get property type for the main config editor (similar to getPropertyTypeForAddProfile)
+  const getPropertyTypeForConfigEditor = (propertyKey: string, profilePath: string[]): string | undefined => {
+    if (selectedTab === null) return undefined;
+
+    // Extract the profile key from the path
+    const profileKey = extractProfileKeyFromPath(profilePath);
+
+    // Get the profile type, which will include pending changes
+    const resolvedType = getProfileType(profileKey);
+
+    if (resolvedType) {
+      const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[resolvedType] || {};
       return propertySchema[propertyKey]?.type;
     }
 

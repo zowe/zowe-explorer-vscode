@@ -526,7 +526,7 @@ ul {
 
 .wizard-property-value-row {
     display: flex;
-    gap: 0.5rem;
+    gap: 4px;
 }
 
 .wizard-property-value-input {
@@ -540,7 +540,7 @@ ul {
 }
 
 .wizard-secure-toggle {
-    padding: 0.25rem;
+    padding: 0.375rem;
     height: 32px;
     width: 32px;
     display: flex;
@@ -550,7 +550,7 @@ ul {
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
-    margin-bottom: 4px;
+    font-size: 13px;
 }
 
 .wizard-secure-toggle.active {
@@ -563,25 +563,39 @@ ul {
     color: var(--vscode-button-secondaryForeground);
 }
 
+.wizard-secure-toggle:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
 /* Move lock/unlock icons up by 4px in wizard secure toggle buttons */
 .wizard-secure-toggle .codicon,
-.wizard-property-secure-toggle .codicon {
+.wizard-property-secure-toggle .codicon,
+.codicon-folder-opened {
     transform: translateY(-2px);
 }
 
 .wizard-file-picker {
-    padding: 0.25rem;
-    height: 32px;
-    width: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--vscode-button-secondaryBackground);
-    color: var(--vscode-button-secondaryForeground);
-    border: 1px solid var(--vscode-button-border);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    padding: 0.375rem !important;
+    height: 32px !important;
+    width: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: var(--vscode-button-secondaryBackground) !important;
+    color: var(--vscode-button-secondaryForeground) !important;
+    border: 1px solid var(--vscode-button-border) !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    font-size: 13px !important;
+}
+
+.wizard-file-picker:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground) !important;
+}
+
+.wizard-file-picker:not(:hover) {
+    background-color: var(--vscode-button-secondaryBackground) !important;
 }
 
 .wizard-add-property-button {
@@ -753,13 +767,13 @@ ul {
 .add-profile-input-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     height: 36px;
 }
 
 .add-profile-input {
     flex: 1;
-    height: 36px;
+    height: 32px;
     margin: 0;
 }
 
@@ -767,13 +781,20 @@ ul {
     display: flex;
     gap: 4px;
     align-items: center;
-    height: 36px;
+    height: 32px;
 }
 
 .add-profile-actions {
     display: flex;
     justify-content: flex-end;
+    gap: 8px;
     flex-grow: 1;
+}
+
+.add-profile-actions .wizard-button {
+    padding: 0.375rem 0.75rem;
+    min-width: 60px;
+    font-size: 12px;
 }
 
 /* Common utility classes */

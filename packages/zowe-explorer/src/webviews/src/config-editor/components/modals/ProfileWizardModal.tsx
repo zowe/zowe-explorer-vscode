@@ -230,13 +230,6 @@ export function ProfileWizardModal({
                     }
                   })()}
                   <div className="wizard-property-buttons">
-                    <button
-                      onClick={onNewPropertySecureToggle}
-                      className={`wizard-secure-toggle ${wizardNewPropertySecure ? "active" : "inactive"}`}
-                      title={wizardNewPropertySecure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
-                    >
-                      <span className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}></span>
-                    </button>
                     {wizardNewPropertyKey && isFileProperty(wizardNewPropertyKey.trim()) && (
                       <button
                         onClick={() => {
@@ -276,6 +269,13 @@ export function ProfileWizardModal({
                         <span className="codicon codicon-folder-opened"></span>
                       </button>
                     )}
+                    <button
+                      onClick={onNewPropertySecureToggle}
+                      className={`wizard-secure-toggle ${wizardNewPropertySecure ? "active" : "inactive"}`}
+                      title={wizardNewPropertySecure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
+                    >
+                      <span className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}></span>
+                    </button>
                   </div>
                 </div>
                 <button
