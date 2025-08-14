@@ -54,6 +54,7 @@ import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerA
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("../../../../src/tools/ZoweLogger");
+jest.mock("../../../../src/tools/ZoweLocalStorage");
 
 let mockClipboardData = null;
 let clipboard;
