@@ -733,4 +733,41 @@ export class ProfilesUtils {
         }, []);
         Gui.infoMessage(responseMsg.join(""), { vsCodeOpts: { modal: true } });
     }
+
+    public static extenderTypeReady: Map<string, imperative.DeferredPromise<void>> = new Map([
+        [
+            "zosmf",
+            ((): imperative.DeferredPromise<void> => {
+                const deferred = new imperative.DeferredPromise<void>();
+                deferred.resolve();
+                return deferred;
+            })(),
+        ],
+    ]);
+
+    public static async awaitExtenderType(profileName: string, profInfo: ProfilesCache): Promise<void> {
+        const profAttrs = await profInfo.getProfileFromConfig(profileName);
+        if (profAttrs && !ProfilesUtils.extenderTypeReady.has(profAttrs.profType)) {
+            const deferredPromise = new imperative.DeferredPromise<void>();
+            ProfilesUtils.extenderTypeReady.set(profAttrs.profType, deferredPromise);
+        }
+        const profilePromise = ProfilesUtils.extenderTypeReady.get(profAttrs?.profType);
+        const promiseTimeout = 10000;
+        if (profilePromise) {
+            let timeoutHandle: NodeJS.Timeout;
+            const timeoutPromise = new Promise<void>((_, reject) => {
+                timeoutHandle = setTimeout(() => reject(new Error("Timeout waiting for profile")), promiseTimeout);
+            });
+            await Promise.race([profilePromise.promise.finally(() => clearTimeout(timeoutHandle)), timeoutPromise]);
+        }
+    }
+
+    public static async resolveTypePromise(extenderType: string): Promise<void> {
+        if (!ProfilesUtils.extenderTypeReady.has(extenderType)) {
+            // Prevent deadlocks by setting a resolved promise to avoid setting a new promise
+            ProfilesUtils.extenderTypeReady.set(extenderType, new imperative.DeferredPromise());
+        }
+        ProfilesUtils.extenderTypeReady.get(extenderType).resolve();
+        await vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", extenderType);
+    }
 }

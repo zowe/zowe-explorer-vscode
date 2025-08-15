@@ -22,6 +22,10 @@ import {
     FsAbstractUtils,
     ZoweScheme,
     ZoweExplorerApiType,
+    PdsEntry,
+    type AttributeInfo,
+    DataSetAttributesProvider,
+    ZosEncoding,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
@@ -39,6 +43,8 @@ import { FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { Definitions } from "../../configuration/Definitions";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
+import { SharedTreeProviders } from "../shared/SharedTreeProviders";
+import { DatasetTree } from "./DatasetTree";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
 
 export class DatasetActions {
@@ -493,6 +499,80 @@ export class DatasetActions {
         }
     }
 
+    /**
+     * Prompts the user to select an encoding and then the files to upload.
+     *
+     * @param {ZoweDatasetNode} node - The PDS node that serves as the parent
+     * @param {datasetTree} datasetProvider - Data set tree provider instance
+     */
+    public static async uploadDialogWithEncoding(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
+        ZoweLogger.trace("dataset.actions.uploadDialogWithEncoding called.");
+
+        if (!SharedContext.isPds(node)) {
+            Gui.showMessage(vscode.l10n.t("This action is only supported for partitioned data sets."));
+            return;
+        }
+
+        const profile = node.getProfile();
+        const encoding = await SharedUtils.promptForUploadEncoding(profile, node.label as string);
+
+        if (!encoding) {
+            return;
+        }
+
+        const fileOpenOptions = {
+            canSelectFiles: true,
+            openLabel: "Upload File with Encoding",
+            canSelectMany: true,
+            defaultUri: LocalFileManagement.getDefaultUri(),
+        };
+        const selectedFiles = await Gui.showOpenDialog(fileOpenOptions);
+        if (!selectedFiles || selectedFiles.length === 0) {
+            return;
+        }
+
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: vscode.l10n.t("Uploading to data set..."),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                let index = 0;
+                for (const item of selectedFiles) {
+                    if (token.isCancellationRequested) {
+                        break;
+                    }
+                    Gui.reportProgress(progress, selectedFiles.length, index, "Uploading");
+                    const response = await DatasetActions.uploadFileWithEncoding(node, item.fsPath, encoding);
+                    if (!response?.success) {
+                        await AuthUtils.errorHandling(response?.commandResponse, {
+                            apiType: ZoweExplorerApiType.Mvs,
+                            profile: node.getProfile(),
+                        });
+                        break;
+                    }
+                    index++;
+                }
+            }
+        );
+
+        // refresh Tree View & favorites
+        datasetProvider.refreshElement(node);
+        datasetProvider.getTreeView().reveal(node, { expand: true, focus: true });
+        if (SharedContext.isFavorite(node) || SharedContext.isFavoriteContext(node.getParent())) {
+            const nonFavNode = datasetProvider.findNonFavoritedNode(node);
+            if (nonFavNode) {
+                datasetProvider.refreshElement(nonFavNode);
+            }
+        } else {
+            const favNode = datasetProvider.findFavoritedNode(node);
+            if (favNode) {
+                datasetProvider.refreshElement(favNode);
+            }
+        }
+    }
+
     public static async uploadFile(node: ZoweDatasetNode, docPath: string): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("dataset.actions.uploadFile called.");
         try {
@@ -503,6 +583,31 @@ export class DatasetActions {
                 encoding: prof.profile?.encoding,
                 responseTimeout: prof.profile?.responseTimeout,
             });
+        } catch (e) {
+            await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+        }
+    }
+
+    public static async uploadFileWithEncoding(node: ZoweDatasetNode, docPath: string, encoding: ZosEncoding): Promise<zosfiles.IZosFilesResponse> {
+        ZoweLogger.trace("dataset.actions.uploadFileWithEncoding called.");
+        try {
+            const datasetName = node.label as string;
+            const prof = node.getProfile();
+
+            const options: any = {
+                responseTimeout: prof.profile?.responseTimeout,
+                binary: encoding.kind === "binary",
+            };
+
+            // Set encoding based on the user's selection
+            if (encoding.kind === "text") {
+                // Use default EBCDIC
+                options.encoding = undefined;
+            } else if (encoding.kind === "other" && encoding.codepage) {
+                options.encoding = encoding.codepage;
+            }
+
+            return await ZoweExplorerApiRegister.getMvsApi(prof).putContents(docPath, datasetName, options);
         } catch (e) {
             await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
         }
@@ -1275,39 +1380,118 @@ export class DatasetActions {
                 throw err;
             }
 
+            DatasetActions.attributeInfo = [
+                {
+                    title: "Zowe Explorer",
+                    reference: "https://docs.zowe.org/stable/typedoc/interfaces/_zowe_zos_files_for_zowe_sdk.izosmflistresponse",
+                    keys: new Map(
+                        [
+                            ["dsname", "Data Set Name", "The name of the dataset"],
+                            ["member", "Member Name", "The name of the member"],
+                            ["blksz", "Block Size", "The block size of the dataset"],
+                            ["catnm", "Catalog Name", "The catalog in which the dataset entry is stored"],
+                            ["cdate", "Create Date", "The dataset creation date"],
+                            ["dev", "Device Type", "The type of the device the dataset is stored on"],
+                            ["dsntp", "Data Set Type", "LIBRARY, (LIBRARY,1), (LIBRARY,2), PDS, HFS, EXTREQ, EXTPREF, BASIC or LARGE"],
+                            ["dsorg", "Data Set Organization", "The organization of the data set as PS, PO, or DA"],
+                            ["edate", "Expiration Date", "The dataset expiration date"],
+                            ["extx", "Extensions", "The number of extensions the dataset has"],
+                            ["lrecl", "Logical Record Length", "The length in bytes of each record"],
+                            ["migr", "Migration", "Indicates if automatic migration is active"],
+                            ["mvol", "Multivolume", "Whether the dataset is on multiple volumes"],
+                            ["ovf", "Open virtualization format", ""],
+                            ["rdate", "Reference Date", "Last referenced date"],
+                            ["recfm", "Record Format", "Valid values: A, B, D, F, M, S, T, U, V (combinable)"],
+                            ["sizex", "Size", "Size of the first extent in tracks"],
+                            ["spacu", "Space Unit", "Type of space units measurement"],
+                            ["used", "Used Space", "Used space percentage"],
+                            ["vol", "Volume", "Volume serial numbers for data set"],
+                            ["vols", "Volumes", "Multiple volume serial numbers"],
+                        ].map(([key, displayName, description]) => [
+                            key,
+                            {
+                                displayName: vscode.l10n.t(displayName),
+                                description: vscode.l10n.t(description),
+                                value: attributes[0][key as keyof (typeof attributes)[0]],
+                            },
+                        ])
+                    ),
+                },
+            ];
+
+            const extenderAttributes = DataSetAttributesProvider.getInstance();
+            const sessionNode = node.getSessionNode();
+
+            DatasetActions.attributeInfo.push(
+                ...(await extenderAttributes.fetchAll({ dsName: attributes[0].dsname, profile: sessionNode.getProfile() }))
+            );
+
+            // Check registered DataSetAttributesProvider, send dsname and profile. get results and append to `attributeInfo`
             const attributesMessage = vscode.l10n.t("Attributes");
+
             const webviewHTML = `<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <title>${label} "${attributesMessage}"</title>
-        </head>
-        <body>
-        <table style="margin-top: 2em; border-spacing: 2em 0">
-        ${Object.keys(attributes[0]).reduce(
-            (html, key) =>
-                html.concat(`
-                <tr>
-                    <td align="left" style="color: var(--vscode-editorLink-activeForeground); font-weight: bold">${key}:</td>
-                    <td align="right" style="color: ${
-                        isNaN(attributes[0][key]) ? "var(--vscode-settings-textInputForeground)" : "var(--vscode-problemsWarningIcon-foreground)"
-                        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                    }">${attributes[0][key]}</td>
-                </tr>
-        `),
-            ""
-        )}
-        </table>
-        </body>
-        </html>`;
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>${label} "${attributesMessage}"</title>
+</head>
+<body>
+    ${DatasetActions.attributeInfo
+        .map(({ title, reference, keys }) => {
+            const linkedTitle = reference
+                ? `<a href="${reference}" target="_blank" style="text-decoration: none;">
+                    <h2 style="color: var(--vscode-textLink-foreground)">${title}</h2>
+                </a>`
+                : `<h2>${title}</h2>`;
+            const tableRows = Array.from(keys.entries())
+                .filter(([key], _, all) => !(key === "vol" && all.some(([k]) => k === "vols")))
+                .reduce((html, [key, info]) => {
+                    if (info.value === undefined || info.value === null) {
+                        return html;
+                    }
+                    return html.concat(`
+                        <tr ${
+                            info.displayName || info.description
+                                ? `title="${info.displayName ? `(${key})` : ""}${
+                                      info.description ? (info.displayName ? " " : "") + info.description : ""
+                                  }"`
+                                : ""
+                        }>
+                            <td align="left" style="color: var(--vscode-settings-textInputForeground); font-weight: bold">
+                                ${info.displayName || key}:
+                            </td>
+                            <td align="right" style="color: ${
+                                isNaN(info.value as any)
+                                    ? "var(--vscode-settings-textInputForeground)"
+                                    : "var(--vscode-problemsWarningIcon-foreground)"
+                            }">
+                                ${info.value as string}
+                            </td>
+                        </tr>
+                `);
+                }, "");
+
+            return `
+            ${linkedTitle}
+            <table style="margin-top: 2em; border-spacing: 2em 0">
+                ${tableRows}
+            </table>
+        `;
+        })
+        .join("")}
+</body>
+</html>`;
+
             const panel: vscode.WebviewPanel = Gui.createWebviewPanel({
                 viewType: "zowe",
-                title: label + " " + vscode.l10n.t("Attributes"),
-                showOptions: vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : 1,
+                title: `${label} ${attributesMessage}`,
+                showOptions: vscode.window.activeTextEditor?.viewColumn ?? 1,
             });
             panel.webview.html = webviewHTML;
         }
     }
+
+    private static attributeInfo: AttributeInfo;
 
     /**
      * Submit the contents of the editor or file as JCL.
@@ -1387,7 +1571,7 @@ export class DatasetActions {
             try {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
                 const args = [sessProfileName, job.jobid];
-                const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+                const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                 Gui.showMessage(
                     vscode.l10n.t({
                         message: "Job submitted {0}",
@@ -1413,6 +1597,117 @@ export class DatasetActions {
             }
         } else {
             Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+        }
+    }
+
+    /**
+     * Attempts to open a data set from the selection of text made in the editor
+     * Works the same as ZOOM command in TSO/ISPF
+     *
+     */
+    public static async zoom(): Promise<void> {
+        ZoweLogger.trace("dataset.actions.zoom called.");
+
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            Gui.warningMessage(vscode.l10n.t("No active editor open. Please open a file and select text to open a data set."));
+            return;
+        }
+
+        const doc = editor.document;
+        const selection = editor.selection;
+        const selectedText = doc.getText(selection);
+        // Shouldn't happen but just in case
+        if (!selectedText) {
+            Gui.warningMessage(vscode.l10n.t("No selection to open."));
+            return;
+        }
+
+        // If selected text is not a valid data set name or data set(member name)
+        const ds = DatasetUtils.extractDataSetAndMember(selectedText);
+        const hasMember = ds.memberName && ds.memberName.length > 0;
+        if (hasMember) {
+            if (!DatasetUtils.validateMemberName(ds.memberName)) {
+                Gui.warningMessage(vscode.l10n.t("Selection is not a valid data set member name."));
+                return;
+            }
+        } else if (!DatasetUtils.validateDataSetName(ds.dataSetName)) {
+            Gui.warningMessage(vscode.l10n.t("Selection is not a valid data set name."));
+            return;
+        }
+
+        const profiles = Profiles.getInstance();
+        const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
+        let sessProfileName = doc.uri ? FsAbstractUtils.getInfoForUri(doc.uri)?.profileName : "";
+
+        // If no profile name or not loaded, prompt user to select one
+        if (!sessProfileName || !profiles.allProfiles.some((p) => p.name === sessProfileName)) {
+            if (profileNamesList.length > 1) {
+                const quickPickOptions: vscode.QuickPickOptions = {
+                    placeHolder: vscode.l10n.t("Select the profile to use to open the data set"),
+                    ignoreFocusOut: true,
+                    canPickMany: false,
+                };
+                sessProfileName = await Gui.showQuickPick(profileNamesList, quickPickOptions);
+                if (!sessProfileName) {
+                    Gui.infoMessage(DatasetActions.localizedStrings.opCancelled);
+                    return;
+                }
+            } else if (profileNamesList.length > 0) {
+                sessProfileName = profileNamesList[0];
+            } else {
+                Gui.showMessage(vscode.l10n.t("No profiles available"));
+                return;
+            }
+        }
+
+        // Get the profile from the session name
+        const sessProfile = profiles.loadNamedProfile(sessProfileName);
+
+        await Profiles.getInstance().checkCurrentProfile(sessProfile);
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        const datasetUri = vscode.Uri.parse(
+            hasMember
+                ? `${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}/${ds.memberName.toUpperCase()}`
+                : `${ZoweScheme.DS}:/${sessProfileName}/${ds.dataSetName.toUpperCase()}`
+        );
+
+        try {
+            // If selected text is a PDS
+            if (!hasMember) {
+                const lookup = await DatasetFSProvider.instance.remoteLookupForResource(datasetUri);
+                if (lookup && lookup instanceof PdsEntry) {
+                    const datasetTree = SharedTreeProviders.ds as DatasetTree;
+                    const successful = await datasetTree.focusOnDsInTree(ds.dataSetName, sessProfile);
+                    if (!successful) {
+                        Gui.warningMessage(vscode.l10n.t("PDS {0} could not be found.", ds.dataSetName));
+                    }
+                    return;
+                }
+            }
+
+            await vscode.workspace.fs.readFile(datasetUri);
+            await vscode.commands.executeCommand("vscode.open", datasetUri, {
+                preview: false,
+                viewColumn: vscode.window.activeTextEditor?.viewColumn,
+            });
+        } catch (error) {
+            if (error instanceof vscode.FileSystemError) {
+                const errorMessage = hasMember
+                    ? vscode.l10n.t("Data set member {0} does not exist or cannot be opened in data set {1}.", ds.memberName, ds.dataSetName)
+                    : vscode.l10n.t("Data set {0} does not exist or cannot be opened.", ds.dataSetName);
+                Gui.warningMessage(errorMessage);
+            } else {
+                await AuthUtils.errorHandling(error, {
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profile: sessProfile,
+                    scenario: vscode.l10n.t("Opening data set failed."),
+                });
+            }
         }
     }
 
@@ -1514,7 +1809,7 @@ export class DatasetActions {
             try {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
                 const args = [sesName, job.jobid];
-                const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+                const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                 Gui.showMessage(
                     vscode.l10n.t({
                         message: "Job submitted {0}",

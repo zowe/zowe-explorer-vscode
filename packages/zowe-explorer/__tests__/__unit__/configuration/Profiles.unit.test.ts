@@ -874,7 +874,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         });
     };
 
-    const setupProfilesCheck = (globalMocks): void => {
+    const setupProfilesCheck = (globalMocks, autoStore: boolean = true): void => {
         jest.spyOn(Profiles.getInstance(), "getDefaultProfile").mockReturnValue({ name: "base" } as any);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => ({
@@ -892,6 +892,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
                         },
                     },
                 },
+                autoStore,
             }),
         } as any);
         jest.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue(globalMocks.testProfile);
@@ -903,6 +904,15 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         const globalMocks = createGlobalMocks();
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+        expect(promptCredentialsSpy).toHaveBeenCalledTimes(1);
+    });
+    it("should succeed without error when autoStore property is missing", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks, undefined);
         jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
@@ -947,6 +957,83 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
+    });
+    it("should not prompt for password if a valid private key is provided", async () => {
+        const globalMocks = await createGlobalMocks();
+        setupProfilesCheck(globalMocks);
+        jest.spyOn(Profiles.getInstance(), "getPropsForProfile").mockImplementationOnce(Profiles.getInstance().getProfileInfo as any);
+        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+        jest.spyOn(Profiles.getInstance(), "getProfileSetting").mockResolvedValue({} as Validation.IValidationProfile);
+        const promptSpy = jest
+            .spyOn(Profiles.getInstance(), "promptCredentials")
+            .mockImplementationOnce(Profiles.getInstance().getProfileInfo as any);
+
+        await Profiles.getInstance().checkCurrentProfile({
+            name: "sestest",
+            profile: {
+                type: "ssh",
+                host: "test",
+                port: 22,
+                user: "test",
+                name: "testName",
+                privateKey: "/path/to/private/key",
+            },
+            type: "ssh",
+            message: "",
+            failNotFound: false,
+        });
+        expect(promptSpy).not.toHaveBeenCalled();
+    });
+    it("should prompt for password if a private key is not provided", async () => {
+        const globalMocks = await createGlobalMocks();
+        setupProfilesCheck(globalMocks);
+        jest.spyOn(Profiles.getInstance(), "getPropsForProfile").mockImplementationOnce(Profiles.getInstance().getProfileInfo as any);
+        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+        jest.spyOn(Profiles.getInstance(), "getProfileSetting").mockResolvedValue({} as Validation.IValidationProfile);
+        const promptSpy = jest
+            .spyOn(Profiles.getInstance(), "promptCredentials")
+            .mockImplementationOnce(Profiles.getInstance().getProfileInfo as any);
+
+        await Profiles.getInstance().checkCurrentProfile({
+            name: "sestest",
+            profile: {
+                type: "ssh",
+                host: "test",
+                port: 22,
+                user: "test",
+                name: "testName",
+            },
+            type: "ssh",
+            message: "",
+            failNotFound: false,
+        });
+        expect(promptSpy).toHaveBeenCalled();
+    });
+    it("should prompt for password if a private key is provided but type is not ssh", async () => {
+        const globalMocks = await createGlobalMocks();
+        setupProfilesCheck(globalMocks);
+        jest.spyOn(Profiles.getInstance(), "getPropsForProfile").mockImplementationOnce(Profiles.getInstance().getProfileInfo as any);
+        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+        jest.spyOn(Profiles.getInstance(), "getProfileSetting").mockResolvedValue({} as Validation.IValidationProfile);
+        const promptSpy = jest
+            .spyOn(Profiles.getInstance(), "promptCredentials")
+            .mockImplementationOnce(Profiles.getInstance().getProfileInfo as any);
+
+        await Profiles.getInstance().checkCurrentProfile({
+            name: "sestest",
+            profile: {
+                type: "base",
+                host: "test",
+                port: 22,
+                user: "test",
+                name: "testName",
+                privateKey: "/path/to/private/key",
+            },
+            type: "base",
+            message: "",
+            failNotFound: false,
+        });
+        expect(promptSpy).toHaveBeenCalled();
     });
     it("should show as unverified if profiles fail to load", async () => {
         const globalMocks = await createGlobalMocks();

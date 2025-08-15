@@ -19,6 +19,9 @@ import { DatasetInit } from "../../../../src/trees/dataset/DatasetInit";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { DatasetSearch } from "../../../../src/trees/dataset/DatasetSearch";
+import { DatasetTableView } from "../../../../src/trees/dataset/DatasetTableView";
+
+jest.mock("../../../../src/tools/ZoweLocalStorage");
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -114,6 +117,10 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(DatasetActions, "uploadDialog"), arg: [test.value, dsProvider] }],
             },
             {
+                name: "zowe.ds.uploadDialogWithEncoding",
+                mock: [{ spy: jest.spyOn(DatasetActions, "uploadDialogWithEncoding"), arg: [test.value, dsProvider] }],
+            },
+            {
                 name: "zowe.ds.downloadAllMembers",
                 mock: [{ spy: jest.spyOn(DatasetActions, "downloadAllMembers"), arg: [test.value] }],
             },
@@ -138,6 +145,10 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.submitJcl",
                 mock: [{ spy: jest.spyOn(DatasetActions, "submitJcl"), arg: [dsProvider, test.value] }],
+            },
+            {
+                name: "zowe.ds.zoom",
+                mock: [{ spy: jest.spyOn(DatasetActions, "zoom"), arg: [] }],
             },
             {
                 name: "zowe.ds.submitMember",
@@ -206,6 +217,14 @@ describe("Test src/dataset/extension", () => {
             {
                 name: "zowe.ds.filterBy",
                 mock: [{ spy: jest.spyOn(dsProvider, "filterPdsMembersDialog"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.ds.tableView",
+                mock: [{ spy: jest.spyOn(DatasetTableView.getInstance(), "handleCommand"), arg: [test.context, test.value, undefined] }],
+            },
+            {
+                name: "zowe.ds.listDataSets",
+                mock: [{ spy: jest.spyOn(DatasetTableView.getInstance(), "handlePatternSearch"), arg: [test.context] }],
             },
             {
                 name: "onDidChangeConfiguration",

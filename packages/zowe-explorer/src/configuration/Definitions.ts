@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosJobs from "@zowe/zos-jobs-for-zowe-sdk";
-import { Types, IZoweTreeNode, imperative, ZosEncoding, IZoweTree } from "@zowe/zowe-explorer-api";
+import { Types, IZoweTreeNode, imperative, ZosEncoding, IZoweTree, Sorting } from "@zowe/zowe-explorer-api";
 import type { DatasetTree } from "../trees/dataset/DatasetTree";
 import type { JobTree } from "../trees/job/JobTree";
 import type { USSTree } from "../trees/uss/USSTree";
@@ -64,6 +64,7 @@ export namespace Definitions {
         encodingHistory: string[];
         templates: Types.DataSetAllocTemplate[];
         searchedKeywordHistory: string[];
+        sortSettings: { [criteria: string]: Sorting.NodeSort };
     };
     export type ReplaceDSType = "ps" | "po" | "mem";
     export type ShouldReplace = "replace" | "cancel" | "notFound";
@@ -160,6 +161,7 @@ export namespace Definitions {
         SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated",
         V1_MIGRATION_STATUS = "zowe.v1MigrationStatus",
         DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
+        DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
         DS_DOWNLOAD_OPTIONS = "zowe.dsDownloadOptions",
     }
 }

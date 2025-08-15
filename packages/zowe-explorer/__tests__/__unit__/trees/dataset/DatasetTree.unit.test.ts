@@ -35,12 +35,11 @@ import { Profiles } from "../../../../src/configuration/Profiles";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
-import { FilterDescriptor } from "../../../../src/management/FilterManagement";
+import { FilterDescriptor, FilterItem } from "../../../../src/management/FilterManagement";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ZowePersistentFilters } from "../../../../src/tools/ZowePersistentFilters";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { DatasetTree } from "../../../../src/trees/dataset/DatasetTree";
-import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
@@ -274,7 +273,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         expect(favChildNodeForProfile).toEqual(node);
     });
     it("Checking function for sequential DS favorite", async () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
@@ -285,6 +284,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             profile: blockMocks.imperativeProfile,
             contextOverride: Constants.DS_FAV_CONTEXT,
         });
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         node.resourceUri = blockMocks.datasetSessionNode.resourceUri?.with({
             path: `/${blockMocks.datasetSessionNode.label as string}/${node.label as string}`,
         });
@@ -1001,7 +1001,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
             mockEnableValidationContext: jest.fn(),
             mockLoadDefaultProfile: jest.fn(),
             mockProfileInstance: null,
-            mockMHistory: ZowePersistentFilters,
+            mockMPersistence: ZowePersistentFilters,
             mockGetConfiguration: jest.fn(),
             mockPersistenceSchema: createPersistentConfig(),
         };
@@ -1062,7 +1062,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = createDatasetTree(blockMocks.datasetSessionNode, blockMocks.treeView);
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        Object.defineProperty(testTree.mHistory, "getSessions", {
+        Object.defineProperty(testTree.mPersistence, "getSessions", {
             value: jest.fn(() => {
                 return ["sestest", "profile1", "profile2"];
             }),
@@ -1081,7 +1081,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const testTree = createDatasetTree(blockMocks.datasetSessionNode, blockMocks.treeView);
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        testTree.mHistory.push(blockMocks.imperativeProfile.name);
+        testTree.mPersistence.push(blockMocks.imperativeProfile.name);
 
         testTree.addSession();
         expect(testTree.mSessionNodes[1].label).toBe(blockMocks.imperativeProfile.name);
@@ -1114,7 +1114,7 @@ describe("Dataset Tree Unit Tests - Function addSession", () => {
                 getProfileName: () => "sestest",
             } as any,
         ];
-        jest.spyOn((testTree as any).mHistory, "getSessions").mockReturnValue(["sestest"]);
+        jest.spyOn((testTree as any).mPersistence, "getSessions").mockReturnValue(["sestest"]);
         jest.spyOn(Profiles.getInstance(), "fetchAllProfiles").mockReturnValue(Promise.resolve([blockMocks.imperativeProfile]));
         jest.spyOn(SharedActions, "resetValidationSettings").mockImplementation();
 
@@ -2061,6 +2061,509 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         expect(updateStatsSpy).toHaveBeenCalled();
     });
+
+    describe("Filter preview functionality", () => {
+        it("should update create filter option with user input preview and use input when selected", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "TEST.PATTERN",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+            const filterDescriptor = new FilterDescriptor('$(plus) Create a new filter: "TEST.PATTERN"');
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterDescriptor);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            expect(mockQuickPick.onDidChangeValue).toHaveBeenCalled();
+            expect(testTree.mSessionNodes[1].pattern).toEqual("TEST.PATTERN");
+        });
+
+        it("should fall back to input box when FilterDescriptor is selected but no value is entered", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "", // Empty value
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+            const filterDescriptor = new FilterDescriptor("Create a new filter");
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterDescriptor);
+
+            jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("INPUT.BOX.PATTERN");
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            expect(Gui.showInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("Search data sets: use a comma to separate multiple patterns"),
+            });
+            expect(testTree.mSessionNodes[1].pattern).toEqual("INPUT.BOX.PATTERN");
+        });
+
+        it("should use trimmed quickpick value when FilterDescriptor is selected with whitespace", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "  TRIM.ME  ",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+            const filterDescriptor = new FilterDescriptor("Create a new filter");
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterDescriptor);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+            expect(testTree.mSessionNodes[1].pattern).toEqual("TRIM.ME");
+        });
+
+        it("should handle selection of existing filter from history", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "USER.TYPED.BUT.SELECTED.HISTORY",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+            // Example of existing filter from user history
+            const filterItem = { label: "EXISTING.FILTER", description: "" };
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterItem);
+            // Confirm user selection of existing filter
+            jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("EXISTING.FILTER");
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["EXISTING.FILTER"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+            expect(testTree.mSessionNodes[1].pattern).toEqual("EXISTING.FILTER");
+        });
+
+        it("should update placeholder text to indicate new behavior", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined); // Cancel
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+            expect(mockQuickPick.placeholder).toContain("Select a filter or type to create a new one");
+        });
+
+        it("should dynamically update the create filter option when user types", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            // Verify that onDidChangeValue callback was registered
+            expect(mockQuickPick.onDidChangeValue).toHaveBeenCalled();
+
+            // Test the callback function directly
+            const onDidChangeCallback = mockQuickPick.onDidChangeValue.mock.calls[0][0];
+
+            // Test with empty input - should show default text
+            onDidChangeCallback("");
+            expect(mockQuickPick.items[0].label).toContain("Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)");
+
+            // Test with user input - should show preview with user input
+            onDidChangeCallback("USER.INPUT");
+            expect(mockQuickPick.items[0].label).toContain('$(plus) Create a new filter: "USER.INPUT"');
+
+            // Test with whitespace input - should show preview
+            onDidChangeCallback("  WHITESPACE.INPUT  ");
+            expect(mockQuickPick.items[0].label).toContain('$(plus) Create a new filter: "WHITESPACE.INPUT"');
+        });
+
+        it("should skip input box when user types filter and selects FilterDescriptor", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "USER.TYPED.FILTER",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+            const filterDescriptor = new FilterDescriptor('$(plus) Create a new filter: "USER.TYPED.FILTER"');
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterDescriptor);
+
+            // Ensure input box is never called when user has typed a filter
+            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockReset();
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            // Verify input box was not called (prompt was skipped)
+            expect(showInputBoxSpy).not.toHaveBeenCalled();
+            expect(testTree.mSessionNodes[1].pattern).toEqual("USER.TYPED.FILTER");
+        });
+
+        it("should cancel operation when user dismisses quickpick without selection", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "USER.TYPED.BUT.CANCELLED",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined); // User cancelled
+
+            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            expect(showMessageSpy).toHaveBeenCalledWith("No selection made. Operation cancelled.");
+            expect(testTree.mSessionNodes[1].pattern).toBe("");
+        });
+
+        it("should maintain session node tooltip when filtering with user input", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "FILTER.PATTERN",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+            const filterDescriptor = new FilterDescriptor('$(plus) Create a new filter: "FILTER.PATTERN"');
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterDescriptor);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            // Set initial tooltip
+            blockMocks.datasetSessionNode.tooltip = "Initial tooltip";
+
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            expect(testTree.mSessionNodes[1].tooltip).toContain("Pattern: FILTER.PATTERN");
+        });
+
+        it("should handle whitespace-only input correctly", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "   ",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+            const filterDescriptor = new FilterDescriptor("$(plus) Create a new filter");
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterDescriptor);
+
+            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("INPUT.BOX.PATTERN");
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            // Should fall back to input box when value is only whitespace
+            expect(showInputBoxSpy).toHaveBeenCalled();
+            expect(testTree.mSessionNodes[1].pattern).toEqual("INPUT.BOX.PATTERN");
+        });
+
+        it("should handle input box cancellation when falling back from FilterDescriptor", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+            const filterDescriptor = new FilterDescriptor("$(plus) Create a new filter");
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(filterDescriptor);
+
+            // User cancels input box
+            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["PREVIOUS.SEARCH"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            expect(showInputBoxSpy).toHaveBeenCalled();
+            expect(testTree.mSessionNodes[1].pattern).toBe("");
+        });
+
+        it("should preserve quickpick items structure when updating create filter option", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            const searchHistory = ["HISTORY.FILTER.1", "HISTORY.FILTER.2"];
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValue(searchHistory);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            // Get the callback and test it preserves items structure
+            const onDidChangeCallback = mockQuickPick.onDidChangeValue.mock.calls[0][0];
+
+            onDidChangeCallback("NEW.FILTER");
+
+            // Should have the create filter option, separator, and history items
+            expect(mockQuickPick.items).toHaveLength(4); // createPick + separator + 2 history items
+            expect(mockQuickPick.items[0]).toBeInstanceOf(FilterDescriptor);
+            expect(mockQuickPick.items[0].label).toContain('$(plus) Create a new filter: "NEW.FILTER"');
+            expect(mockQuickPick.items[1].label).toContain("Recent Filters");
+        });
+
+        it("should not modify items when callback is called with same value repeatedly", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            const mockQuickPick = {
+                value: "",
+                placeholder: "",
+                items: [],
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidAccept: jest.fn(),
+                onDidChangeValue: jest.fn(),
+                ignoreFocusOut: false,
+                onDidHide: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+            jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+            jest.spyOn(testTree.mPersistence, "getSearchHistory").mockReturnValueOnce(["HISTORY.FILTER"]);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            const onDidChangeCallback = mockQuickPick.onDidChangeValue.mock.calls[0][0];
+
+            // Call multiple times with same value
+            onDidChangeCallback("SAME.VALUE");
+            const firstItems = [...mockQuickPick.items];
+
+            onDidChangeCallback("SAME.VALUE");
+            const secondItems = [...mockQuickPick.items];
+
+            // Items should be the same
+            expect(firstItems).toEqual(secondItems);
+            expect(mockQuickPick.items[0].label).toContain('$(plus) Create a new filter: "SAME.VALUE"');
+        });
+    });
+
+    it("should return early when user selects existing filter but cancels the edit input box", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        // Add search history to trigger quick pick
+        const existingFilter = "HLQ.EXISTING.FILTER";
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.addSearchHistory(existingFilter);
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+        // Mock the quick pick functionality following the existing pattern
+        const mockQuickPick = {
+            placeholder: "",
+            activeItems: [],
+            ignoreFocusOut: true,
+            items: [],
+            value: "",
+            show: jest.fn(),
+            hide: jest.fn(),
+            onDidAccept: jest.fn(),
+            onDidChangeValue: jest.fn(),
+            onDidHide: jest.fn(),
+        };
+
+        jest.spyOn(Gui, "createQuickPick").mockReturnValueOnce(mockQuickPick as any);
+
+        const existingFilterItem = new FilterItem({ text: existingFilter });
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(existingFilterItem);
+
+        // Mock the input box to return undefined (simulate user cancelling)
+        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+
+        const filterTreeSpy = jest.spyOn(testTree, "filterTreeByPattern").mockImplementation();
+
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+        expect(Gui.showInputBox).toHaveBeenCalledWith({
+            prompt: expect.any(String),
+            value: existingFilter,
+        });
+        expect(filterTreeSpy).not.toHaveBeenCalled();
+    });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {
     async function createBlockMocks() {
@@ -2979,18 +3482,6 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(renameDataSetMemberSpy).toHaveBeenLastCalledWith(child);
         expect(error).toBe(defaultError);
     });
-    it("Checking validate validateDataSetName util function successfully execution", () => {
-        expect(DatasetUtils.validateDataSetName("#DSNAME.DSNAME")).toBe(true);
-    });
-
-    it("Checking validate validateDataSetName util function fail", () => {
-        expect(DatasetUtils.validateDataSetName("#DSNAME.DSNAMEMORETHAN8CHARS.TEST")).toBe(false);
-    });
-    it("Checking validate validateDataSetName util function fail on max ds length", () => {
-        const dsName = "#DSNAMET.DSNAME.DSNAME.DSNAME.DSNAME.DSNAMETE";
-        expect(dsName.length - 1 === Constants.MAX_DATASET_LENGTH).toBe(true);
-        expect(DatasetUtils.validateDataSetName(dsName)).toBe(false);
-    });
 
     it("Tests that rename() validates the dataset name", async () => {
         createGlobalMocks();
@@ -3224,7 +3715,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
             readFavorites: () => ["[test]: SAMPLE.PO.DS{pds}", "[test]: SAMPLE.PS.DS{ds}", "INVALID*"],
         });
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
@@ -3237,7 +3728,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
             readFavorites: () => ["[test]: SAMPLE.DS{ds}"],
         });
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
@@ -3314,11 +3805,22 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
         showInputBox: jest.spyOn(Gui, "showInputBox"),
     });
 
+    beforeEach(() => {
+        const mocks = getBlockMocks();
+        jest.spyOn(DatasetTree.prototype, "getSortSetting").mockReturnValue(undefined);
+
+        for (const mock of Object.values(mocks)) {
+            mock.mockClear();
+        }
+    });
+
     afterEach(() => {
         const mocks = getBlockMocks();
         for (const mock of Object.values(mocks)) {
             mock.mockClear();
         }
+
+        jest.spyOn(DatasetTree.prototype, "getSortSetting").mockRestore();
     });
 
     afterAll(() => {
@@ -3522,6 +4024,245 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
             expect(nodes.pds.children?.reduce((val, cur) => val + (cur.description as string), "")).toBe("");
         });
+
+        it("loads sort settings from persistence when available", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            const persistedSort = {
+                method: Sorting.DatasetSortOpts.DateCreated,
+                direction: Sorting.SortDirection.Descending,
+            };
+            jest.spyOn(DatasetTree.prototype, "getSortSetting").mockReturnValue(persistedSort);
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.Name);
+            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Descending);
+        });
+
+        it("falls back to default sort options when no persistence available", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            nodes.pds.sort = undefined;
+
+            jest.spyOn(DatasetTree.prototype, "getSortSetting").mockReturnValue(undefined);
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Created" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.DateCreated);
+            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Ascending);
+        });
+
+        it("saves sort settings to persistence after sorting", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            const addSortSettingSpy = jest.spyOn(DatasetTree.prototype, "addSortSetting");
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(account) User ID" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(addSortSettingSpy).toHaveBeenCalledWith(
+                nodes.pds,
+                expect.objectContaining({
+                    method: Sorting.DatasetSortOpts.UserId,
+                    direction: expect.any(Number),
+                })
+            );
+        });
+
+        it("preserves existing sort direction when changing sort method", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            nodes.pds.sort = {
+                method: Sorting.DatasetSortOpts.Name,
+                direction: Sorting.SortDirection.Descending,
+            };
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Modified" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.LastModified);
+            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Descending);
+        });
+
+        it("updates sort direction and persists when sort direction option is selected", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            const addSortSettingSpy = jest.spyOn(DatasetTree.prototype, "addSortSetting");
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(fold) Sort Direction" });
+            mocks.showQuickPick.mockResolvedValueOnce("Ascending");
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name" });
+
+            await tree.sortPdsMembersDialog(nodes.pds);
+
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Ascending);
+            expect(addSortSettingSpy).toHaveBeenCalledWith(
+                nodes.pds,
+                expect.objectContaining({
+                    direction: Sorting.SortDirection.Ascending,
+                })
+            );
+        });
+
+        it("applies persisted sort settings to session nodes", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            const persistedSessionSort = {
+                method: Sorting.DatasetSortOpts.LastModified,
+                direction: Sorting.SortDirection.Descending,
+            };
+            jest.spyOn(DatasetTree.prototype, "getSortSetting").mockReturnValue(persistedSessionSort);
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(account) User ID" });
+            await tree.sortPdsMembersDialog(nodes.session);
+
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.session.sort?.method).toBe(Sorting.DatasetSortOpts.UserId);
+            expect(nodes.session.sort?.direction).toBe(Sorting.SortDirection.Descending);
+        });
+
+        it("does not interfere with sort when getSortSetting returns undefined", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            jest.spyOn(DatasetTree.prototype, "getSortSetting").mockReturnValue(undefined);
+
+            nodes.pds.sort = {
+                method: Sorting.DatasetSortOpts.Name,
+                direction: Sorting.SortDirection.Ascending,
+            };
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Created" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.DateCreated);
+            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Ascending);
+        });
+
+        it("persists sort settings across session closure and reopening", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            const customSort = {
+                method: Sorting.DatasetSortOpts.LastModified,
+                direction: Sorting.SortDirection.Descending,
+            };
+
+            const addSortSettingSpy = jest.spyOn(DatasetTree.prototype, "addSortSetting");
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(fold) Sort Direction" });
+            mocks.showQuickPick.mockResolvedValueOnce("Descending");
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(calendar) Date Modified" });
+
+            await tree.sortPdsMembersDialog(nodes.pds);
+
+            expect(addSortSettingSpy).toHaveBeenCalledWith(
+                nodes.pds,
+                expect.objectContaining({
+                    method: Sorting.DatasetSortOpts.LastModified,
+                    direction: Sorting.SortDirection.Descending,
+                })
+            );
+
+            nodes.pds.sort = undefined;
+
+            jest.spyOn(DatasetTree.prototype, "getSortSetting").mockReturnValue(customSort);
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(account) User ID" });
+            await tree.sortPdsMembersDialog(nodes.pds);
+
+            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.UserId);
+            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Descending);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+        });
+
+        it("uses persisted sort settings in favorites tree when session node is favorited", async () => {
+            const mocks = getBlockMocks();
+
+            const persistedSort = {
+                method: Sorting.DatasetSortOpts.DateCreated,
+                direction: Sorting.SortDirection.Descending,
+            };
+
+            const testTree = new DatasetTree();
+            const favProfileNode = new ZoweDatasetNode({
+                label: "testProfile",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testTree.mFavoriteSession,
+                contextOverride: Constants.FAV_PROFILE_CONTEXT,
+            });
+
+            const favPdsNode = new ZoweDatasetNode({
+                label: "testPds",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: favProfileNode,
+                contextOverride: Constants.PDS_FAV_CONTEXT,
+            });
+
+            const favNodeA = new ZoweDatasetNode({
+                label: "A",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: favPdsNode,
+            });
+            jest.spyOn(favNodeA, "getStats").mockReturnValue({ user: "someUser", createdDate: new Date(), modifiedDate: new Date() });
+
+            const favNodeB = new ZoweDatasetNode({
+                label: "B",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: favPdsNode,
+            });
+            jest.spyOn(favNodeB, "getStats").mockReturnValue({
+                user: "anotherUser",
+                createdDate: new Date("2021-01-01T12:00:00"),
+                modifiedDate: new Date("2022-01-01T12:00:00"),
+            });
+
+            const favNodeC = new ZoweDatasetNode({
+                label: "C",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: favPdsNode,
+            });
+            jest.spyOn(favNodeC, "getStats").mockReturnValue({
+                user: "someUser",
+                createdDate: new Date("2022-02-01T12:00:00"),
+                modifiedDate: new Date("2022-03-15T16:30:00"),
+            });
+
+            favPdsNode.children = [favNodeA, favNodeB, favNodeC];
+            favProfileNode.children.push(favPdsNode);
+            testTree.mFavorites.push(favProfileNode);
+
+            jest.spyOn(DatasetTree.prototype, "getSortSetting").mockReturnValue(persistedSort);
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name" });
+            await tree.sortPdsMembersDialog(favPdsNode);
+
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+
+            expect(favPdsNode.sort?.method).toBe(Sorting.DatasetSortOpts.Name);
+            expect(favPdsNode.sort?.direction).toBe(Sorting.SortDirection.Descending);
+
+            expect(favPdsNode.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["C", "B", "A"]);
+        });
     });
 
     describe("filterBy & filterPdsMembersDialog", () => {
@@ -3624,9 +4365,9 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
     describe("removeSearchHistory", () => {
         it("removes the search item passed in from the current history", () => {
             tree.addSearchHistory("test");
-            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(1);
+            expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(1);
             tree.removeSearchHistory("test");
-            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+            expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(0);
         });
     });
 
@@ -3636,9 +4377,9 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             tree.addSearchHistory("test2");
             tree.addSearchHistory("test3");
             tree.addSearchHistory("test4");
-            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(4);
+            expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(4);
             tree.resetSearchHistory();
-            expect(tree["mHistory"]["mSearchHistory"].length).toEqual(0);
+            expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(0);
         });
     });
 
@@ -3648,9 +4389,9 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             tree.addSearchedKeywordHistory("test2");
             tree.addSearchedKeywordHistory("test3");
             tree.addSearchedKeywordHistory("test4");
-            expect(tree["mHistory"]["mSearchedKeywordHistory"].length).toEqual(4);
+            expect(tree["mPersistence"]["mSearchedKeywordHistory"].length).toEqual(4);
             tree.resetSearchedKeywordHistory();
-            expect(tree["mHistory"]["mSearchedKeywordHistory"].length).toEqual(0);
+            expect(tree["mPersistence"]["mSearchedKeywordHistory"].length).toEqual(0);
         });
     });
 
@@ -3660,9 +4401,9 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             tree.addFileHistory("test2");
             tree.addFileHistory("test3");
             tree.addFileHistory("test4");
-            expect(tree["mHistory"]["mFileHistory"].length).toEqual(4);
+            expect(tree["mPersistence"]["mFileHistory"].length).toEqual(4);
             tree.resetFileHistory();
-            expect(tree["mHistory"]["mFileHistory"].length).toEqual(0);
+            expect(tree["mPersistence"]["mFileHistory"].length).toEqual(0);
         });
     });
 
@@ -3689,7 +4430,7 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
     describe("getSessions", () => {
         it("gets all the available sessions from persistent object", () => {
-            tree["mHistory"]["mSessions"] = ["sestest"];
+            tree["mPersistence"]["mSessions"] = ["sestest"];
             expect(tree.getSessions()).toEqual(["sestest"]);
         });
     });
@@ -4008,7 +4749,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
     it("handle moving of pds to different profiles dropping on seq - should throw error", async () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
-        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
         const blockMocks = createBlockMocks();
         const datasetSession = blockMocks.datasetSessionNode;
 
@@ -4174,5 +4914,79 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
         expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
         draggedNodeMock[Symbol.dispose]();
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
+    let testTree: DatasetTree;
+    let mockTreeView: any;
+    let mockSessionNode: any;
+    let mockFavNode: any;
+    let sessProfile: any;
+
+    beforeEach(() => {
+        testTree = new DatasetTree();
+        mockTreeView = { reveal: jest.fn().mockResolvedValue(undefined) };
+        jest.spyOn(testTree, "getTreeView").mockReturnValue(mockTreeView);
+
+        mockSessionNode = {
+            label: "SESSION1",
+            getChildren: jest.fn(),
+            children: [],
+        };
+        mockFavNode = {
+            label: "FAV1",
+            children: [],
+        };
+        sessProfile = { name: "SESSION1" };
+        testTree.mSessionNodes = [mockSessionNode];
+        testTree.mFavorites = [mockFavNode];
+    });
+
+    it("returns true and reveals node if dataset is found in session nodes", async () => {
+        const dsNode = { label: "MY.DATA.SET" };
+        mockSessionNode.getChildren.mockResolvedValue([dsNode]);
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(result).toBe(true);
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(dsNode, { select: true, focus: true, expand: true });
+    });
+
+    it("returns true and reveals node if dataset is found in favorites", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        const favChild = { label: "MY.DATA.SET" };
+        mockFavNode.children = [favChild];
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(result).toBe(true);
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(mockFavNode, { expand: true });
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(favChild, { select: true, focus: true, expand: true });
+    });
+
+    it("sets filter and reveals node if dataset is not found in session or favorites", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        mockFavNode.children = [];
+        mockSessionNode.children = [{ label: "MY.DATA.SET" }];
+        jest.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(testTree.filterTreeByPattern).toHaveBeenCalledWith(mockSessionNode, sessProfile, "MY.DATA.SET");
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(mockSessionNode.children[0], { select: true, focus: true, expand: true });
+        expect(result).toBe(true);
+    });
+
+    it("returns false if dataset is not found anywhere", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        mockFavNode.children = [];
+        mockSessionNode.children = [];
+        jest.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
+        const result = await testTree.focusOnDsInTree("NOT.FOUND", sessProfile);
+        expect(result).toBe(false);
+    });
+
+    it("returns false if filterTreeByPattern throws", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        mockFavNode.children = [];
+        mockSessionNode.children = [];
+        jest.spyOn(testTree, "filterTreeByPattern").mockRejectedValue(new Error("fail"));
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(result).toBe(false);
     });
 });

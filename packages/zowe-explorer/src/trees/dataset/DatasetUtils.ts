@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { DS_EXTENSION_MAP, IZoweDatasetTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+import dayjs = require("dayjs");
 export class DatasetUtils {
     public static DATASET_SORT_OPTS = [
         `$(case-sensitive) ${vscode.l10n.t("Name")}`,
@@ -86,6 +87,58 @@ export class DatasetUtils {
             return false;
         }
         return Constants.MEMBER_NAME_REGEX_CHECK.test(member);
+    }
+
+    /**
+     * Extracts the data set name and member name from a string like 'DATA.SET(NAME)'.
+     * Returns an object with dataSetName and memberName properties.
+     */
+    public static extractDataSetAndMember(dsName: string): { dataSetName: string; memberName: string } {
+        ZoweLogger.trace("dataset.utils.extractDataSetAndMember called.");
+        const match = dsName.match(Constants.DS_HAS_MEMBER_REGEX_CHECK);
+        if (match) {
+            return {
+                dataSetName: match[1],
+                memberName: match[2],
+            };
+        }
+        return {
+            dataSetName: dsName,
+            memberName: "",
+        };
+    }
+
+    /**
+     * Get the stats for a data set or data set member.
+     * @param item - The item to get the stats for.
+     * @returns The stats for the data set or data set member.
+     */
+    public static getDataSetStats(item: any): Partial<Types.DatasetStats> {
+        const dsStats: Partial<Types.DatasetStats> = {};
+        dsStats.user = item.user ?? item.id;
+        if ("c4date" in item && "m4date" in item) {
+            const { m4date, mtime, msec }: { m4date: string; mtime?: string; msec?: string } = item;
+            dsStats.createdDate = dayjs(item.c4date).toDate();
+            if (mtime) {
+                const [hours, minutes] = mtime.split(":");
+                dsStats.modifiedDate = dayjs(`${m4date} ${hours}:${minutes}`).toDate();
+
+                if (msec) {
+                    dsStats.modifiedDate.setSeconds(parseInt(msec, 10));
+                }
+            } else {
+                dsStats.modifiedDate = dayjs(`${m4date}`).toDate();
+            }
+        }
+
+        dsStats["dsorg"] = item.dsorg;
+        dsStats["lrecl"] = item.lrecl;
+        dsStats["migr"] = item.migr;
+        dsStats["recfm"] = item.recfm;
+        dsStats["vols"] = item.vols;
+        dsStats["vol"] = item.vol;
+
+        return dsStats;
     }
 
     /**

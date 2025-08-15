@@ -11,6 +11,13 @@
 
 import { Progress, ProgressOptions, QuickPick, QuickPickItem } from "vscode";
 
+export class MarkdownString {
+    public value: string;
+    public constructor(value?: string) {
+        this.value = value || "";
+    }
+}
+
 /**
  * A location in the editor at which progress information can be shown. It depends on the
  * location how progress is visually represented.
@@ -596,6 +603,22 @@ export namespace window {
             };
         }
     ): Disposable {
+        return new Disposable();
+    }
+
+    /**
+     * Registers a webview panel serializer.
+     *
+     * Extensions that support reviving should have an `"onWebviewPanel:viewType"` activation event and
+     * make sure that `registerWebviewPanelSerializer` is called during activation.
+     *
+     * Only a single serializer may be registered at a time for a given `viewType`.
+     *
+     * @param viewType Type of the webview panel that can be serialized.
+     * @param serializer Webview serializer.
+     * @returns A {@link Disposable disposable} that unregisters the serializer.
+     */
+    export function registerWebviewPanelSerializer(viewType: string, serializer: any): Disposable {
         return new Disposable();
     }
 
@@ -1452,6 +1475,10 @@ export namespace workspace {
 
     export function applyEdit() {
         return true;
+    }
+
+    export function openTextDocument(uri: Uri) {
+        return;
     }
 
     /**

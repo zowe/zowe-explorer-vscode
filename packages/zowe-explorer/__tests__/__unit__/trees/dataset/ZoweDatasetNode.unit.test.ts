@@ -50,6 +50,7 @@ import { AuthUtils } from "../../../../src/utils/AuthUtils";
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
 jest.mock("vscode");
+jest.mock("../../../../src/tools/ZoweLocalStorage");
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
@@ -433,13 +434,18 @@ describe("ZoweDatasetNode Unit Tests", () => {
      * Profile properties have changed
      *************************************************************************************************************/
     it("Testing what happens when profile has been updated", async () => {
-        Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
-                return {
-                    loadNamedProfile: jest.fn().mockReturnValue({ ...profileOne, profile: { encoding: "IBM-939" } }),
-                };
-            }),
+        const profInstanceSpy = jest.spyOn(Profiles, "getInstance");
+        profInstanceSpy.mockImplementationOnce(() => {
+            return {
+                loadNamedProfile: jest.fn().mockReturnValue({ ...profileOne, profile: { encoding: "IBM-939" } } as any),
+            } as any;
         });
+        profInstanceSpy.mockImplementationOnce(() => {
+            return {
+                loadNamedProfile: jest.fn().mockReturnValue(profileOne as any),
+            } as any;
+        });
+        profInstanceSpy.mockReturnValueOnce(profileOne as any);
 
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const pds = new ZoweDatasetNode({
@@ -885,16 +891,75 @@ describe("ZoweDatasetNode Unit Tests - Function node.setStats", () => {
         lookupMock.mockRestore();
         createDirMock.mockRestore();
     });
+});
 
-    it("returns early when trying to set the stats for a PDS", () => {
-        const pdsEntry = new PdsEntry("TEST.PDS");
-        const lookupMock = jest.spyOn(DatasetFSProvider.instance, "lookup").mockClear().mockReturnValueOnce(pdsEntry);
+describe("ZoweDatasetNode Unit Tests - Function node.updateStats", () => {
+    it("updates stats when m4date is present in the object", () => {
+        const dsEntry = new DsEntry("TEST.DS", false);
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValueOnce(dsEntry);
         const createDirMock = jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        const node = new ZoweDatasetNode({ label: "statsTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
 
-        const node = new ZoweDatasetNode({ label: "pds", collapsibleState: vscode.TreeItemCollapsibleState.Collapsed });
-        node.setStats({ user: "bUser" });
+        // Create mock item with m4date, c4date, mtime, msec, and user properties
+        const mockItem = {
+            c4date: "2024-01-15",
+            m4date: "2024-02-20",
+            mtime: "14:30",
+            msec: "45",
+            user: "testuser",
+            dsorg: "PO",
+            lrecl: 80,
+            recfm: "FB",
+            vols: ["VOL001"],
+        };
+
+        // Call updateStats with the mock item
+        node.updateStats(mockItem);
+
+        // Verify setStats was called internally and that the stats were set correctly
         expect(lookupMock).toHaveBeenCalled();
-        expect(pdsEntry).not.toHaveProperty("stats");
+        expect(dsEntry.stats).toBeDefined();
+        expect(dsEntry.stats.user).toBe("testuser");
+        expect(dsEntry.stats.dsorg).toBe("PO");
+        expect(dsEntry.stats.lrecl).toBe(80);
+        expect(dsEntry.stats.recfm).toBe("FB");
+        expect(dsEntry.stats.vols).toEqual(["VOL001"]);
+
+        lookupMock.mockRestore();
+        createDirMock.mockRestore();
+    });
+
+    it("updates stats when FTP properties (id, changed) are present in the object", () => {
+        const dsEntry = new DsEntry("TEST.DS", false);
+        const lookupMock = jest.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValueOnce(dsEntry);
+        const createDirMock = jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        const node = new ZoweDatasetNode({ label: "statsTest", collapsibleState: vscode.TreeItemCollapsibleState.None });
+
+        // Create mock item with FTP properties
+        const mockItem = {
+            id: "ftpuser",
+            c4date: "2024-01-15T10:30:00Z",
+            m4date: "2024-02-20T14:30:45Z",
+            dsorg: "PS",
+            lrecl: 133,
+            recfm: "VB",
+            vol: "VOL002",
+        };
+
+        // Call updateStats with the mock item
+        node.updateStats(mockItem);
+
+        // Verify setStats was called internally and that the stats were set correctly
+        expect(lookupMock).toHaveBeenCalled();
+        expect(dsEntry.stats).toBeDefined();
+        expect(dsEntry.stats.user).toBe("ftpuser");
+        expect(dsEntry.stats.createdDate).toEqual(new Date("2024-01-15T10:30:00Z"));
+        expect(dsEntry.stats.modifiedDate).toEqual(new Date("2024-02-20T14:30:45Z"));
+        expect(dsEntry.stats.dsorg).toBe("PS");
+        expect(dsEntry.stats.lrecl).toBe(133);
+        expect(dsEntry.stats.recfm).toBe("VB");
+        expect(dsEntry.stats.vol).toBe("VOL002");
+
         lookupMock.mockRestore();
         createDirMock.mockRestore();
     });

@@ -23,6 +23,7 @@ import {
     ZoweVsCodeExtension,
     imperative,
     AuthHandler,
+    FsAbstractUtils,
 } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
@@ -50,6 +51,7 @@ import { CertificateWizard } from "../../utils/CertificateWizard";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 import { ZoweUriHandler } from "../../utils/UriHandler";
 import { TroubleshootError } from "../../utils/TroubleshootError";
+import { ReleaseNotes } from "../../utils/ReleaseNotes";
 
 export class SharedInit {
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
@@ -90,6 +92,15 @@ export class SharedInit {
                 return new SharedHistoryView(context, providers, commandProviders);
             })
         );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.displayReleaseNotes", () => {
+                ReleaseNotes.display(context, true); // Always display when command is run
+            })
+        );
+
+        // Display release notes on activation
+        ReleaseNotes.display(context, false);
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
@@ -321,9 +332,28 @@ export class SharedInit {
                     // This command does nothing, its here to let us disable individual items in the tree view
                 })
             );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.setupRemoteWorkspaceFolders", async (profileType?: string) => {
+                    await this.setupRemoteWorkspaceFolders(undefined, profileType);
+                })
+            );
+
             // initialize the Constants.filesToCompare array during initialization
             LocalFileManagement.resetCompareSelection();
         }
+
+        // Prevent VS Code from restoring selected the webview panels after restart
+        // This is a workaround for issue where the webview panels are not restored properly when VS Code is closed & reopened
+        context.subscriptions.push(
+            vscode.window.registerWebviewPanelSerializer("ZEAPIWebview", {
+                deserializeWebviewPanel(panel) {
+                    if (panel.title.startsWith(Constants.RELEASE_NOTES_PANEL_TITLE) || panel.title.startsWith(Constants.SHARED_HISTORY_PANEL_TITLE)) {
+                        panel.dispose();
+                    }
+                    return Promise.resolve();
+                },
+            })
+        );
     }
 
     public static watchConfigProfile(context: vscode.ExtensionContext): void {
@@ -406,11 +436,23 @@ export class SharedInit {
         });
     }
 
-    public static async setupRemoteWorkspaceFolders(e?: vscode.WorkspaceFoldersChangeEvent): Promise<void> {
+    public static async setupRemoteWorkspaceFolders(e?: vscode.WorkspaceFoldersChangeEvent, profileType?: string): Promise<void> {
         // Perform remote lookup for workspace folders that fit the `zowe-ds` or `zowe-uss` schemes.
-        const newWorkspaces = (e?.added ?? vscode.workspace.workspaceFolders ?? []).filter(
+        let newWorkspaces = (e?.added ?? vscode.workspace.workspaceFolders ?? []).filter(
             (f) => f.uri.scheme === ZoweScheme.DS || f.uri.scheme === ZoweScheme.USS
         );
+
+        const profInfo = Profiles.getInstance();
+        const profileNames = new Set<string>();
+
+        if (profileType) {
+            profInfo.getProfiles(profileType).forEach((prof) => profileNames.add(prof.name));
+            newWorkspaces = newWorkspaces.filter((f) => {
+                const uriInfo = FsAbstractUtils.getInfoForUri(f.uri);
+                return profileNames.has(uriInfo.profileName);
+            });
+        }
+
         for (const folder of newWorkspaces) {
             try {
                 await (folder.uri.scheme === ZoweScheme.DS ? DatasetFSProvider.instance : UssFSProvider.instance).remoteLookupForResource(folder.uri);
@@ -419,6 +461,9 @@ export class SharedInit {
                     ZoweLogger.error(err.message);
                 }
             }
+        }
+        if (profileType !== "zosmf") {
+            await vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer");
         }
     }
 
