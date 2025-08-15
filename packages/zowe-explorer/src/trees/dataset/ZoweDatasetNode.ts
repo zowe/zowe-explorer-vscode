@@ -707,6 +707,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from MVS list API"),
             });
+            if (updated) {
+                return this.listDatasetsInRange(start, limit);
+            }
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
             return {
                 items: [],
@@ -811,6 +814,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 profile: this.getProfile(),
                 scenario: vscode.l10n.t("Retrieving response from MVS list API"),
             });
+
+            if (updated) {
+                return this.listMembersInRange(start, limit);
+            }
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
             return {
                 items: [],
