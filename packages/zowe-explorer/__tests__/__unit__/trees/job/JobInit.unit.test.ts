@@ -48,6 +48,7 @@ describe("Test src/jobs/extension", () => {
             filterPrompt: jest.fn(),
             onDidChangeConfiguration: jest.fn(),
             pollData: jest.fn(),
+            pollActiveJobs: jest.fn(),
             filterJobsDialog: jest.fn(),
         };
         const commands: IJestIt[] = [
@@ -136,6 +137,14 @@ describe("Test src/jobs/extension", () => {
             {
                 name: "zowe.jobs.stopPolling",
                 mock: [{ spy: jest.spyOn(jobsProvider, "pollData"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.jobs.startPollingActiveJobs",
+                mock: [{ spy: jest.spyOn(jobsProvider, "pollActiveJobs"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.jobs.stopPollingActiveJobs",
+                mock: [{ spy: jest.spyOn(jobsProvider, "pollActiveJobs"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.cancelJob",

@@ -25,6 +25,7 @@ import {
     PdsEntry,
     type AttributeInfo,
     DataSetAttributesProvider,
+    ZosEncoding,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
@@ -497,6 +498,80 @@ export class DatasetActions {
         }
     }
 
+    /**
+     * Prompts the user to select an encoding and then the files to upload.
+     *
+     * @param {ZoweDatasetNode} node - The PDS node that serves as the parent
+     * @param {datasetTree} datasetProvider - Data set tree provider instance
+     */
+    public static async uploadDialogWithEncoding(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
+        ZoweLogger.trace("dataset.actions.uploadDialogWithEncoding called.");
+
+        if (!SharedContext.isPds(node)) {
+            Gui.showMessage(vscode.l10n.t("This action is only supported for partitioned data sets."));
+            return;
+        }
+
+        const profile = node.getProfile();
+        const encoding = await SharedUtils.promptForUploadEncoding(profile, node.label as string);
+
+        if (!encoding) {
+            return;
+        }
+
+        const fileOpenOptions = {
+            canSelectFiles: true,
+            openLabel: "Upload File with Encoding",
+            canSelectMany: true,
+            defaultUri: LocalFileManagement.getDefaultUri(),
+        };
+        const selectedFiles = await Gui.showOpenDialog(fileOpenOptions);
+        if (!selectedFiles || selectedFiles.length === 0) {
+            return;
+        }
+
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: vscode.l10n.t("Uploading to data set..."),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                let index = 0;
+                for (const item of selectedFiles) {
+                    if (token.isCancellationRequested) {
+                        break;
+                    }
+                    Gui.reportProgress(progress, selectedFiles.length, index, "Uploading");
+                    const response = await DatasetActions.uploadFileWithEncoding(node, item.fsPath, encoding);
+                    if (!response?.success) {
+                        await AuthUtils.errorHandling(response?.commandResponse, {
+                            apiType: ZoweExplorerApiType.Mvs,
+                            profile: node.getProfile(),
+                        });
+                        break;
+                    }
+                    index++;
+                }
+            }
+        );
+
+        // refresh Tree View & favorites
+        datasetProvider.refreshElement(node);
+        datasetProvider.getTreeView().reveal(node, { expand: true, focus: true });
+        if (SharedContext.isFavorite(node) || SharedContext.isFavoriteContext(node.getParent())) {
+            const nonFavNode = datasetProvider.findNonFavoritedNode(node);
+            if (nonFavNode) {
+                datasetProvider.refreshElement(nonFavNode);
+            }
+        } else {
+            const favNode = datasetProvider.findFavoritedNode(node);
+            if (favNode) {
+                datasetProvider.refreshElement(favNode);
+            }
+        }
+    }
+
     public static async uploadFile(node: ZoweDatasetNode, docPath: string): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("dataset.actions.uploadFile called.");
         try {
@@ -507,6 +582,31 @@ export class DatasetActions {
                 encoding: prof.profile?.encoding,
                 responseTimeout: prof.profile?.responseTimeout,
             });
+        } catch (e) {
+            await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+        }
+    }
+
+    public static async uploadFileWithEncoding(node: ZoweDatasetNode, docPath: string, encoding: ZosEncoding): Promise<zosfiles.IZosFilesResponse> {
+        ZoweLogger.trace("dataset.actions.uploadFileWithEncoding called.");
+        try {
+            const datasetName = node.label as string;
+            const prof = node.getProfile();
+
+            const options: any = {
+                responseTimeout: prof.profile?.responseTimeout,
+                binary: encoding.kind === "binary",
+            };
+
+            // Set encoding based on the user's selection
+            if (encoding.kind === "text") {
+                // Use default EBCDIC
+                options.encoding = undefined;
+            } else if (encoding.kind === "other" && encoding.codepage) {
+                options.encoding = encoding.codepage;
+            }
+
+            return await ZoweExplorerApiRegister.getMvsApi(prof).putContents(docPath, datasetName, options);
         } catch (e) {
             await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
         }
@@ -1134,7 +1234,7 @@ export class DatasetActions {
             try {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
                 const args = [sessProfileName, job.jobid];
-                const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+                const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                 Gui.showMessage(
                     vscode.l10n.t({
                         message: "Job submitted {0}",
@@ -1372,7 +1472,7 @@ export class DatasetActions {
             try {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
                 const args = [sesName, job.jobid];
-                const setJobCmd = `command:zowe.jobs.setJobSpool?${encodeURIComponent(JSON.stringify(args))}`;
+                const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                 Gui.showMessage(
                     vscode.l10n.t({
                         message: "Job submitted {0}",
