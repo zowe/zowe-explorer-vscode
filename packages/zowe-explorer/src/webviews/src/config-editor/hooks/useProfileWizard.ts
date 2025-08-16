@@ -336,6 +336,7 @@ export function useProfileWizard({
                 rootProfile: wizardRootProfile,
                 profileType: wizardSelectedType,
                 configPath: configPath,
+                profileName: wizardProfileName,
                 changes: changes,
             });
         }

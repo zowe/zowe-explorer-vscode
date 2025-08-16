@@ -118,8 +118,42 @@ export function App() {
       }
     });
 
-    // Combine all profiles and ensure uniqueness
+    // Get deleted profiles to exclude them (including children of deleted parents)
+    const deletedProfiles = new Set<string>();
+    const configPath = configurations[selectedTab].configPath;
+    const deletedKeys = deletions[configPath] || [];
+    deletedKeys.forEach((key) => {
+      // Extract profile name from deletion key
+      const keyParts = key.split(".");
+      if (keyParts[0] === "profiles" && keyParts.length >= 2) {
+        // Handle all profile types (simple, nested, deeply nested)
+        // The deletion key structure is: profiles.profile1.profiles.profile2.profiles.profile3...
+        // We need to extract: profile1.profile2.profile3...
+        const profileParts: string[] = [];
+        for (let i = 1; i < keyParts.length; i++) {
+          if (keyParts[i] !== "profiles") {
+            profileParts.push(keyParts[i]);
+          }
+        }
+        const profileName = profileParts.join(".");
+        deletedProfiles.add(profileName);
+
+        // Also add all child profiles of this deleted profile
+        // For example, if "parent" is deleted, also exclude "parent.child", "parent.child.grandchild", etc.
+        profileNames.forEach((existingProfile) => {
+          if (existingProfile.startsWith(profileName + ".")) {
+            deletedProfiles.add(existingProfile);
+          }
+        });
+      }
+    });
+
+    // Combine all profiles, exclude deleted ones, and ensure uniqueness
     const allProfiles = new Set(["root", ...profileNames, ...Array.from(pendingProfiles)]);
+
+    // Remove deleted profiles
+    deletedProfiles.forEach((profile) => allProfiles.delete(profile));
+
     return Array.from(allProfiles).sort((a, b) => {
       // Always put "root" first
       if (a === "root") return -1;
@@ -127,7 +161,7 @@ export function App() {
       // Sort other profiles alphabetically
       return a.localeCompare(b);
     });
-  }, [selectedTab, configurations, pendingChanges]);
+  }, [selectedTab, configurations, pendingChanges, deletions]);
 
   // Profile Wizard hook
   const {

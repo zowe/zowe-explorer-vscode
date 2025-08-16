@@ -373,6 +373,7 @@ export class ConfigEditor extends WebView {
                     message.rootProfile,
                     message.profileType,
                     message.configPath,
+                    message.profileName,
                     message.changes
                 );
                 await this.panel.webview.postMessage({
@@ -732,26 +733,36 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    private async getWizardMergedProperties(rootProfile: string, profileType: string, configPath: string, changes?: any): Promise<any> {
+    private async getWizardMergedProperties(
+        rootProfile: string,
+        profileType: string,
+        configPath: string,
+        profileName?: string,
+        changes?: any
+    ): Promise<any> {
+        if (!profileType) {
+            return [];
+        }
+
         const profInfo = new ProfileInfo("zowe");
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         const teamConfig = profInfo.getTeamConfig();
 
-        // Apply pending changes if provided
+        // Apply existing pending changes if provided
         if (changes) {
             const parsedChanges = this.parseConfigChanges(changes);
             for (const change of parsedChanges) {
                 if (change.defaultsChanges || change.defaultsDeleteKeys) {
                     this.simulateDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
                 }
-
                 if (change.changes || change.deletions) {
                     this.simulateProfileChanges(change.changes, change.deletions, change.configPath, teamConfig);
                 }
             }
         }
 
+        // Activate the correct config layer
         if (configPath !== teamConfig.api.layers.get().path) {
             const findProfile = teamConfig.layers.find((prof: any) => prof.path === configPath);
             if (findProfile) {
@@ -759,38 +770,41 @@ export class ConfigEditor extends WebView {
             }
         }
 
+        // Generate unique temporary profile name
+        const tempProfileName = profileName || `temp_${Date.now()}`;
+        let tempProfilePath: string;
+        let expectedProfileName: string;
+
+        // Determine profile path and expected name based on root profile type
         if (rootProfile === "root") {
-            if (profileType) {
-                // Create a temporary profile instance with the type
-                const tempProfileName = `temp_${Date.now()}`;
-                const profilePath = `profiles.${tempProfileName}`;
-
-                // Set the type for the temporary profile
-                teamConfig.set(`${profilePath}.type`, profileType, { parseString: true });
-
-                // Get the merged args for this temporary profile
-                const allProfiles = profInfo.getAllProfiles();
-                const tempProfile = allProfiles.find((prof) => prof.profName === tempProfileName);
-
-                if (tempProfile) {
-                    const mergedArgs = profInfo.mergeArgsForProfile(tempProfile, { getSecureVals: true });
-                    return mergedArgs.knownArgs || [];
-                }
-            }
+            tempProfilePath = `profiles.${tempProfileName}`;
+            expectedProfileName = tempProfileName;
         } else {
-            // Find the specified root profile
-            const allProfiles = profInfo.getAllProfiles();
-            const rootProfileInstance = allProfiles.find(
-                (prof) => prof.profName === rootProfile && prof.profLoc.osLoc?.includes(path.normalize(configPath))
-            );
+            tempProfilePath = `profiles.${rootProfile}.profiles.${tempProfileName}`;
+            expectedProfileName = `${rootProfile}.${tempProfileName}`;
+        }
 
-            if (!rootProfileInstance) {
+        try {
+            // Create the temporary profile with type
+            teamConfig.set(tempProfilePath, { type: profileType }, { parseString: true });
+
+            // Get merged properties for the temporary profile
+            const allProfiles = profInfo.getAllProfiles();
+            const tempProfile = allProfiles.find((prof) => prof.profName === expectedProfileName);
+
+            if (!tempProfile) {
                 return [];
             }
 
-            // Get merged properties for the root profile
-            const mergedArgs = profInfo.mergeArgsForProfile(rootProfileInstance, { getSecureVals: true });
+            const mergedArgs = profInfo.mergeArgsForProfile(tempProfile, { getSecureVals: true });
             return mergedArgs.knownArgs || [];
+        } finally {
+            // Always clean up the temporary profile
+            try {
+                teamConfig.delete(tempProfilePath);
+            } catch (err) {
+                // Ignore cleanup errors
+            }
         }
     }
 
