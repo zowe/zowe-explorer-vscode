@@ -124,14 +124,11 @@ export function ProfileList({
   return (
     <div
       style={{
-        width: "250px",
-        paddingRight: "1rem",
-        minHeight: "400px",
-        maxHeight: "400px",
-        overflowY: "auto",
-        overflowX: "hidden",
+        width: "100%",
         display: "flex",
         flexDirection: "column",
+        maxHeight: "calc(100vh - 200px)",
+        overflow: "hidden",
       }}
     >
       {/* Search and Filter Component - Sticky */}
@@ -141,6 +138,7 @@ export function ProfileList({
           top: 0,
           backgroundColor: "var(--vscode-editor-background)",
           zIndex: 10,
+          flexShrink: 0,
         }}
       >
         <ProfileSearchFilter
@@ -151,7 +149,7 @@ export function ProfileList({
           filterType={filterType}
         />
       </div>
-      <div style={{ flex: 1, overflowY: "auto" }}>
+      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
         {viewMode === "tree" ? (
           <ProfileTree
             profileKeys={filteredProfileKeys}

@@ -5,19 +5,7 @@ interface FooterProps {
 
 export function Footer({ onClearChanges, onSaveAll }: FooterProps) {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: "8px",
-        padding: "16px",
-        borderTop: "1px solid var(--vscode-tab-border)",
-        background: "var(--vscode-editor-background)",
-        position: "sticky",
-        bottom: 0,
-      }}
-    >
+    <div className="footer">
       <button
         className="header-button"
         onClick={onClearChanges}
@@ -52,4 +40,3 @@ export function Footer({ onClearChanges, onSaveAll }: FooterProps) {
     </div>
   );
 }
-1;

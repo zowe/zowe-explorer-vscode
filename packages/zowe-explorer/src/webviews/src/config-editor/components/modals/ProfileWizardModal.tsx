@@ -28,6 +28,7 @@ interface ProfileWizardModalProps {
   onPropertySecureToggle: (index: number) => void;
   onCreateProfile: () => void;
   onCancel: () => void;
+  onPopulateDefaults: () => void;
   getPropertyType: (propertyKey: string) => string | undefined;
   stringifyValueByType: (value: string | number | boolean | Object) => string;
   onFilePickerSelect?: (filePath: string) => void;
@@ -62,6 +63,7 @@ export function ProfileWizardModal({
   onPropertySecureToggle,
   onCreateProfile,
   onCancel,
+  onPopulateDefaults,
   getPropertyType,
   stringifyValueByType,
   vscodeApi,
@@ -133,21 +135,45 @@ export function ProfileWizardModal({
               {isProfileNameTaken && <div className="wizard-error">{l10n.t("Profile name already exists under this root")}</div>}
             </div>
 
-            {/* Type Selection */}
+            {/* Type Selection with Populate Defaults Button */}
             <div>
               <label className="wizard-label">{l10n.t("Profile Type")}:</label>
-              <select
-                value={wizardSelectedType}
-                onChange={(e) => onSelectedTypeChange((e.target as HTMLSelectElement).value)}
-                className="modal-input wizard-select"
-              >
-                <option value="">{l10n.t("Select a type")}</option>
-                {typeOptions.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
+              <div style={{ display: "flex", gap: "8px", alignItems: "stretch" }}>
+                <select
+                  value={wizardSelectedType}
+                  onChange={(e) => onSelectedTypeChange((e.target as HTMLSelectElement).value)}
+                  className="modal-input wizard-select"
+                  style={{ flex: 1 }}
+                >
+                  <option value="">{l10n.t("Select a type")}</option>
+                  {typeOptions.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={onPopulateDefaults}
+                  disabled={!wizardSelectedType}
+                  className="wizard-button secondary"
+                  style={{
+                    padding: "4px 8px",
+                    fontSize: "12px",
+                    minWidth: "32px",
+                    height: "32px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "1px solid var(--vscode-button-border)",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  title="Populate defaults"
+                >
+                  <span className="codicon codicon-sparkle"></span>
+                </button>
+              </div>
             </div>
 
             {/* Add New Property */}
@@ -374,7 +400,20 @@ export function ProfileWizardModal({
                                 >
                                   <span className={`codicon ${prop.secure ? "codicon-lock" : "codicon-unlock"}`}></span>
                                 </button>
-                                <button onClick={() => onRemoveProperty(index)} className="wizard-property-remove">
+                                <button
+                                  onClick={() => onRemoveProperty(index)}
+                                  className="wizard-button secondary"
+                                  style={{
+                                    padding: "4px 8px",
+                                    fontSize: "12px",
+                                    minWidth: "32px",
+                                    height: "28px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                  title="Remove property"
+                                >
                                   <span className="codicon codicon-trash"></span>
                                 </button>
                               </div>

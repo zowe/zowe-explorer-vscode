@@ -162,6 +162,7 @@ export function App() {
     handleWizardCreateProfile,
     handleWizardCancel,
     requestWizardMergedProperties,
+    handleWizardPopulateDefaults,
   } = useProfileWizard({
     selectedTab,
     configurations,
@@ -1468,7 +1469,7 @@ export function App() {
     return (
       <div>
         <div className="profile-heading-container">
-          <h2>{selectedProfileKey || "Profile Details"}</h2>
+          <h2 title={selectedProfileKey || "Profile Details"}>{selectedProfileKey || "Profile Details"}</h2>
           {selectedProfileKey && (
             <div className="profile-actions">
               <button
@@ -1999,7 +2000,7 @@ export function App() {
 
               return (
                 <div key={fullKey} className="config-item">
-                  <div className="config-item-container">
+                  <div className="config-item-container defaults-container">
                     <span className="config-label">{key}</span>
                     <select
                       className={`config-input ${!displayValue ? "placeholder-style" : ""}`}
@@ -2011,6 +2012,7 @@ export function App() {
                         fontSize: "0.9em",
                         padding: "2px 6px",
                         marginBottom: "0",
+                        minWidth: "150px",
                       }}
                     >
                       <option value="">{l10n.t("Select a profile")}</option>
@@ -2258,7 +2260,7 @@ export function App() {
   };
 
   return (
-    <div>
+    <div className="app-container">
       <Tabs
         configurations={configurations}
         selectedTab={selectedTab}
@@ -2377,6 +2379,7 @@ export function App() {
         onPropertySecureToggle={handleWizardPropertySecureToggle}
         onCreateProfile={handleWizardCreateProfile}
         onCancel={handleWizardCancel}
+        onPopulateDefaults={handleWizardPopulateDefaults}
         getPropertyType={getPropertyType}
         stringifyValueByType={stringifyValueByType}
         vscodeApi={vscodeApi}

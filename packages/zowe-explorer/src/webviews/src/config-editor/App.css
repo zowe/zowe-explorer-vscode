@@ -5,12 +5,57 @@ body {
     color: var(--vscode-editor-foreground);
     margin: 0;
     font-family: var(--vscode-font-family, monospace);
+    height: 100vh;
+    overflow: hidden;
 }
 
+/* Footer styles */
+.footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    border-top: 1px solid var(--vscode-tab-border);
+    background: var(--vscode-editor-background);
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+/* Ensure the main content area takes remaining space */
 .vscode-panel {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+}
+
+.vscode-panel > .panels {
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Ensure the webview container takes full height */
+#root {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main app container - fallback for browsers without :has() support */
+.app-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main app container */
+div:has(> .vscode-panel) {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .tabs {
@@ -21,6 +66,7 @@ body {
     overflow-y: hidden;
     height: 35px;
     position: relative;
+    flex-shrink: 0;
 }
 
 .tab {
@@ -109,18 +155,64 @@ body {
     background-color: var(--vscode-editor-background);
     padding: 12px;
     border-radius: 0 0 4px 4px;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .panel {
     display: none;
+    height: 100%;
+    overflow: auto;
+    min-height: 0;
 }
 
 .panel.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-content {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2rem);
+    align-items: flex-start;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
 }
 
 .config-section {
     margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.config-section.profiles-section {
+    flex: 0 0 280px;
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.config-section.profile-details-section {
+    flex: 0 0 400px;
+    width: 400px;
+    min-width: 400px;
+    max-width: 400px;
+    overflow: auto;
+}
+
+.config-section.defaults-section {
+    flex: 1;
+    min-width: 200px;
+    overflow: auto;
 }
 
 .config-section h2 {
@@ -135,12 +227,31 @@ body {
     justify-content: space-between;
     margin-bottom: 16px;
     min-width: 16px;
+    min-height: 32px;
+    gap: 8px;
 }
 
 .profile-heading-container h2 {
     margin: 0;
     font-size: 16px;
     margin-bottom: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 8px;
+    width: 120px;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+.profile-actions:empty {
+    visibility: hidden;
 }
 
 .defaults-heading-container {
@@ -148,7 +259,7 @@ body {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
-    max-width: 500px;
+    width: 100%;
 }
 
 .config-item {
@@ -175,6 +286,7 @@ body {
     color: var(--vscode-input-foreground);
     font-size: 13px;
     font-family: var(--vscode-font-family);
+    min-width: 120px;
 }
 
 .config-input:focus {
@@ -199,7 +311,11 @@ select:focus {
     grid-template-columns: 150px 1fr auto;
     gap: 8px;
     align-items: center;
-    max-width: 500px;
+    max-width: 100%;
+}
+
+.config-item-container.defaults-container {
+    grid-template-columns: 150px minmax(150px, 250px);
 }
 
 .action-button {
@@ -425,6 +541,117 @@ ul {
 .config-input.placeholder-style option {
     color: var(--vscode-input-foreground) !important;
     font-style: normal !important;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 1200px) {
+    .panel-content {
+        gap: 1rem;
+    }
+
+    .config-section.profiles-section {
+        flex: 0 0 250px;
+        width: 250px;
+        min-width: 250px;
+        max-width: 250px;
+    }
+
+    .config-section.profile-details-section {
+        flex: 0 0 350px;
+        width: 350px;
+        min-width: 350px;
+        max-width: 350px;
+    }
+
+    .config-item-container.defaults-container {
+        grid-template-columns: 150px minmax(120px, 200px);
+    }
+}
+
+@media (max-width: 900px) {
+    .panel-content {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .config-section.profiles-section {
+        flex: 0 0 auto;
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        max-height: 300px;
+    }
+
+    .config-section.profile-details-section {
+        flex: 0 0 auto;
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+    }
+
+    .config-section.defaults-section {
+        min-width: 100%;
+        max-width: 100%;
+    }
+
+    .config-item-container {
+        grid-template-columns: 120px 1fr auto;
+    }
+
+    .config-item-container.defaults-container {
+        grid-template-columns: 120px minmax(100px, 180px);
+    }
+}
+
+@media (max-width: 600px) {
+    .panel-content {
+        gap: 0.5rem;
+    }
+
+    .config-item-container {
+        grid-template-columns: 100px 1fr auto;
+        gap: 4px;
+    }
+
+    .config-item-container.defaults-container {
+        grid-template-columns: 100px minmax(80px, 150px);
+    }
+
+    .config-input {
+        min-width: 100px;
+    }
+
+    .config-label {
+        font-size: 12px;
+    }
+
+    .config-section h2 {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 400px) {
+    .panel-content {
+        gap: 0.25rem;
+    }
+
+    .config-item-container {
+        grid-template-columns: 80px 1fr auto;
+        gap: 2px;
+    }
+
+    .config-item-container.defaults-container {
+        grid-template-columns: 80px minmax(60px, 120px);
+    }
+
+    .config-input {
+        min-width: 80px;
+        font-size: 12px;
+    }
+
+    .config-label {
+        font-size: 11px;
+    }
 }
 
 /* Profile Wizard Modal Styles */

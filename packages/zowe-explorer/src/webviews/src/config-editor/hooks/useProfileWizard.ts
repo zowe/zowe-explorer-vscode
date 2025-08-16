@@ -66,6 +66,7 @@ export function useProfileWizard({
     const [wizardNewPropertyValue, setWizardNewPropertyValue] = useState("");
     const [wizardNewPropertySecure, setWizardNewPropertySecure] = useState(false);
     const [wizardMergedProperties, setWizardMergedProperties] = useState<{ [key: string]: any }>({});
+    const [wizardPopulatedDefaults, setWizardPopulatedDefaults] = useState<Set<string>>(new Set());
 
     // Helper functions
     const getWizardTypeOptions = () => {
@@ -309,6 +310,7 @@ export function useProfileWizard({
         setWizardNewPropertyValue("");
         setWizardNewPropertySecure(false);
         setWizardShowKeyDropdown(false);
+        setWizardPopulatedDefaults(new Set());
     };
 
     const handleWizardCancel = () => {
@@ -322,6 +324,7 @@ export function useProfileWizard({
         setWizardNewPropertySecure(false);
         setWizardShowKeyDropdown(false);
         setWizardMergedProperties({});
+        setWizardPopulatedDefaults(new Set());
     };
 
     const requestWizardMergedProperties = () => {
@@ -337,6 +340,75 @@ export function useProfileWizard({
             });
         }
     };
+
+    const handleWizardPopulateDefaults = () => {
+        if (!wizardSelectedType || selectedTab === null) return;
+
+        const configPath = configurations[selectedTab].configPath;
+        const propertySchema = schemaValidations[configPath]?.propertySchema[wizardSelectedType] || {};
+
+        // Get existing property keys to avoid duplicates
+        const existingKeys = new Set(wizardProperties.map((prop) => prop.key));
+
+        // Get merged property keys and values to check for existing values
+        const mergedKeys = new Set(Object.keys(wizardMergedProperties));
+
+        // Create new properties from schema defaults
+        const newProperties: { key: string; value: string | boolean | number | Object; secure?: boolean }[] = [];
+        const populatedKeys = new Set<string>();
+
+        Object.entries(propertySchema).forEach(([key, schema]: [string, any]) => {
+            // Skip if property already exists in wizard properties
+            if (existingKeys.has(key)) {
+                return;
+            }
+
+            // Check if property has a default value in schema
+            if (schema.default !== undefined) {
+                // For port, always override merged values unless they're the same
+                if (key === "port") {
+                    const mergedValue = wizardMergedProperties[key]?.value;
+                    if (mergedValue !== schema.default) {
+                        newProperties.push({
+                            key,
+                            value: schema.default,
+                            secure: false,
+                        });
+                        populatedKeys.add(key);
+                    }
+                    return;
+                }
+
+                // For other properties, only add if not in merged properties
+                if (!mergedKeys.has(key)) {
+                    newProperties.push({
+                        key,
+                        value: schema.default,
+                        secure: false,
+                    });
+                    populatedKeys.add(key);
+                }
+            }
+        });
+
+        // Add new properties to wizard properties
+        if (newProperties.length > 0) {
+            setWizardProperties((prev) => [...prev, ...newProperties]);
+            setWizardPopulatedDefaults((prev) => new Set([...prev, ...populatedKeys]));
+        }
+    };
+
+    // Clear populated defaults when type changes
+    useEffect(() => {
+        if (wizardSelectedType && wizardPopulatedDefaults.size > 0) {
+            // Clear properties that were populated from defaults (not merged properties)
+            setWizardProperties((prev) => {
+                const mergedKeys = new Set(Object.keys(wizardMergedProperties));
+                return prev.filter((prop) => mergedKeys.has(prop.key) || !wizardPopulatedDefaults.has(prop.key));
+            });
+            setWizardPopulatedDefaults(new Set());
+        }
+    }, [wizardSelectedType]);
 
     // Trigger wizard merged properties request when root profile, type, or pending changes change
     useEffect(() => {
@@ -382,5 +454,6 @@ export function useProfileWizard({
         handleWizardCreateProfile,
         handleWizardCancel,
         requestWizardMergedProperties,
+        handleWizardPopulateDefaults,
     };
 }

@@ -23,8 +23,8 @@ export function Panels({
     <div className="panels">
       {configurations.map((config, index) => (
         <div key={index} className={`panel ${selectedTab === index ? "active" : ""}`}>
-          <div style={{ display: "flex", gap: "2rem", alignItems: "flex-start" }}>
-            <div className="config-section">
+          <div className="panel-content">
+            <div className="config-section profiles-section">
               <div className="profile-heading-container">
                 <h2>Profiles</h2>
                 <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
@@ -76,10 +76,8 @@ export function Panels({
               </div>
               {selectedTab === index && renderProfiles(config.properties.profiles)}
             </div>
-            <div className="config-section" style={{ flex: "0 0 auto", minWidth: "400px" }}>
-              {selectedTab === index && renderProfileDetails()}
-            </div>
-            <div className="config-section" style={{ flex: "1" }}>
+            <div className="config-section profile-details-section">{selectedTab === index && renderProfileDetails()}</div>
+            <div className="config-section defaults-section">
               <div className="defaults-heading-container">
                 <h2>Defaults</h2>
               </div>
