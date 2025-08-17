@@ -1,5 +1,5 @@
 interface PanelsProps {
-  configurations: { configPath: string; properties: any; secure: string[] }[];
+  configurations: { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[];
   selectedTab: number | null;
   renderProfiles: (profilesObj: any) => React.ReactNode;
   renderDefaults: (defaultsObj: any) => React.ReactNode;

@@ -17,10 +17,12 @@ const vscodeApi = acquireVsCodeApi();
 
 export function App() {
   const [localizationState] = useState(null);
-  const [configurations, setConfigurations] = useState<{ configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean }[]>(
-    []
-  );
-  const configurationsRef = useRef<{ configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean }[]>([]);
+  const [configurations, setConfigurations] = useState<
+    { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[]
+  >([]);
+  const configurationsRef = useRef<
+    { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[]
+  >([]);
   const [selectedTab, setSelectedTab] = useState<number | null>(null);
   const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
   const [flattenedDefaults, setFlattenedDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
@@ -946,6 +948,10 @@ export function App() {
 
   const handleRevealInFinder = (configPath: string) => {
     vscodeApi.postMessage({ command: "REVEAL_IN_FINDER", filePath: configPath });
+  };
+
+  const handleOpenSchemaFile = (schemaPath: string) => {
+    vscodeApi.postMessage({ command: "OPEN_SCHEMA_FILE", filePath: schemaPath });
   };
 
   const handleTabChange = (index: number) => {
@@ -2301,6 +2307,7 @@ export function App() {
         onTabChange={handleTabChange}
         onOpenRawFile={handleOpenRawJson}
         onRevealInFinder={handleRevealInFinder}
+        onOpenSchemaFile={handleOpenSchemaFile}
         onAddNewConfig={handleAddNewConfig}
         pendingChanges={pendingChanges}
       />
@@ -2320,12 +2327,15 @@ export function App() {
           const currentSelectedTab = selectedTab;
           const currentSelectedProfileKey = selectedProfileKey;
 
-          vscodeApi.postMessage({ command: "GET_PROFILES" });
+          // Clear all state first
           setHiddenItems({});
           setPendingChanges({});
           setDeletions({});
           setPendingDefaults({});
           setDefaultsDeletions({});
+
+          // Request fresh configurations from the backend
+          vscodeApi.postMessage({ command: "GET_PROFILES" });
 
           // Restore selection after a brief delay to allow configurations to update
           setTimeout(() => {

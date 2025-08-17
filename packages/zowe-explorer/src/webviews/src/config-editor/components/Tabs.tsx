@@ -1,16 +1,26 @@
 import { useState, useEffect } from "react";
 
 interface TabsProps {
-  configurations: { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean }[];
+  configurations: { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[];
   selectedTab: number | null;
   onTabChange: (index: number) => void;
   onOpenRawFile: (filePath: string) => void;
   onRevealInFinder: (filePath: string) => void;
+  onOpenSchemaFile: (filePath: string) => void;
   onAddNewConfig: () => void;
   pendingChanges: { [configPath: string]: any };
 }
 
-export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile, onRevealInFinder, onAddNewConfig, pendingChanges }: TabsProps) {
+export function Tabs({
+  configurations,
+  selectedTab,
+  onTabChange,
+  onOpenRawFile,
+  onRevealInFinder,
+  onOpenSchemaFile,
+  onAddNewConfig,
+  pendingChanges,
+}: TabsProps) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabIndex: number } | null>(null);
 
   // Detect OS for appropriate text
@@ -46,7 +56,7 @@ export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile, 
 
     // Ensure context menu stays within viewport bounds
     const menuWidth = 150;
-    const menuHeight = 80;
+    const menuHeight = 120; // Increased height for additional menu item
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
@@ -66,7 +76,7 @@ export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile, 
     setContextMenu({ x, y, tabIndex: index });
   };
 
-  const handleContextMenuAction = (action: "open" | "reveal") => {
+  const handleContextMenuAction = (action: "open" | "reveal" | "schema") => {
     if (contextMenu) {
       const config = configurations[contextMenu.tabIndex];
       if (config) {
@@ -74,6 +84,8 @@ export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile, 
           onOpenRawFile(config.configPath);
         } else if (action === "reveal") {
           onRevealInFinder(config.configPath);
+        } else if (action === "schema" && config.schemaPath) {
+          onOpenSchemaFile(config.schemaPath);
         }
       }
       setContextMenu(null);
@@ -95,55 +107,113 @@ export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile, 
   return (
     <div className="tabs">
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {configurations.map((config, index) => {
-          const hasPendingChanges = pendingChanges[config.configPath] && Object.keys(pendingChanges[config.configPath]).length > 0;
-          return (
+        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+          {configurations.map((config, index) => {
+            const hasPendingChanges = pendingChanges[config.configPath] && Object.keys(pendingChanges[config.configPath]).length > 0;
+            return (
+              <div
+                key={index}
+                className={`tab ${selectedTab === index ? "active" : ""}`}
+                onClick={() => onTabChange(index)}
+                onContextMenu={(e) => handleTabRightClick(e, index)}
+              >
+                <span className="tab-label" title={config.configPath} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span className={`codicon ${getConfigIcon(config)}`} style={{ fontSize: "14px" }}></span>
+                  {getTabLabel(config.configPath)}
+                  {hasPendingChanges && (
+                    <span
+                      className="codicon codicon-circle-filled"
+                      style={{
+                        fontSize: "12px",
+                        color: "var(--vscode-foreground)",
+                        marginLeft: "4px",
+                        flexShrink: 0,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                      title="Unsaved changes"
+                    />
+                  )}
+                </span>
+              </div>
+            );
+          })}
+          {/* Add new configuration button positioned like a browser tab - only show if there are existing configurations */}
+          {configurations.length > 0 && (
             <div
-              key={index}
-              className={`tab ${selectedTab === index ? "active" : ""}`}
-              onClick={() => onTabChange(index)}
-              onContextMenu={(e) => handleTabRightClick(e, index)}
+              className="tab add-tab"
+              onClick={onAddNewConfig}
+              style={{
+                minWidth: "32px",
+                maxWidth: "32px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                border: "1px solid var(--vscode-tab-border)",
+                borderLeft: "none",
+                backgroundColor: "var(--vscode-tab-inactiveBackground)",
+                color: "var(--vscode-tab-inactiveForeground)",
+              }}
+              title="Add new configuration"
             >
-              <span className="tab-label" title={config.configPath} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span className={`codicon ${getConfigIcon(config)}`} style={{ fontSize: "14px" }}></span>
-                {getTabLabel(config.configPath)}
-                {hasPendingChanges && (
-                  <span
-                    className="codicon codicon-circle-filled"
-                    style={{
-                      fontSize: "12px",
-                      color: "var(--vscode-foreground)",
-                      marginLeft: "4px",
-                      flexShrink: 0,
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                    title="Unsaved changes"
-                  />
-                )}
-              </span>
+              <span className="codicon codicon-add" style={{ fontSize: "14px" }}></span>
             </div>
-          );
-        })}
-        {/* Add new configuration button positioned like a browser tab */}
-        <div
-          className="tab add-tab"
-          onClick={onAddNewConfig}
-          style={{
-            minWidth: "32px",
-            maxWidth: "32px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            border: "1px solid var(--vscode-tab-border)",
-            borderLeft: "none",
-            backgroundColor: "var(--vscode-tab-inactiveBackground)",
-            color: "var(--vscode-tab-inactiveForeground)",
-          }}
-          title="Add new configuration"
-        >
-          <span className="codicon codicon-add" style={{ fontSize: "14px" }}></span>
+          )}
+        </div>
+
+        {/* Help icons on the right side */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingRight: "12px" }}>
+          <a
+            href="https://docs.zowe.org/stable/user-guide/cli-using-using-team-profiles"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "24px",
+              height: "24px",
+              cursor: "pointer",
+              color: "var(--vscode-foreground)",
+              textDecoration: "none",
+              borderRadius: "4px",
+            }}
+            title="Team Configuration Documentation"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--vscode-toolbar-hoverBackground)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+          >
+            <span className="codicon codicon-question" style={{ fontSize: "18px" }}></span>
+          </a>
+          <a
+            href="https://github.com/zowe/zowe-explorer-vscode/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "24px",
+              height: "24px",
+              cursor: "pointer",
+              color: "var(--vscode-foreground)",
+              textDecoration: "none",
+              borderRadius: "4px",
+            }}
+            title="Report Issues"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--vscode-toolbar-hoverBackground)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+          >
+            <span className="codicon codicon-bug" style={{ fontSize: "18px" }}></span>
+          </a>
         </div>
       </div>
 
@@ -185,7 +255,7 @@ export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile, 
               e.currentTarget.style.backgroundColor = "transparent";
             }}
           >
-            <span className="codicon codicon-go-to-file" style={{ fontSize: "12px" }}></span>
+            <span className="codicon codicon-go-to-file" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
             Open File
           </div>
           <div
@@ -210,9 +280,36 @@ export function Tabs({ configurations, selectedTab, onTabChange, onOpenRawFile, 
               e.currentTarget.style.backgroundColor = "transparent";
             }}
           >
-            <span className="codicon codicon-folder-opened" style={{ fontSize: "12px" }}></span>
+            <span className="codicon codicon-folder-opened" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
             {getRevealText()}
           </div>
+          {configurations[contextMenu.tabIndex]?.schemaPath && (
+            <div
+              style={{
+                padding: "4px 0",
+                cursor: "pointer",
+                paddingLeft: "12px",
+                paddingRight: "12px",
+                paddingTop: "6px",
+                paddingBottom: "6px",
+                fontSize: "13px",
+                color: "var(--vscode-menu-foreground)",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+              onClick={() => handleContextMenuAction("schema")}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--vscode-menu-selectionBackground)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
+            >
+              <span className="codicon codicon-file-code" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
+              Open Schema
+            </div>
+          )}
         </div>
       )}
     </div>

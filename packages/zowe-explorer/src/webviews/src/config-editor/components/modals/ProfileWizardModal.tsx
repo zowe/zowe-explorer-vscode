@@ -94,9 +94,9 @@ export function ProfileWizardModal({
         <div className="wizard-content">
           {/* Left Column */}
           <div className="wizard-left-column">
-            {/* Root Profile Selection */}
+            {/* Parent Profile Selection */}
             <div>
-              <label className="wizard-label">{l10n.t("Root Profile")}:</label>
+              <label className="wizard-label">{l10n.t("Parent Profile")}:</label>
               <select
                 value={wizardRootProfile}
                 onChange={(e) => onRootProfileChange((e.target as HTMLSelectElement).value)}

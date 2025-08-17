@@ -2,7 +2,7 @@ import * as l10n from "@vscode/l10n";
 
 interface AddConfigModalProps {
   isOpen: boolean;
-  configurations: { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean }[];
+  configurations: { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[];
   hasWorkspace: boolean;
   onAdd: (configType: string) => void;
   onCancel: () => void;

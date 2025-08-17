@@ -20,7 +20,7 @@ export function Footer({ onClearChanges, onSaveAll }: FooterProps) {
           fontWeight: "normal",
         }}
       >
-        Clear Changes
+        Refresh
       </button>
       <button
         onClick={onSaveAll}

@@ -67,7 +67,39 @@ export class ConfigEditor extends WebView {
 
     protected async getLocalConfigs(): Promise<any[]> {
         const profInfo = new ProfileInfo("zowe");
-        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+        try {
+            await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+        } catch (err) {
+            vscode.window.showErrorMessage(`Error reading profiles from disk: ${err.message}`);
+
+            // Try to extract file path from error message and open it
+            const errorMessage = err.message;
+            const fileMatch = errorMessage.match(/file '([^']+)'/);
+            if (fileMatch && fileMatch[1]) {
+                const filePath = fileMatch[1];
+                try {
+                    // Extract line and column information if available
+                    const lineMatch = errorMessage.match(/Line (\d+)/);
+                    const columnMatch = errorMessage.match(/Column (\d+)/);
+
+                    const line = lineMatch ? parseInt(lineMatch[1]) - 1 : 0; // Convert to 0-based index
+                    const column = columnMatch ? parseInt(columnMatch[1]) - 1 : 0; // Convert to 0-based index
+
+                    const document = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath));
+                    const editor = await vscode.window.showTextDocument(document);
+
+                    // Position cursor at the error location
+                    const position = new vscode.Position(line, column);
+                    editor.selection = new vscode.Selection(position, position);
+                    editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
+                } catch (openError) {
+                    // If we can't open the file, just log it but don't show another error
+                    console.log(`Could not open file ${filePath}: ${openError.message}`);
+                }
+            }
+
+            return [];
+        }
         const layers = profInfo.getTeamConfig().layers;
 
         const allConfigs: {
@@ -75,6 +107,7 @@ export class ConfigEditor extends WebView {
             properties: any;
             schema?: any;
             schemaValidation?: schemaValidation;
+            schemaPath?: string;
             global: boolean;
             user: boolean;
         }[] = [];
@@ -97,6 +130,7 @@ export class ConfigEditor extends WebView {
                             properties: layer.properties,
                             schema,
                             schemaValidation,
+                            schemaPath,
                             global: layer.global,
                             user: layer.user,
                         });
@@ -110,7 +144,29 @@ export class ConfigEditor extends WebView {
                         });
                     }
                 } catch (err) {
-                    vscode.window.showErrorMessage(`Error reading or parsing file ${configPath}:`);
+                    vscode.window.showErrorMessage(`Error reading or parsing file ${configPath}: ${err.message}`);
+
+                    // Try to open the problematic file
+                    try {
+                        // Extract line and column information if available
+                        const errorMessage = err.message;
+                        const lineMatch = errorMessage.match(/Line (\d+)/);
+                        const columnMatch = errorMessage.match(/Column (\d+)/);
+
+                        const line = lineMatch ? parseInt(lineMatch[1]) - 1 : 0; // Convert to 0-based index
+                        const column = columnMatch ? parseInt(columnMatch[1]) - 1 : 0; // Convert to 0-based index
+
+                        const document = await vscode.workspace.openTextDocument(vscode.Uri.file(configPath));
+                        const editor = await vscode.window.showTextDocument(document);
+
+                        // Position cursor at the error location
+                        const position = new vscode.Position(line, column);
+                        editor.selection = new vscode.Selection(position, position);
+                        editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
+                    } catch (openError) {
+                        // If we can't open the file, just log it but don't show another error
+                        console.log(`Could not open file ${configPath}: ${openError.message}`);
+                    }
                 }
             }
         }
@@ -143,6 +199,14 @@ export class ConfigEditor extends WebView {
         const profInfo = new ProfileInfo("zowe");
         switch (message.command.toLocaleUpperCase()) {
             case "GET_PROFILES": {
+                // Force refresh of ProfileInfo to ensure we get the latest state from disk
+                const profInfo = new ProfileInfo("zowe");
+                try {
+                    await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+                } catch (err) {
+                    // If there's still an error, let getLocalConfigs handle it
+                }
+
                 const configurations = await this.getLocalConfigs();
                 await this.panel.webview.postMessage({
                     command: "CONFIGURATIONS",
@@ -165,9 +229,11 @@ export class ConfigEditor extends WebView {
                 }
                 await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
+                const configs = await this.getLocalConfigs();
+
                 await this.panel.webview.postMessage({
                     command: "CONFIGURATIONS",
-                    contents: await this.getLocalConfigs(),
+                    contents: configs,
                 });
 
                 await this.panel.webview.postMessage({
@@ -189,6 +255,14 @@ export class ConfigEditor extends WebView {
                     await vscode.commands.executeCommand("revealFileInOS", fileUri);
                 } catch (error) {
                     vscode.window.showErrorMessage(`Error revealing file in explorer: ${message.filePath}`);
+                }
+                break;
+            }
+            case "OPEN_SCHEMA_FILE": {
+                try {
+                    vscode.window.showTextDocument(vscode.Uri.file(message.filePath));
+                } catch {
+                    vscode.window.showErrorMessage(`Error opening schema file: ${message.filePath as string}:`);
                 }
                 break;
             }
@@ -490,9 +564,10 @@ export class ConfigEditor extends WebView {
                     await ZoweVsCodeExtension.openConfigFile(path.join(rootPath, configName));
 
                     // Refresh the configurations in the webview
+                    const configs = await this.getLocalConfigs();
                     await this.panel.webview.postMessage({
                         command: "CONFIGURATIONS",
-                        contents: await this.getLocalConfigs(),
+                        contents: configs,
                     });
                 } catch (error) {
                     vscode.window.showErrorMessage("Error creating new configuration");
