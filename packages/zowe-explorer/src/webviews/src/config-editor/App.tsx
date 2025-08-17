@@ -2431,7 +2431,6 @@ export function App() {
         typeOptions={getWizardTypeOptions()}
         propertyOptions={getWizardPropertyOptions()}
         isProfileNameTaken={isProfileNameTaken()}
-        configPath={selectedTab !== null ? configurations[selectedTab]?.configPath : undefined}
         onRootProfileChange={setWizardRootProfile}
         onSelectedTypeChange={setWizardSelectedType}
         onProfileNameChange={setWizardProfileName}

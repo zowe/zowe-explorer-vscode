@@ -15,7 +15,6 @@ interface ProfileWizardModalProps {
   typeOptions: string[];
   propertyOptions: string[];
   isProfileNameTaken: boolean;
-  configPath?: string;
   onRootProfileChange: (value: string) => void;
   onSelectedTypeChange: (value: string) => void;
   onProfileNameChange: (value: string) => void;
@@ -51,7 +50,6 @@ export function ProfileWizardModal({
   typeOptions,
   propertyOptions,
   isProfileNameTaken,
-  configPath,
   onRootProfileChange,
   onSelectedTypeChange,
   onProfileNameChange,

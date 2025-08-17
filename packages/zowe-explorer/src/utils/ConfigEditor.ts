@@ -70,10 +70,10 @@ export class ConfigEditor extends WebView {
         try {
             await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
         } catch (err) {
-            vscode.window.showErrorMessage(`Error reading profiles from disk: ${err.message}`);
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`Error reading profiles from disk: ${errorMessage}`);
 
             // Try to extract file path from error message and open it
-            const errorMessage = err.message;
             const fileMatch = errorMessage.match(/file '([^']+)'/);
             if (fileMatch && fileMatch[1]) {
                 const filePath = fileMatch[1];
@@ -94,7 +94,8 @@ export class ConfigEditor extends WebView {
                     editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
                 } catch (openError) {
                     // If we can't open the file, just log it but don't show another error
-                    console.log(`Could not open file ${filePath}: ${openError.message}`);
+                    const openErrorMessage = openError instanceof Error ? openError.message : String(openError);
+                    console.log(`Could not open file ${filePath}: ${openErrorMessage}`);
                 }
             }
 
@@ -144,12 +145,13 @@ export class ConfigEditor extends WebView {
                         });
                     }
                 } catch (err) {
-                    vscode.window.showErrorMessage(`Error reading or parsing file ${configPath}: ${err.message}`);
+                    const errorMessage = err instanceof Error ? err.message : String(err);
+                    vscode.window.showErrorMessage(`Error reading or parsing file ${configPath}: ${errorMessage}`);
 
                     // Try to open the problematic file
                     try {
                         // Extract line and column information if available
-                        const errorMessage = err.message;
+                        const errorMessage = err instanceof Error ? err.message : String(err);
                         const lineMatch = errorMessage.match(/Line (\d+)/);
                         const columnMatch = errorMessage.match(/Column (\d+)/);
 
@@ -165,7 +167,8 @@ export class ConfigEditor extends WebView {
                         editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
                     } catch (openError) {
                         // If we can't open the file, just log it but don't show another error
-                        console.log(`Could not open file ${configPath}: ${openError.message}`);
+                        const openErrorMessage = openError instanceof Error ? openError.message : String(openError);
+                        console.log(`Could not open file ${configPath}: ${openErrorMessage}`);
                     }
                 }
             }
