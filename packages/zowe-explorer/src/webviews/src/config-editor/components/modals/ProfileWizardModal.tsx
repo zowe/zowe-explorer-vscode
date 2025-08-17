@@ -15,6 +15,7 @@ interface ProfileWizardModalProps {
   typeOptions: string[];
   propertyOptions: string[];
   isProfileNameTaken: boolean;
+  configPath?: string;
   onRootProfileChange: (value: string) => void;
   onSelectedTypeChange: (value: string) => void;
   onProfileNameChange: (value: string) => void;
@@ -50,6 +51,7 @@ export function ProfileWizardModal({
   typeOptions,
   propertyOptions,
   isProfileNameTaken,
+  configPath,
   onRootProfileChange,
   onSelectedTypeChange,
   onProfileNameChange,
@@ -90,7 +92,6 @@ export function ProfileWizardModal({
     <div className="modal-backdrop" onClick={onCancel}>
       <div className="modal wizard-modal" onClick={(e) => e.stopPropagation()}>
         <h3 className="wizard-title">{l10n.t("Profile Wizard")}</h3>
-
         <div className="wizard-content">
           {/* Left Column */}
           <div className="wizard-left-column">
@@ -338,24 +339,40 @@ export function ProfileWizardModal({
                   wizardSelectedType && Object.keys(wizardMergedProperties).length > 0
                     ? Object.entries(wizardMergedProperties).filter(([key]) => !userPropertyKeys.has(key) && schemaProperties.includes(key))
                     : [];
-
+                console.log("filteredInheritedProperties", filteredInheritedProperties);
                 return (
                   <>
                     {/* Inherited Properties (not overridden) */}
-                    {filteredInheritedProperties.map(([key, propData]) => (
-                      <div key={`inherited-${key}`} className="wizard-property-item inherited">
-                        <span className="wizard-property-key">{key}:</span>
-                        <div className="wizard-property-value-container">
-                          {propData.secure ? (
-                            <span className="wizard-property-value-display">********</span>
-                          ) : (
-                            <span className="wizard-property-value-display">
-                              {typeof propData.value === "object" ? JSON.stringify(propData.value) : String(propData.value)}
-                            </span>
-                          )}
+                    {filteredInheritedProperties.map(([key, propData]) => {
+                      // Extract logical profile path from jsonLoc (e.g., "profiles.lpar1.profiles.zosmf.profiles.w.properties.host" -> "lpar1.zosmf.w")
+                      const jsonLocParts = propData.argLoc?.jsonLoc?.split(".") || [];
+                      const profilePathParts = jsonLocParts.slice(1, -2); // Remove "profiles" prefix and "properties" + property name suffix
+                      const profilePath =
+                        profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".") ||
+                        "unknown profile";
+
+                      // Extract full normalized config path from osLoc
+                      const fullConfigPath = propData.argLoc?.osLoc?.[0] || "unknown config";
+
+                      return (
+                        <div
+                          key={`inherited-${key}`}
+                          className="wizard-property-item inherited"
+                          title={`Inherited from: ${profilePath} (${fullConfigPath})`}
+                        >
+                          <span className="wizard-property-key">{key}:</span>
+                          <div className="wizard-property-value-container">
+                            {propData.secure ? (
+                              <span className="wizard-property-value-display">********</span>
+                            ) : (
+                              <span className="wizard-property-value-display">
+                                {typeof propData.value === "object" ? JSON.stringify(propData.value) : String(propData.value)}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {/* User-added Properties */}
                     {wizardProperties.length > 0

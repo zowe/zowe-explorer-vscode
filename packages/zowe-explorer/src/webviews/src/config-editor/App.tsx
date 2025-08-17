@@ -360,6 +360,7 @@ export function App() {
                 value: item.argValue,
                 dataType: item.dataType,
                 secure: item.secure,
+                argLoc: item.argLoc,
               };
             }
           });
@@ -487,7 +488,12 @@ export function App() {
   // Trigger wizard merged properties request when root profile, type, or pending changes change
   useEffect(() => {
     if (wizardModalOpen && selectedTab !== null && (wizardRootProfile || wizardSelectedType)) {
-      requestWizardMergedProperties();
+      // Debounce the request to prevent excessive calls
+      const timeoutId = setTimeout(() => {
+        requestWizardMergedProperties();
+      }, 1000); // 1 second delay
+
+      return () => clearTimeout(timeoutId);
     }
   }, [wizardRootProfile, wizardSelectedType, wizardModalOpen, selectedTab, requestWizardMergedProperties]);
 
@@ -1958,7 +1964,22 @@ export function App() {
             key={fullKey}
             className="config-item"
             onClick={isFromMergedProps && jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
-            title={isFromMergedProps && jsonLoc ? `Property Source: ${jsonLoc}` : undefined}
+            title={
+              isFromMergedProps && jsonLoc
+                ? (() => {
+                    // Extract logical profile path from jsonLoc (e.g., "profiles.lpar1.profiles.zosmf.profiles.w.properties.host" -> "lpar1.zosmf.w")
+                    const jsonLocParts = jsonLoc.split(".");
+                    const profilePathParts = jsonLocParts.slice(1, -2); // Remove "profiles" prefix and "properties" + property name suffix
+                    const profilePath =
+                      profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".") || "unknown profile";
+
+                    // Extract full normalized config path from osLoc
+                    const fullConfigPath = osLoc?.[0] || "unknown config";
+
+                    return `Inherited from: ${profilePath} (${fullConfigPath})`;
+                  })()
+                : undefined
+            }
             style={isFromMergedProps && jsonLoc ? { cursor: "pointer" } : {}}
           >
             {readOnlyContainer}
@@ -2410,6 +2431,7 @@ export function App() {
         typeOptions={getWizardTypeOptions()}
         propertyOptions={getWizardPropertyOptions()}
         isProfileNameTaken={isProfileNameTaken()}
+        configPath={selectedTab !== null ? configurations[selectedTab]?.configPath : undefined}
         onRootProfileChange={setWizardRootProfile}
         onSelectedTypeChange={setWizardSelectedType}
         onProfileNameChange={setWizardProfileName}

@@ -855,7 +855,18 @@ export class ConfigEditor extends WebView {
             tempProfilePath = `profiles.${tempProfileName}`;
             expectedProfileName = tempProfileName;
         } else {
-            tempProfilePath = `profiles.${rootProfile}.profiles.${tempProfileName}`;
+            // For nested profiles, we need to add .profiles between each level
+            // Example: rootProfile = "lpar1.zosmf.w" should become "profiles.lpar1.profiles.zosmf.profiles.w.profiles.tempProfileName"
+            const profileParts = rootProfile.split(".");
+            const pathParts = ["profiles"];
+
+            for (const part of profileParts) {
+                pathParts.push(part);
+                pathParts.push("profiles");
+            }
+
+            pathParts.push(tempProfileName);
+            tempProfilePath = pathParts.join(".");
             expectedProfileName = `${rootProfile}.${tempProfileName}`;
         }
 
