@@ -56,7 +56,7 @@ export namespace Types {
 
         reject?<T = never>(reason?: any): Promise<T>;
         resolve?: (uniqueId: string, data: any) => any;
-        request: () => Promise<unknown>;
+        request: () => unknown | Promise<unknown>;
 
         // Indexable for storing custom items
         [key: string]: any;

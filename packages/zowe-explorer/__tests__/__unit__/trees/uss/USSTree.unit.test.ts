@@ -96,7 +96,7 @@ function createGlobalMocks() {
         testSession: createISession(),
         testResponse: createFileResponse({ items: [] }),
         testUSSNode: null,
-        testTree: null,
+        testTree: null as unknown as USSTree,
         profilesForValidation: { status: "active", name: "fake" },
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         mockTreeProviders: createTreeProviders(),
@@ -271,7 +271,7 @@ describe("USSTree Unit Tests - Function initializeFavorites", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
             readFavorites: () => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}", "/invalid"],
         });
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
@@ -285,7 +285,7 @@ describe("USSTree Unit Tests - Function initializeFavorites", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.replaceProperty(blockMocks.testTree as any, "mHistory", {
+        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
             readFavorites: () => ["[test]: /u/aDir{directory}"],
         });
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
@@ -821,7 +821,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         const blockMocks = createBlockMocks(globalMocks);
 
         // Mock search history to trigger quick pick flow
-        globalMocks.testTree.mHistory.addSearchHistory("/test/path");
+        globalMocks.testTree.mPersistence.addSearchHistory("/test/path");
 
         const mockQuickPick = {
             placeholder: "",
@@ -868,7 +868,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         const blockMocks = createBlockMocks(globalMocks);
 
         // Mock search history to trigger quick pick flow
-        globalMocks.testTree.mHistory.addSearchHistory("/test/path");
+        globalMocks.testTree.mPersistence.addSearchHistory("/test/path");
 
         const userTypedValue = "/user/typed/path";
         const mockQuickPick = {
@@ -903,7 +903,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         const blockMocks = createBlockMocks(globalMocks);
 
         // Mock search history to trigger quick pick flow
-        globalMocks.testTree.mHistory.addSearchHistory("/test/path");
+        globalMocks.testTree.mPersistence.addSearchHistory("/test/path");
 
         const mockQuickPick = {
             placeholder: "",
@@ -943,7 +943,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         createBlockMocks(globalMocks);
 
         // Clear search history
-        globalMocks.testTree.mHistory.getSearchHistory = jest.fn().mockReturnValue([]);
+        globalMocks.testTree.mPersistence.getSearchHistory = jest.fn().mockReturnValue([]);
 
         const inputBoxResult = "/direct/input/path";
         globalMocks.showInputBox.mockResolvedValue(inputBoxResult);
@@ -968,7 +968,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         const blockMocks = createBlockMocks(globalMocks);
 
         // Mock search history to trigger quick pick flow
-        globalMocks.testTree.mHistory.addSearchHistory("/test/path");
+        globalMocks.testTree.mPersistence.addSearchHistory("/test/path");
 
         const mockQuickPick = {
             placeholder: "",
@@ -1007,7 +1007,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         const blockMocks = createBlockMocks(globalMocks);
 
         // Mock search history to trigger quick pick flow
-        globalMocks.testTree.mHistory.addSearchHistory("/test/path");
+        globalMocks.testTree.mPersistence.addSearchHistory("/test/path");
 
         const userTypedValueWithSpaces = "  /user/typed/path  ";
         const expectedTrimmedValue = "/user/typed/path";
@@ -1041,7 +1041,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         const blockMocks = createBlockMocks(globalMocks);
 
         const historyItem = "/historical/path";
-        globalMocks.testTree.mHistory.addSearchHistory(historyItem);
+        globalMocks.testTree.mPersistence.addSearchHistory(historyItem);
 
         const mockQuickPick = {
             placeholder: "",
@@ -1061,13 +1061,41 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         const historyFilterItem = new FilterItem({ text: historyItem });
         blockMocks.resolveQuickPickHelper.mockResolvedValue(historyFilterItem);
         globalMocks.showInputBox.mockReset();
+        // Simulate user confirming input for history item
+        globalMocks.showInputBox.mockResolvedValueOnce(historyItem);
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
 
-        // Should not call showInputBox
-        expect(globalMocks.showInputBox).not.toHaveBeenCalled();
+        // Should call showInputBox to allow user to confirm/edit existing filter
+        expect(globalMocks.showInputBox).toHaveBeenCalled();
 
         // Should use the selected history item, not the typed value
         expect(globalMocks.testTree.mSessionNodes[1].fullPath).toEqual(historyItem);
+    });
+
+    it("should return early when user selects existing filter but cancels the edit input box", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        // Add search history to trigger quick pick
+        const existingFilter = "/u/existing/path";
+        globalMocks.testTree.addSearchHistory(existingFilter);
+
+        const existingFilterItem = new FilterItem({ text: existingFilter });
+        blockMocks.resolveQuickPickHelper.mockResolvedValueOnce(existingFilterItem);
+
+        // Mock the input box to return null (simulate user cancelling)
+        globalMocks.showInputBox.mockResolvedValueOnce(undefined);
+
+        const updateTreeViewSpy = jest.spyOn(globalMocks.testTree as any, "updateTreeView").mockImplementation();
+
+        await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
+
+        expect(globalMocks.showInputBox).toHaveBeenCalledWith({
+            placeHolder: expect.any(String),
+            value: existingFilter,
+            validateInput: expect.any(Function),
+        });
+        expect(updateTreeViewSpy).not.toHaveBeenCalled();
     });
 });
 
@@ -2029,36 +2057,36 @@ describe("USSTree Unit Tests - Function editSession", () => {
     describe("removeSearchHistory", () => {
         it("removes the search item passed in from the current history", async () => {
             const globalMocks = createGlobalMocks();
-            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(1);
+            expect(globalMocks.testTree["mPersistence"]["mSearchHistory"].length).toEqual(1);
             globalMocks.testTree.removeSearchHistory("/u/myuser");
-            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(0);
+            expect(globalMocks.testTree["mPersistence"]["mSearchHistory"].length).toEqual(0);
         });
     });
 
     describe("resetSearchHistory", () => {
         it("clears the entire search history", async () => {
             const globalMocks = createGlobalMocks();
-            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(1);
+            expect(globalMocks.testTree["mPersistence"]["mSearchHistory"].length).toEqual(1);
             globalMocks.testTree.resetSearchHistory();
-            expect(globalMocks.testTree["mHistory"]["mSearchHistory"].length).toEqual(0);
+            expect(globalMocks.testTree["mPersistence"]["mSearchHistory"].length).toEqual(0);
         });
     });
 
     describe("resetFileHistory", () => {
         it("clears the entire file history", async () => {
             const globalMocks = createGlobalMocks();
-            globalMocks.testTree["mHistory"]["mFileHistory"] = ["test1", "test2"];
-            expect(globalMocks.testTree["mHistory"]["mFileHistory"].length).toEqual(2);
+            globalMocks.testTree["mPersistence"]["mFileHistory"] = ["test1", "test2"];
+            expect(globalMocks.testTree["mPersistence"]["mFileHistory"].length).toEqual(2);
 
             globalMocks.testTree.resetFileHistory();
-            expect(globalMocks.testTree["mHistory"]["mFileHistory"].length).toEqual(0);
+            expect(globalMocks.testTree["mPersistence"]["mFileHistory"].length).toEqual(0);
         });
     });
 
     describe("getSessions", () => {
         it("gets all the available sessions from persistent object", async () => {
             const globalMocks = createGlobalMocks();
-            globalMocks.testTree["mHistory"]["mSessions"] = ["sestest"];
+            globalMocks.testTree["mPersistence"]["mSessions"] = ["sestest"];
             expect(globalMocks.testTree.getSessions()).toEqual(["sestest"]);
         });
     });
