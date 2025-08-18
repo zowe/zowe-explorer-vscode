@@ -16,16 +16,13 @@ import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { FileManagement, Types } from "../../../src";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
+import * as crypto from "crypto";
 
-const crypto = require("crypto"); // Need to import it again for mocking
-
-// Mock the crypto module and its X509Certificate class
 jest.mock("crypto", () => ({
-    ...jest.requireActual("crypto"), // Keep actual implementations for other parts of crypto
+    ...jest.requireActual("crypto"),
     X509Certificate: jest.fn(() => ({
         subject: "mockedSubject",
         fingerprint256: "mockedFingerprint",
-        // ... add any other methods/properties your code uses
     })),
 }));
 
