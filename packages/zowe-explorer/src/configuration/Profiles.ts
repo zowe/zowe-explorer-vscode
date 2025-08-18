@@ -150,7 +150,6 @@ export class Profiles extends ProfilesCache {
                 return { ...profileStatus, status: "inactive" };
             }
         } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
-            // check cert is valid
             if (!this.isCertFileValid(theProfile.profile.certFile)) {
                 ZoweLogger.error(`Profile ${theProfile?.name} has an invalid SSL certificate`);
                 Gui.errorMessage(

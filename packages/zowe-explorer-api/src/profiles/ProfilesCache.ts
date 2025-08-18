@@ -236,6 +236,13 @@ export class ProfilesCache {
         this.profilesForValidation = [];
     }
 
+    /**
+     * Used to check validity of a profile's certfile used for authentication
+     *
+     * @param {string} certFile Path to certFile from profile
+     *
+     * @returns {boolean} True if certFile is valid and false otherwise
+     */
     public isCertFileValid(certFile: string): boolean {
         let valid = false;
         try {
@@ -252,10 +259,8 @@ export class ProfilesCache {
             } else {
                 this.log.error(`Certificate file ${certFile} is outside its validity period.`);
             }
-
-            // Note: Full chain validation and CA trust checks require more advanced logic or external libraries.
         } catch (e) {
-            this.log.error(`Certificate file validation failed for ${certFile}: ${(e as Error).message}`); // Log the error message
+            this.log.error(`Certificate file validation failed for ${certFile}: ${(e as Error).message}`);
         }
         return valid;
     }
