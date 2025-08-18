@@ -37,6 +37,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. [#3772](https://github.com/zowe/zowe-explorer-vscode/issues/3772)
 - Fixed a regression with the `AuthUtils.syncSessionNode` function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. [#3795](https://github.com/zowe/zowe-explorer-vscode/pull/3795)
 - Prevented data loss by modifying the save process to handle data sets with records that exceeded the logical record length. [#3791](https://github.com/zowe/zowe-explorer-vscode/issues/3791)
+- Fixed repeated authentication prompts when performing actions in the Data Sets tree. [#3807](https://github.com/zowe/zowe-explorer-vscode/issues/3807)
 
 ## `3.2.2`
 

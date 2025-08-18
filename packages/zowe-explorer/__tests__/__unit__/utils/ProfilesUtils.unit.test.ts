@@ -173,35 +173,17 @@ describe("ProfilesUtils unit tests", () => {
                 additionalDetails: "Authentication is not valid or expired.",
             });
             const scenario = "Task failed successfully";
-            const showMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
-            const promptCredsSpy = jest.fn().mockResolvedValueOnce(["someusername", "pw"]);
-            const ssoLoginSpy = jest.fn();
             const profile = createIProfile();
-            // disable locking mechanism for this test, will be tested in separate test cases
 
-            Object.defineProperty(Constants, "PROFILES_CACHE", {
-                value: {
-                    promptCredentials: promptCredsSpy,
-                    ssoLogin: ssoLoginSpy,
-                    getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => profile,
-                    getDefaultProfile: () => ({}),
-                    getPropsForProfile: () => ["tokenValue"],
-                    loadNamedProfile: () => profile,
-                    shouldRemoveTokenFromProfile: () => jest.fn(),
-                },
-                configurable: true,
-            });
-            const unlockProfileMock = jest.spyOn(AuthHandler, "unlockProfile").mockImplementation();
+            // Mock the handleProfileAuthOnError to simulate successful authentication
+            const handleProfileAuthOnErrorSpy = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockResolvedValue();
+
             await AuthUtils.errorHandling(errorDetails, { profile, scenario });
-            expect(showMessageSpy).toHaveBeenCalledTimes(1);
-            expect(promptCredsSpy).toHaveBeenCalledTimes(1);
-            expect(ssoLoginSpy).not.toHaveBeenCalled();
-            // ensure profile is unlocked after successful credential update
-            expect(unlockProfileMock).toHaveBeenCalledWith(profile.name, true);
-            showMessageSpy.mockClear();
-            promptCredsSpy.mockClear();
-            unlockProfileMock.mockRestore();
+
+            expect(handleProfileAuthOnErrorSpy).toHaveBeenCalledTimes(1);
+            expect(handleProfileAuthOnErrorSpy).toHaveBeenCalledWith(errorDetails, profile);
+
+            handleProfileAuthOnErrorSpy.mockRestore();
         });
 
         it("should handle token error and proceed to login", async () => {
@@ -211,39 +193,17 @@ describe("ProfilesUtils unit tests", () => {
                 additionalDetails: "Token is not valid or expired.",
             });
             const scenario = "Task failed successfully";
-            const showErrorSpy = jest.spyOn(Gui, "errorMessage");
-            const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("Log in to Authentication Service"));
-
-            // simulate successful SSO login
-            const ssoLoginSpy = jest.fn().mockResolvedValueOnce(true);
-            const promptCredentialsSpy = jest.fn();
             const profile = createIProfile();
-            const unlockProfileMock = jest.spyOn(AuthHandler, "unlockProfile").mockImplementation();
-            const setAuthCancelledMock = jest.spyOn(AuthHandler, "setAuthCancelled").mockImplementation();
-            Object.defineProperty(Constants, "PROFILES_CACHE", {
-                value: {
-                    getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => profile,
-                    getDefaultProfile: () => ({}),
-                    getPropsForProfile: () => ["tokenValue"],
-                    loadNamedProfile: () => profile,
-                    shouldRemoveTokenFromProfile: () => jest.fn(),
-                    ssoLogin: ssoLoginSpy,
-                    promptCredentials: promptCredentialsSpy,
-                },
-                configurable: true,
-            });
+
+            // Mock the handleProfileAuthOnError to simulate successful SSO login flow
+            const handleProfileAuthOnErrorSpy = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockResolvedValue();
+
             await AuthUtils.errorHandling(errorDetails, { profile, scenario });
-            // ensure profile is unlocked after successful SSO login
-            expect(unlockProfileMock).toHaveBeenCalledWith(profile.name, true);
-            expect(showMessageSpy).toHaveBeenCalledTimes(1);
-            expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
-            expect(showErrorSpy).not.toHaveBeenCalled();
-            expect(promptCredentialsSpy).not.toHaveBeenCalled();
-            showErrorSpy.mockClear();
-            showMessageSpy.mockClear();
-            ssoLoginSpy.mockClear();
-            setAuthCancelledMock.mockRestore();
+
+            expect(handleProfileAuthOnErrorSpy).toHaveBeenCalledTimes(1);
+            expect(handleProfileAuthOnErrorSpy).toHaveBeenCalledWith(errorDetails, profile);
+
+            handleProfileAuthOnErrorSpy.mockRestore();
         });
         it("should handle credential error - no selection made for update", async () => {
             const errorDetails = new imperative.ImperativeError({
@@ -252,40 +212,21 @@ describe("ProfilesUtils unit tests", () => {
                 additionalDetails: "All configured authentication methods failed",
             });
             const moreInfo = "Task failed successfully";
-            Object.defineProperty(vscode, "env", {
-                value: {
-                    appName: "Visual Studio Code",
-                },
-                configurable: true,
-            });
-            const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
-            const setAuthCancelledMock = jest.spyOn(AuthHandler, "setAuthCancelled").mockImplementation();
-            const showMsgSpy = jest.spyOn(Gui, "showMessage");
-            const promptCredentialsSpy = jest.fn();
-            const ssoLogin = jest.fn();
             const profile = { type: "zosmf" } as any;
-            Object.defineProperty(Constants, "PROFILES_CACHE", {
-                value: {
-                    promptCredentials: promptCredentialsSpy,
-                    ssoLogin,
-                    getProfileInfo: profileInfoMock,
-                    getLoadedProfConfig: () => profile,
-                    getDefaultProfile: () => ({}),
-                    getPropsForProfile: () => ["tokenValue"],
-                    loadNamedProfile: () => profile,
-                    shouldRemoveTokenFromProfile: () => jest.fn(),
-                },
-                configurable: true,
-            });
-            await AuthUtils.errorHandling(errorDetails, { profile, scenario: moreInfo });
-            expect(showErrorSpy).toHaveBeenCalledTimes(1);
-            expect(promptCredentialsSpy).not.toHaveBeenCalled();
-            expect(ssoLogin).not.toHaveBeenCalled();
-            expect(showMsgSpy).not.toHaveBeenCalledWith("Operation Cancelled");
-            showErrorSpy.mockClear();
-            showMsgSpy.mockClear();
-            promptCredentialsSpy.mockClear();
-            setAuthCancelledMock.mockRestore();
+
+            // Mock the handleProfileAuthOnError to simulate user cancelling authentication
+            const handleProfileAuthOnErrorSpy = jest
+                .spyOn(AuthUtils, "handleProfileAuthOnError")
+                .mockRejectedValue(new Error("User cancelled authentication"));
+
+            // The errorHandling should catch the exception from handleProfileAuthOnError and return false
+            const result = await AuthUtils.errorHandling(errorDetails, { profile, scenario: moreInfo });
+
+            expect(result).toBe(false);
+            expect(handleProfileAuthOnErrorSpy).toHaveBeenCalledTimes(1);
+            expect(handleProfileAuthOnErrorSpy).toHaveBeenCalledWith(errorDetails, profile);
+
+            handleProfileAuthOnErrorSpy.mockRestore();
         });
     });
 
@@ -421,7 +362,7 @@ describe("ProfilesUtils unit tests", () => {
         it("calls unlockProfile once credentials are provided", async () => {
             const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
             const promptCredentialsProfilesMock = jest.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValueOnce(["someusername", "pw"]);
-            const updateCachedProfileMock = jest.spyOn(mockProfileInstance, "updateCachedProfile").mockResolvedValueOnce(undefined);
+            const updateCachedProfileMock = jest.spyOn(mockProfileInstance, "updateCachedProfile").mockImplementation();
             const profile = createIProfile();
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
@@ -454,9 +395,10 @@ describe("ProfilesUtils unit tests", () => {
                 value: jest.fn().mockResolvedValue(""),
                 configurable: true,
             });
+            const showMessageSpy = jest.spyOn(Gui, "showMessage");
             jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
             await ProfilesUtils.promptCredentials(null as any);
-            expect(Gui.showMessage).toHaveBeenCalledWith("Operation cancelled");
+            expect(showMessageSpy).toHaveBeenCalledWith("Operation cancelled");
         });
 
         it("shows an info message if the profile credentials were updated", async () => {
