@@ -1508,7 +1508,6 @@ describe("USSTree Unit Tests - Function rename", () => {
         globalMocks.showInputBox.mockReturnValueOnce("new name");
         jest.spyOn(UssFSProvider.instance, "rename").mockResolvedValue(undefined);
         await globalMocks.testTree.rename(blockMocks.ussFavNode);
-        console.log(globalMocks.showErrorMessage);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
 

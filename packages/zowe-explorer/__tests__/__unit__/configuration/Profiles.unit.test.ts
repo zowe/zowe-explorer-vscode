@@ -989,8 +989,32 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
             message: "",
             failNotFound: false,
         };
+        jest.spyOn(Profiles.getInstance(), "isCertFileValid").mockReturnValueOnce(true);
         jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+    });
+    it("should show as inactive in status of profile using invalid certificate auth", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        const testProfile = {
+            name: "sestest",
+            profile: {
+                type: "zosmf",
+                host: "test",
+                port: 1443,
+                certFile: "test",
+                certKeyFile: "test",
+                rejectUnauthorized: false,
+                name: "testName",
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false,
+        };
+        jest.spyOn(Profiles.getInstance(), "isCertFileValid").mockReturnValueOnce(false);
+        jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "inactive", name: "sestest" });
+        await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
     });
 
     it("To check updated autoStore value", async () => {
