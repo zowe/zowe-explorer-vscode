@@ -18,6 +18,8 @@ import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 import { Types } from "../Types";
 import { VscSettings } from "../vscode/doc/VscSettings";
+import * as fs from "fs";
+import * as crypto from "crypto";
 
 export class ProfilesCache {
     private profileInfo: imperative.ProfileInfo;
@@ -232,6 +234,30 @@ export class ProfilesCache {
         this.checkMergingConfigAllProfiles();
         this.checkForEnvVarAndUpdate();
         this.profilesForValidation = [];
+    }
+
+    public isCertFileValid(certFile: string): boolean {
+        let valid = false;
+        try {
+            const certPem = fs.readFileSync(certFile, "utf8");
+            const certificate = new crypto.X509Certificate(certPem);
+
+            // Check validity dates
+            const now = new Date();
+            const notBefore = new Date(certificate.validFrom);
+            const notAfter = new Date(certificate.validTo);
+
+            if (now >= notBefore && now <= notAfter) {
+                valid = true;
+            } else {
+                this.log.error(`Certificate file ${certFile} is outside its validity period.`);
+            }
+
+            // Note: Full chain validation and CA trust checks require more advanced logic or external libraries.
+        } catch (e) {
+            this.log.error(`Certificate file validation failed for ${certFile}: ${(e as Error).message}`); // Log the error message
+        }
+        return valid;
     }
 
     public validateAndParseUrl(newUrl: string): Validation.IValidationUrl {
