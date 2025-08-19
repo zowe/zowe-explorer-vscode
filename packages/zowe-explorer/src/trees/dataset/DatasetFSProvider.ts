@@ -583,7 +583,43 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         parentDir.entries.set(fileName, entry);
     }
 
-    private async uploadEntry(entry: DsEntry, content: Uint8Array, forceUpload?: boolean): Promise<IZosFilesResponse> {
+    private async uploadEntry(entry: DsEntry, content: Uint8Array, uri: vscode.Uri, forceUpload?: boolean): Promise<IZosFilesResponse> {
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+        // /DATA.SET/MEMBER
+        const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
+        const isPdsMember = uriPath.length === 2;
+
+        let dsStats: Types.DatasetStats = entry.stats;
+        if (dsStats == null) {
+            const targetPath = isPdsMember ? path.posix.dirname(uri.path) : uri.path;
+            const tempEntry = await this.fetchDataset(uri.with({ path: targetPath }), uriInfo, true);
+            dsStats = tempEntry.stats;
+            if (isPdsMember) {
+                entry.stats = tempEntry.stats;
+            } else {
+                entry = tempEntry as DsEntry;
+            }
+        }
+        if (dsStats?.lrecl || dsStats?.blksz) {
+            const longLines = {};
+            try {
+                const document = await vscode.workspace.openTextDocument(uri);
+                for (let i = 0; i < document.lineCount; i++) {
+                    if (document.lineAt(i).text.length > (Number(dsStats.lrecl) || Number(dsStats.blksz))) {
+                        longLines[i + 1] = document.lineAt(i).text;
+                    }
+                }
+            } catch (err) {
+                // do nothing since we may be trying to create an entry in the FS that doesn't exist yet
+            }
+            if (Object.keys(longLines).length > 0) {
+                // internal error code to indicate unsafe upload
+                throw new imperative.ImperativeError({
+                    msg: "Zowe Explorer: Unsafe upload",
+                    causeErrors: longLines,
+                });
+            }
+        }
         const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Saving data set...")}`);
         let resp: IZosFilesResponse;
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
@@ -633,42 +669,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileExists(uri);
         }
 
-        let dsStats: Types.DatasetStats = isPdsMember ? parent.stats : undefined;
-        if (dsStats == null) {
-            const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-            const targetPath = isPdsMember ? path.posix.dirname(uri.path) : uri.path;
-            const tempEntry = await this.fetchDataset(uri.with({ path: targetPath }), uriInfo, true);
-            dsStats = tempEntry.stats;
-            if (entry) {
-                entry = tempEntry;
-            }
-        }
-
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
         const urlQuery = new URLSearchParams(uri.query);
         const forceUpload = urlQuery.has("forceUpload");
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
 
         try {
-            const longLines = {};
-            try {
-                const document = await vscode.workspace.openTextDocument(uri);
-                for (let i = 0; i < document.lineCount; i++) {
-                    if (document.lineAt(i).text.length > dsStats?.lrecl) {
-                        longLines[i + 1] = document.lineAt(i).text;
-                    }
-                }
-            } catch (err) {
-                // do nothing since we may be trying to create an entry in the FS that doesn't exist yet
-            }
-            if (Object.keys(longLines).length > 0) {
-                // internal error code to indicate unsafe upload
-                throw new imperative.ImperativeError({
-                    msg: "Zowe Explorer: Unsafe upload",
-                    causeErrors: longLines,
-                });
-            }
-
             if (!entry) {
                 entry = new DsEntry(basename, isPdsMember);
                 entry.data = content;
@@ -682,8 +688,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
                 if (content.byteLength > 0) {
                     // Update e-tag if write was successful.
-                    (entry as DsEntry).stats = { ...(entry as DsEntry).stats, ...dsStats };
-                    const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
+                    const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
                 }
@@ -702,8 +707,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
-                    (entry as DsEntry).stats = { ...(entry as DsEntry).stats, ...dsStats };
-                    const resp = await this.uploadEntry(entry as DsEntry, content, forceUpload);
+                    const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload);
                     entry.etag = resp.apiResponse.etag;
                 }
                 entry.data = content;
