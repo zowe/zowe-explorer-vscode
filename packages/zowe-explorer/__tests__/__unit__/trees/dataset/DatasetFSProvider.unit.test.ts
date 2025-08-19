@@ -497,6 +497,7 @@ describe("DatasetFSProvider", () => {
 
             const mockMvsApi = {
                 uploadFromBuffer: jest.fn().mockResolvedValue({ apiResponse: { etag: "etag" } }),
+                dataSet: jest.fn().mockResolvedValue(dsResponseMock),
             };
 
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
