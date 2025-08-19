@@ -1388,6 +1388,31 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
         mockProfilesInstance.mockRestore();
         errorHandlingMock[Symbol.dispose]();
     });
+
+    it("returns empty array when getDatasets returns undefined", async () => {
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+        });
+        sessionNode.pattern = "TEST.*";
+        sessionNode.dirty = true;
+
+        // Mock getDatasets to return undefined (simulating invalid session scenario)
+        const getDatasetsSpy = jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce(undefined);
+        const mockProfilesInstance = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+
+        const result = await sessionNode.getChildren();
+
+        expect(result).toStrictEqual([]);
+        expect(getDatasetsSpy).toHaveBeenCalledWith(profileOne, undefined);
+        getDatasetsSpy.mockRestore();
+        mockProfilesInstance.mockRestore();
+    });
 });
 
 describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {

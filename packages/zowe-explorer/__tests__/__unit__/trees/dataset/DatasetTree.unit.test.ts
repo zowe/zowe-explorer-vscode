@@ -1914,22 +1914,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(errorSpy).not.toHaveBeenCalled();
         errorSpy.mockClear();
     });
-    it("Checking function for return if element.getChildren returns undefined", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
 
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        Object.defineProperty(testTree.mSessionNodes[1], "getDatasets", {
-            value: jest.fn().mockResolvedValueOnce(undefined),
-            configurable: true,
-        });
-
-        expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
-    });
 
     it("should return early if profile is invalid", async () => {
         const globalMocks = createGlobalMocks();
