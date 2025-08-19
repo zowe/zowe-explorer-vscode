@@ -70,6 +70,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
     public persistence = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
+    public inFilterPrompt = false;
 
     private paginator?: Paginator<IZosFilesResponse>;
     private paginatorData?: {
@@ -291,7 +292,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return [];
         }
 
-        if ((!this.dirty && !paginate) || this.label === "Favorites") {
+        if ((!this.dirty && !paginate) || this.label === "Favorites" || this.inFilterPrompt) {
             return this.children;
         }
 

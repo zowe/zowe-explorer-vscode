@@ -1314,6 +1314,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         if (SharedContext.isSessionNotFav(node)) {
             ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
+            node.inFilterPrompt = true;
             if (this.mPersistence.getSearchHistory().length > 0) {
                 const items: vscode.QuickPickItem[] = this.mPersistence.getSearchHistory().map((element) => new FilterItem({ text: element }));
                 const quickpick = Gui.createQuickPick();
@@ -1337,6 +1338,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 quickpick.hide();
                 if (!choice) {
                     Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+                    node.inFilterPrompt = false;
                     return;
                 }
                 if (choice instanceof FilterDescriptor) {
@@ -1350,6 +1352,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         };
                         pattern = await Gui.showInputBox(options);
                         if (!pattern) {
+                            node.inFilterPrompt = false;
                             return;
                         }
                     }
@@ -1362,6 +1365,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     pattern = await Gui.showInputBox(options);
                     if (!pattern) {
                         Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
+                        node.inFilterPrompt = false;
                         return;
                     }
                 }
@@ -1373,6 +1377,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 pattern = await Gui.showInputBox(options);
                 if (!pattern) {
                     Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
+                    node.inFilterPrompt = false;
                     return;
                 }
             }
@@ -1426,6 +1431,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             node.resourceUri = node.resourceUri.with({ query: `pattern=${pattern}` });
         }
         node.dirty = true;
+        node.inFilterPrompt = false;
 
         if (node.collapsibleState !== vscode.TreeItemCollapsibleState.Expanded) {
             // The node is refreshed when its expanded & marked dirty, no need to call nodeDataChanged
