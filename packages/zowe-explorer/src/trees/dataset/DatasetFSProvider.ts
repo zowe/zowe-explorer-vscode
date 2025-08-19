@@ -600,7 +600,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry = tempEntry as DsEntry;
             }
         }
-        if (dsStats) {
+        if (dsStats?.lrecl || dsStats?.blksz) {
             const longLines = {};
             try {
                 const document = await vscode.workspace.openTextDocument(uri);

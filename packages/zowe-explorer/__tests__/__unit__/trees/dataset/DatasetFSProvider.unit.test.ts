@@ -598,48 +598,148 @@ describe("DatasetFSProvider", () => {
             expect(handleErrorMock).toHaveBeenCalled();
         });
 
-        it("calls _handleError when there are lines longer than the LRECL", async () => {
-            const mockMvsApi = {
-                uploadFromBuffer: jest.fn(),
-                dataSet: jest.fn().mockResolvedValue(dsResponseMock),
-            };
+        describe("may call _handleError when there are lines longer than the LRECL", () => {
+            let mockMvsApi;
             const psEntry = { ...testEntries.ps, metadata: testEntries.ps.metadata } as DsEntry;
-            const sessionEntry = { ...testEntries.session };
-            sessionEntry.entries.set("USER.DATA.PS", psEntry);
-            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
-            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            const pdsMemberEntry = { ...testEntries.pdsMember, metadata: testEntries.pdsMember.metadata } as DsEntry;
             const newContents = new Uint8Array(Array(lrecl + 1).fill(0));
             const okContents = new Uint8Array(Array(lrecl - 1).fill(0));
             const lineAt = (i: number) => ({ text: i === 1 ? okContents : newContents });
+            const createOptions = { create: false, overwrite: true };
+            let handleErrorMock;
+            const expectInvalidLines = (msg: string, multiple?: boolean) => {
+                expect(msg).toContain("This upload operation may result in data loss.");
+                expect(msg).toContain("Please review the following lines:");
+                if (multiple) {
+                    expect(msg).toContain("1, 3, 4, 5, 6...");
+                    const stack = (handleErrorMock.mock.calls[0][0] as Error).stack;
+                    expect(stack).toContain("Line: 1");
+                    expect(stack).toContain("Lines: 3-10");
+                } else {
+                    expect(msg).toContain("1");
+                }
+            };
 
-            // Test for 1 invalid line
-            let numberOfInvalidLines = 1;
-            const openTextDocumentMock = jest.spyOn(vscode.workspace, "openTextDocument");
-            openTextDocumentMock.mockResolvedValue({ lineCount: numberOfInvalidLines, lineAt } as any);
-            const handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
-            await expect(DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: false, overwrite: true })).rejects.toThrow();
+            beforeEach(() => {
+                mockMvsApi = {
+                    uploadFromBuffer: jest.fn(),
+                    dataSet: jest.fn().mockResolvedValue(dsResponseMock),
+                };
+                handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            });
 
-            expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
-            expect(handleErrorMock).toHaveBeenCalledTimes(1);
-            let msg = (handleErrorMock.mock.calls[0][0] as Error).message;
-            expect(msg).toContain("This upload operation may result in data loss.");
-            expect(msg).toContain("Please review the following lines:");
-            expect(msg).toContain("1");
+            it("in a PS data set with one invalid line", async () => {
+                const sessionEntry = { ...testEntries.session };
+                sessionEntry.entries.set("USER.DATA.PS", psEntry);
+                jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
+                jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({ lineCount: 1, lineAt } as any);
 
-            // Test for 10 invalid lines
-            numberOfInvalidLines = 10;
-            openTextDocumentMock.mockResolvedValue({ lineCount: numberOfInvalidLines, lineAt } as any);
-            await expect(DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: false, overwrite: true })).rejects.toThrow();
+                await expect(DatasetFSProvider.instance.writeFile(testUris.ps, newContents, createOptions)).rejects.toThrow();
 
-            expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
-            expect(handleErrorMock).toHaveBeenCalledTimes(2);
-            msg = (handleErrorMock.mock.calls[1][0] as Error).message;
-            expect(msg).toContain("This upload operation may result in data loss.");
-            expect(msg).toContain("Please review the following lines:");
-            expect(msg).toContain("1, 3, 4, 5, 6...");
-            const stack = (handleErrorMock.mock.calls[1][0] as Error).stack;
-            expect(stack).toContain("Line: 1");
-            expect(stack).toContain("Lines: 3-10");
+                expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+                expect(handleErrorMock).toHaveBeenCalledTimes(1);
+                const msg = (handleErrorMock.mock.calls[0][0] as Error).message;
+                expectInvalidLines(msg);
+            });
+            it("in a PS data set with multiple invalid lines", async () => {
+                const sessionEntry = { ...testEntries.session };
+                sessionEntry.entries.set("USER.DATA.PS", psEntry);
+                jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
+                jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({ lineCount: 10, lineAt } as any);
+
+                await expect(DatasetFSProvider.instance.writeFile(testUris.ps, newContents, createOptions)).rejects.toThrow();
+
+                expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+                expect(handleErrorMock).toHaveBeenCalledTimes(1);
+                const msg = (handleErrorMock.mock.calls[0][0] as Error).message;
+                expectInvalidLines(msg, true);
+            });
+            it("in a PDS member with one invalid line", async () => {
+                const pdsEntry = { ...testEntries.pds };
+                pdsEntry.entries.set("MEMBER1", pdsMemberEntry);
+                jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(pdsEntry);
+                jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({ lineCount: 1, lineAt } as any);
+
+                await expect(DatasetFSProvider.instance.writeFile(testUris.pdsMember, newContents, createOptions)).rejects.toThrow();
+
+                expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+                expect(handleErrorMock).toHaveBeenCalledTimes(1);
+                const msg = (handleErrorMock.mock.calls[0][0] as Error).message;
+                expectInvalidLines(msg);
+            });
+            it("in a PDS member with multiple invalid lines", async () => {
+                const pdsEntry = { ...testEntries.pds };
+                pdsEntry.entries.set("MEMBER1", pdsMemberEntry);
+                jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(pdsEntry);
+                jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({ lineCount: 10, lineAt } as any);
+
+                await expect(DatasetFSProvider.instance.writeFile(testUris.pdsMember, newContents, createOptions)).rejects.toThrow();
+
+                expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+                expect(handleErrorMock).toHaveBeenCalledTimes(1);
+                const msg = (handleErrorMock.mock.calls[0][0] as Error).message;
+                expectInvalidLines(msg, true);
+            });
+
+            it("in a PS data set with RECFM=U with one invalid line", async () => {
+                const dsResponseMock = {
+                    success: true,
+                    apiResponse: {
+                        items: [{ name: "USER.DATA.PS", recfm: "U", blksz: 10 }],
+                    },
+                    commandResponse: "",
+                };
+                mockMvsApi = {
+                    uploadFromBuffer: jest.fn(),
+                    dataSet: jest.fn().mockResolvedValue(dsResponseMock),
+                };
+                handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+                const sessionEntry = { ...testEntries.session };
+                sessionEntry.entries.set("USER.DATA.PS", psEntry);
+                jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
+                jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({ lineCount: 1, lineAt } as any);
+
+                await expect(DatasetFSProvider.instance.writeFile(testUris.ps, newContents, createOptions)).rejects.toThrow();
+
+                expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+                expect(handleErrorMock).toHaveBeenCalledTimes(1);
+                const msg = (handleErrorMock.mock.calls[0][0] as Error).message;
+                expectInvalidLines(msg);
+            });
+            it("but not if lrecl or blksz are not set", async () => {
+                const dsResponseMock = {
+                    success: true,
+                    apiResponse: {
+                        items: [{ name: "USER.DATA.PS" }],
+                    },
+                    commandResponse: "",
+                };
+                mockMvsApi = {
+                    uploadFromBuffer: jest.fn().mockResolvedValue({
+                        apiResponse: {
+                            etag: "NEWETAG",
+                        },
+                    }),
+                    dataSet: jest.fn().mockResolvedValue(dsResponseMock),
+                };
+                handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
+                const _fireSoonMock = jest.spyOn(DatasetFSProvider.instance as any, "_fireSoon").mockImplementation();
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+                const sessionEntry = { ...testEntries.session };
+                sessionEntry.entries.set("USER.DATA.PS", psEntry);
+                jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
+                jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({ lineCount: 1, lineAt } as any);
+
+                await expect(DatasetFSProvider.instance.writeFile(testUris.ps, newContents, createOptions)).resolves.not.toThrow();
+
+                expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalled();
+                expect(handleErrorMock).not.toHaveBeenCalled();
+                expect(_fireSoonMock).toHaveBeenCalled();
+            });
         });
 
         it("upload changes to a remote DS even if its not yet in the FSP", async () => {
