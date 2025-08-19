@@ -292,7 +292,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return [];
         }
 
-        if ((!this.dirty && !paginate) || this.label === "Favorites" || this.inFilterPrompt) {
+        if ((!this.dirty && !paginate) || this.label === "Favorites") {
+            return this.children;
+        }
+
+        if (SharedContext.isSession(this) && this.inFilterPrompt) {
             return this.children;
         }
 
