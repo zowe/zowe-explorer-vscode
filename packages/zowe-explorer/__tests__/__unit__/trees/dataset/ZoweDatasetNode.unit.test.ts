@@ -1354,6 +1354,40 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
         mockProfilesInstance.mockRestore();
         errorHandlingMock[Symbol.dispose]();
     });
+
+    it("calls error handling when getDatasets throws an error", async () => {
+        const errorHandlingMock = new MockedProperty(AuthUtils, "errorHandling");
+        const mockProfilesInstance = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+        });
+        sessionNode.pattern = "HLQ.PROD1.STUFF";
+        sessionNode.dirty = true;
+
+        jest.spyOn(sessionNode as any, "listDatasets").mockImplementation(() => {
+            throw new Error("Network error");
+        });
+
+        const result = await sessionNode.getChildren();
+
+        expect(result).toStrictEqual([]);
+        expect(errorHandlingMock.mock).toHaveBeenCalledWith(
+            expect.any(Error),
+            expect.objectContaining({
+                apiType: expect.any(String),
+                profile: profileOne,
+            })
+        );
+        mockProfilesInstance.mockRestore();
+        errorHandlingMock[Symbol.dispose]();
+    });
 });
 
 describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
