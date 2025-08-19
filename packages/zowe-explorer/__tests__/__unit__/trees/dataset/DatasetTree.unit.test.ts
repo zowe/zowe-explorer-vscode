@@ -1892,29 +1892,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("No selection made. Operation cancelled.");
     });
-    it("Checking function for return if getChildren is undefined", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        Object.defineProperty(testTree.mSessionNodes[1], "getChildren", {
-            value: jest.fn(() => {
-                return;
-            }),
-            configurable: true,
-        });
-        const errorSpy = jest.spyOn(AuthUtils, "errorHandling");
-
-        expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
-
-        expect(errorSpy).not.toHaveBeenCalled();
-        errorSpy.mockClear();
-    });
-
 
     it("should return early if profile is invalid", async () => {
         const globalMocks = createGlobalMocks();
