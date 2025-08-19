@@ -1788,7 +1788,7 @@ export class DatasetActions {
      * @param node - the node to which content is pasted
      */
     public static async pasteDataSet(datasetProvider: Types.IZoweDatasetTreeType, node: ZoweDatasetNode): Promise<void> {
-        ZoweLogger.trace("dataset.actions.pasteDataSetMembers called.");
+        ZoweLogger.trace("dataset.actions.pasteDataSet called.");
         let clipboardContent;
         try {
             clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
@@ -1797,12 +1797,12 @@ export class DatasetActions {
             return;
         }
         clipboardContent = clipboardContent.flat();
-        if (clipboardContent[0].contextValue === Constants.DS_DS_CONTEXT) {
-            await DatasetActions.copySequentialDatasets(clipboardContent, node);
-        } else if (clipboardContent[0].contextValue === Constants.DS_MEMBER_CONTEXT) {
+        if (clipboardContent[0].contextValue.includes(Constants.DS_PDS_CONTEXT)) {
+            await DatasetActions.copyPartitionedDatasets(clipboardContent, node);
+        } else if (clipboardContent[0].contextValue.includes(Constants.DS_MEMBER_CONTEXT)) {
             await DatasetActions.copyDatasetMembers(clipboardContent, node);
         } else {
-            await DatasetActions.copyPartitionedDatasets(clipboardContent, node);
+            await DatasetActions.copySequentialDatasets(clipboardContent, node);
         }
         datasetProvider.refreshElement(node);
         vscode.env.clipboard.writeText("");
