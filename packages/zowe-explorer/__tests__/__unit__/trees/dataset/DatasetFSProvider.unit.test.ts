@@ -1413,7 +1413,7 @@ describe("DatasetFSProvider", () => {
             warnLoggerMock = jest.spyOn(ZoweLogger, "warn").mockImplementation();
         });
 
-        afterEach(() => { });
+        afterEach(() => {});
 
         describe("stat", () => {
             it("returns entry without API calls when profile is locked", async () => {

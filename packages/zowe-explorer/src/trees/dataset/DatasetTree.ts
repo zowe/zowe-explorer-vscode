@@ -133,11 +133,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
                 // create a PDS on remote with the same attributes as source PDS
                 try {
-                    await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
-                        dataSetTypeEnum,
-                        dsname,
-                        transformedAttrs
-                    );
+                    await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(dataSetTypeEnum, dsname, transformedAttrs);
                 } catch (err) {
                     if (err.errorCode.toString() === "404" || err.errorCode.toString() === "500") {
                         Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
@@ -193,9 +189,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             try {
                 const encodingInfo = await sourceNode.getEncoding();
                 // If the encoding is binary, we need to force upload it as binary
-                const queryString = encodingInfo?.kind === "binary"
-                    ? "forceUpload=true&encoding=binary"
-                    : "forceUpload=true";
+                const queryString = encodingInfo?.kind === "binary" ? "forceUpload=true&encoding=binary" : "forceUpload=true";
                 await DatasetFSProvider.instance.writeFile(
                     destUri.with({
                         query: queryString,
@@ -217,7 +211,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 //dialog message for successful move of pds and members
                 Gui.infoMessage(vscode.l10n.t("Data set(s) moved successfully."));
             }
-
         }
     }
 
@@ -1759,15 +1752,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                message: "all PDS members in {0}",
-                args: [node.label as string],
-                comment: ["Node label"],
-            })
+                  message: "all PDS members in {0}",
+                  args: [node.label as string],
+                  comment: ["Node label"],
+              })
             : vscode.l10n.t({
-                message: "the PDS members in {0}",
-                args: [node.label as string],
-                comment: ["Node label"],
-            });
+                  message: "the PDS members in {0}",
+                  args: [node.label as string],
+                  comment: ["Node label"],
+              });
         const selection = await Gui.showQuickPick(
             DatasetUtils.DATASET_SORT_OPTS.map((opt, i) => ({
                 label: sortOpts.method === i ? `${opt} $(check)` : opt,
@@ -1832,10 +1825,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         node.filter = newFilter;
         node.description = newFilter
             ? vscode.l10n.t({
-                message: "Filter: {0}",
-                args: [newFilter.value],
-                comment: ["Filter value"],
-            })
+                  message: "Filter: {0}",
+                  args: [newFilter.value],
+                  comment: ["Filter value"],
+              })
             : null;
         this.nodeDataChanged(node);
 
@@ -1896,15 +1889,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                message: "all PDS members in {0}",
-                args: [node.label as string],
-                comment: ["Node label"],
-            })
+                  message: "all PDS members in {0}",
+                  args: [node.label as string],
+                  comment: ["Node label"],
+              })
             : vscode.l10n.t({
-                message: "the PDS members in {0}",
-                args: [node.label as string],
-                comment: ["Node label"],
-            });
+                  message: "the PDS members in {0}",
+                  args: [node.label as string],
+                  comment: ["Node label"],
+              });
         const clearFilter = isSession
             ? `$(clear-all) ${vscode.l10n.t("Clear filter for profile")}`
             : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;

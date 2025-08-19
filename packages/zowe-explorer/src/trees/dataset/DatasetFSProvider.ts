@@ -63,7 +63,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     public watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
-        return new vscode.Disposable(() => { });
+        return new vscode.Disposable(() => {});
     }
 
     /**
@@ -406,10 +406,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profInfo =
             parent !== this.root
                 ? new DsEntryMetadata({
-                    profile: parent.metadata.profile,
-                    // we can strip profile name from path because its not involved in API calls
-                    path: path.posix.join(parent.metadata.path, basename),
-                })
+                      profile: parent.metadata.profile,
+                      // we can strip profile name from path because its not involved in API calls
+                      path: path.posix.join(parent.metadata.path, basename),
+                  })
                 : this._getInfoFromUri(uri);
 
         if (FsAbstractUtils.isFilterEntry(parent)) {
@@ -583,7 +583,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         parentDir.entries.set(fileName, entry);
     }
 
-    private async uploadEntry(entry: DsEntry, content: Uint8Array, uri: vscode.Uri, forceUpload?: boolean, encoding?: string): Promise<IZosFilesResponse> {
+    private async uploadEntry(
+        entry: DsEntry,
+        content: Uint8Array,
+        uri: vscode.Uri,
+        forceUpload?: boolean,
+        encoding?: string
+    ): Promise<IZosFilesResponse> {
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         // /DATA.SET/MEMBER
         const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
@@ -684,9 +690,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry.data = content;
                 const profInfo = parent.metadata
                     ? new DsEntryMetadata({
-                        profile: parent.metadata.profile,
-                        path: path.posix.join(parent.metadata.path, basename),
-                    })
+                          profile: parent.metadata.profile,
+                          path: path.posix.join(parent.metadata.path, basename),
+                      })
                     : this._getInfoFromUri(uri);
                 entry.metadata = profInfo;
 

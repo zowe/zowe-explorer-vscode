@@ -5075,28 +5075,30 @@ describe("DatasetTree.crossLparMove", () => {
     beforeEach(() => {
         if (!(zosfiles as any).Copy) {
             (zosfiles as any).Copy = {};
-        };
-        (zosfiles as any).Copy['generateDatasetOptions'] = jest.fn().mockReturnValue({});
+        }
+        (zosfiles as any).Copy["generateDatasetOptions"] = jest.fn().mockReturnValue({});
         jest.clearAllMocks();
         jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue();
         jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue();
-        jest.spyOn(DatasetFSProvider.instance, "delete").mockResolvedValue(undefined); jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "delete").mockResolvedValue(undefined);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue({});
         jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(Buffer.from("hello"));
-        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => { });
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => {});
 
         apiMock = {
             createDataSet: jest.fn().mockResolvedValue({}),
             createDataSetMember: jest.fn().mockResolvedValue({}),
-            dataSet: jest.fn()
+            dataSet: jest.fn(),
         };
         jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(apiMock);
         // make dataSet return a dummy attributes response so PDS branch runs
         (apiMock.dataSet as jest.Mock).mockResolvedValue({
-            apiResponse: { items: [{ dsname: "DST_PROFILE/BAR" }] }
-        }); (FsAbstractUtils as any).getInfoForUri = jest.fn().mockReturnValue({
+            apiResponse: { items: [{ dsname: "DST_PROFILE/BAR" }] },
+        });
+        (FsAbstractUtils as any).getInfoForUri = jest.fn().mockReturnValue({
             profile: { profile: {}, name: "" },
-            slashAfterProfilePos: 0
+            slashAfterProfilePos: 0,
         });
 
         tree = new DatasetTree();
@@ -5106,11 +5108,10 @@ describe("DatasetTree.crossLparMove", () => {
 
         fakeNode = {
             resourceUri: srcUri,
-            contextValue: "ds"
+            contextValue: "ds",
         };
 
         (fakeNode as any).getEncoding = jest.fn().mockResolvedValue({ kind: "text" });
-
     });
 
     it("should copy a sequential dataset and delete the source", async () => {
@@ -5126,7 +5127,7 @@ describe("DatasetTree.crossLparMove", () => {
 
     it("should create a new PDS then recurse children", async () => {
         // only the root fakeNode is a PDS; its single child is a member
-        jest.spyOn(SharedContext, "isPds").mockImplementation(node => node === fakeNode);
+        jest.spyOn(SharedContext, "isPds").mockImplementation((node) => node === fakeNode);
         fakeNode.contextValue = "ds.pds";
 
         const childNode: Partial<IZoweDatasetTreeNode> = {
@@ -5134,7 +5135,7 @@ describe("DatasetTree.crossLparMove", () => {
             resourceUri: srcUri.with({ path: `${srcUri.path}/M1` }),
             contextValue: "member",
             getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
-            getChildren: jest.fn().mockResolvedValue([])
+            getChildren: jest.fn().mockResolvedValue([]),
         };
 
         jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(null);
