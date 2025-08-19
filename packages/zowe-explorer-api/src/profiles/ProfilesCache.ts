@@ -244,25 +244,21 @@ export class ProfilesCache {
      * @returns {boolean} True if certFile is valid and false otherwise
      */
     public isCertFileValid(certFile: string): boolean {
-        let valid = false;
         try {
             const certPem = fs.readFileSync(certFile, "utf8");
             const certificate = new crypto.X509Certificate(certPem);
 
             // Check validity dates
             const now = new Date();
-            const notBefore = new Date(certificate.validFrom);
-            const notAfter = new Date(certificate.validTo);
-
-            if (now >= notBefore && now <= notAfter) {
-                valid = true;
+            if (now >= new Date(certificate.validFrom) && now <= new Date(certificate.validTo)) {
+                return true;
             } else {
                 this.log.error(`Certificate file ${certFile} is outside its validity period.`);
             }
         } catch (e) {
             this.log.error(`Certificate file validation failed for ${certFile}: ${(e as Error).message}`);
         }
-        return valid;
+        return false;
     }
 
     public validateAndParseUrl(newUrl: string): Validation.IValidationUrl {

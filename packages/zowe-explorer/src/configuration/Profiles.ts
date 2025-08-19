@@ -151,11 +151,11 @@ export class Profiles extends ProfilesCache {
             }
         } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
             if (!this.isCertFileValid(theProfile.profile.certFile)) {
-                ZoweLogger.error(`Profile ${theProfile?.name} has an invalid SSL certificate`);
+                ZoweLogger.error(`Profile ${theProfile.name} has an invalid SSL certificate`);
                 Gui.errorMessage(
                     vscode.l10n.t({
                         message: `Profile {0} has an invalid SSL certificate.`,
-                        args: [theProfile?.name],
+                        args: [theProfile.name],
                         comment: ["Profile name"],
                     })
                 );
