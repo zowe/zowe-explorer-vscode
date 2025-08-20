@@ -162,7 +162,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             try {
                 const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
                 if (entry == null) {
-                    if (sourceNode.contextValue === Constants.DS_MEMBER_CONTEXT) {
+                    if (SharedContext.isDsMember(sourceNode)) {
                         dsname = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
                     } else {
@@ -189,7 +189,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             try {
                 const encodingInfo = await sourceNode.getEncoding();
                 // If the encoding is binary, we need to force upload it as binary
-                const queryString = encodingInfo?.kind === "binary" ? "forceUpload=true&encoding=binary" : "forceUpload=true";
+                const queryString = `forceUpload=true${
+                    encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
+                }`;
                 await DatasetFSProvider.instance.writeFile(
                     destUri.with({
                         query: queryString,
