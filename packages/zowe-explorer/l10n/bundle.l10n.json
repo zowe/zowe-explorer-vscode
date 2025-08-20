@@ -1154,6 +1154,12 @@
       "Profile name"
     ]
   },
+  "Profile {0} has an invalid SSL certificate./Profile name": {
+    "message": "Profile {0} has an invalid SSL certificate.",
+    "comment": [
+      "Profile name"
+    ]
+  },
   "Auto Store: ": "Auto Store: ",
   "Config File: ": "Config File: ",
   "Global": "Global",

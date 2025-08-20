@@ -37,8 +37,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where a `401 Unauthorized` error is thrown by the FileSystemProvider implementations when the user cancels or closes an authentication prompt. Now, the filesystem throws a more explicit `AuthCancelledError` in this scenario. [#3662](https://github.com/zowe/zowe-explorer-vscode/issues/3662)
 - Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. [#3772](https://github.com/zowe/zowe-explorer-vscode/issues/3772)
 - Fixed a regression with the `AuthUtils.syncSessionNode` function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. [#3795](https://github.com/zowe/zowe-explorer-vscode/pull/3795)
-- Fixed cross-LPAR PDS transfers to preserve original DCB attributes and prevent binary data corruption. Data is now transferred as binary, and the encoding is respected if previously set by the user. [#3731](https://github.com/zowe/zowe-explorer-vscode/pull/3731)
+- Fix for profile status check when certificate authentication is used and an invalid certificate is used. [#3699](https://github.com/zowe/zowe-explorer-vscode/issues/3699)
 - Prevented data loss by modifying the save process to handle data sets with records that exceeded the logical record length. [#3791](https://github.com/zowe/zowe-explorer-vscode/issues/3791)
+- Fixed cross-LPAR PDS transfers to preserve original DCB attributes and prevent binary data corruption. Data is now transferred as binary, and the encoding is respected if previously set by the user. [#3731](https://github.com/zowe/zowe-explorer-vscode/pull/3731)
 
 ## `3.2.2`
 
