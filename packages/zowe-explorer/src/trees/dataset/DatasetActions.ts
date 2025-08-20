@@ -1797,11 +1797,11 @@ export class DatasetActions {
             return;
         }
         clipboardContent = clipboardContent.flat();
-        if (clipboardContent[0].contextValue.includes(Constants.DS_PDS_CONTEXT)) {
+        if (SharedContext.isPds(clipboardContent[0].contextValue)) {
             await DatasetActions.copyPartitionedDatasets(clipboardContent, node);
-        } else if (clipboardContent[0].contextValue.includes(Constants.DS_MEMBER_CONTEXT)) {
+        } else if (SharedContext.isDsMember(clipboardContent[0].contextValue)) {
             await DatasetActions.copyDatasetMembers(clipboardContent, node);
-        } else {
+        } else if (SharedContext.isDs(clipboardContent[0].contextValue)) {
             await DatasetActions.copySequentialDatasets(clipboardContent, node);
         }
         datasetProvider.refreshElement(node);
