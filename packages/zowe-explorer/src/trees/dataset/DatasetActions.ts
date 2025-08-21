@@ -1832,8 +1832,13 @@ export class DatasetActions {
                             title: DatasetActions.localizedStrings.copyingFiles,
                             cancellable: true,
                         },
-                        () => {
-                            return mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
+                        async () => {
+                            try {
+                                return await mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
+                            } catch (error) {
+                                Gui.errorMessage(error.message);
+                                return;
+                            }
                         }
                     );
                 }
