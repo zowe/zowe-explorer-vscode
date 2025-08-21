@@ -125,7 +125,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             if (err instanceof Error) {
                 ZoweLogger.error(err.message);
             }
-            await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile);
+            let callbackReturn: vscode.FileStat;
+            await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile, async () => {
+                callbackReturn = await this.stat(uri);
+            });
+            if (callbackReturn) {
+                delete AuthUtils.maxAttempts[uriInfo.profile.name];
+                return callbackReturn;
+            }
             throw err;
         }
 
@@ -181,7 +188,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
             }
         } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile);
+            let callbackReturn: FilterEntry;
+            await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile, async () => {
+                callbackReturn = await this.fetchEntriesForProfile(uri, uriInfo, pattern);
+            });
+            if (callbackReturn) {
+                delete AuthUtils.maxAttempts[uriInfo.profile.name];
+                return callbackReturn;
+            }
             this._handleError(err, {
                 additionalContext: vscode.l10n.t("Failed to list datasets"),
                 retry: {
@@ -240,8 +254,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
             members = await mvsApi.allMembers(path.posix.basename(uri.path));
         } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile);
-            throw err;
+            try {
+                await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile, async () => {
+                    await this.fetchEntriesForDataset(entry, uri, uriInfo);
+                });
+            } catch {
+                throw err;
+            }
         }
         const pdsExtension = DatasetUtils.getExtension(entry.name);
 
@@ -314,7 +333,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 if (err instanceof Error) {
                     ZoweLogger.error(err.message);
                 }
-                await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile);
+                let callbackReturn: PdsEntry | DsEntry;
+                await AuthUtils.handleProfileAuthOnError(err, uriInfo.profile, async () => {
+                    callbackReturn = await this.fetchDataset(uri, uriInfo, forceFetch);
+                });
+                if (callbackReturn) {
+                    delete AuthUtils.maxAttempts[uriInfo.profile.name];
+                    return callbackReturn;
+                }
                 throw err;
             }
         }
@@ -502,7 +528,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         } catch (error) {
             //Response will error if the file is not found
             //Callers of fetchDatasetAtUri() do not expect it to throw an error
-            await AuthUtils.handleProfileAuthOnError(error, metadata.profile);
+            let callbackReturn: FileEntry | null;
+            await AuthUtils.handleProfileAuthOnError(error, metadata.profile, async () => {
+                callbackReturn = await this.fetchDatasetAtUri(uri, options);
+            });
+            if (callbackReturn) {
+                delete AuthUtils.maxAttempts[metadata.profile.name];
+                return callbackReturn;
+            }
             return null;
         }
     }

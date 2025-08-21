@@ -42,19 +42,15 @@ export class AuthUtils {
      */
     public static async reauthenticateIfCancelled(profile: imperative.IProfileLoaded): Promise<void> {
         if (AuthHandler.isProfileLocked(profile) && AuthHandler.wasAuthCancelled(profile)) {
-            try {
-                // The original error doesn't matter here, we just need to trigger the flow.
-                await this.handleProfileAuthOnError(
-                    new Error("User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate."),
-                    profile
-                );
-            } catch (err) {
-                // If handleProfileAuthOnError fails (e.g., user cancels again),
-                // we should propagate that failure.
-                throw err;
-            }
+            // The original error doesn't matter here, we just need to trigger the flow.
+            await this.handleProfileAuthOnError(
+                new Error("User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate."),
+                profile
+            );
         }
     }
+
+    public static maxAttempts: Record<string, number> = {};
 
     /**
      * Locks the profile if an authentication error has occurred (prevents further requests in filesystem until unlocked).
@@ -64,7 +60,7 @@ export class AuthUtils {
      * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
      * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
-    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
+    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded, callBack?: () => Promise<void>): Promise<void> {
         if (
             (err instanceof imperative.ImperativeError &&
                 (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
@@ -94,9 +90,21 @@ export class AuthUtils {
             if (AuthHandler.isProfileLocked(profile)) {
                 await AuthHandler.waitForUnlock(profile);
             } else {
-                // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
-                // This may throw AuthCancelledError if the user cancels the authentication prompt
-                await AuthHandler.lockProfile(profile, authOpts);
+                const config = vscode.workspace.getConfiguration("zowe");
+                const maxExtenderRetry = config.get<number>("table.maxExtenderRetry", 0);
+
+                if (!this.maxAttempts[profile.name]) {
+                    this.maxAttempts[profile.name] = 0;
+                }
+
+                if (this.maxAttempts[profile.name] < maxExtenderRetry) {
+                    const profileUpdated = await AuthHandler.lockProfile(profile, authOpts);
+                    this.maxAttempts[profile.name]++;
+
+                    if (profileUpdated) {
+                        await callBack();
+                    }
+                }
             }
         } else if (AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
