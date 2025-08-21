@@ -112,19 +112,29 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         recursiveCall?: boolean
     ): Promise<void> {
         const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
-        let dsname = destUri.path.substring(destinationInfo.slashAfterProfilePos);
+        const sourceInfo = FsAbstractUtils.getInfoForUri(sourceUri, Profiles.getInstance());
+        let dsname = destUri.path.substring(destinationInfo.slashAfterProfilePos + 1);
         if (SharedContext.isPds(sourceNode)) {
             if (!DatasetFSProvider.instance.exists(destUri)) {
-                // create a PDS on remote
+                // find source PDS attributes and make destination PDS have same attributes
+                const sourceAttributesResponse = await ZoweExplorerApiRegister.getMvsApi(sourceInfo.profile).dataSet(dsname, {
+                    attributes: true,
+                    responseTimeout: sourceInfo.profile?.profile?.responseTimeout,
+                });
+                const { dsname: dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
+                // need to transform labels
+                const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
+                let dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
+                // if alcunit is cyl, divide primary by 15 to get the number of cylinders
+                const TRACKS_PER_CYLINDER = 15;
+                const primary = Number(transformedAttrs.primary);
+                if (!isNaN(primary) && primary > 0) {
+                    transformedAttrs.primary = Math.ceil(primary / TRACKS_PER_CYLINDER);
+                }
+                // create a PDS on remote with the same attributes as source PDS
                 try {
-                    dsname = sourceNode.getLabel() as string;
-                    await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
-                        zosfiles.CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
-                        dsname,
-                        {}
-                    );
+                    await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(dataSetTypeEnum, dsname, transformedAttrs);
                 } catch (err) {
-                    //error
                     if (err.errorCode.toString() === "404" || err.errorCode.toString() === "500") {
                         Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                         return;
@@ -152,7 +162,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             try {
                 const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
                 if (entry == null) {
-                    if (sourceNode.contextValue === Constants.DS_MEMBER_CONTEXT) {
+                    if (SharedContext.isDsMember(sourceNode)) {
                         dsname = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
                     } else {
@@ -166,7 +176,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             } catch (err) {
                 //file might already exist. Ignore the error and try to write it to lpar
-                if (err.errorCode.toString() === "404" || err.errorCode.toString() === "500") {
+                // only bail out on a real 404/500 – guard against undefined
+                const code = err.errorCode?.toString();
+                if (code === "404" || code === "500") {
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                     return;
                 }
@@ -175,9 +187,14 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
             //write the contents to the destination LPAR
             try {
+                const encodingInfo = await sourceNode.getEncoding();
+                // If the encoding is binary, we need to force upload it as binary
+                const queryString = `forceUpload=true${
+                    encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
+                }`;
                 await DatasetFSProvider.instance.writeFile(
                     destUri.with({
-                        query: "forceUpload=true",
+                        query: queryString,
                     }),
                     contents,
                     { create: true, overwrite: true }
@@ -193,6 +210,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (!recursiveCall) {
                 // Delete any files from the selection on the source LPAR
                 await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
+                //dialog message for successful move of pds and members
+                Gui.infoMessage(vscode.l10n.t("Data set(s) moved successfully."));
             }
         }
     }
