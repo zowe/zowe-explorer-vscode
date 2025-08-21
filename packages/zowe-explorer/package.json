@@ -2131,10 +2131,21 @@
           "scope": "window",
           "minimum": 1
         },
+        "zowe.table.maxExtenderRetry": {
+          "type": "integer",
+          "default": 0,
+          "description": "%zowe.table.maxExtenderRetry%",
+          "scope": "window",
+          "minimum": 0,
+          "maximum": 100
+        },
         "zowe.table.hidePinnedRowsWarning": {
-          "type": "boolean",
+          "type": [
+            "boolean",
+            "integer"
+          ],
           "default": false,
-          "description": "%zowe.table.hidePinnedRowsWarning%",
+          "description": "%zowe.table.maxExtenderRetry%",
           "scope": "window"
         },
         "zowe.commands.tso.defaultProfile": {
