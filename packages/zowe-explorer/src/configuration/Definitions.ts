@@ -157,5 +157,7 @@ export namespace Definitions {
         V1_MIGRATION_STATUS = "zowe.v1MigrationStatus",
         DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
+        CONFIG_EDITOR_SHOW_MERGED_PROPERTIES = "zowe.configEditor.showMergedProperties",
+        CONFIG_EDITOR_VIEW_MODE = "zowe.configEditor.viewMode",
     }
 }

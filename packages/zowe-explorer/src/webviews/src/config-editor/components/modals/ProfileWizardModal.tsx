@@ -337,7 +337,6 @@ export function ProfileWizardModal({
                   wizardSelectedType && Object.keys(wizardMergedProperties).length > 0
                     ? Object.entries(wizardMergedProperties).filter(([key]) => !userPropertyKeys.has(key) && schemaProperties.includes(key))
                     : [];
-                console.log("filteredInheritedProperties", filteredInheritedProperties);
                 return (
                   <>
                     {/* Inherited Properties (not overridden) */}

@@ -106,19 +106,8 @@ export function ProfileList({
       }
     });
 
-    // Sort the expanded keys to maintain hierarchy order
-    return Array.from(expandedKeys).sort((a, b) => {
-      const aParts = a.split(".");
-      const bParts = b.split(".");
-
-      // First sort by level (shorter paths first)
-      if (aParts.length !== bParts.length) {
-        return aParts.length - bParts.length;
-      }
-
-      // Then sort alphabetically within the same level
-      return a.localeCompare(b);
-    });
+    // Return the expanded keys in the original order from allKeys
+    return allKeys.filter((key) => expandedKeys.has(key));
   };
 
   return (

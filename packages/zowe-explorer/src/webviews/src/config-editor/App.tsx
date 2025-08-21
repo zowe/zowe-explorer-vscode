@@ -15,8 +15,86 @@ import { flattenKeys, flattenProfiles, extractProfileKeyFromPath, sortConfigEntr
 import { useProfileWizard } from "./hooks";
 const vscodeApi = acquireVsCodeApi();
 
+// LocalStorage keys for config editor settings
+const LOCAL_STORAGE_KEYS = {
+  SHOW_MERGED_PROPERTIES: "zowe.configEditor.showMergedProperties",
+  VIEW_MODE: "zowe.configEditor.viewMode",
+  PROPERTY_SORT_ORDER: "zowe.configEditor.propertySortOrder",
+} as const;
+
+// Property sort order options
+export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-first";
+
+const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
+
+// Helper function to get user-friendly display name for sort order
+const getSortOrderDisplayName = (sortOrder: PropertySortOrder): string => {
+  switch (sortOrder) {
+    case "alphabetical":
+      return "alphabetical";
+    case "merged-first":
+      return "merged first";
+    case "non-merged-first":
+      return "merged last";
+    default:
+      return sortOrder;
+  }
+};
+
+// Helper function to get nested property from an object using a path array
+const getNestedProperty = (obj: any, path: string[]): any => {
+  let current = obj;
+  for (const segment of path) {
+    if (current && typeof current === "object" && current.hasOwnProperty(segment)) {
+      current = current[segment];
+    } else {
+      return undefined;
+    }
+  }
+  return current;
+};
+
 export function App() {
   const [localizationState] = useState(null);
+
+  // LocalStorage functions
+  const getLocalStorageValue = useCallback((key: string, defaultValue: any) => {
+    vscodeApi.postMessage({
+      command: "GET_LOCAL_STORAGE_VALUE",
+      key,
+    });
+    return defaultValue;
+  }, []);
+
+  const setLocalStorageValue = useCallback((key: string, value: any) => {
+    vscodeApi.postMessage({
+      command: "SET_LOCAL_STORAGE_VALUE",
+      key,
+      value,
+    });
+  }, []);
+
+  // Wrapper functions that save to localStorage when values change
+  const setShowMergedPropertiesWithStorage = useCallback(
+    (value: boolean) => {
+      setShowMergedProperties(value);
+      setLocalStorageValue(LOCAL_STORAGE_KEYS.SHOW_MERGED_PROPERTIES, value);
+    },
+    [setLocalStorageValue]
+  );
+
+  const setViewModeWithStorage = useCallback(
+    (value: "flat" | "tree") => {
+      setViewMode(value);
+      setLocalStorageValue(LOCAL_STORAGE_KEYS.VIEW_MODE, value);
+    },
+    [setLocalStorageValue]
+  );
+
+  const setPropertySortOrderWithStorage = useCallback((value: PropertySortOrder) => {
+    setPropertySortOrder(value);
+    setSortOrderVersion((prev) => prev + 1);
+  }, []);
   const [configurations, setConfigurations] = useState<
     { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[]
   >([]);
@@ -72,6 +150,7 @@ export function App() {
   const [selectedProfilesByConfig, setSelectedProfilesByConfig] = useState<{ [configPath: string]: string | null }>({});
   const [addConfigModalOpen, setAddConfigModalOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
+  const [hasPromptedForZeroConfigs, setHasPromptedForZeroConfigs] = useState(false);
 
   // Memoize functions to prevent unnecessary re-renders
   const formatPendingChanges = useCallback(() => {
@@ -265,19 +344,142 @@ export function App() {
   // Merged Properties state
   const [mergedProperties, setMergedProperties] = useState<any>(null);
   const [showMergedProperties, setShowMergedProperties] = useState<boolean>(true);
+  const [viewMode, setViewMode] = useState<"flat" | "tree">("tree");
+  const [propertySortOrder, setPropertySortOrder] = useState<PropertySortOrder>("alphabetical");
+  const [sortOrderVersion, setSortOrderVersion] = useState<number>(0);
+
+  // Function to sort properties based on the current sort order
+  const sortProperties = useCallback(
+    (entries: [string, any][], mergedProps?: any, originalProperties?: any, path?: string[]): [string, any][] => {
+      if (propertySortOrder === "alphabetical") {
+        return entries.sort(([a], [b]) => a.localeCompare(b));
+      }
+
+      // For merged-first and non-merged-first, we need the configuration data
+      if (selectedTab === null || !configurations[selectedTab]) {
+        if (!(mergedProps && Object.keys(mergedProps).length > 0)) {
+          return entries;
+        }
+      }
+
+      // For merged-first and non-merged-first, we need to categorize properties
+      const categorizedEntries = entries.map(([key, value]) => {
+        const displayKey = key.split(".").pop();
+        const fullKey = path ? [...path, key].join(".") : key;
+
+        // Check if this is a secure property that was added for sorting
+        const isSecurePropertyForSorting = typeof value === "object" && value !== null && value._isSecureProperty === true;
+
+        // Use the existing isPropertyFromMergedProps function to determine if this is a merged property
+        // Get configPath from mergedProps if available, otherwise from selectedTab
+        let configPath: string | undefined = undefined;
+        if (selectedTab !== null && configurations[selectedTab]) {
+          configPath = configurations[selectedTab].configPath;
+        }
+        if (!configPath && mergedProps && displayKey && mergedProps[displayKey]?.osLoc) {
+          // Extract configPath from the osLoc of the merged property
+          configPath = mergedProps[displayKey].osLoc.join("");
+        }
+
+        let isActuallyMerged = false;
+
+        if (isSecurePropertyForSorting) {
+          // Secure properties added for sorting are always original (non-merged)
+          isActuallyMerged = false;
+        } else if (displayKey && path && configPath) {
+          isActuallyMerged = isPropertyFromMergedProps(displayKey, path, mergedProps, originalProperties, configPath);
+        }
+
+        // Use the existing isPropertySecure function to determine if this property is secure
+        let isSecure = false;
+        if (isSecurePropertyForSorting) {
+          // Properties with _isSecureProperty flag are always secure
+          isSecure = true;
+        } else if (displayKey && path && configPath) {
+          isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties);
+        }
+
+        let category = 0; // 0 = original non-secure, 1 = original secure, 2 = merged non-secure, 3 = merged secure
+
+        if (isActuallyMerged) {
+          category = isSecure ? 3 : 2;
+        } else {
+          category = isSecure ? 1 : 0;
+        }
+
+        return { key, value, category, displayKey, isActuallyMerged, isSecure };
+      });
+
+      if (propertySortOrder === "merged-first") {
+        return categorizedEntries
+          .sort((a, b) => {
+            // First sort by category (merged first: 2, 3, 0, 1)
+            if (a.category !== b.category) {
+              // Categories: 0 = original non-secure, 1 = original secure, 2 = merged non-secure, 3 = merged secure
+              // For merged-first, we want: 2, 3, 0, 1 (merged first, then original)
+              const categoryOrder = [2, 3, 0, 1];
+              const aOrder = categoryOrder.indexOf(a.category);
+              const bOrder = categoryOrder.indexOf(b.category);
+              return aOrder - bOrder;
+            }
+            // Then alphabetically within each category
+            return a.key.localeCompare(b.key);
+          })
+          .map(({ key, value }) => [key, value] as [string, any]);
+      } else {
+        // non-merged-first
+        return categorizedEntries
+          .sort((a, b) => {
+            // First sort by category (non-merged first: 0, 1, 2, 3)
+            if (a.category !== b.category) {
+              // Categories: 0 = original non-secure, 1 = original secure, 2 = merged non-secure, 3 = merged secure
+              // For non-merged-first, we want: 0, 1, 2, 3 (original first, then merged)
+              return a.category - b.category;
+            }
+            // Then alphabetically within each category
+            return a.key.localeCompare(b.key);
+          })
+          .map(({ key, value }) => [key, value] as [string, any]);
+      }
+    },
+    [propertySortOrder, sortOrderVersion]
+  );
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [pendingSaveSelection, setPendingSaveSelection] = useState<{ tab: number | null; profile: string | null } | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
-  const [viewMode, setViewMode] = useState<"flat" | "tree">("tree");
   // Profile search and filter state - persisted across tab changes
   const [profileSearchTerm, setProfileSearchTerm] = useState("");
   const [profileFilterType, setProfileFilterType] = useState<string | null>(null);
   // Workspace state
   const [hasWorkspace, setHasWorkspace] = useState<boolean>(false);
 
+  // Initialize localStorage values on component mount
+  useEffect(() => {
+    // Retrieve stored settings from localStorage
+    getLocalStorageValue(LOCAL_STORAGE_KEYS.SHOW_MERGED_PROPERTIES, true);
+    getLocalStorageValue(LOCAL_STORAGE_KEYS.VIEW_MODE, "tree");
+  }, [getLocalStorageValue]);
+
   // Invoked on webview load
   useEffect(() => {
+    console.log("Config Editor: Component mounted/reloaded");
+
+    // Clear any existing state on reload
+    setConfigurations([]);
+    setSelectedTab(null);
+    setSelectedProfileKey(null);
+    setFlattenedConfig({});
+    setFlattenedDefaults({});
+    setMergedProperties(null);
+    setPendingChanges({});
+    setDeletions({});
+    setPendingDefaults({});
+    setDefaultsDeletions({});
+    setProfileSearchTerm("");
+    setProfileFilterType(null);
+    setHasPromptedForZeroConfigs(false);
+
     window.addEventListener("message", (event) => {
       if (!isSecureOrigin(event.origin)) {
         return;
@@ -332,6 +534,15 @@ export function App() {
 
         // Send ready message to ConfigEditor after configurations are processed
         vscodeApi.postMessage({ command: "CONFIGURATIONS_READY" });
+
+        // If there are no configurations and we haven't prompted yet, automatically open the add config modal
+        if (contents.length === 0 && !hasPromptedForZeroConfigs) {
+          setAddConfigModalOpen(true);
+          setHasPromptedForZeroConfigs(true);
+        } else if (contents.length > 0) {
+          // Reset the flag when configurations are loaded
+          setHasPromptedForZeroConfigs(false);
+        }
       } else if (event.data.command === "DISABLE_OVERLAY") {
         setSaveModalOpen(false);
       } else if (event.data.command === "MERGED_PROPERTIES") {
@@ -419,11 +630,99 @@ export function App() {
             [configPath]: profileName,
           }));
         }
+      } else if (event.data.command === "LOCAL_STORAGE_VALUE") {
+        // Handle localStorage value retrieval
+        const { key, value } = event.data;
+        if (key === LOCAL_STORAGE_KEYS.SHOW_MERGED_PROPERTIES) {
+          setShowMergedProperties(value !== undefined ? value : true);
+        } else if (key === LOCAL_STORAGE_KEYS.VIEW_MODE) {
+          setViewMode(value !== undefined ? value : "tree");
+        }
+      } else if (event.data.command === "LOCAL_STORAGE_SET_SUCCESS") {
+        // Handle successful localStorage value setting (optional - for debugging)
+      } else if (event.data.command === "LOCAL_STORAGE_ERROR") {
+        // Handle localStorage errors (optional - for debugging)
+      } else if (event.data.command === "RELOAD") {
+        // Handle explicit reload request from VS Code
+        console.log("Config Editor: Received RELOAD command from VS Code");
+        // Clear state and request fresh data
+        setConfigurations([]);
+        setSelectedTab(null);
+        setSelectedProfileKey(null);
+        setFlattenedConfig({});
+        setFlattenedDefaults({});
+        setMergedProperties(null);
+        setPendingChanges({});
+        setDeletions({});
+        setPendingDefaults({});
+        setDefaultsDeletions({});
+        setProfileSearchTerm("");
+        setProfileFilterType(null);
+
+        // Request fresh data
+        vscodeApi.postMessage({ command: "GET_PROFILES" });
+        vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
       }
     });
 
+    console.log("Config Editor: Sending GET_PROFILES and GET_ENV_INFORMATION");
     vscodeApi.postMessage({ command: "GET_PROFILES" });
     vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+
+    // Add window focus listener to refresh data on reload
+    const handleWindowFocus = () => {
+      // Refresh configurations when window regains focus
+      vscodeApi.postMessage({ command: "GET_PROFILES" });
+      vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+    };
+
+    // Add visibility change listener to refresh data when tab becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log("Config Editor: Tab became visible, refreshing data");
+        // Refresh configurations when tab becomes visible
+        vscodeApi.postMessage({ command: "GET_PROFILES" });
+        vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+      }
+    };
+
+    // Add beforeunload listener to handle page reload
+    const handleBeforeUnload = () => {
+      console.log("Config Editor: Page is about to unload/reload");
+    };
+
+    // Add load listener to handle page load completion
+    const handleLoad = () => {
+      console.log("Config Editor: Page load completed");
+      // Ensure data is loaded after page load
+      setTimeout(() => {
+        console.log("Config Editor: Sending delayed GET_PROFILES after load");
+        vscodeApi.postMessage({ command: "GET_PROFILES" });
+        vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+      }, 100);
+    };
+
+    // Add DOMContentLoaded listener for immediate initialization
+    const handleDOMContentLoaded = () => {
+      console.log("Config Editor: DOM content loaded");
+      // Send initial data requests
+      vscodeApi.postMessage({ command: "GET_PROFILES" });
+      vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+    };
+
+    window.addEventListener("focus", handleWindowFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("load", handleLoad);
+    document.addEventListener("DOMContentLoaded", handleDOMContentLoaded);
+
+    return () => {
+      window.removeEventListener("focus", handleWindowFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("load", handleLoad);
+      document.removeEventListener("DOMContentLoaded", handleDOMContentLoaded);
+    };
   }, [localizationState]);
 
   // Invoked when swapping tabs
@@ -1455,14 +1754,40 @@ export function App() {
 
     // Filter out deleted profiles and their children
     const deletedProfiles = deletions[configPath] || [];
-    const filteredProfileKeys = Object.keys(allProfiles).filter((profileKey) => !isProfileOrParentDeleted(profileKey, deletedProfiles));
 
-    // Sort profile keys alphabetically
-    const sortedProfileKeys = filteredProfileKeys.sort((a, b) => a.localeCompare(b));
+    // Get profile keys in original order from the configuration
+    const getOrderedProfileKeys = (profiles: any, parentKey = ""): string[] => {
+      const keys: string[] = [];
+      for (const key of Object.keys(profiles)) {
+        const profile = profiles[key];
+        const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+
+        // Add this profile key if it's not deleted
+        if (!isProfileOrParentDeleted(qualifiedKey, deletedProfiles)) {
+          keys.push(qualifiedKey);
+        }
+
+        // Recursively add nested profiles
+        if (profile.profiles) {
+          keys.push(...getOrderedProfileKeys(profile.profiles, qualifiedKey));
+        }
+      }
+      return keys;
+    };
+
+    // Get ordered profile keys from original configuration
+    const orderedProfileKeys = getOrderedProfileKeys(profilesObj);
+
+    // Add pending profiles that aren't already in the ordered list
+    const pendingProfileKeys = Object.keys(pendingProfiles).filter(
+      (key) => !orderedProfileKeys.includes(key) && !isProfileOrParentDeleted(key, deletedProfiles)
+    );
+
+    const filteredProfileKeys = [...orderedProfileKeys, ...pendingProfileKeys];
 
     return (
       <ProfileList
-        sortedProfileKeys={sortedProfileKeys}
+        sortedProfileKeys={filteredProfileKeys}
         selectedProfileKey={selectedProfileKey}
         pendingProfiles={pendingProfiles}
         profileMenuOpen={profileMenuOpen}
@@ -1561,7 +1886,7 @@ export function App() {
               </button>
               <button
                 className="profile-action-button"
-                onClick={() => setShowMergedProperties(!showMergedProperties)}
+                onClick={() => setShowMergedPropertiesWithStorage(!showMergedProperties)}
                 title={showMergedProperties ? "Hide merged properties" : "Show merged properties"}
               >
                 <span className={`codicon codicon-${showMergedProperties ? "eye-closed" : "eye"}`}></span>
@@ -1602,7 +1927,11 @@ export function App() {
             // For newly created profiles, use the pending profile data as the base
             const originalProfile = flatProfiles[selectedProfileKey] || pendingProfiles[selectedProfileKey] || {};
 
-            return renderConfig(originalProfile, path, showMergedProperties ? mergedProperties : null);
+            return (
+              <div key={`${selectedProfileKey}-${propertySortOrder}-${sortOrderVersion}`}>
+                {renderConfig(originalProfile, path, showMergedProperties ? mergedProperties : null)}
+              </div>
+            );
           })()}
       </div>
     );
@@ -1627,7 +1956,63 @@ export function App() {
     combinedConfig = ensureProfileProperties(combinedConfig, path);
 
     // Sort properties according to the specified order
-    const sortedEntries = sortConfigEntries(Object.entries(combinedConfig));
+    let sortedEntries: [string, any][];
+
+    // Special handling for properties section - use custom sorting
+    if (path.length > 0 && path[path.length - 1] === "properties") {
+      // Add secure properties to the entries for sorting, but mark them as secure
+      const entriesForSorting = Object.entries(combinedConfig);
+
+      // Add secure properties from the parent object if they're not already in the properties
+      const parentConfigPath = path.slice(0, -1);
+      const parentConfig = getNestedProperty(configurations[selectedTab!]?.properties, parentConfigPath);
+      if (parentConfig?.secure && Array.isArray(parentConfig.secure)) {
+        parentConfig.secure.forEach((securePropertyName: string) => {
+          // Only add if not already in the properties
+          if (!combinedConfig.hasOwnProperty(securePropertyName)) {
+            entriesForSorting.push([securePropertyName, { _isSecureProperty: true }]);
+          }
+        });
+      }
+
+      // Fallback: If we couldn't find secure properties through getNestedProperty, try to find them directly
+      if (!parentConfig?.secure || parentConfig.secure.length === 0) {
+        const currentProfileKey = extractProfileKeyFromPath(path);
+        const flatProfiles = flattenProfiles(configurations[selectedTab!]?.properties?.profiles || {});
+        const currentProfile = flatProfiles[currentProfileKey];
+        if (currentProfile?.secure && Array.isArray(currentProfile.secure)) {
+          currentProfile.secure.forEach((securePropertyName: string) => {
+            if (
+              !combinedConfig.hasOwnProperty(securePropertyName) &&
+              !entriesForSorting.some(([existingKey]) => existingKey === securePropertyName)
+            ) {
+              entriesForSorting.push([securePropertyName, { _isSecureProperty: true }]);
+            }
+          });
+        }
+      }
+
+      // Also add pending secure properties that might not be in the parent's secure array yet
+      const currentProfileKey = extractProfileKeyFromPath(path);
+      const configPath = configurations[selectedTab!]?.configPath;
+      if (configPath && currentProfileKey) {
+        Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
+          if (entry.profile === currentProfileKey && entry.secure) {
+            const keyParts = key.split(".");
+            const propertyName = keyParts[keyParts.length - 1];
+            // Only add if not already in the properties and not already added as a secure property
+            if (!combinedConfig.hasOwnProperty(propertyName) && !entriesForSorting.some(([existingKey]) => existingKey === propertyName)) {
+              entriesForSorting.push([propertyName, { _isSecureProperty: true }]);
+            }
+          }
+        });
+      }
+
+      sortedEntries = sortProperties(entriesForSorting, mergedProps, originalProperties, path);
+    } else {
+      // Use default sorting for non-properties sections
+      sortedEntries = sortConfigEntries(Object.entries(combinedConfig));
+    }
 
     return sortedEntries.map(([key, value]) => {
       const currentPath = [...path, key];
@@ -1654,9 +2039,12 @@ export function App() {
         }
       }
 
-      const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
+      // Check if this is a secure property that was added for sorting
+      const isSecurePropertyForSorting = typeof value === "object" && value !== null && value._isSecureProperty === true;
+
+      const isParent = typeof value === "object" && value !== null && !Array.isArray(value) && !isSecurePropertyForSorting;
       const isArray = Array.isArray(value);
-      const pendingValue = (pendingChanges[configPath] ?? {})[fullKey]?.value ?? value;
+      const pendingValue = (pendingChanges[configPath] ?? {})[fullKey]?.value ?? (isSecurePropertyForSorting ? "" : value);
 
       // Merge pending secure properties for secure arrays
       let renderValue: any[] = Array.isArray(value) ? value : [];
@@ -1668,7 +2056,27 @@ export function App() {
         return (
           <div key={fullKey} className="config-item parent">
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
+              <h3
+                className={`header-level-${path.length > 3 ? 3 : path.length}`}
+                style={{
+                  cursor: displayKey?.toLocaleLowerCase() === "properties" ? "pointer" : "default",
+                  userSelect: "none",
+                }}
+                onClick={() => {
+                  if (displayKey?.toLocaleLowerCase() === "properties") {
+                    const currentSortOrder = propertySortOrder || "alphabetical";
+                    const currentIndex = SORT_ORDER_OPTIONS.indexOf(currentSortOrder);
+                    const nextIndex = (currentIndex + 1) % SORT_ORDER_OPTIONS.length;
+                    const newSortOrder = SORT_ORDER_OPTIONS[nextIndex];
+                    setPropertySortOrderWithStorage(newSortOrder);
+                  }
+                }}
+                title={
+                  displayKey?.toLocaleLowerCase() === "properties"
+                    ? `Click to change sort order. Current: ${getSortOrderDisplayName(propertySortOrder)}`
+                    : undefined
+                }
+              >
                 {displayKey?.toLocaleLowerCase() === "properties" ? "Profile Properties" : displayKey}
               </h3>
               <button
@@ -1701,41 +2109,8 @@ export function App() {
       } else if (isArray) {
         const tabsHiddenItems = hiddenItems[configurations[selectedTab!]!.configPath];
         if (displayKey?.toLocaleLowerCase() === "secure") {
-          return (
-            <div key={fullKey} className="config-item">
-              <div style={{ paddingLeft: "16px" }}>
-                {Array.from(new Set(renderValue)).map((item: any, index: number) => {
-                  if (
-                    tabsHiddenItems &&
-                    tabsHiddenItems[item] &&
-                    tabsHiddenItems[item].path.includes(currentPath.join(".").replace("secure", "properties") + "." + item)
-                  )
-                    return;
-                  return (
-                    <div key={index} className="config-item">
-                      <div className="config-item-container">
-                        <span className="config-label">{item}</span>
-                        <input
-                          className="config-input"
-                          type="password"
-                          placeholder="••••••••"
-                          value={String(pendingChanges[configurations[selectedTab!]!.configPath]?.[fullKey + "." + item]?.value || "")}
-                          onChange={(e) => handleChange(fullKey + "." + item, (e.target as HTMLInputElement).value)}
-                          style={{ fontFamily: "monospace" }}
-                        />
-                        <button
-                          className="action-button"
-                          onClick={() => handleDeleteProperty(fullKey.replace("secure", "properties") + "." + item, true)}
-                        >
-                          <span className="codicon codicon-trash"></span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
+          // Hide the secure array section since secure properties are now handled in the properties section
+          return null;
         }
         return (
           <div key={fullKey} className="config-item">
@@ -1786,6 +2161,13 @@ export function App() {
         const secure = mergedPropData?.secure;
         const isSecureProperty = isFromMergedProps && jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure) : false;
 
+        // Check if this is a local secure property (in the current profile's secure array)
+        const isLocalSecureProperty =
+          displayKey && path && configPath ? isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties) : false;
+
+        // Check if this is a secure property that was added for sorting
+        const isSecureForSorting = isSecurePropertyForSorting;
+
         const readOnlyContainer = (
           <div className="config-item-container" style={displayKey === "type" ? { gap: "0px" } : {}}>
             <span
@@ -1834,7 +2216,7 @@ export function App() {
               (() => {
                 const propertyType = displayKey ? getPropertyTypeForConfigEditor(displayKey, path) : undefined;
 
-                if (isSecureProperty) {
+                if (isSecureProperty || isLocalSecureProperty || isSecureForSorting) {
                   return (
                     <input
                       className="config-input"
@@ -1926,18 +2308,22 @@ export function App() {
             )}
             {displayKey !== "type" &&
               displayKey &&
-              !isFromMergedProps &&
+              (!isFromMergedProps || isSecurePropertyForSorting) &&
               (() => {
                 const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties);
+                // Only show lock/unlock button for properties that are not already defined as secure in the profile's secure array
+                const isDefinedAsSecureInProfile = isSecurePropertyForSorting;
                 return (
                   <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                    <button
-                      className="action-button"
-                      onClick={() => handleToggleSecure(fullKey, displayKey, path)}
-                      title={isSecure ? "Make property non-secure" : "Make property secure"}
-                    >
-                      <span className={`codicon codicon-${isSecure ? "lock" : "unlock"}`}></span>
-                    </button>
+                    {!isDefinedAsSecureInProfile && (
+                      <button
+                        className="action-button"
+                        onClick={() => handleToggleSecure(fullKey, displayKey, path)}
+                        title={isSecure ? "Make property non-secure" : "Make property secure"}
+                      >
+                        <span className={`codicon codicon-${isSecure ? "lock" : "unlock"}`}></span>
+                      </button>
+                    )}
                     <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
                       <span className="codicon codicon-trash"></span>
                     </button>
@@ -2175,7 +2561,7 @@ export function App() {
       }
     });
 
-    return [...profilesOfType, ...Array.from(pendingProfiles)].sort((a, b) => a.localeCompare(b));
+    return [...profilesOfType, ...Array.from(pendingProfiles)];
   };
 
   const getPropertyTypeForAddProfile = (propertyKey: string): string | undefined => {
@@ -2243,10 +2629,14 @@ export function App() {
       configType: configType,
     });
     setAddConfigModalOpen(false);
+    // Reset the flag since we're creating a new config
+    setHasPromptedForZeroConfigs(false);
   };
 
   const handleCancelAddConfig = () => {
     setAddConfigModalOpen(false);
+    // Reset the flag so the modal can be opened again if needed
+    setHasPromptedForZeroConfigs(false);
   };
 
   // Get options for input key for profile dropdown
@@ -2340,7 +2730,7 @@ export function App() {
         renderDefaults={renderDefaults}
         onProfileWizard={() => setWizardModalOpen(true)}
         viewMode={viewMode}
-        onViewModeToggle={() => setViewMode(viewMode === "tree" ? "flat" : "tree")}
+        onViewModeToggle={() => setViewModeWithStorage(viewMode === "tree" ? "flat" : "tree")}
       />
       <Footer
         onClearChanges={() => {

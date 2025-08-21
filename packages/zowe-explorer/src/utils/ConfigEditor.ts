@@ -10,6 +10,7 @@
  */
 
 import { DeferredPromise, WebView, ZoweVsCodeExtension, FileManagement } from "@zowe/zowe-explorer-api";
+import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
 import * as vscode from "vscode";
 import { ProfileInfo, Config, ConfigBuilder, ConfigSchema } from "@zowe/imperative";
 import * as path from "path";
@@ -63,6 +64,18 @@ export class ConfigEditor extends WebView {
         vscode.commands.executeCommand("workbench.action.keepEditor");
 
         this.panel.onDidDispose(() => {});
+
+        // Ensure the webview is properly initialized by sending initial data
+        this.initializeWebview();
+    }
+
+    private async initializeWebview(): Promise<void> {
+        // Send initial data to ensure the webview is properly initialized
+        const configurations = await this.getLocalConfigs();
+        await this.panel.webview.postMessage({
+            command: "CONFIGURATIONS",
+            contents: configurations,
+        });
     }
 
     protected async getLocalConfigs(): Promise<any[]> {
@@ -459,6 +472,7 @@ export class ConfigEditor extends WebView {
                 });
                 break;
             }
+
             case "SELECT_FILE": {
                 const options: vscode.OpenDialogOptions = {
                     canSelectMany: false,
@@ -574,6 +588,44 @@ export class ConfigEditor extends WebView {
                     });
                 } catch (error) {
                     vscode.window.showErrorMessage("Error creating new configuration");
+                }
+                break;
+            }
+            case "GET_LOCAL_STORAGE_VALUE": {
+                try {
+                    const { key } = message;
+                    const value = LocalStorageAccess.getValue(key);
+                    await this.panel.webview.postMessage({
+                        command: "LOCAL_STORAGE_VALUE",
+                        key,
+                        value,
+                    });
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    await this.panel.webview.postMessage({
+                        command: "LOCAL_STORAGE_ERROR",
+                        key: message.key,
+                        error: errorMessage,
+                    });
+                }
+                break;
+            }
+            case "SET_LOCAL_STORAGE_VALUE": {
+                try {
+                    const { key, value } = message;
+                    await LocalStorageAccess.setValue(key, value);
+                    await this.panel.webview.postMessage({
+                        command: "LOCAL_STORAGE_SET_SUCCESS",
+                        key,
+                        value,
+                    });
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    await this.panel.webview.postMessage({
+                        command: "LOCAL_STORAGE_ERROR",
+                        key: message.key,
+                        error: errorMessage,
+                    });
                 }
                 break;
             }

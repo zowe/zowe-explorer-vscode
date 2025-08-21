@@ -1213,3 +1213,12 @@ ul {
 .profile-action-button .codicon-star-full .profile-action-button .codicon-star-empty {
     color: var(--vscode-descriptionForeground);
 }
+
+/* Clickable header styles for property sorting */
+.header-level-1[style*="cursor: pointer"] {
+    transition: color 0.2s ease;
+}
+
+.header-level-1[style*="cursor: pointer"]:hover {
+    color: var(--vscode-button-foreground);
+}
