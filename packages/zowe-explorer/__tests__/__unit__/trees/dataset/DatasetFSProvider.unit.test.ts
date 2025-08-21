@@ -486,6 +486,34 @@ describe("DatasetFSProvider", () => {
                 ],
             },
         };
+        it("passes binary: true to uploadFromBuffer when entry.encoding.kind is 'binary'", async () => {
+            const provider = DatasetFSProvider.instance;
+            const uri = testUris.pdsMember;
+            const content = new Uint8Array([0x41, 0x42, 0x43]);
+            const parent = { entries: new Map(), metadata: { profile: { name: "profile" }, path: "/" } };
+            const binaryEntry = { ...testEntries.pdsMember, wasAccessed: true, encoding: { kind: "binary" } } as DsEntry;
+            parent.entries.set("MEMBER1", binaryEntry);
+            jest.spyOn(provider as any, "lookupParentDirectory").mockReturnValueOnce(parent);
+
+            const mockMvsApi = {
+                uploadFromBuffer: jest.fn().mockResolvedValue({ apiResponse: { etag: "etag" } }),
+                dataSet: jest.fn().mockResolvedValue(dsResponseMock),
+            };
+
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+            await provider.writeFile(uri, content, { create: false, overwrite: true });
+
+            expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalledWith(
+                Buffer.from(content),
+                binaryEntry.metadata.dsName,
+                expect.objectContaining({
+                    binary: true,
+                    returnEtag: true,
+                })
+            );
+        });
+
         it("updates a PS in the FSP and remote system", async () => {
             const mockMvsApi = {
                 uploadFromBuffer: jest.fn().mockResolvedValue({
