@@ -435,7 +435,8 @@ export namespace ZoweExplorerZosmf {
         }
 
         public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zosjobs.IJob> {
-            return zosjobs.SubmitJobs.submitJcl(this.getSession(), jcl, internalReaderRecfm, internalReaderLrecl);
+            const internalReaderFileEncoding = this.profile?.profile?.jobEncoding;
+            return zosjobs.SubmitJobs.submitJcl(this.getSession(), jcl, internalReaderRecfm, internalReaderLrecl, internalReaderFileEncoding);
         }
 
         public submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
