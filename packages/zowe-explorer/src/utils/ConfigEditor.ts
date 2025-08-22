@@ -82,11 +82,11 @@ export class ConfigEditor extends WebView {
     }
 
     private async areSecureValuesAllowed(): Promise<boolean> {
-        const profilesCache = (ZoweVsCodeExtension as any).profilesCache;
+        const profilesCache = ZoweVsCodeExtension.profilesCache;
         if (!profilesCache) {
             return false;
         }
-        return await profilesCache.isCredentialsSecured();
+        return (((await profilesCache.getProfileInfo()) as any).mCredentials.isCredentialManagerInAppSettings() ?? false) as boolean;
     }
 
     protected async getLocalConfigs(): Promise<any[]> {
