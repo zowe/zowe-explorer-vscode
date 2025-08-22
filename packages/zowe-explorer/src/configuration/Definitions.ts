@@ -159,5 +159,6 @@ export namespace Definitions {
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
         CONFIG_EDITOR_SHOW_MERGED_PROPERTIES = "zowe.configEditor.showMergedProperties",
         CONFIG_EDITOR_VIEW_MODE = "zowe.configEditor.viewMode",
+        CONFIG_EDITOR_PROPERTY_SORT_ORDER = "zowe.configEditor.propertySortOrder",
     }
 }

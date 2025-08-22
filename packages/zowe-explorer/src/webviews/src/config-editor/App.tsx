@@ -91,10 +91,14 @@ export function App() {
     [setLocalStorageValue]
   );
 
-  const setPropertySortOrderWithStorage = useCallback((value: PropertySortOrder) => {
-    setPropertySortOrder(value);
-    setSortOrderVersion((prev) => prev + 1);
-  }, []);
+  const setPropertySortOrderWithStorage = useCallback(
+    (value: PropertySortOrder) => {
+      setPropertySortOrder(value);
+      setLocalStorageValue(LOCAL_STORAGE_KEYS.PROPERTY_SORT_ORDER, value);
+      setSortOrderVersion((prev) => prev + 1);
+    },
+    [setLocalStorageValue]
+  );
   const [configurations, setConfigurations] = useState<
     { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[]
   >([]);
@@ -459,12 +463,11 @@ export function App() {
     // Retrieve stored settings from localStorage
     getLocalStorageValue(LOCAL_STORAGE_KEYS.SHOW_MERGED_PROPERTIES, true);
     getLocalStorageValue(LOCAL_STORAGE_KEYS.VIEW_MODE, "tree");
+    getLocalStorageValue(LOCAL_STORAGE_KEYS.PROPERTY_SORT_ORDER, "merged-last");
   }, [getLocalStorageValue]);
 
   // Invoked on webview load
   useEffect(() => {
-    console.log("Config Editor: Component mounted/reloaded");
-
     // Clear any existing state on reload
     setConfigurations([]);
     setSelectedTab(null);
@@ -637,6 +640,9 @@ export function App() {
           setShowMergedProperties(value !== undefined ? value : true);
         } else if (key === LOCAL_STORAGE_KEYS.VIEW_MODE) {
           setViewMode(value !== undefined ? value : "tree");
+        } else if (key === LOCAL_STORAGE_KEYS.PROPERTY_SORT_ORDER) {
+          setPropertySortOrder(value !== undefined ? value : "alphabetical");
+          setSortOrderVersion((prev) => prev + 1);
         }
       } else if (event.data.command === "LOCAL_STORAGE_SET_SUCCESS") {
         // Handle successful localStorage value setting (optional - for debugging)
@@ -644,7 +650,6 @@ export function App() {
         // Handle localStorage errors (optional - for debugging)
       } else if (event.data.command === "RELOAD") {
         // Handle explicit reload request from VS Code
-        console.log("Config Editor: Received RELOAD command from VS Code");
         // Clear state and request fresh data
         setConfigurations([]);
         setSelectedTab(null);
@@ -665,7 +670,6 @@ export function App() {
       }
     });
 
-    console.log("Config Editor: Sending GET_PROFILES and GET_ENV_INFORMATION");
     vscodeApi.postMessage({ command: "GET_PROFILES" });
     vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
 
@@ -679,7 +683,6 @@ export function App() {
     // Add visibility change listener to refresh data when tab becomes visible
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log("Config Editor: Tab became visible, refreshing data");
         // Refresh configurations when tab becomes visible
         vscodeApi.postMessage({ command: "GET_PROFILES" });
         vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
@@ -687,16 +690,12 @@ export function App() {
     };
 
     // Add beforeunload listener to handle page reload
-    const handleBeforeUnload = () => {
-      console.log("Config Editor: Page is about to unload/reload");
-    };
+    const handleBeforeUnload = () => {};
 
     // Add load listener to handle page load completion
     const handleLoad = () => {
-      console.log("Config Editor: Page load completed");
       // Ensure data is loaded after page load
       setTimeout(() => {
-        console.log("Config Editor: Sending delayed GET_PROFILES after load");
         vscodeApi.postMessage({ command: "GET_PROFILES" });
         vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
       }, 100);
@@ -704,7 +703,6 @@ export function App() {
 
     // Add DOMContentLoaded listener for immediate initialization
     const handleDOMContentLoaded = () => {
-      console.log("Config Editor: DOM content loaded");
       // Send initial data requests
       vscodeApi.postMessage({ command: "GET_PROFILES" });
       vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
@@ -1153,29 +1151,29 @@ export function App() {
     if (selectedTab === null) return;
     const configPath = configurations[selectedTab!]!.configPath;
 
+    // Construct the full profile path
+    let fullProfilePath: string;
+    if (profileKey.includes(".")) {
+      // Nested profile, construct the full path
+      const profileParts = profileKey.split(".");
+      const pathArray = ["profiles"];
+      for (let i = 0; i < profileParts.length; i++) {
+        pathArray.push(profileParts[i]);
+        if (i < profileParts.length - 1) {
+          pathArray.push("profiles");
+        }
+      }
+      fullProfilePath = pathArray.join(".");
+    } else {
+      // Top-level profile
+      fullProfilePath = `profiles.${profileKey}`;
+    }
+
     // Add to deletions - we'll add all profile-related keys to deletions
     setDeletions((prev) => {
       const newDeletions = { ...prev };
       if (!newDeletions[configPath]) {
         newDeletions[configPath] = [];
-      }
-
-      // Construct the full profile path
-      let fullProfilePath: string;
-      if (profileKey.includes(".")) {
-        // Nested profile, construct the full path
-        const profileParts = profileKey.split(".");
-        const pathArray = ["profiles"];
-        for (let i = 0; i < profileParts.length; i++) {
-          pathArray.push(profileParts[i]);
-          if (i < profileParts.length - 1) {
-            pathArray.push("profiles");
-          }
-        }
-        fullProfilePath = pathArray.join(".");
-      } else {
-        // Top-level profile
-        fullProfilePath = `profiles.${profileKey}`;
       }
 
       // Add the full profile path to deletions
@@ -1199,16 +1197,166 @@ export function App() {
       return newState;
     });
 
-    // If this profile is currently selected, or if the selected profile is a child of this profile, clear the selection
+    // If this profile is currently selected, or if the selected profile is a child of this profile, select the nearest profile
     if (selectedProfileKey === profileKey || (selectedProfileKey && selectedProfileKey.startsWith(profileKey + "."))) {
-      setSelectedProfileKey(null);
-      // Also clear it from the stored profiles for this config
-      const configPath = configurations[selectedTab!]?.configPath;
-      if (configPath) {
-        setSelectedProfilesByConfig((prev) => ({
-          ...prev,
-          [configPath]: null,
-        }));
+      // Get the current list of available profiles to find the nearest one
+      const profilesObj = configurations[selectedTab!]?.properties?.profiles;
+      if (profilesObj) {
+        const pendingProfiles = extractPendingProfiles(configPath);
+        const deletedProfiles = deletions[configPath] || [];
+
+        // Get profile keys in original order from the configuration
+        const getOrderedProfileKeys = (profiles: any, parentKey = ""): string[] => {
+          const keys: string[] = [];
+          for (const key of Object.keys(profiles)) {
+            const profile = profiles[key];
+            const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+
+            // Add this profile key if it's not deleted
+            if (!isProfileOrParentDeleted(qualifiedKey, deletedProfiles)) {
+              keys.push(qualifiedKey);
+            }
+
+            // Recursively add nested profiles
+            if (profile.profiles) {
+              keys.push(...getOrderedProfileKeys(profile.profiles, qualifiedKey));
+            }
+          }
+          return keys;
+        };
+
+        const orderedProfileKeys = getOrderedProfileKeys(profilesObj);
+        const pendingProfileKeys = Object.keys(pendingProfiles).filter(
+          (key) => !orderedProfileKeys.includes(key) && !isProfileOrParentDeleted(key, deletedProfiles)
+        );
+        const availableProfileKeys = [...orderedProfileKeys, ...pendingProfileKeys];
+
+        // Find the nearest profile that's not being deleted
+        let nearestProfileKey: string | null = null;
+
+        // First, check if the deleted profile has a parent that should be selected
+        if (profileKey.includes(".")) {
+          // This is a nested profile, find its parent
+          const profileParts = profileKey.split(".");
+          const parentKey = profileParts.slice(0, -1).join(".");
+
+          // Check if the parent exists and is not being deleted
+          if (availableProfileKeys.includes(parentKey) && !isProfileOrParentDeleted(parentKey, deletedProfiles)) {
+            nearestProfileKey = parentKey;
+          }
+        }
+
+        // If no parent found or this is a top-level profile, find the nearest sibling/adjacent profile
+        if (!nearestProfileKey) {
+          // For top-level profiles, we want to find the nearest top-level profile
+          // For nested profiles, we want to find the nearest profile at the same level or the next top-level
+          const isTopLevel = !profileKey.includes(".");
+
+          if (isTopLevel) {
+            // For top-level profiles, find the nearest top-level profile
+            // Get all top-level profiles from the original configuration (including deleted ones)
+            const allTopLevelProfiles = Object.keys(profilesObj).filter((key) => !key.includes("."));
+            const currentTopLevelIndex = allTopLevelProfiles.indexOf(profileKey);
+            const topLevelProfiles = availableProfileKeys.filter((key) => !key.includes("."));
+
+            if (currentTopLevelIndex !== -1) {
+              // Try to find the next top-level profile first
+              for (let i = currentTopLevelIndex + 1; i < allTopLevelProfiles.length; i++) {
+                const candidateProfile = allTopLevelProfiles[i];
+                if (!isProfileOrParentDeleted(candidateProfile, deletedProfiles)) {
+                  nearestProfileKey = candidateProfile;
+                  break;
+                }
+              }
+
+              // If no next top-level profile found, try to find the previous top-level profile
+              if (!nearestProfileKey) {
+                for (let i = currentTopLevelIndex - 1; i >= 0; i--) {
+                  const candidateProfile = allTopLevelProfiles[i];
+                  if (!isProfileOrParentDeleted(candidateProfile, deletedProfiles)) {
+                    nearestProfileKey = candidateProfile;
+                    break;
+                  }
+                }
+              }
+            }
+          } else {
+            // For nested profiles, find the nearest profile at the same level or the next top-level
+            // Get all profiles from the original configuration (including deleted ones)
+            const getAllProfileKeys = (profiles: any, parentKey = ""): string[] => {
+              const keys: string[] = [];
+              for (const key of Object.keys(profiles)) {
+                const profile = profiles[key];
+                const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+                keys.push(qualifiedKey);
+
+                // Recursively add nested profiles
+                if (profile.profiles) {
+                  keys.push(...getAllProfileKeys(profile.profiles, qualifiedKey));
+                }
+              }
+              return keys;
+            };
+
+            const allProfileKeys = getAllProfileKeys(profilesObj);
+            const currentIndex = allProfileKeys.indexOf(profileKey);
+
+            if (currentIndex !== -1) {
+              // Try to find the next profile first
+              for (let i = currentIndex + 1; i < allProfileKeys.length; i++) {
+                const candidateProfile = allProfileKeys[i];
+                if (!isProfileOrParentDeleted(candidateProfile, deletedProfiles)) {
+                  nearestProfileKey = candidateProfile;
+                  break;
+                }
+              }
+
+              // If no next profile found, try to find the previous profile
+              if (!nearestProfileKey) {
+                for (let i = currentIndex - 1; i >= 0; i--) {
+                  const candidateProfile = allProfileKeys[i];
+                  if (!isProfileOrParentDeleted(candidateProfile, deletedProfiles)) {
+                    nearestProfileKey = candidateProfile;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // Set the nearest profile as selected, or null if no profile available
+        setSelectedProfileKey(nearestProfileKey);
+
+        // Also update the stored profiles for this config
+        if (configPath) {
+          setSelectedProfilesByConfig((prev) => ({
+            ...prev,
+            [configPath]: nearestProfileKey,
+          }));
+        }
+
+        // If we found a nearest profile, get its merged properties
+        if (nearestProfileKey) {
+          vscodeApi.postMessage({
+            command: "GET_MERGED_PROPERTIES",
+            profilePath: nearestProfileKey,
+            configPath: configPath,
+            changes: formatPendingChanges(),
+          });
+        } else {
+          setMergedProperties(null);
+        }
+      } else {
+        // Fallback to clearing selection if no profiles object available
+        setSelectedProfileKey(null);
+        if (configPath) {
+          setSelectedProfilesByConfig((prev) => ({
+            ...prev,
+            [configPath]: null,
+          }));
+        }
+        setMergedProperties(null);
       }
     }
   };
@@ -1743,14 +1891,10 @@ export function App() {
   const renderProfiles = (profilesObj: any) => {
     if (!profilesObj || typeof profilesObj !== "object") return null;
 
-    const flatProfiles = flattenProfiles(profilesObj);
     const configPath = configurations[selectedTab!]!.configPath;
 
     // Extract pending profiles using helper function
     const pendingProfiles = extractPendingProfiles(configPath);
-
-    // Combine existing and pending profiles for the profile list
-    const allProfiles = { ...flatProfiles, ...pendingProfiles };
 
     // Filter out deleted profiles and their children
     const deletedProfiles = deletions[configPath] || [];
