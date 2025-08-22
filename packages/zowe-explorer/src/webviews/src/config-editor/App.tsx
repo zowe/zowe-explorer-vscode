@@ -142,6 +142,7 @@ export function App() {
   const [newLayerName, setNewLayerName] = useState("");
   const [newLayerPath, setNewLayerPath] = useState<string[] | null>(null);
   const [isSecure, setIsSecure] = useState(false);
+  const [secureValuesAllowed, setSecureValuesAllowed] = useState<boolean>(true);
 
   const [hiddenItems, setHiddenItems] = useState<{
     [configPath: string]: {
@@ -292,6 +293,7 @@ export function App() {
     vscodeApi,
     formatPendingChanges,
     getAvailableProfiles,
+    secureValuesAllowed,
   });
 
   // Memoize handleSave to prevent unnecessary re-renders
@@ -488,8 +490,11 @@ export function App() {
         return;
       }
       if (event.data.command === "CONFIGURATIONS") {
-        const { contents } = event.data;
+        const { contents, secureValuesAllowed } = event.data;
         setConfigurations(contents);
+        const newSecureValuesAllowed = secureValuesAllowed !== undefined ? secureValuesAllowed : true;
+        setSecureValuesAllowed(newSecureValuesAllowed);
+
         configurationsRef.current = contents;
         const newSchemaValidations: { [configPath: string]: schemaValidation | undefined } = {};
         contents.forEach((config: any) => {
@@ -1257,7 +1262,6 @@ export function App() {
             // Get all top-level profiles from the original configuration (including deleted ones)
             const allTopLevelProfiles = Object.keys(profilesObj).filter((key) => !key.includes("."));
             const currentTopLevelIndex = allTopLevelProfiles.indexOf(profileKey);
-            const topLevelProfiles = availableProfileKeys.filter((key) => !key.includes("."));
 
             if (currentTopLevelIndex !== -1) {
               // Try to find the next top-level profile first
@@ -1740,6 +1744,11 @@ export function App() {
 
   // Helper function to toggle the secure state of a property
   const handleToggleSecure = (fullKey: string, displayKey: string, path: string[]) => {
+    // Don't allow toggling secure state if secure values are not allowed
+    if (!secureValuesAllowed) {
+      return;
+    }
+
     const configPath = configurations[selectedTab!]!.configPath;
     const profileKey = extractProfileKeyFromPath(path);
     const currentSecure = isPropertySecure(fullKey, displayKey, path);
@@ -2459,13 +2468,22 @@ export function App() {
                 const isDefinedAsSecureInProfile = isSecurePropertyForSorting;
                 return (
                   <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                    {!isDefinedAsSecureInProfile && (
+                    {!isDefinedAsSecureInProfile && secureValuesAllowed && (
                       <button
                         className="action-button"
                         onClick={() => handleToggleSecure(fullKey, displayKey, path)}
                         title={isSecure ? "Make property non-secure" : "Make property secure"}
                       >
                         <span className={`codicon codicon-${isSecure ? "lock" : "unlock"}`}></span>
+                      </button>
+                    )}
+                    {!isDefinedAsSecureInProfile && !secureValuesAllowed && (
+                      <button
+                        className="action-button"
+                        disabled
+                        title="A credential manager is not available. Enable a credential manager to use secure properties."
+                      >
+                        <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
                       </button>
                     )}
                     <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
@@ -2927,12 +2945,17 @@ export function App() {
         showDropdown={showDropdown}
         typeOptions={newProfileKeyPath ? fetchTypeOptions(newProfileKeyPath) : []}
         isSecure={isSecure}
+        secureValuesAllowed={secureValuesAllowed}
         getPropertyType={getPropertyTypeForAddProfile}
         vscodeApi={vscodeApi}
         onNewProfileKeyChange={setNewProfileKey}
         onNewProfileValueChange={setNewProfileValue}
         onShowDropdownChange={setShowDropdown}
-        onSecureToggle={() => setIsSecure(!isSecure)}
+        onSecureToggle={() => {
+          if (secureValuesAllowed) {
+            setIsSecure(!isSecure);
+          }
+        }}
         onAdd={handleAddNewProfileKey}
         onCancel={() => {
           setNewProfileModalOpen(false);
@@ -2965,12 +2988,17 @@ export function App() {
         typeOptions={getWizardTypeOptions()}
         propertyOptions={getWizardPropertyOptions()}
         isProfileNameTaken={isProfileNameTaken()}
+        secureValuesAllowed={secureValuesAllowed}
         onRootProfileChange={setWizardRootProfile}
         onSelectedTypeChange={setWizardSelectedType}
         onProfileNameChange={setWizardProfileName}
         onNewPropertyKeyChange={setWizardNewPropertyKey}
         onNewPropertyValueChange={setWizardNewPropertyValue}
-        onNewPropertySecureToggle={() => setWizardNewPropertySecure(!wizardNewPropertySecure)}
+        onNewPropertySecureToggle={() => {
+          if (secureValuesAllowed) {
+            setWizardNewPropertySecure(!wizardNewPropertySecure);
+          }
+        }}
         onShowKeyDropdownChange={setWizardShowKeyDropdown}
         onAddProperty={handleWizardAddProperty}
         onRemoveProperty={handleWizardRemoveProperty}

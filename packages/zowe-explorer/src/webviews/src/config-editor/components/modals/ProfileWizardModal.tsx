@@ -15,6 +15,7 @@ interface ProfileWizardModalProps {
   typeOptions: string[];
   propertyOptions: string[];
   isProfileNameTaken: boolean;
+  secureValuesAllowed: boolean;
   onRootProfileChange: (value: string) => void;
   onSelectedTypeChange: (value: string) => void;
   onProfileNameChange: (value: string) => void;
@@ -50,6 +51,7 @@ export function ProfileWizardModal({
   typeOptions,
   propertyOptions,
   isProfileNameTaken,
+  secureValuesAllowed,
   onRootProfileChange,
   onSelectedTypeChange,
   onProfileNameChange,
@@ -294,13 +296,23 @@ export function ProfileWizardModal({
                         <span className="codicon codicon-folder-opened"></span>
                       </button>
                     )}
-                    <button
-                      onClick={onNewPropertySecureToggle}
-                      className={`wizard-secure-toggle ${wizardNewPropertySecure ? "active" : "inactive"}`}
-                      title={wizardNewPropertySecure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
-                    >
-                      <span className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}></span>
-                    </button>
+                    {secureValuesAllowed ? (
+                      <button
+                        onClick={onNewPropertySecureToggle}
+                        className={`wizard-secure-toggle ${wizardNewPropertySecure ? "active" : "inactive"}`}
+                        title={wizardNewPropertySecure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
+                      >
+                        <span className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}></span>
+                      </button>
+                    ) : (
+                      <button
+                        disabled
+                        className="wizard-secure-toggle inactive"
+                        title="A credential manager is not available. Enable a credential manager to use secure properties."
+                      >
+                        <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                      </button>
+                    )}
                   </div>
                 </div>
                 <button
@@ -407,13 +419,23 @@ export function ProfileWizardModal({
                                     />
                                   )}
                                 </div>
-                                <button
-                                  onClick={() => onPropertySecureToggle(index)}
-                                  className={`wizard-property-secure-toggle ${prop.secure ? "active" : "inactive"}`}
-                                  title={prop.secure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
-                                >
-                                  <span className={`codicon ${prop.secure ? "codicon-lock" : "codicon-unlock"}`}></span>
-                                </button>
+                                {secureValuesAllowed ? (
+                                  <button
+                                    onClick={() => onPropertySecureToggle(index)}
+                                    className={`wizard-property-secure-toggle ${prop.secure ? "active" : "inactive"}`}
+                                    title={prop.secure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
+                                  >
+                                    <span className={`codicon ${prop.secure ? "codicon-lock" : "codicon-unlock"}`}></span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    disabled
+                                    className="wizard-property-secure-toggle inactive"
+                                    title="A credential manager is not available. Enable a credential manager to use secure properties."
+                                  >
+                                    <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => onRemoveProperty(index)}
                                   className="wizard-button secondary"

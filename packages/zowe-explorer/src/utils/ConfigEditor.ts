@@ -72,10 +72,21 @@ export class ConfigEditor extends WebView {
     private async initializeWebview(): Promise<void> {
         // Send initial data to ensure the webview is properly initialized
         const configurations = await this.getLocalConfigs();
+        const secureValuesAllowed = await this.areSecureValuesAllowed();
+
         await this.panel.webview.postMessage({
             command: "CONFIGURATIONS",
             contents: configurations,
+            secureValuesAllowed,
         });
+    }
+
+    private async areSecureValuesAllowed(): Promise<boolean> {
+        const profilesCache = (ZoweVsCodeExtension as any).profilesCache;
+        if (!profilesCache) {
+            return false;
+        }
+        return await profilesCache.isCredentialsSecured();
     }
 
     protected async getLocalConfigs(): Promise<any[]> {
@@ -224,9 +235,11 @@ export class ConfigEditor extends WebView {
                 }
 
                 const configurations = await this.getLocalConfigs();
+                const secureValuesAllowed = await this.areSecureValuesAllowed();
                 await this.panel.webview.postMessage({
                     command: "CONFIGURATIONS",
                     contents: configurations,
+                    secureValuesAllowed,
                 });
 
                 // Initial selection will be sent when the webview sends CONFIGURATIONS_READY
@@ -246,10 +259,12 @@ export class ConfigEditor extends WebView {
                 await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
                 const configs = await this.getLocalConfigs();
+                const secureValuesAllowed = await this.areSecureValuesAllowed();
 
                 await this.panel.webview.postMessage({
                     command: "CONFIGURATIONS",
                     contents: configs,
+                    secureValuesAllowed,
                 });
 
                 await this.panel.webview.postMessage({
@@ -659,7 +674,13 @@ export class ConfigEditor extends WebView {
         const profInfo = new ProfileInfo("zowe");
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
-        for (const item of changes) {
+        // Check if secure values are allowed before processing changes
+        const secureValuesAllowed = await this.areSecureValuesAllowed();
+
+        // Filter out secure changes if secure values are not allowed
+        const filteredChanges = secureValuesAllowed ? changes : changes.filter((change) => !change.secure);
+
+        for (const item of filteredChanges) {
             const keyParts = item.key.split(".");
             if (keyParts[keyParts.length - 2] === "secure") {
                 keyParts[keyParts.length - 2] = "properties";
@@ -690,7 +711,7 @@ export class ConfigEditor extends WebView {
             }
         }
 
-        for (const change of changes) {
+        for (const change of filteredChanges) {
             try {
                 profInfo.getTeamConfig().set(change.key, change.value, { parseString: true, secure: change.secure });
             } catch (err) {

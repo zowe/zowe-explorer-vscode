@@ -43,6 +43,7 @@ interface UseProfileWizardProps {
     vscodeApi: any;
     formatPendingChanges: () => any;
     getAvailableProfiles: () => string[];
+    secureValuesAllowed: boolean;
 }
 
 export function useProfileWizard({
@@ -54,6 +55,7 @@ export function useProfileWizard({
     setSelectedProfileKey,
     vscodeApi,
     formatPendingChanges,
+    secureValuesAllowed,
 }: UseProfileWizardProps) {
     // Profile Wizard state
     const [wizardModalOpen, setWizardModalOpen] = useState(false);
@@ -171,6 +173,11 @@ export function useProfileWizard({
     };
 
     const handleWizardPropertySecureToggle = (index: number) => {
+        // Don't allow toggling secure state if secure values are not allowed
+        if (!secureValuesAllowed) {
+            return;
+        }
+
         setWizardProperties((prev) => {
             const updated = [...prev];
             updated[index] = {

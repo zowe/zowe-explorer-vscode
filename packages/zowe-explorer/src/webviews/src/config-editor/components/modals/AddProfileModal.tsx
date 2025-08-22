@@ -7,6 +7,7 @@ interface AddProfileModalProps {
   showDropdown: boolean;
   typeOptions: string[];
   isSecure: boolean;
+  secureValuesAllowed: boolean;
   getPropertyType: (propertyKey: string) => string | undefined;
   vscodeApi: any;
   onNewProfileKeyChange: (value: string) => void;
@@ -24,6 +25,7 @@ export function AddProfileModal({
   showDropdown,
   typeOptions,
   isSecure,
+  secureValuesAllowed,
   getPropertyType,
   vscodeApi,
   onNewProfileKeyChange,
@@ -186,14 +188,25 @@ export function AddProfileModal({
                 <span className="codicon codicon-folder-opened"></span>
               </button>
             )}
-            <button
-              type="button"
-              onClick={onSecureToggle}
-              className={`wizard-secure-toggle ${isSecure ? "active" : "inactive"}`}
-              title={isSecure ? "Unlock property" : "Lock property"}
-            >
-              <span className={`codicon ${isSecure ? "codicon-lock" : "codicon-unlock"}`}></span>
-            </button>
+            {secureValuesAllowed ? (
+              <button
+                type="button"
+                onClick={onSecureToggle}
+                className={`wizard-secure-toggle ${isSecure ? "active" : "inactive"}`}
+                title={isSecure ? "Unlock property" : "Lock property"}
+              >
+                <span className={`codicon ${isSecure ? "codicon-lock" : "codicon-unlock"}`}></span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="wizard-secure-toggle inactive"
+                title="A credential manager is not available. Enable a credential manager to use secure properties."
+              >
+                <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+              </button>
+            )}
           </div>
         </div>
         <div className="modal-actions">
