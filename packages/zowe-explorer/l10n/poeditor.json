@@ -416,6 +416,9 @@
   "zowe.commands.tso.history": {
     "Toggle if TSO Commands persist locally": ""
   },
+  "zowe.commands.tso.defaultProfile": {
+    "Toggle to use default TSO profile when issuing a TSO command": ""
+  },
   "zowe.commands.uss.history": {
     "Toggle if Unix Commands persist locally": ""
   },
@@ -882,6 +885,7 @@
   "User ID": "",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "",
   "Failed to move {0}: {1}": "",
+  "Data set(s) moved successfully.": "",
   "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "",
   "Cannot drop a partitioned dataset or member into a sequential dataset.": "",
   "Moving MVS files...": "",
@@ -1086,6 +1090,7 @@
   "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "",
   "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.": "",
+  "Profile {0} has an invalid SSL certificate.": "",
   "Auto Store: ": "",
   "Config File: ": "",
   "Global": "",

@@ -16,6 +16,15 @@ import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { FileManagement, Types } from "../../../src";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
+import * as crypto from "crypto";
+
+jest.mock("crypto", () => ({
+    ...jest.requireActual("crypto"),
+    X509Certificate: jest.fn(() => ({
+        subject: "mockedSubject",
+        fingerprint256: "mockedFingerprint",
+    })),
+}));
 
 jest.mock("fs");
 
@@ -137,7 +146,7 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
 }
 
 describe("ProfilesCache", () => {
-    const fakeLogger = { debug: jest.fn() };
+    const fakeLogger = { debug: jest.fn(), error: jest.fn() };
     const fakeZoweDir = "~/.zowe";
     const readProfilesFromDiskSpy = jest.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk");
     const defaultCredMgrWithKeytarSpy = jest.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar");
@@ -628,6 +637,45 @@ describe("ProfilesCache", () => {
             fakeSession.ISession.proxy = proxyValues as any;
             jest.spyOn(VscSettings, "getVsCodeProxySettings").mockReturnValue(proxyValues as any);
             expect(ProfilesCache.getProfileSessionWithVscProxy(fakeSession)).toEqual(fakeSession);
+        });
+    });
+
+    describe("isCertFileValid", () => {
+        it("should return true with valid certificate file", () => {
+            jest.spyOn(fs, "readFileSync");
+            jest.spyOn(crypto, "X509Certificate").mockImplementationOnce(() => ({
+                subject: "CN=Test",
+                fingerprint256: "mockedFingerprint",
+                validFrom: "2022-01-01",
+                validTo: "2026-01-01",
+            }));
+            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger, __dirname);
+            expect(profCache.isCertFileValid("mockedCertFilePath")).toBe(true);
+        });
+        it("should log invalid cert message and return false with invalid certificate file", () => {
+            const logger = fakeLogger as unknown as imperative.Logger;
+            jest.spyOn(fs, "readFileSync");
+            jest.spyOn(crypto, "X509Certificate").mockImplementationOnce(() => ({
+                subject: "CN=Test",
+                fingerprint256: "mockedFingerprint",
+                validFrom: "2022-01-01",
+                validTo: "2024-01-01",
+            }));
+            const profCache = new ProfilesCache(logger, __dirname);
+            const response = profCache.isCertFileValid("mockedCertFilePath");
+            expect(logger.error).toHaveBeenCalledWith("Certificate file mockedCertFilePath is outside its validity period.");
+            expect(response).toBe(false);
+        });
+        it("should log caught error and return false if error thrown in try", () => {
+            const logger = fakeLogger as unknown as imperative.Logger;
+            const error = new Error("mocked error");
+            jest.spyOn(fs, "readFileSync").mockImplementationOnce(() => {
+                throw error;
+            });
+            const profCache = new ProfilesCache(logger, __dirname);
+            const response = profCache.isCertFileValid("mockedCertFilePath");
+            expect(logger.error).toHaveBeenCalledWith(`Certificate file validation failed for mockedCertFilePath: ${error.message}`);
+            expect(response).toBe(false);
         });
     });
 
