@@ -41,6 +41,7 @@ export namespace Definitions {
     };
     export type DataSetDownloadOptions = {
         overwrite?: boolean;
+        generateDirectory?: boolean;
         preserveCase?: boolean;
         binary?: boolean;
         record?: boolean;
