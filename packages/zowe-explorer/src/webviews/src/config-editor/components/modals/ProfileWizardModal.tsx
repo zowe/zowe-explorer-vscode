@@ -31,6 +31,8 @@ interface ProfileWizardModalProps {
   onCancel: () => void;
   onPopulateDefaults: () => void;
   getPropertyType: (propertyKey: string) => string | undefined;
+  canPropertyBeSecure: (propertyKey: string, path: string[]) => boolean;
+  canPropertyBeSecureForWizard: (propertyKey: string, profileType: string) => boolean;
   stringifyValueByType: (value: string | number | boolean | Object) => string;
   onFilePickerSelect?: (filePath: string) => void;
   vscodeApi: any;
@@ -67,6 +69,8 @@ export function ProfileWizardModal({
   onCancel,
   onPopulateDefaults,
   getPropertyType,
+  canPropertyBeSecure,
+  canPropertyBeSecureForWizard,
   stringifyValueByType,
   vscodeApi,
 }: ProfileWizardModalProps) {
@@ -183,7 +187,7 @@ export function ProfileWizardModal({
                 {l10n.t("Add Property")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}:
               </label>
               <div className="wizard-property-form">
-                <div className="wizard-property-input-container">
+                <div className="wizard-property-input-container" style={{ position: "relative" }}>
                   <input
                     type="text"
                     value={wizardNewPropertyKey}
@@ -197,7 +201,37 @@ export function ProfileWizardModal({
                       wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) ? "error" : ""
                     }`}
                     placeholder={l10n.t("Property key")}
+                    style={{ paddingRight: "2rem" }}
                   />
+                  {wizardNewPropertyKey && (
+                    <button
+                      onClick={() => onNewPropertyKeyChange("")}
+                      className="profile-clear-button"
+                      title="Clear input"
+                      style={{
+                        position: "absolute",
+                        right: "8px",
+                        top: "calc(50% - 4px)",
+                        transform: "translateY(-50%)",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "2px",
+                        borderRadius: "3px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <span
+                        className="codicon codicon-chrome-close"
+                        style={{
+                          fontSize: "12px",
+                          lineHeight: 1,
+                        }}
+                      />
+                    </button>
+                  )}
                   {wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) && (
                     <div className="wizard-error">{l10n.t("Property key already exists")}</div>
                   )}
@@ -264,7 +298,7 @@ export function ProfileWizardModal({
                           if (vscodeApi) {
                             vscodeApi.postMessage({
                               command: "SELECT_FILE",
-                              propertyIndex: -1, // -1 indicates new property
+                              propertyIndex: -1,
                               isNewProperty: true,
                               source: "wizard",
                             });
@@ -278,10 +312,7 @@ export function ProfileWizardModal({
                               const target = event.target as HTMLInputElement;
                               if (target.files && target.files.length > 0) {
                                 const file = target.files[0];
-                                // In a webview context, we can't get the full file path directly
-                                // We'll use the file name and let the user know they may need to provide the full path
                                 const fileName = file.name;
-                                // Try to get additional path info if available
                                 const filePath = (file as any).webkitRelativePath || fileName;
                                 onNewPropertyValueChange(filePath);
                               }
@@ -296,23 +327,30 @@ export function ProfileWizardModal({
                         <span className="codicon codicon-folder-opened"></span>
                       </button>
                     )}
-                    {secureValuesAllowed ? (
-                      <button
-                        onClick={onNewPropertySecureToggle}
-                        className={`wizard-secure-toggle ${wizardNewPropertySecure ? "active" : "inactive"}`}
-                        title={wizardNewPropertySecure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
-                      >
-                        <span className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}></span>
-                      </button>
-                    ) : (
-                      <button
-                        disabled
-                        className="wizard-secure-toggle inactive"
-                        title="A credential manager is not available. Enable a credential manager to use secure properties."
-                      >
-                        <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
-                      </button>
-                    )}
+                    {canPropertyBeSecureForWizard(wizardNewPropertyKey, wizardSelectedType) ? (
+                      secureValuesAllowed ? (
+                        <button
+                          onClick={onNewPropertySecureToggle}
+                          className={`wizard-secure-toggle ${wizardNewPropertySecure ? "active" : "inactive"}`}
+                          title={wizardNewPropertySecure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
+                        >
+                          <span className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}></span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            vscodeApi.postMessage({
+                              command: "OPEN_VSCODE_SETTINGS",
+                              searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
+                            });
+                          }}
+                          className="wizard-secure-toggle inactive"
+                          title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
+                        >
+                          <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                        </button>
+                      )
+                    ) : null}
                   </div>
                 </div>
                 <button
@@ -419,23 +457,30 @@ export function ProfileWizardModal({
                                     />
                                   )}
                                 </div>
-                                {secureValuesAllowed ? (
-                                  <button
-                                    onClick={() => onPropertySecureToggle(index)}
-                                    className={`wizard-property-secure-toggle ${prop.secure ? "active" : "inactive"}`}
-                                    title={prop.secure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
-                                  >
-                                    <span className={`codicon ${prop.secure ? "codicon-lock" : "codicon-unlock"}`}></span>
-                                  </button>
-                                ) : (
-                                  <button
-                                    disabled
-                                    className="wizard-property-secure-toggle inactive"
-                                    title="A credential manager is not available. Enable a credential manager to use secure properties."
-                                  >
-                                    <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
-                                  </button>
-                                )}
+                                {canPropertyBeSecureForWizard(prop.key, wizardSelectedType) ? (
+                                  secureValuesAllowed ? (
+                                    <button
+                                      onClick={() => onPropertySecureToggle(index)}
+                                      className={`wizard-property-secure-toggle ${prop.secure ? "active" : "inactive"}`}
+                                      title={prop.secure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
+                                    >
+                                      <span className={`codicon ${prop.secure ? "codicon-lock" : "codicon-unlock"}`}></span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        vscodeApi.postMessage({
+                                          command: "OPEN_VSCODE_SETTINGS",
+                                          searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
+                                        });
+                                      }}
+                                      className="wizard-property-secure-toggle inactive"
+                                      title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
+                                    >
+                                      <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                                    </button>
+                                  )
+                                ) : null}
                                 <button
                                   onClick={() => onRemoveProperty(index)}
                                   className="wizard-button secondary"
@@ -461,7 +506,7 @@ export function ProfileWizardModal({
                 );
               })()}
 
-              {/* Show "No properties added yet" only when there are no properties at all */}
+              {/* Show "No properties added yet" when there are no properties at all */}
               {(() => {
                 const userPropertyKeys = new Set(wizardProperties.map((prop) => prop.key));
                 const schemaProperties = wizardSelectedType ? propertyOptions || [] : [];

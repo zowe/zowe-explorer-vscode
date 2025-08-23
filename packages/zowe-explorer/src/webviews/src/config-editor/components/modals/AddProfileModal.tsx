@@ -9,6 +9,8 @@ interface AddProfileModalProps {
   isSecure: boolean;
   secureValuesAllowed: boolean;
   getPropertyType: (propertyKey: string) => string | undefined;
+  canPropertyBeSecure: (propertyKey: string, path: string[]) => boolean;
+  newProfileKeyPath: string[];
   vscodeApi: any;
   onNewProfileKeyChange: (value: string) => void;
   onNewProfileValueChange: (value: string) => void;
@@ -27,6 +29,8 @@ export function AddProfileModal({
   isSecure,
   secureValuesAllowed,
   getPropertyType,
+  canPropertyBeSecure,
+  newProfileKeyPath,
   vscodeApi,
   onNewProfileKeyChange,
   onNewProfileValueChange,
@@ -188,25 +192,32 @@ export function AddProfileModal({
                 <span className="codicon codicon-folder-opened"></span>
               </button>
             )}
-            {secureValuesAllowed ? (
-              <button
-                type="button"
-                onClick={onSecureToggle}
-                className={`wizard-secure-toggle ${isSecure ? "active" : "inactive"}`}
-                title={isSecure ? "Unlock property" : "Lock property"}
-              >
-                <span className={`codicon ${isSecure ? "codicon-lock" : "codicon-unlock"}`}></span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled
-                className="wizard-secure-toggle inactive"
-                title="A credential manager is not available. Enable a credential manager to use secure properties."
-              >
-                <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
-              </button>
-            )}
+            {canPropertyBeSecure(newProfileKey, newProfileKeyPath) ? (
+              secureValuesAllowed ? (
+                <button
+                  type="button"
+                  onClick={onSecureToggle}
+                  className={`wizard-secure-toggle ${isSecure ? "active" : "inactive"}`}
+                  title={isSecure ? "Unlock property" : "Lock property"}
+                >
+                  <span className={`codicon ${isSecure ? "codicon-lock" : "codicon-unlock"}`}></span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    vscodeApi.postMessage({
+                      command: "OPEN_VSCODE_SETTINGS",
+                      searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
+                    });
+                  }}
+                  className="wizard-secure-toggle inactive"
+                  title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
+                >
+                  <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                </button>
+              )
+            ) : null}
           </div>
         </div>
         <div className="modal-actions">

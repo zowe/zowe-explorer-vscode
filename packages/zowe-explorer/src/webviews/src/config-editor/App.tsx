@@ -137,7 +137,6 @@ export function App() {
   const [newProfileValue, setNewProfileValue] = useState("");
   const [newProfileModalOpen, setNewProfileModalOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
-  // const [originalDefaults, setOriginalDefaults] = useState<{ [key: string]: any }>({});
   const [newLayerModalOpen, setNewLayerModalOpen] = useState(false);
   const [newLayerName, setNewLayerName] = useState("");
   const [newLayerPath, setNewLayerPath] = useState<string[] | null>(null);
@@ -156,6 +155,10 @@ export function App() {
   const [addConfigModalOpen, setAddConfigModalOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
   const [hasPromptedForZeroConfigs, setHasPromptedForZeroConfigs] = useState(false);
+
+  // Use ref to access current selectedProfileKey in event listeners
+  const selectedProfileKeyRef = useRef<string | null>(null);
+  selectedProfileKeyRef.current = selectedProfileKey;
 
   // Memoize functions to prevent unnecessary re-renders
   const formatPendingChanges = useCallback(() => {
@@ -537,7 +540,6 @@ export function App() {
           const config = contents[indexToUse(selectedTab ?? 0)].properties;
           setFlattenedConfig(flattenKeys(config.profiles));
           setFlattenedDefaults(flattenKeys(config.defaults));
-          // setOriginalDefaults(flattenKeys(config.defaults));
         }
 
         // Send ready message to ConfigEditor after configurations are processed
@@ -680,17 +682,23 @@ export function App() {
 
     // Add window focus listener to refresh data on reload
     const handleWindowFocus = () => {
-      // Refresh configurations when window regains focus
-      vscodeApi.postMessage({ command: "GET_PROFILES" });
-      vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+      // Only refresh configurations if no profile is currently selected
+      // This prevents overwriting merged properties when tabbing back in
+      if (!selectedProfileKeyRef.current) {
+        vscodeApi.postMessage({ command: "GET_PROFILES" });
+        vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+      }
     };
 
     // Add visibility change listener to refresh data when tab becomes visible
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        // Refresh configurations when tab becomes visible
-        vscodeApi.postMessage({ command: "GET_PROFILES" });
-        vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+        // Only refresh configurations if no profile is currently selected
+        // This prevents overwriting merged properties when tabbing back in
+        if (!selectedProfileKeyRef.current) {
+          vscodeApi.postMessage({ command: "GET_PROFILES" });
+          vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+        }
       }
     };
 
@@ -734,8 +742,6 @@ export function App() {
       const config = configurations[selectedTab].properties;
       setFlattenedConfig(flattenKeys(config.profiles));
       setFlattenedDefaults(flattenKeys(config.defaults));
-      // setOriginalDefaults(
-      // flattenKeys(config.defaults));
       // Clear merged properties when tab changes (but not when saving or navigating)
       if (!isSaving && !isNavigating) {
         setMergedProperties(null);
@@ -1711,9 +1717,100 @@ export function App() {
     return false;
   };
 
+  // Helper function to get profile type from path
+  const getProfileTypeFromPath = (path: string[]): string | undefined => {
+    if (!path || path.length === 0) {
+      return undefined;
+    }
+
+    // Get the profile type from the path
+    const profileTypePath = path.slice(0, -1); // Remove "properties" from the path
+    const profileKey = extractProfileKeyFromPath(path);
+    const configPath = configurations[selectedTab!]?.configPath;
+
+    // First check if there's a pending type change
+    if (profileKey && configPath) {
+      const typeKey = `profiles.${profileKey}.type`;
+      const pendingType = pendingChanges[configPath]?.[typeKey]?.value;
+      if (pendingType && typeof pendingType === "string") {
+        return pendingType;
+      }
+    }
+
+    // Fall back to the current type from the configuration
+    return getNestedProperty(configurations[selectedTab!]?.properties, profileTypePath)?.type;
+  };
+
+  // Helper function to check if a property can be made secure based on the schema
+  const canPropertyBeSecure = (displayKey: string, path: string[]): boolean => {
+    if (!displayKey || !path || path.length === 0) {
+      return false;
+    }
+
+    // Get the profile type from the path
+    const profileType = getProfileTypeFromPath(path);
+    if (!profileType) {
+      return false;
+    }
+
+    // Get the schema validation for the current configuration
+    const configPath = configurations[selectedTab!]?.configPath;
+    if (!configPath) {
+      return false;
+    }
+
+    const schemaValidation = schemaValidations[configPath];
+    if (!schemaValidation || !schemaValidation.propertySchema) {
+      return false;
+    }
+
+    // Get the properties for this profile type from the schema
+    const profileSchema = schemaValidation.propertySchema[profileType];
+    if (!profileSchema) {
+      return false;
+    }
+
+    // Check if this property is marked as secure in the schema (case insensitive)
+    const displayKeyLower = displayKey.toLowerCase();
+    const propertySchema = Object.entries(profileSchema).find(([key]) => key.toLowerCase() === displayKeyLower)?.[1];
+    return propertySchema?.secure === true;
+  };
+
+  // Helper function to check if a property can be made secure based on the schema (for wizard)
+  const canPropertyBeSecureForWizard = (displayKey: string, profileType: string): boolean => {
+    if (!displayKey || !profileType) {
+      return false;
+    }
+
+    // Get the schema validation for the current configuration
+    const configPath = configurations[selectedTab!]?.configPath;
+    if (!configPath) {
+      return false;
+    }
+
+    const schemaValidation = schemaValidations[configPath];
+    if (!schemaValidation || !schemaValidation.propertySchema) {
+      return false;
+    }
+
+    // Get the properties for this profile type from the schema
+    const profileSchema = schemaValidation.propertySchema[profileType];
+    if (!profileSchema) {
+      return false;
+    }
+
+    // Check if this property is marked as secure in the schema (case insensitive)
+    const displayKeyLower = displayKey.toLowerCase();
+    const propertySchema = Object.entries(profileSchema).find(([key]) => key.toLowerCase() === displayKeyLower)?.[1];
+    return propertySchema?.secure === true;
+  };
+
   // Helper function to determine if a property is currently secure
   const isPropertySecure = (fullKey: string, displayKey: string, path: string[], mergedProps?: any, originalProperties?: any): boolean => {
-    const configPath = configurations[selectedTab!]!.configPath;
+    const configPath = configurations[selectedTab!]?.configPath;
+    if (!configPath) {
+      return false;
+    }
 
     // Check if this property is from merged properties
     const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, originalProperties, configPath);
@@ -1749,7 +1846,11 @@ export function App() {
       return;
     }
 
-    const configPath = configurations[selectedTab!]!.configPath;
+    const configPath = configurations[selectedTab!]?.configPath;
+    if (!configPath) {
+      return;
+    }
+
     const profileKey = extractProfileKeyFromPath(path);
     const currentSecure = isPropertySecure(fullKey, displayKey, path);
     const newSecure = !currentSecure;
@@ -1777,7 +1878,10 @@ export function App() {
 
   // Helper function to check if a profile has any pending secure state changes
   const hasPendingSecureChanges = (profileKey: string): boolean => {
-    const configPath = configurations[selectedTab!]!.configPath;
+    const configPath = configurations[selectedTab!]?.configPath;
+    if (!configPath) {
+      return false;
+    }
     const pendingChangesForConfig = pendingChanges[configPath] || {};
 
     // Check if any property in this profile has a pending secure state change
@@ -2052,8 +2156,12 @@ export function App() {
         </div>
         {selectedProfileKey &&
           (() => {
-            const flatProfiles = flattenProfiles(configurations[selectedTab!]!.properties.profiles);
-            const configPath = configurations[selectedTab!]!.configPath;
+            const currentConfig = configurations[selectedTab!];
+            if (!currentConfig) {
+              return null;
+            }
+            const flatProfiles = flattenProfiles(currentConfig.properties?.profiles || {});
+            const configPath = currentConfig.configPath;
 
             // Use the helper function to extract pending profiles
             const pendingProfiles = extractPendingProfiles(configPath);
@@ -2092,7 +2200,10 @@ export function App() {
 
   const renderConfig = (obj: any, path: string[] = [], mergedProps?: any) => {
     const baseObj = cloneDeep(obj);
-    const configPath = configurations[selectedTab!]!.configPath;
+    const configPath = configurations[selectedTab!]?.configPath;
+    if (!configPath) {
+      return null;
+    }
 
     // Merge pending changes
     let combinedConfig = mergePendingChangesForProfile(baseObj, path, configPath);
@@ -2214,6 +2325,7 @@ export function App() {
                 style={{
                   cursor: displayKey?.toLocaleLowerCase() === "properties" ? "pointer" : "default",
                   userSelect: "none",
+                  textDecoration: displayKey?.toLocaleLowerCase() === "properties" ? "underline" : "none",
                 }}
                 onClick={() => {
                   if (displayKey?.toLocaleLowerCase() === "properties") {
@@ -2234,7 +2346,7 @@ export function App() {
               </h3>
               <button
                 className="header-button"
-                title={`Add key inside \"${fullKey}\"`}
+                title={`Create new property for \"${extractProfileKeyFromPath(currentPath)}\"`}
                 onClick={() => openAddProfileModalAtPath(currentPath)}
                 style={{
                   padding: "2px",
@@ -2375,7 +2487,7 @@ export function App() {
                       className="config-input"
                       type="password"
                       placeholder="••••••••"
-                      value="••••••••"
+                      value={isFromMergedProps ? "••••••••" : stringifyValueByType(pendingValue)}
                       onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
                       disabled={isFromMergedProps}
                       style={
@@ -2466,26 +2578,33 @@ export function App() {
                 const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties);
                 // Only show lock/unlock button for properties that are not already defined as secure in the profile's secure array
                 const isDefinedAsSecureInProfile = isSecurePropertyForSorting;
+                const canBeSecure = canPropertyBeSecure(displayKey, path);
                 return (
                   <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                    {!isDefinedAsSecureInProfile && secureValuesAllowed && (
-                      <button
-                        className="action-button"
-                        onClick={() => handleToggleSecure(fullKey, displayKey, path)}
-                        title={isSecure ? "Make property non-secure" : "Make property secure"}
-                      >
-                        <span className={`codicon codicon-${isSecure ? "lock" : "unlock"}`}></span>
-                      </button>
-                    )}
-                    {!isDefinedAsSecureInProfile && !secureValuesAllowed && (
-                      <button
-                        className="action-button"
-                        disabled
-                        title="A credential manager is not available. Enable a credential manager to use secure properties."
-                      >
-                        <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
-                      </button>
-                    )}
+                    {!isDefinedAsSecureInProfile &&
+                      canBeSecure &&
+                      (secureValuesAllowed ? (
+                        <button
+                          className="action-button"
+                          onClick={() => handleToggleSecure(fullKey, displayKey, path)}
+                          title={isSecure ? "Make property non-secure" : "Make property secure"}
+                        >
+                          <span className={`codicon codicon-${isSecure ? "lock" : "unlock"}`}></span>
+                        </button>
+                      ) : (
+                        <button
+                          className="action-button"
+                          onClick={() => {
+                            vscodeApi.postMessage({
+                              command: "OPEN_VSCODE_SETTINGS",
+                              searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
+                            });
+                          }}
+                          title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
+                        >
+                          <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                        </button>
+                      ))}
                     <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
                       <span className="codicon codicon-trash"></span>
                     </button>
@@ -2499,9 +2618,9 @@ export function App() {
                   e.stopPropagation();
                   handleUnlinkMergedProperty(displayKey, fullKey);
                 }}
-                title="Unlink merged property"
+                title="Overwrite merged property"
               >
-                <span className="codicon codicon-remove"></span>
+                <span className="codicon codicon-add"></span>
               </button>
             )}
           </div>
@@ -2594,9 +2713,6 @@ export function App() {
                       .map((item: any, index: number) => (
                         <div className="list-item" key={index}>
                           {item}
-                          {/* <button className="action-button" style={{ marginLeft: "8px" }} onClick={() => handleDeleteDefaultsProperty(fullKey)}>
-                            <span className="codicon codicon-trash"></span>
-                          </button> */}
                         </div>
                       ))}
                   </div>
@@ -2947,6 +3063,8 @@ export function App() {
         isSecure={isSecure}
         secureValuesAllowed={secureValuesAllowed}
         getPropertyType={getPropertyTypeForAddProfile}
+        canPropertyBeSecure={canPropertyBeSecure}
+        newProfileKeyPath={newProfileKeyPath || []}
         vscodeApi={vscodeApi}
         onNewProfileKeyChange={setNewProfileKey}
         onNewProfileValueChange={setNewProfileValue}
@@ -3008,6 +3126,8 @@ export function App() {
         onCancel={handleWizardCancel}
         onPopulateDefaults={handleWizardPopulateDefaults}
         getPropertyType={getPropertyType}
+        canPropertyBeSecure={canPropertyBeSecure}
+        canPropertyBeSecureForWizard={canPropertyBeSecureForWizard}
         stringifyValueByType={stringifyValueByType}
         vscodeApi={vscodeApi}
       />

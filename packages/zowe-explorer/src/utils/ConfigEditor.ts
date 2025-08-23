@@ -34,7 +34,7 @@ type LayerModifications = {
 };
 
 export type schemaValidation = {
-    propertySchema: Record<string, Record<string, { type?: string; description?: string; default?: any }>>;
+    propertySchema: Record<string, Record<string, { type?: string; description?: string; default?: any; secure?: boolean }>>;
     validDefaults: string[];
 };
 
@@ -82,11 +82,15 @@ export class ConfigEditor extends WebView {
     }
 
     private async areSecureValuesAllowed(): Promise<boolean> {
-        const profilesCache = ZoweVsCodeExtension.profilesCache;
+        const profilesCache = (ZoweVsCodeExtension as any).profilesCache;
         if (!profilesCache) {
             return false;
         }
-        return (((await profilesCache.getProfileInfo()) as any).mCredentials.isCredentialManagerInAppSettings() ?? false) as boolean;
+        try {
+            return (((await profilesCache.getProfileInfo()) as any).mCredentials.isCredentialManagerInAppSettings() ?? false) as boolean;
+        } catch {
+            return false;
+        }
     }
 
     protected async getLocalConfigs(): Promise<any[]> {
@@ -456,14 +460,7 @@ export class ConfigEditor extends WebView {
                 }
                 break;
             }
-            case "PREVIEW_ARGS": {
-                const mergedArgs = await this.getMergedArgsForProfile(message.profilePath, message.configPath);
-                await this.panel.webview.postMessage({
-                    command: "PREVIEW_ARGS",
-                    mergedArgs,
-                });
-                break;
-            }
+
             case "GET_MERGED_PROPERTIES": {
                 const mergedArgs = await this.getPendingMergedArgsForProfile(message.profilePath, message.configPath, message.changes);
                 await this.panel.webview.postMessage({
@@ -541,6 +538,18 @@ export class ConfigEditor extends WebView {
                         break;
                     }
 
+                    // Ensure the directory exists for global configurations
+                    if (global && !fs.existsSync(rootPath)) {
+                        try {
+                            fs.mkdirSync(rootPath, { recursive: true });
+                        } catch (dirError) {
+                            vscode.window.showErrorMessage(
+                                `Cannot create directory ${rootPath}: ${dirError instanceof Error ? dirError.message : String(dirError)}`
+                            );
+                            break;
+                        }
+                    }
+
                     // Check for existing configuration and handle conflicts
                     const existingFile = await this.checkExistingConfig(rootPath, user);
                     if (existingFile === false) {
@@ -558,7 +567,12 @@ export class ConfigEditor extends WebView {
                     });
 
                     // Activate the appropriate layer
-                    if (ZoweVsCodeExtension.workspaceRoot != null) {
+                    // For global configurations, we need to activate the layer properly
+                    if (global) {
+                        // For global configs, activate the layer without workspace dependency
+                        config.api.layers.activate(user, global);
+                    } else if (ZoweVsCodeExtension.workspaceRoot != null) {
+                        // For project configs, activate with workspace path
                         config.api.layers.activate(user, global, rootPath);
                     }
 
@@ -578,7 +592,18 @@ export class ConfigEditor extends WebView {
                         profiles: [...knownCliConfig],
                         baseProfile: ProfileConstants.BaseProfile,
                     };
+
+                    // For global user configs, we need to ensure the config is built correctly
                     const newConfig: any = await ConfigBuilder.build(impConfig, global, opts);
+
+                    // Log the configuration details for debugging
+                    console.log(`Creating config - Global: ${global}, User: ${user}, RootPath: ${rootPath}`);
+                    console.log(
+                        `Config name: ${user ? "user" : "team"}, Expected path: ${path.join(
+                            rootPath,
+                            user ? "zowe.config.user.json" : "zowe.config.json"
+                        )}`
+                    );
 
                     // Merge and save the configuration
                     config.api.layers.merge(newConfig);
@@ -592,8 +617,24 @@ export class ConfigEditor extends WebView {
                         configName = config.configName;
                     }
 
-                    // Open the config file
-                    await ZoweVsCodeExtension.openConfigFile(path.join(rootPath, configName));
+                    const configFilePath = path.join(rootPath, configName);
+
+                    // Add a small delay to ensure the file is fully written to disk
+                    await new Promise((resolve) => setTimeout(resolve, 100));
+
+                    // Check if the file exists before trying to open it
+                    if (fs.existsSync(configFilePath)) {
+                        // Open the config file
+                        await ZoweVsCodeExtension.openConfigFile(configFilePath);
+                        vscode.window.showInformationMessage(`Configuration file created and opened: ${configFilePath}`);
+                    } else {
+                        // If file doesn't exist, show an error message
+                        vscode.window.showErrorMessage(
+                            `Failed to create configuration file at: ${configFilePath}. Please check permissions and try again.`
+                        );
+                        console.error(`Configuration file not found at expected path: ${configFilePath}`);
+                        console.error(`Root path: ${rootPath}, Config name: ${configName}, User: ${user}, Global: ${global}`);
+                    }
 
                     // Refresh the configurations in the webview
                     const configs = await this.getLocalConfigs();
@@ -602,7 +643,8 @@ export class ConfigEditor extends WebView {
                         contents: configs,
                     });
                 } catch (error) {
-                    vscode.window.showErrorMessage("Error creating new configuration");
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    vscode.window.showErrorMessage(`Error creating new configuration: ${errorMessage}`);
                 }
                 break;
             }
@@ -622,6 +664,16 @@ export class ConfigEditor extends WebView {
                         key: message.key,
                         error: errorMessage,
                     });
+                }
+                break;
+            }
+            case "OPEN_VSCODE_SETTINGS": {
+                try {
+                    const searchText = message.searchText || "";
+                    await vscode.commands.executeCommand("workbench.action.openSettings", searchText);
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    vscode.window.showErrorMessage(`Error opening VS Code settings: ${errorMessage}`);
                 }
                 break;
             }
@@ -757,12 +809,13 @@ export class ConfigEditor extends WebView {
     }
 
     private generateSchemaValidation(schema: any): schemaValidation {
-        const propertySchema: Record<string, Record<string, { type?: string; description?: string; default?: any }>> = {};
+        const propertySchema: Record<string, Record<string, { type?: string; description?: string; default?: any; secure?: boolean }>> = {};
         const allOf = schema.properties.profiles.patternProperties["^\\S*$"].allOf;
 
         for (const rule of allOf) {
             const profileType = rule?.if?.properties?.type?.const;
             const properties = rule?.then?.properties?.properties?.properties;
+            const secureProperties = rule?.then?.properties?.secure?.items?.enum || [];
 
             if (profileType && properties) {
                 propertySchema[profileType] = Object.keys(properties).reduce((acc, key) => {
@@ -770,9 +823,10 @@ export class ConfigEditor extends WebView {
                         type: properties[key].type,
                         description: properties[key].description,
                         default: properties[key].default,
+                        secure: secureProperties.includes(key),
                     };
                     return acc;
-                }, {} as Record<string, { type?: string; description?: string; default?: any }>);
+                }, {} as Record<string, { type?: string; description?: string; default?: any; secure?: boolean }>);
             }
         }
 
@@ -782,18 +836,6 @@ export class ConfigEditor extends WebView {
         };
     }
 
-    // WIP
-    private async getMergedArgsForProfile(profPath: string, configPath: string): Promise<any> {
-        const profInfo = new ProfileInfo("zowe");
-        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
-        const allProfiles = profInfo.getAllProfiles();
-        const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
-        if (!profile) {
-            return;
-        }
-        const mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
-        return mergedArgs.knownArgs;
-    }
     private async getPendingMergedArgsForProfile(profPath: string, configPath: string, changes: any): Promise<any> {
         const profInfo = new ProfileInfo("zowe");
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
