@@ -43,6 +43,8 @@ export namespace Definitions {
         overwrite?: boolean;
         preserveCase?: boolean;
         binary?: boolean;
+        record?: boolean;
+        selectedPath?: vscode.Uri;
     };
     export type FavoriteData = {
         profileName: string;
