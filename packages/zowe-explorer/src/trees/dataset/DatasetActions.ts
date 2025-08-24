@@ -656,7 +656,7 @@ export class DatasetActions {
             },
             {
                 label: vscode.l10n.t("Preserve Original Letter Case"),
-                description: vscode.l10n.t("If this and the above option are checked, names will be downloaded in all upper case"),
+                description: vscode.l10n.t("Specifies if the automatically generated directories and files use the original letter case"),
                 picked: dataSetDownloadOptions.preserveCase,
             },
             {
@@ -666,7 +666,7 @@ export class DatasetActions {
             },
             {
                 label: vscode.l10n.t("Record"),
-                description: vscode.l10n.t("Download the file content in record mode"),
+                description: vscode.l10n.t("Download members in record mode"),
                 picked: dataSetDownloadOptions.record,
             },
         ];
@@ -738,7 +738,7 @@ export class DatasetActions {
         dataSetDownloadOptions.selectedPath = vscode.Uri.file(selectedPath);
         await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS, dataSetDownloadOptions);
 
-        // Step 4: Download all members using the SDK
+        // Step 4: Download all members
         await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -768,7 +768,9 @@ export class DatasetActions {
 
                     // Have to do this here because otherwise the data set gets downloaded to VS Code's install directory
                     const dirsFromDataset = zosfiles.ZosFilesUtils.getDirsFromDataSet(datasetName);
-                    const generatedFileDirectory = path.join(selectedPath, dirsFromDataset);
+                    const generatedFileDirectory = preserveOriginalLetterCase
+                        ? path.join(selectedPath, dirsFromDataset.toUpperCase())
+                        : path.join(selectedPath, dirsFromDataset);
 
                     const downloadOptions: zosfiles.IDownloadOptions = {
                         directory: generateDirectory ? generatedFileDirectory : selectedPath,
@@ -797,6 +799,7 @@ export class DatasetActions {
      */
     public static async downloadMember(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.downloadMember called.");
+
         const profile = node.getProfile();
         await Profiles.getInstance().checkCurrentProfile(profile);
         if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
@@ -804,15 +807,17 @@ export class DatasetActions {
             return;
         }
 
-        // Step 1: Show options quick pick (reuse from downloadAllMembers)
         const dataSetDownloadOptions: Definitions.DataSetDownloadOptions =
             ZoweLocalStorage.getValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS) ?? {};
 
         dataSetDownloadOptions.overwrite ??= true;
+        dataSetDownloadOptions.generateDirectory ??= false;
         dataSetDownloadOptions.preserveCase ??= true;
         dataSetDownloadOptions.binary ??= false;
         dataSetDownloadOptions.record ??= false;
+        dataSetDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
 
+        // Step 1: Show options quick pick
         const optionItems: vscode.QuickPickItem[] = [
             {
                 label: vscode.l10n.t("Overwrite"),
@@ -820,18 +825,23 @@ export class DatasetActions {
                 picked: dataSetDownloadOptions.overwrite,
             },
             {
+                label: vscode.l10n.t("Generate Directory Structure"),
+                description: vscode.l10n.t("Generates sub-folders based on the data set name"),
+                picked: dataSetDownloadOptions.generateDirectory,
+            },
+            {
                 label: vscode.l10n.t("Preserve Original Letter Case"),
-                description: vscode.l10n.t("Preserve original letter case of member names"),
+                description: vscode.l10n.t("Specifies if the automatically generated directories and files use the original letter case"),
                 picked: dataSetDownloadOptions.preserveCase,
             },
             {
                 label: vscode.l10n.t("Binary"),
-                description: vscode.l10n.t("Download members as binary files"),
+                description: vscode.l10n.t("Download member as binary file"),
                 picked: dataSetDownloadOptions.binary,
             },
             {
                 label: vscode.l10n.t("Record"),
-                description: vscode.l10n.t("Download the file content in record mode"),
+                description: vscode.l10n.t("Download member in record mode"),
                 picked: dataSetDownloadOptions.record,
             },
         ];
@@ -845,18 +855,29 @@ export class DatasetActions {
         optionsQuickPick.selectedItems = optionItems.filter((item) => item.picked);
 
         const selectedOptions: vscode.QuickPickItem[] = await new Promise((resolve) => {
+            let wasAccepted = false;
+
             optionsQuickPick.onDidAccept(() => {
+                wasAccepted = true;
                 resolve(Array.from(optionsQuickPick.selectedItems));
                 optionsQuickPick.hide();
             });
+
             optionsQuickPick.onDidHide(() => {
-                resolve([]);
-                Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
-                return;
+                if (!wasAccepted) {
+                    resolve(null);
+                }
             });
+
             optionsQuickPick.show();
         });
         optionsQuickPick.dispose();
+
+        // Do this instead of checking for length because unchecking all options is a valid choice
+        if (selectedOptions === null) {
+            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+            return;
+        }
 
         // Step 2: Ask for download location
         const dialogOptions: vscode.OpenDialogOptions = {
@@ -864,6 +885,7 @@ export class DatasetActions {
             canSelectFolders: true,
             canSelectMany: false,
             openLabel: vscode.l10n.t("Select Download Location"),
+            defaultUri: dataSetDownloadOptions.selectedPath,
         };
 
         const downloadPath = await Gui.showOpenDialog(dialogOptions);
@@ -878,65 +900,67 @@ export class DatasetActions {
         // Step 3: Map selected options to download options
         const getOption = (label: string): boolean => selectedOptions.some((opt) => opt.label === vscode.l10n.t(label));
         const overwrite = getOption("Overwrite");
+        const generateDirectory = getOption("Generate Directory Structure");
         const preserveOriginalLetterCase = getOption("Preserve Original Letter Case");
         const binary = getOption("Binary");
         const record = getOption("Record");
 
         dataSetDownloadOptions.overwrite = overwrite;
+        dataSetDownloadOptions.generateDirectory = generateDirectory;
         dataSetDownloadOptions.preserveCase = preserveOriginalLetterCase;
         dataSetDownloadOptions.binary = binary;
         dataSetDownloadOptions.record = record;
+        dataSetDownloadOptions.selectedPath = vscode.Uri.file(selectedPath);
         await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS, dataSetDownloadOptions);
 
         // Step 4: Download the member
-        try {
-            // Build file path
-            const parent = node.getParent();
-            const dsName = parent.getLabel() as string;
-            const memberName = node.getLabel() as string;
-            const extension = DatasetUtils.getExtension(dsName);
-            const fileName = preserveOriginalLetterCase ? memberName : memberName.toUpperCase();
-            const filePath = path.join(selectedPath, `${fileName}${extension ? extension : ""}`);
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: vscode.l10n.t("Downloading member"),
+                cancellable: true,
+            },
+            async (_) => {
+                try {
+                    const parent = node.getParent() as IZoweDatasetTreeNode;
+                    const datasetName = parent.getLabel() as string;
+                    const memberName = node.getLabel() as string;
+                    const fullDatasetName = `${datasetName}(${memberName})`;
 
-            // Handle overwrite logic
-            if (overwrite) {
-                try {
-                    await vscode.workspace.fs.stat(vscode.Uri.file(filePath));
-                    try {
-                        await vscode.workspace.fs.delete(vscode.Uri.file(filePath), { recursive: false, useTrash: false });
-                    } catch (deleteErr) {
-                        ZoweLogger.error(`Failed to delete existing file for overwrite: ${filePath} - ${deleteErr.message as string}`);
-                        Gui.errorMessage(vscode.l10n.t("Failed to delete existing file for overwrite: {0}", filePath));
-                        return;
-                    }
-                } catch {
-                    // File does not exist, nothing to delete
-                }
-            } else {
-                try {
-                    await vscode.workspace.fs.stat(vscode.Uri.file(filePath));
-                    ZoweLogger.info(`File exists and overwrite is false, skipping: ${filePath}`);
-                    Gui.showMessage(vscode.l10n.t("File already exists and overwrite is disabled."));
-                    return;
-                } catch {
-                    // File does not exist, continue
+                    const fileName = preserveOriginalLetterCase ? memberName : memberName.toLowerCase();
+
+                    const extensionMap = await DatasetUtils.getExtensionMap(parent, preserveOriginalLetterCase);
+                    const extension =
+                        extensionMap[fileName] || DatasetUtils.getExtension(datasetName) || zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+
+                    const filePath = path.join(selectedPath, `${fileName}.${extension}`);
+
+                    // Have to do this here because otherwise the data set gets downloaded to VS Code's install directory
+                    const dirsFromDataset = zosfiles.ZosFilesUtils.getDirsFromDataSet(datasetName);
+                    const generatedDir = path.join(selectedPath, dirsFromDataset);
+                    const generatedFilePath = preserveOriginalLetterCase
+                        ? path.join(generatedDir.toUpperCase(), `${fileName}.${extension}`)
+                        : path.join(generatedDir, `${fileName}.${extension}`);
+
+                    const downloadOptions: zosfiles.IDownloadSingleOptions = {
+                        file: generateDirectory ? generatedFilePath : filePath,
+                        binary,
+                        record,
+                        // no extension or preserveOriginalLetterCase because it is not used when passing in file option
+                        overwrite,
+                        responseTimeout: profile?.profile?.responseTimeout,
+                    };
+
+                    // TODO: Should we make new function in ZE API called downloadMember that's identical to getContents?
+                    // Just in case getContents changes in the future. They are functionally identical at the moment
+                    await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
+
+                    Gui.showMessage(vscode.l10n.t("Member downloaded successfully"));
+                } catch (e) {
+                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
                 }
             }
-
-            // Download the member
-            const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
-            const downloadOptions: zosfiles.IDownloadOptions = {
-                file: filePath,
-                binary,
-                record,
-                extension,
-                responseTimeout: profile?.profile?.responseTimeout,
-            };
-            await mvsApi.getContents(dsName, downloadOptions);
-            Gui.showMessage(vscode.l10n.t("Member downloaded successfully"));
-        } catch (e) {
-            await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile });
-        }
+        );
     }
 
     /**
