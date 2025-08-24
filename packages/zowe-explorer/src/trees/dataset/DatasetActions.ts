@@ -26,6 +26,7 @@ import {
     type AttributeInfo,
     DataSetAttributesProvider,
     ZosEncoding,
+    MessageSeverity,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
@@ -712,6 +713,38 @@ export class DatasetActions {
         return dataSetDownloadOptions;
     }
 
+    private static generateDirectoryPath(datasetName: string, selectedPath: vscode.Uri, generateDirectory: boolean, preserveCase: boolean): string {
+        if (!generateDirectory) {
+            return selectedPath.fsPath;
+        }
+
+        const dirsFromDataset = zosfiles.ZosFilesUtils.getDirsFromDataSet(datasetName);
+        return preserveCase ? path.join(selectedPath.fsPath, dirsFromDataset.toUpperCase()) : path.join(selectedPath.fsPath, dirsFromDataset);
+    }
+
+    private static async executeDownloadWithProgress(
+        title: string,
+        downloadFn: (progress?: vscode.Progress<{ message?: string; increment?: number }>) => Promise<void>,
+        successMessage: string,
+        node: IZoweDatasetTreeNode
+    ): Promise<void> {
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title,
+                cancellable: true,
+            },
+            async (progress) => {
+                try {
+                    await downloadFn(progress);
+                    Gui.showMessage(successMessage);
+                } catch (e) {
+                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+                }
+            }
+        );
+    }
+
     /**
      * Downloads all the members of a PDS
      */
@@ -731,18 +764,27 @@ export class DatasetActions {
             return;
         }
 
+        if (children.length > Constants.MIN_WARN_DOWNLOAD_FILES) {
+            const proceed = await Gui.showMessage(
+                vscode.l10n.t(
+                    "This data set has {0} members. Downloading a large number of files may take a long time. Do you want to continue?",
+                    children.length
+                ),
+                { severity: MessageSeverity.WARN, items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")], vsCodeOpts: { modal: true } }
+            );
+            if (proceed !== vscode.l10n.t("Yes")) {
+                return;
+            }
+        }
+
         const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions();
         if (!dataSetDownloadOptions) {
             return;
         }
         const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, binary, record, selectedPath } = dataSetDownloadOptions;
 
-        await Gui.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: vscode.l10n.t("Downloading all members"),
-                cancellable: true,
-            },
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading all members"),
             async (progress) => {
                 let realPercentComplete = 0;
                 const realTotalEntries = children.length;
@@ -759,36 +801,33 @@ export class DatasetActions {
                     stageName: 0, // TaskStage.IN_PROGRESS
                 };
 
-                try {
-                    const datasetName = node.label as string;
-                    const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
-                    const extensionMap = await DatasetUtils.getExtensionMap(node, preserveOriginalLetterCase);
+                const datasetName = node.label as string;
+                const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
+                const extensionMap = await DatasetUtils.getExtensionMap(node, preserveOriginalLetterCase);
 
-                    // Have to do this here because otherwise the data set gets downloaded to VS Code's install directory
-                    const dirsFromDataset = zosfiles.ZosFilesUtils.getDirsFromDataSet(datasetName);
-                    const generatedFileDirectory = preserveOriginalLetterCase
-                        ? path.join(selectedPath.fsPath, dirsFromDataset.toUpperCase())
-                        : path.join(selectedPath.fsPath, dirsFromDataset);
+                const generatedFileDirectory = DatasetActions.generateDirectoryPath(
+                    datasetName,
+                    selectedPath,
+                    generateDirectory,
+                    preserveOriginalLetterCase
+                );
 
-                    const downloadOptions: zosfiles.IDownloadOptions = {
-                        directory: generateDirectory ? generatedFileDirectory : selectedPath.fsPath,
-                        maxConcurrentRequests,
-                        preserveOriginalLetterCase,
-                        extensionMap,
-                        binary,
-                        record,
-                        overwrite,
-                        task,
-                        responseTimeout: profile?.profile?.responseTimeout,
-                    };
+                const downloadOptions: zosfiles.IDownloadOptions = {
+                    directory: generatedFileDirectory,
+                    maxConcurrentRequests,
+                    preserveOriginalLetterCase,
+                    extensionMap,
+                    binary,
+                    record,
+                    overwrite,
+                    task,
+                    responseTimeout: profile?.profile?.responseTimeout,
+                };
 
-                    await ZoweExplorerApiRegister.getMvsApi(profile).downloadAllMembers(datasetName, downloadOptions);
-
-                    Gui.showMessage(vscode.l10n.t("Dataset downloaded successfully"));
-                } catch (e) {
-                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
-                }
-            }
+                await ZoweExplorerApiRegister.getMvsApi(profile).downloadAllMembers(datasetName, downloadOptions);
+            },
+            vscode.l10n.t("Dataset downloaded successfully"),
+            node
         );
     }
 
@@ -811,52 +850,36 @@ export class DatasetActions {
         }
         const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, binary, record, selectedPath } = dataSetDownloadOptions;
 
-        await Gui.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: vscode.l10n.t("Downloading member"),
-                cancellable: true,
-            },
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading member"),
             async () => {
-                try {
-                    const parent = node.getParent() as IZoweDatasetTreeNode;
-                    const datasetName = parent.getLabel() as string;
-                    const memberName = node.getLabel() as string;
-                    const fullDatasetName = `${datasetName}(${memberName})`;
+                const parent = node.getParent() as IZoweDatasetTreeNode;
+                const datasetName = parent.getLabel() as string;
+                const memberName = node.getLabel() as string;
+                const fullDatasetName = `${datasetName}(${memberName})`;
 
-                    const fileName = preserveOriginalLetterCase ? memberName : memberName.toLowerCase();
+                const fileName = preserveOriginalLetterCase ? memberName : memberName.toLowerCase();
 
-                    const extensionMap = await DatasetUtils.getExtensionMap(parent, preserveOriginalLetterCase);
-                    const extension =
-                        extensionMap[fileName] || DatasetUtils.getExtension(datasetName) || zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+                const extensionMap = await DatasetUtils.getExtensionMap(parent, preserveOriginalLetterCase);
+                const extension = extensionMap[fileName] ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
 
-                    const filePath = path.join(selectedPath.fsPath, `${fileName}.${extension}`);
+                const targetDirectory = generateDirectory
+                    ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, preserveOriginalLetterCase)
+                    : selectedPath.fsPath;
+                const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
 
-                    // Have to do this here because otherwise the data set gets downloaded to VS Code's install directory
-                    const dirsFromDataset = zosfiles.ZosFilesUtils.getDirsFromDataSet(datasetName);
-                    const generatedDir = path.join(selectedPath.fsPath, dirsFromDataset);
-                    const generatedFilePath = preserveOriginalLetterCase
-                        ? path.join(generatedDir.toUpperCase(), `${fileName}.${extension}`)
-                        : path.join(generatedDir, `${fileName}.${extension}`);
+                const downloadOptions = {
+                    file: filePath,
+                    binary,
+                    record,
+                    overwrite,
+                    responseTimeout: profile?.profile?.responseTimeout,
+                };
 
-                    const downloadOptions: zosfiles.IDownloadSingleOptions = {
-                        file: generateDirectory ? generatedFilePath : filePath,
-                        binary,
-                        record,
-                        // no extension or preserveOriginalLetterCase because they are not used when passing in file option
-                        overwrite,
-                        responseTimeout: profile?.profile?.responseTimeout,
-                    };
-
-                    // TODO: Should we make new function in ZE API called downloadMember that's identical to getContents?
-                    // Just in case getContents changes in the future. They are functionally identical at the moment
-                    await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
-
-                    Gui.showMessage(vscode.l10n.t("Member downloaded successfully"));
-                } catch (e) {
-                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
-                }
-            }
+                await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
+            },
+            vscode.l10n.t("Member downloaded successfully"),
+            node
         );
     }
 
@@ -884,49 +907,37 @@ export class DatasetActions {
         }
         const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, binary, record, selectedPath } = dataSetDownloadOptions;
 
-        await Gui.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: vscode.l10n.t("Downloading data set"),
-                cancellable: true,
-            },
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading data set"),
             async () => {
-                try {
-                    const datasetName = node.getLabel() as string;
+                const datasetName = node.getLabel() as string;
 
-                    let fileName = preserveOriginalLetterCase ? datasetName : datasetName.toLowerCase();
-
-                    let targetPath = selectedPath.fsPath;
-                    if (generateDirectory) {
-                        const dirsFromDataset = zosfiles.ZosFilesUtils.getDirsFromDataSet(datasetName);
-                        const generatedDirectory = preserveOriginalLetterCase
-                            ? path.join(selectedPath.fsPath, dirsFromDataset.toUpperCase())
-                            : path.join(selectedPath.fsPath, dirsFromDataset);
-
-                        const pathParts = fileName.split(".");
-                        fileName = pathParts[pathParts.length - 1];
-                        targetPath = generatedDirectory;
-                    }
-
-                    const extension = DatasetUtils.getExtension(datasetName) || zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
-                    const filePath = path.join(targetPath, `${fileName}.${extension}`);
-
-                    const downloadOptions: zosfiles.IDownloadSingleOptions = {
-                        file: filePath,
-                        binary,
-                        record,
-                        // no extension or preserveOriginalLetterCase because they are not used when passing in file option
-                        overwrite,
-                        responseTimeout: profile?.profile?.responseTimeout,
-                    };
-
-                    await ZoweExplorerApiRegister.getMvsApi(profile).getContents(datasetName, downloadOptions);
-
-                    Gui.showMessage(vscode.l10n.t("Data set downloaded successfully"));
-                } catch (e) {
-                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+                // Extract the last part as filename when generating directories
+                let fileName = preserveOriginalLetterCase ? datasetName : datasetName.toLowerCase();
+                if (generateDirectory) {
+                    const pathParts = fileName.split(".");
+                    fileName = pathParts[pathParts.length - 1];
                 }
-            }
+
+                const extension = DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+
+                const targetDirectory = generateDirectory
+                    ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, preserveOriginalLetterCase)
+                    : selectedPath.fsPath;
+                const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+
+                const downloadOptions = {
+                    file: filePath,
+                    binary,
+                    record,
+                    overwrite,
+                    responseTimeout: profile?.profile?.responseTimeout,
+                };
+
+                await ZoweExplorerApiRegister.getMvsApi(profile).getContents(datasetName, downloadOptions);
+            },
+            vscode.l10n.t("Data set downloaded successfully"),
+            node
         );
     }
 
