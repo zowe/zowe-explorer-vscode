@@ -43,6 +43,8 @@ export namespace Definitions {
         overwrite?: boolean;
         generateDirectory?: boolean;
         preserveCase?: boolean;
+        // TODO: Do binary and record need to be here?
+        // API doesn't use seem to them, except for setting normalizeResponseNewLines
         binary?: boolean;
         record?: boolean;
         selectedPath?: vscode.Uri;

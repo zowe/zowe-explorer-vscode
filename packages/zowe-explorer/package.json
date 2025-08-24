@@ -357,18 +357,13 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.downloadDataset",
-        "title": "%downloadDataset%",
+        "command": "zowe.ds.downloadDataSet",
+        "title": "%downloadDataSet%",
         "category": "Zowe Explorer"
       },
       {
         "command": "zowe.ds.downloadMember",
         "title": "%downloadMember%",
-        "category": "Zowe Explorer"
-      },
-      {
-        "command": "zowe.ds.downloadAllDatasets",
-        "title": "%downloadAllDatasets%",
         "category": "Zowe Explorer"
       },
       {
@@ -1250,22 +1245,12 @@
           "group": "099_zowe_dsModification@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*/ && !listMultiSelection",
-          "command": "zowe.ds.downloadAllDatasets",
-          "group": "099_zowe_dsModification@3"
-        },
-        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/ && !listMultiSelection",
-          "command": "zowe.ds.downloadDataset",
+          "command": "zowe.ds.downloadDataSet",
           "group": "099_zowe_dsModification@3"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
-          "command": "zowe.ds.downloadAllMembers",
-          "group": "099_zowe_dsModification@3"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^migr.*/ && !listMultiSelection",
           "command": "zowe.ds.downloadAllMembers",
           "group": "099_zowe_dsModification@3"
         },
@@ -1755,11 +1740,7 @@
           "when": "never"
         },
         {
-          "command": "zowe.ds.downloadAllDatasets",
-          "when": "never"
-        },
-        {
-          "command": "zowe.ds.downloadDataset",
+          "command": "zowe.ds.downloadDataSet",
           "when": "never"
         },
         {

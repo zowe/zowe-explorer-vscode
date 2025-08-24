@@ -231,6 +231,10 @@ export class DatasetInit {
             vscode.commands.registerCommand("zowe.ds.downloadMember", async (node: IZoweDatasetTreeNode) => DatasetActions.downloadMember(node))
         );
 
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.downloadDataSet", async (node: IZoweDatasetTreeNode) => DatasetActions.downloadDataSet(node))
+        );
+
         SharedInit.initSubscribers(context, datasetProvider);
         return datasetProvider;
     }
