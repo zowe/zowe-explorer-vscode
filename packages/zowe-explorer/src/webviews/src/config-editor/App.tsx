@@ -79,6 +79,7 @@ export function App() {
     (value: boolean) => {
       setShowMergedProperties(value);
       setLocalStorageValue(LOCAL_STORAGE_KEYS.SHOW_MERGED_PROPERTIES, value);
+      setSortOrderVersion((prev) => prev + 1);
     },
     [setLocalStorageValue]
   );
@@ -645,6 +646,7 @@ export function App() {
         const { key, value } = event.data;
         if (key === LOCAL_STORAGE_KEYS.SHOW_MERGED_PROPERTIES) {
           setShowMergedProperties(value !== undefined ? value : true);
+          setSortOrderVersion((prev) => prev + 1);
         } else if (key === LOCAL_STORAGE_KEYS.VIEW_MODE) {
           setViewMode(value !== undefined ? value : "tree");
         } else if (key === LOCAL_STORAGE_KEYS.PROPERTY_SORT_ORDER) {

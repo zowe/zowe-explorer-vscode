@@ -1,12 +1,12 @@
 body {
     font-size: 14px;
-    padding: 10px;
+    padding: 8px;
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
     margin: 0;
     font-family: var(--vscode-font-family, monospace);
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
 /* Footer styles */
@@ -15,47 +15,45 @@ body {
     justify-content: center;
     align-items: center;
     gap: 8px;
-    padding: 16px;
+    padding: 12px 16px;
     border-top: 1px solid var(--vscode-tab-border);
     background: var(--vscode-editor-background);
     flex-shrink: 0;
-    margin-top: auto;
+    margin-top: 8px;
 }
 
 /* Ensure the main content area takes remaining space */
 .vscode-panel {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    height: 100vh;
-    max-height: 100vh;
-    overflow: hidden;
+    gap: 8px;
+    min-height: 0;
+    overflow: visible;
 }
 
 .vscode-panel > .panels {
-    flex: 1;
-    overflow: hidden;
+    overflow: auto;
+    min-height: 400px;
 }
 
 /* Ensure the webview container takes full height */
 #root {
-    height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
 /* Main app container - fallback for browsers without :has() support */
 .app-container {
-    height: 100vh;
     display: flex;
     flex-direction: column;
+    gap: 8px;
 }
 
 /* Main app container */
 div:has(> .vscode-panel) {
-    height: 100vh;
     display: flex;
     flex-direction: column;
+    gap: 8px;
 }
 
 .tabs {
@@ -155,18 +153,16 @@ div:has(> .vscode-panel) {
     background-color: var(--vscode-editor-background);
     padding: 12px;
     border-radius: 0 0 4px 4px;
-    flex: 1;
-    overflow: hidden;
+    overflow: auto;
     display: flex;
     flex-direction: column;
-    min-height: 0;
+    min-height: 400px;
 }
 
 .panel {
     display: none;
-    height: 100%;
     overflow: auto;
-    min-height: 0;
+    min-height: 350px;
 }
 
 .panel.active {
@@ -178,8 +174,7 @@ div:has(> .vscode-panel) {
     display: flex;
     gap: clamp(1rem, 3vw, 2rem);
     align-items: flex-start;
-    flex: 1;
-    min-height: 0;
+    min-height: 350px;
     overflow: auto;
 }
 
@@ -188,7 +183,7 @@ div:has(> .vscode-panel) {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    overflow: hidden;
+    overflow: auto;
 }
 
 .config-section.profiles-section {
