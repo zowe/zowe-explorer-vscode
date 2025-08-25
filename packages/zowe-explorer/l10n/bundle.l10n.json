@@ -180,6 +180,24 @@
   "Certificate Keys": "Certificate Keys",
   "Select Certificate Key": "Select Certificate Key",
   "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
+  "Your available creds: {0}/Available credentials": {
+    "message": "Your available creds: {0}",
+    "comment": [
+      "Available credentials"
+    ]
+  },
+  "Your authOrder: {0}/Authentication order": {
+    "message": "Your authOrder: {0}",
+    "comment": [
+      "Authentication order"
+    ]
+  },
+  "Selected auth type: {0}/Selected authentication method": {
+    "message": "Selected auth type: {0}",
+    "comment": [
+      "Selected authentication method"
+    ]
+  },
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Profile name": {
     "message": "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
     "comment": [
@@ -1210,7 +1228,6 @@
       "The profile name"
     ]
   },
-  "This profile is using basic authentication and does not support token authentication.": "This profile is using basic authentication and does not support token authentication.",
   "Error getting supported tokenType value for profile {0}/Service profile name": {
     "message": "Error getting supported tokenType value for profile {0}",
     "comment": [

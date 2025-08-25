@@ -135,7 +135,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 );
             }
 
-            await this.profileInstance.checkCurrentProfile(this.nodeProfile);
+            await this.profileInstance.checkCurrentProfile(this.nodeProfile, node);
             if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
                 Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
                 return;

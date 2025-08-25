@@ -520,7 +520,7 @@ describe("ProfilesCache", () => {
             expect(profiles[1]).toMatchObject(lpar2Profile);
         });
 
-        it("should remove token from service profile if base profile overrides it", async () => {
+        it("should not remove token from service profile if base profile overrides it", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             (profCache as any).defaultProfileByType = new Map([["base", baseProfileWithToken]]);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1ProfileWithToken, lpar2ProfileWithToken]));
@@ -528,8 +528,8 @@ describe("ProfilesCache", () => {
             expect(profiles.length).toBe(2);
             expect(profiles[0].profile?.tokenType).toBe(lpar1ProfileWithToken.profile.tokenType);
             expect(profiles[0].profile?.tokenValue).toBe(lpar1ProfileWithToken.profile.tokenValue);
-            expect(profiles[1].profile?.tokenType).toBeUndefined();
-            expect(profiles[1].profile?.tokenValue).toBeUndefined();
+            expect(profiles[1].profile?.tokenType).toBe(lpar2ProfileWithToken.profile.tokenType);
+            expect(profiles[1].profile?.tokenValue).toBe(lpar2ProfileWithToken.profile.tokenValue);
         });
 
         it("should return empty array for unknown profile type", async () => {

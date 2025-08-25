@@ -40,24 +40,17 @@ export class ProfileManagement {
     }
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
+        const sessTypeFromProf = AuthUtils.sessTypeFromProfile(profile);
         let selected: vscode.QuickPickItem;
-        switch (true) {
-            case AuthUtils.isProfileUsingBasicAuth(profile): {
-                ZoweLogger.debug(`Profile ${profile.name} is using basic authentication.`);
-                selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, node);
-                break;
-            }
-            case await AuthUtils.isUsingTokenAuth(profile.name): {
-                ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
-                selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_TOKEN, node);
-                break;
-            }
-            // will need a case for isUsingCertAuth
-            default: {
-                ZoweLogger.debug(`Profile ${profile.name} authentication method is unkown.`);
-                selected = await this.setupProfileManagementQp(null, node);
-                break;
-            }
+        if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BASIC) {
+            ZoweLogger.debug(`Profile ${profile.name} is using basic authentication.`);
+            selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, node);
+        } else if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER) {
+            ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
+            selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_TOKEN, node);
+        } else {
+            ZoweLogger.debug(`Profile ${profile.name} authentication method is unkown.`);
+            selected = await this.setupProfileManagementQp(null, node);
         }
         await this.handleAuthSelection(selected, node, profile);
     }
