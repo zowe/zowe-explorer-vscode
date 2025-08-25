@@ -1590,6 +1590,71 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         expect(getCurrentPageItemsMock).toHaveBeenCalledTimes(1);
         getDirectValueMock.mockRestore();
     });
+
+    it("calls refetchCurrentPage successfully when paginator is initialized and data exists", async () => {
+        const profile = createIProfile();
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.EXAMPLE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        // Set up paginator and data to simulate an initialized state
+        const mockPaginator = new Paginator(100, jest.fn());
+        jest.spyOn(mockPaginator, "isInitialized").mockReturnValueOnce(true);
+        const refetchCurrentPageSpy = jest.spyOn(mockPaginator, "refetchCurrentPage").mockResolvedValueOnce(undefined);
+        const getCurrentPageItemsSpy = jest
+            .spyOn(mockPaginator, "getCurrentPageItems")
+            .mockReset()
+            .mockReturnValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [{ member: "MEMBER1" }, { member: "MEMBER2" }],
+                        returnedRows: 2,
+                    },
+                },
+            ]);
+
+        (pdsNode as any).paginator = mockPaginator;
+        (pdsNode as any).paginatorData = { totalItems: 10 };
+
+        const result = await (pdsNode as any).getDatasets(profile, true);
+
+        expect(refetchCurrentPageSpy).toHaveBeenCalledTimes(1);
+        expect(getCurrentPageItemsSpy).toHaveBeenCalledTimes(1);
+        expect(result).toHaveLength(1);
+        expect(result[0].apiResponse.items).toHaveLength(2);
+    });
+
+    it("handles refetchCurrentPage error by resetting paginator data", async () => {
+        const profile = createIProfile();
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.EXAMPLE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        // Set up paginator and data to simulate an initialized state
+        const mockPaginator = new Paginator(100, jest.fn());
+        jest.spyOn(mockPaginator, "isInitialized").mockReturnValueOnce(true);
+        const refetchError = new Error("Network timeout during refetch");
+        const refetchCurrentPageMock = jest.spyOn(Paginator.prototype, "refetchCurrentPage").mockRejectedValueOnce(refetchError);
+        const loggerErrorSpy = jest.spyOn(ZoweLogger, "error").mockImplementation();
+
+        (pdsNode as any).paginator = mockPaginator;
+        (pdsNode as any).paginatorData = { totalItems: 10, lastItemName: "MEMBER5" };
+
+        // No result from getDatasets() if refetchCurrentPage fails
+        await expect((pdsNode as any).getDatasets(profile, true)).resolves.toBeUndefined();
+
+        expect(refetchCurrentPageMock).toHaveBeenCalledTimes(1);
+        expect(loggerErrorSpy).toHaveBeenCalledWith("[ZoweDatasetNode.getDatasets]: Error refetching current page: Network timeout during refetch");
+        expect((pdsNode as any).paginatorData).toBeUndefined();
+
+        loggerErrorSpy.mockRestore();
+        refetchCurrentPageMock.mockRestore();
+    });
 });
 
 describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
