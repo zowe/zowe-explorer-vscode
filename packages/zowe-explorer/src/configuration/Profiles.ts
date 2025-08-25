@@ -98,6 +98,19 @@ export class Profiles extends ProfilesCache {
         void Gui.errorMessage(inactiveMsg);
     }
 
+    /**
+     * Checks if the profile has a secure token.
+     * Note: This is a workaround to maintain backward compatibility.
+     * @param theProfile - The profile to check.
+     * @returns True if the profile has a secure token, false otherwise.
+     */
+    private async profileHasSecureToken(theProfile: imperative.IProfileLoaded): Promise<boolean> {
+        const teamConfig = (await this.getProfileInfo()).getTeamConfig();
+        const profName = teamConfig.api.profiles.getProfilePathFromName(theProfile.name);
+        const tokenValue = profName + ".properties.tokenValue";
+        return teamConfig.api.secure.secureFields().includes(tokenValue);
+    }
+
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("Profiles.checkCurrentProfile called.");
         let profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
@@ -127,7 +140,7 @@ export class Profiles extends ProfilesCache {
                 break;
         }
 
-        if (usingTokenAuth) {
+        if (usingTokenAuth || (await this.profileHasSecureToken(theProfile))) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")

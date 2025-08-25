@@ -899,6 +899,14 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
                         },
                     },
                 },
+                api: {
+                    profiles: {
+                        getProfilePathFromName: () => "sestest",
+                    },
+                    secure: {
+                        secureFields: () => [],
+                    },
+                },
                 autoStore,
             }),
             isSecured: () => true,
@@ -1136,6 +1144,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
             getAllProfiles: jest.fn(),
             mergeArgsForProfile: jest.fn(),
         } as any);
+        jest.spyOn(Profiles.prototype as any, "profileHasSecureToken").mockResolvedValue(false);
         const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
         testNode.tooltip = "Auto Store: true\n";
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile, testNode)).resolves.toEqual({
@@ -1187,7 +1196,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
             getAllProfiles: jest.fn(),
             mergeArgsForProfile: jest.fn(),
         } as any);
-
+        jest.spyOn(Profiles.prototype as any, "profileHasSecureToken").mockResolvedValue(false);
         jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
         testNode.tooltip = "Auto Store: true\nConfig File: Global";
@@ -1223,6 +1232,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
             getAllProfiles: jest.fn(),
             mergeArgsForProfile: jest.fn(),
         } as any);
+        jest.spyOn(Profiles.prototype as any, "profileHasSecureToken").mockResolvedValue(false);
         const promptCredentialsSpy = jest.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
         jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
         testNode.tooltip = "Auto Store: true\nSecure Credentials Enabled: false";
@@ -1459,6 +1469,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         };
         jest.spyOn(Gui, "showMessage").mockImplementation(jest.fn());
         jest.spyOn(Gui, "errorMessage").mockImplementation(jest.fn());
+        jest.spyOn(Profiles.prototype as any, "profileHasSecureToken").mockResolvedValue(false);
     });
 
     it("To switch from Basic to Token-based authentication using Base Profile", async () => {
