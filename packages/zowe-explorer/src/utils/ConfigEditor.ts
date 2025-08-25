@@ -88,7 +88,7 @@ export class ConfigEditor extends WebView {
         }
         try {
             return (((await profilesCache.getProfileInfo()) as any).mCredentials.isCredentialManagerInAppSettings() ?? false) as boolean;
-        } catch {
+        } catch (_err) {
             return false;
         }
     }

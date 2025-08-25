@@ -807,6 +807,44 @@ export function App() {
     }
   }, [wizardRootProfile, wizardSelectedType, wizardModalOpen, selectedTab, requestWizardMergedProperties]);
 
+  // Handle refresh functionality
+  const handleRefresh = useCallback(() => {
+    // Store current selection before clearing
+    const currentSelectedTab = selectedTab;
+    const currentSelectedProfileKey = selectedProfileKey;
+
+    // Clear all state first
+    setHiddenItems({});
+    setPendingChanges({});
+    setDeletions({});
+    setPendingDefaults({});
+    setDefaultsDeletions({});
+
+    // Request fresh configurations from the backend
+    vscodeApi.postMessage({ command: "GET_PROFILES" });
+
+    // Restore selection after a brief delay to allow configurations to update
+    setTimeout(() => {
+      if (currentSelectedTab !== null) {
+        setSelectedTab(currentSelectedTab);
+      }
+      if (currentSelectedProfileKey !== null) {
+        setSelectedProfileKey(currentSelectedProfileKey);
+
+        // Refresh merged properties for the selected profile after clearing changes
+        const configPath = currentSelectedTab !== null ? configurations[currentSelectedTab]?.configPath : undefined;
+        if (configPath) {
+          vscodeApi.postMessage({
+            command: "GET_MERGED_PROPERTIES",
+            profilePath: currentSelectedProfileKey,
+            configPath: configPath,
+            changes: formatPendingChanges(),
+          });
+        }
+      }
+    }, 100);
+  }, [selectedTab, selectedProfileKey, configurations, formatPendingChanges]);
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -825,6 +863,12 @@ export function App() {
           setSaveModalOpen(true);
         }
       }
+
+      // Check for Cmd+Z (Mac) or Ctrl+Z (Windows/Linux)
+      if ((event.metaKey || event.ctrlKey) && event.key === "z") {
+        event.preventDefault();
+        handleRefresh();
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
@@ -832,7 +876,7 @@ export function App() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, handleSave]);
+  }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, handleSave, handleRefresh]);
 
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
@@ -3013,42 +3057,7 @@ export function App() {
         onViewModeToggle={() => setViewModeWithStorage(viewMode === "tree" ? "flat" : "tree")}
       />
       <Footer
-        onClearChanges={() => {
-          // Store current selection before clearing
-          const currentSelectedTab = selectedTab;
-          const currentSelectedProfileKey = selectedProfileKey;
-
-          // Clear all state first
-          setHiddenItems({});
-          setPendingChanges({});
-          setDeletions({});
-          setPendingDefaults({});
-          setDefaultsDeletions({});
-
-          // Request fresh configurations from the backend
-          vscodeApi.postMessage({ command: "GET_PROFILES" });
-
-          // Restore selection after a brief delay to allow configurations to update
-          setTimeout(() => {
-            if (currentSelectedTab !== null) {
-              setSelectedTab(currentSelectedTab);
-            }
-            if (currentSelectedProfileKey !== null) {
-              setSelectedProfileKey(currentSelectedProfileKey);
-
-              // Refresh merged properties for the selected profile after clearing changes
-              const configPath = currentSelectedTab !== null ? configurations[currentSelectedTab]?.configPath : undefined;
-              if (configPath) {
-                vscodeApi.postMessage({
-                  command: "GET_MERGED_PROPERTIES",
-                  profilePath: currentSelectedProfileKey,
-                  configPath: configPath,
-                  changes: formatPendingChanges(), // This will be empty since we just cleared changes
-                });
-              }
-            }
-          }, 100);
-        }}
+        onClearChanges={handleRefresh}
         onSaveAll={() => {
           handleSave();
           setSaveModalOpen(true);
