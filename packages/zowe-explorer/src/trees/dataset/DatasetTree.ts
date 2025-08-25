@@ -240,6 +240,19 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     }
                 }
 
+                if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
+                    Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member into a sequential dataset."));
+                    return;
+                }
+                const parent = target.getParent();
+                if ((SharedContext.isPds(node) || SharedContext.isDs(node)) && parent && SharedContext.isPds(parent)) {
+                    const message = SharedContext.isPds(node)
+                        ? "Cannot drop a partitioned dataset into another partitioned dataset."
+                        : "Cannot drop a sequential dataset into a partitioned dataset.";
+                    Gui.errorMessage(vscode.l10n.t(message));
+                    return;
+                }
+
                 // If moving to the same system/lpar but different profile, stop the drag entirely
                 const targetSys = target?.getProfile?.().profile.host;
                 const srcNode = this.draggedNodes[item.uri.path];
@@ -252,19 +265,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         )
                     );
                     return; // stop the drop entirely
-                }
-
-                if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
-                    Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member into a sequential dataset."));
-                    return;
-                }
-                const parent = target.getParent();
-                if ((SharedContext.isPds(node) || SharedContext.isDs(node)) && parent && SharedContext.isPds(parent)) {
-                    const message = SharedContext.isPds(node)
-                        ? "Cannot drop a partitioned dataset into another partitioned dataset."
-                        : "Cannot drop a sequential dataset into a partitioned dataset.";
-                    Gui.errorMessage(vscode.l10n.t(message));
-                    return;
                 }
             }
         }
