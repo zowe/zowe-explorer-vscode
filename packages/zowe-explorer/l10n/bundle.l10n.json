@@ -661,6 +661,7 @@
   "User ID": "User ID",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
   "Failed to move {0}: {1}": "Failed to move {0}: {1}",
+  "Data set(s) moved successfully.": "Data set(s) moved successfully.",
   "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.",
   "Cannot drop a partitioned dataset or member into a sequential dataset.": "Cannot drop a partitioned dataset or member into a sequential dataset.",
   "Moving MVS files...": "Moving MVS files...",
