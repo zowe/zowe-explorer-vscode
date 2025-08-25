@@ -946,28 +946,25 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // to reflect potential changes without changing the page itself.
 
             // If the page fetch fails, reset the paginator data to take the user back to the first page.
-            if (this.dirty && paginate) {
-                try {
-                    await this.paginator.refetchCurrentPage();
-                } catch (error) {
-                    if (error instanceof Error) {
-                        ZoweLogger.error(`[ZoweDatasetNode.getDatasets]: Error refetching current page: ${error.message}`);
-                    }
-                    if (
-                        (error instanceof imperative.ImperativeError &&
-                            Number(error.mDetails.errorCode) === imperative.RestConstants.HTTP_STATUS_401) ||
-                        error.message.includes("All configured authentication methods failed")
-                    ) {
-                        throw error;
-                    }
-                    this.paginatorData = undefined;
-                }
-            }
-
-            if (paginate && this.paginator) {
-                // Ensure paginator is initialized if it hasn't been (first load or invalidated cache)
+            if (paginate) {
                 if (!this.paginator.isInitialized() || this.paginatorData == null) {
                     await this.paginator.initialize();
+                } else {
+                    try {
+                        await this.paginator.refetchCurrentPage();
+                    } catch (error) {
+                        if (error instanceof Error) {
+                            ZoweLogger.error(`[ZoweDatasetNode.getDatasets]: Error refetching current page: ${error.message}`);
+                        }
+                        if (
+                            (error instanceof imperative.ImperativeError &&
+                                Number(error.mDetails.errorCode) === imperative.RestConstants.HTTP_STATUS_401) ||
+                            error.message.includes("All configured authentication methods failed")
+                        ) {
+                            throw error;
+                        }
+                        this.paginatorData = undefined;
+                    }
                 }
                 responses.push(...this.paginator.getCurrentPageItems());
             } else {
