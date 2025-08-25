@@ -679,6 +679,7 @@
   "User ID": "User ID",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
   "Failed to move {0}: {1}": "Failed to move {0}: {1}",
+  "Data set(s) moved successfully.": "Data set(s) moved successfully.",
   "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.",
   "Cannot drop a partitioned dataset or member into a sequential dataset.": "Cannot drop a partitioned dataset or member into a sequential dataset.",
   "Moving MVS files...": "Moving MVS files...",
@@ -1167,6 +1168,12 @@
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
   "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
     "message": "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Profile {0} has an invalid SSL certificate./Profile name": {
+    "message": "Profile {0} has an invalid SSL certificate.",
     "comment": [
       "Profile name"
     ]

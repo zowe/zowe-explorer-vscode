@@ -25,7 +25,6 @@ import {
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
-// import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -66,10 +65,9 @@ export class AuthUtils {
      * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
      * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
-    public static async handleProfileAuthOnError(err: Error, profile?: imperative.IProfileLoaded): Promise<void> {
+    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
         if (
             (err instanceof imperative.ImperativeError &&
-                profile != null &&
                 (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                     err.message.includes("All configured authentication methods failed"))) ||
             err.message.includes("HTTP(S) status 401")
@@ -103,7 +101,7 @@ export class AuthUtils {
                 // This may throw AuthCancelledError if the user cancels the authentication prompt
                 await AuthHandler.lockProfile(profile, authOpts);
             }
-        } else if (profile != null && AuthHandler.isProfileLocked(profile)) {
+        } else if (AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
             AuthHandler.unlockProfile(profile);
         }

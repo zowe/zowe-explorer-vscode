@@ -18,6 +18,8 @@ import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 import { Types } from "../Types";
 import { VscSettings } from "../vscode/doc/VscSettings";
+import * as fs from "fs";
+import * as crypto from "crypto";
 
 export class ProfilesCache {
     private profileInfo: imperative.ProfileInfo;
@@ -230,6 +232,31 @@ export class ProfilesCache {
         }
         this.checkForEnvVarAndUpdate();
         this.profilesForValidation = [];
+    }
+
+    /**
+     * Used to check validity of a profile's certfile used for authentication
+     *
+     * @param {string} certFile Path to certFile from profile
+     *
+     * @returns {boolean} True if certFile is valid and false otherwise
+     */
+    public isCertFileValid(certFile: string): boolean {
+        try {
+            const certPem = fs.readFileSync(certFile, "utf8");
+            const certificate = new crypto.X509Certificate(certPem);
+
+            // Check validity dates
+            const now = new Date();
+            if (now >= new Date(certificate.validFrom) && now <= new Date(certificate.validTo)) {
+                return true;
+            } else {
+                this.log.error(`Certificate file ${certFile} is outside its validity period.`);
+            }
+        } catch (e) {
+            this.log.error(`Certificate file validation failed for ${certFile}: ${(e as Error).message}`);
+        }
+        return false;
     }
 
     public validateAndParseUrl(newUrl: string): Validation.IValidationUrl {

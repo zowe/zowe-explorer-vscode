@@ -168,6 +168,18 @@ export class Profiles extends ProfilesCache {
                 return { ...profileStatus, status: "inactive" };
             }
         } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
+            if (!this.isCertFileValid(theProfile.profile.certFile)) {
+                ZoweLogger.error(`Profile ${theProfile.name} has an invalid SSL certificate`);
+                Gui.errorMessage(
+                    vscode.l10n.t({
+                        message: `Profile {0} has an invalid SSL certificate.`,
+                        args: [theProfile.name],
+                        comment: ["Profile name"],
+                    })
+                );
+                this.validProfile = Validation.ValidationType.INVALID;
+                return { ...profileStatus, status: "inactive" };
+            }
             profileStatus.status = "active";
             this.profilesForValidation.push(profileStatus);
         }
