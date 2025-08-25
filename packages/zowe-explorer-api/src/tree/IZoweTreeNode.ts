@@ -187,6 +187,11 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
     children?: IZoweDatasetTreeNode[];
 
     /**
+     * Whether the node is currently being updated through a filter prompt
+     */
+    inFilterPrompt?: boolean;
+
+    /**
      * Retrieves child nodes of this IZoweDatasetTreeNode
      *
      * @returns {Promise<IZoweDatasetTreeNode[]>}
