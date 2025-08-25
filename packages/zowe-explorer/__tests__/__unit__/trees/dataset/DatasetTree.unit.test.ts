@@ -28,7 +28,7 @@ import {
     createMockNode,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
-import { ProfilesCache, imperative, Gui, Validation, NavigationTreeItem } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, imperative, Gui, Validation, NavigationTreeItem, FsAbstractUtils } from "@zowe/zowe-explorer-api";
 import { Constants, JwtCheckResult } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { Profiles } from "../../../../src/configuration/Profiles";
@@ -5204,5 +5204,169 @@ describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
         jest.spyOn(testTree, "filterTreeByPattern").mockRejectedValue(new Error("fail"));
         const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
         expect(result).toBe(false);
+    });
+});
+
+describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
+    let testTree: DatasetTree;
+    let mockTreeView: any;
+    let mockSessionNode: any;
+    let mockFavNode: any;
+    let sessProfile: any;
+
+    beforeEach(() => {
+        testTree = new DatasetTree();
+        mockTreeView = { reveal: jest.fn().mockResolvedValue(undefined) };
+        jest.spyOn(testTree, "getTreeView").mockReturnValue(mockTreeView);
+
+        mockSessionNode = {
+            label: "SESSION1",
+            getChildren: jest.fn(),
+            children: [],
+        };
+        mockFavNode = {
+            label: "FAV1",
+            children: [],
+        };
+        sessProfile = { name: "SESSION1" };
+        testTree.mSessionNodes = [mockSessionNode];
+        testTree.mFavorites = [mockFavNode];
+    });
+
+    it("returns true and reveals node if dataset is found in session nodes", async () => {
+        const dsNode = { label: "MY.DATA.SET" };
+        mockSessionNode.getChildren.mockResolvedValue([dsNode]);
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(result).toBe(true);
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(dsNode, { select: true, focus: true, expand: true });
+    });
+
+    it("returns true and reveals node if dataset is found in favorites", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        const favChild = { label: "MY.DATA.SET" };
+        mockFavNode.children = [favChild];
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(result).toBe(true);
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(mockFavNode, { expand: true });
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(favChild, { select: true, focus: true, expand: true });
+    });
+
+    it("sets filter and reveals node if dataset is not found in session or favorites", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        mockFavNode.children = [];
+        mockSessionNode.children = [{ label: "MY.DATA.SET" }];
+        jest.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(testTree.filterTreeByPattern).toHaveBeenCalledWith(mockSessionNode, sessProfile, "MY.DATA.SET");
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(mockSessionNode.children[0], { select: true, focus: true, expand: true });
+        expect(result).toBe(true);
+    });
+
+    it("returns false if dataset is not found anywhere", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        mockFavNode.children = [];
+        mockSessionNode.children = [];
+        jest.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
+        const result = await testTree.focusOnDsInTree("NOT.FOUND", sessProfile);
+        expect(result).toBe(false);
+    });
+
+    it("returns false if filterTreeByPattern throws", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        mockFavNode.children = [];
+        mockSessionNode.children = [];
+        jest.spyOn(testTree, "filterTreeByPattern").mockRejectedValue(new Error("fail"));
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(result).toBe(false);
+    });
+});
+
+describe("DatasetTree.crossLparMove", () => {
+    let tree: any;
+    let fakeNode: Partial<IZoweDatasetTreeNode>;
+    let srcUri: vscode.Uri;
+    let dstUri: vscode.Uri;
+    let apiMock: any;
+
+    beforeEach(() => {
+        if (!(zosfiles as any).Copy) {
+            (zosfiles as any).Copy = {};
+        }
+        (zosfiles as any).Copy["generateDatasetOptions"] = jest.fn().mockReturnValue({});
+        jest.clearAllMocks();
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue();
+        jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue();
+        jest.spyOn(DatasetFSProvider.instance, "delete").mockResolvedValue(undefined);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue({});
+        jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(Buffer.from("hello"));
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => {});
+
+        apiMock = {
+            createDataSet: jest.fn().mockResolvedValue({}),
+            createDataSetMember: jest.fn().mockResolvedValue({}),
+            dataSet: jest.fn(),
+        };
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(apiMock);
+        // make dataSet return a dummy attributes response so PDS branch runs
+        (apiMock.dataSet as jest.Mock).mockResolvedValue({
+            apiResponse: { items: [{ dsname: "DST_PROFILE/BAR" }] },
+        });
+        (FsAbstractUtils as any).getInfoForUri = jest.fn().mockReturnValue({
+            profile: { profile: {}, name: "" },
+            slashAfterProfilePos: 0,
+        });
+
+        tree = new DatasetTree();
+
+        srcUri = vscode.Uri.from({ scheme: "ds", path: "/SRC_PROFILE/FOO" });
+        dstUri = vscode.Uri.from({ scheme: "ds", path: "/DST_PROFILE/BAR" });
+
+        fakeNode = {
+            resourceUri: srcUri,
+            contextValue: "ds",
+        };
+
+        (fakeNode as any).getEncoding = jest.fn().mockResolvedValue({ kind: "text" });
+    });
+
+    it("should copy a sequential dataset and delete the source", async () => {
+        await tree["crossLparMove"](fakeNode, srcUri, dstUri, false);
+        expect(DatasetFSProvider.instance.createDirectory).not.toHaveBeenCalled(); // sequential ds shouldn't create directory
+        expect(DatasetFSProvider.instance.writeFile).toHaveBeenCalledWith(
+            expect.objectContaining({ path: "/DST_PROFILE/BAR", query: "forceUpload=true" }),
+            Buffer.from("hello"),
+            { create: true, overwrite: true }
+        );
+        expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(srcUri, { recursive: false });
+    });
+
+    it("should create a new PDS then recurse children", async () => {
+        // only the root fakeNode is a PDS; its single child is a member
+        jest.spyOn(SharedContext, "isPds").mockImplementation((node) => node === fakeNode);
+        fakeNode.contextValue = "ds.pds";
+
+        const childNode: Partial<IZoweDatasetTreeNode> = {
+            getLabel: () => "M1",
+            resourceUri: srcUri.with({ path: `${srcUri.path}/M1` }),
+            contextValue: "member",
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+            getChildren: jest.fn().mockResolvedValue([]),
+        };
+
+        jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(null);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        fakeNode.getChildren = jest.fn().mockResolvedValue([childNode]);
+
+        await tree["crossLparMove"](fakeNode, srcUri, dstUri, false);
+
+        expect(apiMock.createDataSet).toHaveBeenCalled();
+        expect(DatasetFSProvider.instance.createDirectory).toHaveBeenCalledWith(dstUri);
+        expect(DatasetFSProvider.instance.writeFile).toHaveBeenCalledWith(
+            expect.objectContaining({ path: "/DST_PROFILE/BAR/M1" }),
+            expect.any(Buffer),
+            expect.objectContaining({ overwrite: true })
+        );
+        expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(srcUri, { recursive: true });
     });
 });
