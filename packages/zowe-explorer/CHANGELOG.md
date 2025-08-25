@@ -41,6 +41,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Prevented data loss by modifying the save process to handle data sets with records that exceeded the logical record length. [#3791](https://github.com/zowe/zowe-explorer-vscode/issues/3791)
 - Fixed cross-LPAR PDS transfers to preserve original DCB attributes and prevent binary data corruption. Data is now transferred as binary, and the encoding is respected if previously set by the user. [#3731](https://github.com/zowe/zowe-explorer-vscode/pull/3731)
 - Fixed copy/paste functionality of data sets for extender-type profiles by using `SharedContext` helper functions. [#3815](https://github.com/zowe/zowe-explorer-vscode/pull/3815)
+- Prevents drag-and-drop between profiles pointing to the same LPAR/dataset by creating a check in `DatasetTree.handleDrop` function. The operation is now blocked and an error message is shown instead; users should refresh the target profile to see any changes. [#3827](https://github.com/zowe/zowe-explorer-vscode/pull/3827)
 
 ## `3.2.2`
 
