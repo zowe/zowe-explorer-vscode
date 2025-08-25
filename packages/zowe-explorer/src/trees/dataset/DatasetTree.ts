@@ -189,9 +189,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             try {
                 const encodingInfo = await sourceNode.getEncoding();
                 // If the encoding is binary, we need to force upload it as binary
-                const queryString = `forceUpload=true${
-                    encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
-                }`;
+                const queryString = `forceUpload=true${encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
+                    }`;
                 await DatasetFSProvider.instance.writeFile(
                     destUri.with({
                         query: queryString,
@@ -227,6 +226,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         }
 
         let target = targetNode;
+
         if (target) {
             for (const item of droppedItems.value) {
                 const node = this.draggedNodes[item.uri.path];
@@ -238,6 +238,20 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         );
                         return;
                     }
+                }
+
+                // If moving to the same system/lpar but different profile, stop the drag entirely
+                const targetSys = target?.getProfile?.().profile.host;
+                const srcNode = this.draggedNodes[item.uri.path];
+                const sourceSys = srcNode?.getProfile?.().profile.host;
+
+                if (targetSys == sourceSys) {
+                    await Gui.errorMessage(
+                        vscode.l10n.t(
+                            "Cannot move: the source and target are the same dataset on the same system. You're viewing it under a different profile. Any changes you need to view with target profile can be seen via a refresh."
+                        )
+                    );
+                    return; // stop the drop entirely
                 }
 
                 if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
@@ -1754,15 +1768,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                  message: "all PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              })
+                message: "all PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            })
             : vscode.l10n.t({
-                  message: "the PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              });
+                message: "the PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            });
         const selection = await Gui.showQuickPick(
             DatasetUtils.DATASET_SORT_OPTS.map((opt, i) => ({
                 label: sortOpts.method === i ? `${opt} $(check)` : opt,
@@ -1827,10 +1841,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         node.filter = newFilter;
         node.description = newFilter
             ? vscode.l10n.t({
-                  message: "Filter: {0}",
-                  args: [newFilter.value],
-                  comment: ["Filter value"],
-              })
+                message: "Filter: {0}",
+                args: [newFilter.value],
+                comment: ["Filter value"],
+            })
             : null;
         this.nodeDataChanged(node);
 
@@ -1891,15 +1905,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                  message: "all PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              })
+                message: "all PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            })
             : vscode.l10n.t({
-                  message: "the PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              });
+                message: "the PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            });
         const clearFilter = isSession
             ? `$(clear-all) ${vscode.l10n.t("Clear filter for profile")}`
             : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;
