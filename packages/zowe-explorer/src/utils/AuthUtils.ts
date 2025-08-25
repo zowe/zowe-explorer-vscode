@@ -24,6 +24,8 @@ import {
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { ZoweDatasetNode } from "../trees/dataset/ZoweDatasetNode";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -349,7 +351,12 @@ export class AuthUtils {
         }
         if (nodeToRefresh) {
             nodeToRefresh.dirty = true;
-            void nodeToRefresh.getChildren().then(() => SharedTreeProviders.getProviderForNode(nodeToRefresh).refreshElement(nodeToRefresh));
+            const shouldPaginate =
+                nodeToRefresh instanceof ZoweDatasetNode &&
+                SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE) > 0;
+            void nodeToRefresh
+                .getChildren(shouldPaginate)
+                .then(() => SharedTreeProviders.getProviderForNode(nodeToRefresh).nodeDataChanged?.(nodeToRefresh));
         }
     }
 
