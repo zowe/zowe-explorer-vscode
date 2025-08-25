@@ -25,7 +25,7 @@ import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { SettingsConfig } from "../configuration/SettingsConfig";
-import { ZoweDatasetNode } from "../trees/dataset/ZoweDatasetNode";
+import type { ZoweDatasetNode } from "../trees/dataset/ZoweDatasetNode";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
