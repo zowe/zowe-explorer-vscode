@@ -139,11 +139,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const oldInfo = this._getInfoFromUri(oldUri);
 
         try {
-            await AuthUtils.reauthenticateIfCancelled(info.profile);
-            await AuthHandler.waitForUnlock(info.profile);
-            await ussApi.move(oldInfo.path, info.path);
+            await AuthUtils.retryRequest(info.profile, async () => {
+                await AuthUtils.reauthenticateIfCancelled(info.profile);
+                await AuthHandler.waitForUnlock(info.profile);
+                await ussApi.move(oldInfo.path, info.path);
+            });
         } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, info.profile);
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({ message: "Failed to move {0}", args: [oldInfo.path], comment: "File path" }),
                 apiType: ZoweExplorerApiType.Uss,
@@ -185,20 +186,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
         let response: IZosFilesResponse;
-        try {
+
+        await AuthUtils.retryRequest(uriInfo.profile, async () => {
             response = await ZoweExplorerApiRegister.getUssApi(loadedProfile).fileList(ussPath);
 
             // If request was successful, create directories for the path if it doesn't exist
             if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
                 await vscode.workspace.fs.createDirectory(uri.with({ query: "" }));
             }
-        } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.error(err.message);
-            }
-            await AuthUtils.handleProfileAuthOnError(err, profile);
-            throw err;
-        }
+        });
 
         return {
             ...response,
@@ -338,21 +334,22 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profile = Profiles.getInstance().loadNamedProfile(file.metadata.profile.name);
 
         let resp: IZosFilesResponse;
-        try {
-            await this.autoDetectEncoding(file as UssFile);
-            const profileEncoding = file.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
-            // Wait for any ongoing authentication process to complete
-            await AuthUtils.reauthenticateIfCancelled(profile);
-            await AuthHandler.waitForUnlock(file.metadata.profile);
+        await this.autoDetectEncoding(file as UssFile);
+        const profileEncoding = file.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
-            // Check if the profile is locked (indicating an auth error is being handled)
-            // If it's locked, we should wait and not make additional requests
-            if (AuthHandler.isProfileLocked(file.metadata.profile)) {
-                ZoweLogger.warn(`[UssFSProvider] Profile ${file.metadata.profile.name} is locked, waiting for authentication`);
-                return;
-            }
+        // Wait for any ongoing authentication process to complete
+        await AuthUtils.reauthenticateIfCancelled(profile);
+        await AuthHandler.waitForUnlock(file.metadata.profile);
 
+        // Check if the profile is locked (indicating an auth error is being handled)
+        // If it's locked, we should wait and not make additional requests
+        if (AuthHandler.isProfileLocked(file.metadata.profile)) {
+            ZoweLogger.warn(`[UssFSProvider] Profile ${file.metadata.profile.name} is locked, waiting for authentication`);
+            return;
+        }
+
+        await AuthUtils.retryRequest(uriInfo.profile, async () => {
             resp = await ZoweExplorerApiRegister.getUssApi(profile).getContents(filePath, {
                 binary: file.encoding?.kind === "binary",
                 encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
@@ -360,13 +357,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 returnEtag: true,
                 stream: bufBuilder,
             });
-        } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.error(err.message);
-            }
-            await AuthUtils.handleProfileAuthOnError(err, profile);
-            return;
-        }
+        });
 
         if (!options?.isConflict) {
             file.wasAccessed = true;
@@ -411,7 +402,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         const ussApi = ZoweExplorerApiRegister.getUssApi(profile);
-        try {
+        await AuthUtils.retryRequest(entry.metadata.profile, async () => {
             if (ussApi.getTag != null) {
                 const taggedEncoding = await ussApi.getTag(entry.metadata.path);
                 if (taggedEncoding === "binary" || taggedEncoding === "mixed") {
@@ -423,10 +414,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 const isBinary = await ussApi.isFileTagBinOrAscii(entry.metadata.path);
                 entry.encoding = isBinary ? { kind: "binary" } : undefined;
             }
-        } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, entry.metadata.profile);
-            throw err;
-        }
+        });
     }
 
     public async fetchEncodingForUri(uri: vscode.Uri): Promise<ZosEncoding> {
@@ -516,18 +504,19 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         let resp: IZosFilesResponse;
         try {
-            await this.autoDetectEncoding(entry);
-            const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
+            await AuthUtils.retryRequest(entry.metadata.profile, async () => {
+                await this.autoDetectEncoding(entry);
+                const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
-            resp = await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
-                binary: entry.encoding?.kind === "binary",
-                encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
-                etag: options?.forceUpload || entry.etag == null ? undefined : entry.etag,
-                returnEtag: true,
+                resp = await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
+                    binary: entry.encoding?.kind === "binary",
+                    encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+                    etag: options?.forceUpload || entry.etag == null ? undefined : entry.etag,
+                    returnEtag: true,
+                });
             });
         } catch (err) {
             statusMsg.dispose();
-            await AuthUtils.handleProfileAuthOnError(err, profile);
             throw err;
         }
 
@@ -666,7 +655,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         try {
-            await ZoweExplorerApiRegister.getUssApi(profile).rename(entry.metadata.path, newPath);
+            await AuthUtils.retryRequest(entry.metadata.profile, async () => {
+                await ZoweExplorerApiRegister.getUssApi(profile).rename(entry.metadata.path, newPath);
+            });
         } catch (err: any) {
             if (err instanceof vscode.FileSystemError && err.code === "FileExists") {
                 try {
@@ -685,7 +676,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     }
                 }
             } else {
-                await AuthUtils.handleProfileAuthOnError(err, profile);
                 this._handleError(err, {
                     additionalContext: vscode.l10n.t({
                         message: "Failed to rename {0}",
@@ -736,9 +726,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         try {
-            await ZoweExplorerApiRegister.getUssApi(profile).delete(entryToDelete.metadata.path, entryToDelete instanceof UssDirectory);
+            await AuthUtils.retryRequest(parent.metadata.profile, async () => {
+                await ZoweExplorerApiRegister.getUssApi(profile).delete(entryToDelete.metadata.path, entryToDelete instanceof UssDirectory);
+            });
         } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, profile);
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to delete {0}",
@@ -841,38 +832,39 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const outputPath = path.posix.join(destInfo.path, fileName);
 
         try {
-            if (hasCopyApi && sourceInfo.profile.profile === destInfo.profile.profile) {
-                await api.copy(outputPath, {
-                    from: sourceInfo.path,
-                    recursive: options.tree.type === USSFileStructure.UssFileType.Directory,
-                    overwrite: options.overwrite ?? true,
-                });
-            } else if (options.tree.type === USSFileStructure.UssFileType.Directory) {
-                // Not all APIs respect the recursive option, so it's best to
-                // create a directory and copy recursively to avoid missing any files/folders
-                await api.create(outputPath, "directory");
-                if (options.tree.children) {
-                    for (const child of options.tree.children) {
-                        await this.copyTree(
-                            child.localUri,
-                            vscode.Uri.from({
-                                scheme: ZoweScheme.USS,
-                                path: path.posix.join(destInfo.profile.name, outputPath, child.baseName),
-                            }),
-                            { ...options, tree: child }
-                        );
+            await AuthUtils.retryRequest(sourceInfo.profile, async () => {
+                if (hasCopyApi && sourceInfo.profile.profile === destInfo.profile.profile) {
+                    await api.copy(outputPath, {
+                        from: sourceInfo.path,
+                        recursive: options.tree.type === USSFileStructure.UssFileType.Directory,
+                        overwrite: options.overwrite ?? true,
+                    });
+                } else if (options.tree.type === USSFileStructure.UssFileType.Directory) {
+                    // Not all APIs respect the recursive option, so it's best to
+                    // create a directory and copy recursively to avoid missing any files/folders
+                    await api.create(outputPath, "directory");
+                    if (options.tree.children) {
+                        for (const child of options.tree.children) {
+                            await this.copyTree(
+                                child.localUri,
+                                vscode.Uri.from({
+                                    scheme: ZoweScheme.USS,
+                                    path: path.posix.join(destInfo.profile.name, outputPath, child.baseName),
+                                }),
+                                { ...options, tree: child }
+                            );
+                        }
                     }
+                } else {
+                    const fileEntry = this.lookup(source);
+                    if (!fileEntry.wasAccessed) {
+                        // must fetch contents of file first before pasting in new path
+                        await this.readFile(source);
+                    }
+                    await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath);
                 }
-            } else {
-                const fileEntry = this.lookup(source);
-                if (!fileEntry.wasAccessed) {
-                    // must fetch contents of file first before pasting in new path
-                    await this.readFile(source);
-                }
-                await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath);
-            }
+            });
         } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, destInfo.profile);
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({
                     message: "Failed to copy {0} to {1}",

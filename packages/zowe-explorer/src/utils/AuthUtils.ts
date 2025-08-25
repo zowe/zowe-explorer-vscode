@@ -24,6 +24,7 @@ import {
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
+import { SettingsConfig } from "../configuration/SettingsConfig";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -60,7 +61,7 @@ export class AuthUtils {
      * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
      * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
-    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded, callBack?: () => Promise<void>): Promise<void> {
+    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
         if (
             (err instanceof imperative.ImperativeError &&
                 (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
@@ -90,25 +91,31 @@ export class AuthUtils {
             if (AuthHandler.isProfileLocked(profile)) {
                 await AuthHandler.waitForUnlock(profile);
             } else {
-                const config = vscode.workspace.getConfiguration("zowe");
-                const maxExtenderRetry = config.get<number>("table.maxExtenderRetry", 0);
-
-                if (!this.maxAttempts[profile.name]) {
-                    this.maxAttempts[profile.name] = 0;
-                }
-
-                if (this.maxAttempts[profile.name] < maxExtenderRetry) {
-                    const profileUpdated = await AuthHandler.lockProfile(profile, authOpts);
-                    this.maxAttempts[profile.name]++;
-
-                    if (profileUpdated) {
-                        await callBack();
-                    }
-                }
+                // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
+                // This may throw AuthCancelledError if the user cancels the authentication prompt
+                await AuthHandler.lockProfile(profile, authOpts);
             }
         } else if (AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
             AuthHandler.unlockProfile(profile);
+        }
+    }
+
+    public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
+        const maxAttempts = SettingsConfig.getDirectValue("zowe.table.maxExtenderRetry", 0);
+        for (let i = 0; i <= maxAttempts; i++) {
+            try {
+                return await callback();
+            } catch (err) {
+                if (err instanceof Error) {
+                    ZoweLogger.error(err.message);
+                }
+                if (i < maxAttempts) {
+                    await this.handleProfileAuthOnError(err, profile);
+                } else {
+                    throw err;
+                }
+            }
         }
     }
 
