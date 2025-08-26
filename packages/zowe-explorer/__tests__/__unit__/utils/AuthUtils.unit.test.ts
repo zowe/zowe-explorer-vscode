@@ -118,7 +118,7 @@ describe("AuthUtils", () => {
                 msg: "All configured authentication methods failed",
             });
             const isUsingTokenAuthMock = jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
-            const getSessFromProfileMock = jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "basic" } } as any);
+            const getSessFromProfileMock = jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "basic" } } as any);
             const isProfileLockedMock = jest.spyOn(AuthHandler, "isProfileLocked").mockReturnValueOnce(true);
             const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
             const lockProfileSpy = jest.spyOn(AuthHandler, "lockProfile");
@@ -361,7 +361,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
             expect(sessionNode.dirty).toBe(true);
@@ -399,7 +399,7 @@ describe("AuthUtils", () => {
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
 
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "basic" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "basic" } } as any);
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
             expect(sessionNode.dirty).toBe(true);
@@ -439,7 +439,7 @@ describe("AuthUtils", () => {
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
 
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "cert-pem" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "cert-pem" } } as any);
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
             expect(sessionNode.dirty).toBe(true);
@@ -462,7 +462,7 @@ describe("AuthUtils", () => {
                     getSession: getSessionMock,
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -499,7 +499,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "basic" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "basic" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -538,7 +538,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "cert-pem" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "cert-pem" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -577,7 +577,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -602,7 +602,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.fullPath = "/a/user/fileName";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -628,7 +628,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Auth Method: Token Authentication\nJobId: JOB0001`;
             sessionNode.description = "Owner: * | Prefix: * | Status: *";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
@@ -656,7 +656,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Auth Method: Token Authentication\nOwner: * | Prefix: * | Status: *`;
             sessionNode.description = "JobId: JOB0001";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
@@ -696,7 +696,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "basic" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "basic" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown\nUser: sampleUser`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -736,7 +736,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Basic Authentication\nPattern: USER.*`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -776,7 +776,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Basic Authentication\nPath: /a/user/fileName.txt`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -816,7 +816,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Basic Authentication\nOwner: * | Prefix: * | Status: *\n `;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -856,7 +856,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Basic Authentication\nJobId: JOB0001\n `;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -882,7 +882,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = "Auth Method: Basic Authentication\nUser: sampleUser";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -908,7 +908,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Auth Method: Token Authentication\nPath: /a/user/fileNameOne`;
             sessionNode.fullPath = "/a/user/fileNameTwo";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
@@ -935,7 +935,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Auth Method: Token Authentication\nOwner: * | Prefix: * | Status: *`;
             sessionNode.description = "Owner: * | Prefix: * | Status: ACTIVE";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
@@ -962,7 +962,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Auth Method: Token Authentication\nJobId: JOB0001`;
             sessionNode.description = "JobId: JOB0002";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
@@ -1057,7 +1057,7 @@ describe("AuthUtils", () => {
                 message: "",
                 failNotFound: false,
             };
-            jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
             jest.spyOn(ZoweLogger, "error").mockImplementation();
             jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation();
         });

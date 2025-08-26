@@ -15,6 +15,7 @@ import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "../tree";
 import { Mutex } from "async-mutex";
 import * as vscode from "vscode";
+import { ZoweExplorerZosmf } from "./ZoweExplorerZosmfApi";
 
 /**
  * @brief individual authentication methods (also supports a `ProfilesCache` class)
@@ -102,8 +103,44 @@ export class AuthHandler {
     }
 
     /**
+     * Function that returns the session associated with the specified profile.
+     *
+     * @param {imperative.IProfileLoaded} profile The profile to be inspected.
+     *
+     * @returns {imperative.Session}
+     *      The session associated with the specified profile
+     */
+    public static getSessFromProfile(profile: imperative.IProfileLoaded): imperative.Session {
+        return new ZoweExplorerZosmf.CommonApi(profile).getSession();
+    }
+
+    /**
+     * Function that returns the session type for the specified session.
+     *
+     * @param {imperative.Session} session The session to be inspected.
+     *
+     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES}
+     *      The session type for the specified session
+     */
+    public static sessTypeFromSession(session: imperative.Session): imperative.SessConstants.AUTH_TYPE_CHOICES {
+        return session?.ISession?.type ?? imperative.SessConstants.AUTH_TYPE_NONE;
+    }
+
+    /**
+     * Function that returns the session type for the session associated with the specified profile.
+     *
+     * @param {imperative.IProfileLoaded} profile The profile to be inspected.
+     *
+     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES}
+     *      The session type for the session associated with the specified profile
+     */
+    public static sessTypeFromProfile(profile: imperative.IProfileLoaded): imperative.SessConstants.AUTH_TYPE_CHOICES {
+        return AuthHandler.sessTypeFromSession(AuthHandler.getSessFromProfile(profile));
+    }
+
+    /**
      * Function that checks whether a profile is using token based authentication
-     * @deprecated Use AuthUtils.sessTypeFromProfile and/or AuthUtils.sessTypeFromSession, which will adhere to authOrder.
+     * @deprecated Use AuthHandler.sessTypeFromProfile and/or AuthHandler.sessTypeFromSession, which will adhere to authOrder.
      * @param {string[]} profileProps Secure properties for the service profile
      * @param {string[]} baseProfileProps Base profile's secure properties (optional)
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not

@@ -940,7 +940,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
     });
     it("should show as active in status of profile using token auth", async () => {
         const globalMocks = createGlobalMocks();
-        jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
+        jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
         const ssoLoginSpy = jest.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce(true);
@@ -958,7 +958,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         const globalMocks = createGlobalMocks();
         setupProfilesCheck(globalMocks);
         jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "inactive", name: "sestest" });
-        jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+        jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
     });
     it("should show as unverified if using basic auth and has expired password", async () => {
@@ -975,7 +975,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
         const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
-        jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
+        jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
         jest.spyOn(Profiles.getInstance(), "ssoLogin").mockRejectedValue(false);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
@@ -1064,7 +1064,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         jest.spyOn(Profiles.getInstance(), "getPropsForProfile").mockImplementation(Profiles.getInstance().getProfileInfo as any);
         jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("");
         const errorSpy = jest.spyOn(ZoweLogger, "error");
-        jest.spyOn(AuthUtils, "getSessFromProfile").mockImplementation(() => {
+        jest.spyOn(AuthHandler, "getSessFromProfile").mockImplementation(() => {
             throw new Error("test error");
         });
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
@@ -1093,7 +1093,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         };
         jest.spyOn(Profiles.getInstance(), "isCertFileValid").mockReturnValueOnce(true);
         jest.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
-        jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" } } as any);
+        jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" } } as any);
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
     });
     it("should show as inactive in status of profile using invalid certificate auth", async () => {
@@ -1473,7 +1473,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     it("To switch from Basic to Token-based authentication using Base Profile", async () => {
-        jest.spyOn(AuthUtils, "sessTypeFromProfile").mockReturnValue("basic" as never);
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue("basic" as never);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => basicTeamConfig,
             getAllProfiles: () => [
@@ -1543,7 +1543,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     it("To check login fail's when trying to switch from Basic to Token-based authentication using Base Profile", async () => {
-        jest.spyOn(AuthUtils, "sessTypeFromProfile").mockReturnValue("basic" as never);
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue("basic" as never);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => basicTeamConfig,
             getAllProfiles: () => [
@@ -1599,7 +1599,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     it("To switch from Basic to Token-based authentication using Regular Profile", async () => {
-        jest.spyOn(AuthUtils, "sessTypeFromProfile").mockReturnValue("basic" as never);
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue("basic" as never);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => basicTeamConfig,
             getAllProfiles: () => [
@@ -1668,7 +1668,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     it("To check login fail's when trying to switch from Basic to Token-based authentication using Regular Profile", async () => {
-        jest.spyOn(AuthUtils, "sessTypeFromProfile").mockReturnValue("basic" as never);
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue("basic" as never);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => basicTeamConfig,
             getAllProfiles: () => [
@@ -1721,7 +1721,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     it("To switch from Token-based to Basic authentication when cred values are passed involving base profile", async () => {
-        jest.spyOn(AuthUtils, "sessTypeFromProfile").mockReturnValue("token" as never);
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue("token" as never);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => basicTeamConfig,
             getAllProfiles: () => [
@@ -1797,9 +1797,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     it("To not switch from Token-based to Basic authentication involving base profile when logout fails", async () => {
-        // jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(true);
-        // jest.spyOn(AuthUtils, "sessTypeFromSession").mockReturnValue("token" as never);
-        jest.spyOn(AuthUtils, "sessTypeFromProfile").mockReturnValue("token" as never);
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue("token" as never);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => basicTeamConfig,
             getAllProfiles: () => [
@@ -1869,7 +1867,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     it("To switch from Token-based to Basic authentication when cred values are passed involving regular profile", async () => {
-        jest.spyOn(AuthUtils, "sessTypeFromProfile").mockReturnValue("token" as never);
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue("token" as never);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => basicTeamConfig,
             getAllProfiles: () => [
@@ -1938,7 +1936,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     it("To not switch from Token-based to Basic authentication when cred values are not passed", async () => {
-        jest.spyOn(AuthUtils, "sessTypeFromProfile").mockReturnValue("token" as never);
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue("token" as never);
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => basicTeamConfig,
             getAllProfiles: () => [
@@ -1976,7 +1974,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
             secure: ["tokenType"],
         };
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue({ label: "Yes" } as vscode.QuickPickItem);
-        jest.spyOn(AuthUtils, "sessTypeFromProfile").mockReturnValue("token" as never);
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue("token" as never);
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
             getTokenTypeName: () => "apimlAuthenticationToken",
         } as never);
@@ -1993,7 +1991,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
     });
 
     it("To not perform switching the authentication for a profile which does not support token-based authentication", async () => {
-        jest.spyOn(AuthUtils, "sessTypeFromProfile").mockReturnValue("basic" as never);
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue("basic" as never);
         jest.spyOn(Gui, "errorMessage").mockImplementation();
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue({ label: "Yes" } as vscode.QuickPickItem);
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
@@ -2036,7 +2034,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
         } as any);
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue({ label: "Yes" } as vscode.QuickPickItem);
         jest.spyOn(Gui, "errorMessage").mockImplementation();
-        jest.spyOn(AuthUtils, "sessTypeFromProfile").mockReturnValue("basic" as never);
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue("basic" as never);
 
         jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue({
             getTokenTypeName: () => "apimlAuthenticationToken",

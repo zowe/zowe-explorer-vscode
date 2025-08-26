@@ -84,7 +84,7 @@ export class AuthUtils {
                 },
             });
 
-            const sessTypeFromProf = AuthUtils.sessTypeFromProfile(profile);
+            const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
             const authOpts: AuthPromptParams = {
                 authMethods: Constants.PROFILES_CACHE,
                 imperativeError: err as unknown as imperative.ImperativeError,
@@ -178,7 +178,7 @@ export class AuthUtils {
                     imperativeError.mDetails.additionalDetails = additionalDetails.join("\n");
                 }
 
-                const sessTypeFromProf = AuthUtils.sessTypeFromProfile(profile);
+                const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
                 return await AuthHandler.promptForAuthentication(profile, {
                     authMethods: Constants.PROFILES_CACHE,
                     imperativeError,
@@ -222,7 +222,7 @@ export class AuthUtils {
     }
 
     public static updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): void {
-        const iSessFromProf = AuthUtils.getSessFromProfile(profile).ISession;
+        const iSessFromProf = AuthHandler.getSessFromProfile(profile).ISession;
         imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
 
         let usingBasicAuth: boolean = false;
@@ -397,47 +397,8 @@ export class AuthUtils {
     }
 
     /**
-     * Function that returns the session associated with the specified profile.
-     *
-     * @param {imperative.IProfileLoaded} profile The profile to be inspected.
-     *
-     * @returns {imperative.Session}
-     *      The session associated with the specified profile
-     */
-    public static getSessFromProfile(profile: imperative.IProfileLoaded): imperative.Session {
-        return new ZoweExplorerZosmf.CommonApi(profile).getSession();
-    }
-
-    /**
-     * Function that returns the session type for the session associated with the specified profile.
-     *
-     * @param {imperative.IProfileLoaded} profile The profile to be inspected.
-     *
-     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES}
-     *      The session type for the session associated with the specified profile
-     */
-    public static sessTypeFromProfile(profile: imperative.IProfileLoaded): imperative.SessConstants.AUTH_TYPE_CHOICES {
-        return AuthUtils.sessTypeFromSession(AuthUtils.getSessFromProfile(profile));
-    }
-
-    /**
-     * Function that returns the session type for the specified session.
-     *
-     * @param {imperative.Session} session The session to be inspected.
-     *
-     * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES}
-     *      The session type for the specified session
-     */
-    public static sessTypeFromSession(session: imperative.Session): imperative.SessConstants.AUTH_TYPE_CHOICES {
-        if (session?.ISession?.type) {
-            return session.ISession.type;
-        }
-        return imperative.SessConstants.AUTH_TYPE_NONE;
-    }
-
-    /**
      * Function that checks whether a profile is using basic authentication
-     * @deprecated Use sessTypeFromProfile and/or sessTypeFromSession, which will adhere to authOrder.
+     * @deprecated Use AuthHandler.sessTypeFromProfile and/or AuthHandler.sessTypeFromSession, which will adhere to authOrder.
      * @param profile
      * @returns {Promise<boolean>} a boolean representing whether basic auth is being used or not
      */
@@ -449,7 +410,7 @@ export class AuthUtils {
 
     /**
      * Function that checks whether a profile is using token based authentication
-     * @deprecated Use sessTypeFromProfile and/or sessTypeFromSession, which will adhere to authOrder.
+     * @deprecated Use AuthHandler.sessTypeFromProfile and/or AuthHandler.sessTypeFromSession, which will adhere to authOrder.
      * @param profileName the name of the profile to check
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
      */

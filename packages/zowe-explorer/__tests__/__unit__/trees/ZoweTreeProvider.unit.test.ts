@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum, Sorting } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum, Sorting, AuthHandler } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweTreeProvider } from "../../../src/trees/ZoweTreeProvider";
 import {
@@ -35,9 +35,9 @@ import { JobInit } from "../../../src/trees/job/JobInit";
 import { createIJobObject, createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
 import { createDatasetFavoritesNode, createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
 import { DatasetInit } from "../../../src/trees/dataset/DatasetInit";
-import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { IconGenerator } from "../../../src/icons/IconGenerator";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
+import { AuthUtils } from "../../../src/utils/AuthUtils";
 
 async function createGlobalMocks() {
     Object.defineProperty(ZoweLocalStorage, "globalState", {
@@ -362,7 +362,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     it("Tests that checkCurrentProfile is executed successfully with active status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
+        jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
         const checkJwtSpy = jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile");
 
         await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);

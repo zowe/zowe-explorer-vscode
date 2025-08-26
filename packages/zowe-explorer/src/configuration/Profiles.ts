@@ -121,7 +121,7 @@ export class Profiles extends ProfilesCache {
         let iSessFromProf: imperative.ISession;
         const usingPrivateKey = theProfile.type === "ssh" && theProfile.profile.privateKey;
         try {
-            iSessFromProf = AuthUtils.getSessFromProfile(theProfile).ISession;
+            iSessFromProf = AuthHandler.getSessFromProfile(theProfile).ISession;
         } catch (error) {
             ZoweLogger.error(error);
             return profileStatus;
@@ -908,7 +908,7 @@ export class Profiles extends ProfilesCache {
         }
         await this.checkCurrentProfile(serviceProfile, node);
 
-        switch (AuthUtils.sessTypeFromProfile(serviceProfile)) {
+        switch (AuthHandler.sessTypeFromProfile(serviceProfile)) {
             case imperative.SessConstants.AUTH_TYPE_BASIC: {
                 let loginOk = false;
                 if (loginTokenType?.startsWith("apimlAuthenticationToken")) {

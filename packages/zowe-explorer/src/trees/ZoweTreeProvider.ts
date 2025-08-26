@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweTreeNode, imperative, Types, IZoweTree, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, imperative, Types, IZoweTree, PersistenceSchemaEnum, Validation, AuthHandler } from "@zowe/zowe-explorer-api";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
@@ -273,7 +273,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, node);
 
         let jwtCheckResult: JwtCheckResult;
-        const sessTypeFromProf = AuthUtils.sessTypeFromProfile(profile);
+        const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
         if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER) {
             jwtCheckResult = await ZoweTreeProvider.checkJwtForProfile(profileName);
         } else {

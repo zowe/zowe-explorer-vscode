@@ -10,13 +10,12 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
+import { AuthHandler, Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
-import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
 
 export class ProfileManagement {
@@ -40,7 +39,7 @@ export class ProfileManagement {
     }
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
-        const sessTypeFromProf = AuthUtils.sessTypeFromProfile(profile);
+        const sessTypeFromProf = AuthHandler.sessTypeFromSession(AuthHandler.getSessFromProfile(profile));
         let selected: vscode.QuickPickItem;
         if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BASIC) {
             ZoweLogger.debug(`Profile ${profile.name} is using basic authentication.`);
