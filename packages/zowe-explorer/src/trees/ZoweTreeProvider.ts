@@ -65,9 +65,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     }
 
     protected async isGlobalProfileNode(node: T): Promise<boolean> {
-        const mProfileInfo = await Profiles.getInstance().getProfileInfo();
-        const prof = mProfileInfo.getAllProfiles().find((p) => p.profName === node.getProfileName());
-        const osLocInfo = mProfileInfo.getOsLocInfo(prof);
+        const osLocInfo = Profiles.getInstance().getOsLocInfo(node.getProfileName());
         if (osLocInfo?.[0]?.global) {
             return true;
         }
