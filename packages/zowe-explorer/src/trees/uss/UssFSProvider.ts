@@ -349,16 +349,19 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return;
         }
 
-        await AuthUtils.retryRequest(uriInfo.profile, async () => {
-            resp = await ZoweExplorerApiRegister.getUssApi(profile).getContents(filePath, {
-                binary: file.encoding?.kind === "binary",
-                encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
-                responseTimeout: profile.profile?.responseTimeout,
-                returnEtag: true,
-                stream: bufBuilder,
+        try {
+            await AuthUtils.retryRequest(uriInfo.profile, async () => {
+                resp = await ZoweExplorerApiRegister.getUssApi(profile).getContents(filePath, {
+                    binary: file.encoding?.kind === "binary",
+                    encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
+                    responseTimeout: profile.profile?.responseTimeout,
+                    returnEtag: true,
+                    stream: bufBuilder,
+                });
             });
-        });
-
+        } catch {
+            return;
+        }
         if (!options?.isConflict) {
             file.wasAccessed = true;
         }

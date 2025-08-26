@@ -10,7 +10,7 @@
  */
 
 import { Disposable, FilePermission, FileType, Uri, window } from "vscode";
-import { FsJobsUtils, FilterEntry, Gui, JobEntry, SpoolEntry, ZoweScheme, AuthHandler, FsAbstractUtils } from "@zowe/zowe-explorer-api";
+import { FsJobsUtils, FilterEntry, Gui, JobEntry, SpoolEntry, ZoweScheme, AuthHandler, FsAbstractUtils, imperative } from "@zowe/zowe-explorer-api";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { createIJobFile, createIJobObject } from "../../../__mocks__/mockCreators/jobs";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -620,7 +620,9 @@ describe("fetchSpoolAtUri", () => {
             .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
         const mockJesApi = {
             downloadSingleSpool: jest.fn((opts) => {
-                throw new Error("Failed to download spool");
+                throw new imperative.ImperativeError({
+                    msg: "All configured authentication methods failed",
+                });
             }),
         };
         const promptForAuthErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation();

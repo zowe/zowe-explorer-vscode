@@ -418,7 +418,7 @@ describe("UssFSProvider", () => {
             const fileEntry = { ...testEntries.file };
             const _fireSoonSpy = jest.spyOn((UssFSProvider as any).prototype, "_fireSoon");
             const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
-            const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
+            const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValueOnce(undefined);
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
                 getContents: jest.fn().mockRejectedValue(new Error("error retrieving contents")),
             } as any);
@@ -1760,7 +1760,7 @@ describe("UssFSProvider", () => {
                 isProfileLockedMock.mockReturnValueOnce(true);
                 const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
                 const ussApiMock = {
-                    fileList: jest.fn().mockResolvedValueOnce({ success: true, items: [] }),
+                    fileList: jest.fn(),
                 } as any;
 
                 const getUssApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(ussApiMock);

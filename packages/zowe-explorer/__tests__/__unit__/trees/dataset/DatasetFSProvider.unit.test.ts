@@ -22,6 +22,7 @@ import {
     FsAbstractUtils,
     FsDatasetsUtils,
     Gui,
+    imperative,
     PdsEntry,
     ZoweExplorerApiType,
     ZoweScheme,
@@ -34,7 +35,7 @@ import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import * as path from "path";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
-import { DeferredPromise } from "@zowe/imperative";
+import { DeferredPromise, Imperative } from "@zowe/imperative";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 const dayjs = require("dayjs");
@@ -978,7 +979,11 @@ describe("DatasetFSProvider", () => {
             expect(allMembersMock).toHaveBeenCalled();
         });
         it("calls handleProfileAuthOnError in the case of an API error", async () => {
-            const allMembersMock = jest.fn().mockRejectedValue(new Error("API error"));
+            const allMembersMock = jest.fn().mockRejectedValue(
+                new imperative.ImperativeError({
+                    msg: "All configured authentication methods failed",
+                })
+            );
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 allMembers: allMembersMock,
             } as any);

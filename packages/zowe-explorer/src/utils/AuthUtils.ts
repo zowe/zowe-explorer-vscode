@@ -110,7 +110,13 @@ export class AuthUtils {
                 if (err instanceof Error) {
                     ZoweLogger.error(err.message);
                 }
-                if (i < maxAttempts) {
+                if (
+                    (i < maxAttempts &&
+                        err instanceof imperative.ImperativeError &&
+                        (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                            err.message.includes("All configured authentication methods failed"))) ||
+                    err.message.includes("HTTP(S) status 401")
+                ) {
                     await this.handleProfileAuthOnError(err, profile);
                 } else {
                     throw err;
