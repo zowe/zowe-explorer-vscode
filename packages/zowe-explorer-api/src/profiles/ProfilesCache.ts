@@ -262,8 +262,8 @@ export class ProfilesCache {
     }
 
     public getOsLocInfo(profileName: string): imperative.IProfLocOsLoc[] {
-        const prof = this.profileInfo.getAllProfiles().find((prof) => prof.profName === profileName);
-        return this.profileInfo.getOsLocInfo(prof);
+        const profAttrs = this.profileInfo.getAllProfiles().find((prof) => prof.profName === profileName);
+        return this.profileInfo.getOsLocInfo(profAttrs);
     }
 
     public validateAndParseUrl(newUrl: string): Validation.IValidationUrl {
