@@ -32,6 +32,7 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import * as vscode from "vscode";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 const testProfile = createIProfile();
 
@@ -96,6 +97,11 @@ describe("UssFSProvider", () => {
             } as any),
         });
         jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.table.maxExtenderRetry") {
+                return 1;
+            }
+        });
     });
 
     afterAll(() => {

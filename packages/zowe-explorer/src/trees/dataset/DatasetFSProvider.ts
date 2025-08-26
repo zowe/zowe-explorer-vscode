@@ -445,8 +445,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         let resp;
-        const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
+
         await AuthUtils.retryRequest(metadata.profile, async () => {
+            const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
             resp = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(metadata.dsName, {
                 binary: dsEntry?.encoding?.kind === "binary",
                 encoding: dsEntry?.encoding?.kind === "other" ? dsEntry?.encoding.codepage : profileEncoding,

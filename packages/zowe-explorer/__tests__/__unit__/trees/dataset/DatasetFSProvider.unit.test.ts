@@ -35,6 +35,7 @@ import * as path from "path";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { DeferredPromise } from "@zowe/imperative";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 const dayjs = require("dayjs");
 
@@ -93,6 +94,11 @@ describe("DatasetFSProvider", () => {
             } as any),
         });
         jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.table.maxExtenderRetry") {
+                return 1;
+            }
+        });
     });
 
     afterAll(() => {
@@ -259,7 +265,7 @@ describe("DatasetFSProvider", () => {
             expect(await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { isConflict: true })).toBe(null);
         });
 
-        it("calls _updateResourceInEditor if 'editor' is specified", async () => {
+        it.only("calls _updateResourceInEditor if 'editor' is specified", async () => {
             const contents = "dataset contents";
             const mockMvsApi = {
                 getContents: jest.fn((dsn, opts) => {

@@ -285,6 +285,9 @@ describe("JobFSProvider.supportSpoolPagination", () => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return true;
             }
+            if (key === "zowe.table.maxExtenderRetry") {
+                return 1;
+            }
         });
 
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
@@ -300,6 +303,9 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return false;
+            }
+            if (key === "zowe.table.maxExtenderRetry") {
+                return 1;
             }
         });
 
@@ -346,6 +352,9 @@ describe("fetchSpoolAtUri", () => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return true;
             }
+            if (key === "zowe.table.maxExtenderRetry") {
+                return 1;
+            }
             return false;
         });
         const mockJesApi = {
@@ -383,6 +392,9 @@ describe("fetchSpoolAtUri", () => {
             }
             if (key === "zowe.jobs.paginate.recordsToFetch") {
                 return 20;
+            }
+            if (key === "zowe.table.maxExtenderRetry") {
+                return 1;
             }
         });
         const mockJesApi = {
@@ -455,6 +467,9 @@ describe("fetchSpoolAtUri", () => {
             }
             if (key === "zowe.jobs.paginate.enabled") {
                 return true;
+            }
+            if (key === "zowe.table.maxExtenderRetry") {
+                return 1;
             }
         });
 
