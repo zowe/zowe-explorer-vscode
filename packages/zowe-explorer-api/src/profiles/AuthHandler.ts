@@ -15,7 +15,7 @@ import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "../tree";
 import { Mutex } from "async-mutex";
 import * as vscode from "vscode";
-import { ZoweExplorerZosmf } from "./ZoweExplorerZosmfApi";
+import { ZoweVsCodeExtension } from "../vscode/ZoweVsCodeExtension";
 
 /**
  * @brief individual authentication methods (also supports a `ProfilesCache` class)
@@ -111,7 +111,7 @@ export class AuthHandler {
      *      The session associated with the specified profile
      */
     public static getSessFromProfile(profile: imperative.IProfileLoaded): imperative.Session {
-        return new ZoweExplorerZosmf.CommonApi(profile).getSession();
+        return ZoweVsCodeExtension.getZoweExplorerApi().getCommonApi(profile).getSession(profile);
     }
 
     /**
@@ -150,7 +150,7 @@ export class AuthHandler {
         if (profileProps.includes("tokenValue")) {
             return !profileUsesBasicAuth;
         }
-        return baseProfileProps?.includes("tokenValue") && !profileUsesBasicAuth;
+        return baseProfileProps?.includes("tokenValue") ?? !profileUsesBasicAuth;
     }
 
     /**
