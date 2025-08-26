@@ -187,51 +187,35 @@ export function ProfileWizardModal({
                 {l10n.t("Add Property")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}:
               </label>
               <div className="wizard-property-form">
-                <div className="wizard-property-input-container" style={{ position: "relative" }}>
-                  <input
-                    type="text"
-                    value={wizardNewPropertyKey}
-                    onChange={(e) => {
-                      onNewPropertyKeyChange((e.target as HTMLInputElement).value);
-                      onShowKeyDropdownChange(true);
-                    }}
-                    onFocus={() => onShowKeyDropdownChange(true)}
-                    onBlur={() => setTimeout(() => onShowKeyDropdownChange(false), 100)}
-                    className={`modal-input wizard-input ${
-                      wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) ? "error" : ""
-                    }`}
-                    placeholder={l10n.t("Property key")}
-                    style={{ paddingRight: "2rem" }}
-                  />
-                  {wizardNewPropertyKey && (
-                    <button
-                      onClick={() => onNewPropertyKeyChange("")}
-                      className="profile-clear-button"
-                      title="Clear input"
-                      style={{
-                        position: "absolute",
-                        right: "8px",
-                        top: "calc(50% - 4px)",
-                        transform: "translateY(-50%)",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        padding: "2px",
-                        borderRadius: "3px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                <div className="wizard-property-input-container">
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type="text"
+                      value={wizardNewPropertyKey}
+                      onChange={(e) => {
+                        onNewPropertyKeyChange((e.target as HTMLInputElement).value);
+                        onShowKeyDropdownChange(true);
                       }}
-                    >
-                      <span
-                        className="codicon codicon-chrome-close"
-                        style={{
-                          fontSize: "12px",
-                          lineHeight: 1,
-                        }}
-                      />
-                    </button>
-                  )}
+                      onFocus={() => onShowKeyDropdownChange(true)}
+                      onBlur={() => setTimeout(() => onShowKeyDropdownChange(false), 100)}
+                      className={`modal-input wizard-input ${
+                        wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) ? "error" : ""
+                      }`}
+                      placeholder={l10n.t("Property key")}
+                      style={{ paddingRight: "2rem" }}
+                    />
+                    {wizardNewPropertyKey && (
+                      <button onClick={() => onNewPropertyKeyChange("")} className="profile-clear-button" title="Clear input">
+                        <span
+                          className="codicon codicon-chrome-close"
+                          style={{
+                            fontSize: "12px",
+                            lineHeight: 1,
+                          }}
+                        />
+                      </button>
+                    )}
+                  </div>
                   {wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) && (
                     <div className="wizard-error">{l10n.t("Property key already exists")}</div>
                   )}

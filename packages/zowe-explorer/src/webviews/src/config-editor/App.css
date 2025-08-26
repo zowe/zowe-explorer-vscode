@@ -520,7 +520,7 @@ ul {
 
 .profile-clear-button {
     position: absolute;
-    right: 0.5rem;
+    right: 8px;
     top: 50%;
     transform: translateY(-70%);
     background: transparent !important;
@@ -531,8 +531,9 @@ ul {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 1.5rem;
-    width: 1.5rem;
+    height: 16px;
+    width: 16px;
+    z-index: 1;
 }
 
 /* Select placeholder styling - only affects the displayed value, not dropdown options */
