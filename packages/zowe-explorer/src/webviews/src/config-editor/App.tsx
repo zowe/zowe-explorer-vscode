@@ -155,6 +155,7 @@ export function App() {
   const [selectedProfilesByConfig, setSelectedProfilesByConfig] = useState<{ [configPath: string]: string | null }>({});
   const [addConfigModalOpen, setAddConfigModalOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
+
   const [hasPromptedForZeroConfigs, setHasPromptedForZeroConfigs] = useState(false);
 
   // Use ref to access current selectedProfileKey in event listeners
@@ -676,6 +677,13 @@ export function App() {
         // Request fresh data
         vscodeApi.postMessage({ command: "GET_PROFILES" });
         vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+      } else if (event.data.command === "REFRESH") {
+        // Handle refresh command from VS Code
+        handleRefresh();
+      } else if (event.data.command === "SAVE") {
+        // Handle save command from VS Code
+        handleSave();
+        setSaveModalOpen(true);
       }
     });
 
@@ -689,6 +697,7 @@ export function App() {
       if (!selectedProfileKeyRef.current) {
         vscodeApi.postMessage({ command: "GET_PROFILES" });
         vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+        vscodeApi.postMessage({ command: "GET_KEYBINDS" });
       }
     };
 
@@ -883,16 +892,17 @@ export function App() {
     const path = flattenedConfig[key]?.path ?? key.split(".");
     const profileKey = extractProfileKeyFromPath(path);
 
-    // Check if this is a secure property
-    const isSecureProperty = key.includes("secure.") || key.split(".").includes("secure");
+    // Check if this property is currently secure
+    const displayKey = path[path.length - 1];
+    const currentSecure = isPropertySecure(key, displayKey, path);
 
-    // When a user changes a property, it should become a local property (not merged)
-    // This ensures that overwritten merged properties become editable
+    // When a user changes a property, maintain its current secure state
+    // This ensures that secure properties stay secure when modified
     setPendingChanges((prev) => ({
       ...prev,
       [configPath]: {
         ...prev[configPath],
-        [key]: { value, path, profile: profileKey, secure: isSecureProperty },
+        [key]: { value, path, profile: profileKey, secure: currentSecure },
       },
     }));
 
@@ -1778,7 +1788,8 @@ export function App() {
     if (profileKey && configPath) {
       const typeKey = `profiles.${profileKey}.type`;
       const pendingType = pendingChanges[configPath]?.[typeKey]?.value;
-      if (pendingType && typeof pendingType === "string") {
+      if (pendingType !== undefined && typeof pendingType === "string") {
+        // Return the pending type (including empty string for typeless profiles)
         return pendingType;
       }
     }
@@ -1795,8 +1806,10 @@ export function App() {
 
     // Get the profile type from the path
     const profileType = getProfileTypeFromPath(path);
+
+    // Allow secure properties for typeless profiles (when profileType is null/undefined)
     if (!profileType) {
-      return false;
+      return true;
     }
 
     // Get the schema validation for the current configuration
@@ -1824,8 +1837,13 @@ export function App() {
 
   // Helper function to check if a property can be made secure based on the schema (for wizard)
   const canPropertyBeSecureForWizard = (displayKey: string, profileType: string): boolean => {
-    if (!displayKey || !profileType) {
+    if (!displayKey) {
       return false;
+    }
+
+    // Allow secure properties for typeless profiles (when profileType is empty)
+    if (!profileType) {
+      return true;
     }
 
     // Get the schema validation for the current configuration
@@ -2622,20 +2640,14 @@ export function App() {
               (!isFromMergedProps || isSecurePropertyForSorting) &&
               (() => {
                 const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties);
-                // Only show lock/unlock button for properties that are not already defined as secure in the profile's secure array
-                const isDefinedAsSecureInProfile = isSecurePropertyForSorting;
                 const canBeSecure = canPropertyBeSecure(displayKey, path);
                 return (
                   <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                    {!isDefinedAsSecureInProfile &&
-                      canBeSecure &&
+                    {canBeSecure &&
+                      !isSecure &&
                       (secureValuesAllowed ? (
-                        <button
-                          className="action-button"
-                          onClick={() => handleToggleSecure(fullKey, displayKey, path)}
-                          title={isSecure ? "Make property non-secure" : "Make property secure"}
-                        >
-                          <span className={`codicon codicon-${isSecure ? "lock" : "unlock"}`}></span>
+                        <button className="action-button" onClick={() => handleToggleSecure(fullKey, displayKey, path)} title="Make property secure">
+                          <span className="codicon codicon-unlock"></span>
                         </button>
                       ) : (
                         <button
@@ -2973,8 +2985,21 @@ export function App() {
     // Get the profile type, which will include pending changes
     const resolvedType = getProfileType(profileKey);
 
-    const propertySchema = schemaValidations[configPath]?.propertySchema[resolvedType || ""] || {};
-    const allPropertyKeys = Object.keys(propertySchema);
+    // Get all available property schemas from all profile types
+    const allPropertyKeys = new Set<string>();
+    const propertySchema = schemaValidations[configPath]?.propertySchema || {};
+
+    if (resolvedType && propertySchema[resolvedType]) {
+      // If profile has a type, get properties from that type
+      Object.keys(propertySchema[resolvedType]).forEach((key) => allPropertyKeys.add(key));
+    } else {
+      // If no type is selected, get properties from all available types
+      Object.values(propertySchema).forEach((typeSchema: any) => {
+        if (typeSchema && typeof typeSchema === "object") {
+          Object.keys(typeSchema).forEach((key) => allPropertyKeys.add(key));
+        }
+      });
+    }
 
     // Get existing properties for this profile (both from current profile and pending changes)
     const existingProperties = new Set<string>();
@@ -3031,7 +3056,7 @@ export function App() {
     });
 
     // Filter out existing properties from the available options
-    return allPropertyKeys.filter((key) => !existingProperties.has(key));
+    return Array.from(allPropertyKeys).filter((key) => !existingProperties.has(key));
   };
 
   return (

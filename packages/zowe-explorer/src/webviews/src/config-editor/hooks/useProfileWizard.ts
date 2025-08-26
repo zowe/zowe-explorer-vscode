@@ -78,11 +78,26 @@ export function useProfileWizard({
 
     const getWizardPropertyOptions = () => {
         if (selectedTab === null) return [];
-        if (!wizardSelectedType) return [];
-        const allOptions = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || {};
+
+        // Get all available property schemas from all profile types
+        const allPropertyOptions = new Set<string>();
+        const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema || {};
+
+        // If a specific type is selected, get properties from that type
+        if (wizardSelectedType && propertySchema[wizardSelectedType]) {
+            Object.keys(propertySchema[wizardSelectedType]).forEach((key) => allPropertyOptions.add(key));
+        } else {
+            // If no type is selected, get properties from all available types
+            Object.values(propertySchema).forEach((typeSchema: any) => {
+                if (typeSchema && typeof typeSchema === "object") {
+                    Object.keys(typeSchema).forEach((key) => allPropertyOptions.add(key));
+                }
+            });
+        }
+
         // Filter out properties that are already added
         const usedKeys = new Set(wizardProperties.map((prop) => prop.key));
-        return Object.keys(allOptions)
+        return Array.from(allPropertyOptions)
             .filter((option) => !usedKeys.has(option))
             .sort((a, b) => a.localeCompare(b));
     };

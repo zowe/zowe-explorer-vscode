@@ -696,6 +696,7 @@ export class ConfigEditor extends WebView {
                 }
                 break;
             }
+
             default:
                 break;
         }

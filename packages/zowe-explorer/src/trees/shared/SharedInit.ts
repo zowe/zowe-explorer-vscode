@@ -232,6 +232,25 @@ export class SharedInit {
             })
         );
 
+        // Config Editor refresh and save commands
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.configEditor.refresh", async () => {
+                // Find the active config editor webview and send refresh command
+                if (existingConfigEditor && existingConfigEditor.panel && existingConfigEditor.panel.visible) {
+                    await existingConfigEditor.panel.webview.postMessage({ command: "REFRESH" });
+                }
+            })
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.configEditor.save", async () => {
+                // Find the active config editor webview and send save command
+                if (existingConfigEditor && existingConfigEditor.panel && existingConfigEditor.panel.visible) {
+                    await existingConfigEditor.panel.webview.postMessage({ command: "SAVE" });
+                }
+            })
+        );
+
         // Register functions & event listeners
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {

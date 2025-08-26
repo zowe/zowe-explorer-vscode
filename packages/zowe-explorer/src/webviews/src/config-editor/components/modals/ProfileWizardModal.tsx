@@ -257,7 +257,17 @@ export function ProfileWizardModal({
                 <div className="wizard-property-value-row">
                   {(() => {
                     const propertyType = getPropertyType(wizardNewPropertyKey.trim());
-                    if (propertyType === "boolean") {
+                    if (wizardNewPropertySecure) {
+                      return (
+                        <input
+                          type="password"
+                          value={wizardNewPropertyValue}
+                          onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
+                          className="modal-input wizard-property-value-input"
+                          placeholder="••••••••"
+                        />
+                      );
+                    } else if (propertyType === "boolean") {
                       return (
                         <select
                           value={wizardNewPropertyValue}
@@ -431,7 +441,13 @@ export function ProfileWizardModal({
                               <div className="wizard-property-actions">
                                 <div className="wizard-property-value-container">
                                   {prop.secure ? (
-                                    <span style={{ display: "flex", alignItems: "center", height: "28px", fontSize: "0.95em" }}>********</span>
+                                    <input
+                                      type="password"
+                                      value={stringifyValueByType(prop.value)}
+                                      onChange={(e) => onPropertyValueChange(index, (e.target as HTMLInputElement).value)}
+                                      className="modal-input wizard-property-value-input-small"
+                                      placeholder="••••••••"
+                                    />
                                   ) : propertyType === "boolean" ? (
                                     <select
                                       value={stringifyValueByType(prop.value)}
