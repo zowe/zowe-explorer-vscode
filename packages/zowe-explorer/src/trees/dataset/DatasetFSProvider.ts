@@ -447,7 +447,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let resp;
 
         await AuthUtils.retryRequest(metadata.profile, async () => {
-            const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
             resp = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(metadata.dsName, {
                 binary: dsEntry?.encoding?.kind === "binary",
                 encoding: dsEntry?.encoding?.kind === "other" ? dsEntry?.encoding.codepage : profileEncoding,
@@ -456,6 +455,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 stream: bufBuilder,
             });
 
+            const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
             //if an entry does not exist for the dataset, create it
             if (!dsEntry) {
                 const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());

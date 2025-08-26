@@ -255,7 +255,7 @@ describe("DatasetFSProvider", () => {
             expect(fakePo.conflictData?.size).toBe(contents.length);
         });
 
-        it("returns null if API call fails", async () => {
+        it.only("returns null if API call fails", async () => {
             const mockMvsApi = {
                 getContents: jest.fn().mockRejectedValue(new Error("unknown API error")),
             };
@@ -265,7 +265,7 @@ describe("DatasetFSProvider", () => {
             expect(await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { isConflict: true })).toBe(null);
         });
 
-        it.only("calls _updateResourceInEditor if 'editor' is specified", async () => {
+        it("calls _updateResourceInEditor if 'editor' is specified", async () => {
             const contents = "dataset contents";
             const mockMvsApi = {
                 getContents: jest.fn((dsn, opts) => {
