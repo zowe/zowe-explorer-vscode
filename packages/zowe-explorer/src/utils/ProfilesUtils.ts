@@ -746,12 +746,12 @@ export class ProfilesUtils {
     ]);
 
     public static async awaitExtenderType(profileName: string, profInfo: ProfilesCache): Promise<void> {
-        const profAttrs = await profInfo.getProfileFromConfig(profileName);
-        if (profAttrs && !ProfilesUtils.extenderTypeReady.has(profAttrs.profType)) {
+        const profLoaded = profInfo.allProfiles.find((prof) => prof.name === profileName);
+        if (profLoaded && !ProfilesUtils.extenderTypeReady.has(profLoaded.type)) {
             const deferredPromise = new imperative.DeferredPromise<void>();
-            ProfilesUtils.extenderTypeReady.set(profAttrs.profType, deferredPromise);
+            ProfilesUtils.extenderTypeReady.set(profLoaded.type, deferredPromise);
         }
-        const profilePromise = ProfilesUtils.extenderTypeReady.get(profAttrs?.profType);
+        const profilePromise = ProfilesUtils.extenderTypeReady.get(profLoaded?.type);
         const promiseTimeout = 10000;
         if (profilePromise) {
             let timeoutHandle: NodeJS.Timeout;
