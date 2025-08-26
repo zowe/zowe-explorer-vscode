@@ -255,7 +255,7 @@ describe("DatasetFSProvider", () => {
             expect(fakePo.conflictData?.size).toBe(contents.length);
         });
 
-        it.only("returns null if API call fails", async () => {
+        it("returns null if API call fails", async () => {
             const mockMvsApi = {
                 getContents: jest.fn().mockRejectedValue(new Error("unknown API error")),
             };

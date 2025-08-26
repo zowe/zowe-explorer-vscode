@@ -433,66 +433,73 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profile = Profiles.getInstance().loadNamedProfile(metadata.profile.name);
         const profileEncoding = dsEntry?.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
-        // Wait for any ongoing authentication process to complete
-        await AuthUtils.reauthenticateIfCancelled(profile);
-        await AuthHandler.waitForUnlock(metadata.profile);
+        try {
+            // Wait for any ongoing authentication process to complete
+            await AuthUtils.reauthenticateIfCancelled(profile);
+            await AuthHandler.waitForUnlock(metadata.profile);
 
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(metadata.profile)) {
-            ZoweLogger.warn(`[DatasetFSProvider] Profile ${metadata.profile.name} is locked, waiting for authentication`);
+            // Check if the profile is locked (indicating an auth error is being handled)
+            // If it's locked, we should wait and not make additional requests
+            if (AuthHandler.isProfileLocked(metadata.profile)) {
+                ZoweLogger.warn(`[DatasetFSProvider] Profile ${metadata.profile.name} is locked, waiting for authentication`);
+                return null;
+            }
+
+            let resp;
+
+            await AuthUtils.retryRequest(metadata.profile, async () => {
+                resp = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(metadata.dsName, {
+                    binary: dsEntry?.encoding?.kind === "binary",
+                    encoding: dsEntry?.encoding?.kind === "other" ? dsEntry?.encoding.codepage : profileEncoding,
+                    responseTimeout: profile.profile?.responseTimeout,
+                    returnEtag: true,
+                    stream: bufBuilder,
+                });
+
+                const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
+                //if an entry does not exist for the dataset, create it
+                if (!dsEntry) {
+                    const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+                    const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
+                    const pdsMember = uriPath.length === 2;
+                    this.createDirectory(uri.with({ path: path.posix.join(uri.path, "..") }));
+                    const parentDir = this.lookupParentDirectory(uri);
+                    const dsname = uriPath[Number(pdsMember)];
+                    const ds = new DsEntry(dsname, pdsMember);
+                    ds.metadata = new DsEntryMetadata({
+                        path: path.posix.join(parentDir.metadata.path, dsname),
+                        profile: parentDir.metadata.profile,
+                    });
+                    parentDir.entries.set(dsname, ds);
+                    dsEntry = parentDir.entries.get(dsname) as DsEntry;
+                }
+
+                if (options?.isConflict) {
+                    dsEntry.conflictData = {
+                        contents: data,
+                        etag: resp.apiResponse.etag,
+                        size: data.byteLength,
+                    };
+                } else {
+                    dsEntry.data = data;
+                    dsEntry.etag = resp.apiResponse.etag;
+                    dsEntry.size = dsEntry.data.byteLength;
+                    dsEntry.mtime = Date.now();
+                }
+            });
+            ZoweLogger.trace(`[DatasetFSProvider] fetchDatasetAtUri fired a change event for ${uri.toString()}`);
+            this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+
+            if (options?.editor) {
+                await this._updateResourceInEditor(uri);
+            }
+            return dsEntry;
+        } catch (error) {
+            //Response will error if the file is not found
+            //Callers of fetchDatasetAtUri() do not expect it to throw an error
+            await AuthUtils.handleProfileAuthOnError(error, metadata.profile);
             return null;
         }
-
-        let resp;
-
-        await AuthUtils.retryRequest(metadata.profile, async () => {
-            resp = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(metadata.dsName, {
-                binary: dsEntry?.encoding?.kind === "binary",
-                encoding: dsEntry?.encoding?.kind === "other" ? dsEntry?.encoding.codepage : profileEncoding,
-                responseTimeout: profile.profile?.responseTimeout,
-                returnEtag: true,
-                stream: bufBuilder,
-            });
-
-            const data: Uint8Array = bufBuilder.read() ?? new Uint8Array();
-            //if an entry does not exist for the dataset, create it
-            if (!dsEntry) {
-                const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-                const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
-                const pdsMember = uriPath.length === 2;
-                this.createDirectory(uri.with({ path: path.posix.join(uri.path, "..") }));
-                const parentDir = this.lookupParentDirectory(uri);
-                const dsname = uriPath[Number(pdsMember)];
-                const ds = new DsEntry(dsname, pdsMember);
-                ds.metadata = new DsEntryMetadata({
-                    path: path.posix.join(parentDir.metadata.path, dsname),
-                    profile: parentDir.metadata.profile,
-                });
-                parentDir.entries.set(dsname, ds);
-                dsEntry = parentDir.entries.get(dsname) as DsEntry;
-            }
-
-            if (options?.isConflict) {
-                dsEntry.conflictData = {
-                    contents: data,
-                    etag: resp.apiResponse.etag,
-                    size: data.byteLength,
-                };
-            } else {
-                dsEntry.data = data;
-                dsEntry.etag = resp.apiResponse.etag;
-                dsEntry.size = dsEntry.data.byteLength;
-                dsEntry.mtime = Date.now();
-            }
-        });
-        ZoweLogger.trace(`[DatasetFSProvider] fetchDatasetAtUri fired a change event for ${uri.toString()}`);
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
-
-        if (options?.editor) {
-            await this._updateResourceInEditor(uri);
-        }
-        return dsEntry;
     }
 
     /**
