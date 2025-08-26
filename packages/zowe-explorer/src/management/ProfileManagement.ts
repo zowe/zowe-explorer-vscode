@@ -49,7 +49,7 @@ export class ProfileManagement {
             ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
             selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_TOKEN, node);
         } else {
-            ZoweLogger.debug(`Profile ${profile.name} authentication method is unkown.`);
+            ZoweLogger.debug(`Profile ${profile.name} authentication method is unknown.`);
             selected = await this.setupProfileManagementQp(null, node);
         }
         await this.handleAuthSelection(selected, node, profile);

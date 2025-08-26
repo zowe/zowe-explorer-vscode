@@ -243,7 +243,7 @@ describe("ProfileManagement unit tests", () => {
     });
     describe("unit tests around no auth declared selections", () => {
         function createBlockMocks(globalMocks): any {
-            globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name as string} authentication method is unkown.`;
+            globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name as string} authentication method is unknown.`;
             jest.spyOn(AuthUtils, "getSessFromProfile").mockReturnValue({ ISession: { type: "none" } } as any);
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockNoAuthProfile);
             return globalMocks;
@@ -370,7 +370,7 @@ describe("ProfileManagement unit tests", () => {
             blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zftp");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
         });
-        it("should return empty array when unkown tree is forcefully passed", () => {
+        it("should return empty array when unknown tree is forcefully passed", () => {
             createBlockMocks(createGlobalMocks());
             expect(ProfileManagement.getRegisteredProfileNameList("fake" as any)).toEqual([]);
         });
@@ -447,7 +447,7 @@ describe("ProfileManagement unit tests", () => {
             blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zftp");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
         });
-        it("should return empty array when unkown tree is forcefully passed", () => {
+        it("should return empty array when unknown tree is forcefully passed", () => {
             createBlockMocks(createGlobalMocks());
             expect(ProfileManagement.getRegisteredProfileNameList("fake" as any)).toEqual([]);
         });
