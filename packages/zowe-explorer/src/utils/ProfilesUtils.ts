@@ -734,24 +734,15 @@ export class ProfilesUtils {
         Gui.infoMessage(responseMsg.join(""), { vsCodeOpts: { modal: true } });
     }
 
-    public static extenderTypeReady: Map<string, imperative.DeferredPromise<void>> = new Map([
-        [
-            "zosmf",
-            ((): imperative.DeferredPromise<void> => {
-                const deferred = new imperative.DeferredPromise<void>();
-                deferred.resolve();
-                return deferred;
-            })(),
-        ],
-    ]);
+    private static extenderTypeReady: Map<string, imperative.DeferredPromise<void>> = new Map();
 
     public static async awaitExtenderType(profileName: string, profInfo: ProfilesCache): Promise<void> {
         const profLoaded = profInfo.allProfiles.find((prof) => prof.name === profileName);
-        if (profLoaded && !ProfilesUtils.extenderTypeReady.has(profLoaded.type)) {
+        if (!profLoaded && !ProfilesUtils.extenderTypeReady.has(profileName)) {
             const deferredPromise = new imperative.DeferredPromise<void>();
-            ProfilesUtils.extenderTypeReady.set(profLoaded.type, deferredPromise);
+            ProfilesUtils.extenderTypeReady.set(profileName, deferredPromise);
         }
-        const profilePromise = ProfilesUtils.extenderTypeReady.get(profLoaded?.type);
+        const profilePromise = ProfilesUtils.extenderTypeReady.get(profileName);
         const promiseTimeout = 10000;
         if (profilePromise) {
             let timeoutHandle: NodeJS.Timeout;
@@ -762,12 +753,12 @@ export class ProfilesUtils {
         }
     }
 
-    public static async resolveTypePromise(extenderType: string): Promise<void> {
-        if (!ProfilesUtils.extenderTypeReady.has(extenderType)) {
-            // Prevent deadlocks by setting a resolved promise to avoid setting a new promise
-            ProfilesUtils.extenderTypeReady.set(extenderType, new imperative.DeferredPromise());
+    public static async resolveTypePromise(extenderType: string, profInfo: ProfilesCache): Promise<void> {
+        for (const profile of profInfo.getProfiles(extenderType)) {
+            if (ProfilesUtils.extenderTypeReady.has(profile.name)) {
+                ProfilesUtils.extenderTypeReady.get(profile.name).resolve();
+            }
         }
-        ProfilesUtils.extenderTypeReady.get(extenderType).resolve();
         await vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", extenderType);
     }
 }
