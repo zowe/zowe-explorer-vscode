@@ -118,11 +118,8 @@ export class ConfigChangeHandlers {
                     profileProps = ConfigSchemaHelpers.getProfileProperties(schemaPath);
                 }
                 // Check if the key is a string, then we know it does not need to be parsed
-                if (!profileProps.has(change.key.split(".")[change.key.split(".").length - 1])) {
-                    profInfo.getTeamConfig().set(change.key, change.value, { secure: change.secure });
-                } else {
-                    profInfo.getTeamConfig().set(change.key, change.value, { parseString: true, secure: change.secure });
-                }
+                const parseString = !profileProps.has(change.key.split(".")[change.key.split(".").length - 1]);
+                profInfo.getTeamConfig().set(change.key, change.value, { parseString, secure: change.secure });
             } catch (err) {
                 // console.log(err);
             }

@@ -236,7 +236,7 @@ export class SharedInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.configEditor.refresh", async () => {
                 // Find the active config editor webview and send refresh command
-                if (existingConfigEditor && existingConfigEditor.panel && existingConfigEditor.panel.visible) {
+                if (existingConfigEditor?.panel?.visible) {
                     await existingConfigEditor.panel.webview.postMessage({ command: "REFRESH" });
                 }
             })
@@ -245,7 +245,7 @@ export class SharedInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.configEditor.save", async () => {
                 // Find the active config editor webview and send save command
-                if (existingConfigEditor && existingConfigEditor.panel && existingConfigEditor.panel.visible) {
+                if (existingConfigEditor?.panel?.visible) {
                     await existingConfigEditor.panel.webview.postMessage({ command: "SAVE" });
                 }
             })
