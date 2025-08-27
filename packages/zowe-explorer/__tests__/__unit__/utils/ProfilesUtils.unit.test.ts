@@ -97,6 +97,13 @@ describe("ProfilesUtils unit tests", () => {
                 },
             }),
         });
+        beforeEach(() => {
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                getCommonApi: () => ({
+                    getSession: () => createISession(),
+                }),
+            } as any);
+        });
 
         it("should log error details", async () => {
             createBlockMocks();

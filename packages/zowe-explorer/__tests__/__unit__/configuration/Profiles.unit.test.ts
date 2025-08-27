@@ -918,6 +918,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
 
     beforeEach(() => {
         jest.restoreAllMocks();
+        jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: null } } as any);
     });
     it("should show as active in status of profile using basic auth", async () => {
         const globalMocks = createGlobalMocks();

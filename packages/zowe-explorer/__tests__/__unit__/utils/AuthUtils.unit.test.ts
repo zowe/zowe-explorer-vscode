@@ -9,7 +9,7 @@
  *
  */
 
-import { AuthHandler, ErrorCorrelator, Gui, imperative, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { AuthHandler, ErrorCorrelator, Gui, imperative, ZoweExplorerApiType, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { Constants } from "../../../src/configuration/Constants";
 import { MockedProperty } from "../../__mocks__/mockUtils";
@@ -26,6 +26,11 @@ jest.mock("../../../src/tools/ZoweLocalStorage");
 describe("AuthUtils", () => {
     beforeEach(() => {
         jest.restoreAllMocks();
+        jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+            getCommonApi: () => ({
+                getSession: () => createISession(),
+            }),
+        } as any);
     });
     describe("handleProfileAuthOnError", () => {
         it("should prompt for authentication", async () => {

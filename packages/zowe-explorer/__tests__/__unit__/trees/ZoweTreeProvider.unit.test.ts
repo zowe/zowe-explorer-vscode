@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum, Sorting, AuthHandler } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum, Sorting, AuthHandler, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweTreeProvider } from "../../../src/trees/ZoweTreeProvider";
 import {
@@ -349,6 +349,11 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     beforeEach(() => {
         // we should always try to start with a clean state
         jest.restoreAllMocks();
+        jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+            getCommonApi: () => ({
+                getSession: () => createISession(),
+            }),
+        } as any);
     });
 
     it("Tests that checkCurrentProfile is executed successfully with active status", async () => {

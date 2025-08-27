@@ -28,7 +28,7 @@ import {
     createMockNode,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
-import { ProfilesCache, imperative, Gui, Validation, NavigationTreeItem, FsAbstractUtils } from "@zowe/zowe-explorer-api";
+import { ProfilesCache, imperative, Gui, Validation, NavigationTreeItem, FsAbstractUtils, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Constants, JwtCheckResult } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { Profiles } from "../../../../src/configuration/Profiles";
@@ -1704,6 +1704,14 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         return newMocks;
     }
+
+    beforeEach(() => {
+        jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+            getCommonApi: () => ({
+                getSession: () => createISession(),
+            }),
+        } as any);
+    });
 
     it("Checking function on favorites", async () => {
         const globalMocks = createGlobalMocks();
