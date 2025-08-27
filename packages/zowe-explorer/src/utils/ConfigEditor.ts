@@ -809,6 +809,24 @@ export class ConfigEditor extends WebView {
         return Object.values(groups);
     }
 
+    /**
+     * Helper function to extract the type from a schema property
+     * If the type is an array, use the first value in the array
+     * @param typeValue - The type value from the schema (string or string array)
+     * @returns The resolved type as a string
+     */
+    private resolveSchemaType(typeValue: string | string[] | undefined): string | undefined {
+        if (!typeValue) {
+            return undefined;
+        }
+
+        if (Array.isArray(typeValue)) {
+            return typeValue[0];
+        }
+
+        return typeValue;
+    }
+
     private generateSchemaValidation(schema: any): schemaValidation {
         const propertySchema: Record<string, Record<string, { type?: string; description?: string; default?: any; secure?: boolean }>> = {};
         const allOf = schema.properties.profiles.patternProperties["^\\S*$"].allOf;
@@ -821,7 +839,7 @@ export class ConfigEditor extends WebView {
             if (profileType && properties) {
                 propertySchema[profileType] = Object.keys(properties).reduce((acc, key) => {
                     acc[key] = {
-                        type: properties[key].type,
+                        type: this.resolveSchemaType(properties[key].type),
                         description: properties[key].description,
                         default: properties[key].default,
                         secure: secureProperties.includes(key),

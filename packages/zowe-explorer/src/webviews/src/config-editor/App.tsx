@@ -854,39 +854,6 @@ export function App() {
     }, 100);
   }, [selectedTab, selectedProfileKey, configurations, formatPendingChanges]);
 
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Check for Cmd+S (Mac) or Ctrl+S (Windows/Linux)
-      if ((event.metaKey || event.ctrlKey) && event.key === "s") {
-        event.preventDefault();
-
-        const hasPendingChanges =
-          Object.keys(pendingChanges).length > 0 ||
-          Object.keys(deletions).length > 0 ||
-          Object.keys(pendingDefaults).length > 0 ||
-          Object.keys(defaultsDeletions).length > 0;
-
-        if (hasPendingChanges) {
-          handleSave();
-          setSaveModalOpen(true);
-        }
-      }
-
-      // Check for Cmd+Z (Mac) or Ctrl+Z (Windows/Linux)
-      if ((event.metaKey || event.ctrlKey) && event.key === "z") {
-        event.preventDefault();
-        handleRefresh();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, handleSave, handleRefresh]);
-
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
     const path = flattenedConfig[key]?.path ?? key.split(".");
