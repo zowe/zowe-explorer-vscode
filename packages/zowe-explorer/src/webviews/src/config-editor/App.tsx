@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
 import { isSecureOrigin } from "../utils";
-import { schemaValidation } from "../../../utils/ConfigEditor";
+import { schemaValidation } from "../../../utils/ConfigSchemaHelpers";
 import "./App.css";
 
 // Components
@@ -1657,15 +1657,18 @@ export function App() {
     configPath: string
   ): boolean => {
     // Only consider properties as merged if showMergedProperties is true and profile is not untyped
-    if (!showMergedProperties || isCurrentProfileUntyped()) {
+    // Check if the specific profile being evaluated is untyped, not just the currently selected profile
+    const currentProfileKey = extractProfileKeyFromPath(path);
+    const currentProfileType = getProfileType(currentProfileKey);
+    const isProfileUntyped = !currentProfileType || currentProfileType.trim() === "";
+
+    if (!showMergedProperties || isProfileUntyped) {
       return false;
     }
 
     if (!displayKey) {
       return false;
     }
-
-    const currentProfileKey = extractProfileKeyFromPath(path);
     const propertyExistsInPendingChanges = displayKey ? isPropertyInPendingChanges(displayKey, currentProfileKey, configPath) : false;
 
     const mergedPropData = mergedProps?.[displayKey];
@@ -1733,7 +1736,9 @@ export function App() {
     }
 
     if (profilePath) {
-      const sourceProfile = configurations[selectedTab!]?.properties?.profiles?.[profilePath];
+      // Use flattenProfiles to get the correct profile for nested profiles
+      const flatProfiles = flattenProfiles(configurations[selectedTab!]?.properties?.profiles || {});
+      const sourceProfile = flatProfiles[profilePath];
       return sourceProfile?.secure?.includes(displayKey) || false;
     }
 
@@ -1753,7 +1758,25 @@ export function App() {
 
     // First check if there's a pending type change
     if (profileKey && configPath) {
-      const typeKey = `profiles.${profileKey}.type`;
+      // For nested profiles, we need to construct the correct key that matches how it's stored in pending changes
+      let typeKey: string;
+      if (profileKey.includes(".")) {
+        // This is a nested profile - construct the full path with "profiles" segments
+        const profileParts = profileKey.split(".");
+        const pathParts = ["profiles"];
+        for (let i = 0; i < profileParts.length; i++) {
+          pathParts.push(profileParts[i]);
+          if (i < profileParts.length - 1) {
+            pathParts.push("profiles");
+          }
+        }
+        pathParts.push("type");
+        typeKey = pathParts.join(".");
+      } else {
+        // Top-level profile
+        typeKey = `profiles.${profileKey}.type`;
+      }
+
       const pendingType = pendingChanges[configPath]?.[typeKey]?.value;
       if (pendingType !== undefined && typeof pendingType === "string") {
         // Return the pending type (including empty string for typeless profiles)
@@ -1863,7 +1886,9 @@ export function App() {
     // Check if this property is in the original configuration's secure array
     const profileKey = extractProfileKeyFromPath(path);
     if (profileKey) {
-      const profile = configurations[selectedTab!]?.properties?.profiles?.[profileKey];
+      // Use flattenProfiles to get the correct profile for nested profiles
+      const flatProfiles = flattenProfiles(configurations[selectedTab!]?.properties?.profiles || {});
+      const profile = flatProfiles[profileKey];
       return profile?.secure?.includes(displayKey) || false;
     }
 
@@ -1887,10 +1912,8 @@ export function App() {
     const newSecure = !currentSecure;
 
     // Get the current value
-    const currentValue =
-      pendingChanges[configPath]?.[fullKey]?.value ??
-      configurations[selectedTab!]?.properties?.profiles?.[profileKey]?.properties?.[displayKey] ??
-      "";
+    const flatProfiles = flattenProfiles(configurations[selectedTab!]?.properties?.profiles || {});
+    const currentValue = pendingChanges[configPath]?.[fullKey]?.value ?? flatProfiles[profileKey]?.properties?.[displayKey] ?? "";
 
     // Update the pending changes with the new secure state
     setPendingChanges((prev) => ({
@@ -1924,8 +1947,8 @@ export function App() {
       if (!keyParts.includes("properties")) return false;
 
       // Check if the secure state has changed from the original
-      const originalSecure =
-        configurations[selectedTab!]?.properties?.profiles?.[profileKey]?.secure?.includes(keyParts[keyParts.length - 1]) || false;
+      const flatProfiles = flattenProfiles(configurations[selectedTab!]?.properties?.profiles || {});
+      const originalSecure = flatProfiles[profileKey]?.secure?.includes(keyParts[keyParts.length - 1]) || false;
       return entry.secure !== originalSecure;
     });
   };
