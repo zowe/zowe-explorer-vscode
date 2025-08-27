@@ -109,6 +109,8 @@ export class AuthHandler {
      *
      * @returns {imperative.Session}
      *      The session associated with the specified profile
+     *
+     * @throws {Error} If the profile type is not supported by the common APIs in the Zowe Explorer API register
      */
     public static getSessFromProfile(profile: imperative.IProfileLoaded): imperative.Session {
         return ZoweVsCodeExtension.getZoweExplorerApi().getCommonApi(profile).getSession(profile);
@@ -133,6 +135,8 @@ export class AuthHandler {
      *
      * @returns {imperative.SessConstants.AUTH_TYPE_CHOICES}
      *      The session type for the session associated with the specified profile
+     *
+     * @throws {Error} If the profile type is not supported by the common APIs in the Zowe Explorer API register
      */
     public static sessTypeFromProfile(profile: imperative.IProfileLoaded): imperative.SessConstants.AUTH_TYPE_CHOICES {
         return AuthHandler.sessTypeFromSession(AuthHandler.getSessFromProfile(profile));
