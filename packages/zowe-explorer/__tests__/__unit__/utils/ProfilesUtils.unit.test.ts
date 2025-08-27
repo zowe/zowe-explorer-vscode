@@ -1444,6 +1444,21 @@ describe("ProfilesUtils unit tests", () => {
         });
     });
 
+    describe("Profiles unit tests - function awaitExtenderType", () => {
+        it("should create deferred promise for registered profile type", () => {
+            const mockProfilesCache = {
+                allProfiles: [{ name: "test", type: "test" }],
+            };
+            const extenderTypeReadyGetSpy = jest.spyOn(ProfilesUtils.extenderTypeReady, "get");
+            const extenderTypeReadySetSpy = jest.spyOn(ProfilesUtils.extenderTypeReady, "set");
+            // First time create a deferred promise, second time reuse it
+            (ProfilesUtils as any).awaitExtenderType("test", mockProfilesCache);
+            (ProfilesUtils as any).awaitExtenderType("test", mockProfilesCache);
+            expect(extenderTypeReadyGetSpy).toHaveBeenCalledTimes(2);
+            expect(extenderTypeReadySetSpy).toHaveBeenCalledTimes(1);
+        });
+    });
+
     describe("Profiles unit tests - function resolveTypePromise", () => {
         it("should resolve deferred promise for matching profile type", () => {
             const mockResolve = jest.spyOn(imperative.DeferredPromise.prototype, "resolve").mockReturnValueOnce();
