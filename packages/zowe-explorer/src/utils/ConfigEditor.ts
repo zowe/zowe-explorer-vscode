@@ -16,29 +16,9 @@ import { ProfileInfo, Config, ConfigBuilder, ConfigSchema } from "@zowe/imperati
 import * as path from "path";
 import * as fs from "fs";
 import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
-type ChangeEntry = {
-    key: string;
-    value: string;
-    path: string[];
-    profile?: string;
-    configPath: string;
-    secure: boolean;
-};
-
-type LayerModifications = {
-    configPath: string;
-    changes: ChangeEntry[];
-    deletions: ChangeEntry[];
-    defaultsChanges: ChangeEntry[];
-    defaultsDeleteKeys: ChangeEntry[];
-};
-
-export type schemaValidation = {
-    propertySchema: Record<string, Record<string, { type?: string; description?: string; default?: any; secure?: boolean }>>;
-    validDefaults: string[];
-};
-
-type ArrayField = "changes" | "deletions" | "defaultsChanges" | "defaultsDeleteKeys";
+import { ConfigSchemaHelpers, schemaValidation } from "./ConfigSchemaHelpers";
+import { ConfigChangeHandlers, ChangeEntry } from "./ConfigChangeHandlers";
+import { ConfigUtils, LayerModifications } from "./ConfigUtils";
 
 export class ConfigEditor extends WebView {
     public userSubmission: DeferredPromise<{
@@ -206,24 +186,7 @@ export class ConfigEditor extends WebView {
     }
 
     private processProfilesRecursively(profiles: any): void {
-        if (!profiles || typeof profiles !== "object") {
-            return;
-        }
-
-        for (const profileName in profiles) {
-            const profile = profiles[profileName];
-
-            // Handle secure properties for current profile
-            if (profile.secure && profile.properties) {
-                const secureKeys = profile.secure;
-                profile.properties = Object.fromEntries(Object.entries(profile.properties).filter(([key]) => !secureKeys.includes(key)));
-            }
-
-            // Recursively process nested profiles
-            if (profile.profiles) {
-                this.processProfilesRecursively(profile.profiles);
-            }
-        }
+        ConfigUtils.processProfilesRecursively(profiles);
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
@@ -703,156 +666,19 @@ export class ConfigEditor extends WebView {
     }
 
     private async handleDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string): Promise<void> {
-        const profInfo = new ProfileInfo("zowe");
-        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
-
-        if (activeLayer !== profInfo.getTeamConfig().api.layers.get().path) {
-            const findProfile = profInfo.getTeamConfig().layers.find((prof) => prof.path === activeLayer);
-            if (findProfile) {
-                profInfo.getTeamConfig().api.layers.activate(findProfile.user, findProfile.global);
-            }
-        }
-
-        for (const change of changes) {
-            profInfo.getTeamConfig().api.profiles.defaultSet(change.key, change.value);
-        }
-
-        for (const deletion of deletions) {
-            profInfo.getTeamConfig().delete(`defaults.${deletion.key}`);
-        }
-        await profInfo.getTeamConfig().save();
+        await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer);
     }
 
     private async handleProfileChanges(changes: ChangeEntry[], deletions: ChangeEntry[], configPath: string): Promise<void> {
-        const profInfo = new ProfileInfo("zowe");
-        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
-
-        // Check if secure values are allowed before processing changes
-        const secureValuesAllowed = await this.areSecureValuesAllowed();
-
-        // Filter out secure changes if secure values are not allowed
-        const filteredChanges = secureValuesAllowed ? changes : changes.filter((change) => !change.secure);
-
-        for (const item of filteredChanges) {
-            const keyParts = item.key.split(".");
-            if (keyParts[keyParts.length - 2] === "secure") {
-                keyParts[keyParts.length - 2] = "properties";
-                item.key = keyParts.join(".");
-            }
-
-            if (item.profile) {
-                const profileParts = item.profile.split(".");
-                if (profileParts[profileParts.length - 2] === "secure") {
-                    profileParts[profileParts.length - 2] = "properties";
-                    item.profile = profileParts.join(".");
-                }
-            }
-        }
-
-        for (const item of deletions) {
-            const keyParts = item.key.split(".");
-            if (keyParts[keyParts.length - 2] === "secure") {
-                keyParts[keyParts.length - 2] = "properties";
-                item.key = keyParts.join(".");
-            }
-        }
-
-        if (configPath !== profInfo.getTeamConfig().api.layers.get().path) {
-            const findProfile = profInfo.getTeamConfig().layers.find((prof) => prof.path === configPath);
-            if (findProfile) {
-                profInfo.getTeamConfig().api.layers.activate(findProfile.user, findProfile.global);
-            }
-        }
-
-        for (const change of filteredChanges) {
-            try {
-                profInfo.getTeamConfig().set(change.key, change.value, { parseString: true, secure: change.secure });
-            } catch (err) {
-                // console.log(err);
-            }
-        }
-
-        for (const deletion of deletions) {
-            try {
-                profInfo.getTeamConfig().delete(deletion.key);
-            } catch (err) {
-                // console.log(err);
-            }
-        }
-        await profInfo.getTeamConfig().save();
+        await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, () => this.areSecureValuesAllowed());
     }
 
     private parseConfigChanges(data: LayerModifications): LayerModifications[] {
-        const groups: Record<string, LayerModifications> = {};
-
-        const addToGroup = (items: ChangeEntry[], field: ArrayField): any => {
-            for (const item of items) {
-                const configPath = item.configPath;
-                if (!groups[configPath]) {
-                    groups[configPath] = {
-                        configPath,
-                        changes: [],
-                        deletions: [],
-                        defaultsChanges: [],
-                        defaultsDeleteKeys: [],
-                    };
-                }
-                groups[configPath][field].push(item);
-            }
-        };
-
-        addToGroup(data.changes || [], "changes");
-        addToGroup(data.deletions || [], "deletions");
-        addToGroup(data.defaultsChanges || [], "defaultsChanges");
-        addToGroup(data.defaultsDeleteKeys || [], "defaultsDeleteKeys");
-
-        return Object.values(groups);
-    }
-
-    /**
-     * Helper function to extract the type from a schema property
-     * If the type is an array, use the first value in the array
-     * @param typeValue - The type value from the schema (string or string array)
-     * @returns The resolved type as a string
-     */
-    private resolveSchemaType(typeValue: string | string[] | undefined): string | undefined {
-        if (!typeValue) {
-            return undefined;
-        }
-
-        if (Array.isArray(typeValue)) {
-            return typeValue[0];
-        }
-
-        return typeValue;
+        return ConfigUtils.parseConfigChanges(data);
     }
 
     private generateSchemaValidation(schema: any): schemaValidation {
-        const propertySchema: Record<string, Record<string, { type?: string; description?: string; default?: any; secure?: boolean }>> = {};
-        const allOf = schema.properties.profiles.patternProperties["^\\S*$"].allOf;
-
-        for (const rule of allOf) {
-            const profileType = rule?.if?.properties?.type?.const;
-            const properties = rule?.then?.properties?.properties?.properties;
-            const secureProperties = rule?.then?.properties?.secure?.items?.enum || [];
-
-            if (profileType && properties) {
-                propertySchema[profileType] = Object.keys(properties).reduce((acc, key) => {
-                    acc[key] = {
-                        type: this.resolveSchemaType(properties[key].type),
-                        description: properties[key].description,
-                        default: properties[key].default,
-                        secure: secureProperties.includes(key),
-                    };
-                    return acc;
-                }, {} as Record<string, { type?: string; description?: string; default?: any; secure?: boolean }>);
-            }
-        }
-
-        return {
-            validDefaults: Object.keys(schema.properties.defaults.properties) ?? undefined,
-            propertySchema,
-        };
+        return ConfigSchemaHelpers.generateSchemaValidation(schema);
     }
 
     private async getPendingMergedArgsForProfile(profPath: string, configPath: string, changes: any): Promise<any> {
@@ -885,64 +711,11 @@ export class ConfigEditor extends WebView {
     }
 
     private simulateDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string, teamConfig: any): void {
-        if (activeLayer !== teamConfig.api.layers.get().path) {
-            const findProfile = teamConfig.layers.find((prof: any) => prof.path === activeLayer);
-            teamConfig.api.layers.activate(findProfile.user, findProfile.global);
-        }
-
-        for (const change of changes) {
-            teamConfig.api.profiles.defaultSet(change.key, change.value);
-        }
-
-        for (const deletion of deletions) {
-            teamConfig.delete(`defaults.${deletion.key}`);
-        }
+        ConfigChangeHandlers.simulateDefaultChanges(changes, deletions, activeLayer, teamConfig);
     }
 
     private simulateProfileChanges(changes: ChangeEntry[], deletions: ChangeEntry[], configPath: string, teamConfig: any): void {
-        for (const item of changes) {
-            const keyParts = item.key.split(".");
-            if (keyParts[keyParts.length - 2] === "secure") {
-                keyParts[keyParts.length - 2] = "properties";
-                item.key = keyParts.join(".");
-            }
-            if (item.profile) {
-                const profileParts = item.profile.split(".");
-                if (profileParts[profileParts.length - 2] === "secure") {
-                    profileParts[profileParts.length - 2] = "properties";
-                    item.profile = profileParts.join(".");
-                }
-            }
-        }
-
-        for (const item of deletions) {
-            const keyParts = item.key.split(".");
-            if (keyParts[keyParts.length - 2] === "secure") {
-                keyParts[keyParts.length - 2] = "properties";
-                item.key = keyParts.join(".");
-            }
-        }
-
-        if (configPath !== teamConfig.api.layers.get().path) {
-            const findProfile = teamConfig.layers.find((prof: any) => prof.path === configPath);
-            teamConfig.api.layers.activate(findProfile.user, findProfile.global);
-        }
-
-        for (const change of changes) {
-            try {
-                teamConfig.set(change.key, change.value, { parseString: true, secure: change.secure });
-            } catch (err) {
-                // console.log(err);
-            }
-        }
-
-        for (const deletion of deletions) {
-            try {
-                teamConfig.delete(deletion.key);
-            } catch (err) {
-                // console.log(err);
-            }
-        }
+        ConfigChangeHandlers.simulateProfileChanges(changes, deletions, configPath, teamConfig);
     }
 
     private async getWizardMergedProperties(
