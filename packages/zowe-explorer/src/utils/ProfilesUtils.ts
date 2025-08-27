@@ -736,8 +736,8 @@ export class ProfilesUtils {
 
     private static extenderTypeReady: Map<string, imperative.DeferredPromise<void>> = new Map();
 
-    public static async awaitExtenderType(profileName: string, profInfo: ProfilesCache): Promise<void> {
-        const profLoaded = profInfo.allProfiles.find((prof) => prof.name === profileName);
+    public static async awaitExtenderType(profileName: string, profCache: ProfilesCache): Promise<void> {
+        const profLoaded = profCache.allProfiles.find((prof) => prof.name === profileName);
         if (!profLoaded && !ProfilesUtils.extenderTypeReady.has(profileName)) {
             const deferredPromise = new imperative.DeferredPromise<void>();
             ProfilesUtils.extenderTypeReady.set(profileName, deferredPromise);
@@ -753,8 +753,8 @@ export class ProfilesUtils {
         }
     }
 
-    public static async resolveTypePromise(extenderType: string, profInfo: ProfilesCache): Promise<void> {
-        for (const profile of profInfo.getProfiles(extenderType)) {
+    public static async resolveTypePromise(extenderType: string, profCache: ProfilesCache): Promise<void> {
+        for (const profile of profCache.getProfiles(extenderType)) {
             if (ProfilesUtils.extenderTypeReady.has(profile.name)) {
                 ProfilesUtils.extenderTypeReady.get(profile.name).resolve();
             }

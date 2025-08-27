@@ -12,7 +12,7 @@
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { imperative, MainframeInteraction, ZoweExplorerZosmf, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
-import { createInstanceOfProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
+import { createInstanceOfProfile, createInstanceOfProfileInfo, createValidIProfile } from "../../__mocks__/mockCreators/shared";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
 import { JobFSProvider } from "../../../src/trees/job/JobFSProvider";
@@ -146,6 +146,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                    getProfiles: jest.fn(() => []),
                 };
             }),
         });
