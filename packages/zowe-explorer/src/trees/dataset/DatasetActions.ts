@@ -1788,7 +1788,7 @@ export class DatasetActions {
      * @param node - the node to which content is pasted
      */
     public static async pasteDataSet(datasetProvider: Types.IZoweDatasetTreeType, node: ZoweDatasetNode): Promise<void> {
-        ZoweLogger.trace("dataset.actions.pasteDataSetMembers called.");
+        ZoweLogger.trace("dataset.actions.pasteDataSet called.");
         let clipboardContent;
         try {
             clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
@@ -1797,12 +1797,12 @@ export class DatasetActions {
             return;
         }
         clipboardContent = clipboardContent.flat();
-        if (clipboardContent[0].contextValue === Constants.DS_DS_CONTEXT) {
-            await DatasetActions.copySequentialDatasets(clipboardContent, node);
-        } else if (clipboardContent[0].contextValue === Constants.DS_MEMBER_CONTEXT) {
-            await DatasetActions.copyDatasetMembers(clipboardContent, node);
-        } else {
+        if (SharedContext.isPds(clipboardContent[0].contextValue)) {
             await DatasetActions.copyPartitionedDatasets(clipboardContent, node);
+        } else if (SharedContext.isDsMember(clipboardContent[0].contextValue)) {
+            await DatasetActions.copyDatasetMembers(clipboardContent, node);
+        } else if (SharedContext.isDs(clipboardContent[0].contextValue)) {
+            await DatasetActions.copySequentialDatasets(clipboardContent, node);
         }
         datasetProvider.refreshElement(node);
         vscode.env.clipboard.writeText("");
@@ -1832,8 +1832,13 @@ export class DatasetActions {
                             title: DatasetActions.localizedStrings.copyingFiles,
                             cancellable: true,
                         },
-                        () => {
-                            return mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
+                        async () => {
+                            try {
+                                return await mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
+                            } catch (error) {
+                                Gui.errorMessage(error.message);
+                                return;
+                            }
                         }
                     );
                 }

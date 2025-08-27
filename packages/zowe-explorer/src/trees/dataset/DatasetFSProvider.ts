@@ -575,7 +575,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         parentDir.entries.set(fileName, entry);
     }
 
-    private async uploadEntry(entry: DsEntry, content: Uint8Array, uri: vscode.Uri, forceUpload?: boolean): Promise<IZosFilesResponse> {
+    private async uploadEntry(
+        entry: DsEntry,
+        content: Uint8Array,
+        uri: vscode.Uri,
+        forceUpload?: boolean,
+        encoding?: string
+    ): Promise<IZosFilesResponse> {
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         // /DATA.SET/MEMBER
         const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
@@ -622,11 +628,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
+            const profileEncoding = entry.encoding ? null : profile.profile?.encoding;
+
+            const binary = encoding === "binary" || entry.encoding?.kind === "binary";
 
             resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
-                binary: entry.encoding?.kind === "binary",
-                encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+                binary,
+                encoding: encoding ?? (entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding),
                 etag: forceUpload ? undefined : entry.etag,
                 returnEtag: true,
             });
@@ -664,6 +672,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
         const urlQuery = new URLSearchParams(uri.query);
         const forceUpload = urlQuery.has("forceUpload");
+        const encodingParam = urlQuery.get("encoding") || undefined;
+
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
 
         try {
@@ -679,8 +689,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 entry.metadata = profInfo;
 
                 if (content.byteLength > 0) {
-                    // Update e-tag if write was successful.
-                    const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload);
+                    // Pass encodingParam and e-tag if write was successful.
+                    const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload, encodingParam);
                     entry.etag = resp.apiResponse.etag;
                     entry.data = content;
                 }
@@ -699,7 +709,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
 
                 if (entry.wasAccessed || content.length > 0) {
-                    const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload);
+                    const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload, encodingParam);
                     entry.etag = resp.apiResponse.etag;
                 }
                 entry.data = content;
