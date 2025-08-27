@@ -123,8 +123,18 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
               </div>
             )}
 
-            <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "var(--vscode-descriptionForeground)" }}>
+            {/* <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "var(--vscode-descriptionForeground)" }}>
               {l10n.t("Select the type of configuration file to create:")}
+            </p> */}
+            <p
+              style={{
+                margin: "0 0 16px 0",
+                fontSize: "140x",
+                color: "var(--vscode-descriptionForeground)",
+                fontStyle: "italic",
+              }}
+            >
+              {l10n.t("Warning: Creation/deletion of configuration files are immediately written to disk and cannot be undone by refreshing")}
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
