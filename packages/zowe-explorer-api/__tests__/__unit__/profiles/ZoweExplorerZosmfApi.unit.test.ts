@@ -666,7 +666,7 @@ describe("ZosmfJesApi", () => {
         {
             name: "submitJcl",
             spy: jest.spyOn(zosjobs.SubmitJobs, "submitJcl"),
-            args: ["jcl", "FB", "80"],
+            args: ["jcl", "FB", "80", undefined],
         },
         {
             name: "submitJob",
@@ -718,6 +718,20 @@ describe("ZosmfJesApi", () => {
                     retcode: "ACTIVE",
                 } as zosjobs.IJob)
             ).toBe(false);
+        });
+    });
+
+    describe("submitJcl", () => {
+        it("uses job encoding if specified in profile", async () => {
+            const api = new ZoweExplorerZosmf.JesApi();
+            api.profile = {
+                profile: {
+                    jobEncoding: "IBM-1147",
+                },
+            } as unknown as imperative.IProfileLoaded;
+            const submitJclSpy = jest.spyOn(zosjobs.SubmitJobs, "submitJcl");
+            await api.submitJcl("iefbr14");
+            expect(submitJclSpy).toHaveBeenLastCalledWith(undefined, "iefbr14", undefined, undefined, "IBM-1147");
         });
     });
 });
