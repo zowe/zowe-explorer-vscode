@@ -372,7 +372,7 @@ importers:
         version: 0.9.1(eslint@8.57.0)(typescript@5.4.5)(vite@6.3.5)
       vite-plugin-static-copy:
         specifier: ^2.3.0
-        version: 2.3.0(vite@6.3.5)
+        version: 2.3.2(vite@6.3.5)
 
 packages:
 
@@ -556,7 +556,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/highlight': 7.24.5
-      picocolors: 1.0.1
+      picocolors: 1.1.1
     dev: true
 
   /@babel/code-frame@7.26.2:
@@ -10411,10 +10411,6 @@ packages:
     resolution: {integrity: sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==}
     dev: true
 
-  /picocolors@1.0.1:
-    resolution: {integrity: sha512-anP1Z8qwhkbmu7MFP5iTt+wQKXgwzf7zTyGlcdzabySa9vd0Xt392U0rVmz9poOaBj0uHJKyyo9/upk0HrEQew==}
-    dev: true
-
   /picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
     dev: true
@@ -12798,8 +12794,8 @@ packages:
       vscode-uri: 3.1.0
     dev: true
 
-  /vite-plugin-static-copy@2.3.0(vite@6.3.5):
-    resolution: {integrity: sha512-LLKwhhHetGaCnWz4mas4qqjjguDka6/6b4+SeIohRroj8aCE7QTfiZECfPecslFQkWZ3HdQuq5kOPmWZjNYlKA==}
+  /vite-plugin-static-copy@2.3.2(vite@6.3.5):
+    resolution: {integrity: sha512-iwrrf+JupY4b9stBttRWzGHzZbeMjAHBhkrn67MNACXJVjEMRpCI10Q3AkxdBkl45IHaTfw/CNVevzQhP7yTwg==}
     engines: {node: ^18.0.0 || >=20.0.0}
     peerDependencies:
       vite: ^5.0.0 || ^6.0.0

@@ -417,7 +417,9 @@ export class EventOperator {
 }
 
 export class DeferredPromise {
-    public resolve(value: any): void {}
+    public promise: Promise<any> = Promise.resolve();
+    public resolve(value?: any): void {}
+    public reject(reason?: any): void {}
 }
 
 export class AuthOrder {

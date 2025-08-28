@@ -154,7 +154,7 @@ export class AuthHandler {
         if (profileProps.includes("tokenValue")) {
             return !profileUsesBasicAuth;
         }
-        return baseProfileProps?.includes("tokenValue") ?? !profileUsesBasicAuth;
+        return baseProfileProps != null ? baseProfileProps.includes("tokenValue") && !profileUsesBasicAuth : !profileUsesBasicAuth;
     }
 
     /**

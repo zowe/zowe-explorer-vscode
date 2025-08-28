@@ -748,7 +748,7 @@ describe("UssFSProvider", () => {
                 }),
             };
 
-            ProfilesUtils.extenderTypeReady.set(testProfile.name || "mockProfile", profilePromise as any);
+            ProfilesUtils.extenderProfileReady.set(testProfile.name || "mockProfile", profilePromise as any);
 
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
             lookupAsFileMock.mockReturnValue(testEntries.file);
@@ -774,7 +774,7 @@ describe("UssFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - no existing promise", async () => {
-            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(undefined);
+            jest.spyOn(ProfilesUtils.extenderProfileReady, "get").mockReturnValueOnce(undefined);
             const mockAllProfiles = [
                 { name: "sestest", type: "ssh" },
                 { name: "profile1", type: "zosmf" },
@@ -800,7 +800,7 @@ describe("UssFSProvider", () => {
                     setTimeout(resolve, 50);
                 }),
             };
-            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(profilePromise as any);
+            jest.spyOn(ProfilesUtils.extenderProfileReady, "get").mockReturnValueOnce(profilePromise as any);
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
             lookupAsFileMock.mockReturnValue(testEntries.file);
 
@@ -1788,7 +1788,7 @@ describe("UssFSProvider", () => {
                         setTimeout(resolve, 50);
                     }),
                 };
-                jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValueOnce(profilePromise as any);
+                jest.spyOn(ProfilesUtils.extenderProfileReady, "get").mockReturnValueOnce(profilePromise as any);
                 isProfileLockedMock.mockReturnValueOnce(false);
                 const ussApiMock = {
                     fileList: jest.fn().mockResolvedValueOnce({
