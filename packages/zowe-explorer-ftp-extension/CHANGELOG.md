@@ -7,6 +7,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 - Changed the response field names for the `FtpMvsApi.allMembers` function from "created" and "changed" to "c4date" and "m4date" to be consistent with the z/OSMF API response format for a PDS member list. [#3751](https://github.com/zowe/zowe-explorer-vscode/issues/3751)
 - Replaced use of `tmp` dependency with Node.js functions for temporary file creation when downloading data sets and USS file contents. [#3805](https://github.com/zowe/zowe-explorer-vscode/pull/3805)
 - Updated Zowe SDKs to `8.26.1` for technical currency. [#3696](https://github.com/zowe/zowe-explorer-vscode/pull/3696)
+- Updated the extension name to "Zowe® Explorer for IBM® z/OS® FTP" to align with Zowe branding standards.
 
 ### Bug fixes
 
