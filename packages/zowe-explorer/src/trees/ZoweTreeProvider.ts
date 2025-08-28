@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweTreeNode, imperative, Types, IZoweTree, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, imperative, Types, IZoweTree, PersistenceSchemaEnum, Validation, AuthHandler } from "@zowe/zowe-explorer-api";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
@@ -270,11 +270,15 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         ZoweLogger.trace("ZoweTreeProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
         const profileName = profile.name ?? node.getProfileName();
-
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, node);
-        const jwtCheckResult = (await AuthUtils.isUsingTokenAuth(profileName))
-            ? await ZoweTreeProvider.checkJwtForProfile(profileName)
-            : JwtCheckResult.TokenUnusedOrUnsupported;
+
+        let jwtCheckResult: JwtCheckResult;
+        const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
+        if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER) {
+            jwtCheckResult = await ZoweTreeProvider.checkJwtForProfile(profileName);
+        } else {
+            jwtCheckResult = JwtCheckResult.TokenUnusedOrUnsupported;
+        }
 
         if (jwtCheckResult === JwtCheckResult.TokenExpired) {
             // Mark profile as inactive if user dismissed "token expired/login" prompt or login failed
