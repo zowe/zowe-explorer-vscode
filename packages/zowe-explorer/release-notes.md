@@ -11,7 +11,7 @@ Data sets can now be viewed in a table format, similar to the **JOBS** table. Th
 - **Open the table:**
 
   - Right-click a filtered data sets profile, a data set, or a favorite, and select **Show as Table**.
-  - Open command palette and search for `Zowe Explorer: List Data Sets`, select a profile, and enter a search filter.
+  - Open the **Command Palette** and search for `Zowe Explorer: List Data Sets`, select a profile, and enter a search filter.
 
 - **Features:**
   - Reorder, filter, sort and choose visible columns
