@@ -45,9 +45,8 @@ jobs:
         with:
           node-version: '20.x'
 
-      # use pnpm version 8 until Octorelease supports pnpm@9
       - name: Install pnpm and Lerna
-        run: npm install -g pnpm@8 lerna@6
+        run: npm install -g pnpm lerna@6
 
       - name: Build Source
         run: |
