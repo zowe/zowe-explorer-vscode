@@ -20,7 +20,7 @@ Data sets can now be viewed in a table format, similar to the **JOBS** table. Th
   - Pin rows to keep them visible while scrolling
 - **Row actions:** Right-click a data set to:
   - Open the data set
-  - Display the data set in the Data Sets tree
+  - Display the data set in the **DATA SETS** tree
   - Pin or unpin the row
 
 ![3.3-ds-table-1](./resources/release-notes/3.3-ds-table-1.webp)
