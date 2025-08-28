@@ -35,7 +35,7 @@ Right-click on a directory or partitioned data set in the **USS** or **DATA SETS
 
 ### Poll active jobs
 
-Active jobs in the Jobs tree can now be set to poll for job completion. Right-click on a filtered jobs profile, select **Start Polling Active Jobs**, and enter the desired poll interval. The default poll interval can be set in the Zowe Explorer settings under `Zowe > Jobs > Poll Interval`. The minimum interval is 1000ms.
+Active jobs in the **JOBS** tree can now be set to poll for job completion. Right-click on a filtered jobs profile, select **Start Polling Active Jobs**, and enter the desired poll interval. The default poll interval can be set in the Zowe Explorer settings under **Zowe > Jobs > Poll Interval**. The minimum interval is 1000ms.
 
 ![3.3-active-jobs-polling-1](./resources/release-notes/3.3-active-jobs-polling-1.webp)
 
