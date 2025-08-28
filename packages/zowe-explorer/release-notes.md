@@ -1,16 +1,63 @@
+## `3.3.0`
+
+### Release notes
+
+Release notes for Zowe Explorer are now available in VS Code. Release notes are displayed when Zowe Explorer updates and can also be accessed from the command palette (`Ctrl` + `Shift` + `P`) by searching for `Zowe Explorer: Display Release Notes`. Disable automatic display of release notes when updating by unticking `Display release notes after an update` in this window or in the Zowe Explorer settings.
+
+### Data sets table
+
+Data sets can now be viewed in a table format, similar to the jobs table. The data sets table allows for easier filtering, sorting, and bulk actions on data sets and members.
+
+- **Open the table:**
+
+  - Right-click a filtered data sets profile, a data set, or a favorite, and select **Show as Table**.
+  - Open the **Command Palette** and search for `Zowe Explorer: List Data Sets`, select a profile, and enter a search filter.
+
+- **Features:**
+  - Reorder, filter, sort, and choose visible columns
+  - View members of a partitioned data set
+  - Select multiple data sets or members for bulk open
+  - Pin rows to keep them visible while scrolling
+- **Row actions:** Right-click a data set to:
+  - Open the data set
+  - Display the data set in the **DATA SETS** tree
+  - Pin or unpin the row
+
+![3.3-ds-table-1](./resources/release-notes/3.3-ds-table-1.webp)
+
+### Open selected data set
+
+Select text in the editor, right-click, and choose **Open Selected Data Set**. If the selected text is a valid data set name, it opens in a new editor tab or focus onto an existing tab if already open. If the selected text is a valid partitioned data set, it opens in the **DATA SETS** tree. This is equivalent to the `ZOOM` command in ISPF.
+
+### Upload with encoding
+
+Right-click on a directory or partitioned data set in the **USS** or **DATA SETS** tree and select **Upload with Encoding...** to choose a character encoding for the uploaded files.
+
+### Poll active jobs
+
+Active jobs in the **JOBS** tree can now be set to poll for job completion. Right-click on a filtered jobs profile, select **Start Polling Active Jobs**, and enter the desired poll interval. The default poll interval can be set in the Zowe Explorer settings under **Zowe > Jobs > Poll Interval**. The minimum interval is 1000ms.
+
+![3.3-active-jobs-polling-1](./resources/release-notes/3.3-active-jobs-polling-1.webp)
+
+Active jobs in the filtered profile automatically refresh at the specified interval and any new jobs matching the filter automatically appear. When a job completes, it shows a notification message with the job name and return code.
+
+![3.3-active-jobs-polling-2](./resources/release-notes/3.3-active-jobs-polling-2.png)
+
+When all jobs have completed, polling automatically stops. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.
+
 ## `3.2.0`
 
 ### Job spool pagination
 
-Large job spool files now load faster by displaying a `Load more…` button at the bottom of the spool file to fetch additional lines as needed. For active jobs, use this button to retrieve new output without refreshing the Jobs tree. It is recommended to use the default keyboard shortcut `Ctrl` + `L` to quickly load more lines. The number of lines per page and the toggle for pagination can be configured in the settings under `Zowe > Jobs > Paginate`. The default is 100 lines per page.
+Large job spool files now load faster by displaying a `Load more…` button at the bottom of the spool file to fetch additional lines as needed. For active jobs, use this button to retrieve new output without refreshing the **JOBS** tree. It is recommended to use the default keyboard shortcut `Ctrl` + `L` to quickly load more lines. The number of lines per page and the toggle for pagination can be configured in the settings under **Zowe > Jobs > Paginate**. The default is 100 lines per page.
 
 ![3.2-job-spool-1](./resources/release-notes/3.2-job-spool-1.png)
 
 ### Data set tree pagination
 
-The Data Sets tree and any data sets with many members now display `<- Previous page` and `-> Next page` navigation buttons to page through members. Only a subset of members is loaded at a time, allowing for large filters and data sets to load members faster. The number of members per page is configurable in the settings under `Zowe > Ds > Paginate`. The default is 100 members per page.
+The Data Sets tree and any data sets with many members now display `<- Previous page` and `-> Next page` navigation buttons to page through members. Only a subset of members is loaded at a time, allowing for large filters and data sets to load members faster. The number of members per page is configurable in the settings under **Zowe > Ds > Paginate**. The default is 100 members per page.
 
-![3.2-ds-pagination-1](./resources/release-notes/3.2-ds-pagination-1.png)
+![3.2-ds-pagination-1](./resources/release-notes/3.2-ds-pagination-1.webp)
 
 **Note:** Sorting is only applied within each page, while the overall member list is fetched by alphabetical, ascending order.
 
@@ -38,7 +85,7 @@ Data sets and members can now be copied and pasted within or across LPARs. Drag 
 
 ### Improved USS filtering
 
-The USS tree can now be filtered by any selected directory. Right-click a directory and select `Search by directory` to filter. Use the `Go Up One Directory` button to quickly adjust the filter to the parent directory.
+The **USS** tree can now be filtered by any selected directory. Right-click a directory and select `Search by directory` to filter. Use the `Go Up One Directory` button to quickly adjust the filter to the parent directory.
 
 ![3.2-uss-filter-1](./resources/release-notes/3.2-uss-filter-1.png)
 ![3.2-uss-filter-2](./resources/release-notes/3.2-uss-filter-2.png)
@@ -65,7 +112,7 @@ The jobs table is a panel that allows viewing filtered jobs more clearly and for
   - Open the job in the Jobs tree
   - Copy job info as JSON
 
-![3.1-jobs-table-2](./resources/release-notes/3.1-jobs-table-2.png)
+![3.1-jobs-table-2](./resources/release-notes/3.1-jobs-table-2.webp)
 
 ### Search data sets
 
@@ -83,7 +130,7 @@ Data sets can now be searched for a string, similar to ISPF's `SRCHFOR`.
   - Progress is shown in the status bar.
   - Results appear in the `Zowe Resources` panel, where files can be bulk opened.
 
-![3.1-search-1](./resources/release-notes/3.1-search-1.png)
+![3.1-search-1](./resources/release-notes/3.1-search-1.webp)
 
 ### Integrated terminal
 
