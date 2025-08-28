@@ -1,4 +1,5 @@
 import * as l10n from "@vscode/l10n";
+import { useModalClickOutside } from "../../hooks";
 
 interface AddProfileModalProps {
   isOpen: boolean;
@@ -41,6 +42,8 @@ export function AddProfileModal({
 }: AddProfileModalProps) {
   if (!isOpen) return null;
 
+  const { modalRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+
   const isFileProperty = (key: string): boolean => {
     // Check if key is defined and not null
     if (!key || typeof key !== "string") {
@@ -58,8 +61,8 @@ export function AddProfileModal({
   };
 
   return (
-    <div className="modal-backdrop" onClick={onCancel}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop" onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick}>
+      <div className="modal" ref={modalRef} onClick={(e) => e.stopPropagation()}>
         <h3>{l10n.t("Add New Profile Property")}</h3>
         <div className="dropdown-container" style={{ position: "relative" }}>
           <input

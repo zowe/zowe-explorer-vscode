@@ -1,4 +1,5 @@
 import * as l10n from "@vscode/l10n";
+import { useModalClickOutside } from "../../hooks";
 
 interface AddConfigModalProps {
   isOpen: boolean;
@@ -10,6 +11,8 @@ interface AddConfigModalProps {
 
 export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, onCancel }: AddConfigModalProps) {
   if (!isOpen) return null;
+
+  const { modalRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
 
   // Get all configuration types with their availability status
   const getAllConfigTypes = () => {
@@ -82,9 +85,11 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
         justifyContent: "center",
         zIndex: 1000,
       }}
-      onClick={onCancel}
+      onMouseDown={handleBackdropMouseDown}
+      onClick={handleBackdropClick}
     >
       <div
+        ref={modalRef}
         style={{
           backgroundColor: "var(--vscode-editor-background)",
           border: "1px solid var(--vscode-panel-border)",

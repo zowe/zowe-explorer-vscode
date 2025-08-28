@@ -8,7 +8,9 @@ interface TabsProps {
   onRevealInFinder: (filePath: string) => void;
   onOpenSchemaFile: (filePath: string) => void;
   onAddNewConfig: () => void;
+  onToggleAutostore: (configPath: string) => void;
   pendingChanges: { [configPath: string]: any };
+  autostoreChanges: { [configPath: string]: boolean };
 }
 
 export function Tabs({
@@ -19,7 +21,9 @@ export function Tabs({
   onRevealInFinder,
   onOpenSchemaFile,
   onAddNewConfig,
+  onToggleAutostore,
   pendingChanges,
+  autostoreChanges,
 }: TabsProps) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabIndex: number } | null>(null);
 
@@ -56,7 +60,7 @@ export function Tabs({
 
     // Ensure context menu stays within viewport bounds
     const menuWidth = 150;
-    const menuHeight = 120; // Increased height for additional menu item
+    const menuHeight = 160; // Increased height for additional menu item
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
@@ -76,7 +80,7 @@ export function Tabs({
     setContextMenu({ x, y, tabIndex: index });
   };
 
-  const handleContextMenuAction = (action: "open" | "reveal" | "schema") => {
+  const handleContextMenuAction = (action: "open" | "reveal" | "schema" | "autostore") => {
     if (contextMenu) {
       const config = configurations[contextMenu.tabIndex];
       if (config) {
@@ -86,6 +90,10 @@ export function Tabs({
           onRevealInFinder(config.configPath);
         } else if (action === "schema" && config.schemaPath) {
           onOpenSchemaFile(config.schemaPath);
+        } else if (action === "autostore") {
+          onToggleAutostore(config.configPath);
+          // Don't close the context menu immediately to allow multiple toggles
+          return;
         }
       }
       setContextMenu(null);
@@ -109,7 +117,9 @@ export function Tabs({
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
           {configurations.map((config, index) => {
-            const hasPendingChanges = pendingChanges[config.configPath] && Object.keys(pendingChanges[config.configPath]).length > 0;
+            const hasPendingChanges =
+              (pendingChanges[config.configPath] && Object.keys(pendingChanges[config.configPath]).length > 0) ||
+              autostoreChanges[config.configPath] !== undefined;
             return (
               <div
                 key={index}
@@ -310,6 +320,56 @@ export function Tabs({
               Open Schema
             </div>
           )}
+          <div
+            style={{
+              padding: "4px 0",
+              cursor: "pointer",
+              paddingLeft: "12px",
+              paddingRight: "12px",
+              paddingTop: "6px",
+              paddingBottom: "6px",
+              fontSize: "13px",
+              color: "var(--vscode-menu-foreground)",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+            onClick={() => handleContextMenuAction("autostore")}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--vscode-menu-selectionBackground)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+          >
+            <span className="codicon codicon-settings-gear" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
+            {(() => {
+              const config = configurations[contextMenu.tabIndex];
+              if (config) {
+                const currentValue = config.properties?.autoStore;
+                const pendingValue = autostoreChanges[config.configPath];
+                const displayValue = pendingValue !== undefined ? pendingValue : currentValue;
+
+                if (displayValue === undefined || displayValue === null) {
+                  return "AutoStore: Unset";
+                }
+
+                return (
+                  <>
+                    AutoStore:{" "}
+                    <span
+                      style={{
+                        color: displayValue ? "var(--vscode-testing-iconPassed)" : "var(--vscode-testing-iconFailed)",
+                      }}
+                    >
+                      {displayValue.toString()}
+                    </span>
+                  </>
+                );
+              }
+              return "AutoStore: Unset";
+            })()}
+          </div>
         </div>
       )}
     </div>

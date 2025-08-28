@@ -1,4 +1,5 @@
 import * as l10n from "@vscode/l10n";
+import { useModalClickOutside } from "../../hooks";
 
 interface ProfileWizardModalProps {
   isOpen: boolean;
@@ -92,9 +93,11 @@ export function ProfileWizardModal({
     return false;
   };
 
+  const { modalRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+
   return (
-    <div className="modal-backdrop" onClick={onCancel}>
-      <div className="modal wizard-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop" onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick}>
+      <div className="modal wizard-modal" ref={modalRef} onClick={(e) => e.stopPropagation()}>
         <h3 className="wizard-title">{l10n.t("Profile Wizard")}</h3>
         <div className="wizard-content">
           {/* Left Column */}

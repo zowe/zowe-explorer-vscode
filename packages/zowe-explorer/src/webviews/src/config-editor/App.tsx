@@ -133,6 +133,62 @@ export function App() {
   const [defaultsDeletions, setDefaultsDeletions] = useState<{
     [configPath: string]: string[];
   }>({});
+
+  // Autostore changes state
+  const [autostoreChanges, setAutostoreChanges] = useState<{
+    [configPath: string]: boolean;
+  }>({});
+
+  // Use refs to store current state values for save operations
+  const pendingChangesRef = useRef<{
+    [configPath: string]: {
+      [key: string]: {
+        value: string | number | boolean | Record<string, any>;
+        path: string[];
+        profile: string;
+        secure?: boolean;
+      };
+    };
+  }>({});
+  const deletionsRef = useRef<{
+    [configPath: string]: string[];
+  }>({});
+  const pendingDefaultsRef = useRef<{
+    [configPath: string]: {
+      [key: string]: {
+        value: string;
+        path: string[];
+      };
+    };
+  }>({});
+  const defaultsDeletionsRef = useRef<{
+    [configPath: string]: string[];
+  }>({});
+  const autostoreChangesRef = useRef<{
+    [configPath: string]: boolean;
+  }>({});
+
+  // Update refs when state changes
+  useEffect(() => {
+    pendingChangesRef.current = pendingChanges;
+  }, [pendingChanges]);
+
+  useEffect(() => {
+    deletionsRef.current = deletions;
+  }, [deletions]);
+
+  useEffect(() => {
+    pendingDefaultsRef.current = pendingDefaults;
+  }, [pendingDefaults]);
+
+  useEffect(() => {
+    defaultsDeletionsRef.current = defaultsDeletions;
+  }, [defaultsDeletions]);
+
+  useEffect(() => {
+    autostoreChangesRef.current = autostoreChanges;
+  }, [autostoreChanges]);
+
   const [newProfileKeyPath, setNewProfileKeyPath] = useState<string[] | null>(null);
   const [newProfileKey, setNewProfileKey] = useState("");
   const [newProfileValue, setNewProfileValue] = useState("");
@@ -312,25 +368,33 @@ export function App() {
       profile: selectedProfileKey,
     });
 
-    const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
+    // Use refs to get the most current state values
+    const changes = Object.entries(pendingChangesRef.current).flatMap(([configPath, changesForPath]) =>
       Object.keys(changesForPath).map((key) => {
         const { value, path, profile, secure } = changesForPath[key];
         return { key, value, path, profile, configPath, secure };
       })
     );
 
-    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
+    const deleteKeys = Object.entries(deletionsRef.current).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
 
-    const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
+    const defaultsChanges = Object.entries(pendingDefaultsRef.current).flatMap(([configPath, changesForPath]) =>
       Object.keys(changesForPath).map((key) => {
         const { value, path } = changesForPath[key];
         return { key, value, path, configPath, secure: false };
       })
     );
 
-    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
+    const defaultsDeleteKeys = Object.entries(defaultsDeletionsRef.current).flatMap(([configPath, keys]) =>
       keys.map((key) => ({ key, configPath, secure: false }))
     );
+
+    // Prepare autostore changes
+    const otherChanges = Object.entries(autostoreChangesRef.current).map(([configPath, value]) => ({
+      type: "autostore",
+      value,
+      configPath,
+    }));
 
     vscodeApi.postMessage({
       command: "SAVE_CHANGES",
@@ -338,6 +402,7 @@ export function App() {
       deletions: deleteKeys,
       defaultsChanges,
       defaultsDeleteKeys: defaultsDeleteKeys,
+      otherChanges,
     });
 
     setHiddenItems({});
@@ -345,10 +410,11 @@ export function App() {
     setDeletions({});
     setPendingDefaults({});
     setDefaultsDeletions({});
+    setAutostoreChanges({});
 
     // Refresh configurations after save
     vscodeApi.postMessage({ command: "GET_PROFILES" });
-  }, [selectedTab, selectedProfileKey, pendingChanges, deletions, pendingDefaults, defaultsDeletions]);
+  }, [selectedTab, selectedProfileKey]);
 
   // Preview Args Modal state
 
@@ -828,6 +894,7 @@ export function App() {
     setDeletions({});
     setPendingDefaults({});
     setDefaultsDeletions({});
+    setAutostoreChanges({});
 
     // Request fresh configurations from the backend
     vscodeApi.postMessage({ command: "GET_PROFILES" });
@@ -898,6 +965,19 @@ export function App() {
         [configPath]: prev[configPath]?.filter((k) => k !== key) ?? [],
       }));
     }
+  };
+
+  const handleAutostoreToggle = (configPath: string) => {
+    const currentValue = configurations.find((config) => config.configPath === configPath)?.properties?.autoStore;
+    const pendingValue = autostoreChanges[configPath];
+    const effectiveValue = pendingValue !== undefined ? pendingValue : currentValue;
+    // If unset, default to true, otherwise toggle
+    const newValue = effectiveValue === undefined || effectiveValue === null ? true : !effectiveValue;
+
+    setAutostoreChanges((prev) => ({
+      ...prev,
+      [configPath]: newValue,
+    }));
   };
 
   const handleAddNewProfileKey = () => {
@@ -3059,7 +3139,9 @@ export function App() {
         onRevealInFinder={handleRevealInFinder}
         onOpenSchemaFile={handleOpenSchemaFile}
         onAddNewConfig={handleAddNewConfig}
+        onToggleAutostore={handleAutostoreToggle}
         pendingChanges={pendingChanges}
+        autostoreChanges={autostoreChanges}
       />
       <Panels
         configurations={configurations}

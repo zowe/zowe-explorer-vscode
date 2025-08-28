@@ -223,6 +223,11 @@ export class ConfigEditor extends WebView {
                         await this.handleProfileChanges(change.changes, change.deletions, change.configPath);
                     }
                 }
+
+                if (message.otherChanges) {
+                    await this.handleOtherChanges(message.otherChanges);
+                }
+
                 await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
                 const configs = await this.getLocalConfigs();
@@ -671,6 +676,38 @@ export class ConfigEditor extends WebView {
 
     private async handleProfileChanges(changes: ChangeEntry[], deletions: ChangeEntry[], configPath: string): Promise<void> {
         await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, () => this.areSecureValuesAllowed());
+    }
+
+    private async handleOtherChanges(otherChanges: any[]): Promise<void> {
+        for (const change of otherChanges) {
+            if (change.type === "autostore") {
+                await this.handleAutostoreChange(change.configPath, change.value);
+            }
+        }
+    }
+
+    private async handleAutostoreChange(configPath: string, value: boolean): Promise<void> {
+        try {
+            const profInfo = new ProfileInfo("zowe");
+            await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+            const teamConfig = profInfo.getTeamConfig();
+
+            // Find and activate the correct layer
+            const targetLayer = teamConfig.layers.find((layer: any) => layer.path === configPath);
+
+            if (targetLayer) {
+                teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
+
+                // Set the autostore value
+                teamConfig.set("autoStore", value, { parseString: true });
+
+                // Save the configuration
+                await teamConfig.save();
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            vscode.window.showErrorMessage(`Error updating autostore setting: ${errorMessage}`);
+        }
     }
 
     private parseConfigChanges(data: LayerModifications): LayerModifications[] {
