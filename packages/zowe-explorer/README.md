@@ -15,7 +15,7 @@
 - Submit JCL and view job output
 - Apply other VS Code extensions for things like syntax highlighting, debugging, and IntelliSense to improve the developer experience
 
-Zowe Explorer for VS Code is a Zowe&reg; component that focuses on modernizing the mainframe experience. [Zowe](https://www.zowe.org/) is hosted by the [Open Mainframe Project&trade;](https://www.openmainframeproject.org/), a [Linux Foundation&trade;](https://www.linuxfoundation.org/) initiative.
+Zowe Explorer for VS Code is a Zowe&reg; component that focuses on modernizing the mainframe experience. [Zowe](https://www.zowe.org/) is hosted by the [Open Mainframe Project&trade;](https://www.openmainframeproject.org/), a [Linux Foundation&reg;](https://www.linuxfoundation.org/) initiative.
 
 ## Contents
 
