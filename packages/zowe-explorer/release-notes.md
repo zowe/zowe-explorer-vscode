@@ -6,7 +6,7 @@ Release notes for Zowe Explorer are now available in VS Code. Release notes are 
 
 ### Data sets table
 
-Data sets can now be viewed in a table format, similar to the jobs table. The data sets table allows for easier filtering, sorting, and bulk actions on data sets and members.
+Data sets can now be viewed in a table format, similar to the **JOBS** table. The **DATA SETS** sets table allows for easier filtering, sorting, and bulk actions on data sets and members.
 
 - **Open the table:**
 
