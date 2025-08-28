@@ -27,7 +27,7 @@ Data sets can now be viewed in a table format, similar to the **JOBS** table. Th
 
 ### Open selected data set
 
-Select text in the editor, right-click, and choose **Open Selected Data Set**. If the selected text is a valid data set name, it will open in a new editor tab or focus onto an existing tab if already open. If the selected text is a valid partitioned data set, it will open in the Data Sets tree. This is equivalent to the `ZOOM` command in ISPF.
+Select text in the editor, right-click, and choose **Open Selected Data Set**. If the selected text is a valid data set name, it opens in a new editor tab or focus onto an existing tab if already open. If the selected text is a valid partitioned data set, it opens in the **DATA SETS** tree. This is equivalent to the `ZOOM` command in ISPF.
 
 ### Upload with encoding
 
