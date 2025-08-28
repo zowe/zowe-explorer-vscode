@@ -43,7 +43,7 @@ Active jobs in the filtered profile automatically refresh at the specified inter
 
 ![3.3-active-jobs-polling-2](./resources/release-notes/3.3-active-jobs-polling-2.png)
 
-When all jobs have completed, polling will automatically stop. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.
+When all jobs have completed, polling automatically stop. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.
 
 ## `3.2.0`
 
