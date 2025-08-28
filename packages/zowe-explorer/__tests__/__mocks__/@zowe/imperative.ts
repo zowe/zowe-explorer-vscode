@@ -378,8 +378,11 @@ export class TextUtils {
     public static chalk = jest.requireActual("chalk");
 }
 
-export namespace SessConstants {
-    export declare const AUTH_TYPE_TOKEN = "token";
+export class SessConstants {
+    public static readonly AUTH_TYPE_TOKEN = "token";
+    public static readonly AUTH_TYPE_BASIC = "basic";
+    public static readonly AUTH_TYPE_BEARER = "bearer";
+    public static readonly AUTH_TYPE_CERT_PEM = "cert-pem";
 }
 
 export const apiErrorHeader = {
@@ -417,4 +420,20 @@ export class DeferredPromise {
     public promise: Promise<any> = Promise.resolve();
     public resolve(value?: any): void {}
     public reject(reason?: any): void {}
+}
+
+export class AuthOrder {
+    // private static originalAuthOrder = jest.requireActual("@zowe/imperative").AuthOrder;
+    public static addCredsToSession(...args: any[]): void {
+        // this.originalAuthOrder.addCredsToSession(...args);
+    }
+    public static putNewAuthsFirstInSess(...args: any[]): void {
+        // this.originalAuthOrder.putNewAuthsFirstInSess(...args);
+    }
+    public static putNewAuthsFirstOnDisk(...args: any[]): void {
+        // this.originalAuthOrder.putNewAuthsFirstOnDisk(...args);
+    }
+    public static makingRequestForToken(...args: any[]): void {
+        // this.originalAuthOrder.makingRequestForToken(...args);
+    }
 }

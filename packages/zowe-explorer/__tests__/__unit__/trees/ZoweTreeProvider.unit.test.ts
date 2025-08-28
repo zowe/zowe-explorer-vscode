@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum, Sorting } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum, Sorting, AuthHandler, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweTreeProvider } from "../../../src/trees/ZoweTreeProvider";
 import {
@@ -35,9 +35,9 @@ import { JobInit } from "../../../src/trees/job/JobInit";
 import { createIJobObject, createJobSessionNode } from "../../__mocks__/mockCreators/jobs";
 import { createDatasetFavoritesNode, createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
 import { DatasetInit } from "../../../src/trees/dataset/DatasetInit";
-import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { IconGenerator } from "../../../src/icons/IconGenerator";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
+import { AuthUtils } from "../../../src/utils/AuthUtils";
 
 async function createGlobalMocks() {
     Object.defineProperty(ZoweLocalStorage, "globalState", {
@@ -60,7 +60,6 @@ async function createGlobalMocks() {
         mockDisableValidationContext: jest.fn(),
         mockEnableValidationContext: jest.fn(),
         getConfiguration: jest.fn(),
-        isUsingTokenAuth: jest.fn(),
         refresh: jest.fn(),
         testProfile: profile,
         testSession: createISession(),
@@ -109,7 +108,6 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ConfigurationTarget", { value: globalMocks.enums, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
-    Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: globalMocks.isUsingTokenAuth, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: jest.fn().mockReturnValue({
@@ -348,6 +346,15 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
 
         return newMocks;
     }
+    beforeEach(() => {
+        // we should always try to start with a clean state
+        jest.restoreAllMocks();
+        jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+            getCommonApi: () => ({
+                getSession: () => createISession(),
+            }),
+        } as any);
+    });
 
     it("Tests that checkCurrentProfile is executed successfully with active status", async () => {
         const globalMocks = await createGlobalMocks();
@@ -360,7 +367,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     it("Tests that checkCurrentProfile is executed successfully with active status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(true);
+        jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
         const checkJwtSpy = jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile");
 
         await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
@@ -475,8 +482,10 @@ describe("Tree Provider Unit Tests - function ssoLogin", () => {
         };
     };
 
-    const blockMocks = createBlockMocks();
-
+    let blockMocks;
+    beforeEach(() => {
+        blockMocks = createBlockMocks();
+    });
     afterEach(() => {
         blockMocks.executeCommandSpy.mockClear();
     });
@@ -523,8 +532,10 @@ describe("Tree Provider Unit Tests - function ssoLogout", () => {
         };
     };
 
-    const blockMocks = createBlockMocks();
-
+    let blockMocks;
+    beforeEach(() => {
+        blockMocks = createBlockMocks();
+    });
     afterEach(() => {
         blockMocks.executeCommandSpy.mockClear();
     });
