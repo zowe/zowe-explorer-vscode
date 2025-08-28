@@ -1892,66 +1892,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("No selection made. Operation cancelled.");
     });
-    it("Checking adding of new filter error is caught on getChildren", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        Object.defineProperty(testTree.mSessionNodes[1], "getChildren", {
-            value: jest.fn(() => {
-                throw new Error("test error");
-            }),
-            configurable: true,
-        });
-        const errorSpy = jest.spyOn(AuthUtils, "errorHandling");
-
-        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
-
-        expect(errorSpy).toHaveBeenCalled();
-        errorSpy.mockClear();
-    });
-    it("Checking function for return if getChildren is undefined", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        Object.defineProperty(testTree.mSessionNodes[1], "getChildren", {
-            value: jest.fn(() => {
-                return;
-            }),
-            configurable: true,
-        });
-        const errorSpy = jest.spyOn(AuthUtils, "errorHandling");
-
-        expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
-
-        expect(errorSpy).not.toHaveBeenCalled();
-        errorSpy.mockClear();
-    });
-    it("Checking function for return if element.getChildren returns undefined", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-
-        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new FilterDescriptor("\uFF0B " + "Create a new filter"));
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD1.STUFF");
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        Object.defineProperty(testTree.mSessionNodes[1], "getDatasets", {
-            value: jest.fn().mockResolvedValueOnce(undefined),
-            configurable: true,
-        });
-
-        expect(await testTree.datasetFilterPrompt(testTree.mSessionNodes[1])).not.toBeDefined();
-    });
 
     it("should return early if profile is invalid", async () => {
         const globalMocks = createGlobalMocks();
@@ -2563,6 +2503,282 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             value: existingFilter,
         });
         expect(filterTreeSpy).not.toHaveBeenCalled();
+    });
+
+    describe("inFilterPrompt flag management", () => {
+        it("should set inFilterPrompt to true when prompt opens and false when user cancels", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const node = blockMocks.datasetSessionNode;
+
+            // Mock the QuickPick to simulate user cancellation
+            const mockQuickPick = {
+                placeholder: "",
+                ignoreFocusOut: true,
+                items: [],
+                value: "",
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidChangeValue: jest.fn(),
+            };
+
+            mocked(Gui.createQuickPick).mockReturnValue(mockQuickPick);
+            mocked(Gui.resolveQuickPick).mockResolvedValue(undefined); // User cancels
+
+            // Spy on node.inFilterPrompt changes
+            const originalInFilterPrompt = node.inFilterPrompt;
+            expect(originalInFilterPrompt).toBe(false);
+
+            // Mock search history to trigger QuickPick path
+            jest.spyOn(blockMocks.testTree.mPersistence, "getSearchHistory").mockReturnValue(["HLQ.*"]);
+
+            await blockMocks.testTree.datasetFilterPrompt(node);
+
+            // Verify that inFilterPrompt was set to false after cancellation
+            expect(node.inFilterPrompt).toBe(false);
+            expect(Gui.showMessage).toHaveBeenCalledWith("No selection made. Operation cancelled.");
+        });
+
+        it("should set inFilterPrompt to false when user enters invalid input", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const node = blockMocks.datasetSessionNode;
+
+            // Mock the QuickPick to simulate user selecting "Create new filter" but providing no input
+            const mockQuickPick = {
+                placeholder: "",
+                ignoreFocusOut: true,
+                items: [],
+                value: "",
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidChangeValue: jest.fn(),
+            };
+
+            mocked(Gui.createQuickPick).mockReturnValue(mockQuickPick);
+            mocked(Gui.resolveQuickPick).mockResolvedValue(new FilterDescriptor("Create a new filter"));
+            mocked(Gui.showInputBox).mockResolvedValue(undefined); // User provides no input
+
+            // Mock search history to trigger QuickPick path
+            jest.spyOn(blockMocks.testTree.mPersistence, "getSearchHistory").mockReturnValue(["HLQ.*"]);
+
+            await blockMocks.testTree.datasetFilterPrompt(node);
+
+            // Verify that inFilterPrompt was set to false after invalid input
+            expect(node.inFilterPrompt).toBe(false);
+        });
+
+        it("should set inFilterPrompt to false when successful filter is applied", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const node = blockMocks.datasetSessionNode;
+
+            // Mock the QuickPick to simulate successful filter creation
+            const mockQuickPick = {
+                placeholder: "",
+                ignoreFocusOut: true,
+                items: [],
+                value: "HLQ.TEST.*",
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidChangeValue: jest.fn(),
+            };
+
+            mocked(Gui.createQuickPick).mockReturnValue(mockQuickPick);
+            mocked(Gui.resolveQuickPick).mockResolvedValue(new FilterDescriptor("Create a new filter"));
+
+            // Mock TreeViewUtils.expandNode to avoid actual tree expansion
+            jest.spyOn(TreeViewUtils, "expandNode").mockResolvedValue();
+            jest.spyOn(blockMocks.testTree, "nodeDataChanged").mockImplementation();
+            jest.spyOn(blockMocks.testTree, "addSearchHistory").mockImplementation();
+
+            // Mock search history to trigger QuickPick path
+            jest.spyOn(blockMocks.testTree.mPersistence, "getSearchHistory").mockReturnValue(["HLQ.*"]);
+
+            const originalInFilterPrompt = node.inFilterPrompt;
+            expect(originalInFilterPrompt).toBe(false);
+
+            await blockMocks.testTree.datasetFilterPrompt(node);
+
+            // Verify that inFilterPrompt was set to false after successful filter application
+            expect(node.inFilterPrompt).toBe(false);
+            expect(node.pattern).toEqual("HLQ.TEST.*");
+        });
+
+        it("should set dirty flag to true and trigger refresh when successful filter is applied", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const node = blockMocks.datasetSessionNode;
+
+            // Set up successful filter application
+            const mockQuickPick = {
+                placeholder: "",
+                ignoreFocusOut: true,
+                items: [],
+                value: "HLQ.TEST.*",
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidChangeValue: jest.fn(),
+            };
+
+            mocked(Gui.createQuickPick).mockReturnValue(mockQuickPick);
+            mocked(Gui.resolveQuickPick).mockResolvedValue(new FilterDescriptor("Create a new filter"));
+
+            // Mock TreeViewUtils.expandNode and nodeDataChanged to track calls
+            const expandNodeSpy = jest.spyOn(TreeViewUtils, "expandNode").mockResolvedValue();
+            const nodeDataChangedSpy = jest.spyOn(blockMocks.testTree, "nodeDataChanged").mockImplementation();
+            jest.spyOn(blockMocks.testTree, "addSearchHistory").mockImplementation();
+
+            // Mock search history
+            jest.spyOn(blockMocks.testTree.mPersistence, "getSearchHistory").mockReturnValue(["HLQ.*"]);
+
+            // Set initial state
+            node.dirty = false;
+            node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+            await blockMocks.testTree.datasetFilterPrompt(node);
+
+            // Verify dirty flag was set to true
+            expect(node.dirty).toBe(true);
+            expect(node.inFilterPrompt).toBe(false);
+
+            // Verify refresh was triggered for expanded node
+            expect(nodeDataChangedSpy).toHaveBeenCalledWith(node);
+            expect(expandNodeSpy).not.toHaveBeenCalled(); // Should not expand already expanded node
+        });
+
+        it("should expand node when it's not already expanded after filter application", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const node = blockMocks.datasetSessionNode;
+
+            // Set up successful filter application
+            const mockQuickPick = {
+                placeholder: "",
+                ignoreFocusOut: true,
+                items: [],
+                value: "HLQ.TEST.*",
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidChangeValue: jest.fn(),
+            };
+
+            mocked(Gui.createQuickPick).mockReturnValue(mockQuickPick);
+            mocked(Gui.resolveQuickPick).mockResolvedValue(new FilterDescriptor("Create a new filter"));
+
+            // Mock TreeViewUtils.expandNode and nodeDataChanged to track calls
+            const expandNodeSpy = jest.spyOn(TreeViewUtils, "expandNode").mockResolvedValue();
+            const nodeDataChangedSpy = jest.spyOn(blockMocks.testTree, "nodeDataChanged").mockImplementation();
+            jest.spyOn(blockMocks.testTree, "addSearchHistory").mockImplementation();
+
+            // Mock search history
+            jest.spyOn(blockMocks.testTree.mPersistence, "getSearchHistory").mockReturnValue(["HLQ.*"]);
+
+            // Set initial state - node is NOT expanded
+            node.dirty = false;
+            node.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+
+            await blockMocks.testTree.datasetFilterPrompt(node);
+
+            // Verify dirty flag was set to true
+            expect(node.dirty).toBe(true);
+            expect(node.inFilterPrompt).toBe(false);
+
+            // Verify expand was called instead of nodeDataChanged
+            expect(expandNodeSpy).toHaveBeenCalledWith(node, blockMocks.testTree);
+            expect(nodeDataChangedSpy).not.toHaveBeenCalled();
+        });
+
+        it("should not interfere with dirty flag when user cancels filter prompt", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const node = blockMocks.datasetSessionNode;
+
+            // Mock user cancellation
+            const mockQuickPick = {
+                placeholder: "",
+                ignoreFocusOut: true,
+                items: [],
+                value: "",
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidChangeValue: jest.fn(),
+            };
+
+            mocked(Gui.createQuickPick).mockReturnValue(mockQuickPick);
+            mocked(Gui.resolveQuickPick).mockResolvedValue(undefined); // User cancels
+
+            // Mock search history
+            jest.spyOn(blockMocks.testTree.mPersistence, "getSearchHistory").mockReturnValue(["HLQ.*"]);
+
+            // Set initial state
+            const originalDirtyState = true;
+            node.dirty = originalDirtyState;
+
+            await blockMocks.testTree.datasetFilterPrompt(node);
+
+            // Verify dirty flag was not modified during cancellation
+            expect(node.dirty).toBe(originalDirtyState);
+            expect(node.inFilterPrompt).toBe(false);
+        });
+
+        it("should return early from getChildren when inFilterPrompt is true", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const node = blockMocks.datasetSessionNode;
+
+            // Set up node state
+            node.pattern = "HLQ.*";
+            node.dirty = true;
+            node.inFilterPrompt = true; // Simulate being in filter prompt
+            node.children = [
+                new ZoweDatasetNode({
+                    label: "EXISTING.CHILD",
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: node,
+                }),
+            ];
+
+            // Mock SharedContext.isSessionNotFav to return true for session node
+            jest.spyOn(SharedContext, "isSessionNotFav").mockReturnValue(true);
+
+            const result = await node.getChildren();
+
+            // Should return existing children without fetching new data
+            expect(result).toBe(node.children);
+            expect(result).toHaveLength(1);
+            expect(result[0].label).toBe("EXISTING.CHILD");
+        });
+
+        it("should reset inFilterPrompt when selecting existing filter but canceling input", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const node = blockMocks.datasetSessionNode;
+
+            // Mock selecting existing filter from history
+            const mockQuickPick = {
+                placeholder: "",
+                ignoreFocusOut: true,
+                items: [],
+                value: "",
+                show: jest.fn(),
+                hide: jest.fn(),
+                onDidChangeValue: jest.fn(),
+            };
+
+            mocked(Gui.createQuickPick).mockReturnValue(mockQuickPick);
+            mocked(Gui.resolveQuickPick).mockResolvedValue(new FilterItem({ text: "HLQ.EXISTING.*" }));
+            mocked(Gui.showInputBox).mockResolvedValue(undefined); // User cancels input
+
+            // Mock search history
+            jest.spyOn(blockMocks.testTree.mPersistence, "getSearchHistory").mockReturnValue(["HLQ.EXISTING.*"]);
+
+            await blockMocks.testTree.datasetFilterPrompt(node);
+
+            // Verify inFilterPrompt was reset to false
+            expect(node.inFilterPrompt).toBe(false);
+            expect(Gui.showMessage).toHaveBeenCalledWith("You must enter a pattern.");
+        });
     });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {
