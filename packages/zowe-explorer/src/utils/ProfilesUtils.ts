@@ -734,15 +734,15 @@ export class ProfilesUtils {
         Gui.infoMessage(responseMsg.join(""), { vsCodeOpts: { modal: true } });
     }
 
-    private static extenderTypeReady: Map<string, imperative.DeferredPromise<void>> = new Map();
+    private static extenderProfileReady: Map<string, imperative.DeferredPromise<void>> = new Map();
 
     public static async awaitExtenderType(profileName: string, profCache: ProfilesCache): Promise<void> {
         const profLoaded = profCache.allProfiles.find((prof) => prof.name === profileName);
-        if (!profLoaded && !ProfilesUtils.extenderTypeReady.has(profileName)) {
+        if (!profLoaded && !ProfilesUtils.extenderProfileReady.has(profileName)) {
             const deferredPromise = new imperative.DeferredPromise<void>();
-            ProfilesUtils.extenderTypeReady.set(profileName, deferredPromise);
+            ProfilesUtils.extenderProfileReady.set(profileName, deferredPromise);
         }
-        const profilePromise = ProfilesUtils.extenderTypeReady.get(profileName);
+        const profilePromise = ProfilesUtils.extenderProfileReady.get(profileName);
         const promiseTimeout = 10000;
         if (profilePromise) {
             let timeoutHandle: NodeJS.Timeout;
@@ -755,8 +755,8 @@ export class ProfilesUtils {
 
     public static async resolveTypePromise(extenderType: string, profCache: ProfilesCache): Promise<void> {
         for (const profile of profCache.getProfiles(extenderType)) {
-            if (ProfilesUtils.extenderTypeReady.has(profile.name)) {
-                ProfilesUtils.extenderTypeReady.get(profile.name).resolve();
+            if (ProfilesUtils.extenderProfileReady.has(profile.name)) {
+                ProfilesUtils.extenderProfileReady.get(profile.name).resolve();
             }
         }
         await vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", extenderType);

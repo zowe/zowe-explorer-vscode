@@ -1447,13 +1447,13 @@ describe("ProfilesUtils unit tests", () => {
     describe("Profiles unit tests - function awaitExtenderType", () => {
         it("should create deferred promise for registered profile type", () => {
             const mockProfilesCache = { allProfiles: [] } as unknown as ProfilesCache;
-            const extenderTypeReadyGetSpy = jest.spyOn((ProfilesUtils as any).extenderTypeReady, "get");
-            const extenderTypeReadySetSpy = jest.spyOn((ProfilesUtils as any).extenderTypeReady, "set");
+            const extenderProfileReadyGetSpy = jest.spyOn((ProfilesUtils as any).extenderProfileReady, "get");
+            const extenderProfileReadySetSpy = jest.spyOn((ProfilesUtils as any).extenderProfileReady, "set");
             // First time create a deferred promise, second time reuse it
             ProfilesUtils.awaitExtenderType("test", mockProfilesCache);
             ProfilesUtils.awaitExtenderType("test", mockProfilesCache);
-            expect(extenderTypeReadyGetSpy).toHaveBeenCalledTimes(2);
-            expect(extenderTypeReadySetSpy).toHaveBeenCalledTimes(1);
+            expect(extenderProfileReadyGetSpy).toHaveBeenCalledTimes(2);
+            expect(extenderProfileReadySetSpy).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -1466,8 +1466,8 @@ describe("ProfilesUtils unit tests", () => {
                     { name: "test2", type: "zftp" },
                 ]),
             } as unknown as ProfilesCache;
-            (ProfilesUtils as any).extenderTypeReady.set("test1", { resolve: mockResolve });
-            (ProfilesUtils as any).extenderTypeReady.set("test2", { resolve: mockResolve });
+            (ProfilesUtils as any).extenderProfileReady.set("test1", { resolve: mockResolve });
+            (ProfilesUtils as any).extenderProfileReady.set("test2", { resolve: mockResolve });
             ProfilesUtils.resolveTypePromise("zftp", mockProfilesCache);
             expect(mockResolve).toHaveBeenCalledTimes(2);
         });
