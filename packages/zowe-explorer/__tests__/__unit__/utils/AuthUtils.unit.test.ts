@@ -183,48 +183,94 @@ describe("AuthUtils", () => {
     });
 
     describe("retryRequest", () => {
-        describe("JobFSProvider fetchSpoolAtUri auth error handling", () => {
-            const loadNamedProfileMock = jest.fn().mockReturnValue(createIProfile());
-            jest.spyOn(Profiles, "getInstance").mockReturnValue({ loadNamedProfile: loadNamedProfileMock } as any);
-            const attempts = [0, 1, 3, 5, 25, 99];
-            beforeEach(() => {
-                jest.clearAllMocks();
-            });
-            afterEach(() => {
-                jest.clearAllMocks();
-            });
+        let loadNamedProfileMock;
+        let mockMvsApi;
+        let promptForAuthErrorMock;
 
-            test.each(attempts)(`calls AuthUtils.handleProfileAuthOnError to ensure it is called %i times`, async (maxAttempts) => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+
+            // Setup common mocks
+            loadNamedProfileMock = jest.fn().mockReturnValue(createIProfile());
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile: loadNamedProfileMock,
+            } as any);
+
+            mockMvsApi = {
+                dataSet: jest.fn(() => {
+                    throw new imperative.ImperativeError({
+                        msg: "All configured authentication methods failed",
+                    });
+                }),
+            };
+
+            promptForAuthErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation();
+
+            // Common spies setup
+            jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.ps);
+
+            jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testEntries.ps.metadata.profile,
+            });
+        });
+
+        afterEach(() => {
+            jest.clearAllMocks();
+        });
+
+        describe("JobFSProvider fetchSpoolAtUri auth error handling", () => {
+            const testAttempts = [0, 1, 3, 5, 25, 99];
+
+            test.each(testAttempts)("calls AuthUtils.handleProfileAuthOnError %i times when maxAttempts is %i", async (maxAttempts) => {
+                // Arrange
                 jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
                     if (key === "zowe.table.maxExtenderRetry") {
                         return maxAttempts;
                     }
+                    return undefined;
                 });
-                jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.ps);
-                jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
-                    isRoot: false,
-                    slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
-                    profileName: "sestest",
-                    profile: testEntries.ps.metadata.profile,
-                });
-                const mockMvsApi = {
-                    dataSet: jest.fn(() => {
-                        throw new imperative.ImperativeError({
-                            msg: "All configured authentication methods failed",
-                        });
-                    }),
-                };
-                const promptForAuthErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation();
 
                 jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
-                let e;
-                try {
-                    await DatasetFSProvider.instance.stat(testUris.ps);
-                } catch (err) {
-                    e = err;
-                }
-                expect(e).toBeDefined();
+
+                // Act & Assert
+                await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toBeDefined();
+
                 expect(promptForAuthErrorMock).toHaveBeenCalledTimes(maxAttempts);
+            });
+        });
+
+        describe("successful authentication retry", () => {
+            it("should return stat value when handleProfileAuthOnError receives correct credentials", async () => {
+                // Arrange
+                const maxRetries = 3;
+                jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+                    if (key === "zowe.table.maxExtenderRetry") {
+                        return maxRetries;
+                    }
+                    return undefined;
+                });
+
+                const successfulMvsApi = {
+                    dataSet: jest.fn(() => ({ success: true })),
+                };
+
+                // Mock sequence: fail twice, then succeed
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi")
+                    .mockReturnValueOnce(mockMvsApi as any)
+                    .mockReturnValueOnce(mockMvsApi as any)
+                    .mockReturnValue(successfulMvsApi as any);
+
+                // Act
+                const statResult = await DatasetFSProvider.instance.stat(testUris.ps);
+                const fetchResult = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
+
+                // Assert
+                expect(statResult).toBeDefined();
+                expect(fetchResult).toBeDefined();
+                expect(promptForAuthErrorMock).toHaveBeenCalledTimes(2);
             });
         });
     });
