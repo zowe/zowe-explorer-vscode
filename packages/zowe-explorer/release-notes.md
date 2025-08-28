@@ -31,7 +31,7 @@ Select text in the editor, right-click, and choose **Open Selected Data Set**. I
 
 ### Upload with encoding
 
-Right-click on a directory or partitioned data set in the USS or Data Sets tree and select **Upload with Encoding...** to choose a character encoding for the uploaded files.
+Right-click on a directory or partitioned data set in the **USS** or **DATA SETS** tree and select **Upload with Encoding...** to choose a character encoding for the uploaded files.
 
 ### Poll active jobs
 
