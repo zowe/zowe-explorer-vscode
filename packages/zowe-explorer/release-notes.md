@@ -39,7 +39,7 @@ Active jobs in the **JOBS** tree can now be set to poll for job completion. Righ
 
 ![3.3-active-jobs-polling-1](./resources/release-notes/3.3-active-jobs-polling-1.webp)
 
-Active jobs in the filtered profile will automatically refresh at the specified interval and any new jobs matching the filter will automatically appear. When a job completes, it shows a notification message with the job name and return code.
+Active jobs in the filtered profile automatically refresh at the specified interval and any new jobs matching the filter automatically appear. When a job completes, it shows a notification message with the job name and return code.
 
 ![3.3-active-jobs-polling-2](./resources/release-notes/3.3-active-jobs-polling-2.png)
 
