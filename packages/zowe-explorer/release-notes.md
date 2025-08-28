@@ -6,7 +6,7 @@ Release notes for Zowe Explorer are now available in VS Code. Release notes are 
 
 ### Data sets table
 
-Data sets can now be viewed in a table format, similar to the **JOBS** table. The **DATA SETS** sets table allows for easier filtering, sorting, and bulk actions on data sets and members.
+Data sets can now be viewed in a table format, similar to the jobs table. The data sets table allows for easier filtering, sorting, and bulk actions on data sets and members.
 
 - **Open the table:**
 
@@ -43,19 +43,19 @@ Active jobs in the filtered profile automatically refresh at the specified inter
 
 ![3.3-active-jobs-polling-2](./resources/release-notes/3.3-active-jobs-polling-2.png)
 
-When all jobs have completed, polling automatically stop. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.
+When all jobs have completed, polling automatically stops. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.
 
 ## `3.2.0`
 
 ### Job spool pagination
 
-Large job spool files now load faster by displaying a `Load more…` button at the bottom of the spool file to fetch additional lines as needed. For active jobs, use this button to retrieve new output without refreshing the Jobs tree. It is recommended to use the default keyboard shortcut `Ctrl` + `L` to quickly load more lines. The number of lines per page and the toggle for pagination can be configured in the settings under `Zowe > Jobs > Paginate`. The default is 100 lines per page.
+Large job spool files now load faster by displaying a `Load more…` button at the bottom of the spool file to fetch additional lines as needed. For active jobs, use this button to retrieve new output without refreshing the **JOBS** tree. It is recommended to use the default keyboard shortcut `Ctrl` + `L` to quickly load more lines. The number of lines per page and the toggle for pagination can be configured in the settings under **Zowe > Jobs > Paginate**. The default is 100 lines per page.
 
 ![3.2-job-spool-1](./resources/release-notes/3.2-job-spool-1.png)
 
 ### Data set tree pagination
 
-The Data Sets tree and any data sets with many members now display `<- Previous page` and `-> Next page` navigation buttons to page through members. Only a subset of members is loaded at a time, allowing for large filters and data sets to load members faster. The number of members per page is configurable in the settings under `Zowe > Ds > Paginate`. The default is 100 members per page.
+The Data Sets tree and any data sets with many members now display `<- Previous page` and `-> Next page` navigation buttons to page through members. Only a subset of members is loaded at a time, allowing for large filters and data sets to load members faster. The number of members per page is configurable in the settings under **Zowe > Ds > Paginate**. The default is 100 members per page.
 
 ![3.2-ds-pagination-1](./resources/release-notes/3.2-ds-pagination-1.webp)
 
@@ -85,7 +85,7 @@ Data sets and members can now be copied and pasted within or across LPARs. Drag 
 
 ### Improved USS filtering
 
-The USS tree can now be filtered by any selected directory. Right-click a directory and select `Search by directory` to filter. Use the `Go Up One Directory` button to quickly adjust the filter to the parent directory.
+The **USS** tree can now be filtered by any selected directory. Right-click a directory and select `Search by directory` to filter. Use the `Go Up One Directory` button to quickly adjust the filter to the parent directory.
 
 ![3.2-uss-filter-1](./resources/release-notes/3.2-uss-filter-1.png)
 ![3.2-uss-filter-2](./resources/release-notes/3.2-uss-filter-2.png)
