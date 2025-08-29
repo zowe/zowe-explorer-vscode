@@ -45,19 +45,15 @@ export class AuthUtils {
      */
     public static async reauthenticateIfCancelled(profile: imperative.IProfileLoaded): Promise<void> {
         if (AuthHandler.isProfileLocked(profile) && AuthHandler.wasAuthCancelled(profile)) {
-            try {
-                // The original error doesn't matter here, we just need to trigger the flow.
-                await this.handleProfileAuthOnError(
-                    new Error("User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate."),
-                    profile
-                );
-            } catch (err) {
-                // If handleProfileAuthOnError fails (e.g., user cancels again),
-                // we should propagate that failure.
-                throw err;
-            }
+            // The original error doesn't matter here, we just need to trigger the flow.
+            await this.handleProfileAuthOnError(
+                new Error("User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate."),
+                profile
+            );
         }
     }
+
+    public static maxAttempts: Record<string, number> = {};
 
     /**
      * Locks the profile if an authentication error has occurred (prevents further requests in filesystem until unlocked).
@@ -106,6 +102,30 @@ export class AuthUtils {
         } else if (AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
             AuthHandler.unlockProfile(profile);
+        }
+    }
+
+    public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
+        const maxAttempts = SettingsConfig.getDirectValue("zowe.table.maxExtenderRetry", 0);
+        for (let i = 0; i <= maxAttempts; i++) {
+            try {
+                return await callback();
+            } catch (err) {
+                if (err instanceof Error) {
+                    ZoweLogger.error(err.message);
+                }
+                if (
+                    (i < maxAttempts &&
+                        err instanceof imperative.ImperativeError &&
+                        (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                            err.message.includes("All configured authentication methods failed"))) ||
+                    err.message.includes("HTTP(S) status 401")
+                ) {
+                    await this.handleProfileAuthOnError(err, profile);
+                } else {
+                    throw err;
+                }
+            }
         }
     }
 
