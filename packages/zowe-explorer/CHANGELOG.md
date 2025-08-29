@@ -41,6 +41,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Prevented data loss by modifying the save process to handle data sets with records that exceeded the logical record length. [#3791](https://github.com/zowe/zowe-explorer-vscode/issues/3791)
 - Fixed cross-LPAR PDS transfers to preserve original DCB attributes and prevent binary data corruption. Data is now transferred as binary, and the encoding is respected if previously set by the user. [#3731](https://github.com/zowe/zowe-explorer-vscode/pull/3731)
 - Fixed copy/paste functionality of data sets for extender-type profiles by using `SharedContext` helper functions. [#3815](https://github.com/zowe/zowe-explorer-vscode/pull/3815)
+- Fixed issue where the `getChildren` function made requests repeatedly while the data set filter prompt was open, causing repeated authentication prompts and excessive requests for listing data sets. [#3807](https://github.com/zowe/zowe-explorer-vscode/issues/3807)
 
 ## `3.2.2`
 
@@ -52,6 +53,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where clicking the Cancel button in the Save Credentials dialog triggered a 401 error prompting to update credentials. [#3713](https://github.com/zowe/zowe-explorer-vscode/pull/3713)
 - Resolved an issue where secure credentials were inadvertently converted to non-string data types. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)
 - Changed the jobs pagination setting to be disabled by default and the default records to fetch from 100 to 1000 due to customer feedback. [#3743](https://github.com/zowe/zowe-explorer-vscode/issues/3743)
+- Updated Zowe SDKs to `8.26.1` for technical currency. [#3696](https://github.com/zowe/zowe-explorer-vscode/pull/3696)
 
 ## `3.2.1`
 

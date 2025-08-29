@@ -20,6 +20,7 @@ import {
     imperative,
     PdsEntry,
     ZoweExplorerApiType,
+    ZoweVsCodeExtension,
     ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
@@ -80,6 +81,14 @@ const testEntries = {
 };
 
 describe("AuthUtils", () => {
+    beforeEach(() => {
+        jest.restoreAllMocks();
+        jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+            getCommonApi: () => ({
+                getSession: () => createISession(),
+            }),
+        } as any);
+    });
     describe("handleProfileAuthOnError", () => {
         it("should prompt for authentication", async () => {
             const imperativeError = new imperative.ImperativeError({
@@ -171,14 +180,16 @@ describe("AuthUtils", () => {
                 msg: "All configured authentication methods failed",
             });
             const isUsingTokenAuthMock = jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            const getSessFromProfileMock = jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "basic" } } as any);
             const isProfileLockedMock = jest.spyOn(AuthHandler, "isProfileLocked").mockReturnValueOnce(true);
             const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
             const lockProfileSpy = jest.spyOn(AuthHandler, "lockProfile");
             await AuthUtils.handleProfileAuthOnError(imperativeError, profile);
             expect(waitForUnlockMock).toHaveBeenCalledWith(profile);
             expect(isProfileLockedMock).toHaveBeenCalledWith(profile);
-            expect(isUsingTokenAuthMock).toHaveBeenCalledWith(profile.name);
+            expect(isUsingTokenAuthMock).not.toHaveBeenCalled();
             expect(lockProfileSpy).not.toHaveBeenCalledWith(profile);
+            expect(getSessFromProfileMock).toHaveBeenCalledWith(profile);
         });
     });
 
@@ -521,7 +532,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
             expect(sessionNode.dirty).toBe(true);
@@ -559,7 +570,7 @@ describe("AuthUtils", () => {
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
 
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "basic" } } as any);
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
             expect(sessionNode.dirty).toBe(true);
@@ -599,7 +610,7 @@ describe("AuthUtils", () => {
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
 
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "cert-pem" } } as any);
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
             expect(sessionNode.dirty).toBe(true);
@@ -622,7 +633,7 @@ describe("AuthUtils", () => {
                     getSession: getSessionMock,
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -659,7 +670,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "basic" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -698,7 +709,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "cert-pem" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -737,7 +748,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -762,7 +773,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.fullPath = "/a/user/fileName";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -788,7 +799,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Auth Method: Token Authentication\nJobId: JOB0001`;
             sessionNode.description = "Owner: * | Prefix: * | Status: *";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
@@ -816,7 +827,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Auth Method: Token Authentication\nOwner: * | Prefix: * | Status: *`;
             sessionNode.description = "JobId: JOB0001";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
@@ -856,7 +867,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "basic" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown\nUser: sampleUser`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -896,7 +907,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Basic Authentication\nPattern: USER.*`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -936,7 +947,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Basic Authentication\nPath: /a/user/fileName.txt`;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -976,7 +987,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Basic Authentication\nOwner: * | Prefix: * | Status: *\n `;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -1016,7 +1027,7 @@ describe("AuthUtils", () => {
                 failNotFound: false,
             };
             loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(false);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "none" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Basic Authentication\nJobId: JOB0001\n `;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -1042,7 +1053,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = "Auth Method: Basic Authentication\nUser: sampleUser";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -1068,7 +1079,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Auth Method: Token Authentication\nPath: /a/user/fileNameOne`;
             sessionNode.fullPath = "/a/user/fileNameTwo";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
@@ -1095,7 +1106,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Auth Method: Token Authentication\nOwner: * | Prefix: * | Status: *`;
             sessionNode.description = "Owner: * | Prefix: * | Status: ACTIVE";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
@@ -1122,7 +1133,7 @@ describe("AuthUtils", () => {
                 } as any);
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValueOnce(true);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Auth Method: Token Authentication\nJobId: JOB0001`;
             sessionNode.description = "JobId: JOB0002";
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
@@ -1205,9 +1216,6 @@ describe("AuthUtils", () => {
 
     describe("updateNodeToolTip", () => {
         let mockProfile: imperative.IProfileLoaded;
-        let isUsingTokenAuthSpy: jest.SpyInstance;
-        let loggerErrorSpy: jest.SpyInstance;
-        let createDirectoryMock: jest.SpyInstance;
 
         beforeEach(() => {
             mockProfile = {
@@ -1220,16 +1228,16 @@ describe("AuthUtils", () => {
                 message: "",
                 failNotFound: false,
             };
-            isUsingTokenAuthSpy = jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(false);
-            loggerErrorSpy = jest.spyOn(ZoweLogger, "error").mockImplementation();
-            createDirectoryMock = jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation();
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+            jest.spyOn(ZoweLogger, "error").mockImplementation();
+            jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation();
         });
 
         afterEach(() => {
             jest.clearAllMocks();
         });
 
-        it("should not throw when sessionNode has an undefined tooltip", async () => {
+        it("should not throw when sessionNode has an undefined tooltip", () => {
             const mockSessionNode = new ZoweUSSNode({
                 label: "sestest",
                 collapsibleState: TreeItemCollapsibleState.Collapsed,
@@ -1240,7 +1248,7 @@ describe("AuthUtils", () => {
             });
             mockSessionNode.fullPath = "/test/path";
 
-            await expect(AuthUtils.updateNodeToolTip(mockSessionNode, mockProfile)).resolves.not.toThrow();
+            AuthUtils.updateNodeToolTip(mockSessionNode, mockProfile);
             expect(mockSessionNode.tooltip).toBeDefined();
             expect(typeof mockSessionNode.tooltip).toBe("string");
             expect(mockSessionNode.tooltip).toContain("Auth Method: Basic Authentication");
@@ -1248,7 +1256,7 @@ describe("AuthUtils", () => {
             expect(mockSessionNode.tooltip).toContain("Path: /test/path");
         });
 
-        it("should not throw when sessionNode has a MarkdownString tooltip", async () => {
+        it("should not throw when sessionNode has a MarkdownString tooltip", () => {
             const mockMarkdownString = new MarkdownString("Existing tooltip content");
             const mockSessionNode = new ZoweUSSNode({
                 label: "sestest",
@@ -1261,7 +1269,7 @@ describe("AuthUtils", () => {
             mockSessionNode.tooltip = mockMarkdownString;
             mockSessionNode.fullPath = "/test/path";
 
-            await expect(AuthUtils.updateNodeToolTip(mockSessionNode, mockProfile)).resolves.not.toThrow();
+            AuthUtils.updateNodeToolTip(mockSessionNode, mockProfile);
             expect(mockSessionNode.tooltip).toBeDefined();
             expect(typeof mockSessionNode.tooltip).toBe("string");
             expect(mockSessionNode.tooltip).toContain("Existing tooltip content");
@@ -1270,7 +1278,7 @@ describe("AuthUtils", () => {
             expect(mockSessionNode.tooltip).toContain("Path: /test/path");
         });
 
-        it("should not throw when sessionNode has a string tooltip", async () => {
+        it("should not throw when sessionNode has a string tooltip", () => {
             const mockSessionNode = new ZoweUSSNode({
                 label: "sestest",
                 collapsibleState: TreeItemCollapsibleState.Collapsed,
@@ -1282,13 +1290,49 @@ describe("AuthUtils", () => {
             mockSessionNode.fullPath = "/test/path";
             mockSessionNode.tooltip = "Existing string tooltip";
 
-            await expect(AuthUtils.updateNodeToolTip(mockSessionNode, mockProfile)).resolves.not.toThrow();
+            AuthUtils.updateNodeToolTip(mockSessionNode, mockProfile);
             expect(mockSessionNode.tooltip).toBeDefined();
             expect(typeof mockSessionNode.tooltip).toBe("string");
             expect(mockSessionNode.tooltip).toContain("Existing string tooltip");
             expect(mockSessionNode.tooltip).toContain("Auth Method: Basic Authentication");
             expect(mockSessionNode.tooltip).toContain("User: testUser");
             expect(mockSessionNode.tooltip).toContain("Path: /test/path");
+        });
+    });
+
+    describe("errorHandling", () => {
+        let profilesCacheMock: MockedProperty;
+        const loadNamedProfileMock = jest.fn().mockReturnValue(createIProfile());
+        beforeAll(() => {
+            profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    loadNamedProfile: loadNamedProfileMock,
+                    promptCredentials: jest.fn().mockImplementation(),
+                } as any,
+                configurable: true,
+            });
+        });
+
+        afterAll(() => {
+            profilesCacheMock[Symbol.dispose]();
+        });
+        it("should properly format Imperative errors with additional details", async () => {
+            const testError = new imperative.ImperativeError({
+                msg: "Test error message",
+                errorCode: "401",
+                additionalDetails: "\nAuth order: token,basic\nAuth type: token\nAvailable creds: token,basic\n",
+            });
+            const promptForAuthenticationMock = jest.spyOn(AuthHandler, "promptForAuthentication").mockResolvedValue(true);
+            const moreInfo = {
+                profile: "testProfile",
+                apiType: ZoweExplorerApiType.Mvs,
+            };
+            await expect(AuthUtils.errorHandling(testError, moreInfo)).resolves.toBe(true);
+            expect(promptForAuthenticationMock.mock.calls[0][1]).toEqual(
+                expect.objectContaining({
+                    imperativeError: testError,
+                })
+            );
         });
     });
 });

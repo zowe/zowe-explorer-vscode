@@ -421,7 +421,7 @@ describe("DatasetFSProvider", () => {
             const profilePromise = new DeferredPromise<void>();
 
             if (testProfile.name) {
-                ProfilesUtils.extenderTypeReady.set(testProfile.name, profilePromise);
+                ProfilesUtils.extenderProfileReady.set(testProfile.name, profilePromise);
             }
 
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue({
@@ -442,7 +442,7 @@ describe("DatasetFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - no existing promise", async () => {
-            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValue(undefined);
+            jest.spyOn(ProfilesUtils.extenderProfileReady, "get").mockReturnValue(undefined);
             const mockAllProfiles = [
                 { name: "sestest", type: "ssh" },
                 { name: "profile1", type: "zosmf" },
@@ -458,7 +458,7 @@ describe("DatasetFSProvider", () => {
             jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfilesInstance as any);
 
             const profilePromise = new DeferredPromise<void>();
-            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValue(profilePromise);
+            jest.spyOn(ProfilesUtils.extenderProfileReady, "get").mockReturnValue(profilePromise);
 
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue({
                 ...testEntries.ps,

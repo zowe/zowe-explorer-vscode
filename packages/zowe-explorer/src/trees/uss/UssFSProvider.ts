@@ -436,7 +436,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         let file: UssFile | UssDirectory;
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
-        // If the extenderTypeReady map does not contain the profile, create a deferred promise for the profile.
+        // If the extenderProfileReady map does not contain the profile, create a deferred promise for the profile.
         const uriInfo = FsAbstractUtils.getInfoForUri(uri);
         await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
         try {

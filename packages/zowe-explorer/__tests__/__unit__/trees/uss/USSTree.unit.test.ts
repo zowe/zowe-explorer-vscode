@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, IZoweUSSTreeNode, ProfilesCache, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { AuthHandler, Gui, imperative, IZoweUSSTreeNode, ProfilesCache, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
@@ -105,8 +105,8 @@ function createGlobalMocks() {
             createDirectory: jest.fn(),
             rename: jest.fn(),
         },
-        isUsingTokenAuth: jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(false),
     };
+    jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
     globalMocks.createSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
@@ -1152,7 +1152,8 @@ describe("USSTree Unit Tests - Function filterBy", () => {
     it("Tests that filterBy() works correctly for favorited search nodes with credentials", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks();
-        globalMocks.isUsingTokenAuth.mockResolvedValueOnce(true);
+        jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
+
         const sessionWithCred = createISession();
         const profile = createIProfile();
         profile.name = "ussTestSess2";
