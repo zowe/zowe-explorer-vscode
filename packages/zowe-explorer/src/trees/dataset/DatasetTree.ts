@@ -307,7 +307,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      */
     public async rename(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.rename called.");
-        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        await Profiles.getInstance().checkCurrentProfile(node.getProfile(), node);
         if (await TreeViewUtils.errorForUnsavedResource(node)) {
             return;
         }
@@ -571,7 +571,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // If no profile/session yet, then add session and profile to parent profile node in this.mFavorites array:
             try {
                 profile = Profiles.getInstance().loadNamedProfile(profileName);
-                await Profiles.getInstance().checkCurrentProfile(profile);
+                await Profiles.getInstance().checkCurrentProfile(profile, parentNode);
                 if (Profiles.getInstance().validProfile === Validation.ValidationType.VALID || !SharedContext.isValidationEnabled(parentNode)) {
                     session = await ZoweExplorerApiRegister.getMvsApi(profile).getSession();
                     parentNode.setProfileToChoice(profile);
@@ -1333,50 +1333,63 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         if (SharedContext.isSessionNotFav(node)) {
             ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
-            if (this.mPersistence.getSearchHistory().length > 0) {
-                const items: vscode.QuickPickItem[] = this.mPersistence.getSearchHistory().map((element) => new FilterItem({ text: element }));
-                const quickpick = Gui.createQuickPick();
-                quickpick.placeholder = vscode.l10n.t("Select a filter or type to create a new one");
-                quickpick.ignoreFocusOut = true;
+            node.inFilterPrompt = true;
+            try {
+                if (this.mPersistence.getSearchHistory().length > 0) {
+                    const items: vscode.QuickPickItem[] = this.mPersistence.getSearchHistory().map((element) => new FilterItem({ text: element }));
+                    const quickpick = Gui.createQuickPick();
+                    quickpick.placeholder = vscode.l10n.t("Select a filter or type to create a new one");
+                    quickpick.ignoreFocusOut = true;
 
-                // Callback updates the "Create a new filter" option as user types
-                quickpick.onDidChangeValue((value) => {
-                    const trimmedValue = value.trim();
-                    const createPick = trimmedValue
-                        ? new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value.trim()}"`)
-                        : new FilterDescriptor(DatasetTree.defaultDialogText);
+                    // Callback updates the "Create a new filter" option as user types
+                    quickpick.onDidChangeValue((value) => {
+                        const trimmedValue = value.trim();
+                        const createPick = trimmedValue
+                            ? new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value.trim()}"`)
+                            : new FilterDescriptor(DatasetTree.defaultDialogText);
+                        quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+                    });
+
+                    const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
                     quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
-                });
 
-                const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
-                quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
-
-                quickpick.show();
-                const choice = await Gui.resolveQuickPick(quickpick);
-                quickpick.hide();
-                if (!choice) {
-                    Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                    return;
-                }
-                if (choice instanceof FilterDescriptor) {
-                    // If user typed something and selected "Create a new filter", use that input
-                    if (quickpick.value && quickpick.value.trim()) {
-                        pattern = quickpick.value.trim();
+                    quickpick.show();
+                    const choice = await Gui.resolveQuickPick(quickpick);
+                    quickpick.hide();
+                    if (!choice) {
+                        Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+                        return;
+                    }
+                    if (choice instanceof FilterDescriptor) {
+                        // If user typed something and selected "Create a new filter", use that input
+                        if (quickpick.value && quickpick.value.trim()) {
+                            pattern = quickpick.value.trim();
+                        } else {
+                            // Fall back to input box if no text was entered
+                            const options: vscode.InputBoxOptions = {
+                                prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
+                            };
+                            pattern = await Gui.showInputBox(options);
+                            if (!pattern) {
+                                return;
+                            }
+                        }
                     } else {
-                        // Fall back to input box if no text was entered
+                        // User selected an existing filter - show input box with the filter pre-filled for editing
                         const options: vscode.InputBoxOptions = {
                             prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
+                            value: choice.label, // Pre-fill with the selected filter
                         };
                         pattern = await Gui.showInputBox(options);
                         if (!pattern) {
+                            Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
                             return;
                         }
                     }
                 } else {
-                    // User selected an existing filter - show input box with the filter pre-filled for editing
+                    // No search history, use input box directly
                     const options: vscode.InputBoxOptions = {
                         prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
-                        value: choice.label, // Pre-fill with the selected filter
                     };
                     pattern = await Gui.showInputBox(options);
                     if (!pattern) {
@@ -1384,16 +1397,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         return;
                     }
                 }
-            } else {
-                // No search history, use input box directly
-                const options: vscode.InputBoxOptions = {
-                    prompt: vscode.l10n.t("Search data sets: use a comma to separate multiple patterns"),
-                };
-                pattern = await Gui.showInputBox(options);
-                if (!pattern) {
-                    Gui.showMessage(vscode.l10n.t("You must enter a pattern."));
-                    return;
-                }
+            } finally {
+                node.inFilterPrompt = false;
             }
         } else {
             // executing search from saved search in favorites
