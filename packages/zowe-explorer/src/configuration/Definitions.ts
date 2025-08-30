@@ -43,10 +43,16 @@ export namespace Definitions {
         overwrite?: boolean;
         generateDirectory?: boolean;
         preserveCase?: boolean;
-        // TODO: Do binary and record need to be here?
-        // API doesn't use seem to them, except for setting normalizeResponseNewLines
         binary?: boolean;
         record?: boolean;
+        selectedPath?: vscode.Uri;
+    };
+    export type UssDownloadOptions = {
+        overwrite?: boolean;
+        generateDirectory?: boolean;
+        includeHidden?: boolean;
+        chooseEncoding?: boolean;
+        encoding?: ZosEncoding;
         selectedPath?: vscode.Uri;
     };
     export type FavoriteData = {
@@ -168,5 +174,6 @@ export namespace Definitions {
         DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
         DS_DOWNLOAD_OPTIONS = "zowe.dsDownloadOptions",
+        USS_DOWNLOAD_OPTIONS = "zowe.ussDownloadOptions",
     }
 }

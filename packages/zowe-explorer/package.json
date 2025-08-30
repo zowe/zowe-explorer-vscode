@@ -545,6 +545,16 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.uss.downloadFile",
+        "title": "%uss.downloadFile%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.downloadDirectory",
+        "title": "%uss.downloadDirectory%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.uss.copyUssFile",
         "title": "%copyFile%",
         "category": "Zowe Explorer"
@@ -1010,9 +1020,19 @@
           "group": "099_zowe_ussModification:@3"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^textFile|binaryFile/ && !listMultiSelection",
+          "command": "zowe.uss.downloadFile",
+          "group": "099_zowe_ussModification:@5"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "command": "zowe.uss.downloadDirectory",
+          "group": "099_zowe_ussModification:@5"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|.*_fav))/",
           "command": "zowe.uss.deleteNode",
-          "group": "099_zowe_ussModification:@4"
+          "group": "099_zowe_ussModification:@7"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
@@ -1625,6 +1645,14 @@
         },
         {
           "command": "zowe.uss.uploadDialog",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.downloadFile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.downloadDirectory",
           "when": "never"
         },
         {

@@ -626,15 +626,16 @@ export class DatasetActions {
         dataSetDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
 
         const optionItems: vscode.QuickPickItem[] = [
-            {
-                label: vscode.l10n.t("Overwrite"),
-                description: vscode.l10n.t("Overwrite existing files"),
-                picked: dataSetDownloadOptions.overwrite,
-            },
+            // TODO: Re-add overwrite option when enhancement is added to API to support it
+            // {
+            //     label: vscode.l10n.t("Overwrite"),
+            //     description: vscode.l10n.t("Overwrite existing files"),
+            //     picked: dataSetDownloadOptions.overwrite,
+            // },
             {
                 label: vscode.l10n.t("Generate Directory Structure"),
                 description: vscode.l10n.t("Generates sub-folders based on the data set name"),
-                picked: dataSetDownloadOptions.overwrite,
+                picked: dataSetDownloadOptions.generateDirectory,
             },
             {
                 label: vscode.l10n.t("Preserve Original Letter Case"),
@@ -759,7 +760,7 @@ export class DatasetActions {
         }
 
         const children = await node.getChildren();
-        if (children.length === 0) {
+        if (!children || children.length === 0) {
             Gui.showMessage(vscode.l10n.t("The selected data set has no members to download."));
             return;
         }
@@ -897,7 +898,7 @@ export class DatasetActions {
         }
 
         if (SharedContext.isPds(node) || SharedContext.isVsam(node)) {
-            Gui.showMessage(vscode.l10n.t("This action is only supported for sequential data sets."));
+            Gui.showMessage(vscode.l10n.t("Cannot download this type of data set."));
             return;
         }
 

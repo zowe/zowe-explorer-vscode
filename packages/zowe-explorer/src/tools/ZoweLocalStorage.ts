@@ -68,6 +68,7 @@ export class LocalStorageAccess extends ZoweLocalStorage {
         [Definitions.LocalStorageKey.DS_SEARCH_OPTIONS]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [Definitions.LocalStorageKey.DISPLAY_RELEASE_NOTES_VERSION]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS]: StorageAccessLevel.Read | StorageAccessLevel.Write,
+        [Definitions.LocalStorageKey.USS_DOWNLOAD_OPTIONS]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [PersistenceSchemaEnum.Dataset]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [PersistenceSchemaEnum.USS]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [PersistenceSchemaEnum.Job]: StorageAccessLevel.Read | StorageAccessLevel.Write,

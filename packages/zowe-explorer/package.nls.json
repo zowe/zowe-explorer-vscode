@@ -63,6 +63,8 @@
   "uss.uploadDialog": "Upload Files...",
   "uss.uploadDialogBinary": "Upload Files (Binary)...",
   "uss.uploadDialogWithEncoding": "Upload Files with Encoding...",
+  "uss.downloadFile": "Download File...",
+  "uss.downloadDirectory": "Download Directory...",
   "uss.text": "Toggle Text",
   "uss.filterBy": "Search by Directory",
   "uss.cd": "Go Up One Level",
