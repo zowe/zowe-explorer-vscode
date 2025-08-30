@@ -139,7 +139,7 @@ export class TreeViewUtils {
      */
     public static async errorForUnsavedResource(node: IZoweTreeNode, action = l10n.t("rename")): Promise<boolean> {
         const currentFilePath = node.resourceUri.fsPath; // The user's complete local file path for the node
-        await Profiles.getInstance().checkCurrentProfile(node.getProfile());
+        await Profiles.getInstance().checkCurrentProfile(node.getProfile(), node);
         const openedTextDocuments: readonly TextDocument[] = workspace.textDocuments; // Array of all documents open in VS Code
 
         const isUss = SharedContext.isUssNode(node);

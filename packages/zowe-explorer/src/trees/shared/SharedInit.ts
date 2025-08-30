@@ -462,7 +462,7 @@ export class SharedInit {
                 }
             }
         }
-        if (profileType !== "zosmf") {
+        if (profileType !== "zosmf" && newWorkspaces.length > 0) {
             await vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer");
         }
     }

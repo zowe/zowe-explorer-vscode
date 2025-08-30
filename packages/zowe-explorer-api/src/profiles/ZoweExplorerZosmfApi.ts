@@ -67,22 +67,16 @@ export namespace ZoweExplorerZosmf {
             return this.session ? ProfilesCache.getProfileSessionWithVscProxy(this.session) : undefined;
         }
 
-        private _getSession(serviceProfile: imperative.IProfileLoaded): imperative.Session {
+        public static getCommandArgs(profile: imperative.IProfileLoaded): imperative.ICommandArguments {
             const cmdArgs: imperative.ICommandArguments = {
                 $0: "zowe",
                 _: [""],
-                host: serviceProfile.profile.host as string,
-                port: serviceProfile.profile.port as number,
-                protocol: serviceProfile.profile.protocol as string,
-                basePath: serviceProfile.profile.basePath as string,
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
-                tokenType: serviceProfile.profile.tokenType as string,
-                tokenValue: serviceProfile.profile.tokenValue as string,
-                user: serviceProfile.profile.user as string,
-                password: serviceProfile.profile.password as string,
-                certFile: serviceProfile.profile.certFile as string,
-                certKeyFile: serviceProfile.profile.certKeyFile as string,
+                ...profile.profile,
             };
+            return cmdArgs;
+        }
+        private _getSession(serviceProfile: imperative.IProfileLoaded): imperative.Session {
+            const cmdArgs = CommonApi.getCommandArgs(serviceProfile);
             return this.getSessionFromCommandArgument(cmdArgs);
         }
 
