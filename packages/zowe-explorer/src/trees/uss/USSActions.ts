@@ -28,6 +28,7 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { Definitions } from "../../configuration/Definitions";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
+import { USSUtils } from "./USSUtils";
 
 export class USSActions {
     /**
@@ -324,6 +325,10 @@ export class USSActions {
         ussDownloadOptions.chooseEncoding ??= false;
         ussDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
 
+        if (USSUtils.zosEncodingToString(ussDownloadOptions.encoding) == "text") {
+            ussDownloadOptions.encoding = undefined;
+        }
+
         const optionItems: vscode.QuickPickItem[] = [
             {
                 label: vscode.l10n.t("Generate Directory Structure"),
@@ -339,9 +344,7 @@ export class USSActions {
                               ussDownloadOptions.encoding.kind === "binary"
                                   ? "binary"
                                   : ussDownloadOptions.encoding.kind === "other"
-                                  ? ussDownloadOptions.encoding.codepage || "default"
-                                  : ussDownloadOptions.encoding.kind === "text"
-                                  ? "text"
+                                  ? ussDownloadOptions.encoding.codepage
                                   : "default",
                           ],
                           comment: ["Encoding kind or codepage"],
@@ -489,17 +492,17 @@ export class USSActions {
             return;
         }
 
-        const children = await node.getChildren();
-        if (!children || children.length === 0) {
-            Gui.infoMessage(vscode.l10n.t("The selected directory is empty."));
+        const totalFileCount = await USSUtils.countAllFilesRecursively(node);
+        if (totalFileCount === 0) {
+            Gui.infoMessage(vscode.l10n.t("The selected directory contains no files to download."));
             return;
         }
 
-        if (children.length > Constants.MIN_WARN_DOWNLOAD_FILES) {
+        if (totalFileCount > Constants.MIN_WARN_DOWNLOAD_FILES) {
             const proceed = await Gui.showMessage(
                 vscode.l10n.t(
                     "This directory has {0} members. Downloading a large number of files may take a long time. Do you want to continue?",
-                    children.length
+                    totalFileCount
                 ),
                 { severity: MessageSeverity.WARN, items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")], vsCodeOpts: { modal: true } }
             );
@@ -511,12 +514,12 @@ export class USSActions {
         await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: vscode.l10n.t("Downloading USS directory..."),
+                title: vscode.l10n.t("Downloading USS directory"),
                 cancellable: true,
             },
             async (progress, token) => {
                 let realPercentComplete = 0;
-                const realTotalEntries = children.length;
+                const realTotalEntries = totalFileCount;
                 const task: imperative.ITaskWithStatus = {
                     set percentComplete(value: number) {
                         realPercentComplete = value;
