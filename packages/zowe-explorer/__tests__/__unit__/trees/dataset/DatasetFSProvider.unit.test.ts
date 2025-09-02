@@ -266,7 +266,7 @@ describe("DatasetFSProvider", () => {
             expect(await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { isConflict: true })).toBe(null);
         });
 
-        it("should fetchUri info and lookup returns undefined", async () => {
+        it.only("should fetchUri info and lookup returns undefined", async () => {
             const contents = "dataset contents";
             const mockMvsApi = {
                 getContents: jest.fn((dsn, opts) => {
@@ -278,9 +278,25 @@ describe("DatasetFSProvider", () => {
                         },
                     };
                 }),
+                set: jest.fn(),
             };
-            const fakePo = { ...testEntries.ps };
-            await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { editor: {} as TextEditor, isConflict: false });
+            const fakePo = {
+                ...testEntries.ps,
+                entries: {
+                    set: jest.fn(),
+                    get: jest.fn().mockReturnValue([]),
+                },
+            };
+            jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(undefined);
+            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakePo);
+            jest.spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor").mockImplementationOnce(() => {});
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+            expect(
+                (
+                    (await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { editor: {} as TextEditor, isConflict: false })) as any
+                ).data.toString()
+            ).toBe(contents);
             expect(fakePo.etag).toBe("OLDETAG");
         });
 
