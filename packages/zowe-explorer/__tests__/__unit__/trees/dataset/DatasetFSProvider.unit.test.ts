@@ -266,6 +266,27 @@ describe("DatasetFSProvider", () => {
             expect(await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { isConflict: true })).toBe(null);
         });
 
+        it.only("should fetchUri info and lookup returns undefined", async () => {
+            const contents = "dataset contents";
+            const mockMvsApi = {
+                getContents: jest.fn((dsn, opts) => {
+                    opts.stream.write(contents);
+
+                    return {
+                        apiResponse: {
+                            etag: "123ANETAG",
+                        },
+                    };
+                }),
+            };
+            const fakePo = { ...testEntries.ps };
+            const _updateResourceInEditorMock = jest.spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor").mockImplementation();
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { editor: {} as TextEditor, isConflict: false });
+            expect(fakePo.etag).toBe("OLDETAG");
+            expect(_updateResourceInEditorMock).toHaveBeenCalledWith(testUris.ps);
+        });
+
         it("calls _updateResourceInEditor if 'editor' is specified", async () => {
             const contents = "dataset contents";
             const mockMvsApi = {
