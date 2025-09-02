@@ -238,7 +238,7 @@ describe("AuthUtils", () => {
             test.each(testAttempts)("calls AuthUtils.handleProfileAuthOnError %i times when maxAttempts is %i", async (maxAttempts) => {
                 // Arrange
                 jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
-                    if (key === "zowe.table.maxExtenderRetry") {
+                    if (key === "zowe.settings.maxExtenderRetry") {
                         return maxAttempts;
                     }
                     return undefined;
@@ -258,7 +258,7 @@ describe("AuthUtils", () => {
                 // Arrange
                 const maxRetries = 3;
                 jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
-                    if (key === "zowe.table.maxExtenderRetry") {
+                    if (key === "zowe.settings.maxExtenderRetry") {
                         return maxRetries;
                     }
                     return undefined;

@@ -104,7 +104,7 @@ export class AuthUtils {
     }
 
     public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
-        const maxAttempts = SettingsConfig.getDirectValue("zowe.table.maxExtenderRetry", 0);
+        const maxAttempts = SettingsConfig.getDirectValue("zowe.settings.maxExtenderRetry", 0);
         for (let i = 0; i <= maxAttempts; i++) {
             try {
                 return await callback();

@@ -2131,10 +2131,10 @@
           "scope": "window",
           "minimum": 1
         },
-        "zowe.table.maxExtenderRetry": {
+        "zowe.settings.maxExtenderRetry": {
           "type": "integer",
           "default": 0,
-          "description": "%zowe.table.maxExtenderRetry%",
+          "description": "%zowe.settings.maxExtenderRetry%",
           "scope": "window",
           "minimum": 0,
           "maximum": 100
@@ -2145,7 +2145,7 @@
             "integer"
           ],
           "default": false,
-          "description": "%zowe.table.maxExtenderRetry%",
+          "description": "%zowe.settings.maxExtenderRetry%",
           "scope": "window"
         },
         "zowe.commands.tso.defaultProfile": {

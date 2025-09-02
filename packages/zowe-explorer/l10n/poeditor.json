@@ -557,12 +557,13 @@
   "zowe.settings.displayReleaseNotes": {
     "Should display the Zowe Explorer release notes after an update.": ""
   },
+  "zowe.settings.maxExtenderRetry": {
+    "Maximum number retries an extender may attempt after updating credentials.": ""
+  },
   "zowe.table.maxPinnedRows": {
     "Maximum number of rows that can be pinned to the top of table views.": ""
   },
-  "zowe.table.maxExtenderRetry": {
-    "Maximum number retries an extender may attempt after updating credentials.": ""
-  },
+
   "zowe.table.hidePinnedRowsWarning": {
     "Hide the warning message when pinning many rows to table views.": ""
   },

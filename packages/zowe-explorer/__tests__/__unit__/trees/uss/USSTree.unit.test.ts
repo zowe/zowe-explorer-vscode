@@ -252,7 +252,7 @@ function createGlobalMocks() {
 describe("USSTree Unit Tests - Function initializeFavorites", () => {
     beforeEach(() => {
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
-            if (key === "zowe.table.maxExtenderRetry") {
+            if (key === "zowe.settings.maxExtenderRetry") {
                 return 1;
             }
         });
