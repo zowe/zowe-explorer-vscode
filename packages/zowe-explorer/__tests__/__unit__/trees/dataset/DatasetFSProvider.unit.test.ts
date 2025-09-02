@@ -280,11 +280,8 @@ describe("DatasetFSProvider", () => {
                 }),
             };
             const fakePo = { ...testEntries.ps };
-            const _updateResourceInEditorMock = jest.spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor").mockImplementation();
-            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
             await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { editor: {} as TextEditor, isConflict: false });
             expect(fakePo.etag).toBe("OLDETAG");
-            expect(_updateResourceInEditorMock).toHaveBeenCalledWith(testUris.ps);
         });
 
         it("calls _updateResourceInEditor if 'editor' is specified", async () => {
