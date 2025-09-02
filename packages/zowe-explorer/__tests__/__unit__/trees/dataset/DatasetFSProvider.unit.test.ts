@@ -266,7 +266,7 @@ describe("DatasetFSProvider", () => {
             expect(await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { isConflict: true })).toBe(null);
         });
 
-        it.only("should fetchUri info and lookup returns undefined", async () => {
+        it("should fetchUri info and lookup returns undefined", async () => {
             const contents = "dataset contents";
             const mockMvsApi = {
                 getContents: jest.fn((dsn, opts) => {
