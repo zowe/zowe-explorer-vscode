@@ -53,8 +53,6 @@ export class AuthUtils {
         }
     }
 
-    public static maxAttempts: Record<string, number> = {};
-
     /**
      * Locks the profile if an authentication error has occurred (prevents further requests in filesystem until unlocked).
      * If the error is not an authentication error, the profile is unlocked for further use.

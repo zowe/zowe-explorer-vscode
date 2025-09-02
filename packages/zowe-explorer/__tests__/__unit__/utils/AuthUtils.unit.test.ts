@@ -295,6 +295,7 @@ describe("AuthUtils", () => {
                     getDefaultProfile: jest.fn().mockReturnValue("sestest"),
                     shouldRemoveTokenFromProfile: jest.fn().mockReturnValue(true),
                     loadNamedProfile: jest.fn(),
+                    getPropsForProfile: jest.fn().mockReturnValue([]),
                 } as any,
                 configurable: true,
             });
