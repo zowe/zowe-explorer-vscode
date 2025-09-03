@@ -19,6 +19,12 @@ import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
 import { ConfigSchemaHelpers, schemaValidation } from "./ConfigSchemaHelpers";
 import { ConfigChangeHandlers, ChangeEntry } from "./ConfigChangeHandlers";
 import { ConfigUtils, LayerModifications } from "./ConfigUtils";
+import {
+    ConfigMoveAPI,
+    moveProfile,
+    updateDefaultsAfterRename,
+    simulateDefaultsUpdateAfterRename,
+} from "../webviews/src/config-editor/utils/MoveUtils";
 
 export class ConfigEditor extends WebView {
     public userSubmission: DeferredPromise<{
@@ -90,20 +96,17 @@ export class ConfigEditor extends WebView {
                     const lineMatch = errorMessage.match(/Line (\d+)/);
                     const columnMatch = errorMessage.match(/Column (\d+)/);
 
-                    const line = lineMatch ? parseInt(lineMatch[1]) - 1 : 0; // Convert to 0-based index
-                    const column = columnMatch ? parseInt(columnMatch[1]) - 1 : 0; // Convert to 0-based index
+                    const line = lineMatch ? parseInt(lineMatch[1]) - 1 : 0;
+                    const column = columnMatch ? parseInt(columnMatch[1]) - 1 : 0;
 
                     const document = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath));
                     const editor = await vscode.window.showTextDocument(document);
 
-                    // Position cursor at the error location
                     const position = new vscode.Position(line, column);
                     editor.selection = new vscode.Selection(position, position);
                     editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
                 } catch (openError) {
-                    // If we can't open the file, just log it but don't show another error
-                    const openErrorMessage = openError instanceof Error ? openError.message : String(openError);
-                    console.log(`Could not open file ${filePath}: ${openErrorMessage}`);
+                    // Ignore file open errors
                 }
             }
 
@@ -131,7 +134,6 @@ export class ConfigEditor extends WebView {
                         const schema = JSON.parse(schemaContent);
                         const schemaValidation = this.generateSchemaValidation(schema);
 
-                        // Process profiles recursively to handle nested profiles
                         this.processProfilesRecursively(layer.properties.profiles);
 
                         allConfigs.push({
@@ -156,27 +158,21 @@ export class ConfigEditor extends WebView {
                     const errorMessage = err instanceof Error ? err.message : String(err);
                     vscode.window.showErrorMessage(`Error reading or parsing file ${configPath}: ${errorMessage}`);
 
-                    // Try to open the problematic file
                     try {
-                        // Extract line and column information if available
-                        const errorMessage = err instanceof Error ? err.message : String(err);
                         const lineMatch = errorMessage.match(/Line (\d+)/);
                         const columnMatch = errorMessage.match(/Column (\d+)/);
 
-                        const line = lineMatch ? parseInt(lineMatch[1]) - 1 : 0; // Convert to 0-based index
-                        const column = columnMatch ? parseInt(columnMatch[1]) - 1 : 0; // Convert to 0-based index
+                        const line = lineMatch ? parseInt(lineMatch[1]) - 1 : 0;
+                        const column = columnMatch ? parseInt(columnMatch[1]) - 1 : 0;
 
                         const document = await vscode.workspace.openTextDocument(vscode.Uri.file(configPath));
                         const editor = await vscode.window.showTextDocument(document);
 
-                        // Position cursor at the error location
                         const position = new vscode.Position(line, column);
                         editor.selection = new vscode.Selection(position, position);
                         editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
                     } catch (openError) {
-                        // If we can't open the file, just log it but don't show another error
-                        const openErrorMessage = openError instanceof Error ? openError.message : String(openError);
-                        console.log(`Could not open file ${configPath}: ${openErrorMessage}`);
+                        // Ignore file open errors
                     }
                 }
             }
@@ -193,12 +189,11 @@ export class ConfigEditor extends WebView {
         const profInfo = new ProfileInfo("zowe");
         switch (message.command.toLocaleUpperCase()) {
             case "GET_PROFILES": {
-                // Force refresh of ProfileInfo to ensure we get the latest state from disk
                 const profInfo = new ProfileInfo("zowe");
                 try {
                     await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
                 } catch (err) {
-                    // If there's still an error, let getLocalConfigs handle it
+                    // Let getLocalConfigs handle any errors
                 }
 
                 const configurations = await this.getLocalConfigs();
@@ -209,11 +204,22 @@ export class ConfigEditor extends WebView {
                     secureValuesAllowed,
                 });
 
-                // Initial selection will be sent when the webview sends CONFIGURATIONS_READY
                 break;
             }
             case "SAVE_CHANGES": {
-                const parsedChanges = this.parseConfigChanges(message);
+                // Process renames first
+                if (message.renames && Array.isArray(message.renames)) {
+                    await this.handleProfileRenames(message.renames);
+                }
+
+                // Update profile changes to use new names after renames are processed
+                let updatedMessage = message;
+                if (message.renames && Array.isArray(message.renames)) {
+                    updatedMessage = await this.updateProfileChangesForRenames(message, message.renames);
+                }
+
+                // Process changes with updated profile names
+                const parsedChanges = this.parseConfigChanges(updatedMessage);
                 for (const change of parsedChanges) {
                     if (change.defaultsChanges || change.defaultsDeleteKeys) {
                         await this.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath);
@@ -286,7 +292,6 @@ export class ConfigEditor extends WebView {
                 break;
             }
             case "CONFIGURATIONS_READY": {
-                // If there's initial selection data, send it to the webview now that it's ready
                 if (this.initialSelection) {
                     await this.panel.webview.postMessage({
                         command: "INITIAL_SELECTION",
@@ -294,7 +299,6 @@ export class ConfigEditor extends WebView {
                         configPath: this.initialSelection.configPath,
                         profileType: this.initialSelection.profileType,
                     });
-                    // Clear the initial selection after sending it
                     this.initialSelection = undefined;
                 }
                 break;
@@ -304,12 +308,10 @@ export class ConfigEditor extends WebView {
                     const document = await vscode.workspace.openTextDocument(vscode.Uri.file(message.filePath));
                     const editor = await vscode.window.showTextDocument(document);
 
-                    // Find and place cursor at the beginning of the profile in the JSON file
                     const profileKey = message.profileKey;
                     const text = document.getText();
                     const lines = text.split("\n");
 
-                    // Handle nested profiles by splitting the profile key
                     const profileParts = profileKey.split(".");
                     let currentLine = -1;
                     let currentColumn = 0;
@@ -322,7 +324,6 @@ export class ConfigEditor extends WebView {
                     for (let i = 0; i < lines.length; i++) {
                         const line = lines[i];
                         const trimmedLine = line.trim();
-                        // Count global braces
                         for (const char of line) {
                             if (char === "{") {
                                 globalBraceCount++;
@@ -331,16 +332,13 @@ export class ConfigEditor extends WebView {
                                 globalBraceCount--;
                             }
                         }
-                        // Check if we're entering the profiles section
                         if (trimmedLine.includes('"profiles"')) {
                             if (!inTargetProfile) {
-                                // Main profiles section
                                 inProfilesSection = true;
                                 profileDepth = 0;
                                 inTargetProfile = false;
                                 targetProfileBraceCount = 0;
                             } else {
-                                // Nested profiles section within a target profile
                                 profileDepth++;
                                 inTargetProfile = false;
                                 targetProfileBraceCount = 0;
@@ -348,7 +346,6 @@ export class ConfigEditor extends WebView {
                             continue;
                         }
                         if (inProfilesSection) {
-                            // If we're inside a target profile, track its brace count
                             if (inTargetProfile) {
                                 for (const char of line) {
                                     if (char === "{") {
@@ -359,12 +356,10 @@ export class ConfigEditor extends WebView {
                                     }
                                 }
 
-                                // Check if we found a profile within the target profile
                                 const profileMatch = trimmedLine.match(/"([^"]+)":\s*\{/);
                                 if (profileMatch) {
                                     const foundProfileName = profileMatch[1];
 
-                                    // Check if this is the profile we're looking for at the current depth
                                     if (profileParts[profileDepth] === foundProfileName) {
                                         if (profileDepth === profileParts.length - 1) {
                                             // This is the final profile we're looking for
@@ -377,37 +372,30 @@ export class ConfigEditor extends WebView {
                                         }
                                     }
                                 }
-                                // If we exit the target profile, reset
                                 if (targetProfileBraceCount === 0) {
                                     inTargetProfile = false;
                                     profileDepth = 0;
                                 }
                             } else {
-                                // Check if we found a profile (any profile)
                                 const profileMatch = trimmedLine.match(/"([^"]+)":\s*\{/);
                                 if (profileMatch) {
                                     const foundProfileName = profileMatch[1];
 
-                                    // Check if this is the profile we're looking for at the current depth
                                     if (profileParts[profileDepth] === foundProfileName) {
                                         if (profileDepth === profileParts.length - 1) {
-                                            // This is the final profile we're looking for
                                             foundProfile = true;
                                             currentLine = i;
-                                            // Find the column position at the end of the profile name
                                             const profileNameIndex = line.indexOf(`"${foundProfileName}"`);
                                             currentColumn = profileNameIndex >= 0 ? profileNameIndex + foundProfileName.length + 2 : 0;
                                             break;
                                         } else {
-                                            // This is a nested profile, start tracking within this profile
                                             inTargetProfile = true;
-                                            targetProfileBraceCount = 1; // Start with 1 for the opening brace
+                                            targetProfileBraceCount = 1;
                                             continue;
                                         }
                                     }
                                 }
                             }
-                            // If we exit the profiles section, reset
                             if (globalBraceCount === 0) {
                                 inProfilesSection = false;
                                 profileDepth = 0;
@@ -430,7 +418,12 @@ export class ConfigEditor extends WebView {
             }
 
             case "GET_MERGED_PROPERTIES": {
-                const mergedArgs = await this.getPendingMergedArgsForProfile(message.profilePath, message.configPath, message.changes);
+                const mergedArgs = await this.getPendingMergedArgsForProfile(
+                    message.profilePath,
+                    message.configPath,
+                    message.changes,
+                    message.renames
+                );
                 await this.panel.webview.postMessage({
                     command: "MERGED_PROPERTIES",
                     mergedArgs,
@@ -444,7 +437,8 @@ export class ConfigEditor extends WebView {
                     message.profileType,
                     message.configPath,
                     message.profileName,
-                    message.changes
+                    message.changes,
+                    message.renames
                 );
                 await this.panel.webview.postMessage({
                     command: "WIZARD_MERGED_PROPERTIES",
@@ -506,7 +500,6 @@ export class ConfigEditor extends WebView {
                         break;
                     }
 
-                    // Ensure the directory exists for global configurations
                     if (global && !fs.existsSync(rootPath)) {
                         try {
                             fs.mkdirSync(rootPath, { recursive: true });
@@ -518,66 +511,44 @@ export class ConfigEditor extends WebView {
                         }
                     }
 
-                    // Check for existing configuration and handle conflicts
                     const existingFile = await this.checkExistingConfig(rootPath, user);
                     if (existingFile === false) {
-                        // User cancelled the operation
                         return;
                     }
                     if (existingFile != null) {
                         user = existingFile.includes("user");
                     }
 
-                    // Load the configuration
                     const config = await Config.load("zowe", {
                         homeDir: FileManagement.getZoweDir(),
                         projectDir: FileManagement.getFullPath(rootPath),
                     });
 
-                    // Activate the appropriate layer
-                    // For global configurations, we need to activate the layer properly
                     if (global) {
-                        // For global configs, activate the layer without workspace dependency
                         config.api.layers.activate(user, global);
                     } else if (ZoweVsCodeExtension.workspaceRoot != null) {
-                        // For project configs, activate with workspace path
                         config.api.layers.activate(user, global, rootPath);
                     }
 
-                    // Get known CLI configurations
                     const knownCliConfig: any[] = (ZoweVsCodeExtension as any).profilesCache.getCoreProfileTypes();
                     knownCliConfig.push(...(ZoweVsCodeExtension as any).profilesCache.getConfigArray());
                     knownCliConfig.push(ProfileConstants.BaseProfile);
                     config.setSchema(ConfigSchema.buildSchema(knownCliConfig));
 
-                    // Build options for configuration creation
                     const opts: any = {
                         populateProperties: true,
                     };
 
-                    // Build new config and merge with existing layer
                     const impConfig: any = {
                         profiles: [...knownCliConfig],
                         baseProfile: ProfileConstants.BaseProfile,
                     };
 
-                    // For global user configs, we need to ensure the config is built correctly
                     const newConfig: any = await ConfigBuilder.build(impConfig, global, opts);
 
-                    // Log the configuration details for debugging
-                    console.log(`Creating config - Global: ${global}, User: ${user}, RootPath: ${rootPath}`);
-                    console.log(
-                        `Config name: ${user ? "user" : "team"}, Expected path: ${path.join(
-                            rootPath,
-                            user ? "zowe.config.user.json" : "zowe.config.json"
-                        )}`
-                    );
-
-                    // Merge and save the configuration
                     config.api.layers.merge(newConfig);
                     await config.save(false);
 
-                    // Get the config file name
                     let configName;
                     if (user) {
                         configName = config.userConfigName;
@@ -587,24 +558,18 @@ export class ConfigEditor extends WebView {
 
                     const configFilePath = path.join(rootPath, configName);
 
-                    // Add a small delay to ensure the file is fully written to disk
+                    // Ensure the file is fully written to disk
                     await new Promise((resolve) => setTimeout(resolve, 100));
 
-                    // Check if the file exists before trying to open it
                     if (fs.existsSync(configFilePath)) {
-                        // Open the config file
                         await ZoweVsCodeExtension.openConfigFile(configFilePath);
                         vscode.window.showInformationMessage(`Configuration file created and opened: ${configFilePath}`);
                     } else {
-                        // If file doesn't exist, show an error message
                         vscode.window.showErrorMessage(
                             `Failed to create configuration file at: ${configFilePath}. Please check permissions and try again.`
                         );
-                        console.error(`Configuration file not found at expected path: ${configFilePath}`);
-                        console.error(`Root path: ${rootPath}, Config name: ${configName}, User: ${user}, Global: ${global}`);
                     }
 
-                    // Refresh the configurations in the webview
                     const configs = await this.getLocalConfigs();
                     await this.panel.webview.postMessage({
                         command: "CONFIGURATIONS",
@@ -686,22 +651,141 @@ export class ConfigEditor extends WebView {
         }
     }
 
+    private async handleProfileRenames(renames: Array<{ originalKey: string; newKey: string; configPath: string }>): Promise<void> {
+        const profInfo = new ProfileInfo("zowe");
+        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+
+        for (const rename of renames) {
+            try {
+                // Get the team config
+                const teamConfig = profInfo.getTeamConfig();
+
+                const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
+
+                if (!targetLayer) {
+                    throw new Error(`Configuration layer not found for path: ${rename.configPath}`);
+                }
+
+                teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
+
+                const configMoveAPI: ConfigMoveAPI = {
+                    get: (path: string) => {
+                        const currentLayer = teamConfig.api.layers.get();
+                        const profiles = currentLayer.properties.profiles;
+
+                        const profileKey = path.replace("profiles.", "");
+
+                        const findNestedProfile = (key: string, profilesObj: any): any => {
+                            const parts = key.split(".");
+                            let current: any = profilesObj;
+
+                            for (let i = 0; i < parts.length; i++) {
+                                const part = parts[i];
+
+                                if (part === "profiles") {
+                                    continue;
+                                }
+
+                                if (!current || !current[part]) {
+                                    return null;
+                                }
+                                current = current[part];
+
+                                if (i === parts.length - 1) {
+                                    return current;
+                                }
+
+                                if (current && typeof current === "object" && current.profiles) {
+                                    current = current.profiles;
+                                } else if (i < parts.length - 1) {
+                                    return null;
+                                }
+                            }
+                            return current;
+                        };
+
+                        const result = findNestedProfile(profileKey, profiles);
+                        return result;
+                    },
+                    set: (path: string, value: any) => {
+                        return (teamConfig as any).set(path, value, { parseString: true });
+                    },
+                    delete: (path: string) => {
+                        return (teamConfig as any).delete(path);
+                    },
+                };
+
+                const layerActive = () => ({
+                    properties: {
+                        profiles: teamConfig.api.layers.get().properties.profiles,
+                    },
+                });
+
+                const originalPath = this.constructNestedProfilePath(rename.originalKey);
+                const newPath = this.constructNestedProfilePath(rename.newKey);
+
+                // Check if the original profile exists
+                const originalProfile = configMoveAPI.get(originalPath);
+                if (!originalProfile) {
+                    throw new Error(`Cannot rename profile '${rename.originalKey}': Profile does not exist`);
+                }
+
+                const existingTargetProfile = configMoveAPI.get(newPath);
+                if (existingTargetProfile) {
+                    throw new Error(`Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Profile '${rename.newKey}' already exists`);
+                }
+
+                // Additional safety check: ensure we're not creating a circular reference
+                if (rename.newKey.startsWith(rename.originalKey + ".")) {
+                    throw new Error(`Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Would create circular reference`);
+                }
+
+                moveProfile(configMoveAPI, layerActive, originalPath, newPath);
+
+                // Update any defaults that reference the old profile name
+                updateDefaultsAfterRename(
+                    () => teamConfig.api.layers.get(),
+                    rename.originalKey,
+                    rename.newKey,
+                    (updatedDefaults) => teamConfig.set("defaults", updatedDefaults, { parseString: true })
+                );
+
+                await teamConfig.save();
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                vscode.window.showErrorMessage(`Error renaming profile from '${rename.originalKey}' to '${rename.newKey}': ${errorMessage}`);
+                throw error;
+            }
+        }
+    }
+
+    private constructNestedProfilePath(profileKey: string): string {
+        const profileParts = profileKey.split(".");
+        const pathParts = ["profiles"];
+
+        for (const part of profileParts) {
+            pathParts.push(part);
+            pathParts.push("profiles");
+        }
+
+        // Remove the last "profiles" since we don't need it for the final path
+        pathParts.pop();
+        return pathParts.join(".");
+    }
+
     private async handleAutostoreChange(configPath: string, value: boolean): Promise<void> {
         try {
             const profInfo = new ProfileInfo("zowe");
             await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
             const teamConfig = profInfo.getTeamConfig();
 
-            // Find and activate the correct layer
             const targetLayer = teamConfig.layers.find((layer: any) => layer.path === configPath);
 
             if (targetLayer) {
                 teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
 
-                // Set the autostore value
                 teamConfig.set("autoStore", value, { parseString: true });
 
-                // Save the configuration
                 await teamConfig.save();
             }
         } catch (error) {
@@ -718,14 +802,248 @@ export class ConfigEditor extends WebView {
         return ConfigSchemaHelpers.generateSchemaValidation(schema);
     }
 
-    private async getPendingMergedArgsForProfile(profPath: string, configPath: string, changes: any): Promise<any> {
+    /**
+     * Updates profile changes to use new profile names before processing
+     * This prevents duplicate profiles by ensuring changes target the correct names
+     * Uses TeamConfig API for more reliable profile path resolution
+     */
+    private async updateProfileChangesForRenames(
+        message: any,
+        renames: Array<{ originalKey: string; newKey: string; configPath: string }>
+    ): Promise<any> {
+        if (!renames || renames.length === 0) {
+            return message;
+        }
+
+        // Initialize TeamConfig for profile API access
         const profInfo = new ProfileInfo("zowe");
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
-        // Create a copy of the team config to simulate changes without affecting the original
-        const teamConfig = profInfo.getTeamConfig();
+        const updatedMessage = { ...message };
 
-        // Apply changes to simulate pending modifications
+        // Create a map of all renames for easier lookup
+        const renameMap = new Map<string, { oldKey: string; newKey: string; configPath: string }>();
+        renames.forEach((rename) => {
+            renameMap.set(rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath });
+        });
+
+        // Helper function to get the new name for a profile path
+        const getNewProfilePath = (profilePath: string, configPath: string, includeProfilesSegments = false): string => {
+            // Split the path into parts to handle nested profiles
+            const parts = profilePath.split(".");
+            let newPath = parts.slice();
+            let modified = false;
+
+            // Check each part and its parent combinations for renames
+            for (let i = parts.length; i > 0; i--) {
+                const partialPath = parts.slice(0, i).join(".");
+                const rename = renameMap.get(partialPath);
+                if (rename && rename.configPath === configPath) {
+                    // Replace this part of the path with the new name
+                    const remainingParts = parts.slice(i);
+                    newPath = [...rename.newKey.split("."), ...remainingParts];
+                    modified = true;
+                    break;
+                }
+            }
+
+            if (includeProfilesSegments) {
+                // Always convert profile path to include 'profiles' segments
+                // e.g., "test.lpar2" -> ["profiles", "test", "profiles", "lpar2"]
+                // or "test" -> ["profiles", "test"]
+                const pathWithProfiles: string[] = [];
+                const pathParts = modified ? newPath : parts;
+
+                // Always start with "profiles"
+                pathWithProfiles.push("profiles");
+
+                // Add each part with "profiles" between them
+                for (let i = 0; i < pathParts.length; i++) {
+                    pathWithProfiles.push(pathParts[i]);
+                    // Add "profiles" between parts, but not after the last one
+                    if (i < pathParts.length - 1) {
+                        pathWithProfiles.push("profiles");
+                    }
+                }
+                return pathWithProfiles.join(".");
+            }
+
+            return modified ? newPath.join(".") : profilePath;
+        };
+
+        // Update changes
+        if (updatedMessage.changes) {
+            updatedMessage.changes = updatedMessage.changes.map((change: any) => {
+                if (change.configPath) {
+                    const updatedChange = { ...change };
+
+                    // Update the profile field
+                    if (updatedChange.profile) {
+                        updatedChange.profile = getNewProfilePath(updatedChange.profile, change.configPath);
+                    }
+
+                    // Update the key field
+                    if (updatedChange.key) {
+                        const keyParts = updatedChange.key.split(".");
+                        // Extract the profile path and property/type
+                        let propertyPath = "";
+                        let inProfile = false;
+                        let currentProfile = "";
+                        let profileEndIndex = -1;
+
+                        // Find where the profile path ends
+                        for (let i = 0; i < keyParts.length; i++) {
+                            const part = keyParts[i];
+                            if (part === "profiles") {
+                                inProfile = true;
+                                continue;
+                            }
+                            if (part === "properties") {
+                                propertyPath = keyParts.slice(i).join(".");
+                                profileEndIndex = i;
+                                break;
+                            }
+                            if (part === "type" || part === "secure") {
+                                // For direct profile properties like 'type' or 'secure' (not under 'properties')
+                                propertyPath = keyParts.slice(i).join(".");
+                                profileEndIndex = i;
+                                break;
+                            }
+                            if (inProfile) {
+                                if (currentProfile) {
+                                    currentProfile += "." + part;
+                                } else {
+                                    currentProfile = part;
+                                }
+                            }
+                        }
+
+                        // If we didn't find properties, type, or secure, the entire path might be a profile path
+                        if (profileEndIndex === -1 && inProfile) {
+                            // This might be a profile-only key (though this should be rare)
+                            profileEndIndex = keyParts.length;
+                        }
+
+                        if (currentProfile) {
+                            // Get the new profile path with 'profiles' segments included
+                            const newProfilePath = getNewProfilePath(currentProfile, change.configPath, true);
+                            // Combine with property path
+                            updatedChange.key = propertyPath ? `${newProfilePath}.${propertyPath}` : newProfilePath;
+                        }
+                    }
+
+                    // Update the path array
+                    if (updatedChange.path && Array.isArray(updatedChange.path)) {
+                        // Extract the profile path from the path array
+                        let currentProfile = "";
+                        let propertyPath: string[] = [];
+                        let foundPropertySection = false;
+
+                        for (const part of updatedChange.path) {
+                            if (part === "properties" || part === "type" || part === "secure") {
+                                foundPropertySection = true;
+                                propertyPath.push(part);
+                                continue;
+                            }
+                            if (!foundPropertySection) {
+                                if (part !== "profiles") {
+                                    if (currentProfile) {
+                                        currentProfile += "." + part;
+                                    } else {
+                                        currentProfile = part;
+                                    }
+                                }
+                            } else {
+                                propertyPath.push(part);
+                            }
+                        }
+
+                        if (currentProfile) {
+                            // Get the new profile path with 'profiles' segments
+                            const newProfilePath = getNewProfilePath(currentProfile, change.configPath, true);
+                            // Split into array and combine with property path
+                            updatedChange.path = [...newProfilePath.split("."), ...propertyPath];
+                        }
+                    }
+
+                    return updatedChange;
+                }
+                return change;
+            });
+        }
+
+        // Update profile deletions to use new names
+        if (updatedMessage.deletions) {
+            updatedMessage.deletions = updatedMessage.deletions.map((deletion: any) => {
+                if (deletion.configPath) {
+                    const updatedDeletion = { ...deletion };
+
+                    // Update the profile field
+                    if (updatedDeletion.profile) {
+                        updatedDeletion.profile = getNewProfilePath(updatedDeletion.profile, deletion.configPath);
+                    }
+
+                    // Update the key field
+                    if (updatedDeletion.key) {
+                        const keyParts = updatedDeletion.key.split(".");
+                        // Extract the profile path and property
+                        let propertyPath = "";
+                        let inProfile = false;
+                        let currentProfile = "";
+
+                        for (let i = 0; i < keyParts.length; i++) {
+                            const part = keyParts[i];
+                            if (part === "profiles") {
+                                inProfile = true;
+                                continue;
+                            }
+                            if (part === "properties") {
+                                propertyPath = keyParts.slice(i).join(".");
+                                break;
+                            }
+                            if (inProfile) {
+                                if (currentProfile) {
+                                    currentProfile += "." + part;
+                                } else {
+                                    currentProfile = part;
+                                }
+                            }
+                        }
+
+                        if (currentProfile) {
+                            // Get the new profile path with 'profiles' segments included
+                            const newProfilePath = getNewProfilePath(currentProfile, deletion.configPath, true);
+                            // Combine with property path
+                            updatedDeletion.key = propertyPath ? `${newProfilePath}.${propertyPath}` : newProfilePath;
+                        }
+                    }
+
+                    // Update the path array
+                    if (updatedDeletion.path && Array.isArray(updatedDeletion.path)) {
+                        const pathStr = updatedDeletion.path.join(".");
+                        // Get the new path with 'profiles' segments included
+                        const updatedPathStr = getNewProfilePath(pathStr, deletion.configPath, true);
+                        updatedDeletion.path = updatedPathStr.split(".");
+                    }
+
+                    return updatedDeletion;
+                }
+                return deletion;
+            });
+        }
+        return updatedMessage;
+    }
+
+    private async getPendingMergedArgsForProfile(
+        profPath: string,
+        configPath: string,
+        changes: any,
+        renames?: Array<{ originalKey: string; newKey: string; configPath: string }>
+    ): Promise<any> {
+        const profInfo = new ProfileInfo("zowe");
+        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+
+        const teamConfig = profInfo.getTeamConfig();
         const parsedChanges = this.parseConfigChanges(changes);
         for (const change of parsedChanges) {
             if (change.defaultsChanges || change.defaultsDeleteKeys) {
@@ -737,8 +1055,21 @@ export class ConfigEditor extends WebView {
             }
         }
 
+        if (renames && Array.isArray(renames)) {
+            this.simulateProfileRenames(renames, teamConfig);
+        }
+
         const allProfiles = profInfo.getAllProfiles();
-        const profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
+
+        let actualProfileName = profPath;
+        if (renames && Array.isArray(renames)) {
+            const rename = renames.find((r) => r.originalKey === profPath && r.configPath === configPath);
+            if (rename) {
+                actualProfileName = rename.newKey;
+            }
+        }
+
+        const profile = allProfiles.find((prof) => prof.profName === actualProfileName && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
         if (!profile) {
             return;
         }
@@ -755,12 +1086,84 @@ export class ConfigEditor extends WebView {
         ConfigChangeHandlers.simulateProfileChanges(changes, deletions, configPath, teamConfig);
     }
 
+    private simulateProfileRenames(renames: Array<{ originalKey: string; newKey: string; configPath: string }>, teamConfig: any): void {
+        for (const rename of renames) {
+            try {
+                const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
+
+                if (!targetLayer) {
+                    continue; // Skip if layer not found
+                }
+
+                teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
+
+                const configMoveAPI: ConfigMoveAPI = {
+                    get: (path: string) => {
+                        const currentLayer = teamConfig.api.layers.get();
+                        const profiles = currentLayer.properties.profiles;
+
+                        const profileKey = path.replace("profiles.", "");
+
+                        const findNestedProfile = (key: string, profilesObj: any): any => {
+                            const parts = key.split(".");
+                            let current: any = profilesObj;
+
+                            for (let i = 0; i < parts.length; i++) {
+                                const part = parts[i];
+
+                                if (part === "profiles") {
+                                    continue;
+                                }
+
+                                if (!current || !current[part]) {
+                                    return null;
+                                }
+                                current = current[part];
+
+                                if (i === parts.length - 1) {
+                                    return current;
+                                }
+
+                                if (current && typeof current === "object" && current.profiles) {
+                                    current = current.profiles;
+                                } else if (i < parts.length - 1) {
+                                    return null;
+                                }
+                            }
+                            return current;
+                        };
+
+                        return findNestedProfile(profileKey, profiles);
+                    },
+                    set: (path: string, value: any) => teamConfig.set(path, value, { parseString: true }),
+                    delete: (path: string) => teamConfig.delete(path),
+                };
+
+                const layerActive = () => ({
+                    properties: {
+                        profiles: teamConfig.api.layers.get().properties.profiles,
+                    },
+                });
+
+                const originalPath = this.constructNestedProfilePath(rename.originalKey);
+                const newPath = this.constructNestedProfilePath(rename.newKey);
+                moveProfile(configMoveAPI, layerActive, originalPath, newPath);
+
+                // Simulate defaults updates for this rename
+                simulateDefaultsUpdateAfterRename(() => teamConfig.api.layers.get(), rename.originalKey, rename.newKey);
+            } catch (error) {
+                continue;
+            }
+        }
+    }
+
     private async getWizardMergedProperties(
         rootProfile: string,
         profileType: string,
         configPath: string,
         profileName?: string,
-        changes?: any
+        changes?: any,
+        renames?: Array<{ originalKey: string; newKey: string; configPath: string }>
     ): Promise<any> {
         if (!profileType) {
             return [];
@@ -771,7 +1174,6 @@ export class ConfigEditor extends WebView {
 
         const teamConfig = profInfo.getTeamConfig();
 
-        // Apply existing pending changes if provided
         if (changes) {
             const parsedChanges = this.parseConfigChanges(changes);
             for (const change of parsedChanges) {
@@ -784,7 +1186,10 @@ export class ConfigEditor extends WebView {
             }
         }
 
-        // Activate the correct config layer
+        if (renames && Array.isArray(renames)) {
+            this.simulateProfileRenames(renames, teamConfig);
+        }
+
         if (configPath !== teamConfig.api.layers.get().path) {
             const findProfile = teamConfig.layers.find((prof: any) => prof.path === configPath);
             if (findProfile) {
@@ -792,19 +1197,30 @@ export class ConfigEditor extends WebView {
             }
         }
 
-        // Generate unique temporary profile name
+        let actualRootProfile = rootProfile;
+        if (renames && Array.isArray(renames)) {
+            for (const rename of renames) {
+                if (rename.configPath === configPath) {
+                    if (rootProfile === rename.originalKey) {
+                        actualRootProfile = rename.newKey;
+                        break;
+                    } else if (rootProfile.startsWith(rename.originalKey + ".")) {
+                        actualRootProfile = rootProfile.replace(rename.originalKey + ".", rename.newKey + ".");
+                        break;
+                    }
+                }
+            }
+        }
+
         const tempProfileName = profileName || `temp_${Date.now()}`;
         let tempProfilePath: string;
         let expectedProfileName: string;
 
-        // Determine profile path and expected name based on root profile type
-        if (rootProfile === "root") {
+        if (actualRootProfile === "root") {
             tempProfilePath = `profiles.${tempProfileName}`;
             expectedProfileName = tempProfileName;
         } else {
-            // For nested profiles, we need to add .profiles between each level
-            // Example: rootProfile = "lpar1.zosmf.w" should become "profiles.lpar1.profiles.zosmf.profiles.w.profiles.tempProfileName"
-            const profileParts = rootProfile.split(".");
+            const profileParts = actualRootProfile.split(".");
             const pathParts = ["profiles"];
 
             for (const part of profileParts) {
@@ -814,14 +1230,12 @@ export class ConfigEditor extends WebView {
 
             pathParts.push(tempProfileName);
             tempProfilePath = pathParts.join(".");
-            expectedProfileName = `${rootProfile}.${tempProfileName}`;
+            expectedProfileName = `${actualRootProfile}.${tempProfileName}`;
         }
 
         try {
-            // Create the temporary profile with type
             teamConfig.set(tempProfilePath, { type: profileType }, { parseString: true });
 
-            // Get merged properties for the temporary profile
             const allProfiles = profInfo.getAllProfiles();
             const tempProfile = allProfiles.find((prof) => prof.profName === expectedProfileName);
 
@@ -832,7 +1246,6 @@ export class ConfigEditor extends WebView {
             const mergedArgs = profInfo.mergeArgsForProfile(tempProfile, { getSecureVals: true });
             return mergedArgs.knownArgs || [];
         } finally {
-            // Always clean up the temporary profile
             try {
                 teamConfig.delete(tempProfilePath);
             } catch (err) {
@@ -844,7 +1257,6 @@ export class ConfigEditor extends WebView {
     private async checkExistingConfig(filePath: string, user: boolean): Promise<string | false | null> {
         const existingLayers = await ZoweVsCodeExtension.getConfigLayers();
 
-        // Check for both zowe.config.json and zowe.config.user.json in the directory
         const configFiles = user ? ["zowe.config.user.json"] : ["zowe.config.json"];
         const foundLayer = existingLayers.find((layer) => {
             const layerDir = path.dirname(layer.path);

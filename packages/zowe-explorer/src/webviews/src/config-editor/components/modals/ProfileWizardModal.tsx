@@ -1,5 +1,6 @@
 import * as l10n from "@vscode/l10n";
-import { useModalClickOutside } from "../../hooks";
+import React from "react";
+import { useModalClickOutside, useModalFocus } from "../../hooks";
 
 interface ProfileWizardModalProps {
   isOpen: boolean;
@@ -93,10 +94,22 @@ export function ProfileWizardModal({
     return false;
   };
 
-  const { modalRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+  const { modalRef: clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+  const modalRef = useModalFocus(isOpen, "input[type='text']");
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      // Only create profile if we have a valid profile name and it's not taken
+      if (wizardProfileName.trim() && !isProfileNameTaken) {
+        onCreateProfile();
+      }
+    } else if (e.key === "Escape") {
+      onCancel();
+    }
+  };
 
   return (
-    <div className="modal-backdrop" onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick}>
+    <div className="modal-backdrop" onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick} onKeyDown={handleKeyDown} tabIndex={-1}>
       <div className="modal wizard-modal" ref={modalRef} onClick={(e) => e.stopPropagation()}>
         <h3 className="wizard-title">{l10n.t("Profile Wizard")}</h3>
         <div className="wizard-content">
@@ -108,6 +121,7 @@ export function ProfileWizardModal({
               <select
                 value={wizardRootProfile}
                 onChange={(e) => onRootProfileChange((e.target as HTMLSelectElement).value)}
+                onKeyDown={handleKeyDown}
                 className="modal-input wizard-select"
               >
                 {availableProfiles.map((profile) => (
@@ -125,6 +139,18 @@ export function ProfileWizardModal({
                 type="text"
                 value={wizardProfileName}
                 onKeyDown={(e) => {
+                  // Handle Enter key to create profile
+                  if (e.key === "Enter") {
+                    if (wizardProfileName.trim() && !isProfileNameTaken) {
+                      onCreateProfile();
+                    }
+                    return;
+                  }
+                  // Handle Escape key to close modal
+                  if (e.key === "Escape") {
+                    onCancel();
+                    return;
+                  }
                   // Allow: backspace, delete, tab, escape, enter, and navigation keys
                   if ([8, 9, 27, 13, 46, 37, 38, 39, 40].includes(e.keyCode)) {
                     return;
@@ -150,6 +176,7 @@ export function ProfileWizardModal({
                 <select
                   value={wizardSelectedType}
                   onChange={(e) => onSelectedTypeChange((e.target as HTMLSelectElement).value)}
+                  onKeyDown={handleKeyDown}
                   className="modal-input wizard-select"
                   style={{ flex: 1 }}
                 >
@@ -201,6 +228,13 @@ export function ProfileWizardModal({
                       }}
                       onFocus={() => onShowKeyDropdownChange(true)}
                       onBlur={() => setTimeout(() => onShowKeyDropdownChange(false), 100)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          onAddProperty();
+                        } else if (e.key === "Escape") {
+                          onCancel();
+                        }
+                      }}
                       className={`modal-input wizard-input ${
                         wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) ? "error" : ""
                       }`}
@@ -250,6 +284,13 @@ export function ProfileWizardModal({
                           type="password"
                           value={wizardNewPropertyValue}
                           onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              onAddProperty();
+                            } else if (e.key === "Escape") {
+                              onCancel();
+                            }
+                          }}
                           className="modal-input wizard-property-value-input"
                           placeholder="••••••••"
                         />
@@ -259,6 +300,13 @@ export function ProfileWizardModal({
                         <select
                           value={wizardNewPropertyValue}
                           onChange={(e) => onNewPropertyValueChange((e.target as HTMLSelectElement).value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              onAddProperty();
+                            } else if (e.key === "Escape") {
+                              onCancel();
+                            }
+                          }}
                           className="modal-input wizard-property-value-input"
                         >
                           <option value="true">true</option>
@@ -271,6 +319,13 @@ export function ProfileWizardModal({
                           type="number"
                           value={wizardNewPropertyValue}
                           onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              onAddProperty();
+                            } else if (e.key === "Escape") {
+                              onCancel();
+                            }
+                          }}
                           className="modal-input wizard-property-value-input"
                           placeholder={l10n.t("Property value")}
                         />
@@ -281,6 +336,13 @@ export function ProfileWizardModal({
                           type="text"
                           value={wizardNewPropertyValue}
                           onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              onAddProperty();
+                            } else if (e.key === "Escape") {
+                              onCancel();
+                            }
+                          }}
                           className="modal-input wizard-property-value-input"
                           placeholder={l10n.t("Property value")}
                         />

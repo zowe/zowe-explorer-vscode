@@ -1,3 +1,22 @@
+import React from "react";
+
+// Profile sort order options
+const PROFILE_SORT_ORDER_OPTIONS: ("natural" | "alphabetical" | "reverse-alphabetical")[] = ["natural", "alphabetical", "reverse-alphabetical"];
+
+// Helper function to get user-friendly display name for profile sort order
+const getProfileSortOrderDisplayName = (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical"): string => {
+  switch (sortOrder) {
+    case "natural":
+      return "Natural";
+    case "alphabetical":
+      return "Alphabetical";
+    case "reverse-alphabetical":
+      return "Reverse Alphabetical";
+    default:
+      return sortOrder;
+  }
+};
+
 interface PanelsProps {
   configurations: { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[];
   selectedTab: number | null;
@@ -7,6 +26,9 @@ interface PanelsProps {
   onProfileWizard: () => void;
   viewMode: "flat" | "tree";
   onViewModeToggle: () => void;
+  // Profile sort order props
+  profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical";
+  onProfileSortOrderChange: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical") => void;
 }
 
 export function Panels({
@@ -18,6 +40,8 @@ export function Panels({
   onProfileWizard,
   viewMode,
   onViewModeToggle,
+  profileSortOrder,
+  onProfileSortOrderChange,
 }: PanelsProps) {
   return (
     <div className="panels">
@@ -26,7 +50,22 @@ export function Panels({
           <div className="panel-content">
             <div className="config-section profiles-section">
               <div className="profile-heading-container">
-                <h2>Profiles</h2>
+                <h2
+                  style={{
+                    cursor: "pointer",
+                    userSelect: "none",
+                    textDecoration: "underline",
+                  }}
+                  onClick={() => {
+                    const currentIndex = PROFILE_SORT_ORDER_OPTIONS.indexOf(profileSortOrder);
+                    const nextIndex = (currentIndex + 1) % PROFILE_SORT_ORDER_OPTIONS.length;
+                    const newSortOrder = PROFILE_SORT_ORDER_OPTIONS[nextIndex];
+                    onProfileSortOrderChange(newSortOrder);
+                  }}
+                  title={`Click to change sort order. Current: ${getProfileSortOrderDisplayName(profileSortOrder)}`}
+                >
+                  Profiles
+                </h2>
                 <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
                   <button
                     className="header-button"

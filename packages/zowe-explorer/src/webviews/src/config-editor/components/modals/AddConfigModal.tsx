@@ -1,5 +1,5 @@
 import * as l10n from "@vscode/l10n";
-import { useModalClickOutside } from "../../hooks";
+import { useModalClickOutside, useModalFocus } from "../../hooks";
 
 interface AddConfigModalProps {
   isOpen: boolean;
@@ -12,7 +12,8 @@ interface AddConfigModalProps {
 export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, onCancel }: AddConfigModalProps) {
   if (!isOpen) return null;
 
-  const { modalRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+  const { modalRef: clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+  const modalRef = useModalFocus(isOpen, "button:not([disabled])");
 
   // Get all configuration types with their availability status
   const getAllConfigTypes = () => {
@@ -71,6 +72,18 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
   const allConfigTypes = getAllConfigTypes();
   const availableTypes = allConfigTypes.filter((type) => !type.disabled);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      // Find the first available config type and add it
+      const firstAvailableType = availableTypes[0];
+      if (firstAvailableType) {
+        onAdd(firstAvailableType.value);
+      }
+    } else if (e.key === "Escape") {
+      onCancel();
+    }
+  };
+
   return (
     <div
       style={{
@@ -87,6 +100,8 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
       }}
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={-1}
     >
       <div
         ref={modalRef}
@@ -147,6 +162,13 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
                 <button
                   key={type.value}
                   onClick={() => !type.disabled && onAdd(type.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !type.disabled) {
+                      onAdd(type.value);
+                    } else if (e.key === "Escape") {
+                      onCancel();
+                    }
+                  }}
                   disabled={type.disabled}
                   style={{
                     padding: "12px",
@@ -210,6 +232,11 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
           <button
             onClick={onCancel}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                onCancel();
+              }
+            }}
             style={{
               padding: "8px 16px",
               border: "1px solid var(--vscode-button-border)",

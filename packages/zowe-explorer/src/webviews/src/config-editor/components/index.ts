@@ -21,3 +21,4 @@ export { SaveModal } from "./modals/SaveModal";
 export { NewLayerModal } from "./modals/NewLayerModal";
 export { ProfileWizardModal } from "./modals/ProfileWizardModal";
 export { AddConfigModal } from "./modals/AddConfigModal";
+export { RenameProfileModal } from "./modals/RenameProfileModal";

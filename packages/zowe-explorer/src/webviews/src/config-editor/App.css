@@ -463,6 +463,70 @@ ul {
     gap: 8px;
 }
 
+.modal-content {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+    min-width: 300px;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modal-error {
+    color: var(--vscode-errorForeground);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.modal-hint {
+    color: var(--vscode-descriptionForeground);
+    font-size: 12px;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.modal-input.error {
+    border-color: var(--vscode-inputValidation-errorBorder);
+}
+
+.modal-button {
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.modal-button.primary {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+}
+
+.modal-button.primary:hover {
+    background-color: var(--vscode-button-hoverBackground);
+}
+
+.modal-button.secondary {
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+}
+
+.modal-button.secondary:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
 .codicon {
     display: inline-block;
     width: 16px;

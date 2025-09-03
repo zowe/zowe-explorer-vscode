@@ -1,5 +1,5 @@
 import * as l10n from "@vscode/l10n";
-import { useModalClickOutside } from "../../hooks";
+import { useModalClickOutside, useModalFocus } from "../../hooks";
 
 interface AddProfileModalProps {
   isOpen: boolean;
@@ -19,6 +19,7 @@ interface AddProfileModalProps {
   onSecureToggle: () => void;
   onAdd: () => void;
   onCancel: () => void;
+  focusValueInput?: boolean; // New prop to control focus behavior
 }
 
 export function AddProfileModal({
@@ -39,10 +40,12 @@ export function AddProfileModal({
   onSecureToggle,
   onAdd,
   onCancel,
+  focusValueInput = false,
 }: AddProfileModalProps) {
   if (!isOpen) return null;
 
-  const { modalRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+  const { modalRef: clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+  const modalRef = useModalFocus(isOpen, focusValueInput ? ".add-profile-input" : "#profile-type-input");
 
   const isFileProperty = (key: string): boolean => {
     // Check if key is defined and not null
@@ -60,6 +63,14 @@ export function AddProfileModal({
     return false;
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      onAdd();
+    } else if (e.key === "Escape") {
+      onCancel();
+    }
+  };
+
   return (
     <div className="modal-backdrop" onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick}>
       <div className="modal" ref={modalRef} onClick={(e) => e.stopPropagation()}>
@@ -74,6 +85,7 @@ export function AddProfileModal({
             }}
             onFocus={() => onShowDropdownChange(true)}
             onBlur={() => setTimeout(() => onShowDropdownChange(false), 100)}
+            onKeyDown={handleKeyDown}
             className="modal-input"
             placeholder={l10n.t("New Key")}
             style={{ paddingRight: "2rem" }}
@@ -118,6 +130,7 @@ export function AddProfileModal({
                   placeholder="••••••••"
                   value={newProfileValue}
                   onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
+                  onKeyDown={handleKeyDown}
                   className="modal-input add-profile-input"
                   type="password"
                 />
@@ -127,6 +140,7 @@ export function AddProfileModal({
                 <select
                   value={newProfileValue}
                   onChange={(e) => onNewProfileValueChange((e.target as HTMLSelectElement).value)}
+                  onKeyDown={handleKeyDown}
                   className="modal-input add-profile-input"
                 >
                   <option value="true">true</option>
@@ -139,6 +153,7 @@ export function AddProfileModal({
                   type="number"
                   value={newProfileValue}
                   onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
+                  onKeyDown={handleKeyDown}
                   className="modal-input add-profile-input"
                   placeholder={l10n.t("Value")}
                 />
@@ -149,6 +164,7 @@ export function AddProfileModal({
                   type="text"
                   value={newProfileValue}
                   onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
+                  onKeyDown={handleKeyDown}
                   className="modal-input add-profile-input"
                   placeholder={l10n.t("Value")}
                 />

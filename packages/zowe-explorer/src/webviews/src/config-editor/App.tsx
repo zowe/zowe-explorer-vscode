@@ -6,56 +6,174 @@ import { schemaValidation } from "../../../utils/ConfigSchemaHelpers";
 import "./App.css";
 
 // Components
-import { Footer, Tabs, Panels, ProfileList, AddProfileModal, SaveModal, NewLayerModal, ProfileWizardModal, AddConfigModal } from "./components";
+import {
+  Footer,
+  Tabs,
+  Panels,
+  ProfileList,
+  AddProfileModal,
+  SaveModal,
+  NewLayerModal,
+  ProfileWizardModal,
+  AddConfigModal,
+  RenameProfileModal,
+} from "./components";
 
 // Utils
-import { flattenKeys, flattenProfiles, extractProfileKeyFromPath, sortConfigEntries, stringifyValueByType, pathFromArray } from "./utils";
+import {
+  flattenKeys,
+  flattenProfiles,
+  extractProfileKeyFromPath,
+  sortConfigEntries,
+  stringifyValueByType,
+  pathFromArray,
+  getProfileType,
+  getRenamedProfileKey,
+  getRenamedProfileKeyWithNested,
+  getOriginalProfileKey,
+  getOriginalProfileKeyWithNested,
+  getPropertyTypeForAddProfile,
+  getPropertyTypeForConfigEditor,
+  fetchTypeOptions,
+  getSortOrderDisplayName,
+  getNestedProperty,
+  PropertySortOrder,
+  ProfileSortOrder,
+} from "./utils";
 
 // Hooks
 import { useProfileWizard } from "./hooks";
+
 const vscodeApi = acquireVsCodeApi();
+
+// Types
+type Configuration = {
+  configPath: string;
+  properties: any;
+  secure: string[];
+  global?: boolean;
+  user?: boolean;
+  schemaPath?: string;
+};
+
+type PendingChange = {
+  value: string | number | boolean | Record<string, any>;
+  path: string[];
+  profile: string;
+  secure?: boolean;
+};
+
+type PendingDefault = {
+  value: string;
+  path: string[];
+};
 
 // LocalStorage keys for config editor settings
 const LOCAL_STORAGE_KEYS = {
   SHOW_MERGED_PROPERTIES: "zowe.configEditor.showMergedProperties",
   VIEW_MODE: "zowe.configEditor.viewMode",
   PROPERTY_SORT_ORDER: "zowe.configEditor.propertySortOrder",
+  PROFILE_SORT_ORDER: "zowe.configEditor.profileSortOrder",
 } as const;
 
-// Property sort order options
-export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-first";
+// Property sort order options - now imported from utils
+// Profile sort order options - now imported from utils
 
 const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
 
-// Helper function to get user-friendly display name for sort order
-const getSortOrderDisplayName = (sortOrder: PropertySortOrder): string => {
-  switch (sortOrder) {
-    case "alphabetical":
-      return "alphabetical";
-    case "merged-first":
-      return "merged first";
-    case "non-merged-first":
-      return "merged last";
-    default:
-      return sortOrder;
-  }
-};
-
-// Helper function to get nested property from an object using a path array
-const getNestedProperty = (obj: any, path: string[]): any => {
-  let current = obj;
-  for (const segment of path) {
-    if (current && typeof current === "object" && current.hasOwnProperty(segment)) {
-      current = current[segment];
-    } else {
-      return undefined;
-    }
-  }
-  return current;
-};
+// Helper functions now imported from utils
 
 export function App() {
-  const [localizationState] = useState(null);
+  // State management
+  const [configurations, setConfigurations] = useState<Configuration[]>([]);
+  const [selectedTab, setSelectedTab] = useState<number | null>(null);
+  const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
+  const [flattenedDefaults, setFlattenedDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
+  const [pendingChanges, setPendingChanges] = useState<{ [configPath: string]: { [key: string]: PendingChange } }>({});
+  const [pendingDefaults, setPendingDefaults] = useState<{ [configPath: string]: { [key: string]: PendingDefault } }>({});
+  const [deletions, setDeletions] = useState<{ [configPath: string]: string[] }>({});
+  const [defaultsDeletions, setDefaultsDeletions] = useState<{ [configPath: string]: string[] }>({});
+  const [renames, setRenames] = useState<{ [configPath: string]: { [originalKey: string]: string } }>({});
+  const [autostoreChanges, setAutostoreChanges] = useState<{ [configPath: string]: boolean }>({});
+  const [hiddenItems, setHiddenItems] = useState<{ [configPath: string]: { [key: string]: { path: string } } }>({});
+  const [schemaValidations, setSchemaValidations] = useState<{ [configPath: string]: schemaValidation | undefined }>({});
+  const [selectedProfileKey, setSelectedProfileKey] = useState<string | null>(null);
+  const [selectedProfilesByConfig, setSelectedProfilesByConfig] = useState<{ [configPath: string]: string | null }>({});
+  const [mergedProperties, setMergedProperties] = useState<any>(null);
+  const [showMergedProperties, setShowMergedProperties] = useState<boolean>(true);
+
+  // Track merged properties requests to prevent duplicates
+  const [pendingMergedPropertiesRequest, setPendingMergedPropertiesRequest] = useState<string | null>(null);
+
+  // Debug logging for merged properties state changes
+  useEffect(() => {}, [mergedProperties]);
+  const [viewMode, setViewMode] = useState<"flat" | "tree">("tree");
+  const [propertySortOrder, setPropertySortOrder] = useState<PropertySortOrder>("alphabetical");
+  const [profileSortOrder, setProfileSortOrder] = useState<ProfileSortOrder | null>(null);
+  const [sortOrderVersion, setSortOrderVersion] = useState<number>(0);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [pendingSaveSelection, setPendingSaveSelection] = useState<{ tab: number | null; profile: string | null } | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [profileSearchTerm, setProfileSearchTerm] = useState("");
+  const [profileFilterType, setProfileFilterType] = useState<string | null>(null);
+  const [hasWorkspace, setHasWorkspace] = useState<boolean>(false);
+  const [secureValuesAllowed, setSecureValuesAllowed] = useState<boolean>(true);
+  const [hasPromptedForZeroConfigs, setHasPromptedForZeroConfigs] = useState(false);
+
+  // Modal states
+  const [newProfileKeyPath, setNewProfileKeyPath] = useState<string[] | null>(null);
+  const [newProfileKey, setNewProfileKey] = useState("");
+  const [newProfileValue, setNewProfileValue] = useState("");
+  const [newProfileModalOpen, setNewProfileModalOpen] = useState(false);
+  const [focusValueInput, setFocusValueInput] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [newLayerModalOpen, setNewLayerModalOpen] = useState(false);
+  const [newLayerName, setNewLayerName] = useState("");
+  const [newLayerPath, setNewLayerPath] = useState<string[] | null>(null);
+  const [isSecure, setIsSecure] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [addConfigModalOpen, setAddConfigModalOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
+  const [renameProfileModalOpen, setRenameProfileModalOpen] = useState(false);
+
+  // Refs for current state values
+  const configurationsRef = useRef<Configuration[]>([]);
+  const pendingChangesRef = useRef<{ [configPath: string]: { [key: string]: PendingChange } }>({});
+  const deletionsRef = useRef<{ [configPath: string]: string[] }>({});
+  const pendingDefaultsRef = useRef<{ [configPath: string]: { [key: string]: PendingDefault } }>({});
+  const defaultsDeletionsRef = useRef<{ [configPath: string]: string[] }>({});
+  const autostoreChangesRef = useRef<{ [configPath: string]: boolean }>({});
+  const renamesRef = useRef<{ [configPath: string]: { [originalKey: string]: string } }>({});
+  const selectedProfileKeyRef = useRef<string | null>(null);
+
+  // Update refs when state changes
+  useEffect(() => {
+    pendingChangesRef.current = pendingChanges;
+  }, [pendingChanges]);
+
+  useEffect(() => {
+    deletionsRef.current = deletions;
+  }, [deletions]);
+
+  useEffect(() => {
+    pendingDefaultsRef.current = pendingDefaults;
+  }, [pendingDefaults]);
+
+  useEffect(() => {
+    defaultsDeletionsRef.current = defaultsDeletions;
+  }, [defaultsDeletions]);
+
+  useEffect(() => {
+    autostoreChangesRef.current = autostoreChanges;
+  }, [autostoreChanges]);
+
+  useEffect(() => {
+    renamesRef.current = renames;
+  }, [renames]);
+
+  useEffect(() => {
+    selectedProfileKeyRef.current = selectedProfileKey;
+  }, [selectedProfileKey]);
 
   // LocalStorage functions
   const getLocalStorageValue = useCallback((key: string, defaultValue: any) => {
@@ -100,123 +218,66 @@ export function App() {
     },
     [setLocalStorageValue]
   );
-  const [configurations, setConfigurations] = useState<
-    { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[]
-  >([]);
-  const configurationsRef = useRef<
-    { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[]
-  >([]);
-  const [selectedTab, setSelectedTab] = useState<number | null>(null);
-  const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
-  const [flattenedDefaults, setFlattenedDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
-  const [pendingChanges, setPendingChanges] = useState<{
-    [configPath: string]: {
-      [key: string]: {
-        value: string | number | boolean | Record<string, any>;
-        path: string[];
-        profile: string;
-        secure?: boolean;
-      };
-    };
-  }>({});
-  const [pendingDefaults, setPendingDefaults] = useState<{
-    [configPath: string]: {
-      [key: string]: {
-        value: string;
-        path: string[];
-      };
-    };
-  }>({});
-  const [deletions, setDeletions] = useState<{
-    [configPath: string]: string[];
-  }>({});
-  const [defaultsDeletions, setDefaultsDeletions] = useState<{
-    [configPath: string]: string[];
-  }>({});
 
-  // Autostore changes state
-  const [autostoreChanges, setAutostoreChanges] = useState<{
-    [configPath: string]: boolean;
-  }>({});
+  const setProfileSortOrderWithStorage = useCallback(
+    (value: ProfileSortOrder) => {
+      setProfileSortOrder(value);
+      setLocalStorageValue(LOCAL_STORAGE_KEYS.PROFILE_SORT_ORDER, value);
+    },
+    [setLocalStorageValue]
+  );
 
-  // Use refs to store current state values for save operations
-  const pendingChangesRef = useRef<{
-    [configPath: string]: {
-      [key: string]: {
-        value: string | number | boolean | Record<string, any>;
-        path: string[];
-        profile: string;
-        secure?: boolean;
-      };
-    };
-  }>({});
-  const deletionsRef = useRef<{
-    [configPath: string]: string[];
-  }>({});
-  const pendingDefaultsRef = useRef<{
-    [configPath: string]: {
-      [key: string]: {
-        value: string;
-        path: string[];
-      };
-    };
-  }>({});
-  const defaultsDeletionsRef = useRef<{
-    [configPath: string]: string[];
-  }>({});
-  const autostoreChangesRef = useRef<{
-    [configPath: string]: boolean;
-  }>({});
+  // Helper function to update changes for renames
+  const updateChangesForRenames = useCallback((changes: any[], renames: any[]) => {
+    if (!renames || renames.length === 0) {
+      return changes;
+    }
 
-  // Update refs when state changes
-  useEffect(() => {
-    pendingChangesRef.current = pendingChanges;
-  }, [pendingChanges]);
+    return changes.map((change) => {
+      const updatedChange = { ...change };
 
-  useEffect(() => {
-    deletionsRef.current = deletions;
-  }, [deletions]);
+      // Update profile references in the change
+      for (const rename of renames) {
+        if (rename.configPath === change.configPath) {
+          // Update profile name in the change path
+          if (updatedChange.profile === rename.originalKey) {
+            updatedChange.profile = rename.newKey;
+          }
 
-  useEffect(() => {
-    pendingDefaultsRef.current = pendingDefaults;
-  }, [pendingDefaults]);
+          // Update nested profile references (e.g., parent.child -> newparent.newchild)
+          if (updatedChange.profile && updatedChange.profile.startsWith(rename.originalKey + ".")) {
+            updatedChange.profile = updatedChange.profile.replace(rename.originalKey + ".", rename.newKey + ".");
+          }
 
-  useEffect(() => {
-    defaultsDeletionsRef.current = defaultsDeletions;
-  }, [defaultsDeletions]);
+          // Update the key field to use new profile name
+          if (updatedChange.key) {
+            // Handle nested profiles by finding and replacing the profile name in the key
+            // The key format is: profiles.parent.profiles.child.properties.property
+            // We need to find where the profile name appears and replace it
+            const keyParts = updatedChange.key.split(".");
+            for (let i = 0; i < keyParts.length; i++) {
+              if (keyParts[i] === rename.originalKey) {
+                keyParts[i] = rename.newKey;
+              }
+            }
+            updatedChange.key = keyParts.join(".");
+          }
 
-  useEffect(() => {
-    autostoreChangesRef.current = autostoreChanges;
-  }, [autostoreChanges]);
+          // Update the path array to use new profile name
+          if (updatedChange.path && Array.isArray(updatedChange.path)) {
+            updatedChange.path = updatedChange.path.map((pathPart: string) => {
+              if (pathPart === rename.originalKey) {
+                return rename.newKey;
+              }
+              return pathPart;
+            });
+          }
+        }
+      }
 
-  const [newProfileKeyPath, setNewProfileKeyPath] = useState<string[] | null>(null);
-  const [newProfileKey, setNewProfileKey] = useState("");
-  const [newProfileValue, setNewProfileValue] = useState("");
-  const [newProfileModalOpen, setNewProfileModalOpen] = useState(false);
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
-  const [newLayerModalOpen, setNewLayerModalOpen] = useState(false);
-  const [newLayerName, setNewLayerName] = useState("");
-  const [newLayerPath, setNewLayerPath] = useState<string[] | null>(null);
-  const [isSecure, setIsSecure] = useState(false);
-  const [secureValuesAllowed, setSecureValuesAllowed] = useState<boolean>(true);
-
-  const [hiddenItems, setHiddenItems] = useState<{
-    [configPath: string]: {
-      [key: string]: { path: string };
-    };
-  }>({});
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [schemaValidations, setSchemaValidations] = useState<{ [configPath: string]: schemaValidation | undefined }>({});
-  const [selectedProfileKey, setSelectedProfileKey] = useState<string | null>(null);
-  const [selectedProfilesByConfig, setSelectedProfilesByConfig] = useState<{ [configPath: string]: string | null }>({});
-  const [addConfigModalOpen, setAddConfigModalOpen] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
-
-  const [hasPromptedForZeroConfigs, setHasPromptedForZeroConfigs] = useState(false);
-
-  // Use ref to access current selectedProfileKey in event listeners
-  const selectedProfileKeyRef = useRef<string | null>(null);
-  selectedProfileKeyRef.current = selectedProfileKey;
+      return updatedChange;
+    });
+  }, []);
 
   // Memoize functions to prevent unnecessary re-renders
   const formatPendingChanges = useCallback(() => {
@@ -240,15 +301,29 @@ export function App() {
       keys.map((key) => ({ key, configPath, secure: false }))
     );
 
+    // Prepare renames data
+    const renamesData = Object.entries(renames).flatMap(([configPath, configRenames]) =>
+      Object.entries(configRenames).map(([originalKey, newKey]) => ({
+        originalKey,
+        newKey,
+        configPath,
+      }))
+    );
+
+    // Update changes to use new profile names
+    const updatedChanges = updateChangesForRenames(changes, renamesData);
+    const updatedDeleteKeys = updateChangesForRenames(deleteKeys, renamesData);
+
     const result = {
-      changes,
-      deletions: deleteKeys,
+      changes: updatedChanges,
+      deletions: updatedDeleteKeys,
       defaultsChanges,
       defaultsDeleteKeys: defaultsDeleteKeys,
+      renames: renamesData,
     };
 
     return result;
-  }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions]);
+  }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, renames, updateChangesForRenames]);
 
   const getAvailableProfiles = useCallback(() => {
     if (selectedTab === null) return ["root"];
@@ -295,8 +370,14 @@ export function App() {
       }
     });
 
+    // Apply renames to profile names, including nested profiles
+    const renamedProfileNames = profileNames.map((profileName) => {
+      const configPath = configurations[selectedTab].configPath;
+      return getRenamedProfileKeyWithNested(profileName, configPath, renames);
+    });
+
     // Combine all profiles, exclude deleted ones, and ensure uniqueness
-    const allProfiles = new Set(["root", ...profileNames, ...Array.from(pendingProfiles)]);
+    const allProfiles = new Set(["root", ...renamedProfileNames, ...Array.from(pendingProfiles)]);
 
     // Remove deleted profiles
     deletedProfiles.forEach((profile) => allProfiles.delete(profile));
@@ -308,7 +389,7 @@ export function App() {
       // Sort other profiles alphabetically
       return a.localeCompare(b);
     });
-  }, [selectedTab, configurations, pendingChanges, deletions]);
+  }, [selectedTab, configurations, pendingChanges, deletions, renames]);
 
   // Profile Wizard hook
   const {
@@ -396,13 +477,27 @@ export function App() {
       configPath,
     }));
 
+    // Prepare renames data for save
+    const renamesData = Object.entries(renamesRef.current).flatMap(([configPath, configRenames]) =>
+      Object.entries(configRenames).map(([originalKey, newKey]) => ({
+        originalKey,
+        newKey,
+        configPath,
+      }))
+    );
+
+    // Update changes to use new profile names before sending to backend
+    const updatedChanges = updateChangesForRenames(changes, renamesData);
+    const updatedDeleteKeys = updateChangesForRenames(deleteKeys, renamesData);
+
     vscodeApi.postMessage({
       command: "SAVE_CHANGES",
-      changes,
-      deletions: deleteKeys,
+      changes: updatedChanges,
+      deletions: updatedDeleteKeys,
       defaultsChanges,
       defaultsDeleteKeys: defaultsDeleteKeys,
       otherChanges,
+      renames: renamesData,
     });
 
     setHiddenItems({});
@@ -411,19 +506,11 @@ export function App() {
     setPendingDefaults({});
     setDefaultsDeletions({});
     setAutostoreChanges({});
+    setRenames({});
 
     // Refresh configurations after save
     vscodeApi.postMessage({ command: "GET_PROFILES" });
   }, [selectedTab, selectedProfileKey]);
-
-  // Preview Args Modal state
-
-  // Merged Properties state
-  const [mergedProperties, setMergedProperties] = useState<any>(null);
-  const [showMergedProperties, setShowMergedProperties] = useState<boolean>(true);
-  const [viewMode, setViewMode] = useState<"flat" | "tree">("tree");
-  const [propertySortOrder, setPropertySortOrder] = useState<PropertySortOrder>("alphabetical");
-  const [sortOrderVersion, setSortOrderVersion] = useState<number>(0);
 
   // Function to sort properties based on the current sort order
   const sortProperties = useCallback(
@@ -447,24 +534,30 @@ export function App() {
         // Check if this is a secure property that was added for sorting
         const isSecurePropertyForSorting = typeof value === "object" && value !== null && value._isSecureProperty === true;
 
-        // Use the existing isPropertyFromMergedProps function to determine if this is a merged property
-        // Get configPath from mergedProps if available, otherwise from selectedTab
-        let configPath: string | undefined = undefined;
-        if (selectedTab !== null && configurations[selectedTab]) {
-          configPath = configurations[selectedTab].configPath;
-        }
-        if (!configPath && mergedProps && displayKey && mergedProps[displayKey]?.osLoc) {
-          // Extract configPath from the osLoc of the merged property
-          configPath = mergedProps[displayKey].osLoc.join("");
-        }
+        // Check if this is a merged property that was added for sorting
+        const isMergedPropertyForSorting = typeof value === "object" && value !== null && value._isMergedProperty === true;
 
+        // Determine if this property is actually merged
         let isActuallyMerged = false;
 
         if (isSecurePropertyForSorting) {
           // Secure properties added for sorting are always original (non-merged)
           isActuallyMerged = false;
-        } else if (displayKey && path && configPath) {
-          isActuallyMerged = isPropertyFromMergedProps(displayKey, path, mergedProps, originalProperties, configPath);
+        } else if (isMergedPropertyForSorting) {
+          // Properties with _isMergedProperty flag are always merged
+          isActuallyMerged = true;
+        } else if (displayKey && mergedProps && mergedProps[displayKey]) {
+          // This property exists in mergedProps
+          if (originalProperties && originalProperties.hasOwnProperty(displayKey)) {
+            // It also exists in original properties, so it's NOT merged
+            isActuallyMerged = false;
+          } else {
+            // It only exists in mergedProps, so it IS merged
+            isActuallyMerged = true;
+          }
+        } else {
+          // Property doesn't exist in mergedProps, so it's original
+          isActuallyMerged = false;
         }
 
         // Use the existing isPropertySecure function to determine if this property is secure
@@ -472,8 +565,15 @@ export function App() {
         if (isSecurePropertyForSorting) {
           // Properties with _isSecureProperty flag are always secure
           isSecure = true;
-        } else if (displayKey && path && configPath) {
-          isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties);
+        } else if (displayKey && path) {
+          // Get configPath for secure property check
+          let configPath: string | undefined = undefined;
+          if (selectedTab !== null && configurations[selectedTab]) {
+            configPath = configurations[selectedTab].configPath;
+          }
+          if (configPath) {
+            isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties);
+          }
         }
 
         let category = 0; // 0 = original non-secure, 1 = original secure, 2 = merged non-secure, 3 = merged secure
@@ -522,21 +622,13 @@ export function App() {
     [propertySortOrder, sortOrderVersion]
   );
 
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [pendingSaveSelection, setPendingSaveSelection] = useState<{ tab: number | null; profile: string | null } | null>(null);
-  const [isNavigating, setIsNavigating] = useState(false);
-  // Profile search and filter state - persisted across tab changes
-  const [profileSearchTerm, setProfileSearchTerm] = useState("");
-  const [profileFilterType, setProfileFilterType] = useState<string | null>(null);
-  // Workspace state
-  const [hasWorkspace, setHasWorkspace] = useState<boolean>(false);
-
   // Initialize localStorage values on component mount
   useEffect(() => {
     // Retrieve stored settings from localStorage
     getLocalStorageValue(LOCAL_STORAGE_KEYS.SHOW_MERGED_PROPERTIES, true);
     getLocalStorageValue(LOCAL_STORAGE_KEYS.VIEW_MODE, "tree");
     getLocalStorageValue(LOCAL_STORAGE_KEYS.PROPERTY_SORT_ORDER, "merged-last");
+    getLocalStorageValue(LOCAL_STORAGE_KEYS.PROFILE_SORT_ORDER, "natural");
   }, [getLocalStorageValue]);
 
   // Invoked on webview load
@@ -638,7 +730,13 @@ export function App() {
             }
           });
         }
-        setMergedProperties(mergedPropsData);
+
+        if (Object.keys(mergedPropsData).length > 0) {
+          setMergedProperties(mergedPropsData);
+        }
+
+        // Clear the pending request since we received the response
+        setPendingMergedPropertiesRequest(null);
       } else if (event.data.command === "WIZARD_MERGED_PROPERTIES") {
         // Store the merged properties for the profile wizard - convert array to object format
         const mergedPropsData: { [key: string]: any } = {};
@@ -719,6 +817,8 @@ export function App() {
         } else if (key === LOCAL_STORAGE_KEYS.PROPERTY_SORT_ORDER) {
           setPropertySortOrder(value !== undefined ? value : "alphabetical");
           setSortOrderVersion((prev) => prev + 1);
+        } else if (key === LOCAL_STORAGE_KEYS.PROFILE_SORT_ORDER) {
+          setProfileSortOrder(value !== undefined ? value : "natural");
         }
       } else if (event.data.command === "LOCAL_STORAGE_SET_SUCCESS") {
         // Handle successful localStorage value setting (optional - for debugging)
@@ -811,7 +911,7 @@ export function App() {
       window.removeEventListener("load", handleLoad);
       document.removeEventListener("DOMContentLoaded", handleDOMContentLoaded);
     };
-  }, [localizationState]);
+  }, []);
 
   // Invoked when swapping tabs
   useEffect(() => {
@@ -832,26 +932,30 @@ export function App() {
     if (selectedProfileKey) {
       const configPath = configurations[selectedTab!]?.configPath;
       if (configPath) {
+        // Get the correct profile name for merged properties (handles renames)
+        const profileNameForMergedProperties = getProfileNameForMergedProperties(selectedProfileKey, configPath);
+
         // Use a timeout to debounce rapid changes and prevent race conditions
         const timeoutId = setTimeout(() => {
           const changes = formatPendingChanges();
           vscodeApi.postMessage({
             command: "GET_MERGED_PROPERTIES",
-            profilePath: selectedProfileKey,
+            profilePath: profileNameForMergedProperties,
             configPath: configPath,
             changes: changes,
+            renames: changes.renames,
           });
         }, 100); // 100ms debounce
 
         return () => clearTimeout(timeoutId);
       }
     }
-  }, [selectedProfileKey, selectedTab, formatPendingChanges]);
+  }, [selectedProfileKey, selectedTab, formatPendingChanges, renames]);
 
   useEffect(() => {
-    const isModalOpen = newProfileModalOpen || saveModalOpen || newLayerModalOpen || wizardModalOpen;
+    const isModalOpen = newProfileModalOpen || saveModalOpen || newLayerModalOpen || wizardModalOpen || renameProfileModalOpen;
     document.body.classList.toggle("modal-open", isModalOpen);
-  }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, wizardModalOpen]);
+  }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, wizardModalOpen, renameProfileModalOpen]);
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -895,6 +999,7 @@ export function App() {
     setPendingDefaults({});
     setDefaultsDeletions({});
     setAutostoreChanges({});
+    setRenames({});
 
     // Request fresh configurations from the backend
     vscodeApi.postMessage({ command: "GET_PROFILES" });
@@ -910,11 +1015,16 @@ export function App() {
         // Refresh merged properties for the selected profile after clearing changes
         const configPath = currentSelectedTab !== null ? configurations[currentSelectedTab]?.configPath : undefined;
         if (configPath) {
+          // Get the correct profile name for merged properties (handles renames)
+          const profileNameForMergedProperties = getProfileNameForMergedProperties(currentSelectedProfileKey, configPath);
+
+          const changes = formatPendingChanges();
           vscodeApi.postMessage({
             command: "GET_MERGED_PROPERTIES",
-            profilePath: currentSelectedProfileKey,
+            profilePath: profileNameForMergedProperties,
             configPath: configPath,
-            changes: formatPendingChanges(),
+            changes: changes,
+            renames: changes.renames,
           });
         }
       }
@@ -1030,6 +1140,7 @@ export function App() {
     setNewProfileKeyPath(null);
     setNewProfileModalOpen(false);
     setIsSecure(false);
+    setFocusValueInput(false);
   };
 
   const handleDeleteProperty = (fullKey: string, secure?: boolean) => {
@@ -1068,6 +1179,8 @@ export function App() {
     setNewProfileValue("");
     setNewProfileKeyPath(fullKey.split(".").slice(0, -1)); // Remove the property name from the path
     setNewProfileModalOpen(true);
+    // Set a flag to indicate this modal was opened via "Overwrite merged property"
+    setFocusValueInput(true);
   };
 
   const handleNavigateToSource = (jsonLoc: string, osLoc?: string[]) => {
@@ -1181,64 +1294,73 @@ export function App() {
     }
   };
 
-  // Helper function to get a profile's type
-  const getProfileType = (profileKey: string): string | null => {
-    if (selectedTab === null) return null;
-    const configPath = configurations[selectedTab!]!.configPath;
-
-    // Check pending changes first
-    const pendingType = Object.entries(pendingChanges[configPath] ?? {}).find(([key, entry]) => {
-      if (entry.profile !== profileKey) return false;
-      const keyParts = key.split(".");
-      return keyParts[keyParts.length - 1] === "type";
-    });
-
-    if (pendingType) {
-      return pendingType[1].value as string;
-    }
-
-    // Check existing profiles
-    const config = configurations[selectedTab!].properties;
-    const flatProfiles = flattenProfiles(config.profiles);
-    const profile = flatProfiles[profileKey];
-
-    if (profile && profile.type) {
-      return profile.type;
-    }
-
-    return null;
-  };
+  // Helper function to get a profile's type - now imported from utils
 
   // Helper function to check if current profile is untyped
   const isCurrentProfileUntyped = (): boolean => {
     if (!selectedProfileKey) return false;
-    const profileType = getProfileType(selectedProfileKey);
+    const profileType = getProfileType(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
     return !profileType || profileType.trim() === "";
+  };
+
+  // Helper function to get the correct profile name for merged properties (handles renames)
+  const getProfileNameForMergedProperties = (profileKey: string, configPath: string): string => {
+    // If this profile is a new name from a rename, get the original name
+    const originalKey = getOriginalProfileKeyWithNested(profileKey, configPath, renames);
+
+    // For child profiles, we need to handle the case where the parent profile has been renamed
+    // If this is a child profile and its parent has been renamed, we need to find the data
+    // using the original parent name structure
+    let effectiveProfileKey = originalKey;
+
+    if (originalKey.includes(".")) {
+      // This is a child profile - check if any parent has been renamed
+      const profilePathParts = originalKey.split(".");
+      const parentKey = profilePathParts.slice(0, -1).join(".");
+      const hasParentRename = Object.values(renames[configPath] || {}).some((renamedKey) => renamedKey === parentKey);
+
+      if (hasParentRename) {
+        // Find the original parent key
+        const originalParentKey = Object.keys(renames[configPath] || {}).find((key) => renames[configPath][key] === parentKey);
+        if (originalParentKey) {
+          // Reconstruct the original child profile key
+          const childName = profilePathParts[profilePathParts.length - 1];
+          effectiveProfileKey = `${originalParentKey}.${childName}`;
+        }
+      }
+    }
+
+    const result = effectiveProfileKey || profileKey;
+
+    return result;
   };
 
   // Helper function to check if a profile is set as default
   const isProfileDefault = (profileKey: string): boolean => {
     if (selectedTab === null) return false;
     const configPath = configurations[selectedTab!]!.configPath;
-    const profileType = getProfileType(profileKey);
+    const profileType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
 
     if (!profileType) return false;
+
+    // Check if this profile was renamed and get the original profile name
+    const originalProfileKey = getOriginalProfileKeyWithNested(profileKey, configPath, renames);
 
     // Check pending defaults first
     const pendingDefault = pendingDefaults[configPath]?.[profileType];
     if (pendingDefault) {
-      return pendingDefault.value === profileKey;
+      return pendingDefault.value === profileKey || pendingDefault.value === originalProfileKey;
     }
 
     // Check existing defaults
     const config = configurations[selectedTab!].properties;
     const defaults = config.defaults || {};
 
-    return defaults[profileType] === profileKey;
+    return defaults[profileType] === profileKey || defaults[profileType] === originalProfileKey;
   };
 
   const handleSetAsDefault = (profileKey: string) => {
-    const profileType = getProfileType(profileKey);
+    const profileType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
     if (!profileType) {
       return;
     }
@@ -1259,6 +1381,60 @@ export function App() {
       ...prev,
       [configPath]: prev[configPath]?.filter((k) => k !== profileType) ?? [],
     }));
+  };
+
+  // Helper functions now imported from utils
+
+  const handleRenameProfile = (originalKey: string, newKey: string) => {
+    if (selectedTab === null) return;
+    const configPath = configurations[selectedTab!]!.configPath;
+
+    // Update the renames state
+    setRenames((prev) => ({
+      ...prev,
+      [configPath]: {
+        ...prev[configPath],
+        [originalKey]: newKey,
+      },
+    }));
+
+    // Update the selected profile key if it's the one being renamed
+    if (selectedProfileKey === originalKey) {
+      setSelectedProfileKey(newKey);
+    }
+
+    // Update any pending defaults that reference the old profile name
+    setPendingDefaults((prev) => {
+      const configDefaults = prev[configPath];
+      if (!configDefaults) return prev;
+
+      const updatedDefaults = { ...configDefaults };
+      let hasChanges = false;
+
+      // Check each default entry
+      Object.entries(updatedDefaults).forEach(([profileType, defaultEntry]) => {
+        if (defaultEntry.value === originalKey) {
+          // Update the default to reference the new profile name
+          updatedDefaults[profileType] = {
+            ...defaultEntry,
+            value: newKey,
+          };
+          hasChanges = true;
+        }
+      });
+
+      if (hasChanges) {
+        return {
+          ...prev,
+          [configPath]: updatedDefaults,
+        };
+      }
+
+      return prev;
+    });
+
+    // Close the modal
+    setRenameProfileModalOpen(false);
   };
 
   const handleDeleteProfile = (profileKey: string) => {
@@ -1348,90 +1524,37 @@ export function App() {
         // Find the nearest profile that's not being deleted
         let nearestProfileKey: string | null = null;
 
-        // First, check if the deleted profile has a parent that should be selected
+        // Find the nearest profile that's not being deleted
         if (profileKey.includes(".")) {
-          // This is a nested profile, find its parent
+          // For nested profiles, try to find the parent first
           const profileParts = profileKey.split(".");
           const parentKey = profileParts.slice(0, -1).join(".");
 
-          // Check if the parent exists and is not being deleted
           if (availableProfileKeys.includes(parentKey) && !isProfileOrParentDeleted(parentKey, deletedProfiles)) {
             nearestProfileKey = parentKey;
           }
         }
 
-        // If no parent found or this is a top-level profile, find the nearest sibling/adjacent profile
+        // If no parent found, find the next available profile
         if (!nearestProfileKey) {
-          // For top-level profiles, we want to find the nearest top-level profile
-          // For nested profiles, we want to find the nearest profile at the same level or the next top-level
-          const isTopLevel = !profileKey.includes(".");
-
-          if (isTopLevel) {
-            // For top-level profiles, find the nearest top-level profile
-            // Get all top-level profiles from the original configuration (including deleted ones)
-            const allTopLevelProfiles = Object.keys(profilesObj).filter((key) => !key.includes("."));
-            const currentTopLevelIndex = allTopLevelProfiles.indexOf(profileKey);
-
-            if (currentTopLevelIndex !== -1) {
-              // Try to find the next top-level profile first
-              for (let i = currentTopLevelIndex + 1; i < allTopLevelProfiles.length; i++) {
-                const candidateProfile = allTopLevelProfiles[i];
-                if (!isProfileOrParentDeleted(candidateProfile, deletedProfiles)) {
-                  nearestProfileKey = candidateProfile;
-                  break;
-                }
-              }
-
-              // If no next top-level profile found, try to find the previous top-level profile
-              if (!nearestProfileKey) {
-                for (let i = currentTopLevelIndex - 1; i >= 0; i--) {
-                  const candidateProfile = allTopLevelProfiles[i];
-                  if (!isProfileOrParentDeleted(candidateProfile, deletedProfiles)) {
-                    nearestProfileKey = candidateProfile;
-                    break;
-                  }
-                }
+          const currentIndex = availableProfileKeys.indexOf(profileKey);
+          if (currentIndex !== -1) {
+            // Try to find the next profile
+            for (let i = currentIndex + 1; i < availableProfileKeys.length; i++) {
+              const candidateProfile = availableProfileKeys[i];
+              if (!isProfileOrParentDeleted(candidateProfile, deletedProfiles)) {
+                nearestProfileKey = candidateProfile;
+                break;
               }
             }
-          } else {
-            // For nested profiles, find the nearest profile at the same level or the next top-level
-            // Get all profiles from the original configuration (including deleted ones)
-            const getAllProfileKeys = (profiles: any, parentKey = ""): string[] => {
-              const keys: string[] = [];
-              for (const key of Object.keys(profiles)) {
-                const profile = profiles[key];
-                const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
-                keys.push(qualifiedKey);
 
-                // Recursively add nested profiles
-                if (profile.profiles) {
-                  keys.push(...getAllProfileKeys(profile.profiles, qualifiedKey));
-                }
-              }
-              return keys;
-            };
-
-            const allProfileKeys = getAllProfileKeys(profilesObj);
-            const currentIndex = allProfileKeys.indexOf(profileKey);
-
-            if (currentIndex !== -1) {
-              // Try to find the next profile first
-              for (let i = currentIndex + 1; i < allProfileKeys.length; i++) {
-                const candidateProfile = allProfileKeys[i];
+            // If no next profile found, try to find the previous profile
+            if (!nearestProfileKey) {
+              for (let i = currentIndex - 1; i >= 0; i--) {
+                const candidateProfile = availableProfileKeys[i];
                 if (!isProfileOrParentDeleted(candidateProfile, deletedProfiles)) {
                   nearestProfileKey = candidateProfile;
                   break;
-                }
-              }
-
-              // If no next profile found, try to find the previous profile
-              if (!nearestProfileKey) {
-                for (let i = currentIndex - 1; i >= 0; i--) {
-                  const candidateProfile = allProfileKeys[i];
-                  if (!isProfileOrParentDeleted(candidateProfile, deletedProfiles)) {
-                    nearestProfileKey = candidateProfile;
-                    break;
-                  }
                 }
               }
             }
@@ -1451,14 +1574,17 @@ export function App() {
 
         // If we found a nearest profile, get its merged properties
         if (nearestProfileKey) {
+          // Get the correct profile name for merged properties (handles renames)
+          const profileNameForMergedProperties = getProfileNameForMergedProperties(nearestProfileKey, configPath);
+
+          const changes = formatPendingChanges();
           vscodeApi.postMessage({
             command: "GET_MERGED_PROPERTIES",
-            profilePath: nearestProfileKey,
+            profilePath: profileNameForMergedProperties,
             configPath: configPath,
-            changes: formatPendingChanges(),
+            changes: changes,
+            renames: changes.renames,
           });
-        } else {
-          setMergedProperties(null);
         }
       } else {
         // Fallback to clearing selection if no profiles object available
@@ -1469,7 +1595,7 @@ export function App() {
             [configPath]: null,
           }));
         }
-        setMergedProperties(null);
+        // Don't clear merged properties here - they will be updated when a new profile is selected
       }
     }
   };
@@ -1478,7 +1604,7 @@ export function App() {
     if (profileKey === "") {
       // Deselect profile
       setSelectedProfileKey(null);
-      setMergedProperties(null);
+      // Don't clear merged properties - they will be updated when a new profile is selected
       return;
     }
 
@@ -1492,11 +1618,34 @@ export function App() {
         [configPath]: profileKey,
       }));
 
+      // Get the correct profile name for merged properties (handles renames)
+      const profileNameForMergedProperties = getProfileNameForMergedProperties(profileKey, configPath);
+
+      // Create a unique request key to prevent duplicate requests
+      const requestKey = `${configPath}:${profileKey}`;
+
+      // Check if we already have a pending request for this profile
+      if (pendingMergedPropertiesRequest === requestKey) {
+        return;
+      }
+
+      const changes = formatPendingChanges();
+
+      // For merged properties, we need to send the CURRENT profile structure (with renames applied)
+      // because the backend needs to know about pending renames to properly resolve the profile
+      const currentProfilePath = profileKey; // Use the current profile key (with renames)
+
+      // Mark this request as pending
+      setPendingMergedPropertiesRequest(requestKey);
+
       vscodeApi.postMessage({
         command: "GET_MERGED_PROPERTIES",
-        profilePath: profileKey,
+        profilePath: currentProfilePath, // Send current profile key (with renames)
         configPath: configPath,
-        changes: formatPendingChanges(),
+        changes: changes,
+        renames: changes.renames,
+        currentProfileKey: profileKey,
+        originalProfileKey: profileNameForMergedProperties,
       });
     }
   };
@@ -1530,12 +1679,17 @@ export function App() {
       if (previouslySelectedProfile) {
         setSelectedProfileKey(previouslySelectedProfile);
 
+        // Get the correct profile name for merged properties (handles renames)
+        const profileNameForMergedProperties = getProfileNameForMergedProperties(previouslySelectedProfile, configPath);
+
         // Get merged properties for the restored profile
+        const changes = formatPendingChanges();
         vscodeApi.postMessage({
           command: "GET_MERGED_PROPERTIES",
-          profilePath: previouslySelectedProfile,
+          profilePath: profileNameForMergedProperties,
           configPath: configPath,
-          changes: formatPendingChanges(),
+          changes: changes,
+          renames: changes.renames,
         });
       } else {
         // No previously selected profile for this config, clear selection
@@ -1551,8 +1705,60 @@ export function App() {
     const currentProfileKey = extractProfileKeyFromPath(path);
     const pendingChangesAtLevel: { [key: string]: any } = {};
 
+    // Check if this profile was renamed and get the original profile name (handle nested profiles)
+    const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
+
+    // Helper function to check if a profile key matches considering renames
+    const isProfileKeyMatch = (entryProfileKey: string): boolean => {
+      // Direct match with current or original profile key
+      if (entryProfileKey === currentProfileKey || entryProfileKey === originalProfileKey) {
+        return true;
+      }
+
+      // For nested profiles, check if this entry's profile key would match after applying renames
+      if (entryProfileKey.includes(".") || currentProfileKey.includes(".")) {
+        // Get the renamed version of the entry's profile key
+        const renamedEntryProfileKey = getRenamedProfileKeyWithNested(entryProfileKey, configPath, renames);
+        if (renamedEntryProfileKey === currentProfileKey) {
+          return true;
+        }
+
+        // Also check if the current profile key, when reversed through renames, matches the entry
+        const originalOfCurrentKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
+        if (entryProfileKey === originalOfCurrentKey) {
+          return true;
+        }
+
+        // For deeply nested profiles, check if the entry profile key is an ancestor or descendant
+        // after applying renames at each level
+        const entryParts = entryProfileKey.split(".");
+        const currentParts = currentProfileKey.split(".");
+
+        // Check if entry profile is a parent of current profile after renames
+        if (entryParts.length < currentParts.length) {
+          const currentParentKey = currentParts.slice(0, entryParts.length).join(".");
+          const renamedEntryKey = getRenamedProfileKeyWithNested(entryProfileKey, configPath, renames);
+          if (renamedEntryKey === currentParentKey) {
+            return true;
+          }
+        }
+
+        // Check if current profile is a parent of entry profile after renames
+        if (currentParts.length < entryParts.length) {
+          const entryParentKey = entryParts.slice(0, currentParts.length).join(".");
+          const renamedEntryParentKey = getRenamedProfileKeyWithNested(entryParentKey, configPath, renames);
+          if (renamedEntryParentKey === currentProfileKey) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    };
+
     Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-      if (entry.profile === currentProfileKey && (key === fullPath || key.startsWith(fullPath + "."))) {
+      // Check if the entry belongs to the current profile considering renames
+      if (isProfileKeyMatch(entry.profile) && (key === fullPath || key.startsWith(fullPath + "."))) {
         const keyParts = key.split(".");
         const relativePath = keyParts.slice(path.length);
 
@@ -1588,7 +1794,9 @@ export function App() {
       }
     });
 
-    return { ...baseObj, ...pendingChangesAtLevel };
+    const result = { ...baseObj, ...pendingChangesAtLevel };
+
+    return result;
   };
 
   // Helper function to merge merged properties into the configuration
@@ -1608,7 +1816,7 @@ export function App() {
     }
 
     const currentProfileName = extractProfileKeyFromPath(path);
-    const profileType = getProfileType(currentProfileName);
+    const profileType = getProfileType(currentProfileName, selectedTab, configurations, pendingChanges, renames);
     const propertySchema = schemaValidations[configPath]?.propertySchema[profileType || ""] || {};
     const allowedProperties = Object.keys(propertySchema);
     const fullPath = path.join(".");
@@ -1728,6 +1936,55 @@ export function App() {
     return result.sort();
   };
 
+  // Helper function to check if a property is actually inherited from another profile
+  const isPropertyActuallyInherited = (profilePath: string, currentProfileKey: string | null, configPath: string): boolean => {
+    if (!profilePath || !currentProfileKey) {
+      return false;
+    }
+
+    // First check if the paths are exactly the same
+    if (profilePath === currentProfileKey) {
+      return false;
+    }
+
+    // Get all profile renames in the config
+    const renamesForConfig = renames[configPath] || {};
+
+    // Function to get the effective profile name (after renames)
+    const getEffectiveName = (profileName: string): string => {
+      // Check if this profile was renamed
+      const directRename = Object.entries(renamesForConfig).find(([oldName, _newName]) => oldName === profileName);
+      if (directRename) {
+        return directRename[1];
+      }
+
+      // Check if any parent was renamed
+      const parts = profileName.split(".");
+      for (let i = parts.length - 1; i > 0; i--) {
+        const parentPath = parts.slice(0, i).join(".");
+        const parentRename = Object.entries(renamesForConfig).find(([oldName, _newName]) => oldName === parentPath);
+        if (parentRename) {
+          // Replace the parent part with its new name
+          const childPart = parts.slice(i).join(".");
+          return `${parentRename[1]}.${childPart}`;
+        }
+      }
+
+      return profileName;
+    };
+
+    // Get the effective names for both paths
+    const effectiveSourcePath = getEffectiveName(profilePath);
+    const effectiveCurrentPath = getEffectiveName(currentProfileKey);
+
+    // If the effective paths match, this property is not inherited
+    if (effectiveSourcePath === effectiveCurrentPath) {
+      return false;
+    }
+
+    return true;
+  };
+
   // Helper function to determine if a property is from merged properties
   const isPropertyFromMergedProps = (
     displayKey: string | undefined,
@@ -1736,35 +1993,91 @@ export function App() {
     originalProperties: any,
     configPath: string
   ): boolean => {
+    console.log("\nisPropertyFromMergedProps check:", {
+      displayKey,
+      path,
+      configPath,
+      originalProperties,
+    });
+
     // Only consider properties as merged if showMergedProperties is true and profile is not untyped
-    // Check if the specific profile being evaluated is untyped, not just the currently selected profile
     const currentProfileKey = extractProfileKeyFromPath(path);
-    const currentProfileType = getProfileType(currentProfileKey);
+    const currentProfileType = getProfileType(currentProfileKey, selectedTab, configurations, pendingChanges, renames);
     const isProfileUntyped = !currentProfileType || currentProfileType.trim() === "";
 
-    if (!showMergedProperties || isProfileUntyped) {
+    console.log("Profile info:", {
+      currentProfileKey,
+      currentProfileType,
+      isProfileUntyped,
+    });
+
+    if (!showMergedProperties || isProfileUntyped || !displayKey) {
+      console.log("-> false (showMergedProperties, untyped, or no displayKey)");
       return false;
     }
 
-    if (!displayKey) {
-      return false;
-    }
-    const propertyExistsInPendingChanges = displayKey ? isPropertyInPendingChanges(displayKey, currentProfileKey, configPath) : false;
-
+    const propertyExistsInPendingChanges = isPropertyInPendingChanges(displayKey, currentProfileKey, configPath);
     const mergedPropData = mergedProps?.[displayKey];
     const jsonLoc = mergedPropData?.jsonLoc;
     const osLoc = mergedPropData?.osLoc;
 
-    if (
-      !mergedProps ||
-      typeof mergedProps !== "object" ||
-      path.length === 0 ||
-      path[path.length - 1] !== "properties" ||
-      !mergedProps.hasOwnProperty(displayKey) ||
-      (originalProperties && originalProperties.hasOwnProperty(displayKey)) ||
-      propertyExistsInPendingChanges ||
-      !osLoc
-    ) {
+    console.log("Property data:", {
+      propertyExistsInPendingChanges,
+      mergedPropData,
+      jsonLoc,
+      osLoc,
+    });
+
+    if (!mergedProps) {
+      console.log("-> false (no mergedProps)");
+      return false;
+    }
+    if (typeof mergedProps !== "object") {
+      console.log("-> false (mergedProps not object)");
+      return false;
+    }
+    if (path.length === 0) {
+      console.log("-> false (empty path)");
+      return false;
+    }
+    if (path[path.length - 1] !== "properties") {
+      console.log("-> false (not in properties)");
+      return false;
+    }
+    if (!mergedProps.hasOwnProperty(displayKey)) {
+      console.log("-> false (property not in mergedProps)");
+      return false;
+    }
+    if (originalProperties && originalProperties.hasOwnProperty(displayKey)) {
+      console.log("-> false (property exists in originalProperties)");
+      return false;
+    }
+    if (propertyExistsInPendingChanges) {
+      console.log("-> false (property exists in pendingChanges)");
+      return false;
+    }
+    if (!osLoc) {
+      console.log("-> false (no osLoc)");
+      return false;
+    }
+
+    // Extract profile path from jsonLoc
+    const jsonLocParts = jsonLoc ? jsonLoc.split(".") : [];
+    const profilePathParts = jsonLocParts.slice(1, -2);
+    const profilePath = profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".");
+
+    console.log("Extracted profile path:", {
+      jsonLocParts,
+      profilePathParts,
+      profilePath,
+    });
+
+    // Check if this property is actually inherited
+    const isInherited = isPropertyActuallyInherited(profilePath, currentProfileKey, configPath);
+    console.log("isInherited check result:", isInherited);
+
+    if (!isInherited) {
+      console.log("-> false (property is not actually inherited)");
       return false;
     }
 
@@ -1772,9 +2085,124 @@ export function App() {
     const osLocString = osLoc.join("");
     const pathsEqual = selectedConfigPath === osLocString;
     const currentProfilePathForComparison = path.slice(0, -1).join(".");
-    const jsonLocIndicatesDifferentProfile = jsonLoc && !jsonLoc.includes(currentProfilePathForComparison + ".properties");
 
-    return !pathsEqual || jsonLocIndicatesDifferentProfile;
+    console.log("Path comparison:", {
+      selectedConfigPath,
+      osLocString,
+      pathsEqual,
+      currentProfilePathForComparison,
+    });
+
+    // Check if this profile has been renamed
+    const currentlyViewedProfileKey = selectedProfileKey;
+    const hasBeenRenamed =
+      currentlyViewedProfileKey && Object.values(renames[configPath] || {}).some((newName) => newName === currentlyViewedProfileKey);
+
+    console.log("Rename check:", {
+      currentlyViewedProfileKey,
+      hasBeenRenamed,
+    });
+
+    if (hasBeenRenamed) {
+      // Extract profile name from jsonLoc
+      const jsonLocParts = jsonLoc ? jsonLoc.split(".") : [];
+      let jsonLocProfileName = "";
+
+      if (jsonLocParts.length >= 2 && jsonLocParts[0] === "profiles") {
+        let profileParts = [];
+        let i = 1;
+
+        while (i < jsonLocParts.length) {
+          if (jsonLocParts[i] !== "profiles" && jsonLocParts[i] !== "properties") {
+            profileParts.push(jsonLocParts[i]);
+            i++;
+          } else if (jsonLocParts[i] === "profiles") {
+            i++;
+          } else if (jsonLocParts[i] === "properties") {
+            break;
+          } else {
+            i++;
+          }
+        }
+        jsonLocProfileName = profileParts.join(".");
+      }
+
+      // For renamed profiles, we need to check if the jsonLoc refers to the CURRENT profile structure
+      // The jsonLoc will contain the OLD profile name (e.g., 'profiles.z18.properties.port')
+      // We need to check if this matches the currently viewed profile structure by mapping old names to new names
+
+      // Get the full profile path for the current profile and jsonLoc profile
+      const currentProfileParts = currentlyViewedProfileKey ? currentlyViewedProfileKey.split(".") : [];
+      const jsonLocProfileParts = jsonLocProfileName ? jsonLocProfileName.split(".") : [];
+
+      // Check if the jsonLoc profile name matches the current profile (considering renames)
+      const jsonLocRefersToCurrentProfile = (() => {
+        // Direct match
+        if (jsonLocProfileName === currentlyViewedProfileKey) return true;
+
+        // Check if this is a child profile and its path matches after considering renames
+        const currentProfilePath = currentProfileParts.join(".");
+        const jsonLocPath = jsonLocProfileParts.join(".");
+
+        // If the jsonLoc path matches the current path exactly (after any renames)
+        if (jsonLocPath === currentProfilePath) return true;
+
+        // If we're looking at a child profile, check if its full path matches after parent rename
+        if (currentProfileParts.length > 1) {
+          const parentProfilePath = currentProfileParts.slice(0, -1).join(".");
+          const originalParentKey = Object.keys(renames[configPath] || {}).find((oldName) => renames[configPath][oldName] === parentProfilePath);
+
+          if (originalParentKey) {
+            // Reconstruct the original path using the parent's old name
+            const childName = currentProfileParts[currentProfileParts.length - 1];
+            const originalPath = `${originalParentKey}.${childName}`;
+            return jsonLocPath === originalPath;
+          }
+        }
+
+        return false;
+      })();
+
+      // Check if the jsonLoc profile name is the OLD name that maps to the current profile
+      const jsonLocIsOldNameOfCurrentProfile =
+        jsonLocProfileName &&
+        Object.keys(renames[configPath] || {}).some(
+          (oldName) => oldName === jsonLocProfileName && renames[configPath][oldName] === currentlyViewedProfileKey
+        );
+
+      // Check if the jsonLoc refers to a parent profile that has been renamed
+      const isFromRenamedParent = jsonLocProfileName && Object.values(renames[configPath] || {}).some((newName) => newName === jsonLocProfileName);
+
+      // Check if the jsonLoc refers to a child profile of a renamed parent
+      const isFromChildOfRenamedParent =
+        currentlyViewedProfileKey &&
+        jsonLocProfileName &&
+        Object.entries(renames[configPath] || {}).some(([oldName, newName]) => {
+          // Check if current profile is a child of the new parent name
+          const isCurrentProfileChildOfNewParent = currentlyViewedProfileKey.startsWith(newName + ".");
+          // Check if jsonLoc refers to the old parent name
+          const jsonLocRefersToOldParent = jsonLocProfileName === oldName;
+          return isCurrentProfileChildOfNewParent && jsonLocRefersToOldParent;
+        });
+
+      // A property IS merged if:
+      // 1. The paths are NOT equal (different config files), OR
+      // 2. The jsonLoc does NOT refer to:
+      //    - the current profile (jsonLocRefersToCurrentProfile)
+      //    - the OLD name of the current profile (jsonLocIsOldNameOfCurrentProfile)
+      //    - a renamed parent profile (isFromRenamedParent)
+      //    - a child of a renamed parent (isFromChildOfRenamedParent)
+      const result =
+        !pathsEqual || (!jsonLocRefersToCurrentProfile && !jsonLocIsOldNameOfCurrentProfile && !isFromRenamedParent && !isFromChildOfRenamedParent);
+
+      return result;
+    } else {
+      // For non-renamed profiles, use the original logic
+      const jsonLocIndicatesDifferentProfile = jsonLoc && !jsonLoc.includes(currentProfilePathForComparison + ".properties");
+      const result = !pathsEqual || jsonLocIndicatesDifferentProfile;
+
+      return result;
+    }
   };
 
   // Helper function to check if a merged property is secure
@@ -2085,7 +2513,7 @@ export function App() {
               pendingProfiles[profileKey].properties[propertyName] = entry.value;
             }
 
-            // If this is a secure property, add it to the secure array
+            // If this is a secure property, add it to the profile
             if (entry.secure) {
               if (!pendingProfiles[profileKey].secure) {
                 pendingProfiles[profileKey].secure = [];
@@ -2135,70 +2563,179 @@ export function App() {
     return false;
   };
 
-  const renderProfiles = (profilesObj: any) => {
-    if (!profilesObj || typeof profilesObj !== "object") return null;
-
-    const configPath = configurations[selectedTab!]!.configPath;
-
-    // Extract pending profiles using helper function
-    const pendingProfiles = extractPendingProfiles(configPath);
-
-    // Filter out deleted profiles and their children
-    const deletedProfiles = deletions[configPath] || [];
-
-    // Get profile keys in original order from the configuration
-    const getOrderedProfileKeys = (profiles: any, parentKey = ""): string[] => {
-      const keys: string[] = [];
-      for (const key of Object.keys(profiles)) {
-        const profile = profiles[key];
-        const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
-
-        // Add this profile key if it's not deleted
-        if (!isProfileOrParentDeleted(qualifiedKey, deletedProfiles)) {
-          keys.push(qualifiedKey);
-        }
-
-        // Recursively add nested profiles
-        if (profile.profiles) {
-          keys.push(...getOrderedProfileKeys(profile.profiles, qualifiedKey));
-        }
+  // Helper function to sort profiles at each level
+  const sortProfilesAtLevel = useCallback(
+    (profileKeys: string[]): string[] => {
+      const currentProfileSortOrder = profileSortOrder || "natural";
+      if (currentProfileSortOrder === "natural") {
+        return profileKeys; // No sorting, maintain original order
       }
-      return keys;
-    };
 
-    // Get ordered profile keys from original configuration
-    const orderedProfileKeys = getOrderedProfileKeys(profilesObj);
+      // Create a map of profiles with their depth and parent information
+      const profileInfo = profileKeys.map((profileKey) => {
+        const parts = profileKey.split(".");
+        const depth = parts.length - 1;
+        const parentKey = parts.length > 1 ? parts.slice(0, -1).join(".") : "";
+        return { profileKey, depth, parentKey, parts };
+      });
 
-    // Add pending profiles that aren't already in the ordered list
-    const pendingProfileKeys = Object.keys(pendingProfiles).filter(
-      (key) => !orderedProfileKeys.includes(key) && !isProfileOrParentDeleted(key, deletedProfiles)
-    );
+      // Sort profiles while maintaining parent-child relationships
+      const sortedProfiles: string[] = [];
+      const processedProfiles = new Set<string>();
 
-    const filteredProfileKeys = [...orderedProfileKeys, ...pendingProfileKeys];
+      // Helper function to add a profile and its descendants
+      const addProfileAndDescendants = (profileKey: string) => {
+        if (processedProfiles.has(profileKey)) return;
 
-    return (
-      <ProfileList
-        sortedProfileKeys={filteredProfileKeys}
-        selectedProfileKey={selectedProfileKey}
-        pendingProfiles={pendingProfiles}
-        profileMenuOpen={profileMenuOpen}
-        configPath={configurations[selectedTab!]?.configPath || ""}
-        vscodeApi={vscodeApi}
-        onProfileSelect={handleProfileSelection}
-        onProfileMenuToggle={setProfileMenuOpen}
-        onDeleteProfile={handleDeleteProfile}
-        onSetAsDefault={handleSetAsDefault}
-        isProfileDefault={isProfileDefault}
-        getProfileType={getProfileType}
-        viewMode={viewMode}
-        hasPendingSecureChanges={hasPendingSecureChanges}
-        searchTerm={profileSearchTerm}
-        filterType={profileFilterType}
-        onSearchChange={setProfileSearchTerm}
-        onFilterChange={setProfileFilterType}
-      />
-    );
-  };
+        // Find all profiles that have this profile as a parent
+        const children = profileInfo.filter((info) => info.parentKey === profileKey);
+
+        // Sort children based on the current sort order
+        if (currentProfileSortOrder === "alphabetical") {
+          children.sort((a, b) => a.profileKey.localeCompare(b.profileKey));
+        } else if (currentProfileSortOrder === "reverse-alphabetical") {
+          children.sort((a, b) => b.profileKey.localeCompare(a.profileKey));
+        }
+
+        // Add the current profile
+        sortedProfiles.push(profileKey);
+        processedProfiles.add(profileKey);
+
+        // Recursively add all children
+        children.forEach((child) => {
+          addProfileAndDescendants(child.profileKey);
+        });
+      };
+
+      // Get all top-level profiles (depth 0)
+      const topLevelProfiles = profileInfo.filter((info) => info.depth === 0);
+
+      // Sort top-level profiles
+      if (currentProfileSortOrder === "alphabetical") {
+        topLevelProfiles.sort((a, b) => a.profileKey.localeCompare(b.profileKey));
+      } else if (currentProfileSortOrder === "reverse-alphabetical") {
+        topLevelProfiles.sort((a, b) => b.profileKey.localeCompare(a.profileKey));
+      }
+
+      // Process each top-level profile and its descendants
+      topLevelProfiles.forEach((info) => {
+        addProfileAndDescendants(info.profileKey);
+      });
+
+      return sortedProfiles;
+    },
+    [profileSortOrder]
+  );
+
+  const renderProfiles = useCallback(
+    (profilesObj: any) => {
+      if (!profilesObj || typeof profilesObj !== "object") return null;
+
+      const configPath = configurations[selectedTab!]!.configPath;
+
+      // Extract pending profiles using helper function
+      const pendingProfiles = extractPendingProfiles(configPath);
+
+      // Filter out deleted profiles and their children
+      const deletedProfiles = deletions[configPath] || [];
+
+      // Get profile keys in original order from the configuration
+      const getOrderedProfileKeys = (profiles: any, parentKey = ""): string[] => {
+        const keys: string[] = [];
+        for (const key of Object.keys(profiles)) {
+          const profile = profiles[key];
+          const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+
+          // Add this profile key if it's not deleted
+          if (!isProfileOrParentDeleted(qualifiedKey, deletedProfiles)) {
+            keys.push(qualifiedKey);
+          }
+
+          // Recursively add nested profiles
+          if (profile.profiles) {
+            keys.push(...getOrderedProfileKeys(profile.profiles, qualifiedKey));
+          }
+        }
+        return keys;
+      };
+
+      // Get ordered profile keys from original configuration
+      const orderedProfileKeys = getOrderedProfileKeys(profilesObj);
+
+      // Apply renames to the profile keys, including nested profiles
+      const renamedProfileKeys = orderedProfileKeys.map((profileKey) => {
+        return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
+      });
+
+      // Add pending profiles that aren't already in the ordered list
+      const pendingProfileKeys = Object.keys(pendingProfiles).filter(
+        (key) => !orderedProfileKeys.includes(key) && !isProfileOrParentDeleted(key, deletedProfiles)
+      );
+
+      // Apply renames to pending profile keys as well, including nested profiles
+      const renamedPendingProfileKeys = pendingProfileKeys.map((profileKey) => {
+        return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
+      });
+
+      const filteredProfileKeys = [...renamedProfileKeys, ...renamedPendingProfileKeys];
+
+      // Apply profile sorting based on the current sort order
+      const sortedProfileKeys = sortProfilesAtLevel(filteredProfileKeys);
+
+      return (
+        <ProfileList
+          sortedProfileKeys={sortedProfileKeys}
+          selectedProfileKey={selectedProfileKey}
+          pendingProfiles={pendingProfiles}
+          profileMenuOpen={profileMenuOpen}
+          configPath={configurations[selectedTab!]?.configPath || ""}
+          vscodeApi={vscodeApi}
+          onProfileSelect={handleProfileSelection}
+          onProfileMenuToggle={setProfileMenuOpen}
+          onDeleteProfile={handleDeleteProfile}
+          onSetAsDefault={handleSetAsDefault}
+          isProfileDefault={isProfileDefault}
+          getProfileType={(profileKey: string) => getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames)}
+          viewMode={viewMode}
+          hasPendingSecureChanges={hasPendingSecureChanges}
+          searchTerm={profileSearchTerm}
+          filterType={profileFilterType}
+          onSearchChange={setProfileSearchTerm}
+          onFilterChange={setProfileFilterType}
+          profileSortOrder={profileSortOrder || "natural"}
+          onProfileSortOrderChange={setProfileSortOrderWithStorage}
+        />
+      );
+    },
+    [
+      selectedTab,
+      configurations,
+      deletions,
+      pendingChanges,
+      renames,
+      selectedProfileKey,
+      profileMenuOpen,
+      vscodeApi,
+      handleProfileSelection,
+      setProfileMenuOpen,
+      handleDeleteProfile,
+      handleSetAsDefault,
+      isProfileDefault,
+      getProfileType,
+      viewMode,
+      hasPendingSecureChanges,
+      profileSearchTerm,
+      profileFilterType,
+      setProfileSearchTerm,
+      setProfileFilterType,
+      extractPendingProfiles,
+      isProfileOrParentDeleted,
+      getRenamedProfileKey,
+      getRenamedProfileKeyWithNested,
+      profileSortOrder || "natural",
+      sortProfilesAtLevel,
+    ]
+  );
 
   // Validate filter type when switching tabs - reset to null if current filter type doesn't exist
   useEffect(() => {
@@ -2215,7 +2752,11 @@ export function App() {
 
           // Get available types for current tab
           const availableTypes = Array.from(
-            new Set(filteredProfileKeys.map((key) => getProfileType(key)).filter((type): type is string => type !== null))
+            new Set(
+              filteredProfileKeys
+                .map((key) => getProfileType(key, selectedTab, configurations, pendingChanges, renames))
+                .filter((type): type is string => type !== null)
+            )
           );
 
           // If current filter type is not available, reset to null
@@ -2227,7 +2768,7 @@ export function App() {
     }
   }, [selectedTab, configurations, profileFilterType, deletions, pendingChanges]);
 
-  const renderProfileDetails = () => {
+  const renderProfileDetails = useCallback(() => {
     return (
       <div>
         <div className="profile-heading-container">
@@ -2255,7 +2796,7 @@ export function App() {
                 onClick={() => {
                   if (isProfileDefault(selectedProfileKey)) {
                     // If already default, deselect it by setting to empty
-                    const profileType = getProfileType(selectedProfileKey);
+                    const profileType = getProfileType(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
                     if (profileType) {
                       const configPath = configurations[selectedTab!]!.configPath;
                       setPendingDefaults((prev) => ({
@@ -2282,6 +2823,9 @@ export function App() {
               >
                 <span className={`codicon codicon-${showMergedProperties ? "eye-closed" : "eye"}`}></span>
               </button>
+              <button className="profile-action-button" onClick={() => setRenameProfileModalOpen(true)} title="Rename profile">
+                <span className="codicon codicon-edit"></span>
+              </button>
               <button className="profile-action-button" onClick={() => handleDeleteProfile(selectedProfileKey)} title="Delete profile">
                 <span className="codicon codicon-trash"></span>
               </button>
@@ -2300,589 +2844,865 @@ export function App() {
             // Use the helper function to extract pending profiles
             const pendingProfiles = extractPendingProfiles(configPath);
 
-            // Construct the profile path
-            const profilePathParts = selectedProfileKey.split(".");
-            let path;
-            if (profilePathParts.length === 1) {
-              // Top-level profile
-              path = ["profiles", selectedProfileKey];
-            } else {
-              // Nested profile - need to construct path like ["profiles", "project_base", "profiles", "tso"]
-              path = ["profiles"];
-              for (let i = 0; i < profilePathParts.length; i++) {
-                path.push(profilePathParts[i]);
-                if (i < profilePathParts.length - 1) {
-                  path.push("profiles");
+            // Check if this profile was renamed and get the original profile name
+            const originalProfileKey = getOriginalProfileKeyWithNested(selectedProfileKey, configPath, renames);
+
+            // For child profiles, we need to handle the case where the parent profile has been renamed
+            // If this is a child profile and its parent has been renamed, we need to find the data
+            // using the original parent name structure
+            let effectiveProfileKey = originalProfileKey;
+            let effectivePath: string[];
+
+            if (originalProfileKey.includes(".")) {
+              // This is a child profile - check if any parent has been renamed
+              const profilePathParts = originalProfileKey.split(".");
+              const parentKey = profilePathParts.slice(0, -1).join(".");
+              const hasParentRename = Object.values(renames[configPath] || {}).some((renamedKey) => renamedKey === parentKey);
+
+              if (hasParentRename) {
+                // Find the original parent key
+                const originalParentKey = Object.keys(renames[configPath] || {}).find((key) => renames[configPath][key] === parentKey);
+                if (originalParentKey) {
+                  // Reconstruct the original child profile key
+                  const childName = profilePathParts[profilePathParts.length - 1];
+                  effectiveProfileKey = `${originalParentKey}.${childName}`;
                 }
               }
             }
 
-            // Pass the original profile object (without pending changes) to renderConfig
+            // Construct the profile path using the effective profile key
+            const effectiveProfilePathParts = effectiveProfileKey.split(".");
+            if (effectiveProfilePathParts.length === 1) {
+              // Top-level profile
+              effectivePath = ["profiles", effectiveProfileKey];
+            } else {
+              // Nested profile - need to construct path like ["profiles", "project_base", "profiles", "tso"]
+              effectivePath = ["profiles"];
+              for (let i = 0; i < effectiveProfilePathParts.length; i++) {
+                effectivePath.push(effectiveProfilePathParts[i]);
+                if (i < effectiveProfilePathParts.length - 1) {
+                  effectivePath.push("profiles");
+                }
+              }
+            }
+
+            // Pass the effective profile object (without pending changes) to renderConfig
             // so that renderConfig can properly combine existing and pending changes
             // For newly created profiles, use the pending profile data as the base
-            const originalProfile = flatProfiles[selectedProfileKey] || pendingProfiles[selectedProfileKey] || {};
+            const effectiveProfile = flatProfiles[effectiveProfileKey] || pendingProfiles[effectiveProfileKey] || {};
+
+            // Check if this profile has pending renames - if so, don't show merged properties
+            // We need to check if the selected profile key is a renamed version of another profile
+            // OR if any of its parent profiles have been renamed
+            Object.values(renames[configPath] || {}).some((newKey) => {
+              // Check if this profile is directly renamed
+              if (newKey === selectedProfileKey) return true;
+
+              // Check if any parent profile has been renamed
+              const profileParts = selectedProfileKey.split(".");
+              for (let i = 1; i <= profileParts.length; i++) {
+                const parentKey = profileParts.slice(0, i).join(".");
+                if (Object.values(renames[configPath] || {}).some((renamedKey) => renamedKey === parentKey)) {
+                  return true;
+                }
+              }
+              return false;
+            });
+            // We can still show merged properties even with parent renames, as long as we request them
+            // using the correct profile name (which getProfileNameForMergedProperties handles)
+            const shouldShowMergedProperties = showMergedProperties;
 
             return (
               <div key={`${selectedProfileKey}-${propertySortOrder}-${sortOrderVersion}`}>
-                {renderConfig(originalProfile, path, showMergedProperties ? mergedProperties : null)}
+                {renderConfig(effectiveProfile, effectivePath, shouldShowMergedProperties ? mergedProperties : null)}
               </div>
             );
           })()}
       </div>
     );
-  };
+  }, [
+    selectedProfileKey,
+    configurations,
+    selectedTab,
+    vscodeApi,
+    isProfileDefault,
+    getProfileType,
+    handleSetAsDefault,
+    setPendingDefaults,
+    showMergedProperties,
+    setShowMergedPropertiesWithStorage,
+    setRenameProfileModalOpen,
+    handleDeleteProfile,
+    pendingChanges,
+    deletions,
+    renames,
+    extractPendingProfiles,
+    getOriginalProfileKey,
+    getProfileNameForMergedProperties,
+    propertySortOrder,
+    sortOrderVersion,
+    mergedProperties,
+  ]);
 
-  const renderConfig = (obj: any, path: string[] = [], mergedProps?: any) => {
-    const baseObj = cloneDeep(obj);
-    const configPath = configurations[selectedTab!]?.configPath;
-    if (!configPath) {
-      return null;
-    }
-
-    // Merge pending changes
-    let combinedConfig = mergePendingChangesForProfile(baseObj, path, configPath);
-
-    // Track original properties for merged property detection
-    const originalProperties = baseObj.properties || {};
-
-    // Only merge merged properties if showMergedProperties is true and profile is not untyped
-    if (showMergedProperties && mergedProps && !isCurrentProfileUntyped()) {
-      combinedConfig = mergeMergedProperties(combinedConfig, path, mergedProps, configPath);
-    }
-
-    // Ensure required profile properties exist
-    combinedConfig = ensureProfileProperties(combinedConfig, path);
-
-    // Sort properties according to the specified order
-    let sortedEntries: [string, any][];
-
-    // Special handling for properties section - use custom sorting
-    if (path.length > 0 && path[path.length - 1] === "properties") {
-      // Add secure properties to the entries for sorting, but mark them as secure
-      const entriesForSorting = Object.entries(combinedConfig);
-
-      // Add secure properties from the parent object if they're not already in the properties
-      const parentConfigPath = path.slice(0, -1);
-      const parentConfig = getNestedProperty(configurations[selectedTab!]?.properties, parentConfigPath);
-      if (parentConfig?.secure && Array.isArray(parentConfig.secure)) {
-        parentConfig.secure.forEach((securePropertyName: string) => {
-          // Only add if not already in the properties
-          if (!combinedConfig.hasOwnProperty(securePropertyName)) {
-            entriesForSorting.push([securePropertyName, { _isSecureProperty: true }]);
-          }
-        });
+  const renderConfig = useCallback(
+    (obj: any, path: string[] = [], mergedProps?: any) => {
+      const baseObj = cloneDeep(obj);
+      const configPath = configurations[selectedTab!]?.configPath;
+      if (!configPath) {
+        return null;
       }
 
-      // Fallback: If we couldn't find secure properties through getNestedProperty, try to find them directly
-      if (!parentConfig?.secure || parentConfig.secure.length === 0) {
-        const currentProfileKey = extractProfileKeyFromPath(path);
-        const flatProfiles = flattenProfiles(configurations[selectedTab!]?.properties?.profiles || {});
-        const currentProfile = flatProfiles[currentProfileKey];
-        if (currentProfile?.secure && Array.isArray(currentProfile.secure)) {
-          currentProfile.secure.forEach((securePropertyName: string) => {
-            if (
-              !combinedConfig.hasOwnProperty(securePropertyName) &&
-              !entriesForSorting.some(([existingKey]) => existingKey === securePropertyName)
-            ) {
+      // Merge pending changes
+      let combinedConfig = mergePendingChangesForProfile(baseObj, path, configPath);
+
+      // Track original properties for merged property detection
+      const originalProperties = baseObj.properties || {};
+
+      // Only merge merged properties if showMergedProperties is true and profile is not untyped
+      if (showMergedProperties && mergedProps && !isCurrentProfileUntyped()) {
+        combinedConfig = mergeMergedProperties(combinedConfig, path, mergedProps, configPath);
+      }
+
+      // Ensure required profile properties exist
+      combinedConfig = ensureProfileProperties(combinedConfig, path);
+
+      // Sort properties according to the specified order
+      let sortedEntries: [string, any][];
+
+      // Special handling for properties section - use custom sorting
+      if (path.length > 0 && path[path.length - 1] === "properties") {
+        // Add secure properties to the entries for sorting, but mark them as secure
+        const entriesForSorting = Object.entries(combinedConfig);
+
+        // Add secure properties from the parent object if they're not already in the properties
+        const parentConfigPath = path.slice(0, -1);
+        const parentConfig = getNestedProperty(configurations[selectedTab!]?.properties, parentConfigPath);
+        if (parentConfig?.secure && Array.isArray(parentConfig.secure)) {
+          parentConfig.secure.forEach((securePropertyName: string) => {
+            // Only add if not already in the properties
+            if (!combinedConfig.hasOwnProperty(securePropertyName)) {
               entriesForSorting.push([securePropertyName, { _isSecureProperty: true }]);
             }
           });
         }
-      }
 
-      // Also add pending secure properties that might not be in the parent's secure array yet
-      const currentProfileKey = extractProfileKeyFromPath(path);
-      const configPath = configurations[selectedTab!]?.configPath;
-      if (configPath && currentProfileKey) {
-        Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-          if (entry.profile === currentProfileKey && entry.secure) {
-            const keyParts = key.split(".");
-            const propertyName = keyParts[keyParts.length - 1];
-            // Only add if not already in the properties and not already added as a secure property
-            if (!combinedConfig.hasOwnProperty(propertyName) && !entriesForSorting.some(([existingKey]) => existingKey === propertyName)) {
-              entriesForSorting.push([propertyName, { _isSecureProperty: true }]);
-            }
+        // Fallback: If we couldn't find secure properties through getNestedProperty, try to find them directly
+        if (!parentConfig?.secure || parentConfig.secure.length === 0) {
+          const currentProfileKey = extractProfileKeyFromPath(path);
+          const flatProfiles = flattenProfiles(configurations[selectedTab!]?.properties?.profiles || {});
+          const currentProfile = flatProfiles[currentProfileKey];
+          if (currentProfile?.secure && Array.isArray(currentProfile.secure)) {
+            currentProfile.secure.forEach((securePropertyName: string) => {
+              if (
+                !combinedConfig.hasOwnProperty(securePropertyName) &&
+                !entriesForSorting.some(([existingKey]) => existingKey === securePropertyName)
+              ) {
+                entriesForSorting.push([securePropertyName, { _isSecureProperty: true }]);
+              }
+            });
           }
-        });
-      }
-
-      sortedEntries = sortProperties(entriesForSorting, mergedProps, originalProperties, path);
-    } else {
-      // Use default sorting for non-properties sections
-      sortedEntries = sortConfigEntries(Object.entries(combinedConfig));
-    }
-
-    return sortedEntries.map(([key, value]) => {
-      const currentPath = [...path, key];
-      const fullKey = currentPath.join(".");
-      const displayKey = key.split(".").pop();
-
-      // Check if this is a merged property that should be shown even if the original was deleted
-      const isMergedProperty = showMergedProperties && mergedProps && displayKey && mergedProps[displayKey];
-      const isInDeletions = (deletions[configPath] ?? []).includes(fullKey);
-
-      if (isInDeletions && !isMergedProperty) {
-        return null;
-      }
-
-      // Filter secure properties from properties object
-      if (key === "properties") {
-        const filteredValue = filterSecureProperties(value, combinedConfig, configPath);
-        // Always render the properties section, even if empty, so users can add properties
-        if (filteredValue === null) {
-          // Return an empty properties object instead of null so the header still renders
-          value = {};
-        } else {
-          value = filteredValue;
         }
+
+        // Also add pending secure properties that might not be in the parent's secure array yet
+        const currentProfileKey = extractProfileKeyFromPath(path);
+        const configPath = configurations[selectedTab!]?.configPath;
+        if (configPath && currentProfileKey) {
+          Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
+            if (entry.profile === currentProfileKey && entry.secure) {
+              const keyParts = key.split(".");
+              const propertyName = keyParts[keyParts.length - 1];
+              // Only add if not already in the properties and not already added as a secure property
+              if (!combinedConfig.hasOwnProperty(propertyName) && !entriesForSorting.some(([existingKey]) => existingKey === propertyName)) {
+                entriesForSorting.push([propertyName, { _isSecureProperty: true }]);
+              }
+            }
+          });
+        }
+
+        // Add merged properties that aren't already in the entriesForSorting
+        // Mark them with a special flag so they're properly identified as merged in sorting
+        if (mergedProps && showMergedProperties && selectedProfileKey) {
+          // Get the current profile type and schema validation for filtering
+          const currentProfileKey = extractProfileKeyFromPath(path);
+          const profileType = getProfileType(currentProfileKey, selectedTab, configurations, pendingChanges, renames);
+          const propertySchema = profileType ? schemaValidations[configPath]?.propertySchema[profileType] || {} : {};
+          const allowedProperties = Object.keys(propertySchema);
+
+          Object.entries(mergedProps).forEach(([propertyName, propData]: [string, any]) => {
+            // Only add if:
+            // 1. Not already in the entries
+            // 2. Not in the original properties
+            // 3. Property is allowed by the schema (only if profile has a type)
+            const isAllowedBySchema = !profileType || allowedProperties.includes(propertyName);
+
+            if (
+              !entriesForSorting.some(([existingKey]) => existingKey === propertyName) &&
+              !originalProperties?.hasOwnProperty(propertyName) &&
+              isAllowedBySchema
+            ) {
+              // Add merged property with a special flag to identify it as merged
+              entriesForSorting.push([
+                propertyName,
+                {
+                  _isMergedProperty: true,
+                  _mergedValue: propData.value,
+                  _mergedData: propData,
+                },
+              ]);
+            }
+          });
+        }
+
+        sortedEntries = sortProperties(entriesForSorting, mergedProps, originalProperties, path);
+      } else {
+        // Use default sorting for non-properties sections
+        sortedEntries = sortConfigEntries(Object.entries(combinedConfig));
       }
 
-      // Check if this is a secure property that was added for sorting
-      const isSecurePropertyForSorting = typeof value === "object" && value !== null && value._isSecureProperty === true;
+      return sortedEntries.map(([key, value]) => {
+        const currentPath = [...path, key];
+        const fullKey = currentPath.join(".");
+        const displayKey = key.split(".").pop();
 
-      const isParent = typeof value === "object" && value !== null && !Array.isArray(value) && !isSecurePropertyForSorting;
-      const isArray = Array.isArray(value);
-      const pendingValue = (pendingChanges[configPath] ?? {})[fullKey]?.value ?? (isSecurePropertyForSorting ? "" : value);
+        // Check if this is a merged property that should be shown even if the original was deleted
+        const isMergedProperty = showMergedProperties && mergedProps && displayKey && mergedProps[displayKey];
+        const isInDeletions = (deletions[configPath] ?? []).includes(fullKey);
 
-      // Merge pending secure properties for secure arrays
-      let renderValue: any[] = Array.isArray(value) ? value : [];
-      if (isArray && key === "secure") {
-        renderValue = mergePendingSecureProperties(value, path, configPath);
-      }
-
-      if (isParent) {
-        return (
-          <div key={fullKey} className="config-item parent">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h3
-                className={`header-level-${path.length > 3 ? 3 : path.length}`}
-                style={{
-                  cursor: displayKey?.toLocaleLowerCase() === "properties" ? "pointer" : "default",
-                  userSelect: "none",
-                  textDecoration: displayKey?.toLocaleLowerCase() === "properties" ? "underline" : "none",
-                }}
-                onClick={() => {
-                  if (displayKey?.toLocaleLowerCase() === "properties") {
-                    const currentSortOrder = propertySortOrder || "alphabetical";
-                    const currentIndex = SORT_ORDER_OPTIONS.indexOf(currentSortOrder);
-                    const nextIndex = (currentIndex + 1) % SORT_ORDER_OPTIONS.length;
-                    const newSortOrder = SORT_ORDER_OPTIONS[nextIndex];
-                    setPropertySortOrderWithStorage(newSortOrder);
-                  }
-                }}
-                title={
-                  displayKey?.toLocaleLowerCase() === "properties"
-                    ? `Click to change sort order. Current: ${getSortOrderDisplayName(propertySortOrder)}`
-                    : undefined
-                }
-              >
-                {displayKey?.toLocaleLowerCase() === "properties" ? "Profile Properties" : displayKey}
-              </h3>
-              <button
-                className="header-button"
-                title={`Create new property for \"${extractProfileKeyFromPath(currentPath)}\"`}
-                onClick={() => openAddProfileModalAtPath(currentPath)}
-                style={{
-                  padding: "2px",
-                  width: "20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "transparent",
-                  color: "var(--vscode-button-secondaryForeground)",
-                  borderRadius: "3px",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  lineHeight: "1",
-                  border: "none",
-                }}
-              >
-                <span className="codicon codicon-add"></span>
-              </button>
-            </div>
-            <div style={{ paddingLeft: displayKey?.toLocaleLowerCase() === "properties" ? "16px" : "0px" }}>
-              {renderConfig(value, currentPath, mergedProps)}
-            </div>
-          </div>
-        );
-      } else if (isArray) {
-        const tabsHiddenItems = hiddenItems[configurations[selectedTab!]!.configPath];
-        if (displayKey?.toLocaleLowerCase() === "secure") {
-          // Hide the secure array section since secure properties are now handled in the properties section
+        if (isInDeletions && !isMergedProperty) {
           return null;
         }
-        return (
-          <div key={fullKey} className="config-item">
-            <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
-              <span className="config-label" style={{ fontWeight: "bold" }}>
+
+        // Filter secure properties from properties object
+        if (key === "properties") {
+          const filteredValue = filterSecureProperties(value, combinedConfig, configPath);
+          // Always render the properties section, even if empty, so users can add properties
+          if (filteredValue === null) {
+            // Return an empty properties object instead of null so the header still renders
+            value = {};
+          } else {
+            value = filteredValue;
+          }
+        }
+
+        // Check if this is a secure property that was added for sorting
+        const isSecurePropertyForSorting = typeof value === "object" && value !== null && value._isSecureProperty === true;
+
+        // Check if this is a merged property that was added for sorting
+        const isMergedPropertyForSorting = typeof value === "object" && value !== null && value._isMergedProperty === true;
+
+        const isParent =
+          typeof value === "object" && value !== null && !Array.isArray(value) && !isSecurePropertyForSorting && !isMergedPropertyForSorting;
+        const isArray = Array.isArray(value);
+        const pendingValue =
+          (pendingChanges[configPath] ?? {})[fullKey]?.value ??
+          (isSecurePropertyForSorting ? "" : isMergedPropertyForSorting ? value._mergedValue : value);
+
+        // Merge pending secure properties for secure arrays
+        let renderValue: any[] = Array.isArray(value) ? value : [];
+        if (isArray && key === "secure") {
+          renderValue = mergePendingSecureProperties(value, path, configPath);
+        }
+
+        if (isParent) {
+          return (
+            <div key={fullKey} className="config-item parent">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h3
+                  className={`header-level-${path.length > 3 ? 3 : path.length}`}
+                  style={{
+                    cursor: displayKey?.toLocaleLowerCase() === "properties" ? "pointer" : "default",
+                    userSelect: "none",
+                    textDecoration: displayKey?.toLocaleLowerCase() === "properties" ? "underline" : "none",
+                  }}
+                  onClick={() => {
+                    if (displayKey?.toLocaleLowerCase() === "properties") {
+                      const currentSortOrder = propertySortOrder || "alphabetical";
+                      const currentIndex = SORT_ORDER_OPTIONS.indexOf(currentSortOrder);
+                      const nextIndex = (currentIndex + 1) % SORT_ORDER_OPTIONS.length;
+                      const newSortOrder = SORT_ORDER_OPTIONS[nextIndex];
+                      setPropertySortOrderWithStorage(newSortOrder);
+                    }
+                  }}
+                  title={
+                    displayKey?.toLocaleLowerCase() === "properties"
+                      ? `Click to change sort order. Current: ${getSortOrderDisplayName(propertySortOrder)}`
+                      : undefined
+                  }
+                >
+                  {displayKey?.toLocaleLowerCase() === "properties" ? "Profile Properties" : displayKey}
+                </h3>
+                <button
+                  className="header-button"
+                  title={`Create new property for \"${extractProfileKeyFromPath(currentPath)}\"`}
+                  onClick={() => openAddProfileModalAtPath(currentPath)}
+                  style={{
+                    padding: "2px",
+                    width: "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "transparent",
+                    color: "var(--vscode-button-secondaryForeground)",
+                    borderRadius: "3px",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    lineHeight: "1",
+                    border: "none",
+                  }}
+                >
+                  <span className="codicon codicon-add"></span>
+                </button>
+              </div>
+              <div style={{ paddingLeft: displayKey?.toLocaleLowerCase() === "properties" ? "16px" : "0px" }}>
+                {renderConfig(value, currentPath, mergedProps)}
+              </div>
+            </div>
+          );
+        } else if (isArray) {
+          const tabsHiddenItems = hiddenItems[configurations[selectedTab!]!.configPath];
+          if (displayKey?.toLocaleLowerCase() === "secure") {
+            // Hide the secure array section since secure properties are now handled in the properties section
+            return null;
+          }
+          return (
+            <div key={fullKey} className="config-item">
+              <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
+                <span className="config-label" style={{ fontWeight: "bold" }}>
+                  {displayKey}
+                </span>
+              </h3>
+              <div style={{ paddingLeft: "0px" }}>
+                {Array.from(new Set(renderValue)).map((item: any, index: number) => {
+                  if (
+                    tabsHiddenItems &&
+                    tabsHiddenItems[item] &&
+                    tabsHiddenItems[item].path.includes(currentPath.join(".").replace("secure", "properties") + "." + item)
+                  )
+                    return;
+                  return (
+                    <div key={index} className="config-item">
+                      <div className="config-item-container">
+                        <span className="config-label">{item}</span>
+                        <input
+                          className="config-input"
+                          type="password"
+                          placeholder="••••••••"
+                          value={String(pendingChanges[configurations[selectedTab!]!.configPath]?.[fullKey + "." + item]?.value || "")}
+                          onChange={(e) => handleChange(fullKey + "." + item, (e.target as HTMLInputElement).value)}
+                          style={{ fontFamily: "monospace" }}
+                        />
+                        <button
+                          className="action-button"
+                          onClick={() => handleDeleteProperty(fullKey.replace("secure", "properties") + "." + item, true)}
+                        >
+                          <span className="codicon codicon-trash"></span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        } else {
+          // Handle merged properties that were added for sorting
+          if (isMergedPropertyForSorting) {
+            // Double-check that this property should actually be displayed as merged
+            const shouldShowAsMerged = displayKey ? isPropertyFromMergedProps(displayKey, path, mergedProps, originalProperties, configPath) : false;
+
+            if (!shouldShowAsMerged) {
+              // This property was added for sorting but shouldn't be displayed as merged
+              // Skip rendering it
+              return null;
+            }
+
+            const mergedPropData = value._mergedData;
+            const jsonLoc = mergedPropData?.jsonLoc;
+            const osLoc = mergedPropData?.osLoc;
+            const secure = mergedPropData?.secure;
+            const isSecureProperty = jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure) : false;
+
+            // Render merged property with proper styling and behavior
+            return (
+              <div
+                key={fullKey}
+                className="config-item"
+                onClick={jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
+                title={
+                  jsonLoc
+                    ? (() => {
+                        // Extract logical profile path from jsonLoc
+                        const jsonLocParts = jsonLoc.split(".");
+                        const profilePathParts = jsonLocParts.slice(1, -2);
+                        const profilePath =
+                          profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".") ||
+                          "unknown profile";
+
+                        // Extract full normalized config path from osLoc
+                        const fullConfigPath = osLoc?.[0] || "unknown config";
+
+                        const title = `Inherited from: ${profilePath} (${fullConfigPath})`;
+                        return title;
+                      })()
+                    : undefined
+                }
+                style={{ cursor: jsonLoc ? "pointer" : "default" }}
+              >
+                <div className="config-item-container">
+                  <span
+                    className="config-label"
+                    style={{
+                      color: "var(--vscode-descriptionForeground)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {displayKey}
+                  </span>
+                  <input
+                    className="config-input"
+                    type={isSecureProperty ? "password" : "text"}
+                    placeholder={isSecureProperty ? "••••••••" : ""}
+                    value={isSecureProperty ? "••••••••" : String(mergedPropData?.value ?? "")}
+                    disabled={true}
+                    style={{
+                      backgroundColor: "var(--vscode-input-disabledBackground)",
+                      color: "var(--vscode-disabledForeground)",
+                      cursor: "pointer",
+                      pointerEvents: "none",
+                    }}
+                  />
+                  <button
+                    className="action-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUnlinkMergedProperty(displayKey, fullKey);
+                    }}
+                    title="Overwrite merged property"
+                  >
+                    <span className="codicon codicon-add"></span>
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          // Check if this property is from merged properties
+          const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, originalProperties, configPath);
+          const mergedPropData = displayKey ? mergedProps?.[displayKey] : undefined;
+          const jsonLoc = mergedPropData?.jsonLoc;
+          const osLoc = mergedPropData?.osLoc;
+          const secure = mergedPropData?.secure;
+          const isSecureProperty = isFromMergedProps && jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure) : false;
+
+          // Check if this is a local secure property (in the current profile's secure array)
+          const isLocalSecureProperty =
+            displayKey && path && configPath ? isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties) : false;
+
+          // Check if this is a secure property that was added for sorting
+          const isSecureForSorting = isSecurePropertyForSorting;
+
+          // Debug logging for secure properties
+          if (isSecurePropertyForSorting) {
+          }
+
+          const readOnlyContainer = (
+            <div className="config-item-container" style={displayKey === "type" ? { gap: "0px" } : {}}>
+              <span
+                className="config-label"
+                style={
+                  isFromMergedProps
+                    ? {
+                        color: "var(--vscode-descriptionForeground)",
+                        cursor: "pointer",
+                      }
+                    : {}
+                }
+              >
                 {displayKey}
               </span>
-            </h3>
-            <div style={{ paddingLeft: "0px" }}>
-              {Array.from(new Set(renderValue)).map((item: any, index: number) => {
-                if (
-                  tabsHiddenItems &&
-                  tabsHiddenItems[item] &&
-                  tabsHiddenItems[item].path.includes(currentPath.join(".").replace("secure", "properties") + "." + item)
-                )
-                  return;
-                return (
-                  <div key={index} className="config-item">
-                    <div className="config-item-container">
-                      <span className="config-label">{item}</span>
+              {displayKey === "type" ? (
+                <div style={{ position: "relative", width: "100%" }}>
+                  <select
+                    className="config-input"
+                    value={String(pendingValue)}
+                    onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
+                    style={{
+                      width: "100%",
+                      height: "28px",
+                      fontSize: "0.9em",
+                      padding: "2px",
+                      marginBottom: "0",
+                      textTransform: "lowercase",
+                      border:
+                        showMergedProperties && isCurrentProfileUntyped()
+                          ? "2px solid var(--vscode-warningForeground)"
+                          : "1px solid var(--vscode-input-border)",
+                      outline: showMergedProperties && isCurrentProfileUntyped() ? "2px solid var(--vscode-warningForeground)" : "none",
+                      boxShadow: showMergedProperties && isCurrentProfileUntyped() ? "0 0 0 2px var(--vscode-warningForeground)" : "none",
+                    }}
+                  >
+                    <option value="">{l10n.t("Select a type")}</option>
+                    {getWizardTypeOptions().map((type: string) => (
+                      <option key={type} value={type}>
+                        {type.toLowerCase()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : typeof pendingValue === "string" || typeof pendingValue === "boolean" || typeof pendingValue === "number" ? (
+                (() => {
+                  const propertyType = displayKey
+                    ? getPropertyTypeForConfigEditor(
+                        displayKey,
+                        path,
+                        selectedTab,
+                        configurations,
+                        schemaValidations,
+                        getProfileType,
+                        pendingChanges,
+                        renames
+                      )
+                    : undefined;
+
+                  if (isSecureProperty || isLocalSecureProperty || isSecureForSorting) {
+                    return (
                       <input
                         className="config-input"
                         type="password"
                         placeholder="••••••••"
-                        value={String(pendingChanges[configurations[selectedTab!]!.configPath]?.[fullKey + "." + item]?.value || "")}
-                        onChange={(e) => handleChange(fullKey + "." + item, (e.target as HTMLInputElement).value)}
-                        style={{ fontFamily: "monospace" }}
+                        value={isFromMergedProps ? "••••••••" : stringifyValueByType(pendingValue)}
+                        onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
+                        disabled={isFromMergedProps}
+                        style={
+                          isFromMergedProps
+                            ? {
+                                backgroundColor: "var(--vscode-input-disabledBackground)",
+                                color: "var(--vscode-disabledForeground)",
+                                cursor: "pointer",
+                                fontFamily: "monospace",
+                                pointerEvents: "none",
+                              }
+                            : { fontFamily: "monospace" }
+                        }
                       />
-                      <button
-                        className="action-button"
-                        onClick={() => handleDeleteProperty(fullKey.replace("secure", "properties") + "." + item, true)}
+                    );
+                  } else if (propertyType === "boolean") {
+                    return (
+                      <select
+                        className="config-input"
+                        value={stringifyValueByType(pendingValue)}
+                        onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
+                        disabled={isFromMergedProps}
+                        style={
+                          isFromMergedProps
+                            ? {
+                                backgroundColor: "var(--vscode-input-disabledBackground)",
+                                color: "var(--vscode-disabledForeground)",
+                                cursor: "pointer",
+                                pointerEvents: "none",
+                              }
+                            : {}
+                        }
                       >
+                        <option value="true">true</option>
+                        <option value="false">false</option>
+                      </select>
+                    );
+                  } else if (propertyType === "number") {
+                    return (
+                      <input
+                        className="config-input"
+                        type="number"
+                        value={stringifyValueByType(pendingValue)}
+                        onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
+                        disabled={isFromMergedProps}
+                        style={
+                          isFromMergedProps
+                            ? {
+                                backgroundColor: "var(--vscode-input-disabledBackground)",
+                                color: "var(--vscode-disabledForeground)",
+                                cursor: "pointer",
+                                pointerEvents: "none",
+                              }
+                            : {}
+                        }
+                      />
+                    );
+                  } else {
+                    return (
+                      <input
+                        className="config-input"
+                        type="text"
+                        placeholder=""
+                        value={isFromMergedProps ? String(mergedPropData?.value ?? "") : stringifyValueByType(pendingValue)}
+                        onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
+                        disabled={isFromMergedProps}
+                        style={
+                          isFromMergedProps
+                            ? {
+                                backgroundColor: "var(--vscode-input-disabledBackground)",
+                                color: "var(--vscode-disabledForeground)",
+                                cursor: "pointer",
+                                pointerEvents: "none",
+                              }
+                            : {}
+                        }
+                      />
+                    );
+                  }
+                })()
+              ) : (
+                <span>{"{...}"}</span>
+              )}
+              {displayKey !== "type" &&
+                displayKey &&
+                (!isFromMergedProps || isSecurePropertyForSorting) &&
+                (() => {
+                  const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties);
+                  const canBeSecure = canPropertyBeSecure(displayKey, path);
+                  return (
+                    <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                      {canBeSecure &&
+                        !isSecure &&
+                        (secureValuesAllowed ? (
+                          <button
+                            className="action-button"
+                            onClick={() => handleToggleSecure(fullKey, displayKey, path)}
+                            title="Make property secure"
+                          >
+                            <span className="codicon codicon-unlock"></span>
+                          </button>
+                        ) : (
+                          <button
+                            className="action-button"
+                            onClick={() => {
+                              vscodeApi.postMessage({
+                                command: "OPEN_VSCODE_SETTINGS",
+                                searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
+                              });
+                            }}
+                            title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
+                          >
+                            <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                          </button>
+                        ))}
+                      <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
                         <span className="codicon codicon-trash"></span>
                       </button>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      } else {
-        // Check if this property is from merged properties
-        const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, originalProperties, configPath);
-        const mergedPropData = displayKey ? mergedProps?.[displayKey] : undefined;
-        const jsonLoc = mergedPropData?.jsonLoc;
-        const osLoc = mergedPropData?.osLoc;
-        const secure = mergedPropData?.secure;
-        const isSecureProperty = isFromMergedProps && jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure) : false;
-
-        // Check if this is a local secure property (in the current profile's secure array)
-        const isLocalSecureProperty =
-          displayKey && path && configPath ? isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties) : false;
-
-        // Check if this is a secure property that was added for sorting
-        const isSecureForSorting = isSecurePropertyForSorting;
-
-        const readOnlyContainer = (
-          <div className="config-item-container" style={displayKey === "type" ? { gap: "0px" } : {}}>
-            <span
-              className="config-label"
-              style={
-                isFromMergedProps
-                  ? {
-                      color: "var(--vscode-descriptionForeground)",
-                      cursor: "pointer",
-                    }
-                  : {}
-              }
-            >
-              {displayKey}
-            </span>
-            {displayKey === "type" ? (
-              <div style={{ position: "relative", width: "100%" }}>
-                <select
-                  className="config-input"
-                  value={String(pendingValue)}
-                  onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
-                  style={{
-                    width: "100%",
-                    height: "28px",
-                    fontSize: "0.9em",
-                    padding: "2px",
-                    marginBottom: "0",
-                    textTransform: "lowercase",
-                    border:
-                      showMergedProperties && isCurrentProfileUntyped()
-                        ? "2px solid var(--vscode-warningForeground)"
-                        : "1px solid var(--vscode-input-border)",
-                    outline: showMergedProperties && isCurrentProfileUntyped() ? "2px solid var(--vscode-warningForeground)" : "none",
-                    boxShadow: showMergedProperties && isCurrentProfileUntyped() ? "0 0 0 2px var(--vscode-warningForeground)" : "none",
+                  );
+                })()}
+              {displayKey !== "type" && isFromMergedProps && (
+                <button
+                  className="action-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleUnlinkMergedProperty(displayKey, fullKey);
                   }}
+                  title="Overwrite merged property"
                 >
-                  <option value="">{l10n.t("Select a type")}</option>
-                  {getWizardTypeOptions().map((type: string) => (
-                    <option key={type} value={type}>
-                      {type.toLowerCase()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : typeof pendingValue === "string" || typeof pendingValue === "boolean" || typeof pendingValue === "number" ? (
-              (() => {
-                const propertyType = displayKey ? getPropertyTypeForConfigEditor(displayKey, path) : undefined;
+                  <span className="codicon codicon-add"></span>
+                </button>
+              )}
+            </div>
+          );
 
-                if (isSecureProperty || isLocalSecureProperty || isSecureForSorting) {
-                  return (
-                    <input
-                      className="config-input"
-                      type="password"
-                      placeholder="••••••••"
-                      value={isFromMergedProps ? "••••••••" : stringifyValueByType(pendingValue)}
-                      onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
-                      disabled={isFromMergedProps}
-                      style={
-                        isFromMergedProps
-                          ? {
-                              backgroundColor: "var(--vscode-input-disabledBackground)",
-                              color: "var(--vscode-disabledForeground)",
-                              cursor: "pointer",
-                              fontFamily: "monospace",
-                              pointerEvents: "none",
-                            }
-                          : { fontFamily: "monospace" }
+          return (
+            <div
+              key={fullKey}
+              className="config-item"
+              onClick={isFromMergedProps && jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
+              title={
+                isFromMergedProps && jsonLoc
+                  ? (() => {
+                      // Extract logical profile path from jsonLoc
+                      const jsonLocParts = jsonLoc.split(".");
+                      const profilePathParts = jsonLocParts.slice(1, -2);
+                      let profilePath =
+                        profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".") ||
+                        "unknown profile";
+
+                      // Check if this is the current profile or its renamed version
+                      const currentProfileKey = selectedProfileKey || "";
+                      const configPath = configurations[selectedTab!]?.configPath;
+
+                      // Get both old and new names for the current profile
+                      const isCurrentProfileRenamed = Object.entries(renames[configPath] || {}).find(
+                        ([oldName, newName]) => newName === currentProfileKey || oldName === currentProfileKey
+                      );
+
+                      if (isCurrentProfileRenamed) {
+                        const [oldName, newName] = isCurrentProfileRenamed;
+                        // If the profilePath matches either the old or new name, this is not actually inherited
+                        if (profilePath === oldName || profilePath === newName) {
+                          return undefined;
+                        }
+                      } else if (profilePath === currentProfileKey) {
+                        // If not renamed but matches current profile, not inherited
+                        return undefined;
                       }
-                    />
-                  );
-                } else if (propertyType === "boolean") {
-                  return (
-                    <select
-                      className="config-input"
-                      value={stringifyValueByType(pendingValue)}
-                      onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
-                      disabled={isFromMergedProps}
-                      style={
-                        isFromMergedProps
-                          ? {
-                              backgroundColor: "var(--vscode-input-disabledBackground)",
-                              color: "var(--vscode-disabledForeground)",
-                              cursor: "pointer",
-                              pointerEvents: "none",
-                            }
-                          : {}
+
+                      // Extract full normalized config path from osLoc
+                      const fullConfigPath = osLoc?.[0] || "unknown config";
+
+                      // Check if the source profile has been renamed and use its new name
+                      const sourceProfileRenamed = Object.entries(renames[configPath] || {}).find(([oldName]) => oldName === profilePath);
+                      if (sourceProfileRenamed) {
+                        profilePath = sourceProfileRenamed[1]; // Use the new name
                       }
-                    >
-                      <option value="true">true</option>
-                      <option value="false">false</option>
-                    </select>
-                  );
-                } else if (propertyType === "number") {
-                  return (
-                    <input
-                      className="config-input"
-                      type="number"
-                      value={stringifyValueByType(pendingValue)}
-                      onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
-                      disabled={isFromMergedProps}
-                      style={
-                        isFromMergedProps
-                          ? {
-                              backgroundColor: "var(--vscode-input-disabledBackground)",
-                              color: "var(--vscode-disabledForeground)",
-                              cursor: "pointer",
-                              pointerEvents: "none",
-                            }
-                          : {}
-                      }
-                    />
-                  );
-                } else {
-                  return (
-                    <input
-                      className="config-input"
-                      type="text"
-                      placeholder=""
-                      value={isFromMergedProps ? String(mergedPropData?.value ?? "") : stringifyValueByType(pendingValue)}
-                      onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
-                      disabled={isFromMergedProps}
-                      style={
-                        isFromMergedProps
-                          ? {
-                              backgroundColor: "var(--vscode-input-disabledBackground)",
-                              color: "var(--vscode-disabledForeground)",
-                              cursor: "pointer",
-                              pointerEvents: "none",
-                            }
-                          : {}
-                      }
-                    />
-                  );
-                }
-              })()
-            ) : (
-              <span>{"{...}"}</span>
-            )}
-            {displayKey !== "type" &&
-              displayKey &&
-              (!isFromMergedProps || isSecurePropertyForSorting) &&
-              (() => {
-                const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties);
-                const canBeSecure = canPropertyBeSecure(displayKey, path);
+
+                      const title = `Inherited from: ${profilePath} (${fullConfigPath})`;
+                      return title;
+                    })()
+                  : undefined
+              }
+              style={isFromMergedProps && jsonLoc ? { cursor: "pointer" } : {}}
+            >
+              {readOnlyContainer}
+            </div>
+          );
+        }
+      });
+    },
+    [
+      configurations,
+      selectedTab,
+      pendingChanges,
+      deletions,
+      showMergedProperties,
+      propertySortOrder,
+      sortOrderVersion,
+      mergePendingChangesForProfile,
+      mergeMergedProperties,
+      ensureProfileProperties,
+      sortProperties,
+      sortConfigEntries,
+      filterSecureProperties,
+      isCurrentProfileUntyped,
+      getNestedProperty,
+      extractProfileKeyFromPath,
+      flattenProfiles,
+      isPropertyFromMergedProps,
+      isPropertySecure,
+      renames,
+      handleChange,
+      handleDeleteProperty,
+      handleUnlinkMergedProperty,
+      handleNavigateToSource,
+      handleToggleSecure,
+      canPropertyBeSecure,
+      secureValuesAllowed,
+      vscodeApi,
+      stringifyValueByType,
+      l10n,
+      SORT_ORDER_OPTIONS,
+      getSortOrderDisplayName,
+      setPropertySortOrderWithStorage,
+    ]
+  );
+
+  const renderDefaults = useCallback(
+    (defaults: { [key: string]: any }) => {
+      if (!defaults || typeof defaults !== "object") return null;
+
+      // Get all available property types from the schema
+      const availableTypes = getWizardTypeOptions();
+
+      // Create a complete defaults object with all available types
+      const completeDefaults = { ...defaults };
+      availableTypes.forEach((type: string) => {
+        if (!(type in completeDefaults)) {
+          completeDefaults[type] = "";
+        }
+      });
+
+      const combinedDefaults = {
+        ...completeDefaults,
+        ...Object.fromEntries(
+          Object.entries(pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})
+            .filter(([key]) => !(key in completeDefaults))
+            .map(([key, entry]) => [key, entry.value])
+        ),
+      };
+
+      return (
+        <div>
+          {/* Render defaults */}
+          {Object.entries(combinedDefaults)
+            .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+            .map(([key, value]) => {
+              const currentPath = [key];
+              const fullKey = currentPath.join(".");
+              if (defaultsDeletions[configurations[selectedTab!]!.configPath]?.includes(fullKey)) return null;
+              const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
+              const isArray = Array.isArray(value);
+              const pendingValue = (pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})[fullKey]?.value ?? value;
+
+              if (isParent) {
                 return (
-                  <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                    {canBeSecure &&
-                      !isSecure &&
-                      (secureValuesAllowed ? (
-                        <button className="action-button" onClick={() => handleToggleSecure(fullKey, displayKey, path)} title="Make property secure">
-                          <span className="codicon codicon-unlock"></span>
-                        </button>
-                      ) : (
-                        <button
-                          className="action-button"
-                          onClick={() => {
-                            vscodeApi.postMessage({
-                              command: "OPEN_VSCODE_SETTINGS",
-                              searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
-                            });
-                          }}
-                          title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
-                        >
-                          <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
-                        </button>
-                      ))}
-                    <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
-                      <span className="codicon codicon-trash"></span>
-                    </button>
+                  <div key={fullKey} className="config-item parent">
+                    <h3 className={`header-level-${currentPath.length}`}>{key}</h3>
+                    {renderDefaults(value)}
                   </div>
                 );
-              })()}
-            {displayKey !== "type" && isFromMergedProps && (
-              <button
-                className="action-button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleUnlinkMergedProperty(displayKey, fullKey);
-                }}
-                title="Overwrite merged property"
-              >
-                <span className="codicon codicon-add"></span>
-              </button>
-            )}
-          </div>
-        );
-
-        return (
-          <div
-            key={fullKey}
-            className="config-item"
-            onClick={isFromMergedProps && jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
-            title={
-              isFromMergedProps && jsonLoc
-                ? (() => {
-                    // Extract logical profile path from jsonLoc (e.g., "profiles.lpar1.profiles.zosmf.profiles.w.properties.host" -> "lpar1.zosmf.w")
-                    const jsonLocParts = jsonLoc.split(".");
-                    const profilePathParts = jsonLocParts.slice(1, -2); // Remove "profiles" prefix and "properties" + property name suffix
-                    const profilePath =
-                      profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".") || "unknown profile";
-
-                    // Extract full normalized config path from osLoc
-                    const fullConfigPath = osLoc?.[0] || "unknown config";
-
-                    return `Inherited from: ${profilePath} (${fullConfigPath})`;
-                  })()
-                : undefined
-            }
-            style={isFromMergedProps && jsonLoc ? { cursor: "pointer" } : {}}
-          >
-            {readOnlyContainer}
-          </div>
-        );
-      }
-    });
-  };
-
-  const renderDefaults = (defaults: { [key: string]: any }) => {
-    if (!defaults || typeof defaults !== "object") return null;
-
-    // Get all available property types from the schema
-    const availableTypes = getWizardTypeOptions();
-
-    // Create a complete defaults object with all available types
-    const completeDefaults = { ...defaults };
-    availableTypes.forEach((type: string) => {
-      if (!(type in completeDefaults)) {
-        completeDefaults[type] = "";
-      }
-    });
-
-    const combinedDefaults = {
-      ...completeDefaults,
-      ...Object.fromEntries(
-        Object.entries(pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})
-          .filter(([key]) => !(key in completeDefaults))
-          .map(([key, entry]) => [key, entry.value])
-      ),
-    };
-
-    return (
-      <div>
-        {/* Render defaults */}
-        {Object.entries(combinedDefaults)
-          .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-          .map(([key, value]) => {
-            const currentPath = [key];
-            const fullKey = currentPath.join(".");
-            if (defaultsDeletions[configurations[selectedTab!]!.configPath]?.includes(fullKey)) return null;
-            const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
-            const isArray = Array.isArray(value);
-            const pendingValue = (pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})[fullKey]?.value ?? value;
-
-            if (isParent) {
-              return (
-                <div key={fullKey} className="config-item parent">
-                  <h3 className={`header-level-${currentPath.length}`}>{key}</h3>
-                  {renderDefaults(value)}
-                </div>
-              );
-            } else if (isArray) {
-              return (
-                <div key={fullKey} className="config-item">
-                  <h3 className={`header-level-${currentPath.length}`}>
-                    <span className="config-label" style={{ fontWeight: "bold" }}>
-                      {key}
-                    </span>
-                  </h3>
-                  <div>
-                    {value
-                      .sort((a: any, b: any) => String(a).localeCompare(String(b)))
-                      .map((item: any, index: number) => (
-                        <div className="list-item" key={index}>
-                          {item}
-                        </div>
-                      ))}
+              } else if (isArray) {
+                return (
+                  <div key={fullKey} className="config-item">
+                    <h3 className={`header-level-${currentPath.length}`}>
+                      <span className="config-label" style={{ fontWeight: "bold" }}>
+                        {key}
+                      </span>
+                    </h3>
+                    <div>
+                      {value
+                        .sort((a: any, b: any) => String(a).localeCompare(String(b)))
+                        .map((item: any, index: number) => (
+                          <div className="list-item" key={index}>
+                            {item}
+                          </div>
+                        ))}
+                    </div>
                   </div>
-                </div>
-              );
-            } else {
-              const availableProfiles = getAvailableProfilesByType(key);
-              const selectedProfileExists = availableProfiles.includes(String(pendingValue));
-              const displayValue = selectedProfileExists ? String(pendingValue) : "";
+                );
+              } else {
+                const availableProfiles = getAvailableProfilesByType(key);
+                const selectedProfileExists = availableProfiles.includes(String(pendingValue));
+                const displayValue = selectedProfileExists ? String(pendingValue) : "";
 
-              return (
-                <div key={fullKey} className="config-item">
-                  <div className="config-item-container defaults-container">
-                    <span className="config-label">{key}</span>
-                    <select
-                      className={`config-input ${!displayValue ? "placeholder-style" : ""}`}
-                      value={displayValue}
-                      onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLSelectElement).value)}
-                      style={{
-                        width: "100%",
-                        height: "28px",
-                        fontSize: "0.9em",
-                        padding: "2px 6px",
-                        marginBottom: "0",
-                        minWidth: "150px",
-                      }}
-                    >
-                      <option value="">{l10n.t("Select a profile")}</option>
-                      {availableProfiles.map((profile) => (
-                        <option key={profile} value={profile}>
-                          {profile === "root" ? "/" : profile}
-                        </option>
-                      ))}
-                    </select>
+                return (
+                  <div key={fullKey} className="config-item">
+                    <div className="config-item-container defaults-container">
+                      <span className="config-label">{key}</span>
+                      <select
+                        className={`config-input ${!displayValue ? "placeholder-style" : ""}`}
+                        value={displayValue}
+                        onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLSelectElement).value)}
+                        style={{
+                          width: "100%",
+                          height: "28px",
+                          fontSize: "0.9em",
+                          padding: "2px 6px",
+                          marginBottom: "0",
+                          minWidth: "150px",
+                        }}
+                      >
+                        <option value="">{l10n.t("Select a profile")}</option>
+                        {availableProfiles.map((profile) => (
+                          <option key={profile} value={profile}>
+                            {profile === "root" ? "/" : profile}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                </div>
-              );
-            }
-          })}
-      </div>
-    );
-  };
+                );
+              }
+            })}
+        </div>
+      );
+    },
+    [getWizardTypeOptions, pendingDefaults, configurations, selectedTab, defaultsDeletions, handleDefaultsChange, l10n]
+  );
 
   const openAddProfileModalAtPath = (path: string[]) => {
     setNewProfileKeyPath(path);
@@ -2942,7 +3762,7 @@ export function App() {
       if (profilesWithPendingTypeChanges.has(profileKey)) {
         return false;
       }
-      const profileTypeValue = getProfileType(profileKey);
+      const profileTypeValue = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
       return profileTypeValue === profileType;
     });
 
@@ -2967,62 +3787,12 @@ export function App() {
       }
     });
 
-    return [...profilesOfType, ...Array.from(pendingProfiles)];
-  };
-
-  const getPropertyTypeForAddProfile = (propertyKey: string): string | undefined => {
-    if (selectedTab === null) return undefined;
-
-    // Try to get the profile type from the current selected profile
-    const currentProfileType = selectedProfileKey ? getProfileType(selectedProfileKey) : null;
-    if (currentProfileType) {
-      const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[currentProfileType] || {};
-      return propertySchema[propertyKey]?.type;
-    }
-
-    // Fallback: check all profile types for this property
+    // Apply renames to all profile names, including nested profiles
     const configPath = configurations[selectedTab].configPath;
-    const schemaValidation = schemaValidations[configPath];
-    if (schemaValidation?.propertySchema) {
-      for (const profileType in schemaValidation.propertySchema) {
-        const propertySchema = schemaValidation.propertySchema[profileType];
-        if (propertySchema[propertyKey]?.type) {
-          return propertySchema[propertyKey].type;
-        }
-      }
-    }
+    const renamedProfilesOfType = profilesOfType.map((profileKey) => getRenamedProfileKeyWithNested(profileKey, configPath, renames));
+    const renamedPendingProfiles = Array.from(pendingProfiles).map((profileKey) => getRenamedProfileKeyWithNested(profileKey, configPath, renames));
 
-    return undefined;
-  };
-
-  // Get property type for the main config editor (similar to getPropertyTypeForAddProfile)
-  const getPropertyTypeForConfigEditor = (propertyKey: string, profilePath: string[]): string | undefined => {
-    if (selectedTab === null) return undefined;
-
-    // Extract the profile key from the path
-    const profileKey = extractProfileKeyFromPath(profilePath);
-
-    // Get the profile type, which will include pending changes
-    const resolvedType = getProfileType(profileKey);
-
-    if (resolvedType) {
-      const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[resolvedType] || {};
-      return propertySchema[propertyKey]?.type;
-    }
-
-    // Fallback: check all profile types for this property
-    const configPath = configurations[selectedTab].configPath;
-    const schemaValidation = schemaValidations[configPath];
-    if (schemaValidation?.propertySchema) {
-      for (const profileType in schemaValidation.propertySchema) {
-        const propertySchema = schemaValidation.propertySchema[profileType];
-        if (propertySchema[propertyKey]?.type) {
-          return propertySchema[propertyKey].type;
-        }
-      }
-    }
-
-    return undefined;
+    return [...renamedProfilesOfType, ...renamedPendingProfiles];
   };
 
   const handleAddNewConfig = () => {
@@ -3043,90 +3813,6 @@ export function App() {
     setAddConfigModalOpen(false);
     // Reset the flag so the modal can be opened again if needed
     setHasPromptedForZeroConfigs(false);
-  };
-
-  // Get options for input key for profile dropdown
-  const fetchTypeOptions = (path: string[]) => {
-    const { configPath } = configurations[selectedTab!]!;
-
-    // Extract the profile key from the path
-    const profileKey = extractProfileKeyFromPath(path);
-
-    // Get the profile type, which will include pending changes
-    const resolvedType = getProfileType(profileKey);
-
-    // Get all available property schemas from all profile types
-    const allPropertyKeys = new Set<string>();
-    const propertySchema = schemaValidations[configPath]?.propertySchema || {};
-
-    if (resolvedType && propertySchema[resolvedType]) {
-      // If profile has a type, get properties from that type
-      Object.keys(propertySchema[resolvedType]).forEach((key) => allPropertyKeys.add(key));
-    } else {
-      // If no type is selected, get properties from all available types
-      Object.values(propertySchema).forEach((typeSchema: any) => {
-        if (typeSchema && typeof typeSchema === "object") {
-          Object.keys(typeSchema).forEach((key) => allPropertyKeys.add(key));
-        }
-      });
-    }
-
-    // Get existing properties for this profile (both from current profile and pending changes)
-    const existingProperties = new Set<string>();
-
-    // Get properties from the current profile
-    const config = configurations[selectedTab!].properties;
-    const flatProfiles = flattenProfiles(config.profiles);
-    const currentProfile = flatProfiles[profileKey];
-    if (currentProfile && currentProfile.properties) {
-      Object.keys(currentProfile.properties).forEach((key) => existingProperties.add(key));
-    }
-
-    // Get secure properties from the current profile
-    if (currentProfile && currentProfile.secure && Array.isArray(currentProfile.secure)) {
-      currentProfile.secure.forEach((key: string) => existingProperties.add(key));
-    }
-
-    // Get properties from pending changes for this profile
-    Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-      if (entry.profile === profileKey) {
-        const keyParts = key.split(".");
-        if (keyParts.includes("properties")) {
-          const propertyName = keyParts[keyParts.length - 1];
-          existingProperties.add(propertyName);
-        }
-        // Also check for secure properties in pending changes
-        if (entry.secure) {
-          const propertyName = keyParts[keyParts.length - 1];
-          existingProperties.add(propertyName);
-        }
-      }
-    });
-
-    // Get deleted properties for this profile and remove them from existing properties
-    const deletedProperties = new Set<string>();
-    (deletions[configPath] ?? []).forEach((deletedKey) => {
-      const keyParts = deletedKey.split(".");
-      if (keyParts.includes("profiles")) {
-        // Extract the profile from the deleted key
-        const profileIndex = keyParts.indexOf("profiles");
-        const deletedProfileKey = keyParts[profileIndex + 1];
-
-        // Check if this deletion is for the current profile
-        if (deletedProfileKey === profileKey) {
-          const propertyName = keyParts[keyParts.length - 1];
-          deletedProperties.add(propertyName);
-        }
-      }
-    });
-
-    // Remove deleted properties from existing properties (so they become available again)
-    deletedProperties.forEach((deletedProperty) => {
-      existingProperties.delete(deletedProperty);
-    });
-
-    // Filter out existing properties from the available options
-    return Array.from(allPropertyKeys).filter((key) => !existingProperties.has(key));
   };
 
   return (
@@ -3152,6 +3838,8 @@ export function App() {
         onProfileWizard={() => setWizardModalOpen(true)}
         viewMode={viewMode}
         onViewModeToggle={() => setViewModeWithStorage(viewMode === "tree" ? "flat" : "tree")}
+        profileSortOrder={profileSortOrder || "natural"}
+        onProfileSortOrderChange={setProfileSortOrderWithStorage}
       />
       <Footer
         onClearChanges={handleRefresh}
@@ -3163,14 +3851,30 @@ export function App() {
       {/* Modals */}
 
       <AddProfileModal
+        key={`add-profile-${newProfileModalOpen}`}
         isOpen={newProfileModalOpen}
         newProfileKey={newProfileKey}
         newProfileValue={newProfileValue}
         showDropdown={showDropdown}
-        typeOptions={newProfileKeyPath ? fetchTypeOptions(newProfileKeyPath) : []}
+        typeOptions={
+          newProfileKeyPath
+            ? fetchTypeOptions(newProfileKeyPath, selectedTab, configurations, schemaValidations, getProfileType, pendingChanges, renames)
+            : []
+        }
         isSecure={isSecure}
         secureValuesAllowed={secureValuesAllowed}
-        getPropertyType={getPropertyTypeForAddProfile}
+        getPropertyType={(propertyKey: string) =>
+          getPropertyTypeForAddProfile(
+            propertyKey,
+            selectedTab,
+            configurations,
+            selectedProfileKey,
+            schemaValidations,
+            getProfileType,
+            pendingChanges,
+            renames
+          )
+        }
         canPropertyBeSecure={canPropertyBeSecure}
         newProfileKeyPath={newProfileKeyPath || []}
         vscodeApi={vscodeApi}
@@ -3186,12 +3890,15 @@ export function App() {
         onCancel={() => {
           setNewProfileModalOpen(false);
           setIsSecure(false);
+          setFocusValueInput(false);
         }}
+        focusValueInput={focusValueInput}
       />
 
       <SaveModal isOpen={saveModalOpen} />
 
       <NewLayerModal
+        key={`new-layer-${newLayerModalOpen}`}
         isOpen={newLayerModalOpen}
         newLayerName={newLayerName}
         onNewLayerNameChange={setNewLayerName}
@@ -3200,6 +3907,7 @@ export function App() {
       />
 
       <ProfileWizardModal
+        key={`wizard-${wizardModalOpen}`}
         isOpen={wizardModalOpen}
         wizardRootProfile={wizardRootProfile}
         wizardSelectedType={wizardSelectedType}
@@ -3241,11 +3949,52 @@ export function App() {
       />
 
       <AddConfigModal
+        key={`add-config-${addConfigModalOpen}`}
         isOpen={addConfigModalOpen}
         configurations={configurations}
         hasWorkspace={hasWorkspace}
         onAdd={handleAddConfig}
         onCancel={handleCancelAddConfig}
+      />
+
+      <RenameProfileModal
+        key={`rename-profile-${renameProfileModalOpen}`}
+        isOpen={renameProfileModalOpen}
+        currentProfileName={selectedProfileKey ? selectedProfileKey.split(".").pop() || selectedProfileKey : ""}
+        currentProfileKey={selectedProfileKey || ""}
+        existingProfiles={(() => {
+          if (selectedTab === null || !selectedProfileKey) return [];
+          const config = configurations[selectedTab];
+          if (!config?.properties?.profiles) return [];
+
+          // Get all existing profile keys
+          const getAllProfileKeys = (profiles: any, parentKey = ""): string[] => {
+            const keys: string[] = [];
+            for (const key of Object.keys(profiles)) {
+              const profile = profiles[key];
+              const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+              keys.push(qualifiedKey);
+
+              // Recursively add nested profiles
+              if (profile.profiles) {
+                keys.push(...getAllProfileKeys(profile.profiles, qualifiedKey));
+              }
+            }
+            return keys;
+          };
+
+          return getAllProfileKeys(config.properties.profiles);
+        })()}
+        pendingProfiles={(() => {
+          if (selectedTab === null) return [];
+          const config = configurations[selectedTab];
+          if (!config) return [];
+
+          const pendingProfiles = extractPendingProfiles(config.configPath);
+          return Object.keys(pendingProfiles);
+        })()}
+        onRename={(newName) => handleRenameProfile(selectedProfileKey!, newName)}
+        onCancel={() => setRenameProfileModalOpen(false)}
       />
     </div>
   );

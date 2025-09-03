@@ -22,6 +22,9 @@ interface ProfileListProps {
   filterType: string | null;
   onSearchChange: (searchTerm: string) => void;
   onFilterChange: (filterType: string | null) => void;
+  // Profile sort order props
+  profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical";
+  onProfileSortOrderChange: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical") => void;
 }
 
 export function ProfileList({

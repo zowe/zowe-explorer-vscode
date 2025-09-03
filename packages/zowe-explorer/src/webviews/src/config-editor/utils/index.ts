@@ -10,3 +10,7 @@
  */
 
 export * from "./configUtils";
+export * from "./MoveUtils";
+export * from "./profileUtils";
+export * from "./propertyUtils";
+export * from "./generalUtils";

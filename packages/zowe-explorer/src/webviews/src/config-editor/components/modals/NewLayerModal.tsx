@@ -1,5 +1,5 @@
 import * as l10n from "@vscode/l10n";
-import { useModalClickOutside } from "../../hooks";
+import { useModalClickOutside, useModalFocus } from "../../hooks";
 
 interface NewLayerModalProps {
   isOpen: boolean;
@@ -12,7 +12,8 @@ interface NewLayerModalProps {
 export function NewLayerModal({ isOpen, newLayerName, onNewLayerNameChange, onAdd, onCancel }: NewLayerModalProps) {
   if (!isOpen) return null;
 
-  const { modalRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+  const { modalRef: clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+  const modalRef = useModalFocus(isOpen, "input");
 
   return (
     <div className="modal-backdrop" onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick}>
@@ -22,6 +23,13 @@ export function NewLayerModal({ isOpen, newLayerName, onNewLayerNameChange, onAd
           placeholder={l10n.t("New Layer Name")}
           value={newLayerName}
           onChange={(e) => onNewLayerNameChange((e.target as HTMLInputElement).value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              onAdd();
+            } else if (e.key === "Escape") {
+              onCancel();
+            }
+          }}
         />
         <div className="modal-actions">
           <button onClick={onAdd}>{l10n.t("Add")}</button>

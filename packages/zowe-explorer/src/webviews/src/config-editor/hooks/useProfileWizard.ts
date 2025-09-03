@@ -360,6 +360,7 @@ export function useProfileWizard({
                 configPath: configPath,
                 profileName: wizardProfileName,
                 changes: changes,
+                renames: changes.renames,
             });
         }
     };
