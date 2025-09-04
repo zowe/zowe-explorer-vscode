@@ -31,7 +31,5 @@
   ],
   "[rust]": {
     "editor.defaultFormatter": "rust-lang.rust-analyzer"
-  },
-  "jestrunner.projectPath": "packages\\zowe-explorer",
-  "jestrunner.jestPath": "..\\..\\node_modules\\jest\\bin\\jest.js"
+  }
 }
