@@ -1,3 +1,14 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
 // @ts-ignore
 import { get, set } from "lodash";
 
@@ -36,17 +47,17 @@ export function moveProfile(api: ConfigMoveAPI, layerActive: () => IConfigLayer,
     moveSecureProperties(api, layerActive, sourcePath, targetPath);
 }
 
-export function getSecurePropertiesForProfile(api: ConfigMoveAPI, layerActive: () => IConfigLayer, profilePath: string): string[] {
+export function getSecurePropertiesForProfile(api: ConfigMoveAPI, profilePath: string): string[] {
     const profile = api.get(profilePath);
     return profile?.secure || [];
 }
 
 export function moveSecureProperties(api: ConfigMoveAPI, layerActive: () => IConfigLayer, sourcePath: string, targetPath: string): void {
-    const sourceSecure = getSecurePropertiesForProfile(api, layerActive, sourcePath);
-    const targetSecure = getSecurePropertiesForProfile(api, layerActive, targetPath);
+    const sourceSecure = getSecurePropertiesForProfile(api, targetPath);
+    const targetSecure = getSecurePropertiesForProfile(api, targetPath);
 
     // Update secure arrays
-    updateSecureArrays(api, layerActive, sourcePath, targetPath, sourceSecure, targetSecure);
+    updateSecureArrays(layerActive, sourcePath, targetPath, sourceSecure, targetSecure);
 }
 
 export function deleteProfileRecursively(api: ConfigMoveAPI, layerActive: () => IConfigLayer, profilePath: string): void {
@@ -69,14 +80,13 @@ export function deleteProfileRecursively(api: ConfigMoveAPI, layerActive: () => 
 }
 
 export function updateSecureArrays(
-    api: ConfigMoveAPI,
     layerActive: () => IConfigLayer,
     sourcePath: string,
     targetPath: string,
     sourceSecure: string[],
     targetSecure: string[]
 ): void {
-    const secureArrays = findSecureArrays(api, layerActive, sourcePath, targetPath);
+    const secureArrays = findSecureArrays(layerActive);
 
     for (const secureArray of secureArrays) {
         const currentSecure = secureArray.secure || [];
@@ -107,12 +117,7 @@ export function updateSecureArrays(
     }
 }
 
-export function findSecureArrays(
-    api: ConfigMoveAPI,
-    layerActive: () => IConfigLayer,
-    sourcePath: string,
-    targetPath: string
-): Array<{ profile: any; profilePath: string; secure: string[] }> {
+export function findSecureArrays(layerActive: () => IConfigLayer): Array<{ profile: any; profilePath: string; secure: string[] }> {
     const secureArrays: Array<{ profile: any; profilePath: string; secure: string[] }> = [];
     const currentLayer = layerActive();
     const profiles = currentLayer.properties.profiles;
@@ -192,7 +197,6 @@ export function renameProfile(api: ConfigMoveAPI, layerActive: () => IConfigLaye
 
     // Extract the parent path and original name
     const pathParts = originalPath.split(".");
-    const originalName = pathParts[pathParts.length - 1] || "";
     const parentPath = pathParts.slice(0, -1).join(".");
 
     // Construct the new path

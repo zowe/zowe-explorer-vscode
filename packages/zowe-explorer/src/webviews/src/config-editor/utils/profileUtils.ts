@@ -10,7 +10,7 @@
  */
 
 import { flattenProfiles, extractProfileKeyFromPath } from "./configUtils";
-
+import { PendingChange } from "./configUtils";
 // Types
 export interface Configuration {
     configPath: string;
@@ -19,13 +19,6 @@ export interface Configuration {
     global?: boolean;
     user?: boolean;
     schemaPath?: string;
-}
-
-export interface PendingChange {
-    value: string | number | boolean | Record<string, any>;
-    path: string[];
-    profile: string;
-    secure?: boolean;
 }
 
 export interface PendingDefault {

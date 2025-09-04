@@ -44,7 +44,7 @@ export function AddProfileModal({
 }: AddProfileModalProps) {
   if (!isOpen) return null;
 
-  const { modalRef: clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+  const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, focusValueInput ? ".add-profile-input" : "#profile-type-input");
 
   const isFileProperty = (key: string): boolean => {
@@ -63,7 +63,7 @@ export function AddProfileModal({
     return false;
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
       onAdd();
     } else if (e.key === "Escape") {

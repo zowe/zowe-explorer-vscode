@@ -1,5 +1,4 @@
 import * as l10n from "@vscode/l10n";
-import React from "react";
 import { useModalClickOutside, useModalFocus } from "../../hooks";
 
 interface ProfileWizardModalProps {
@@ -71,7 +70,6 @@ export function ProfileWizardModal({
   onCancel,
   onPopulateDefaults,
   getPropertyType,
-  canPropertyBeSecure,
   canPropertyBeSecureForWizard,
   stringifyValueByType,
   vscodeApi,
@@ -94,7 +92,7 @@ export function ProfileWizardModal({
     return false;
   };
 
-  const { modalRef: clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+  const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, "input[type='text']");
 
   const handleKeyDown = (e: KeyboardEvent) => {

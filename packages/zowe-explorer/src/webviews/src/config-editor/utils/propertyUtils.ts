@@ -11,28 +11,9 @@
 
 import { extractProfileKeyFromPath } from "./configUtils";
 import { getProfileType } from "./profileUtils";
-
+import { PendingChange } from "./configUtils";
+import { schemaValidation, Configuration } from "./profileUtils";
 // Types
-export interface Configuration {
-    configPath: string;
-    properties: any;
-    secure: string[];
-    global?: boolean;
-    user?: boolean;
-    schemaPath?: string;
-}
-
-export interface PendingChange {
-    value: string | number | boolean | Record<string, any>;
-    path: string[];
-    profile: string;
-    secure?: boolean;
-}
-
-export interface schemaValidation {
-    propertySchema: { [key: string]: any };
-    validDefaults: string[];
-}
 
 /**
  * Get property type for add profile modal

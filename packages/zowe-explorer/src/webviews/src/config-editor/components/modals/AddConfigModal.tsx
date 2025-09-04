@@ -12,7 +12,7 @@ interface AddConfigModalProps {
 export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, onCancel }: AddConfigModalProps) {
   if (!isOpen) return null;
 
-  const { modalRef: clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
+  const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, "button:not([disabled])");
 
   // Get all configuration types with their availability status
@@ -72,7 +72,7 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
   const allConfigTypes = getAllConfigTypes();
   const availableTypes = allConfigTypes.filter((type) => !type.disabled);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
       // Find the first available config type and add it
       const firstAvailableType = availableTypes[0];
