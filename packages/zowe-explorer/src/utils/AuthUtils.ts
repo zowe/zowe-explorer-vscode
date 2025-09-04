@@ -103,24 +103,42 @@ export class AuthUtils {
         }
     }
 
+    public static promptCountForProfile: Record<string, number> = {};
+
     public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
         const maxAttempts = SettingsConfig.getDirectValue("zowe.settings.maxExtenderRetry", 0);
+
+        if (!this.promptCountForProfile[profile.name]) {
+            this.promptCountForProfile[profile.name] = 0;
+        }
+
         for (let i = 0; i <= maxAttempts; i++) {
             try {
-                return await callback();
+                const callbackValue = await callback();
+                this.promptCountForProfile[profile.name] = 0;
+                return callbackValue;
             } catch (err) {
                 if (err instanceof Error) {
                     ZoweLogger.error(err.message);
                 }
+                if (maxAttempts <= 0) {
+                    await this.handleProfileAuthOnError(err, profile);
+                    throw vscode.FileSystemError.Unavailable();
+                }
+                if (maxAttempts <= 0 || i >= maxAttempts || this.promptCountForProfile[profile.name] >= maxAttempts) {
+                    delete AuthUtils.promptCountForProfile[profile.name];
+                    throw vscode.FileSystemError.Unavailable();
+                }
                 if (
-                    (i < maxAttempts &&
-                        err instanceof imperative.ImperativeError &&
+                    (err instanceof imperative.ImperativeError &&
                         (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                             err.message.includes("All configured authentication methods failed"))) ||
                     err.message.includes("HTTP(S) status 401")
                 ) {
+                    this.promptCountForProfile[profile.name]++;
                     await this.handleProfileAuthOnError(err, profile);
                 } else {
+                    delete AuthUtils.promptCountForProfile[profile.name];
                     throw err;
                 }
             }

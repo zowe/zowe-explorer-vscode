@@ -112,11 +112,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
             if (isPdsMember) {
-                // PDS member
                 const pds = this.lookupParentDirectory(uri);
                 resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(pds.name, { attributes: true });
             } else {
-                // Data Set
                 resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(dsPath), {
                     attributes: true,
                 });
@@ -251,36 +249,42 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     private async fetchDataset(uri: vscode.Uri, uriInfo: UriFsInfo, forceFetch?: boolean): Promise<PdsEntry | DsEntry> {
         let entry: PdsEntry | DsEntry;
-        try {
-            entry = this.lookup(uri, false) as PdsEntry | DsEntry;
-        } catch (err) {
-            if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
-                throw err;
-            }
-        }
-
-        const entryExists = entry != null;
-        let entryIsDir = entry != null ? entry.type === vscode.FileType.Directory : false;
-        // /DATA.SET/MEMBER
-        const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
-        const pdsMember = uriPath.length === 2;
-
-        // Wait for any ongoing authentication process to complete
-        await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-            ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
-            if (entryExists) {
-                return entry;
-            }
-            throw vscode.FileSystemError.FileNotFound(uri);
-        }
         let entryStats: Partial<Types.DatasetStats>;
-        if (!entryExists || forceFetch) {
-            await AuthUtils.retryRequest(uriInfo.profile, async () => {
+        let entryIsDir: boolean;
+        let entryExists: boolean;
+        let pdsMember: boolean;
+        let uriPath: string[];
+
+        await AuthUtils.retryRequest(uriInfo.profile, async () => {
+            try {
+                entry = this.lookup(uri, false) as PdsEntry | DsEntry;
+            } catch (err) {
+                if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
+                    throw err;
+                }
+            }
+
+            entryExists = entry != null;
+            entryIsDir = entry != null ? entry.type === vscode.FileType.Directory : false;
+            // /DATA.SET/MEMBER
+            uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
+            pdsMember = uriPath.length === 2;
+
+            // Wait for any ongoing authentication process to complete
+            await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
+            await AuthHandler.waitForUnlock(uriInfo.profile);
+
+            // Check if the profile is locked (indicating an auth error is being handled)
+            // If it's locked, we should wait and not make additional requests
+            if (AuthHandler.isProfileLocked(uriInfo.profile)) {
+                ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
+                if (entryExists) {
+                    return;
+                }
+                throw vscode.FileSystemError.FileNotFound(uri);
+            }
+
+            if (!entryExists || forceFetch) {
                 if (pdsMember) {
                     const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(uriPath[0]);
                     entryIsDir = false;
@@ -303,8 +307,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
                 }
-            });
-        }
+            }
+        });
+
         if (entryIsDir) {
             if (!entryExists) {
                 this.createDirectory(uri);
