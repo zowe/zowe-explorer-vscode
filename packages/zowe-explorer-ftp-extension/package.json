@@ -1,6 +1,6 @@
 {
   "name": "zowe-explorer-ftp-extension",
-  "displayName": "IBM z/OS FTP for Zowe Explorer",
+  "displayName": "Zowe Explorer for IBM z/OS FTP",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
