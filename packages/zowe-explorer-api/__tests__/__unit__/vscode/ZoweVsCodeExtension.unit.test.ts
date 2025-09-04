@@ -645,6 +645,35 @@ describe("ZoweVsCodeExtension", () => {
         };
         const onProfileUpdatedEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
 
+        it("should not leak the password value in the input box placeholder", async () => {
+            const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
+            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: jest.fn().mockReturnValue({
+                    profile: {},
+                }),
+                getProfileInfo: jest.fn().mockReturnValue({
+                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
+                    isSecured: jest.fn().mockReturnValue(true),
+                    updateProperty: mockUpdateProperty,
+                }),
+                refresh: jest.fn(),
+                updateCachedProfile: jest.fn(),
+            });
+            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
+            const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
+                promptCredsOptions,
+                undefined as unknown as Types.IApiRegisterClient
+            );
+            expect(profileLoaded.profile?.password).toBe("fakePassword");
+            expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
+            // The placeholder should not contain the raw password value
+            expect(showInputBoxSpy.mock.calls[1][0].placeHolder).not.toBe("fakePassword");
+        });
+
         it("should update user and password as secure fields", async () => {
             const mockUpdateProperty = jest.fn();
             jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
