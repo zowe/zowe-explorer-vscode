@@ -15,6 +15,7 @@
   "engines": {
     "vscode": "^1.79.0"
   },
+  "packageManager": "pnpm@10.0.0",
   "dependencies": {
     "@vscode/l10n": "^0.0.18",
     "disposablestack": "^1.1.4"
