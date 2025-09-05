@@ -387,6 +387,12 @@ export namespace MainframeInteraction {
             options: zosfiles.ICrossLparCopyDatasetOptions,
             sourceprofile: imperative.IProfileLoaded
         ): Promise<zosfiles.IZosFilesResponse>;
+
+        /**
+         * Get count for all the datasets accordingly to dataSetPatterns
+         *
+         */
+        getCount?(dataSetPatterns: string[]): Promise<number>;
     }
 
     /**

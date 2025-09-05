@@ -684,24 +684,43 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         let lastDatasetName = this.paginatorData?.lastItemName;
         let allDatasets: IZosmfListResponse[] = [];
         const responses: IZosFilesResponse[] = [];
+        const profile = Profiles.getInstance().loadNamedProfile(this.getProfile().name);
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
 
         try {
             if (this.dirty || totalItems == null || lastDatasetName == null) {
                 // Rebuild cache to handle future page changes
-                const basicResponses: IZosFilesResponse[] = [];
-                await this.listDatasets(basicResponses, { attributes: false });
 
-                allDatasets = basicResponses
-                    .filter((r) => r.success)
-                    .reduce((arr: IZosmfListResponse[], r) => {
-                        const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
-                        return responseItems ? [...arr, ...responseItems] : arr;
-                    }, []);
+                if (mvsApi.getCount) {
+                    const dsPatterns = [
+                        ...new Set(
+                            this.pattern
+                                .toUpperCase()
+                                .split(",")
+                                .map((p) => p.trim())
+                        ),
+                    ];
+                    const allDatasetsCount = await mvsApi.getCount(dsPatterns);
+                    this.paginatorData = {
+                        totalItems: allDatasetsCount,
+                    };
+                } else {
+                    const basicResponses: IZosFilesResponse[] = [];
+                    await this.listDatasets(basicResponses, { attributes: false });
 
-                this.paginatorData = {
-                    totalItems: allDatasets.length,
-                    lastItemName: allDatasets.at(-1)?.dsname,
-                };
+                    allDatasets = basicResponses
+                        .filter((r) => r.success)
+                        .reduce((arr: IZosmfListResponse[], r) => {
+                            const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
+                            return responseItems ? [...arr, ...responseItems] : arr;
+                        }, []);
+
+                    this.paginatorData = {
+                        totalItems: allDatasets.length,
+                        lastItemName: allDatasets.at(-1)?.dsname,
+                    };
+                }
+
                 totalItems = this.paginatorData.totalItems;
                 lastDatasetName = this.paginatorData.lastItemName;
             }
