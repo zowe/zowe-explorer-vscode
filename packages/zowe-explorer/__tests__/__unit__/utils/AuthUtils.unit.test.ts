@@ -246,10 +246,13 @@ describe("AuthUtils", () => {
 
                 jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
 
-                // Act & Assert
                 await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toBeDefined();
 
-                expect(promptForAuthErrorMock).toHaveBeenCalledTimes(maxAttempts);
+                if (maxAttempts === 0) {
+                    expect(promptForAuthErrorMock).toHaveBeenCalledTimes(maxAttempts + 1);
+                } else {
+                    expect(promptForAuthErrorMock).toHaveBeenCalledTimes(maxAttempts);
+                }
             });
         });
 

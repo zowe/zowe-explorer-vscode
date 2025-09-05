@@ -106,27 +106,37 @@ export class AuthUtils {
     public static promptCountForProfile: Record<string, number> = {};
 
     public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
+        console.log("try");
         const maxAttempts = SettingsConfig.getDirectValue("zowe.settings.maxExtenderRetry", 0);
+        const profileName = profile?.name;
+        const shouldTrackPrompts = profileName != null;
 
-        if (!this.promptCountForProfile[profile.name]) {
-            this.promptCountForProfile[profile.name] = 0;
+        if (shouldTrackPrompts && !this.promptCountForProfile[profileName]) {
+            this.promptCountForProfile[profileName] = 0;
         }
 
         for (let i = 0; i <= maxAttempts; i++) {
             try {
                 const callbackValue = await callback();
-                this.promptCountForProfile[profile.name] = 0;
+                if (shouldTrackPrompts) {
+                    delete this.promptCountForProfile[profileName];
+                }
                 return callbackValue;
             } catch (err) {
                 if (err instanceof Error) {
                     ZoweLogger.error(err.message);
                 }
                 if (maxAttempts <= 0) {
-                    await this.handleProfileAuthOnError(err, profile);
+                    if (profile) {
+                        await this.handleProfileAuthOnError(err, profile);
+                    }
                     throw vscode.FileSystemError.Unavailable();
                 }
-                if (maxAttempts <= 0 || i >= maxAttempts || this.promptCountForProfile[profile.name] >= maxAttempts) {
-                    delete AuthUtils.promptCountForProfile[profile.name];
+                const currentPromptCount = shouldTrackPrompts ? this.promptCountForProfile[profileName] || 0 : 0;
+                if (maxAttempts <= 0 || i >= maxAttempts || currentPromptCount >= maxAttempts) {
+                    if (shouldTrackPrompts) {
+                        delete this.promptCountForProfile[profileName];
+                    }
                     throw vscode.FileSystemError.Unavailable();
                 }
                 if (
@@ -135,10 +145,16 @@ export class AuthUtils {
                             err.message.includes("All configured authentication methods failed"))) ||
                     err.message.includes("HTTP(S) status 401")
                 ) {
-                    this.promptCountForProfile[profile.name]++;
-                    await this.handleProfileAuthOnError(err, profile);
+                    if (shouldTrackPrompts) {
+                        this.promptCountForProfile[profileName]++;
+                    }
+                    if (profile) {
+                        await this.handleProfileAuthOnError(err, profile);
+                    }
                 } else {
-                    delete AuthUtils.promptCountForProfile[profile.name];
+                    if (shouldTrackPrompts) {
+                        delete this.promptCountForProfile[profileName];
+                    }
                     throw err;
                 }
             }
