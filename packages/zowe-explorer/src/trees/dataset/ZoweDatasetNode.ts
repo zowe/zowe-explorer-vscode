@@ -684,7 +684,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         let lastDatasetName = this.paginatorData?.lastItemName;
         let allDatasets: IZosmfListResponse[] = [];
         const responses: IZosFilesResponse[] = [];
-        const profile = Profiles.getInstance().loadNamedProfile(this.getProfile().name);
+        const profile = Profiles.getInstance()?.loadNamedProfile(this.getProfile().name);
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
 
         try {
@@ -705,6 +705,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         totalItems: allDatasetsCount,
                     };
                 } else {
+                    console.log("Run Else - ZoweDsNode");
                     const basicResponses: IZosFilesResponse[] = [];
                     await this.listDatasets(basicResponses, { attributes: false });
 

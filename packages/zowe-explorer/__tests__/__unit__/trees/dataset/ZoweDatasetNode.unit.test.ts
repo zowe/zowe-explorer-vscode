@@ -1691,7 +1691,6 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
                     commandResponse: "2 data set(s) were listed successfully",
                 });
             });
-
         await (sessionNode as any).listDatasetsInRange(undefined, 2);
         expect(listDatasetsMock).toHaveBeenCalledTimes(2);
         expect(listDatasetsMock.mock.calls[0][1]).toStrictEqual({ attributes: false });
