@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 interface ProfileTreeProps {
   profileKeys: string[];
@@ -12,7 +12,7 @@ interface ProfileTreeProps {
   isFilteringActive?: boolean;
   expandedNodes: Set<string>;
   setExpandedNodes: React.Dispatch<React.SetStateAction<Set<string>>>;
-  onProfileRename?: (originalKey: string, newKey: string) => void;
+  onProfileRename?: (originalKey: string, newKey: string) => boolean;
   // Add props to help find original keys
   configurations?: any[];
   selectedTab?: number | null;
@@ -97,9 +97,6 @@ export function ProfileTree({
 
     return currentKey;
   };
-
-  // Debug: Monitor draggedProfile state changes
-  useEffect(() => {}, [draggedProfile]);
 
   const getEffectiveExpandedNodes = (): Set<string> => {
     if (!isFilteringActive || !hasNestedProfiles) {
@@ -247,6 +244,10 @@ export function ProfileTree({
     } else if (targetProfileKey === draggedProfileName) {
       // Special case: if dragging a nested profile to a root profile with the same name, move to root
       newProfileKey = targetProfileKey;
+    } else if (targetProfileKey.endsWith(`.${draggedProfileName}`)) {
+      // Special case: if dragging to a profile that ends with the same name, move to that location
+      // This handles cases like bonk.tso.help -> bonk.help
+      newProfileKey = targetProfileKey;
     } else {
       // Create the new nested profile structure
       newProfileKey = `${targetProfileKey}.${draggedProfileName}`;
@@ -256,10 +257,16 @@ export function ProfileTree({
     if (draggedProfile !== newProfileKey) {
       // Find the original key for the dragged profile
       const originalKey = findOriginalKey(draggedProfile);
-      onProfileRename(originalKey, newProfileKey);
+      const success = onProfileRename(originalKey, newProfileKey);
+
+      // If the rename failed (e.g., due to circular rename), don't clear drag state
+      // This allows the user to try again or cancel the drag operation
+      if (!success) {
+        return; // Don't clear drag state, let user try again
+      }
     }
 
-    // Clear drag state
+    // Clear drag state only on successful rename
     setDraggedProfile(null);
     setDragOverProfile(null);
   };
@@ -271,28 +278,59 @@ export function ProfileTree({
 
   // Helper function to check if a drop is invalid
   const isInvalidDrop = (sourceProfile: string, targetProfile: string): boolean => {
+    console.log("isInvalidDrop check:", { sourceProfile, targetProfile });
+
     // Can't drop on itself
     if (sourceProfile === targetProfile) {
+      console.log("Invalid: dropping on itself");
       return true;
     }
 
     // Special case for root level - always allow dropping to root
     if (targetProfile === "ROOT") {
+      console.log("Valid: dropping to root");
       return false;
     }
 
     // Can't drop a parent onto its child
     if (targetProfile.startsWith(sourceProfile + ".")) {
+      console.log("Invalid: dropping parent onto child");
       return true;
     }
 
     // Can't drop if it would create a circular reference
+    // But allow moving a profile to its parent or a different branch
     if (sourceProfile.startsWith(targetProfile + ".")) {
+      // Check if this is dropping onto the immediate parent (which should be blocked)
+      const sourceParent = sourceProfile.substring(0, sourceProfile.lastIndexOf("."));
+      if (sourceParent === targetProfile) {
+        console.log("Invalid: dropping onto immediate parent (no-op)");
+        return true;
+      }
+
+      // Check if this is a valid move up the hierarchy
+      // Valid: moving a child to its grandparent or a different branch
+      // Invalid: moving a profile to create a circular reference
+
+      // Extract the remaining path after the target
+      const remainingPath = sourceProfile.substring(targetProfile.length + 1);
+      const sourceProfileName = sourceProfile.split(".").pop() || "";
+
+      // If we're moving to a parent and the remaining path contains the source profile name,
+      // this is likely a valid move up the hierarchy
+      if (remainingPath.includes(sourceProfileName)) {
+        console.log("Valid: moving profile up hierarchy");
+        return false;
+      }
+
+      // Otherwise, it might be a circular reference
+      console.log("Invalid: would create circular reference");
       return true;
     }
 
     // Allow dropping onto any valid profile name, even if it doesn't currently exist
     // This handles cases where a profile was moved and we want to move it back
+    console.log("Valid: drop allowed");
     return false;
   };
 

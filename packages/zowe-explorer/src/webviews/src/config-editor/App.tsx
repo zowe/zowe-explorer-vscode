@@ -1380,6 +1380,8 @@ export function App() {
     const tempRenames = { ...existingRenames };
 
     // If the new rename creates a circular dependency, remove the conflicting rename
+    // Note: This function is called after circular rename validation in handleRenameProfile,
+    // so this case should not occur in normal operation, but we keep it as a safety measure
     if (tempRenames[newKey] === originalKey) {
       // This creates a circular dependency: originalKey -> newKey -> originalKey
       // Remove the conflicting rename
@@ -1519,9 +1521,35 @@ export function App() {
     }));
   }, []);
 
-  const handleRenameProfile = (originalKey: string, newKey: string) => {
-    if (selectedTab === null) return;
+  const handleRenameProfile = (originalKey: string, newKey: string): boolean => {
+    if (selectedTab === null) return false;
     const configPath = configurations[selectedTab!]!.configPath;
+
+    // Check for circular renames before proceeding (same validation as rename modal)
+    const currentRenames = renames[configPath] || {};
+
+    // Special case: if renaming back to the original key, cancel the rename operation
+    if (newKey === originalKey) {
+      // Remove the rename entry to restore the profile to its original state
+      setRenames((prev) => {
+        const updatedRenames = { ...prev[configPath] };
+        delete updatedRenames[originalKey];
+        return {
+          ...prev,
+          [configPath]: updatedRenames,
+        };
+      });
+      return true; // Return true to indicate success (rename was canceled)
+    }
+
+    if (currentRenames[newKey] === originalKey) {
+      // Show error message for circular rename
+      vscodeApi.postMessage({
+        command: "SHOW_ERROR_MESSAGE",
+        message: `Cannot rename '${originalKey}' to '${newKey}': This would create a circular rename (${newKey} -> ${originalKey})`,
+      });
+      return false; // Return false to indicate failure
+    }
 
     // Update the renames state with consolidation
     setRenames((prev) => {
@@ -1542,8 +1570,20 @@ export function App() {
       const oldRenames = renames[configPath] || {};
       const oldRenamedValue = oldRenames[originalKey];
 
+      // Special case: if we're canceling a rename (newKey === originalKey)
+      if (newKey === originalKey) {
+        // If the selected profile was the renamed version, restore it to the original
+        if (selectedProfileKey === oldRenamedValue) {
+          newSelectedProfileKey = originalKey;
+        }
+        // If the selected profile was a child of the renamed version, restore it to the original
+        else if (oldRenamedValue && selectedProfileKey.startsWith(oldRenamedValue + ".")) {
+          const childPath = selectedProfileKey.substring(oldRenamedValue.length + 1);
+          newSelectedProfileKey = originalKey + "." + childPath;
+        }
+      }
       // Check if the selected profile is directly renamed
-      if (selectedProfileKey === originalKey) {
+      else if (selectedProfileKey === originalKey) {
         newSelectedProfileKey = newKey;
       }
       // Check if the selected profile is a child of the renamed profile
@@ -1615,8 +1655,22 @@ export function App() {
       let newCurrentSelectedProfile = currentSelectedProfile;
 
       if (currentSelectedProfile) {
+        // Special case: if we're canceling a rename (newKey === originalKey)
+        if (newKey === originalKey) {
+          const oldRenames = renames[configPath] || {};
+          const oldRenamedValue = oldRenames[originalKey];
+          // If the selected profile was the renamed version, restore it to the original
+          if (currentSelectedProfile === oldRenamedValue) {
+            newCurrentSelectedProfile = originalKey;
+          }
+          // If the selected profile was a child of the renamed version, restore it to the original
+          else if (oldRenamedValue && currentSelectedProfile.startsWith(oldRenamedValue + ".")) {
+            const childPath = currentSelectedProfile.substring(oldRenamedValue.length + 1);
+            newCurrentSelectedProfile = originalKey + "." + childPath;
+          }
+        }
         // Check direct rename
-        if (currentSelectedProfile === originalKey) {
+        else if (currentSelectedProfile === originalKey) {
           newCurrentSelectedProfile = newKey;
         }
         // Check child rename
@@ -1655,8 +1709,22 @@ export function App() {
       for (const expandedKey of currentExpandedNodes) {
         let newExpandedKey = expandedKey;
 
+        // Special case: if we're canceling a rename (newKey === originalKey)
+        if (newKey === originalKey) {
+          const oldRenames = renames[configPath] || {};
+          const oldRenamedValue = oldRenames[originalKey];
+          // If the expanded key was the renamed version, restore it to the original
+          if (expandedKey === oldRenamedValue) {
+            newExpandedKey = originalKey;
+          }
+          // If the expanded key was a child of the renamed version, restore it to the original
+          else if (oldRenamedValue && expandedKey.startsWith(oldRenamedValue + ".")) {
+            const childPath = expandedKey.substring(oldRenamedValue.length + 1);
+            newExpandedKey = originalKey + "." + childPath;
+          }
+        }
         // Check direct rename
-        if (expandedKey === originalKey) {
+        else if (expandedKey === originalKey) {
           newExpandedKey = newKey;
         }
         // Check child rename
@@ -1684,6 +1752,26 @@ export function App() {
         [configPath]: newExpandedNodes,
       };
     });
+
+    // Auto-expand parent profiles when a profile is moved to a nested path
+    if (newKey !== originalKey && newKey.includes(".")) {
+      // Extract the parent path from the new key
+      const parentPath = newKey.substring(0, newKey.lastIndexOf("."));
+
+      // Add the parent path to expanded nodes if it's not already expanded
+      setExpandedNodesByConfig((prev) => {
+        const currentExpandedNodes = prev[configPath] || new Set();
+        if (!currentExpandedNodes.has(parentPath)) {
+          const newExpandedNodes = new Set(currentExpandedNodes);
+          newExpandedNodes.add(parentPath);
+          return {
+            ...prev,
+            [configPath]: newExpandedNodes,
+          };
+        }
+        return prev;
+      });
+    }
 
     // Update any pending defaults that reference the old profile name or consolidated renames
     setPendingDefaults((prev) => {
@@ -1753,6 +1841,8 @@ export function App() {
 
     // Close the modal
     setRenameProfileModalOpen(false);
+
+    return true; // Return true to indicate success
   };
 
   const handleDeleteProfile = (profileKey: string) => {

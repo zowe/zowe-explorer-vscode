@@ -630,6 +630,10 @@ export class ConfigEditor extends WebView {
                 }
                 break;
             }
+            case "SHOW_ERROR_MESSAGE": {
+                vscode.window.showErrorMessage(message.message);
+                break;
+            }
 
             default:
                 break;

@@ -30,7 +30,7 @@ interface ProfileListProps {
   expandedNodes: Set<string>;
   setExpandedNodes: React.Dispatch<React.SetStateAction<Set<string>>>;
   // Drag and drop props
-  onProfileRename?: (originalKey: string, newKey: string) => void;
+  onProfileRename?: (originalKey: string, newKey: string) => boolean;
   // Props for finding original keys
   configurations?: any[];
   selectedTab?: number | null;
