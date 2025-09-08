@@ -17,6 +17,7 @@ interface ProfileListProps {
   getProfileType: (profileKey: string) => string | null;
   viewMode: "flat" | "tree";
   hasPendingSecureChanges: (profileKey: string) => boolean;
+  hasPendingRename: (profileKey: string) => boolean;
   // Search and filter props
   searchTerm: string;
   filterType: string | null;
@@ -25,6 +26,9 @@ interface ProfileListProps {
   // Profile sort order props
   profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical";
   onProfileSortOrderChange: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical") => void;
+  // Expanded nodes props
+  expandedNodes: Set<string>;
+  setExpandedNodes: React.Dispatch<React.SetStateAction<Set<string>>>;
 }
 
 export function ProfileList({
@@ -36,14 +40,16 @@ export function ProfileList({
   getProfileType,
   viewMode,
   hasPendingSecureChanges,
+  hasPendingRename,
   searchTerm,
   filterType,
   onSearchChange,
   onFilterChange,
+  expandedNodes,
+  setExpandedNodes,
 }: ProfileListProps) {
   const [filteredProfileKeys, setFilteredProfileKeys] = useState<string[]>(sortedProfileKeys);
   const [isFilteringActive, setIsFilteringActive] = useState<boolean>(false);
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
   // Get unique profile types for filter dropdown
   const availableTypes = Array.from(
@@ -81,18 +87,23 @@ export function ProfileList({
     if (viewMode === "tree" && selectedProfileKey) {
       const newExpandedNodes = new Set(expandedNodes);
       const parts = selectedProfileKey.split(".");
+      let hasChanges = false;
 
       // Add all parent nodes of the selected profile
       for (let i = 1; i < parts.length; i++) {
         const parentKey = parts.slice(0, i).join(".");
-        if (sortedProfileKeys.includes(parentKey)) {
+        if (sortedProfileKeys.includes(parentKey) && !newExpandedNodes.has(parentKey)) {
           newExpandedNodes.add(parentKey);
+          hasChanges = true;
         }
       }
 
-      setExpandedNodes(newExpandedNodes);
+      // Only update if there are actual changes to prevent infinite loops
+      if (hasChanges) {
+        setExpandedNodes(newExpandedNodes);
+      }
     }
-  }, [selectedProfileKey, viewMode, sortedProfileKeys]);
+  }, [selectedProfileKey, viewMode, sortedProfileKeys, expandedNodes, setExpandedNodes]);
 
   // Helper function to expand filtered results for tree view
   const expandFilteredResultsForTree = (filteredKeys: string[], allKeys: string[]): string[] => {
@@ -151,6 +162,7 @@ export function ProfileList({
             isProfileDefault={isProfileDefault}
             getProfileType={getProfileType}
             hasPendingSecureChanges={hasPendingSecureChanges}
+            hasPendingRename={hasPendingRename}
             isFilteringActive={isFilteringActive}
             expandedNodes={expandedNodes}
             setExpandedNodes={setExpandedNodes}
@@ -188,7 +200,7 @@ export function ProfileList({
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
-                  opacity: pendingProfiles[profileKey] || hasPendingSecureChanges(profileKey) ? 0.7 : 1,
+                  opacity: pendingProfiles[profileKey] || hasPendingSecureChanges(profileKey) || hasPendingRename(profileKey) ? 0.7 : 1,
                 }}
               >
                 {profileKey}

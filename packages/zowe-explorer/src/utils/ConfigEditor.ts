@@ -651,15 +651,128 @@ export class ConfigEditor extends WebView {
         }
     }
 
+    /**
+     * Updates rename keys to handle both parent-first and child-first rename scenarios.
+     *
+     * Parent-first scenario:
+     * - test1 -> test12
+     * - test1.lpar1 -> test12.lpar12
+     * Result: test12.lpar1 -> test12.lpar12
+     *
+     * Child-first scenario:
+     * - test1.lpar1 -> test1.lpar2
+     * - test1 -> test12
+     * Result: test12.lpar2 -> test12.lpar2 (no change needed for child, parent path updated)
+     */
+    private updateRenameKeysForParentChanges(
+        renames: Array<{ originalKey: string; newKey: string; configPath: string }>
+    ): Array<{ originalKey: string; newKey: string; configPath: string }> {
+        const updatedRenames: Array<{ originalKey: string; newKey: string; configPath: string }> = [];
+        const processedRenames = new Map<string, string>(); // originalKey -> newKey mapping
+        const allRenames = new Map<string, string>(); // Track all renames for reverse lookup
+
+        // First pass: collect all renames
+        for (const rename of renames) {
+            allRenames.set(rename.originalKey, rename.newKey);
+        }
+
+        for (const rename of renames) {
+            let updatedOriginalKey = rename.originalKey;
+            let updatedNewKey = rename.newKey;
+
+            // Check if any parent of this profile has been renamed
+            const originalParts = rename.originalKey.split(".");
+            const newParts = rename.newKey.split(".");
+
+            // Update the original key to reflect any parent renames
+            for (let i = 0; i < originalParts.length; i++) {
+                const parentPath = originalParts.slice(0, i + 1).join(".");
+                if (processedRenames.has(parentPath)) {
+                    // Replace the parent part in the original key
+                    const newParentPath = processedRenames.get(parentPath)!;
+                    const remainingParts = originalParts.slice(i + 1);
+                    updatedOriginalKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
+                }
+            }
+
+            // Update the new key to reflect any parent renames
+            for (let i = 0; i < newParts.length; i++) {
+                const parentPath = newParts.slice(0, i + 1).join(".");
+                if (processedRenames.has(parentPath)) {
+                    // Replace the parent part in the new key
+                    const newParentPath = processedRenames.get(parentPath)!;
+                    const remainingParts = newParts.slice(i + 1);
+                    updatedNewKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
+                }
+            }
+
+            // Handle child-first scenario: if this is a parent rename, update any existing child renames
+            if (originalParts.length === 1) {
+                // This is a parent rename
+                const parentOriginalKey = rename.originalKey;
+                const parentNewKey = rename.newKey;
+
+                // Find and update any child renames that reference this parent
+                for (let i = 0; i < updatedRenames.length; i++) {
+                    const childRename = updatedRenames[i];
+                    const childOriginalParts = childRename.originalKey.split(".");
+
+                    // Check if this child rename starts with the parent we're renaming
+                    if (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) {
+                        // Update the child's original key to use the new parent name
+                        const childRemainingParts = childOriginalParts.slice(1);
+                        const updatedChildOriginalKey = `${parentNewKey}.${childRemainingParts.join(".")}`;
+
+                        // Update the child's new key to use the new parent name if it also starts with the old parent
+                        let updatedChildNewKey = childRename.newKey;
+                        const childNewParts = childRename.newKey.split(".");
+                        if (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey) {
+                            const childNewRemainingParts = childNewParts.slice(1);
+                            updatedChildNewKey = `${parentNewKey}.${childNewRemainingParts.join(".")}`;
+                        }
+
+                        // Update the child rename in the array
+                        updatedRenames[i] = {
+                            originalKey: updatedChildOriginalKey,
+                            newKey: updatedChildNewKey,
+                            configPath: childRename.configPath,
+                        };
+                    }
+                }
+            }
+
+            // Add the updated rename
+            updatedRenames.push({
+                originalKey: updatedOriginalKey,
+                newKey: updatedNewKey,
+                configPath: rename.configPath,
+            });
+
+            // Track this rename for future reference
+            processedRenames.set(rename.originalKey, rename.newKey);
+        }
+
+        return updatedRenames;
+    }
+
     private async handleProfileRenames(renames: Array<{ originalKey: string; newKey: string; configPath: string }>): Promise<void> {
         const profInfo = new ProfileInfo("zowe");
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
-        for (const rename of renames) {
+        // Sort renames by length (shortest first) to ensure parent renames are processed before child renames
+        const sortedRenames = renames.sort((a, b) => {
+            const aLength = a.originalKey.split(".").length;
+            const bLength = b.originalKey.split(".").length;
+            return aLength - bLength; // Ascending order (shortest first)
+        });
+
+        // Update rename keys to reflect parent renames that have already been processed
+        const updatedRenames = this.updateRenameKeysForParentChanges(sortedRenames);
+
+        for (const rename of updatedRenames) {
             try {
                 // Get the team config
                 const teamConfig = profInfo.getTeamConfig();
-
                 const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
 
                 if (!targetLayer) {
@@ -1044,6 +1157,12 @@ export class ConfigEditor extends WebView {
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         const teamConfig = profInfo.getTeamConfig();
+
+        // Simulate profile renames FIRST, so that default changes can reference the renamed profiles
+        if (renames && Array.isArray(renames)) {
+            this.simulateProfileRenames(renames, teamConfig);
+        }
+
         const parsedChanges = this.parseConfigChanges(changes);
         for (const change of parsedChanges) {
             if (change.defaultsChanges || change.defaultsDeleteKeys) {
@@ -1055,21 +1174,53 @@ export class ConfigEditor extends WebView {
             }
         }
 
-        if (renames && Array.isArray(renames)) {
-            this.simulateProfileRenames(renames, teamConfig);
-        }
-
         const allProfiles = profInfo.getAllProfiles();
 
-        let actualProfileName = profPath;
+        // After simulateProfileRenames, the profile data has been moved to the new location
+        // So we need to look for the profile using the new name (after rename simulation)
+        let profileNameToLookup = profPath;
+
+        // Check if this profile or any of its parents was renamed and use the new name for lookup
         if (renames && Array.isArray(renames)) {
-            const rename = renames.find((r) => r.originalKey === profPath && r.configPath === configPath);
+            // First check for exact match
+            let rename = renames.find((r) => r.originalKey === profPath && r.configPath === configPath);
+
             if (rename) {
-                actualProfileName = rename.newKey;
+                // Exact match found
+                profileNameToLookup = rename.newKey;
+            } else if (profPath.includes(".")) {
+                // Handle nested profiles with multiple potential renames
+                const profileParts = profPath.split(".");
+                let currentPath = "";
+
+                // Build the new path incrementally
+                for (let i = 0; i < profileParts.length; i++) {
+                    const nextPath = currentPath ? `${currentPath}.${profileParts[i]}` : profileParts[i];
+
+                    // Check if this specific path level has a rename
+                    const levelRename = renames.find((r) => r.originalKey === nextPath && r.configPath === configPath);
+
+                    if (levelRename) {
+                        // This level was renamed, use the new name
+                        currentPath = levelRename.newKey;
+                    } else {
+                        // This level wasn't renamed, add the original part
+                        currentPath = nextPath;
+                    }
+                }
+
+                profileNameToLookup = currentPath;
             }
         }
 
-        const profile = allProfiles.find((prof) => prof.profName === actualProfileName && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
+        // Look for the profile using the name after rename simulation
+        let profile = allProfiles.find((prof) => prof.profName === profileNameToLookup && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
+
+        // If still not found, try with the original name as fallback
+        if (!profile && profileNameToLookup !== profPath) {
+            profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
+        }
+
         if (!profile) {
             return;
         }
@@ -1087,7 +1238,14 @@ export class ConfigEditor extends WebView {
     }
 
     private simulateProfileRenames(renames: Array<{ originalKey: string; newKey: string; configPath: string }>, teamConfig: any): void {
-        for (const rename of renames) {
+        // Sort renames by length (shortest first) to ensure parent renames are processed before child renames
+        const sortedRenames = renames.sort((a, b) => {
+            const aLength = a.originalKey.split(".").length;
+            const bLength = b.originalKey.split(".").length;
+            return aLength - bLength; // Ascending order (shortest first)
+        });
+
+        for (const rename of sortedRenames) {
             try {
                 const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
 
@@ -1174,6 +1332,11 @@ export class ConfigEditor extends WebView {
 
         const teamConfig = profInfo.getTeamConfig();
 
+        // Simulate profile renames FIRST, so that default changes can reference the renamed profiles
+        if (renames && Array.isArray(renames)) {
+            this.simulateProfileRenames(renames, teamConfig);
+        }
+
         if (changes) {
             const parsedChanges = this.parseConfigChanges(changes);
             for (const change of parsedChanges) {
@@ -1184,10 +1347,6 @@ export class ConfigEditor extends WebView {
                     this.simulateProfileChanges(change.changes, change.deletions, change.configPath, teamConfig);
                 }
             }
-        }
-
-        if (renames && Array.isArray(renames)) {
-            this.simulateProfileRenames(renames, teamConfig);
         }
 
         if (configPath !== teamConfig.api.layers.get().path) {

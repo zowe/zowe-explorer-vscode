@@ -173,6 +173,7 @@ export function getRenamedProfileKey(
 
 /**
  * Get the renamed profile key for nested profiles, checking for renames at each level
+ * and handling parent renames that affect child profiles
  */
 export function getRenamedProfileKeyWithNested(
     profileKey: string,
@@ -184,28 +185,38 @@ export function getRenamedProfileKeyWithNested(
         return getRenamedProfileKey(profileKey, configPath, renames);
     }
 
-    // Handle nested profiles by checking for renames at each level of nesting
-    const profileParts = profileKey.split(".");
-    let renamedPath = "";
+    // First check if there's a direct rename for the complete profile path
+    const directRename = getRenamedProfileKey(profileKey, configPath, renames);
+    if (directRename !== profileKey) {
+        return directRename;
+    }
 
-    // Check if any parent profile has been renamed
-    for (let i = 0; i < profileParts.length; i++) {
-        const currentPath = profileParts.slice(0, i + 1).join(".");
+    // Handle nested profiles by applying renames iteratively to handle multiple nested renames
+    const configRenames = renames[configPath] || {};
+    let renamedPath = profileKey;
 
-        // Check if this current path has been renamed
-        const renamed = getRenamedProfileKey(currentPath, configPath, renames);
+    // Apply renames iteratively until no more changes
+    let changed = true;
+    while (changed) {
+        changed = false;
 
-        if (renamed !== currentPath) {
-            // This path has been renamed, use the new name and continue building from there
-            const remainingParts = profileParts.slice(i + 1);
-            renamedPath = renamed + (remainingParts.length > 0 ? "." + remainingParts.join(".") : "");
-            break;
-        } else if (i === 0) {
-            // First part hasn't been renamed
-            renamedPath = profileParts[i];
-        } else {
-            // This part hasn't been renamed, add it to the path
-            renamedPath = renamedPath + "." + profileParts[i];
+        // Sort renames by length of original key (longest first) to handle nested renames correctly
+        const sortedRenames = Object.entries(configRenames).sort(([a], [b]) => b.length - a.length);
+
+        for (const [originalKey, newKey] of sortedRenames) {
+            // Check for exact match
+            if (renamedPath === originalKey) {
+                renamedPath = newKey;
+                changed = true;
+                break;
+            }
+
+            // Check for partial matches (parent renames affecting children)
+            if (renamedPath.startsWith(originalKey + ".")) {
+                renamedPath = renamedPath.replace(originalKey + ".", newKey + ".");
+                changed = true;
+                break;
+            }
         }
     }
 
@@ -234,6 +245,7 @@ export function getOriginalProfileKey(
 
 /**
  * Get the original profile key for nested profiles, checking for renames at each level
+ * and handling parent renames that affect child profiles
  */
 export function getOriginalProfileKeyWithNested(
     renamedKey: string,
@@ -245,10 +257,30 @@ export function getOriginalProfileKeyWithNested(
         return getOriginalProfileKey(renamedKey, configPath, renames);
     }
 
+    // First check if there's a direct reverse lookup for the complete profile path
+    const directOriginal = getOriginalProfileKey(renamedKey, configPath, renames);
+    if (directOriginal !== renamedKey) {
+        return directOriginal;
+    }
+
     // Handle nested profiles by checking for renames at each level of nesting
     const profileParts = renamedKey.split(".");
     let originalPath = "";
 
+    // We need to reverse the rename process by checking what original keys would produce this renamed key
+    // First, try to find if any existing original key would produce this renamed key when processed through getRenamedProfileKeyWithNested
+    const configRenames = renames[configPath] || {};
+    for (const [origKey, _] of Object.entries(configRenames)) {
+        if (origKey.includes(".")) {
+            // Check if this original key would produce our renamedKey when processed
+            const wouldProduce = getRenamedProfileKeyWithNested(origKey, configPath, renames);
+            if (wouldProduce === renamedKey) {
+                return origKey;
+            }
+        }
+    }
+
+    // If no direct match found, fall back to level-by-level reverse processing
     // Check if any parent profile has been renamed by working backwards
     for (let i = 0; i < profileParts.length; i++) {
         const currentPath = profileParts.slice(0, i + 1).join(".");
@@ -267,6 +299,25 @@ export function getOriginalProfileKeyWithNested(
         } else {
             // This part hasn't been renamed, add it to the path
             originalPath = originalPath + "." + profileParts[i];
+        }
+    }
+
+    // Additional check: Handle the case where a parent was renamed after a child was renamed
+    // This handles the reverse scenario: test2.lpar2 should map back to test1.lpar1
+    // when we have: test1.lpar1 -> test1.lpar2, then test1 -> test2
+    const profilePartsForParentCheck = originalPath.split(".");
+
+    // Check if any parent in the current path needs to be reverted
+    for (let i = 0; i < profilePartsForParentCheck.length; i++) {
+        const parentPath = profilePartsForParentCheck.slice(0, i + 1).join(".");
+
+        // Check if this parent path was the result of a rename (reverse lookup)
+        for (const [origKey, newKey] of Object.entries(configRenames)) {
+            if (newKey === parentPath) {
+                const remainingParts = profilePartsForParentCheck.slice(i + 1);
+                originalPath = origKey + (remainingParts.length > 0 ? "." + remainingParts.join(".") : "");
+                break;
+            }
         }
     }
 

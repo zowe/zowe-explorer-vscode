@@ -6,6 +6,7 @@ interface ProfileTreeProps {
   isProfileDefault: (profileKey: string) => boolean;
   getProfileType: (profileKey: string) => string | null;
   hasPendingSecureChanges: (profileKey: string) => boolean;
+  hasPendingRename: (profileKey: string) => boolean;
   isFilteringActive?: boolean;
   expandedNodes: Set<string>;
   setExpandedNodes: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -27,6 +28,7 @@ export function ProfileTree({
   onProfileSelect,
   isProfileDefault,
   hasPendingSecureChanges,
+  hasPendingRename,
   isFilteringActive,
   expandedNodes,
   setExpandedNodes,
@@ -113,6 +115,7 @@ export function ProfileTree({
     const hasPendingChanges = pendingProfiles[node.key];
     const hasSecureChanges = hasPendingSecureChanges(node.key);
     const isDefault = isProfileDefault(node.key);
+    const hasRename = hasPendingRename(node.key);
 
     return (
       <div key={node.key}>
@@ -169,7 +172,7 @@ export function ProfileTree({
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
-              opacity: hasPendingChanges || hasSecureChanges ? 0.7 : 1,
+              opacity: hasPendingChanges || hasSecureChanges || hasRename ? 0.7 : 1,
             }}
           >
             {node.name}

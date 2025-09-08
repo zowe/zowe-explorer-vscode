@@ -22,15 +22,22 @@ export function RenameProfileModal({
 }: RenameProfileModalProps) {
   const [newName, setNewName] = useState("");
   const [error, setError] = useState("");
+  const [isFullPathMode, setIsFullPathMode] = useState(false);
   const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, "#profile-name");
 
   useEffect(() => {
     if (isOpen) {
-      setNewName(currentProfileName);
+      // Initialize with the appropriate value based on mode
+      setNewName(isFullPathMode ? currentProfileKey : currentProfileName);
       setError("");
+    } else {
+      // Reset state when modal is closed
+      setNewName("");
+      setError("");
+      setIsFullPathMode(false);
     }
-  }, [isOpen, currentProfileName]);
+  }, [isOpen, currentProfileName, currentProfileKey, isFullPathMode]);
 
   const validateNewName = (name: string): string | null => {
     // Check if name is empty
@@ -39,7 +46,8 @@ export function RenameProfileModal({
     }
 
     // Check if name is the same as current
-    if (name.trim() === currentProfileName) {
+    const currentValue = isFullPathMode ? currentProfileKey : currentProfileName;
+    if (name.trim() === currentValue) {
       return "New name must be different from current name";
     }
 
@@ -49,18 +57,25 @@ export function RenameProfileModal({
       return "Profile name can only contain letters, numbers, dots, underscores, and hyphens";
     }
 
-    // Check if the new name would conflict with existing profiles
-    const parentPath = currentProfileKey.includes(".") ? currentProfileKey.substring(0, currentProfileKey.lastIndexOf(".")) : "";
-    const newFullKey = parentPath ? `${parentPath}.${name.trim()}` : name.trim();
+    // Determine the new full key based on mode
+    let newFullKey: string;
+    if (isFullPathMode) {
+      // In full path mode, the user is specifying the entire profile path
+      newFullKey = name.trim();
+    } else {
+      // In single name mode, combine with parent path
+      const parentPath = currentProfileKey.includes(".") ? currentProfileKey.substring(0, currentProfileKey.lastIndexOf(".")) : "";
+      newFullKey = parentPath ? `${parentPath}.${name.trim()}` : name.trim();
+    }
 
     // Check existing profiles
     if (existingProfiles.includes(newFullKey)) {
-      return `Profile '${name.trim()}' already exists`;
+      return `Profile '${newFullKey}' already exists`;
     }
 
     // Check pending profiles
     if (pendingProfiles.includes(newFullKey)) {
-      return `Profile '${name.trim()}' is pending creation`;
+      return `Profile '${newFullKey}' is pending creation`;
     }
 
     return null;
@@ -73,9 +88,16 @@ export function RenameProfileModal({
       return;
     }
 
-    // Construct the full profile key by combining parent path with new name
-    const parentPath = currentProfileKey.includes(".") ? currentProfileKey.substring(0, currentProfileKey.lastIndexOf(".")) : "";
-    const fullNewKey = parentPath ? `${parentPath}.${newName.trim()}` : newName.trim();
+    // Determine the new full key based on mode
+    let fullNewKey: string;
+    if (isFullPathMode) {
+      // In full path mode, the user is specifying the entire profile path
+      fullNewKey = newName.trim();
+    } else {
+      // In single name mode, combine with parent path
+      const parentPath = currentProfileKey.includes(".") ? currentProfileKey.substring(0, currentProfileKey.lastIndexOf(".")) : "";
+      fullNewKey = parentPath ? `${parentPath}.${newName.trim()}` : newName.trim();
+    }
 
     onRename(fullNewKey);
   };
@@ -98,6 +120,14 @@ export function RenameProfileModal({
     }
   };
 
+  const handleModeToggle = () => {
+    const newMode = !isFullPathMode;
+    setIsFullPathMode(newMode);
+    // Update the input value based on the new mode
+    setNewName(newMode ? currentProfileKey : currentProfileName);
+    setError("");
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -105,7 +135,7 @@ export function RenameProfileModal({
       <div ref={modalRef} className="modal-content">
         <h2>Rename Profile</h2>
         <div className="modal-body">
-          <label htmlFor="profile-name">New Profile Name:</label>
+          <label htmlFor="profile-name">{isFullPathMode ? "New Profile Path:" : "New Profile Name:"}</label>
           <input
             id="profile-name"
             type="text"
@@ -113,11 +143,17 @@ export function RenameProfileModal({
             value={newName}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Enter new profile name"
+            placeholder={isFullPathMode ? "Enter new profile path" : "Enter new profile name"}
           />
           {error && <div className="modal-error">{error}</div>}
           <div className="modal-hint" style={{ marginBottom: "16px" }}>
             Warning: Unsaved renames may result in inaccurate rendering of profiles. Make sure to save your changes after renaming.
+          </div>
+          <div style={{ marginBottom: "12px" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <input type="checkbox" checked={isFullPathMode} onChange={handleModeToggle} />
+              <span>Rename entire profile path</span>
+            </label>
           </div>
         </div>
         <div className="modal-actions">

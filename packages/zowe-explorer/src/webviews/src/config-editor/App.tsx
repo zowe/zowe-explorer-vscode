@@ -120,6 +120,9 @@ export function App() {
   const [secureValuesAllowed, setSecureValuesAllowed] = useState<boolean>(true);
   const [hasPromptedForZeroConfigs, setHasPromptedForZeroConfigs] = useState(false);
 
+  // Tree view expanded nodes state - track expanded nodes per config
+  const [expandedNodesByConfig, setExpandedNodesByConfig] = useState<{ [configPath: string]: Set<string> }>({});
+
   // Modal states
   const [newProfileKeyPath, setNewProfileKeyPath] = useState<string[] | null>(null);
   const [newProfileKey, setNewProfileKey] = useState("");
@@ -233,6 +236,15 @@ export function App() {
       return changes;
     }
 
+    // Create a map for faster lookup and to handle complex nested renames
+    const renameMap = new Map<string, string>();
+    renames.forEach((rename) => {
+      if (rename.configPath) {
+        const key = `${rename.configPath}:${rename.originalKey}`;
+        renameMap.set(key, rename.newKey);
+      }
+    });
+
     return changes.map((change) => {
       const updatedChange = { ...change };
 
@@ -249,28 +261,80 @@ export function App() {
             updatedChange.profile = updatedChange.profile.replace(rename.originalKey + ".", rename.newKey + ".");
           }
 
-          // Update the key field to use new profile name
+          // Update the key field to use new profile name - handle complex nested paths
           if (updatedChange.key) {
-            // Handle nested profiles by finding and replacing the profile name in the key
-            // The key format is: profiles.parent.profiles.child.properties.property
-            // We need to find where the profile name appears and replace it
-            const keyParts = updatedChange.key.split(".");
-            for (let i = 0; i < keyParts.length; i++) {
-              if (keyParts[i] === rename.originalKey) {
-                keyParts[i] = rename.newKey;
+            // For complex renames like test1.lpar1 -> test2.lpar2, we need to handle the full path replacement
+            // The key format is: profiles.test1.profiles.lpar1.properties.property
+            // When test1.lpar1 -> test2.lpar2, this should become: profiles.test2.profiles.lpar2.properties.property
+
+            const originalKeyParts = rename.originalKey.split(".");
+            const newKeyParts = rename.newKey.split(".");
+
+            if (originalKeyParts.length > 1 && newKeyParts.length > 1) {
+              // Handle complex nested profile renames
+              let updatedKey = updatedChange.key;
+
+              // Build the pattern to match in the key
+              // For test1.lpar1, we need to match "profiles.test1.profiles.lpar1"
+              const originalPattern = "profiles." + originalKeyParts.join(".profiles.");
+              const newPattern = "profiles." + newKeyParts.join(".profiles.");
+
+              if (updatedKey.includes(originalPattern)) {
+                updatedKey = updatedKey.replace(originalPattern, newPattern);
+                updatedChange.key = updatedKey;
               }
+            } else {
+              // Handle simple renames
+              const keyParts = updatedChange.key.split(".");
+              for (let i = 0; i < keyParts.length; i++) {
+                if (keyParts[i] === rename.originalKey) {
+                  keyParts[i] = rename.newKey;
+                }
+              }
+              updatedChange.key = keyParts.join(".");
             }
-            updatedChange.key = keyParts.join(".");
           }
 
           // Update the path array to use new profile name
           if (updatedChange.path && Array.isArray(updatedChange.path)) {
-            updatedChange.path = updatedChange.path.map((pathPart: string) => {
-              if (pathPart === rename.originalKey) {
-                return rename.newKey;
+            const originalKeyParts = rename.originalKey.split(".");
+            const newKeyParts = rename.newKey.split(".");
+
+            if (originalKeyParts.length > 1 && newKeyParts.length > 1) {
+              // Handle complex nested profile path updates
+              let pathUpdated = false;
+              const updatedPath = [...updatedChange.path];
+
+              // Find the position where the original profile path starts in the path array
+              for (let i = 0; i <= updatedPath.length - originalKeyParts.length; i++) {
+                let matches = true;
+                for (let j = 0; j < originalKeyParts.length; j++) {
+                  if (updatedPath[i + j] !== originalKeyParts[j]) {
+                    matches = false;
+                    break;
+                  }
+                }
+
+                if (matches) {
+                  // Replace the matched segment with the new key parts
+                  updatedPath.splice(i, originalKeyParts.length, ...newKeyParts);
+                  pathUpdated = true;
+                  break;
+                }
               }
-              return pathPart;
-            });
+
+              if (pathUpdated) {
+                updatedChange.path = updatedPath;
+              }
+            } else {
+              // Handle simple path updates
+              updatedChange.path = updatedChange.path.map((pathPart: string) => {
+                if (pathPart === rename.originalKey) {
+                  return rename.newKey;
+                }
+                return pathPart;
+              });
+            }
           }
         }
       }
@@ -436,6 +500,7 @@ export function App() {
     formatPendingChanges,
     getAvailableProfiles,
     secureValuesAllowed,
+    renames,
   });
 
   // Memoize handleSave to prevent unnecessary re-renders
@@ -512,122 +577,12 @@ export function App() {
     vscodeApi.postMessage({ command: "GET_PROFILES" });
   }, [selectedTab, selectedProfileKey]);
 
-  // Function to sort properties based on the current sort order
-  const sortProperties = useCallback(
-    (entries: [string, any][], mergedProps?: any, originalProperties?: any, path?: string[]): [string, any][] => {
-      if (propertySortOrder === "alphabetical") {
-        return entries.sort(([a], [b]) => a.localeCompare(b));
-      }
-
-      // For merged-first and non-merged-first, we need the configuration data
-      if (selectedTab === null || !configurations[selectedTab]) {
-        if (!(mergedProps && Object.keys(mergedProps).length > 0)) {
-          return entries;
-        }
-      }
-
-      // For merged-first and non-merged-first, we need to categorize properties
-      const categorizedEntries = entries.map(([key, value]) => {
-        const displayKey = key.split(".").pop();
-        const fullKey = path ? [...path, key].join(".") : key;
-
-        // Check if this is a secure property that was added for sorting
-        const isSecurePropertyForSorting = typeof value === "object" && value !== null && value._isSecureProperty === true;
-
-        // Check if this is a merged property that was added for sorting
-        const isMergedPropertyForSorting = typeof value === "object" && value !== null && value._isMergedProperty === true;
-
-        // Determine if this property is actually merged
-        let isActuallyMerged = false;
-
-        if (isSecurePropertyForSorting) {
-          // Secure properties added for sorting are always original (non-merged)
-          isActuallyMerged = false;
-        } else if (isMergedPropertyForSorting) {
-          // Properties with _isMergedProperty flag are always merged
-          isActuallyMerged = true;
-        } else if (displayKey && mergedProps && mergedProps[displayKey]) {
-          // This property exists in mergedProps
-          if (originalProperties && originalProperties.hasOwnProperty(displayKey)) {
-            // It also exists in original properties, so it's NOT merged
-            isActuallyMerged = false;
-          } else {
-            // It only exists in mergedProps, so it IS merged
-            isActuallyMerged = true;
-          }
-        } else {
-          // Property doesn't exist in mergedProps, so it's original
-          isActuallyMerged = false;
-        }
-
-        // Use the existing isPropertySecure function to determine if this property is secure
-        let isSecure = false;
-        if (isSecurePropertyForSorting) {
-          // Properties with _isSecureProperty flag are always secure
-          isSecure = true;
-        } else if (displayKey && path) {
-          // Get configPath for secure property check
-          let configPath: string | undefined = undefined;
-          if (selectedTab !== null && configurations[selectedTab]) {
-            configPath = configurations[selectedTab].configPath;
-          }
-          if (configPath) {
-            isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties);
-          }
-        }
-
-        let category = 0; // 0 = original non-secure, 1 = original secure, 2 = merged non-secure, 3 = merged secure
-
-        if (isActuallyMerged) {
-          category = isSecure ? 3 : 2;
-        } else {
-          category = isSecure ? 1 : 0;
-        }
-
-        return { key, value, category, displayKey, isActuallyMerged, isSecure };
-      });
-
-      if (propertySortOrder === "merged-first") {
-        return categorizedEntries
-          .sort((a, b) => {
-            // First sort by category (merged first: 2, 3, 0, 1)
-            if (a.category !== b.category) {
-              // Categories: 0 = original non-secure, 1 = original secure, 2 = merged non-secure, 3 = merged secure
-              // For merged-first, we want: 2, 3, 0, 1 (merged first, then original)
-              const categoryOrder = [2, 3, 0, 1];
-              const aOrder = categoryOrder.indexOf(a.category);
-              const bOrder = categoryOrder.indexOf(b.category);
-              return aOrder - bOrder;
-            }
-            // Then alphabetically within each category
-            return a.key.localeCompare(b.key);
-          })
-          .map(({ key, value }) => [key, value] as [string, any]);
-      } else {
-        // non-merged-first
-        return categorizedEntries
-          .sort((a, b) => {
-            // First sort by category (non-merged first: 0, 1, 2, 3)
-            if (a.category !== b.category) {
-              // Categories: 0 = original non-secure, 1 = original secure, 2 = merged non-secure, 3 = merged secure
-              // For non-merged-first, we want: 0, 1, 2, 3 (original first, then merged)
-              return a.category - b.category;
-            }
-            // Then alphabetically within each category
-            return a.key.localeCompare(b.key);
-          })
-          .map(({ key, value }) => [key, value] as [string, any]);
-      }
-    },
-    [propertySortOrder, sortOrderVersion]
-  );
-
   // Initialize localStorage values on component mount
   useEffect(() => {
     // Retrieve stored settings from localStorage
     getLocalStorageValue(LOCAL_STORAGE_KEYS.SHOW_MERGED_PROPERTIES, true);
     getLocalStorageValue(LOCAL_STORAGE_KEYS.VIEW_MODE, "tree");
-    getLocalStorageValue(LOCAL_STORAGE_KEYS.PROPERTY_SORT_ORDER, "merged-last");
+    getLocalStorageValue(LOCAL_STORAGE_KEYS.PROPERTY_SORT_ORDER, "alphabetical");
     getLocalStorageValue(LOCAL_STORAGE_KEYS.PROFILE_SORT_ORDER, "natural");
   }, [getLocalStorageValue]);
 
@@ -676,6 +631,8 @@ export function App() {
           setSelectedProfileKey(pendingSaveSelection.profile);
           setPendingSaveSelection(null);
           setIsSaving(false);
+          // Increment sort order version to trigger re-render with updated merged properties after save
+          setSortOrderVersion((prev) => prev + 1);
         } else {
           setSelectedTab((prevSelectedTab) => {
             if (prevSelectedTab !== null && prevSelectedTab < contents.length) {
@@ -731,9 +688,7 @@ export function App() {
           });
         }
 
-        if (Object.keys(mergedPropsData).length > 0) {
-          setMergedProperties(mergedPropsData);
-        }
+        setMergedProperties(mergedPropsData);
 
         // Clear the pending request since we received the response
         setPendingMergedPropertiesRequest(null);
@@ -950,7 +905,7 @@ export function App() {
         return () => clearTimeout(timeoutId);
       }
     }
-  }, [selectedProfileKey, selectedTab, formatPendingChanges, renames]);
+  }, [selectedProfileKey, selectedTab, formatPendingChanges, renames, sortOrderVersion]);
 
   useEffect(() => {
     const isModalOpen = newProfileModalOpen || saveModalOpen || newLayerModalOpen || wizardModalOpen || renameProfileModalOpen;
@@ -1034,7 +989,14 @@ export function App() {
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
     const path = flattenedConfig[key]?.path ?? key.split(".");
-    const profileKey = extractProfileKeyFromPath(path);
+
+    // Use the selected profile key and apply all pending renames to get the fully renamed profile key
+    let profileKey = selectedProfileKey || extractProfileKeyFromPath(path);
+
+    // If we have a selected profile key, apply all pending renames to get the fully renamed state
+    if (selectedProfileKey && renames[configPath]) {
+      profileKey = getRenamedProfileKeyWithNested(selectedProfileKey, configPath, renames);
+    }
 
     // Check if this property is currently secure
     const displayKey = path[path.length - 1];
@@ -1305,34 +1267,44 @@ export function App() {
 
   // Helper function to get the correct profile name for merged properties (handles renames)
   const getProfileNameForMergedProperties = (profileKey: string, configPath: string): string => {
-    // If this profile is a new name from a rename, get the original name
-    const originalKey = getOriginalProfileKeyWithNested(profileKey, configPath, renames);
+    // For merged properties, we need to find where the data is actually stored in the original configuration
+    // The data is always stored at the original location before any renames
+    // We need to reverse all renames to get to the original location
+    let effectiveProfileKey = profileKey;
 
-    // For child profiles, we need to handle the case where the parent profile has been renamed
-    // If this is a child profile and its parent has been renamed, we need to find the data
-    // using the original parent name structure
-    let effectiveProfileKey = originalKey;
+    // Apply reverse renames step by step
+    if (renames[configPath] && Object.keys(renames[configPath]).length > 0) {
+      const configRenames = renames[configPath];
 
-    if (originalKey.includes(".")) {
-      // This is a child profile - check if any parent has been renamed
-      const profilePathParts = originalKey.split(".");
-      const parentKey = profilePathParts.slice(0, -1).join(".");
-      const hasParentRename = Object.values(renames[configPath] || {}).some((renamedKey) => renamedKey === parentKey);
+      // Sort renames by length of newKey (longest first) to handle nested renames correctly
+      const sortedRenames = Object.entries(configRenames).sort(([, a], [, b]) => b.length - a.length);
 
-      if (hasParentRename) {
-        // Find the original parent key
-        const originalParentKey = Object.keys(renames[configPath] || {}).find((key) => renames[configPath][key] === parentKey);
-        if (originalParentKey) {
-          // Reconstruct the original child profile key
-          const childName = profilePathParts[profilePathParts.length - 1];
-          effectiveProfileKey = `${originalParentKey}.${childName}`;
+      let changed = true;
+
+      // Keep applying reverse renames until no more changes
+      while (changed) {
+        changed = false;
+
+        // Process renames from longest to shortest to handle nested cases
+        for (const [originalKey, newKey] of sortedRenames) {
+          // Check for exact match
+          if (effectiveProfileKey === newKey) {
+            effectiveProfileKey = originalKey;
+            changed = true;
+            break;
+          }
+
+          // Check for partial matches (parent renames affecting children)
+          if (effectiveProfileKey.startsWith(newKey + ".")) {
+            effectiveProfileKey = effectiveProfileKey.replace(newKey + ".", originalKey + ".");
+            changed = true;
+            break;
+          }
         }
       }
     }
 
-    const result = effectiveProfileKey || profileKey;
-
-    return result;
+    return effectiveProfileKey;
   };
 
   // Helper function to check if a profile is set as default
@@ -1356,7 +1328,22 @@ export function App() {
     const config = configurations[selectedTab!].properties;
     const defaults = config.defaults || {};
 
-    return defaults[profileType] === profileKey || defaults[profileType] === originalProfileKey;
+    // Check if the current profile is the default
+    if (defaults[profileType] === profileKey || defaults[profileType] === originalProfileKey) {
+      return true;
+    }
+
+    // Check if this profile should be the default due to renames (simulate backend logic)
+    // This handles the case where a default profile was renamed and should remain the default
+    const configRenames = renames[configPath] || {};
+    for (const [originalKey, newKey] of Object.entries(configRenames)) {
+      // If the original profile was the default and this is the renamed version
+      if (defaults[profileType] === originalKey && newKey === profileKey) {
+        return true;
+      }
+    }
+
+    return false;
   };
 
   const handleSetAsDefault = (profileKey: string) => {
@@ -1383,45 +1370,366 @@ export function App() {
     }));
   };
 
+  // Helper function to consolidate renames and handle chained renames
+  const consolidateRenames = (
+    existingRenames: { [originalKey: string]: string },
+    originalKey: string,
+    newKey: string
+  ): { [originalKey: string]: string } => {
+    // Create a temporary consolidated object with the new rename
+    const tempRenames = { ...existingRenames, [originalKey]: newKey };
+
+    // Convert to array format for processing with updateRenameKeysForParentChanges logic
+    const renamesArray = Object.entries(tempRenames).map(([orig, newName]) => ({
+      originalKey: orig,
+      newKey: newName,
+      configPath: configurations[selectedTab!]?.configPath || "",
+    }));
+
+    // Sort by depth (shortest first) to ensure parent renames are processed before child renames
+    const sortedRenames = renamesArray.sort((a, b) => {
+      const aLength = a.originalKey.split(".").length;
+      const bLength = b.originalKey.split(".").length;
+      return aLength - bLength;
+    });
+
+    // Apply the same logic as updateRenameKeysForParentChanges
+    const updatedRenames = updateRenameKeysForParentChangesClient(sortedRenames);
+
+    // Convert back to object format
+    const consolidated: { [originalKey: string]: string } = {};
+    updatedRenames.forEach((rename) => {
+      consolidated[rename.originalKey] = rename.newKey;
+    });
+
+    return consolidated;
+  };
+
+  // Client-side version of updateRenameKeysForParentChanges
+  const updateRenameKeysForParentChangesClient = (
+    renames: Array<{ originalKey: string; newKey: string; configPath: string }>
+  ): Array<{ originalKey: string; newKey: string; configPath: string }> => {
+    const updatedRenames: Array<{ originalKey: string; newKey: string; configPath: string }> = [];
+    const processedRenames = new Map<string, string>(); // originalKey -> newKey mapping
+
+    for (const rename of renames) {
+      let updatedOriginalKey = rename.originalKey;
+      let updatedNewKey = rename.newKey;
+
+      // Check if any parent of this profile has been renamed
+      const originalParts = rename.originalKey.split(".");
+      const newParts = rename.newKey.split(".");
+
+      // Update the original key to reflect any parent renames
+      for (let i = 0; i < originalParts.length; i++) {
+        const parentPath = originalParts.slice(0, i + 1).join(".");
+        if (processedRenames.has(parentPath)) {
+          // Replace the parent part in the original key
+          const newParentPath = processedRenames.get(parentPath)!;
+          const remainingParts = originalParts.slice(i + 1);
+          updatedOriginalKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
+        }
+      }
+
+      // Update the new key to reflect any parent renames
+      for (let i = 0; i < newParts.length; i++) {
+        const parentPath = newParts.slice(0, i + 1).join(".");
+        if (processedRenames.has(parentPath)) {
+          // Replace the parent part in the new key
+          const newParentPath = processedRenames.get(parentPath)!;
+          const remainingParts = newParts.slice(i + 1);
+          updatedNewKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
+        }
+      }
+
+      // Handle child-first scenario: if this is a parent rename, update any existing child renames
+      if (originalParts.length === 1) {
+        // This is a parent rename
+        const parentOriginalKey = rename.originalKey;
+        const parentNewKey = rename.newKey;
+
+        // Find and update any child renames that reference this parent
+        for (let i = 0; i < updatedRenames.length; i++) {
+          const childRename = updatedRenames[i];
+          const childOriginalParts = childRename.originalKey.split(".");
+
+          // Check if this child rename starts with the parent we're renaming
+          if (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) {
+            // Update the child's original key to use the new parent name
+            const childRemainingParts = childOriginalParts.slice(1);
+            const updatedChildOriginalKey = `${parentNewKey}.${childRemainingParts.join(".")}`;
+
+            // Update the child's new key to use the new parent name if it also starts with the old parent
+            let updatedChildNewKey = childRename.newKey;
+            const childNewParts = childRename.newKey.split(".");
+            if (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey) {
+              const childNewRemainingParts = childNewParts.slice(1);
+              updatedChildNewKey = `${parentNewKey}.${childNewRemainingParts.join(".")}`;
+            }
+
+            // Update the child rename in the array
+            updatedRenames[i] = {
+              originalKey: updatedChildOriginalKey,
+              newKey: updatedChildNewKey,
+              configPath: childRename.configPath,
+            };
+          }
+        }
+      }
+
+      // Add the updated rename
+      updatedRenames.push({
+        originalKey: updatedOriginalKey,
+        newKey: updatedNewKey,
+        configPath: rename.configPath,
+      });
+
+      // Track this rename for future reference
+      processedRenames.set(rename.originalKey, rename.newKey);
+    }
+
+    return updatedRenames;
+  };
+
   // Helper functions now imported from utils
+
+  // Helper function to get expanded nodes for a config
+  const getExpandedNodesForConfig = useCallback(
+    (configPath: string): Set<string> => {
+      return expandedNodesByConfig[configPath] || new Set();
+    },
+    [expandedNodesByConfig]
+  );
+
+  // Helper function to set expanded nodes for a config
+  const setExpandedNodesForConfig = useCallback((configPath: string, expandedNodes: Set<string>) => {
+    setExpandedNodesByConfig((prev) => ({
+      ...prev,
+      [configPath]: expandedNodes,
+    }));
+  }, []);
 
   const handleRenameProfile = (originalKey: string, newKey: string) => {
     if (selectedTab === null) return;
     const configPath = configurations[selectedTab!]!.configPath;
 
-    // Update the renames state
-    setRenames((prev) => ({
-      ...prev,
-      [configPath]: {
-        ...prev[configPath],
-        [originalKey]: newKey,
-      },
-    }));
+    // Update the renames state with consolidation
+    setRenames((prev) => {
+      const updatedRenames = consolidateRenames(prev[configPath] || {}, originalKey, newKey);
+      return {
+        ...prev,
+        [configPath]: updatedRenames,
+      };
+    });
 
-    // Update the selected profile key if it's the one being renamed
-    if (selectedProfileKey === originalKey) {
-      setSelectedProfileKey(newKey);
+    // Update the selected profile key based on the consolidated renames
+    const updatedRenames = consolidateRenames(renames[configPath] || {}, originalKey, newKey);
+
+    // Find what the selectedProfileKey should be after consolidation
+    let newSelectedProfileKey = selectedProfileKey;
+    if (selectedProfileKey) {
+      // Get the old renames for checking chained renames
+      const oldRenames = renames[configPath] || {};
+      const oldRenamedValue = oldRenames[originalKey];
+
+      // Check if the selected profile is directly renamed
+      if (selectedProfileKey === originalKey) {
+        newSelectedProfileKey = newKey;
+      }
+      // Check if the selected profile is a child of the renamed profile
+      else if (selectedProfileKey.startsWith(originalKey + ".")) {
+        const childPath = selectedProfileKey.substring(originalKey.length + 1);
+        newSelectedProfileKey = newKey + "." + childPath;
+      }
+      // Check if the selected profile is a child of the old renamed value
+      else if (oldRenamedValue && selectedProfileKey.startsWith(oldRenamedValue + ".")) {
+        const childPath = selectedProfileKey.substring(oldRenamedValue.length + 1);
+        newSelectedProfileKey = newKey + "." + childPath;
+      }
+      // Check if the selected profile was part of a chained rename
+      else {
+        // First check if the selectedProfileKey matches the old renamed value that's being updated
+        if (selectedProfileKey === oldRenamedValue) {
+          // The selected profile is the old renamed value, update it to the new value
+          newSelectedProfileKey = newKey;
+        }
+        // Also check if the selected profile matches any key in the consolidated renames
+        else {
+          for (const [origKey, renamedValue] of Object.entries(updatedRenames)) {
+            if (selectedProfileKey === origKey || selectedProfileKey === renamedValue) {
+              // The selected profile is involved in the rename chain
+              if (selectedProfileKey === origKey) {
+                newSelectedProfileKey = renamedValue;
+              }
+              break;
+            }
+          }
+        }
+      }
     }
 
-    // Update any pending defaults that reference the old profile name
-    setPendingDefaults((prev) => {
-      const configDefaults = prev[configPath];
-      if (!configDefaults) return prev;
+    if (newSelectedProfileKey !== selectedProfileKey) {
+      setSelectedProfileKey(newSelectedProfileKey);
 
+      // Refresh merged properties for the renamed profile to maintain sorting order
+      if (newSelectedProfileKey) {
+        const profileNameForMergedProperties = getProfileNameForMergedProperties(newSelectedProfileKey, configPath);
+        const changes = formatPendingChanges();
+
+        // Create a unique request key to prevent duplicate requests
+        const requestKey = `${configPath}:${newSelectedProfileKey}`;
+
+        // Only request if we don't already have a pending request
+        if (pendingMergedPropertiesRequest !== requestKey) {
+          setPendingMergedPropertiesRequest(requestKey);
+
+          // Increment sort order version to trigger re-render with updated merged properties
+          setSortOrderVersion((prev) => prev + 1);
+
+          vscodeApi.postMessage({
+            command: "GET_MERGED_PROPERTIES",
+            profilePath: profileNameForMergedProperties,
+            configPath: configPath,
+            changes: changes,
+            renames: changes.renames,
+            currentProfileKey: newSelectedProfileKey,
+            originalProfileKey: profileNameForMergedProperties,
+          });
+        }
+      }
+    }
+
+    // Update the selected profiles by config to reflect the rename
+    setSelectedProfilesByConfig((prev) => {
+      const currentSelectedProfile = prev[configPath];
+      let newCurrentSelectedProfile = currentSelectedProfile;
+
+      if (currentSelectedProfile) {
+        // Check direct rename
+        if (currentSelectedProfile === originalKey) {
+          newCurrentSelectedProfile = newKey;
+        }
+        // Check child rename
+        else if (currentSelectedProfile.startsWith(originalKey + ".")) {
+          const childPath = currentSelectedProfile.substring(originalKey.length + 1);
+          newCurrentSelectedProfile = newKey + "." + childPath;
+        }
+        // Check chained renames
+        else {
+          for (const [origKey, renamedValue] of Object.entries(updatedRenames)) {
+            if (currentSelectedProfile === origKey || currentSelectedProfile === renamedValue) {
+              if (currentSelectedProfile === origKey) {
+                newCurrentSelectedProfile = renamedValue;
+              }
+              break;
+            }
+          }
+        }
+      }
+
+      if (newCurrentSelectedProfile !== currentSelectedProfile) {
+        return {
+          ...prev,
+          [configPath]: newCurrentSelectedProfile,
+        };
+      }
+      return prev;
+    });
+
+    // Update expanded nodes to reflect the rename
+    setExpandedNodesByConfig((prev) => {
+      const currentExpandedNodes = prev[configPath] || new Set();
+      const newExpandedNodes = new Set<string>();
+
+      // Map old expanded node keys to new keys based on the rename
+      for (const expandedKey of currentExpandedNodes) {
+        let newExpandedKey = expandedKey;
+
+        // Check direct rename
+        if (expandedKey === originalKey) {
+          newExpandedKey = newKey;
+        }
+        // Check child rename
+        else if (expandedKey.startsWith(originalKey + ".")) {
+          const childPath = expandedKey.substring(originalKey.length + 1);
+          newExpandedKey = newKey + "." + childPath;
+        }
+        // Check chained renames
+        else {
+          for (const [origKey, renamedValue] of Object.entries(updatedRenames)) {
+            if (expandedKey === origKey || expandedKey === renamedValue) {
+              if (expandedKey === origKey) {
+                newExpandedKey = renamedValue;
+              }
+              break;
+            }
+          }
+        }
+
+        newExpandedNodes.add(newExpandedKey);
+      }
+
+      return {
+        ...prev,
+        [configPath]: newExpandedNodes,
+      };
+    });
+
+    // Update any pending defaults that reference the old profile name or consolidated renames
+    setPendingDefaults((prev) => {
+      const configDefaults = prev[configPath] || {};
       const updatedDefaults = { ...configDefaults };
       let hasChanges = false;
 
-      // Check each default entry
+      // Check each default entry against all consolidated renames
       Object.entries(updatedDefaults).forEach(([profileType, defaultEntry]) => {
+        // Check direct rename
         if (defaultEntry.value === originalKey) {
-          // Update the default to reference the new profile name
           updatedDefaults[profileType] = {
             ...defaultEntry,
             value: newKey,
           };
           hasChanges = true;
         }
+        // Check child renames
+        else if (defaultEntry.value.startsWith(originalKey + ".")) {
+          const childPath = defaultEntry.value.substring(originalKey.length + 1);
+          updatedDefaults[profileType] = {
+            ...defaultEntry,
+            value: newKey + "." + childPath,
+          };
+          hasChanges = true;
+        }
+        // Check consolidated renames
+        else {
+          for (const [origKey, renamedValue] of Object.entries(updatedRenames)) {
+            if (defaultEntry.value === origKey) {
+              updatedDefaults[profileType] = {
+                ...defaultEntry,
+                value: renamedValue,
+              };
+              hasChanges = true;
+              break;
+            }
+          }
+        }
       });
+
+      // Check if the renamed profile was a default profile and create a pending default change
+      const config = configurations[selectedTab!].properties;
+      const defaults = config.defaults || {};
+
+      // Check if the original profile was a default for any profile type
+      for (const [profileType, defaultProfileName] of Object.entries(defaults)) {
+        if (defaultProfileName === originalKey) {
+          // The renamed profile was a default, create a pending default change
+          updatedDefaults[profileType] = {
+            value: newKey,
+            path: [profileType],
+          };
+          hasChanges = true;
+        }
+      }
 
       if (hasChanges) {
         return {
@@ -1631,16 +1939,12 @@ export function App() {
 
       const changes = formatPendingChanges();
 
-      // For merged properties, we need to send the CURRENT profile structure (with renames applied)
-      // because the backend needs to know about pending renames to properly resolve the profile
-      const currentProfilePath = profileKey; // Use the current profile key (with renames)
-
       // Mark this request as pending
       setPendingMergedPropertiesRequest(requestKey);
 
       vscodeApi.postMessage({
         command: "GET_MERGED_PROPERTIES",
-        profilePath: currentProfilePath, // Send current profile key (with renames)
+        profilePath: profileNameForMergedProperties, // Send original profile key for backend lookup
         configPath: configPath,
         changes: changes,
         renames: changes.renames,
@@ -1648,13 +1952,6 @@ export function App() {
         originalProfileKey: profileNameForMergedProperties,
       });
     }
-  };
-
-  // Helper function to check if a property is in pending changes for a specific profile
-  const isPropertyInPendingChanges = (propertyKey: string, profileKey: string, configPath: string): boolean => {
-    return Object.entries(pendingChanges[configPath] ?? {}).some(([key, entry]) => {
-      return entry.profile === profileKey && key.endsWith(`.properties.${propertyKey}`);
-    });
   };
 
   const handleOpenRawJson = (configPath: string) => {
@@ -1950,134 +2247,121 @@ export function App() {
     // Get all profile renames in the config
     const renamesForConfig = renames[configPath] || {};
 
-    // Function to get the effective profile name (after renames)
-    const getEffectiveName = (profileName: string): string => {
-      // Check if this profile was renamed
-      const directRename = Object.entries(renamesForConfig).find(([oldName, _newName]) => oldName === profileName);
-      if (directRename) {
-        return directRename[1];
-      }
+    // Function to get the original profile name (reverse renames)
+    const getOriginalName = (profileName: string): string => {
+      let originalName = profileName;
 
-      // Check if any parent was renamed
-      const parts = profileName.split(".");
-      for (let i = parts.length - 1; i > 0; i--) {
-        const parentPath = parts.slice(0, i).join(".");
-        const parentRename = Object.entries(renamesForConfig).find(([oldName, _newName]) => oldName === parentPath);
-        if (parentRename) {
-          // Replace the parent part with its new name
-          const childPart = parts.slice(i).join(".");
-          return `${parentRename[1]}.${childPart}`;
+      // Apply reverse renames iteratively to get back to the original name
+      let changed = true;
+      while (changed) {
+        changed = false;
+
+        // Sort renames by length of newKey (longest first) to handle nested renames correctly
+        const sortedRenames = Object.entries(renamesForConfig).sort(([, a], [, b]) => b.length - a.length);
+
+        for (const [originalKey, newKey] of sortedRenames) {
+          // Check for exact match
+          if (originalName === newKey) {
+            originalName = originalKey;
+            changed = true;
+            break;
+          }
+
+          // Check for partial matches (parent renames affecting children)
+          if (originalName.startsWith(newKey + ".")) {
+            originalName = originalName.replace(newKey + ".", originalKey + ".");
+            changed = true;
+            break;
+          }
         }
       }
 
-      return profileName;
+      return originalName;
     };
 
-    // Get the effective names for both paths
-    const effectiveSourcePath = getEffectiveName(profilePath);
-    const effectiveCurrentPath = getEffectiveName(currentProfileKey);
+    // Get the original names for both paths
+    const originalSourcePath = getOriginalName(profilePath);
+    const originalCurrentPath = getOriginalName(currentProfileKey);
 
-    // If the effective paths match, this property is not inherited
-    if (effectiveSourcePath === effectiveCurrentPath) {
+    // If the original paths match, this property is not inherited
+    if (originalSourcePath === originalCurrentPath) {
       return false;
+    }
+
+    // Check if there's an actual inheritance relationship by looking at the profile configuration
+    // This handles cases where profiles inherit from base profiles that have been renamed
+    const config = configurations[selectedTab!]?.properties;
+    if (config) {
+      // Check if the current profile inherits from the source profile through the inheritance chain
+      const checkInheritanceChain = (currentProfile: string, sourceProfile: string): boolean => {
+        // Get the profile type for the current profile
+        const currentProfileType = getProfileType(currentProfile, selectedTab, configurations, pendingChanges, renames);
+        if (!currentProfileType) return false;
+
+        // Check if the source profile is the default for this profile type
+        const defaults = config.defaults || {};
+        const defaultForType = defaults[currentProfileType];
+
+        // Apply renames to the default to see if it matches the source profile
+        if (defaultForType) {
+          const renamedDefault = getRenamedProfileKeyWithNested(defaultForType, configPath, renames);
+          if (renamedDefault === sourceProfile) {
+            return true;
+          }
+        }
+
+        // Also check if the source profile is a base profile that the current profile should inherit from
+        // This handles cases where the source profile is a base profile (like global_base1)
+        const sourceProfileType = getProfileType(sourceProfile, selectedTab, configurations, pendingChanges, renames);
+        if (sourceProfileType && sourceProfileType === currentProfileType) {
+          // If both profiles have the same type and the source is a base profile, it's inherited
+          // Check if the source profile is a base profile by checking if it's the default for its type
+          const sourceDefaultForType = defaults[sourceProfileType];
+          if (sourceDefaultForType) {
+            const renamedSourceDefault = getRenamedProfileKeyWithNested(sourceDefaultForType, configPath, renames);
+            if (renamedSourceDefault === sourceProfile) {
+              return true;
+            }
+          }
+        }
+
+        return false;
+      };
+
+      // Check if the current profile inherits from the source profile
+      if (checkInheritanceChain(currentProfileKey, profilePath)) {
+        return true;
+      }
     }
 
     return true;
   };
 
   // Helper function to determine if a property is from merged properties
-  const isPropertyFromMergedProps = (
-    displayKey: string | undefined,
-    path: string[],
-    mergedProps: any,
-    originalProperties: any,
-    configPath: string
-  ): boolean => {
-    console.log("\nisPropertyFromMergedProps check:", {
-      displayKey,
-      path,
-      configPath,
-      originalProperties,
-    });
-
+  const isPropertyFromMergedProps = (displayKey: string | undefined, path: string[], mergedProps: any, configPath: string): boolean => {
     // Only consider properties as merged if showMergedProperties is true and profile is not untyped
-    const currentProfileKey = extractProfileKeyFromPath(path);
+    const originalProfileKey = extractProfileKeyFromPath(path);
+    const currentProfileKey = getRenamedProfileKeyWithNested(originalProfileKey, configPath, renames);
     const currentProfileType = getProfileType(currentProfileKey, selectedTab, configurations, pendingChanges, renames);
     const isProfileUntyped = !currentProfileType || currentProfileType.trim() === "";
 
-    console.log("Profile info:", {
-      currentProfileKey,
-      currentProfileType,
-      isProfileUntyped,
-    });
-
     if (!showMergedProperties || isProfileUntyped || !displayKey) {
-      console.log("-> false (showMergedProperties, untyped, or no displayKey)");
       return false;
     }
 
-    const propertyExistsInPendingChanges = isPropertyInPendingChanges(displayKey, currentProfileKey, configPath);
     const mergedPropData = mergedProps?.[displayKey];
     const jsonLoc = mergedPropData?.jsonLoc;
     const osLoc = mergedPropData?.osLoc;
-
-    console.log("Property data:", {
-      propertyExistsInPendingChanges,
-      mergedPropData,
-      jsonLoc,
-      osLoc,
-    });
-
-    if (!mergedProps) {
-      console.log("-> false (no mergedProps)");
-      return false;
-    }
-    if (typeof mergedProps !== "object") {
-      console.log("-> false (mergedProps not object)");
-      return false;
-    }
-    if (path.length === 0) {
-      console.log("-> false (empty path)");
-      return false;
-    }
-    if (path[path.length - 1] !== "properties") {
-      console.log("-> false (not in properties)");
-      return false;
-    }
-    if (!mergedProps.hasOwnProperty(displayKey)) {
-      console.log("-> false (property not in mergedProps)");
-      return false;
-    }
-    if (originalProperties && originalProperties.hasOwnProperty(displayKey)) {
-      console.log("-> false (property exists in originalProperties)");
-      return false;
-    }
-    if (propertyExistsInPendingChanges) {
-      console.log("-> false (property exists in pendingChanges)");
-      return false;
-    }
-    if (!osLoc) {
-      console.log("-> false (no osLoc)");
-      return false;
-    }
 
     // Extract profile path from jsonLoc
     const jsonLocParts = jsonLoc ? jsonLoc.split(".") : [];
     const profilePathParts = jsonLocParts.slice(1, -2);
     const profilePath = profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".");
 
-    console.log("Extracted profile path:", {
-      jsonLocParts,
-      profilePathParts,
-      profilePath,
-    });
-
     // Check if this property is actually inherited
     const isInherited = isPropertyActuallyInherited(profilePath, currentProfileKey, configPath);
-    console.log("isInherited check result:", isInherited);
 
     if (!isInherited) {
-      console.log("-> false (property is not actually inherited)");
       return false;
     }
 
@@ -2086,22 +2370,10 @@ export function App() {
     const pathsEqual = selectedConfigPath === osLocString;
     const currentProfilePathForComparison = path.slice(0, -1).join(".");
 
-    console.log("Path comparison:", {
-      selectedConfigPath,
-      osLocString,
-      pathsEqual,
-      currentProfilePathForComparison,
-    });
-
     // Check if this profile has been renamed
     const currentlyViewedProfileKey = selectedProfileKey;
     const hasBeenRenamed =
       currentlyViewedProfileKey && Object.values(renames[configPath] || {}).some((newName) => newName === currentlyViewedProfileKey);
-
-    console.log("Rename check:", {
-      currentlyViewedProfileKey,
-      hasBeenRenamed,
-    });
 
     if (hasBeenRenamed) {
       // Extract profile name from jsonLoc
@@ -2170,9 +2442,6 @@ export function App() {
           (oldName) => oldName === jsonLocProfileName && renames[configPath][oldName] === currentlyViewedProfileKey
         );
 
-      // Check if the jsonLoc refers to a parent profile that has been renamed
-      const isFromRenamedParent = jsonLocProfileName && Object.values(renames[configPath] || {}).some((newName) => newName === jsonLocProfileName);
-
       // Check if the jsonLoc refers to a child profile of a renamed parent
       const isFromChildOfRenamedParent =
         currentlyViewedProfileKey &&
@@ -2185,15 +2454,7 @@ export function App() {
           return isCurrentProfileChildOfNewParent && jsonLocRefersToOldParent;
         });
 
-      // A property IS merged if:
-      // 1. The paths are NOT equal (different config files), OR
-      // 2. The jsonLoc does NOT refer to:
-      //    - the current profile (jsonLocRefersToCurrentProfile)
-      //    - the OLD name of the current profile (jsonLocIsOldNameOfCurrentProfile)
-      //    - a renamed parent profile (isFromRenamedParent)
-      //    - a child of a renamed parent (isFromChildOfRenamedParent)
-      const result =
-        !pathsEqual || (!jsonLocRefersToCurrentProfile && !jsonLocIsOldNameOfCurrentProfile && !isFromRenamedParent && !isFromChildOfRenamedParent);
+      const result = !pathsEqual || (!jsonLocRefersToCurrentProfile && !jsonLocIsOldNameOfCurrentProfile && !isFromChildOfRenamedParent);
 
       return result;
     } else {
@@ -2368,14 +2629,14 @@ export function App() {
   };
 
   // Helper function to determine if a property is currently secure
-  const isPropertySecure = (fullKey: string, displayKey: string, path: string[], mergedProps?: any, originalProperties?: any): boolean => {
+  const isPropertySecure = (fullKey: string, displayKey: string, path: string[], mergedProps?: any): boolean => {
     const configPath = configurations[selectedTab!]?.configPath;
     if (!configPath) {
       return false;
     }
 
     // Check if this property is from merged properties
-    const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, originalProperties, configPath);
+    const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath);
 
     if (isFromMergedProps) {
       const mergedPropData = displayKey ? mergedProps?.[displayKey] : undefined;
@@ -2459,6 +2720,20 @@ export function App() {
       const originalSecure = flatProfiles[profileKey]?.secure?.includes(keyParts[keyParts.length - 1]) || false;
       return entry.secure !== originalSecure;
     });
+  };
+
+  // Helper function to check if a profile has been renamed
+  const hasPendingRename = (profileKey: string): boolean => {
+    const configPath = configurations[selectedTab!]?.configPath;
+    if (!configPath) {
+      return false;
+    }
+    const renamesForConfig = renames[configPath] || {};
+
+    // Check if this profile is a renamed profile (exists as a value in the renames object)
+    const result = Object.values(renamesForConfig).includes(profileKey);
+
+    return result;
   };
 
   // Helper function to extract pending profiles from pending changes
@@ -2591,10 +2866,21 @@ export function App() {
         const children = profileInfo.filter((info) => info.parentKey === profileKey);
 
         // Sort children based on the current sort order
+        // For renamed profiles, we need to be more careful about sorting
         if (currentProfileSortOrder === "alphabetical") {
-          children.sort((a, b) => a.profileKey.localeCompare(b.profileKey));
+          children.sort((a, b) => {
+            // Extract just the profile name (last part) for comparison
+            const aName = a.parts[a.parts.length - 1];
+            const bName = b.parts[b.parts.length - 1];
+            return aName.localeCompare(bName);
+          });
         } else if (currentProfileSortOrder === "reverse-alphabetical") {
-          children.sort((a, b) => b.profileKey.localeCompare(a.profileKey));
+          children.sort((a, b) => {
+            // Extract just the profile name (last part) for comparison
+            const aName = a.parts[a.parts.length - 1];
+            const bName = b.parts[b.parts.length - 1];
+            return bName.localeCompare(aName);
+          });
         }
 
         // Add the current profile
@@ -2612,9 +2898,19 @@ export function App() {
 
       // Sort top-level profiles
       if (currentProfileSortOrder === "alphabetical") {
-        topLevelProfiles.sort((a, b) => a.profileKey.localeCompare(b.profileKey));
+        topLevelProfiles.sort((a, b) => {
+          // Extract just the profile name (last part) for comparison
+          const aName = a.parts[a.parts.length - 1];
+          const bName = b.parts[b.parts.length - 1];
+          return aName.localeCompare(bName);
+        });
       } else if (currentProfileSortOrder === "reverse-alphabetical") {
-        topLevelProfiles.sort((a, b) => b.profileKey.localeCompare(a.profileKey));
+        topLevelProfiles.sort((a, b) => {
+          // Extract just the profile name (last part) for comparison
+          const aName = a.parts[a.parts.length - 1];
+          const bName = b.parts[b.parts.length - 1];
+          return bName.localeCompare(aName);
+        });
       }
 
       // Process each top-level profile and its descendants
@@ -2680,7 +2976,8 @@ export function App() {
       const filteredProfileKeys = [...renamedProfileKeys, ...renamedPendingProfileKeys];
 
       // Apply profile sorting based on the current sort order
-      const sortedProfileKeys = sortProfilesAtLevel(filteredProfileKeys);
+      // For natural sort order, maintain the original order of renamed profiles
+      const sortedProfileKeys = profileSortOrder === "natural" ? filteredProfileKeys : sortProfilesAtLevel(filteredProfileKeys);
 
       return (
         <ProfileList
@@ -2698,12 +2995,25 @@ export function App() {
           getProfileType={(profileKey: string) => getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames)}
           viewMode={viewMode}
           hasPendingSecureChanges={hasPendingSecureChanges}
+          hasPendingRename={hasPendingRename}
           searchTerm={profileSearchTerm}
           filterType={profileFilterType}
           onSearchChange={setProfileSearchTerm}
           onFilterChange={setProfileFilterType}
           profileSortOrder={profileSortOrder || "natural"}
           onProfileSortOrderChange={setProfileSortOrderWithStorage}
+          expandedNodes={getExpandedNodesForConfig(configurations[selectedTab!]?.configPath || "")}
+          setExpandedNodes={useCallback(
+            (newExpandedNodes) => {
+              const configPath = configurations[selectedTab!]?.configPath || "";
+              if (typeof newExpandedNodes === "function") {
+                setExpandedNodesForConfig(configPath, newExpandedNodes(getExpandedNodesForConfig(configPath)));
+              } else {
+                setExpandedNodesForConfig(configPath, newExpandedNodes);
+              }
+            },
+            [selectedTab, configurations, setExpandedNodesForConfig, getExpandedNodesForConfig]
+          )}
         />
       );
     },
@@ -2844,31 +3154,44 @@ export function App() {
             // Use the helper function to extract pending profiles
             const pendingProfiles = extractPendingProfiles(configPath);
 
-            // Check if this profile was renamed and get the original profile name
-            const originalProfileKey = getOriginalProfileKeyWithNested(selectedProfileKey, configPath, renames);
+            // For profile data lookup, we need to find where the data is actually stored in the original configuration
+            // The data is always stored at the original location before any renames
+            // We need to reverse all renames to get to the original location
+            let effectiveProfileKey = selectedProfileKey;
 
-            // For child profiles, we need to handle the case where the parent profile has been renamed
-            // If this is a child profile and its parent has been renamed, we need to find the data
-            // using the original parent name structure
-            let effectiveProfileKey = originalProfileKey;
-            let effectivePath: string[];
+            // Apply reverse renames step by step
+            if (renames[configPath] && Object.keys(renames[configPath]).length > 0) {
+              const configRenames = renames[configPath];
 
-            if (originalProfileKey.includes(".")) {
-              // This is a child profile - check if any parent has been renamed
-              const profilePathParts = originalProfileKey.split(".");
-              const parentKey = profilePathParts.slice(0, -1).join(".");
-              const hasParentRename = Object.values(renames[configPath] || {}).some((renamedKey) => renamedKey === parentKey);
+              // Sort renames by length of newKey (longest first) to handle nested renames correctly
+              const sortedRenames = Object.entries(configRenames).sort(([, a], [, b]) => b.length - a.length);
 
-              if (hasParentRename) {
-                // Find the original parent key
-                const originalParentKey = Object.keys(renames[configPath] || {}).find((key) => renames[configPath][key] === parentKey);
-                if (originalParentKey) {
-                  // Reconstruct the original child profile key
-                  const childName = profilePathParts[profilePathParts.length - 1];
-                  effectiveProfileKey = `${originalParentKey}.${childName}`;
+              let changed = true;
+
+              // Keep applying reverse renames until no more changes
+              while (changed) {
+                changed = false;
+
+                // Process renames from longest to shortest to handle nested cases
+                for (const [originalKey, newKey] of sortedRenames) {
+                  // Check for exact match
+                  if (effectiveProfileKey === newKey) {
+                    effectiveProfileKey = originalKey;
+                    changed = true;
+                    break;
+                  }
+
+                  // Check for partial matches (parent renames affecting children)
+                  if (effectiveProfileKey.startsWith(newKey + ".")) {
+                    effectiveProfileKey = effectiveProfileKey.replace(newKey + ".", originalKey + ".");
+                    changed = true;
+                    break;
+                  }
                 }
               }
             }
+
+            let effectivePath: string[];
 
             // Construct the profile path using the effective profile key
             const effectiveProfilePathParts = effectiveProfileKey.split(".");
@@ -2971,6 +3294,45 @@ export function App() {
 
       // Special handling for properties section - use custom sorting
       if (path.length > 0 && path[path.length - 1] === "properties") {
+        // Lock the sort order at this level to prevent any external interference
+        const lockedSortOrder = propertySortOrder;
+
+        // Create a local sorting function that doesn't depend on external state
+        const localSortProperties = (entries: [string, any][]): [string, any][] => {
+          if (lockedSortOrder === "alphabetical") {
+            return [...entries].sort(([a], [b]) => a.localeCompare(b));
+          } else if (lockedSortOrder === "merged-first") {
+            return [...entries].sort(([a], [b]) => {
+              // Check if properties are merged using the current mergedProps
+              const aIsMerged = a && isPropertyFromMergedProps(a, path, mergedProps, configPath);
+              const bIsMerged = b && isPropertyFromMergedProps(b, path, mergedProps, configPath);
+
+              // Merged properties come first
+              if (aIsMerged && !bIsMerged) return -1;
+              if (!aIsMerged && bIsMerged) return 1;
+
+              // Within each group, sort alphabetically
+              return a.localeCompare(b);
+            });
+          } else if (lockedSortOrder === "non-merged-first") {
+            return [...entries].sort(([a], [b]) => {
+              // Check if properties are merged using the current mergedProps
+              const aIsMerged = a && isPropertyFromMergedProps(a, path, mergedProps, configPath);
+              const bIsMerged = b && isPropertyFromMergedProps(b, path, mergedProps, configPath);
+
+              // Non-merged properties come first
+              if (!aIsMerged && bIsMerged) return -1;
+              if (aIsMerged && !bIsMerged) return 1;
+
+              // Within each group, sort alphabetically
+              return a.localeCompare(b);
+            });
+          } else {
+            // Fallback to alphabetical
+            return [...entries].sort(([a], [b]) => a.localeCompare(b));
+          }
+        };
+
         // Add secure properties to the entries for sorting, but mark them as secure
         const entriesForSorting = Object.entries(combinedConfig);
 
@@ -3053,7 +3415,7 @@ export function App() {
           });
         }
 
-        sortedEntries = sortProperties(entriesForSorting, mergedProps, originalProperties, path);
+        sortedEntries = localSortProperties(entriesForSorting);
       } else {
         // Use default sorting for non-properties sections
         sortedEntries = sortConfigEntries(Object.entries(combinedConfig));
@@ -3208,7 +3570,7 @@ export function App() {
           // Handle merged properties that were added for sorting
           if (isMergedPropertyForSorting) {
             // Double-check that this property should actually be displayed as merged
-            const shouldShowAsMerged = displayKey ? isPropertyFromMergedProps(displayKey, path, mergedProps, originalProperties, configPath) : false;
+            const shouldShowAsMerged = displayKey ? isPropertyFromMergedProps(displayKey, path, mergedProps, configPath) : false;
 
             if (!shouldShowAsMerged) {
               // This property was added for sorting but shouldn't be displayed as merged
@@ -3287,7 +3649,7 @@ export function App() {
           }
 
           // Check if this property is from merged properties
-          const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, originalProperties, configPath);
+          const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath);
           const mergedPropData = displayKey ? mergedProps?.[displayKey] : undefined;
           const jsonLoc = mergedPropData?.jsonLoc;
           const osLoc = mergedPropData?.osLoc;
@@ -3295,8 +3657,7 @@ export function App() {
           const isSecureProperty = isFromMergedProps && jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure) : false;
 
           // Check if this is a local secure property (in the current profile's secure array)
-          const isLocalSecureProperty =
-            displayKey && path && configPath ? isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties) : false;
+          const isLocalSecureProperty = displayKey && path && configPath ? isPropertySecure(fullKey, displayKey, path, mergedProps) : false;
 
           // Check if this is a secure property that was added for sorting
           const isSecureForSorting = isSecurePropertyForSorting;
@@ -3458,7 +3819,7 @@ export function App() {
                 displayKey &&
                 (!isFromMergedProps || isSecurePropertyForSorting) &&
                 (() => {
-                  const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, originalProperties);
+                  const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps);
                   const canBeSecure = canPropertyBeSecure(displayKey, path);
                   return (
                     <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
@@ -3575,7 +3936,6 @@ export function App() {
       mergePendingChangesForProfile,
       mergeMergedProperties,
       ensureProfileProperties,
-      sortProperties,
       sortConfigEntries,
       filterSecureProperties,
       isCurrentProfileUntyped,
@@ -3636,7 +3996,36 @@ export function App() {
               if (defaultsDeletions[configurations[selectedTab!]!.configPath]?.includes(fullKey)) return null;
               const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
               const isArray = Array.isArray(value);
-              const pendingValue = (pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})[fullKey]?.value ?? value;
+              // Calculate pending value considering both explicit pending defaults and simulated defaults from renames
+              const getEffectiveDefaultValue = (profileType: string): string => {
+                const configPath = configurations[selectedTab!]!.configPath;
+
+                // Check explicit pending defaults first
+                const pendingDefault = pendingDefaults[configPath]?.[profileType];
+                if (pendingDefault) {
+                  return pendingDefault.value;
+                }
+
+                // Check existing defaults
+                const config = configurations[selectedTab!].properties;
+                const defaults = config.defaults || {};
+                let defaultValue = defaults[profileType];
+
+                // Apply renames to the default value (simulate backend logic)
+                if (defaultValue) {
+                  const configRenames = renames[configPath] || {};
+                  for (const [originalKey, newKey] of Object.entries(configRenames)) {
+                    if (defaultValue === originalKey) {
+                      defaultValue = newKey;
+                      break;
+                    }
+                  }
+                }
+
+                return defaultValue || "";
+              };
+
+              const pendingValue = (pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})[fullKey]?.value ?? getEffectiveDefaultValue(key);
 
               if (isParent) {
                 return (
@@ -3828,6 +4217,7 @@ export function App() {
         onToggleAutostore={handleAutostoreToggle}
         pendingChanges={pendingChanges}
         autostoreChanges={autostoreChanges}
+        renames={renames}
       />
       <Panels
         configurations={configurations}
@@ -3993,7 +4383,39 @@ export function App() {
           const pendingProfiles = extractPendingProfiles(config.configPath);
           return Object.keys(pendingProfiles);
         })()}
-        onRename={(newName) => handleRenameProfile(selectedProfileKey!, newName)}
+        onRename={(newName) => {
+          // Find the original key from the configuration that corresponds to the selected profile
+          const configPath = configurations[selectedTab!]?.configPath;
+          if (configPath) {
+            // Get all original profile keys from the configuration
+            const config = configurations[selectedTab!];
+            const getAllOriginalKeys = (profiles: any, parentKey = ""): string[] => {
+              const keys: string[] = [];
+              for (const key of Object.keys(profiles)) {
+                const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+                keys.push(qualifiedKey);
+                if (profiles[key].profiles) {
+                  keys.push(...getAllOriginalKeys(profiles[key].profiles, qualifiedKey));
+                }
+              }
+              return keys;
+            };
+
+            const originalKeys = getAllOriginalKeys(config.properties?.profiles || {});
+
+            // Find which original key would produce the current selectedProfileKey
+            let trueOriginalKey = selectedProfileKey!;
+            for (const origKey of originalKeys) {
+              const renamedKey = getRenamedProfileKeyWithNested(origKey, configPath, renames);
+              if (renamedKey === selectedProfileKey) {
+                trueOriginalKey = origKey;
+                break;
+              }
+            }
+
+            handleRenameProfile(trueOriginalKey, newName);
+          }
+        }}
         onCancel={() => setRenameProfileModalOpen(false)}
       />
     </div>

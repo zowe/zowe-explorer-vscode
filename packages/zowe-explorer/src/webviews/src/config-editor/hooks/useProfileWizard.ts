@@ -44,6 +44,7 @@ interface UseProfileWizardProps {
     formatPendingChanges: () => any;
     getAvailableProfiles: () => string[];
     secureValuesAllowed: boolean;
+    renames: { [configPath: string]: { [originalKey: string]: string } };
 }
 
 export function useProfileWizard({
@@ -56,6 +57,7 @@ export function useProfileWizard({
     vscodeApi,
     formatPendingChanges,
     secureValuesAllowed,
+    renames,
 }: UseProfileWizardProps) {
     // Profile Wizard state
     const [wizardModalOpen, setWizardModalOpen] = useState(false);
@@ -112,8 +114,12 @@ export function useProfileWizard({
     const isProfileNameTaken = () => {
         if (!wizardProfileName.trim() || selectedTab === null) return false;
 
+        const configPath = configurations[selectedTab].configPath;
         const config = configurations[selectedTab].properties;
         const flatProfiles = flattenProfiles(config.profiles);
+
+        // Construct the full profile key that would be created
+        const newProfileKey = wizardRootProfile === "root" ? wizardProfileName.trim() : `${wizardRootProfile}.${wizardProfileName.trim()}`;
 
         // Check existing profiles
         const existingProfilesUnderRoot = Object.keys(flatProfiles).some((profileKey) => {
@@ -128,7 +134,7 @@ export function useProfileWizard({
         });
 
         // Check pending changes
-        const pendingProfilesUnderRoot = Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).some(([_, entry]) => {
+        const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([_, entry]) => {
             if (entry.profile) {
                 if (wizardRootProfile === "root") {
                     return entry.profile === wizardProfileName.trim();
@@ -142,7 +148,30 @@ export function useProfileWizard({
             return false;
         });
 
-        return existingProfilesUnderRoot || pendingProfilesUnderRoot;
+        // Check if a rename is occupying this name
+        const renamesForConfig = renames[configPath] || {};
+        const renameIsOccupyingName = Object.entries(renamesForConfig).some(([, newName]) => {
+            // Check if the rename will result in a profile with the same name we're trying to create
+            if (newName === newProfileKey) {
+                return true;
+            }
+
+            // Check if the rename will result in a parent profile that would conflict
+            // e.g., if we're trying to create "tso2.child" and "tso1" is being renamed to "tso2"
+            if (newProfileKey.startsWith(newName + ".")) {
+                return true;
+            }
+
+            // Check if we're trying to create a profile that would be a parent of the renamed profile
+            // e.g., if we're trying to create "tso2" and "tso1.child" is being renamed to "tso2.child"
+            if (newName.startsWith(newProfileKey + ".")) {
+                return true;
+            }
+
+            return false;
+        });
+
+        return existingProfilesUnderRoot || pendingProfilesUnderRoot || renameIsOccupyingName;
     };
 
     const handleWizardAddProperty = () => {
