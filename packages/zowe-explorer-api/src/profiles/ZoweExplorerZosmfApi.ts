@@ -435,12 +435,18 @@ export namespace ZoweExplorerZosmf {
         }
 
         public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zosjobs.IJob> {
-            const internalReaderFileEncoding = this.profile?.profile?.jobEncoding;
-            return zosjobs.SubmitJobs.submitJcl(this.getSession(), jcl, internalReaderRecfm, internalReaderLrecl, internalReaderFileEncoding);
+            const jesEncoding = this.profile?.profile?.jobEncoding;
+            return zosjobs.SubmitJobs.submitJcl(this.getSession(), jcl, internalReaderRecfm, internalReaderLrecl, jesEncoding);
         }
 
-        public submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
-            return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
+        public async submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
+            const jesEncoding = this.profile?.profile?.jobEncoding;
+            if (jesEncoding == null) {
+                return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
+            } else {
+                const rawJcl = await zosfiles.Get.dataSet(this.getSession(), jobDataSet);
+                return this.submitJcl(rawJcl.toString());
+            }
         }
 
         public async deleteJob(jobname: string, jobid: string): Promise<void> {
