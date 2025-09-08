@@ -1659,6 +1659,7 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
 
 describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
     it("calls listDatasets to fetch basic list when cached data is null", async () => {
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({} as any);
         const sessionNode = new ZoweDatasetNode({
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
