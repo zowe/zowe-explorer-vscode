@@ -606,8 +606,8 @@ export class ProfilesUtils {
                 break;
             case convertButton:
                 ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
-                await ProfilesUtils.convertV1Profs();
                 await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, undefined);
+                await ProfilesUtils.convertV1Profs();
                 break;
             default:
                 return;
@@ -696,6 +696,7 @@ export class ProfilesUtils {
                 successMsg.push(`Converted ${k} profile: ${v.join(", ")}`);
             }
             ZoweLogger.info(successMsg.join("\n"));
+            await profileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: undefined });
             const document = await vscode.workspace.openTextDocument(path.join(FileManagement.getZoweDir(), profileInfo.getTeamConfig().configName));
             if (document) {
                 await Gui.showTextDocument(document);
@@ -723,7 +724,7 @@ export class ProfilesUtils {
             msgs.push(msg.msgText + "\n");
             return msgs;
         }, []);
-        await Gui.infoMessage(responseMsg.join(""), { vsCodeOpts: { modal: true } });
+        Gui.infoMessage(responseMsg.join(""), { vsCodeOpts: { modal: true } });
     }
 
     private static extenderProfileReady: Map<string, imperative.DeferredPromise<void>> = new Map();
