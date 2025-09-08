@@ -7,6 +7,7 @@ interface RenameProfileModalProps {
   currentProfileKey: string; // Full profile key (e.g., "lpar1.test")
   existingProfiles: string[]; // List of existing profile keys
   pendingProfiles: string[]; // List of pending profile keys
+  pendingRenames: { [originalKey: string]: string }; // Map of original key to new key for pending renames
   onRename: (newName: string) => void;
   onCancel: () => void;
 }
@@ -17,6 +18,7 @@ export function RenameProfileModal({
   currentProfileKey,
   existingProfiles,
   pendingProfiles,
+  pendingRenames,
   onRename,
   onCancel,
 }: RenameProfileModalProps) {
@@ -109,14 +111,39 @@ export function RenameProfileModal({
       newFullKey = parentPath ? `${parentPath}.${name.trim()}` : name.trim();
     }
 
-    // Check existing profiles
+    // Check existing profiles, but exclude profiles that are being renamed from the current profile
     if (existingProfiles.includes(newFullKey)) {
-      return `Profile '${newFullKey}' already exists`;
+      // Check if this existing profile is being renamed from the current profile
+      const isBeingRenamedFromCurrent = Object.entries(pendingRenames).some(
+        ([originalKey, newKey]) => originalKey === currentProfileKey && newKey === newFullKey
+      );
+
+      // Check if this existing profile is being renamed away (i.e., it's the original key in a rename)
+      const isBeingRenamedAway = Object.entries(pendingRenames).some(([originalKey]) => originalKey === newFullKey);
+
+      if (!isBeingRenamedFromCurrent && !isBeingRenamedAway) {
+        return `Profile '${newFullKey}' already exists`;
+      }
     }
 
-    // Check pending profiles
+    // Check pending profiles, but exclude profiles that are being renamed from the current profile
     if (pendingProfiles.includes(newFullKey)) {
-      return `Profile '${newFullKey}' is pending creation`;
+      // Check if this pending profile is being renamed from the current profile
+      const isBeingRenamedFromCurrent = Object.entries(pendingRenames).some(
+        ([originalKey, newKey]) => originalKey === currentProfileKey && newKey === newFullKey
+      );
+
+      // Check if this pending profile is being renamed away (i.e., it's the original key in a rename)
+      const isBeingRenamedAway = Object.entries(pendingRenames).some(([originalKey]) => originalKey === newFullKey);
+
+      if (!isBeingRenamedFromCurrent && !isBeingRenamedAway) {
+        return `Profile '${newFullKey}' is pending creation`;
+      }
+    }
+
+    // Check for circular renames
+    if (pendingRenames[newFullKey] === currentProfileKey) {
+      return `Cannot rename '${currentProfileKey}' to '${newFullKey}': This would create a circular rename (${newFullKey} -> ${currentProfileKey})`;
     }
 
     return null;

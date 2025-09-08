@@ -1376,8 +1376,18 @@ export function App() {
     originalKey: string,
     newKey: string
   ): { [originalKey: string]: string } => {
-    // Create a temporary consolidated object with the new rename
-    const tempRenames = { ...existingRenames, [originalKey]: newKey };
+    // Check for circular renames and remove conflicting ones
+    const tempRenames = { ...existingRenames };
+
+    // If the new rename creates a circular dependency, remove the conflicting rename
+    if (tempRenames[newKey] === originalKey) {
+      // This creates a circular dependency: originalKey -> newKey -> originalKey
+      // Remove the conflicting rename
+      delete tempRenames[newKey];
+    }
+
+    // Add the new rename
+    tempRenames[originalKey] = newKey;
 
     // Convert to array format for processing with updateRenameKeysForParentChanges logic
     const renamesArray = Object.entries(tempRenames).map(([orig, newName]) => ({
@@ -3014,6 +3024,10 @@ export function App() {
             },
             [selectedTab, configurations, setExpandedNodesForConfig, getExpandedNodesForConfig]
           )}
+          onProfileRename={handleRenameProfile}
+          configurations={configurations}
+          selectedTab={selectedTab}
+          renames={renames}
         />
       );
     },
@@ -4382,6 +4396,13 @@ export function App() {
 
           const pendingProfiles = extractPendingProfiles(config.configPath);
           return Object.keys(pendingProfiles);
+        })()}
+        pendingRenames={(() => {
+          if (selectedTab === null) return {};
+          const config = configurations[selectedTab];
+          if (!config) return {};
+
+          return renames[config.configPath] || {};
         })()}
         onRename={(newName) => {
           // Find the original key from the configuration that corresponds to the selected profile

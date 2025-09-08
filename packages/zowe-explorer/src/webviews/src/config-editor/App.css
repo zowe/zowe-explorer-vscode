@@ -6,6 +6,26 @@ body {
     overflow: hidden;
 }
 
+/* Drag and drop styles */
+.profile-tree-item.dragging {
+    opacity: 0.5;
+    transition: all 0.2s ease;
+}
+
+.profile-tree-item.drag-over {
+    background-color: var(--vscode-button-hoverBackground) !important;
+    border: 2px dashed var(--vscode-button-background) !important;
+    transition: all 0.2s ease;
+}
+
+.profile-tree-item[draggable="true"] {
+    cursor: grab;
+}
+
+.profile-tree-item[draggable="true"]:active {
+    cursor: grabbing;
+}
+
 body {
     font-size: 14px;
     background-color: var(--vscode-editor-background);

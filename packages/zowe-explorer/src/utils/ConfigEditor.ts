@@ -776,6 +776,14 @@ export class ConfigEditor extends WebView {
 
         for (const rename of updatedRenames) {
             try {
+                console.log(`Processing rename: ${rename.originalKey} -> ${rename.newKey}`);
+
+                // Skip if the original and new keys are the same (no-op rename)
+                if (rename.originalKey === rename.newKey) {
+                    console.log(`Skipping no-op rename: ${rename.originalKey}`);
+                    continue;
+                }
+
                 // Pre-validate the rename operation before making any changes
                 let originalPath: string;
                 let newPath: string;
@@ -792,12 +800,15 @@ export class ConfigEditor extends WebView {
                 }
 
                 // Check for circular reference BEFORE making any changes
+                console.log(`Checking circular reference: ${rename.originalKey} -> ${rename.newKey}`);
                 if (this.wouldCreateCircularReference(rename.originalKey, rename.newKey)) {
+                    console.log(`Circular reference detected: ${rename.originalKey} -> ${rename.newKey}`);
                     vscode.window.showErrorMessage(
                         `Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Would create circular reference`
                     );
                     continue; // Skip this rename and continue with others
                 }
+                console.log(`No circular reference: ${rename.originalKey} -> ${rename.newKey}`);
 
                 // Get the team config
                 const teamConfig = profInfo.getTeamConfig();
@@ -871,7 +882,9 @@ export class ConfigEditor extends WebView {
                 }
 
                 const existingTargetProfile = configMoveAPI.get(newPath);
+                console.log(`Checking if target profile exists: ${newPath}, exists: ${!!existingTargetProfile}`);
                 if (existingTargetProfile) {
+                    console.log(`Target profile already exists: ${rename.newKey}`);
                     vscode.window.showErrorMessage(
                         `Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Profile '${rename.newKey}' already exists`
                     );
@@ -1514,6 +1527,11 @@ export class ConfigEditor extends WebView {
 
         for (const rename of sortedRenames) {
             try {
+                // Skip if the original and new keys are the same (no-op rename)
+                if (rename.originalKey === rename.newKey) {
+                    continue;
+                }
+
                 const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
 
                 if (!targetLayer) {

@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from "react";
+
 interface ProfileTreeProps {
   profileKeys: string[];
   selectedProfileKey: string | null;
@@ -10,6 +12,11 @@ interface ProfileTreeProps {
   isFilteringActive?: boolean;
   expandedNodes: Set<string>;
   setExpandedNodes: React.Dispatch<React.SetStateAction<Set<string>>>;
+  onProfileRename?: (originalKey: string, newKey: string) => void;
+  // Add props to help find original keys
+  configurations?: any[];
+  selectedTab?: number | null;
+  renames?: { [configPath: string]: { [originalKey: string]: string } };
 }
 
 interface ProfileNode {
@@ -32,8 +39,67 @@ export function ProfileTree({
   isFilteringActive,
   expandedNodes,
   setExpandedNodes,
+  onProfileRename,
+  configurations,
+  selectedTab,
+  renames,
 }: ProfileTreeProps) {
   const hasNestedProfiles = profileKeys.some((key) => key.includes("."));
+
+  // Drag and drop state
+  const [draggedProfile, setDraggedProfile] = useState<string | null>(null);
+  const [dragOverProfile, setDragOverProfile] = useState<string | null>(null);
+
+  // Helper function to find the original key from a current profile key
+  const findOriginalKey = (currentKey: string): string => {
+    if (!configurations || selectedTab === null || selectedTab === undefined || !renames) {
+      return currentKey;
+    }
+
+    const configPath = configurations[selectedTab]?.configPath;
+    if (!configPath || !renames[configPath]) {
+      return currentKey;
+    }
+
+    const configRenames = renames[configPath];
+
+    // Get all original profile keys from the configuration
+    const config = configurations[selectedTab];
+    if (!config) {
+      return currentKey;
+    }
+    const getAllOriginalKeys = (profiles: any, parentKey = ""): string[] => {
+      const keys: string[] = [];
+      for (const key of Object.keys(profiles)) {
+        const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+        keys.push(qualifiedKey);
+        if (profiles[key].profiles) {
+          keys.push(...getAllOriginalKeys(profiles[key].profiles, qualifiedKey));
+        }
+      }
+      return keys;
+    };
+
+    const originalKeys = getAllOriginalKeys(config.properties?.profiles || {});
+
+    // Find which original key would produce the current key
+    for (const origKey of originalKeys) {
+      // Apply renames to see if this original key produces the current key
+      let renamedKey = origKey;
+      if (configRenames[origKey]) {
+        renamedKey = configRenames[origKey];
+      }
+
+      if (renamedKey === currentKey) {
+        return origKey;
+      }
+    }
+
+    return currentKey;
+  };
+
+  // Debug: Monitor draggedProfile state changes
+  useEffect(() => {}, [draggedProfile]);
 
   const getEffectiveExpandedNodes = (): Set<string> => {
     if (!isFilteringActive || !hasNestedProfiles) {
@@ -110,17 +176,140 @@ export function ProfileTree({
     setExpandedNodes(newExpanded);
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (e: any, profileKey: string) => {
+    e.stopPropagation();
+
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", profileKey);
+      e.dataTransfer.setData("application/json", JSON.stringify({ profileKey }));
+
+      // Set a custom drag image to make it more obvious
+      const dragImage = e.target.cloneNode(true);
+      dragImage.style.opacity = "0.5";
+      e.dataTransfer.setDragImage(dragImage, 0, 0);
+    }
+
+    // Use setTimeout to ensure the drag operation starts before setting state
+    setTimeout(() => {
+      setDraggedProfile(profileKey);
+    }, 0);
+  };
+
+  const handleDragOver = (e: any, profileKey: string) => {
+    e.preventDefault();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = "move";
+    }
+
+    // Only allow dropping if it's a valid target
+    if (draggedProfile && draggedProfile !== profileKey && !isInvalidDrop(draggedProfile, profileKey)) {
+      setDragOverProfile(profileKey);
+    }
+  };
+
+  const handleDragLeave = (e: any) => {
+    // Only clear drag over if we're leaving the profile item itself
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverProfile(null);
+    }
+  };
+
+  const handleDrop = (e: any, targetProfileKey: string) => {
+    e.preventDefault();
+
+    if (!draggedProfile || !onProfileRename) {
+      setDraggedProfile(null);
+      setDragOverProfile(null);
+      return;
+    }
+
+    // Validate the drop
+    if (isInvalidDrop(draggedProfile, targetProfileKey)) {
+      setDraggedProfile(null);
+      setDragOverProfile(null);
+      return;
+    }
+
+    // Extract only the profile name (last part) from the dragged profile
+    const draggedProfileName = draggedProfile.split(".").pop() || draggedProfile;
+
+    // Determine the new profile key
+    let newProfileKey: string;
+
+    // Special case: if dragging back to the original location, just move to that location
+    if (draggedProfile === targetProfileKey) {
+      newProfileKey = targetProfileKey;
+    } else if (draggedProfile === `${targetProfileKey}.${draggedProfileName}`) {
+      // Special case: if dragging a nested profile back to its parent, move to the parent
+      newProfileKey = targetProfileKey;
+    } else if (targetProfileKey === draggedProfileName) {
+      // Special case: if dragging a nested profile to a root profile with the same name, move to root
+      newProfileKey = targetProfileKey;
+    } else {
+      // Create the new nested profile structure
+      newProfileKey = `${targetProfileKey}.${draggedProfileName}`;
+    }
+
+    // Only call rename if the key actually changes
+    if (draggedProfile !== newProfileKey) {
+      // Find the original key for the dragged profile
+      const originalKey = findOriginalKey(draggedProfile);
+      onProfileRename(originalKey, newProfileKey);
+    }
+
+    // Clear drag state
+    setDraggedProfile(null);
+    setDragOverProfile(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedProfile(null);
+    setDragOverProfile(null);
+  };
+
+  // Helper function to check if a drop is invalid
+  const isInvalidDrop = (sourceProfile: string, targetProfile: string): boolean => {
+    // Can't drop on itself
+    if (sourceProfile === targetProfile) {
+      return true;
+    }
+
+    // Special case for root level - always allow dropping to root
+    if (targetProfile === "ROOT") {
+      return false;
+    }
+
+    // Can't drop a parent onto its child
+    if (targetProfile.startsWith(sourceProfile + ".")) {
+      return true;
+    }
+
+    // Can't drop if it would create a circular reference
+    if (sourceProfile.startsWith(targetProfile + ".")) {
+      return true;
+    }
+
+    // Allow dropping onto any valid profile name, even if it doesn't currently exist
+    // This handles cases where a profile was moved and we want to move it back
+    return false;
+  };
+
   const renderNode = (node: ProfileNode): React.ReactNode => {
     const isSelected = selectedProfileKey === node.key;
     const hasPendingChanges = pendingProfiles[node.key];
     const hasSecureChanges = hasPendingSecureChanges(node.key);
     const isDefault = isProfileDefault(node.key);
     const hasRename = hasPendingRename(node.key);
+    const isDragging = draggedProfile === node.key;
+    const isDragOver = dragOverProfile === node.key;
+    const canDrop = draggedProfile && draggedProfile !== node.key && !isInvalidDrop(draggedProfile, node.key);
 
     return (
       <div key={node.key}>
         <div
-          className={`profile-tree-item ${isSelected ? "selected" : ""}`}
+          className={`profile-tree-item ${isSelected ? "selected" : ""} ${isDragging ? "dragging" : ""} ${isDragOver ? "drag-over" : ""}`}
           style={{
             cursor: "pointer",
             margin: "2px 0",
@@ -128,12 +317,26 @@ export function ProfileTree({
             paddingLeft: `${8 + node.level * 16}px`,
             borderRadius: "4px",
             border: isSelected ? "2px solid var(--vscode-button-background)" : "2px solid transparent",
-            backgroundColor: "var(--vscode-button-secondaryBackground)",
+            backgroundColor:
+              isDragOver && canDrop
+                ? "var(--vscode-button-hoverBackground)"
+                : isDragging
+                ? "var(--vscode-button-secondaryHoverBackground)"
+                : "var(--vscode-button-secondaryBackground)",
             display: "flex",
             alignItems: "center",
             gap: "6px",
             fontSize: "0.9em",
+            opacity: isDragging ? 0.5 : 1,
+            transition: "all 0.2s ease",
+            userSelect: "none",
           }}
+          draggable={true}
+          onDragStart={(e) => handleDragStart(e, node.key)}
+          onDragOver={(e) => handleDragOver(e, node.key)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, node.key)}
+          onDragEnd={handleDragEnd}
           onClick={(e) => {
             e.stopPropagation();
             if (isSelected) {
@@ -163,7 +366,7 @@ export function ProfileTree({
           )}
 
           {/* Placeholder for consistent alignment when no arrow */}
-          {!node.hasChildren && <span style={{ width: "12px", flexShrink: 0 }} />}
+          {!node.hasChildren && <span style={{ width: "12px", flexShrink: 0 }} draggable={false} />}
 
           {/* Profile name */}
           <span
@@ -173,7 +376,9 @@ export function ProfileTree({
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
               opacity: hasPendingChanges || hasSecureChanges || hasRename ? 0.7 : 1,
+              pointerEvents: "none",
             }}
+            draggable={false}
           >
             {node.name}
           </span>
@@ -186,7 +391,9 @@ export function ProfileTree({
                 fontSize: "12px",
                 color: "var(--vscode-textPreformat-foreground)",
                 flexShrink: 0,
+                pointerEvents: "none",
               }}
+              draggable={false}
               title="Default profile"
             />
           )}
@@ -199,6 +406,81 @@ export function ProfileTree({
   };
 
   const treeNodes = buildTree(profileKeys);
+  const isDraggingRootProfile = draggedProfile && !draggedProfile.includes(".");
 
-  return <div style={{ width: "100%" }}>{treeNodes.map((node) => renderNode(node))}</div>;
+  // Root drop zone for moving profiles to root level
+  const renderRootDropZone = () => {
+    const isDragOverRoot = dragOverProfile === "ROOT";
+    const canDropToRoot = draggedProfile && !isInvalidDrop(draggedProfile, "ROOT");
+    const isDragging = draggedProfile !== null;
+
+    return (
+      <div
+        style={{
+          margin: "2px 0",
+          padding: isDragging ? "8px" : "4px",
+          borderRadius: "4px",
+          border: isDragOverRoot && canDropToRoot ? "2px dashed var(--vscode-button-background)" : "2px solid transparent",
+          backgroundColor: isDragOverRoot && canDropToRoot ? "var(--vscode-button-hoverBackground)" : "transparent",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: isDragging ? "0.8em" : "0.7em",
+          color: isDragging ? "var(--vscode-descriptionForeground)" : "var(--vscode-disabledForeground)",
+          transition: "all 0.2s ease",
+          minHeight: isDragging ? "32px" : "20px",
+          opacity: isDragging ? 1 : 0.3,
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = "move";
+          }
+          if (draggedProfile && !isInvalidDrop(draggedProfile, "ROOT")) {
+            setDragOverProfile("ROOT");
+          }
+        }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setDragOverProfile(null);
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (!draggedProfile || !onProfileRename) {
+            setDraggedProfile(null);
+            setDragOverProfile(null);
+            return;
+          }
+
+          // Validate the drop
+          if (isInvalidDrop(draggedProfile, "ROOT")) {
+            setDraggedProfile(null);
+            setDragOverProfile(null);
+            return;
+          }
+
+          // Extract only the profile name (last part) from the dragged profile
+          const draggedProfileName = draggedProfile.split(".").pop() || draggedProfile;
+
+          // Call the rename handler to move to root
+          const originalKey = findOriginalKey(draggedProfile);
+          onProfileRename(originalKey, draggedProfileName);
+
+          // Clear drag state
+          setDraggedProfile(null);
+          setDragOverProfile(null);
+        }}
+      >
+        {isDragOverRoot && canDropToRoot ? "Drop here to move to root level" : isDragging ? "Drop zone for root level" : ""}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ width: "100%" }}>
+      {draggedProfile && !isDraggingRootProfile && renderRootDropZone()}
+      {treeNodes.map((node) => renderNode(node))}
+    </div>
+  );
 }
