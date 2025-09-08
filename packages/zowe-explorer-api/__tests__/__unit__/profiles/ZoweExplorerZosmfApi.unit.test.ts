@@ -734,6 +734,22 @@ describe("ZosmfJesApi", () => {
             expect(submitJclSpy).toHaveBeenLastCalledWith(undefined, "iefbr14", undefined, undefined, "IBM-1147");
         });
     });
+
+    describe("submitJob", () => {
+        it("uses job encoding if specified in profile", async () => {
+            const api = new ZoweExplorerZosmf.JesApi();
+            api.profile = {
+                profile: {
+                    jobEncoding: "IBM-1147",
+                },
+            } as unknown as imperative.IProfileLoaded;
+            const getDatasetSpy = jest.spyOn(zosfiles.Get, "dataSet").mockResolvedValue(Buffer.from("fakeJcl"));
+            const submitJclSpy = jest.spyOn(zosjobs.SubmitJobs, "submitJcl");
+            await api.submitJob("IBMUSER.JCL(IEFBR14)");
+            expect(getDatasetSpy).toHaveBeenLastCalledWith(undefined, "IBMUSER.JCL(IEFBR14)");
+            expect(submitJclSpy).toHaveBeenLastCalledWith(undefined, "fakeJcl", undefined, undefined, "IBM-1147");
+        });
+    });
 });
 
 describe("ZosmfCommandApi", () => {
