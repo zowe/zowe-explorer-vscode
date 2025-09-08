@@ -21,6 +21,7 @@ import { ConfigChangeHandlers, ChangeEntry } from "./ConfigChangeHandlers";
 import { ConfigUtils, LayerModifications } from "./ConfigUtils";
 import {
     ConfigMoveAPI,
+    IConfigLayer,
     moveProfile,
     updateDefaultsAfterRename,
     simulateDefaultsUpdateAfterRename,
@@ -756,6 +757,10 @@ export class ConfigEditor extends WebView {
     }
 
     private async handleProfileRenames(renames: Array<{ originalKey: string; newKey: string; configPath: string }>): Promise<void> {
+        if (!renames || renames.length === 0) {
+            return;
+        }
+
         const profInfo = new ProfileInfo("zowe");
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
@@ -771,12 +776,36 @@ export class ConfigEditor extends WebView {
 
         for (const rename of updatedRenames) {
             try {
+                // Pre-validate the rename operation before making any changes
+                let originalPath: string;
+                let newPath: string;
+
+                try {
+                    originalPath = this.constructNestedProfilePath(rename.originalKey);
+                    newPath = this.constructNestedProfilePath(rename.newKey);
+                } catch (pathError) {
+                    const pathErrorMessage = pathError instanceof Error ? pathError.message : String(pathError);
+                    vscode.window.showErrorMessage(
+                        `Invalid profile path for rename '${rename.originalKey}' to '${rename.newKey}': ${pathErrorMessage}`
+                    );
+                    continue; // Skip this rename and continue with others
+                }
+
+                // Check for circular reference BEFORE making any changes
+                if (this.wouldCreateCircularReference(rename.originalKey, rename.newKey)) {
+                    vscode.window.showErrorMessage(
+                        `Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Would create circular reference`
+                    );
+                    continue; // Skip this rename and continue with others
+                }
+
                 // Get the team config
                 const teamConfig = profInfo.getTeamConfig();
                 const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
 
                 if (!targetLayer) {
-                    throw new Error(`Configuration layer not found for path: ${rename.configPath}`);
+                    vscode.window.showErrorMessage(`Configuration layer not found for path: ${rename.configPath}`);
+                    continue; // Skip this rename and continue with others
                 }
 
                 teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
@@ -834,49 +863,84 @@ export class ConfigEditor extends WebView {
                     },
                 });
 
-                const originalPath = this.constructNestedProfilePath(rename.originalKey);
-                const newPath = this.constructNestedProfilePath(rename.newKey);
-
                 // Check if the original profile exists
                 const originalProfile = configMoveAPI.get(originalPath);
                 if (!originalProfile) {
-                    throw new Error(`Cannot rename profile '${rename.originalKey}': Profile does not exist`);
+                    vscode.window.showErrorMessage(`Cannot rename profile '${rename.originalKey}': Profile does not exist`);
+                    continue; // Skip this rename and continue with others
                 }
 
                 const existingTargetProfile = configMoveAPI.get(newPath);
                 if (existingTargetProfile) {
-                    throw new Error(`Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Profile '${rename.newKey}' already exists`);
+                    vscode.window.showErrorMessage(
+                        `Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Profile '${rename.newKey}' already exists`
+                    );
+                    continue; // Skip this rename and continue with others
                 }
 
-                // Additional safety check: ensure we're not creating a circular reference
-                if (rename.newKey.startsWith(rename.originalKey + ".")) {
-                    throw new Error(`Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Would create circular reference`);
+                // Validate ConfigMoveAPI before use
+                try {
+                    this.validateConfigMoveAPI(configMoveAPI, layerActive);
+                } catch (validationError) {
+                    const errorMessage = this.handleMoveUtilsError(validationError, "validate ConfigMoveAPI", rename.originalKey, rename.newKey);
+                    vscode.window.showErrorMessage(errorMessage);
+                    continue; // Skip this rename and continue with others
                 }
 
-                moveProfile(configMoveAPI, layerActive, originalPath, newPath);
+                try {
+                    // Check if this is a nested profile creation (e.g., 'tso' -> 'tso.asdf')
+                    if (this.isNestedProfileCreation(rename.originalKey, rename.newKey)) {
+                        this.createNestedProfileStructure(configMoveAPI, layerActive, originalPath, newPath, rename.originalKey, rename.newKey);
+                    } else {
+                        moveProfile(configMoveAPI, layerActive, originalPath, newPath);
+                    }
+                } catch (moveError) {
+                    const errorMessage = this.handleMoveUtilsError(moveError, "move profile", originalPath, newPath);
+                    vscode.window.showErrorMessage(errorMessage);
+                    continue; // Skip this rename and continue with others
+                }
 
                 // Update any defaults that reference the old profile name
-                updateDefaultsAfterRename(
-                    () => teamConfig.api.layers.get(),
-                    rename.originalKey,
-                    rename.newKey,
-                    (updatedDefaults) => teamConfig.set("defaults", updatedDefaults, { parseString: true })
-                );
+                try {
+                    updateDefaultsAfterRename(
+                        () => teamConfig.api.layers.get(),
+                        rename.originalKey,
+                        rename.newKey,
+                        (updatedDefaults) => teamConfig.set("defaults", updatedDefaults, { parseString: true })
+                    );
+                } catch (defaultsError) {
+                    const errorMessage = this.handleMoveUtilsError(defaultsError, "update defaults", rename.originalKey, rename.newKey);
+                    // Log the error but don't fail the entire rename operation
+                    console.warn(errorMessage);
+                }
 
                 await teamConfig.save();
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
-                vscode.window.showErrorMessage(`Error renaming profile from '${rename.originalKey}' to '${rename.newKey}': ${errorMessage}`);
-                throw error;
+                vscode.window.showErrorMessage(
+                    `Unexpected error renaming profile from '${rename.originalKey}' to '${rename.newKey}': ${errorMessage}`
+                );
+                // Don't throw the error - continue with other renames
             }
         }
     }
 
     private constructNestedProfilePath(profileKey: string): string {
+        if (!profileKey || typeof profileKey !== "string") {
+            throw new Error("Profile key must be a non-empty string");
+        }
+
         const profileParts = profileKey.split(".");
+        if (profileParts.length === 0) {
+            throw new Error("Profile key cannot be empty");
+        }
+
         const pathParts = ["profiles"];
 
         for (const part of profileParts) {
+            if (!part || part.trim() === "") {
+                throw new Error("Profile key parts cannot be empty");
+            }
             pathParts.push(part);
             pathParts.push("profiles");
         }
@@ -884,6 +948,200 @@ export class ConfigEditor extends WebView {
         // Remove the last "profiles" since we don't need it for the final path
         pathParts.pop();
         return pathParts.join(".");
+    }
+
+    /**
+     * Validates the ConfigMoveAPI before calling MoveUtils functions
+     * @param configMoveAPI The ConfigMoveAPI to validate
+     * @param layerActive The layer active function
+     * @throws Error if validation fails
+     */
+    private validateConfigMoveAPI(configMoveAPI: ConfigMoveAPI, layerActive: () => IConfigLayer): void {
+        if (!configMoveAPI) {
+            throw new Error("ConfigMoveAPI is null or undefined");
+        }
+
+        if (typeof configMoveAPI.get !== "function") {
+            throw new Error("ConfigMoveAPI.get is not a function");
+        }
+
+        if (typeof configMoveAPI.set !== "function") {
+            throw new Error("ConfigMoveAPI.set is not a function");
+        }
+
+        if (typeof configMoveAPI.delete !== "function") {
+            throw new Error("ConfigMoveAPI.delete is not a function");
+        }
+
+        if (typeof layerActive !== "function") {
+            throw new Error("layerActive is not a function");
+        }
+
+        try {
+            const layer = layerActive();
+            if (!layer || !layer.properties || !layer.properties.profiles) {
+                throw new Error("Invalid layer structure: missing properties or profiles");
+            }
+        } catch (error) {
+            throw new Error(`Failed to validate layer: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+
+    /**
+     * Handles errors from MoveUtils functions with consistent error messaging
+     * @param error The error that occurred
+     * @param operation The operation that failed (e.g., "move profile", "update defaults")
+     * @param originalKey The original profile key
+     * @param newKey The new profile key
+     * @param isSimulation Whether this is a simulation operation
+     * @returns A formatted error message
+     */
+    private handleMoveUtilsError(error: unknown, operation: string, originalKey: string, newKey: string, isSimulation: boolean = false): string {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const simulationPrefix = isSimulation ? "Simulation failed for " : "";
+        return `${simulationPrefix}${operation} from '${originalKey}' to '${newKey}': ${errorMessage}`;
+    }
+
+    /**
+     * Checks if a profile rename would create a circular reference
+     * @param originalKey The original profile key
+     * @param newKey The new profile key
+     * @returns true if the rename would create a circular reference
+     */
+    private wouldCreateCircularReference(originalKey: string, newKey: string): boolean {
+        // A circular reference occurs when:
+        // 1. The new key is a direct child of the original key AND
+        // 2. The original key is already a child of the new key in the existing hierarchy
+
+        // First, check if newKey is a direct child of originalKey
+        if (!newKey.startsWith(originalKey + ".")) {
+            return false; // Not a child relationship, so no circular reference possible
+        }
+
+        // Extract the child part
+        const childPart = newKey.substring(originalKey.length + 1);
+
+        // Check if the child part contains the original key (indicating a potential circular reference)
+        // This would happen if we're trying to rename 'parent' to 'parent.child' where 'child'
+        // already contains a reference to 'parent'
+        if (childPart.includes(originalKey)) {
+            return true;
+        }
+
+        // Additional check: if we're renaming a parent to be a child of itself
+        // e.g., 'parent' -> 'parent.parent' or 'parent' -> 'parent.child.parent'
+        const childParts = childPart.split(".");
+        for (const part of childParts) {
+            if (part === originalKey) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if a rename operation is creating a nested profile structure
+     * @param originalKey The original profile key
+     * @param newKey The new profile key
+     * @returns true if this is creating a nested profile structure
+     */
+    private isNestedProfileCreation(originalKey: string, newKey: string): boolean {
+        // This is a nested profile creation if:
+        // 1. The new key starts with the original key + "."
+        // 2. The original key is a single-level profile (no dots)
+        return newKey.startsWith(originalKey + ".") && !originalKey.includes(".");
+    }
+
+    /**
+     * Creates a nested profile structure when renaming a profile to create a parent-child relationship
+     * @param configMoveAPI The ConfigMoveAPI instance
+     * @param layerActive The layer active function
+     * @param originalPath The original profile path
+     * @param newPath The new profile path
+     * @param originalKey The original profile key
+     * @param newKey The new profile key
+     */
+    private createNestedProfileStructure(
+        configMoveAPI: ConfigMoveAPI,
+        layerActive: () => IConfigLayer,
+        originalPath: string,
+        newPath: string,
+        originalKey: string,
+        newKey: string
+    ): void {
+        // Get the original profile data
+        const originalProfile = configMoveAPI.get(originalPath);
+        if (!originalProfile) {
+            throw new Error(`Source profile not found at path: ${originalPath}`);
+        }
+
+        // Extract the child profile name from the new key
+        const childProfileName = newKey.substring(originalKey.length + 1);
+
+        // Create the new parent profile structure
+        const newParentProfile = {
+            ...originalProfile,
+            profiles: {
+                [childProfileName]: originalProfile,
+            },
+        };
+
+        // Remove the profiles property from the child profile to avoid duplication
+        const childProfile = { ...originalProfile };
+        delete childProfile.profiles;
+
+        // Set the new parent profile structure
+        configMoveAPI.set(originalPath, newParentProfile);
+
+        // Update the child profile within the parent
+        const childPath = `${originalPath}.profiles.${childProfileName}`;
+        configMoveAPI.set(childPath, childProfile);
+
+        // Move secure properties if they exist
+        this.moveSecurePropertiesForNestedProfile(configMoveAPI, layerActive, originalPath, childPath, originalKey, newKey);
+    }
+
+    /**
+     * Moves secure properties for nested profile creation
+     * @param configMoveAPI The ConfigMoveAPI instance
+     * @param layerActive The layer active function
+     * @param parentPath The parent profile path
+     * @param childPath The child profile path
+     * @param originalKey The original profile key
+     * @param newKey The new profile key
+     */
+    private moveSecurePropertiesForNestedProfile(
+        configMoveAPI: ConfigMoveAPI,
+        layerActive: () => IConfigLayer,
+        parentPath: string,
+        childPath: string,
+        originalKey: string,
+        newKey: string
+    ): void {
+        try {
+            // Get secure properties from the original profile
+            const originalProfile = configMoveAPI.get(parentPath);
+            const secureProperties = originalProfile?.secure || [];
+
+            if (secureProperties.length > 0) {
+                // Set secure properties on the child profile
+                const childProfile = configMoveAPI.get(childPath);
+                if (childProfile) {
+                    configMoveAPI.set(`${childPath}.secure`, secureProperties);
+                }
+
+                // Remove secure properties from the parent profile
+                const parentProfile = configMoveAPI.get(parentPath);
+                if (parentProfile && parentProfile.secure) {
+                    delete parentProfile.secure;
+                    configMoveAPI.set(parentPath, parentProfile);
+                }
+            }
+        } catch (error) {
+            // Log error but don't fail the operation
+            console.warn(`Failed to move secure properties for nested profile creation: ${error}`);
+        }
     }
 
     private async handleAutostoreChange(configPath: string, value: boolean): Promise<void> {
@@ -1238,6 +1496,15 @@ export class ConfigEditor extends WebView {
     }
 
     private simulateProfileRenames(renames: Array<{ originalKey: string; newKey: string; configPath: string }>, teamConfig: any): void {
+        if (!renames || renames.length === 0) {
+            return;
+        }
+
+        if (!teamConfig) {
+            console.warn("Cannot simulate profile renames: teamConfig is null or undefined");
+            return;
+        }
+
         // Sort renames by length (shortest first) to ensure parent renames are processed before child renames
         const sortedRenames = renames.sort((a, b) => {
             const aLength = a.originalKey.split(".").length;
@@ -1303,12 +1570,60 @@ export class ConfigEditor extends WebView {
                     },
                 });
 
-                const originalPath = this.constructNestedProfilePath(rename.originalKey);
-                const newPath = this.constructNestedProfilePath(rename.newKey);
-                moveProfile(configMoveAPI, layerActive, originalPath, newPath);
+                let originalPath: string;
+                let newPath: string;
+
+                try {
+                    originalPath = this.constructNestedProfilePath(rename.originalKey);
+                    newPath = this.constructNestedProfilePath(rename.newKey);
+                } catch (pathError) {
+                    const errorMessage = this.handleMoveUtilsError(pathError, "construct profile path", rename.originalKey, rename.newKey, true);
+                    console.warn(errorMessage);
+                    continue; // Skip this rename and continue with others
+                }
+
+                // Validate ConfigMoveAPI before use
+                try {
+                    this.validateConfigMoveAPI(configMoveAPI, layerActive);
+                } catch (validationError) {
+                    const errorMessage = this.handleMoveUtilsError(
+                        validationError,
+                        "validate ConfigMoveAPI",
+                        rename.originalKey,
+                        rename.newKey,
+                        true
+                    );
+                    console.warn(errorMessage);
+                    continue; // Skip this rename and continue with others
+                }
+
+                try {
+                    // Check if this is a nested profile creation (e.g., 'tso' -> 'tso.asdf')
+                    if (this.isNestedProfileCreation(rename.originalKey, rename.newKey)) {
+                        this.createNestedProfileStructure(configMoveAPI, layerActive, originalPath, newPath, rename.originalKey, rename.newKey);
+                    } else {
+                        moveProfile(configMoveAPI, layerActive, originalPath, newPath);
+                    }
+                } catch (moveError) {
+                    const errorMessage = this.handleMoveUtilsError(moveError, "simulate move profile", originalPath, newPath, true);
+                    console.warn(errorMessage);
+                    continue; // Skip this rename and continue with others
+                }
 
                 // Simulate defaults updates for this rename
-                simulateDefaultsUpdateAfterRename(() => teamConfig.api.layers.get(), rename.originalKey, rename.newKey);
+                try {
+                    simulateDefaultsUpdateAfterRename(() => teamConfig.api.layers.get(), rename.originalKey, rename.newKey);
+                } catch (defaultsError) {
+                    const errorMessage = this.handleMoveUtilsError(
+                        defaultsError,
+                        "simulate defaults update",
+                        rename.originalKey,
+                        rename.newKey,
+                        true
+                    );
+                    console.warn(errorMessage);
+                    // Continue execution as this is simulation only
+                }
             } catch (error) {
                 continue;
             }
