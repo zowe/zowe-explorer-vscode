@@ -232,6 +232,11 @@ export class ProfilesCache {
         }
         this.checkForEnvVarAndUpdate();
         this.profilesForValidation = [];
+
+        imperative.Censor.setCensoredOptions({
+            config: mProfileInfo.getTeamConfig(),
+            profiles: [...this.getCoreProfileTypes(), ...this.getConfigArray()],
+        });
     }
 
     /**
