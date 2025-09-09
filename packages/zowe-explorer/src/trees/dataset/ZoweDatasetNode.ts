@@ -705,7 +705,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         totalItems: allDatasetsCount,
                     };
                 } else {
-                    console.log("Run Else - ZoweDsNode");
                     const basicResponses: IZosFilesResponse[] = [];
                     await this.listDatasets(basicResponses, { attributes: false });
 
