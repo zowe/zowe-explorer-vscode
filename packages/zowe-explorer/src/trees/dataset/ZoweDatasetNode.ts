@@ -690,7 +690,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         try {
             if (this.dirty || totalItems == null || lastDatasetName == null) {
                 // Rebuild cache to handle future page changes
-
+                // If getCount() is present
                 if (mvsApi.getCount) {
                     const dsPatterns = [
                         ...new Set(
@@ -705,6 +705,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         totalItems: allDatasetsCount,
                     };
                 } else {
+                    //if getCount() not present for zosmf and extender profiles
                     const basicResponses: IZosFilesResponse[] = [];
                     await this.listDatasets(basicResponses, { attributes: false });
 
