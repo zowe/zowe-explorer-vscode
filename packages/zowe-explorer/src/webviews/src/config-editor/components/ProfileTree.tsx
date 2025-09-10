@@ -253,6 +253,34 @@ export function ProfileTree({
       newProfileKey = `${targetProfileKey}.${draggedProfileName}`;
     }
 
+    // Check if the new profile key would conflict with an existing profile
+    // Get all current profile keys (including pending profiles and targets of pending renames)
+    const allCurrentProfileKeys = [...profileKeys, ...Object.keys(pendingProfiles)];
+
+    // Add profiles that are targets of pending renames to avoid conflicts
+    if (renames && configurations && selectedTab !== null && selectedTab !== undefined) {
+      const configPath = configurations[selectedTab]?.configPath;
+      if (configPath && renames[configPath]) {
+        const configRenames = renames[configPath];
+        const renameTargets = Object.values(configRenames);
+        allCurrentProfileKeys.push(...renameTargets);
+      }
+    }
+
+    // Check if the new profile key already exists and is not the dragged profile itself
+    if (allCurrentProfileKeys.includes(newProfileKey) && newProfileKey !== draggedProfile) {
+      // Find a unique name by appending a number
+      let counter = 1;
+      let uniqueNewProfileKey = `${newProfileKey}_${counter}`;
+
+      while (allCurrentProfileKeys.includes(uniqueNewProfileKey)) {
+        counter++;
+        uniqueNewProfileKey = `${newProfileKey}_${counter}`;
+      }
+
+      newProfileKey = uniqueNewProfileKey;
+    }
+
     // Only call rename if the key actually changes
     if (draggedProfile !== newProfileKey) {
       // Find the original key for the dragged profile
@@ -278,23 +306,18 @@ export function ProfileTree({
 
   // Helper function to check if a drop is invalid
   const isInvalidDrop = (sourceProfile: string, targetProfile: string): boolean => {
-    console.log("isInvalidDrop check:", { sourceProfile, targetProfile });
-
     // Can't drop on itself
     if (sourceProfile === targetProfile) {
-      console.log("Invalid: dropping on itself");
       return true;
     }
 
     // Special case for root level - always allow dropping to root
     if (targetProfile === "ROOT") {
-      console.log("Valid: dropping to root");
       return false;
     }
 
     // Can't drop a parent onto its child
     if (targetProfile.startsWith(sourceProfile + ".")) {
-      console.log("Invalid: dropping parent onto child");
       return true;
     }
 
@@ -304,7 +327,6 @@ export function ProfileTree({
       // Check if this is dropping onto the immediate parent (which should be blocked)
       const sourceParent = sourceProfile.substring(0, sourceProfile.lastIndexOf("."));
       if (sourceParent === targetProfile) {
-        console.log("Invalid: dropping onto immediate parent (no-op)");
         return true;
       }
 
@@ -319,18 +341,15 @@ export function ProfileTree({
       // If we're moving to a parent and the remaining path contains the source profile name,
       // this is likely a valid move up the hierarchy
       if (remainingPath.includes(sourceProfileName)) {
-        console.log("Valid: moving profile up hierarchy");
         return false;
       }
 
       // Otherwise, it might be a circular reference
-      console.log("Invalid: would create circular reference");
       return true;
     }
 
     // Allow dropping onto any valid profile name, even if it doesn't currently exist
     // This handles cases where a profile was moved and we want to move it back
-    console.log("Valid: drop allowed");
     return false;
   };
 
@@ -501,9 +520,38 @@ export function ProfileTree({
           // Extract only the profile name (last part) from the dragged profile
           const draggedProfileName = draggedProfile.split(".").pop() || draggedProfile;
 
+          // Check if the new profile key would conflict with an existing profile
+          // Get all current profile keys (including pending profiles and targets of pending renames)
+          const allCurrentProfileKeys = [...profileKeys, ...Object.keys(pendingProfiles)];
+
+          // Add profiles that are targets of pending renames to avoid conflicts
+          if (renames && configurations && selectedTab !== null && selectedTab !== undefined) {
+            const configPath = configurations[selectedTab]?.configPath;
+            if (configPath && renames[configPath]) {
+              const configRenames = renames[configPath];
+              const renameTargets = Object.values(configRenames);
+              allCurrentProfileKeys.push(...renameTargets);
+            }
+          }
+
+          // Check if the new profile key already exists and is not the dragged profile itself
+          let newProfileKey = draggedProfileName;
+          if (allCurrentProfileKeys.includes(newProfileKey) && newProfileKey !== draggedProfile) {
+            // Find a unique name by appending a number
+            let counter = 1;
+            let uniqueNewProfileKey = `${newProfileKey}_${counter}`;
+
+            while (allCurrentProfileKeys.includes(uniqueNewProfileKey)) {
+              counter++;
+              uniqueNewProfileKey = `${newProfileKey}_${counter}`;
+            }
+
+            newProfileKey = uniqueNewProfileKey;
+          }
+
           // Call the rename handler to move to root
           const originalKey = findOriginalKey(draggedProfile);
-          onProfileRename(originalKey, draggedProfileName);
+          onProfileRename(originalKey, newProfileKey);
 
           // Clear drag state
           setDraggedProfile(null);

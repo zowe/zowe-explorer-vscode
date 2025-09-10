@@ -24,7 +24,8 @@ export function RenameProfileModal({
 }: RenameProfileModalProps) {
   const [newName, setNewName] = useState("");
   const [error, setError] = useState("");
-  const [isFullPathMode, setIsFullPathMode] = useState(false);
+  // const [isFullPathMode, setIsFullPathMode] = useState(false);
+  const isFullPathMode = false; // Always use profile name only mode
   const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, "#profile-name");
 
@@ -39,7 +40,7 @@ export function RenameProfileModal({
       // Reset state when modal is closed
       setNewName("");
       setError("");
-      setIsFullPathMode(false);
+      // setIsFullPathMode(false);
     }
   }, [isOpen, currentProfileName, currentProfileKey, isFullPathMode]);
 
@@ -121,7 +122,12 @@ export function RenameProfileModal({
       // Check if this existing profile is being renamed away (i.e., it's the original key in a rename)
       const isBeingRenamedAway = Object.entries(pendingRenames).some(([originalKey]) => originalKey === newFullKey);
 
-      if (!isBeingRenamedFromCurrent && !isBeingRenamedAway) {
+      // Check if any other profile is being renamed TO this target location
+      const isBeingRenamedTo = Object.entries(pendingRenames).some(
+        ([originalKey, newKey]) => newKey === newFullKey && originalKey !== currentProfileKey
+      );
+
+      if (!isBeingRenamedFromCurrent && !isBeingRenamedAway && !isBeingRenamedTo) {
         return `Profile '${newFullKey}' already exists`;
       }
     }
@@ -136,7 +142,12 @@ export function RenameProfileModal({
       // Check if this pending profile is being renamed away (i.e., it's the original key in a rename)
       const isBeingRenamedAway = Object.entries(pendingRenames).some(([originalKey]) => originalKey === newFullKey);
 
-      if (!isBeingRenamedFromCurrent && !isBeingRenamedAway) {
+      // Check if any other profile is being renamed TO this target location
+      const isBeingRenamedTo = Object.entries(pendingRenames).some(
+        ([originalKey, newKey]) => newKey === newFullKey && originalKey !== currentProfileKey
+      );
+
+      if (!isBeingRenamedFromCurrent && !isBeingRenamedAway && !isBeingRenamedTo) {
         return `Profile '${newFullKey}' is pending creation`;
       }
     }
@@ -144,6 +155,24 @@ export function RenameProfileModal({
     // Check for circular renames
     if (pendingRenames[newFullKey] === currentProfileKey) {
       return `Cannot rename '${currentProfileKey}' to '${newFullKey}': This would create a circular rename (${newFullKey} -> ${currentProfileKey})`;
+    }
+
+    // Check for circular dependency (when new key contains current key as a parent)
+    const newParts = newFullKey.split(".");
+    for (let i = 0; i < newParts.length; i++) {
+      const partialKey = newParts.slice(0, i + 1).join(".");
+      if (partialKey === currentProfileKey) {
+        return `Cannot rename '${currentProfileKey}' to '${newFullKey}': Would create circular dependency`;
+      }
+    }
+
+    // Check if any other profile is being renamed TO this target location (even if not in existing/pending lists)
+    const isBeingRenamedToByOther = Object.entries(pendingRenames).some(
+      ([originalKey, newKey]) => newKey === newFullKey && originalKey !== currentProfileKey
+    );
+
+    if (isBeingRenamedToByOther) {
+      return `Profile '${newFullKey}' is already a target of a pending rename`;
     }
 
     return null;
@@ -196,19 +225,19 @@ export function RenameProfileModal({
     }
   };
 
-  const handleModeToggle = () => {
-    const newMode = !isFullPathMode;
-    setIsFullPathMode(newMode);
+  // const handleModeToggle = () => {
+  //   const newMode = !isFullPathMode;
+  //   setIsFullPathMode(newMode);
 
-    // Get the appropriate initial value for the new mode
-    const initialValue = newMode ? currentProfileKey : currentProfileName;
+  //   // Get the appropriate initial value for the new mode
+  //   const initialValue = newMode ? currentProfileKey : currentProfileName;
 
-    // Apply filtering to the initial value based on the new mode
-    const filteredValue = filterInputValue(initialValue);
+  //   // Apply filtering to the initial value based on the new mode
+  //   const filteredValue = filterInputValue(initialValue);
 
-    setNewName(filteredValue);
-    setError("");
-  };
+  //   setNewName(filteredValue);
+  //   setError("");
+  // };
 
   if (!isOpen) return null;
 
@@ -217,7 +246,7 @@ export function RenameProfileModal({
       <div ref={modalRef} className="modal-content">
         <h2>Rename Profile</h2>
         <div className="modal-body">
-          <div style={{ marginBottom: "16px" }}>
+          {/* <div style={{ marginBottom: "16px" }}>
             <h3 style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "600" }}>Rename Options</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
@@ -255,11 +284,11 @@ export function RenameProfileModal({
                 </div>
               </label>
             </div>
-          </div>
+          </div> */}
 
           <div style={{ marginBottom: "16px" }}>
             <label htmlFor="profile-name" style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>
-              {isFullPathMode ? "New Profile Path:" : "New Profile Name:"}
+              New Profile Name:
             </label>
             <input
               id="profile-name"
@@ -268,14 +297,10 @@ export function RenameProfileModal({
               value={newName}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={isFullPathMode ? "e.g., parent.child" : "e.g., tso-new"}
+              placeholder="e.g., tso-new"
             />
             {error && <div className="modal-error">{error}</div>}
-            <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-              {isFullPathMode
-                ? "Use periods to separate profile levels (e.g., parent.child.grandchild)"
-                : "Use letters, numbers, underscores, and hyphens only"}
-            </div>
+            <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>Use letters, numbers, underscores, and hyphens only</div>
           </div>
 
           <div className="modal-hint" style={{ marginBottom: "16px" }}>

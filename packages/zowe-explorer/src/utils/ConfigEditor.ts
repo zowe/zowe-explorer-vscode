@@ -770,9 +770,18 @@ export class ConfigEditor extends WebView {
 
         // Sort renames by length (shortest first) to ensure parent renames are processed before child renames
         const sortedRenames = renames.sort((a, b) => {
-            const aLength = a.originalKey.split(".").length;
-            const bLength = b.originalKey.split(".").length;
-            return aLength - bLength; // Ascending order (shortest first)
+            const aOriginalLength = a.originalKey.split(".").length;
+            const bOriginalLength = b.originalKey.split(".").length;
+
+            // Primary sort: by original key length (shortest first)
+            if (aOriginalLength !== bOriginalLength) {
+                return aOriginalLength - bOriginalLength;
+            }
+
+            // Secondary sort: by new key length (shortest first)
+            const aNewLength = a.newKey.split(".").length;
+            const bNewLength = b.newKey.split(".").length;
+            return aNewLength - bNewLength;
         });
 
         // Update rename keys to reflect parent renames that have already been processed
@@ -1524,9 +1533,18 @@ export class ConfigEditor extends WebView {
 
         // Sort renames by length (shortest first) to ensure parent renames are processed before child renames
         const sortedRenames = renames.sort((a, b) => {
-            const aLength = a.originalKey.split(".").length;
-            const bLength = b.originalKey.split(".").length;
-            return aLength - bLength; // Ascending order (shortest first)
+            const aOriginalLength = a.originalKey.split(".").length;
+            const bOriginalLength = b.originalKey.split(".").length;
+
+            // Primary sort: by original key length (shortest first)
+            if (aOriginalLength !== bOriginalLength) {
+                return aOriginalLength - bOriginalLength;
+            }
+
+            // Secondary sort: by new key length (shortest first)
+            const aNewLength = a.newKey.split(".").length;
+            const bNewLength = b.newKey.split(".").length;
+            return aNewLength - bNewLength;
         });
 
         for (const rename of sortedRenames) {

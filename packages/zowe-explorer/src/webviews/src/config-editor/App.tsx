@@ -426,9 +426,18 @@ export function App() {
 
         // Also add all child profiles of this deleted profile
         // For example, if "parent" is deleted, also exclude "parent.child", "parent.child.grandchild", etc.
+        // But only if they haven't been renamed away from being children
         profileNames.forEach((existingProfile) => {
           if (existingProfile.startsWith(profileName + ".")) {
-            deletedProfiles.add(existingProfile);
+            // Check if this child profile has been renamed and is no longer a child of the deleted profile
+            const configPath = configurations[selectedTab].configPath;
+            const renamedProfile = getRenamedProfileKeyWithNested(existingProfile, configPath, renames);
+
+            // Only add to deleted profiles if the renamed version is still a child of the deleted profile
+            // This means the renamed profile should still start with the deleted profile name
+            if (renamedProfile.startsWith(profileName + ".")) {
+              deletedProfiles.add(existingProfile);
+            }
           }
         });
       }
@@ -1388,6 +1397,42 @@ export function App() {
       delete tempRenames[newKey];
     }
 
+    // Check if the new key conflicts with existing renames
+    const conflictingRename = Object.entries(tempRenames).find(([_, targetKey]) => targetKey === newKey);
+
+    if (conflictingRename) {
+      // Update the conflicting rename to use a non-conflicting target
+      const [conflictingOriginalKey, conflictingTargetKey] = conflictingRename;
+
+      // If the conflicting target starts with the original key, update it to use the new key
+      if (conflictingTargetKey.startsWith(originalKey + ".")) {
+        const remainingPath = conflictingTargetKey.substring(originalKey.length + 1);
+        const updatedTargetKey = `${newKey}.${remainingPath}`;
+        tempRenames[conflictingOriginalKey] = updatedTargetKey;
+      } else {
+        // Generate a unique target key by appending a number
+        let counter = 1;
+        let newTargetKey = `${conflictingTargetKey}_${counter}`;
+
+        // Keep trying until we find a non-conflicting target
+        while (Object.values(tempRenames).includes(newTargetKey) || newTargetKey === newKey) {
+          counter++;
+          newTargetKey = `${conflictingTargetKey}_${counter}`;
+        }
+
+        tempRenames[conflictingOriginalKey] = newTargetKey;
+      }
+    }
+
+    // Update any existing renames that reference the original key as a parent BEFORE adding the new rename
+    Object.entries(tempRenames).forEach(([existingOriginalKey, existingNewKey]) => {
+      if (existingNewKey.startsWith(originalKey + ".")) {
+        const remainingPath = existingNewKey.substring(originalKey.length + 1);
+        const updatedNewKey = `${newKey}.${remainingPath}`;
+        tempRenames[existingOriginalKey] = updatedNewKey;
+      }
+    });
+
     // Add the new rename
     tempRenames[originalKey] = newKey;
 
@@ -1838,6 +1883,61 @@ export function App() {
 
       return prev;
     });
+
+    // If the new key is nested, create parent profiles as pending profiles
+    if (newKey.includes(".")) {
+      const parentParts = newKey.split(".");
+      const parentKeys: string[] = [];
+
+      // Create all parent profile keys
+      for (let i = 1; i < parentParts.length; i++) {
+        parentKeys.push(parentParts.slice(0, i).join("."));
+      }
+
+      // Check which parent profiles need to be created
+      const config = configurations[selectedTab!];
+      const existingProfiles = flattenProfiles(config.properties.profiles);
+      const existingProfileKeys = Object.keys(existingProfiles);
+
+      // Get all current profile keys including renamed ones
+      const allCurrentProfileKeys = existingProfileKeys.map((key) => getRenamedProfileKeyWithNested(key, configPath, renames));
+
+      // Add pending changes for parent profiles that don't exist
+      setPendingChanges((prev) => {
+        const newState = { ...prev };
+        if (!newState[configPath]) {
+          newState[configPath] = {};
+        }
+
+        parentKeys.forEach((parentKey) => {
+          // Check if the parent profile exists in original profiles or as a renamed profile
+          const existsAsOriginal = existingProfileKeys.includes(parentKey);
+          const existsAsRenamed = allCurrentProfileKeys.includes(parentKey);
+
+          if (!existsAsOriginal && !existsAsRenamed) {
+            // Create a pending change for the parent profile (without type)
+            const parentPath = parentKey.split(".");
+            const fullPath = ["profiles"];
+            for (let i = 0; i < parentPath.length; i++) {
+              fullPath.push(parentPath[i]);
+              if (i < parentPath.length - 1) {
+                fullPath.push("profiles");
+              }
+            }
+
+            const fullPathKey = fullPath.join(".");
+            newState[configPath][fullPathKey] = {
+              value: {}, // Empty object to create the profile structure
+              path: [],
+              profile: parentKey,
+              secure: false,
+            };
+          }
+        });
+
+        return newState;
+      });
+    }
 
     // Close the modal
     setRenameProfileModalOpen(false);
@@ -2907,9 +3007,12 @@ export function App() {
 
   // Helper function to check if a profile or its parent is deleted
   const isProfileOrParentDeleted = (profileKey: string, deletedProfiles: string[]): boolean => {
+    if (selectedTab === null) return false;
+
+    // Use the current profile key (after renames) to check the current hierarchy
     const profileParts = profileKey.split(".");
 
-    // Check each level of the profile hierarchy
+    // Check each level of the current profile hierarchy
     for (let i = 0; i < profileParts.length; i++) {
       const currentLevelProfileKey = profileParts.slice(0, i + 1).join(".");
       let fullProfilePath: string;
@@ -3042,8 +3145,24 @@ export function App() {
           const profile = profiles[key];
           const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
 
-          // Add this profile key if it's not deleted
-          if (!isProfileOrParentDeleted(qualifiedKey, deletedProfiles)) {
+          // Check if this profile should be excluded due to deletion
+          let shouldExclude = false;
+
+          // First check if the profile itself is deleted
+          if (isProfileOrParentDeleted(qualifiedKey, deletedProfiles)) {
+            // But check if this profile has been renamed away from being a child of a deleted parent
+            const renamedKey = getRenamedProfileKeyWithNested(qualifiedKey, configPath, renames);
+
+            // If the renamed version is different and doesn't have deleted parents, don't exclude it
+            if (renamedKey !== qualifiedKey && !isProfileOrParentDeleted(renamedKey, deletedProfiles)) {
+              shouldExclude = false;
+            } else {
+              shouldExclude = true;
+            }
+          }
+
+          // Add this profile key if it's not excluded
+          if (!shouldExclude) {
             keys.push(qualifiedKey);
           }
 
