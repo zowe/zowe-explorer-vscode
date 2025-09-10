@@ -8,6 +8,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Added support to delete VSAM data sets for z/OSMF type profiles. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
+
 ## `3.3.0`
 
 ### New features and enhancements
