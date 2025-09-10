@@ -8,6 +8,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Added support to delete VSAM data sets for z/OSMF type profiles. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
+
 ## `3.3.0`
 
 ### New features and enhancements
@@ -40,7 +42,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Fixed error message shown when creating a config file that already exists. [#3647](https://github.com/zowe/zowe-explorer-vscode/issues/3647)
 - Fixed wrong error message received when accessing a mainframe resource with a file system URI containing invalid profile name. [#3760](https://github.com/zowe/zowe-explorer-vscode/issues/3760)
 - Fixed regression with the `ZoweTreeNode.getProfile` function that caused unhandled exceptions to occur when a profile is no longer accessible. [#3772](https://github.com/zowe/zowe-explorer-vscode/issues/3772)
-- Added support to delete VSAM data sets for z/OSMF type profiles. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
 
 ## `3.2.2`
 
