@@ -6,6 +6,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+### Bug fixes
+
+## `3.3.0`
+
+### New features and enhancements
+
 - Added VSCode setting to allow users to enable and disable using the default TSO profile for issuing TSO commands. The default is set to true if a default TSO profile is set as the default. [#2528](https://github.com/zowe/zowe-explorer-vscode/issues/2528)
 - Added capability for extenders to provide additional attributes for data sets. [#3730](https://github.com/zowe/zowe-explorer-vscode/pull/3730)
 - Added hostname validation to prevent encountering a VS Code Proxy bug that occurs when attempting to connect to a z/OSMF server with the protocol specified as part of the hostname. [#3364](https://github.com/zowe/zowe-explorer-vscode/issues/3364)
