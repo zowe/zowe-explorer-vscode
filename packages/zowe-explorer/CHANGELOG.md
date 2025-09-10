@@ -42,6 +42,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed cross-LPAR PDS transfers to preserve original DCB attributes and prevent binary data corruption. Data is now transferred as binary, and the encoding is respected if previously set by the user. [#3731](https://github.com/zowe/zowe-explorer-vscode/pull/3731)
 - Fixed copy/paste functionality of data sets for extender-type profiles by using `SharedContext` helper functions. [#3815](https://github.com/zowe/zowe-explorer-vscode/pull/3815)
 - Fixed issue where the `getChildren` function made requests repeatedly while the data set filter prompt was open, causing repeated authentication prompts and excessive requests for listing data sets. [#3807](https://github.com/zowe/zowe-explorer-vscode/issues/3807)
+- Fixed issues seen when user is prompted, having v1 profiles and chooses convert or create new config options.[#3757](https://github.com/zowe/zowe-explorer-vscode/issues/3757)
 
 ## `3.2.2`
 
