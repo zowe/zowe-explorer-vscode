@@ -360,19 +360,19 @@ importers:
     devDependencies:
       '@preact/preset-vite':
         specifier: ^2.10.1
-        version: 2.10.1(@babel/core@7.28.4)(preact@10.22.0)(vite@6.3.5)
+        version: 2.10.1(@babel/core@7.27.7)(preact@10.22.0)(vite@6.3.6)
       typescript:
         specifier: ^5.3.3
         version: 5.4.5
       vite:
-        specifier: ^6.2.7
-        version: 6.3.5(@types/node@20.17.6)(tsx@4.19.3)
+        specifier: ^6.3.6
+        version: 6.3.6(@types/node@20.17.6)(tsx@4.19.3)
       vite-plugin-checker:
         specifier: ^0.9.1
-        version: 0.9.1(eslint@8.57.0)(typescript@5.4.5)(vite@6.3.5)
+        version: 0.9.1(eslint@8.57.0)(typescript@5.4.5)(vite@6.3.6)
       vite-plugin-static-copy:
-        specifier: ^2.3.0
-        version: 2.3.2(vite@6.3.5)
+        specifier: ^2.3.2
+        version: 2.3.2(vite@6.3.6)
 
 packages:
 
@@ -2208,7 +2208,7 @@ packages:
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
     dev: true
 
-  /@preact/preset-vite@2.10.1(@babel/core@7.28.4)(preact@10.22.0)(vite@6.3.5):
+  /@preact/preset-vite@2.10.1(@babel/core@7.27.7)(preact@10.22.0)(vite@6.3.6):
     resolution: {integrity: sha512-59lyGBXNfZIr5OOuBUB4/IB8AqF/ULbvYnyItgK/2BJnsGJqaeaJobRVtMp1129obHQuj8oZ/dVxB9inmH8Xig==}
     peerDependencies:
       '@babel/core': 7.x
@@ -2217,12 +2217,12 @@ packages:
       '@babel/core': 7.28.4
       '@babel/plugin-transform-react-jsx': 7.23.4(@babel/core@7.28.4)
       '@babel/plugin-transform-react-jsx-development': 7.22.5(@babel/core@7.28.4)
-      '@prefresh/vite': 2.4.7(preact@10.22.0)(vite@6.3.5)
+      '@prefresh/vite': 2.4.7(preact@10.22.0)(vite@6.3.6)
       '@rollup/pluginutils': 4.2.1
       babel-plugin-transform-hook-names: 1.0.2(@babel/core@7.28.4)
       debug: 4.4.0(supports-color@8.1.1)
       kolorist: 1.8.0
-      vite: 6.3.5(@types/node@20.17.6)(tsx@4.19.3)
+      vite: 6.3.6(@types/node@20.17.6)(tsx@4.19.3)
       vite-prerender-plugin: 0.5.7
     transitivePeerDependencies:
       - preact
@@ -2245,7 +2245,7 @@ packages:
     resolution: {integrity: sha512-KtC/fZw+oqtwOLUFM9UtiitB0JsVX0zLKNyRTA332sqREqSALIIQQxdUCS1P3xR/jT1e2e8/5rwH6gdcMLEmsQ==}
     dev: true
 
-  /@prefresh/vite@2.4.7(preact@10.22.0)(vite@6.3.5):
+  /@prefresh/vite@2.4.7(preact@10.22.0)(vite@6.3.6):
     resolution: {integrity: sha512-zmCEDWSFHl5A7PciXa/fe+OUjoGi4iiCQclpWfpIg7LjxwWrtlUT4DfxDBcQwHfTyipS/XDm8x7WYrkiTW0q+w==}
     peerDependencies:
       preact: ^10.4.0
@@ -2257,7 +2257,7 @@ packages:
       '@prefresh/utils': 1.2.0
       '@rollup/pluginutils': 4.2.1
       preact: 10.22.0
-      vite: 6.3.5(@types/node@20.17.6)(tsx@4.19.3)
+      vite: 6.3.6(@types/node@20.17.6)(tsx@4.19.3)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -12848,7 +12848,7 @@ packages:
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dev: false
 
-  /vite-plugin-checker@0.9.1(eslint@8.57.0)(typescript@5.4.5)(vite@6.3.5):
+  /vite-plugin-checker@0.9.1(eslint@8.57.0)(typescript@5.4.5)(vite@6.3.6):
     resolution: {integrity: sha512-neH3CSNWdkZ+zi+WPt/0y5+IO2I0UAI0NX6MaXqU/KxN1Lz6np/7IooRB6VVAMBa4nigqm1GRF6qNa4+EL5jDQ==}
     engines: {node: '>=14.16'}
     peerDependencies:
@@ -12892,11 +12892,11 @@ packages:
       tiny-invariant: 1.3.3
       tinyglobby: 0.2.12
       typescript: 5.4.5
-      vite: 6.3.5(@types/node@20.17.6)(tsx@4.19.3)
+      vite: 6.3.6(@types/node@20.17.6)(tsx@4.19.3)
       vscode-uri: 3.1.0
     dev: true
 
-  /vite-plugin-static-copy@2.3.2(vite@6.3.5):
+  /vite-plugin-static-copy@2.3.2(vite@6.3.6):
     resolution: {integrity: sha512-iwrrf+JupY4b9stBttRWzGHzZbeMjAHBhkrn67MNACXJVjEMRpCI10Q3AkxdBkl45IHaTfw/CNVevzQhP7yTwg==}
     engines: {node: ^18.0.0 || >=20.0.0}
     peerDependencies:
@@ -12907,7 +12907,7 @@ packages:
       fs-extra: 11.3.0
       p-map: 7.0.3
       picocolors: 1.1.1
-      vite: 6.3.5(@types/node@20.17.6)(tsx@4.19.3)
+      vite: 6.3.6(@types/node@20.17.6)(tsx@4.19.3)
     dev: true
 
   /vite-prerender-plugin@0.5.7:
@@ -12921,8 +12921,8 @@ packages:
       stack-trace: 1.0.0-pre2
     dev: true
 
-  /vite@6.3.5(@types/node@20.17.6)(tsx@4.19.3):
-    resolution: {integrity: sha512-cZn6NDFE7wdTpINgs++ZJ4N49W2vRp8LCKrn3Ob1kYNtOo21vfDoaV5GzBfLU4MovSAB8uNRm4jgzVQZ+mBzPQ==}
+  /vite@6.3.6(@types/node@20.17.6)(tsx@4.19.3):
+    resolution: {integrity: sha512-0msEVHJEScQbhkbVTb/4iHZdJ6SXp/AvxL2sjwYQFfBqleHtnCqv1J3sa9zbWz/6kW1m9Tfzn92vW+kZ1WV6QA==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
     peerDependencies:
