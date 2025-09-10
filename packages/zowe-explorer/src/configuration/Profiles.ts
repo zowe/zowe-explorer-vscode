@@ -608,7 +608,7 @@ export class Profiles extends ProfilesCache {
         const isProfileString = typeof profile === "string";
         const profilename = isProfileString ? profile : profile.name;
         const userInputBoxOptions: vscode.InputBoxOptions = {
-            placeHolder: isProfileString ? vscode.l10n.t(`User Name`) : profile.profile.user,
+            placeHolder: vscode.l10n.t(`User Name`),
             prompt: vscode.l10n.t({
                 message: "Enter the user name for the {0} connection. Leave blank to not store.",
                 args: [profilename],
@@ -616,7 +616,7 @@ export class Profiles extends ProfilesCache {
             }),
         };
         const passwordInputBoxOptions: vscode.InputBoxOptions = {
-            placeHolder: isProfileString ? vscode.l10n.t(`Password`) : profile.profile.password,
+            placeHolder: vscode.l10n.t(`Password`),
             prompt: vscode.l10n.t({
                 message: "Enter the password for the {0} connection. Leave blank to not store.",
                 args: [profilename],
