@@ -612,6 +612,7 @@ export class ProfilesUtils {
             default:
                 return;
         }
+        ProfilesUtils.noConfigDialogShown = true;
     }
 
     /**
