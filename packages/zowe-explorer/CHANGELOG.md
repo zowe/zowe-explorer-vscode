@@ -7,6 +7,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 - Added support for file system calls to be retried and continue after the credentials have been updated [#3830](https://github.com/zowe/zowe-explorer-vscode/pull/3830)
+- Added support to delete VSAM data sets. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
 
 ### Bug fixes
 
