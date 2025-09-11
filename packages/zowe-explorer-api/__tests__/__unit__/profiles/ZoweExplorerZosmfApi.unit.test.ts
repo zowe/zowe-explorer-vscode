@@ -22,7 +22,6 @@ import { FileManagement } from "../../../src/utils/FileManagement";
 import { MainframeInteraction } from "../../../src/extend";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
-import exp from "constants";
 
 type ParametersWithProfileArgs<F> = F extends (...args: infer P) => any ? [...Parameters<F>, profileProperties?: object] : never;
 
