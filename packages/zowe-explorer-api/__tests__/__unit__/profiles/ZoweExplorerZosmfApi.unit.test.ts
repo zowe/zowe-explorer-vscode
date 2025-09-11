@@ -751,7 +751,7 @@ describe("ZosmfJesApi", () => {
             const getDatasetSpy = jest.spyOn(zosfiles.Get, "dataSet").mockResolvedValue(Buffer.from("fakeJcl"));
             const submitJclSpy = jest.spyOn(zosjobs.SubmitJobs, "submitJcl");
             await api.submitJob("IBMUSER.JCL(IEFBR14)");
-            expect(getDatasetSpy).toHaveBeenLastCalledWith(undefined, "IBMUSER.JCL(IEFBR14)");
+            expect(getDatasetSpy).toHaveBeenLastCalledWith(undefined, "IBMUSER.JCL(IEFBR14)", { encoding: "IBM-1147" });
             expect(submitJclSpy).toHaveBeenLastCalledWith(undefined, "fakeJcl", undefined, undefined, "IBM-1147");
         });
     });

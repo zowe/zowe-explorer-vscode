@@ -451,7 +451,7 @@ export namespace ZoweExplorerZosmf {
             if (jesEncoding == null) {
                 return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
             } else {
-                const rawJcl = await zosfiles.Get.dataSet(this.getSession(), jobDataSet);
+                const rawJcl = await zosfiles.Get.dataSet(this.getSession(), jobDataSet, { encoding: jesEncoding });
                 return this.submitJcl(rawJcl.toString());
             }
         }
