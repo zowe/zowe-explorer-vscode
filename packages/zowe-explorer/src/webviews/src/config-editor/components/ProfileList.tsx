@@ -60,6 +60,7 @@ export function ProfileList({
 }: ProfileListProps) {
   const [filteredProfileKeys, setFilteredProfileKeys] = useState<string[]>(sortedProfileKeys);
   const [isFilteringActive, setIsFilteringActive] = useState<boolean>(false);
+  const [lastSelectedProfileKey, setLastSelectedProfileKey] = useState<string | null>(null);
 
   // Get unique profile types for filter dropdown
   const availableTypes = Array.from(
@@ -93,27 +94,37 @@ export function ProfileList({
   }, [sortedProfileKeys, searchTerm, filterType, getProfileType, viewMode]);
 
   // Auto-expand parent nodes of selected profile to ensure it's visible
+  // Only run this when the selected profile actually changes, not on every render
   useEffect(() => {
-    if (viewMode === "tree" && selectedProfileKey) {
-      const newExpandedNodes = new Set(expandedNodes);
+    if (viewMode === "tree" && selectedProfileKey && selectedProfileKey !== lastSelectedProfileKey) {
       const parts = selectedProfileKey.split(".");
-      let hasChanges = false;
 
-      // Add all parent nodes of the selected profile
+      // Check if any parent nodes need to be expanded
+      let needsExpansion = false;
       for (let i = 1; i < parts.length; i++) {
         const parentKey = parts.slice(0, i).join(".");
-        if (sortedProfileKeys.includes(parentKey) && !newExpandedNodes.has(parentKey)) {
-          newExpandedNodes.add(parentKey);
-          hasChanges = true;
+        if (sortedProfileKeys.includes(parentKey) && !expandedNodes.has(parentKey)) {
+          needsExpansion = true;
+          break;
         }
       }
 
-      // Only update if there are actual changes to prevent infinite loops
-      if (hasChanges) {
+      // Only expand if the selected profile is not visible due to collapsed parents
+      if (needsExpansion) {
+        const newExpandedNodes = new Set(expandedNodes);
+        for (let i = 1; i < parts.length; i++) {
+          const parentKey = parts.slice(0, i).join(".");
+          if (sortedProfileKeys.includes(parentKey)) {
+            newExpandedNodes.add(parentKey);
+          }
+        }
         setExpandedNodes(newExpandedNodes);
       }
+
+      // Update the last selected profile key
+      setLastSelectedProfileKey(selectedProfileKey);
     }
-  }, [selectedProfileKey, viewMode, sortedProfileKeys, expandedNodes, setExpandedNodes]);
+  }, [selectedProfileKey, viewMode, sortedProfileKeys, setExpandedNodes, lastSelectedProfileKey]);
 
   // Helper function to expand filtered results for tree view
   const expandFilteredResultsForTree = (filteredKeys: string[], allKeys: string[]): string[] => {

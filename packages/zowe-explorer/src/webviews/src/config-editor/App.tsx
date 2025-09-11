@@ -1391,10 +1391,17 @@ export function App() {
     // If the new rename creates a circular dependency, remove the conflicting rename
     // Note: This function is called after circular rename validation in handleRenameProfile,
     // so this case should not occur in normal operation, but we keep it as a safety measure
+    // However, we need to be careful not to remove renames that are part of a cancellation
     if (tempRenames[newKey] === originalKey) {
-      // This creates a circular dependency: originalKey -> newKey -> originalKey
-      // Remove the conflicting rename
-      delete tempRenames[newKey];
+      // Check if this is actually a cancellation (moving back to original location)
+      // If originalKey is the target of an existing rename, this might be a cancellation
+      const isCancellation = Object.entries(tempRenames).some(([origKey, targetKey]) => targetKey === originalKey && origKey === newKey);
+
+      if (!isCancellation) {
+        // This creates a circular dependency: originalKey -> newKey -> originalKey
+        // Remove the conflicting rename
+        delete tempRenames[newKey];
+      }
     }
 
     // Check if the new key conflicts with existing renames
@@ -1424,17 +1431,59 @@ export function App() {
       }
     }
 
-    // Update any existing renames that reference the original key as a parent BEFORE adding the new rename
-    Object.entries(tempRenames).forEach(([existingOriginalKey, existingNewKey]) => {
-      if (existingNewKey.startsWith(originalKey + ".")) {
-        const remainingPath = existingNewKey.substring(originalKey.length + 1);
-        const updatedNewKey = `${newKey}.${remainingPath}`;
-        tempRenames[existingOriginalKey] = updatedNewKey;
-      }
-    });
+    // Handle rename cancellation (when newKey === originalKey)
+    if (newKey === originalKey) {
+      // Remove the rename entry to cancel it
+      delete tempRenames[originalKey];
 
-    // Add the new rename
-    tempRenames[originalKey] = newKey;
+      // Also need to update any child renames that were affected by this parent rename
+      // Find any child renames that start with the original key and update them back
+      Object.keys(tempRenames).forEach((key) => {
+        const value = tempRenames[key];
+        if (value.startsWith(originalKey + ".")) {
+          // This is a child rename that was affected by the parent rename
+          // Update it back to use the original parent name
+          const remainingPath = value.substring(originalKey.length + 1);
+          tempRenames[key] = originalKey + "." + remainingPath;
+        }
+      });
+    } else {
+      // Check if this rename is canceling an existing rename
+      // For example: if we have "zftp" -> "tso.zftp" and now we're doing "tso.zftp" -> "zftp"
+      // This is only a cancellation if the newKey matches the originalKey of the existing rename
+      const existingRename = Object.entries(tempRenames).find(([_, targetKey]) => targetKey === originalKey);
+
+      if (existingRename) {
+        const [existingOriginalKey, existingTargetKey] = existingRename;
+
+        // Only treat this as a cancellation if the newKey matches the existingOriginalKey
+        // This means we're moving back to the original location
+        if (newKey === existingOriginalKey) {
+          // Remove the existing rename
+          delete tempRenames[existingOriginalKey];
+
+          // Update any child renames that were affected by the canceled rename
+          Object.keys(tempRenames).forEach((key) => {
+            const value = tempRenames[key];
+            if (value.startsWith(existingTargetKey + ".")) {
+              // This is a child rename that was affected by the canceled parent rename
+              // Update it back to use the original parent name
+              const remainingPath = value.substring(existingTargetKey.length + 1);
+              const newValue = existingOriginalKey + "." + remainingPath;
+              tempRenames[key] = newValue;
+            }
+          });
+
+          // Don't add the new rename since we're canceling
+          return tempRenames;
+        }
+        // If newKey !== existingOriginalKey, this is not a cancellation but a continuation
+        // of the rename chain, so we should keep both renames
+      }
+
+      // Add the new rename
+      tempRenames[originalKey] = newKey;
+    }
 
     // Convert to array format for processing with updateRenameKeysForParentChanges logic
     const renamesArray = Object.entries(tempRenames).map(([orig, newName]) => ({
@@ -1453,10 +1502,12 @@ export function App() {
     // Apply the same logic as updateRenameKeysForParentChanges
     const updatedRenames = updateRenameKeysForParentChangesClient(sortedRenames);
 
-    // Convert back to object format
+    // Convert back to object format and remove any no-op renames (where originalKey === newKey)
     const consolidated: { [originalKey: string]: string } = {};
     updatedRenames.forEach((rename) => {
-      consolidated[rename.originalKey] = rename.newKey;
+      if (rename.originalKey !== rename.newKey) {
+        consolidated[rename.originalKey] = rename.newKey;
+      }
     });
 
     return consolidated;
@@ -1468,6 +1519,12 @@ export function App() {
   ): Array<{ originalKey: string; newKey: string; configPath: string }> => {
     const updatedRenames: Array<{ originalKey: string; newKey: string; configPath: string }> = [];
     const processedRenames = new Map<string, string>(); // originalKey -> newKey mapping
+
+    // First pass: collect all renames to build a complete mapping
+    const allRenames = new Map<string, string>();
+    for (const rename of renames) {
+      allRenames.set(rename.originalKey, rename.newKey);
+    }
 
     for (const rename of renames) {
       let updatedOriginalKey = rename.originalKey;
@@ -1509,16 +1566,24 @@ export function App() {
         for (let i = 0; i < updatedRenames.length; i++) {
           const childRename = updatedRenames[i];
           const childOriginalParts = childRename.originalKey.split(".");
+          const childNewParts = childRename.newKey.split(".");
 
           // Check if this child rename starts with the parent we're renaming
-          if (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) {
+          // Either in the original key or the new key
+          const childStartsWithParent =
+            (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) ||
+            (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey);
+
+          if (childStartsWithParent) {
             // Update the child's original key to use the new parent name
-            const childRemainingParts = childOriginalParts.slice(1);
-            const updatedChildOriginalKey = `${parentNewKey}.${childRemainingParts.join(".")}`;
+            let updatedChildOriginalKey = childRename.originalKey;
+            if (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) {
+              const childRemainingParts = childOriginalParts.slice(1);
+              updatedChildOriginalKey = `${parentNewKey}.${childRemainingParts.join(".")}`;
+            }
 
             // Update the child's new key to use the new parent name if it also starts with the old parent
             let updatedChildNewKey = childRename.newKey;
-            const childNewParts = childRename.newKey.split(".");
             if (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey) {
               const childNewRemainingParts = childNewParts.slice(1);
               updatedChildNewKey = `${parentNewKey}.${childNewRemainingParts.join(".")}`;
@@ -1541,9 +1606,11 @@ export function App() {
         configPath: rename.configPath,
       });
 
-      // Track this rename for future reference
-      processedRenames.set(rename.originalKey, rename.newKey);
+      // Track this rename for future reference - use the updated keys
+      processedRenames.set(updatedOriginalKey, updatedNewKey);
     }
+
+    // Second pass is no longer needed - the first pass handles child renames correctly
 
     return updatedRenames;
   };
@@ -1566,9 +1633,22 @@ export function App() {
     }));
   }, []);
 
+  // Helper function to get the current effective name of a profile (considering pending renames)
+  const getCurrentEffectiveName = (profileKey: string, configPath: string): string => {
+    const currentRenames = renames[configPath] || {};
+    return currentRenames[profileKey] || profileKey;
+  };
+
   const handleRenameProfile = (originalKey: string, newKey: string): boolean => {
     if (selectedTab === null) return false;
     const configPath = configurations[selectedTab!]!.configPath;
+
+    // Check if we need to use the current effective name instead of the original key
+    const currentEffectiveName = getCurrentEffectiveName(originalKey, configPath);
+    if (currentEffectiveName !== originalKey) {
+      // Use the current effective name as the original key
+      originalKey = currentEffectiveName;
+    }
 
     // Check for circular renames before proceeding (same validation as rename modal)
     const currentRenames = renames[configPath] || {};
@@ -1587,13 +1667,21 @@ export function App() {
       return true; // Return true to indicate success (rename was canceled)
     }
 
+    // Check for circular renames, but allow cancellations
     if (currentRenames[newKey] === originalKey) {
-      // Show error message for circular rename
-      vscodeApi.postMessage({
-        command: "SHOW_ERROR_MESSAGE",
-        message: `Cannot rename '${originalKey}' to '${newKey}': This would create a circular rename (${newKey} -> ${originalKey})`,
-      });
-      return false; // Return false to indicate failure
+      // Check if this is actually a cancellation (moving back to original location)
+      const isCancellation = Object.entries(currentRenames).some(([origKey, targetKey]) => targetKey === originalKey && origKey === newKey);
+
+      if (isCancellation) {
+        // This is a cancellation, not a circular rename - allow it to proceed
+      } else {
+        // Show error message for circular rename
+        vscodeApi.postMessage({
+          command: "SHOW_ERROR_MESSAGE",
+          message: `Cannot rename '${originalKey}' to '${newKey}': This would create a circular rename (${newKey} -> ${originalKey})`,
+        });
+        return false; // Return false to indicate failure
+      }
     }
 
     // Update the renames state with consolidation
@@ -1901,6 +1989,11 @@ export function App() {
 
       // Get all current profile keys including renamed ones
       const allCurrentProfileKeys = existingProfileKeys.map((key) => getRenamedProfileKeyWithNested(key, configPath, renames));
+
+      // Also include pending profiles
+      const pendingProfiles = extractPendingProfiles(configPath);
+      const pendingProfileKeys = Object.keys(pendingProfiles);
+      allCurrentProfileKeys.push(...pendingProfileKeys);
 
       // Add pending changes for parent profiles that don't exist
       setPendingChanges((prev) => {
@@ -2318,17 +2411,122 @@ export function App() {
     const allowedProperties = Object.keys(propertySchema);
     const fullPath = path.join(".");
 
+    // Debug logging for pending changes
+    const currentProfileKey = extractProfileKeyFromPath(path);
+
+    // Find the original profile key by looking for what was renamed to the current key
+    const configRenames = renames[configPath] || {};
+    let originalProfileKey = currentProfileKey;
+
+    // Look for the original key that was renamed to the current key
+    for (const [originalKey, newKey] of Object.entries(configRenames)) {
+      if (newKey === currentProfileKey) {
+        originalProfileKey = originalKey;
+        break;
+      }
+    }
+
+    // Always log rename detection for debugging
+
+    // Check if current profile should be renamed
+    // We should only skip if this profile is the ORIGINAL profile that was renamed
+    // (not an intermediate profile in a rename chain)
+    const shouldBeRenamed = configRenames[currentProfileKey];
+
+    // A profile should be skipped if:
+    // 1. It has a rename mapping (shouldBeRenamed is truthy)
+    // 2. It's not the final result of any rename chain (not in the values of configRenames)
+    // 3. It's not an intermediate step in a rename chain
+    const isOriginalProfile = shouldBeRenamed && !Object.values(configRenames).includes(currentProfileKey);
+
+    // Additional check: if this profile is the final result of a rename chain, don't skip it
+    const isFinalResult = Object.values(configRenames).includes(currentProfileKey);
+
+    if (shouldBeRenamed && isOriginalProfile && !isFinalResult) {
+      // Skip processing merged properties for the old profile path
+      return combinedConfig;
+    } else if (shouldBeRenamed && !isOriginalProfile) {
+    } else if (isFinalResult) {
+    }
+
+    if (currentProfileKey !== originalProfileKey) {
+    }
+
     Object.entries(mergedProps).forEach(([key, propData]: [string, any]) => {
       const pendingKey = `${fullPath}.properties.${key}`;
-      const isInPendingChanges = pendingChanges[configPath]?.[pendingKey] !== undefined;
-      const isInDeletions = (deletions[configPath] ?? []).includes(pendingKey);
+
+      // Check for pending changes using both current path and original path (considering renames)
+      const currentProfileKey = extractProfileKeyFromPath(path);
+      const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
+
+      // Construct the original path for pending changes lookup
+      // For nested profiles, we need to include "profiles" segments between profile levels
+      let originalPath: string;
+      if (originalProfileKey.includes(".")) {
+        // This is a nested profile - construct the full path with "profiles" segments
+        const profileParts = originalProfileKey.split(".");
+        const pathParts = ["profiles"];
+        for (let i = 0; i < profileParts.length; i++) {
+          pathParts.push(profileParts[i]);
+          if (i < profileParts.length - 1) {
+            pathParts.push("profiles");
+          }
+        }
+        originalPath = pathParts.join(".");
+      } else {
+        // Top-level profile
+        originalPath = `profiles.${originalProfileKey}`;
+      }
+
+      const originalPendingKey = `${originalPath}.properties.${key}`;
+
+      // Debug logging for path construction
+      if (key === "host" || key === "port" || key === "user" || key === "password") {
+      }
+
+      const isInPendingChanges =
+        pendingChanges[configPath]?.[pendingKey] !== undefined || pendingChanges[configPath]?.[originalPendingKey] !== undefined;
+
+      // Check for deletions using the same enhanced path logic as pending changes
+      let isInDeletions = (deletions[configPath] ?? []).includes(pendingKey) || (deletions[configPath] ?? []).includes(originalPendingKey);
+
+      // Also check for nested path structure (for cases like zftp.zosmf -> zosmf)
+      if (!isInDeletions && originalProfileKey.includes(".")) {
+        // Construct nested path with .profiles segments
+        const profileParts = originalProfileKey.split(".");
+        const pathParts = ["profiles"];
+        for (let i = 0; i < profileParts.length; i++) {
+          pathParts.push(profileParts[i]);
+          if (i < profileParts.length - 1) {
+            pathParts.push("profiles");
+          }
+        }
+        pathParts.push("properties", key);
+        const nestedPendingKey = pathParts.join(".");
+        isInDeletions = (deletions[configPath] ?? []).includes(nestedPendingKey);
+      }
+
+      // Debug logging for precedence issue
+      if (key === "host" || key === "port" || key === "user" || key === "password") {
+        // Common properties to debug
+      }
 
       // If the property is in deletions, we should add the merged property to replace it
       // For secure properties that were deleted, we still want to show the merged property in properties
-      if (allowedProperties.includes(key) && !isInPendingChanges && (isInDeletions || !combinedConfig.properties.hasOwnProperty(key))) {
+      const shouldAddMerged =
+        allowedProperties.includes(key) && !isInPendingChanges && (isInDeletions || !combinedConfig.properties.hasOwnProperty(key));
+
+      // Debug logging for precedence issue
+      if (key === "host" || key === "port" || key === "user" || key === "password") {
+        // Common properties to debug
+      }
+
+      if (shouldAddMerged) {
         // Only add primitive values to avoid recursion
         if (typeof propData.value !== "object" || propData.value === null) {
           combinedConfig.properties[key] = propData.value;
+          if (key === "host" || key === "port" || key === "user" || key === "password") {
+          }
         }
       }
     });
@@ -2434,7 +2632,7 @@ export function App() {
   };
 
   // Helper function to check if a property is actually inherited from another profile
-  const isPropertyActuallyInherited = (profilePath: string, currentProfileKey: string | null, configPath: string): boolean => {
+  const isPropertyActuallyInherited = (profilePath: string, currentProfileKey: string | null, configPath: string, propertyName?: string): boolean => {
     if (!profilePath || !currentProfileKey) {
       return false;
     }
@@ -2442,6 +2640,58 @@ export function App() {
     // First check if the paths are exactly the same
     if (profilePath === currentProfileKey) {
       return false;
+    }
+
+    // Check if there are pending changes for this specific property in the current profile
+    // If there are pending changes, the property is not inherited (it's been overridden locally)
+    if (propertyName) {
+      const currentProfilePath = `profiles.${currentProfileKey}`;
+      const propertyPendingKey = `${currentProfilePath}.properties.${propertyName}`;
+
+      // Also check for pending changes under the original profile path (before rename)
+      // Find the original profile key by looking for what was renamed to the current key
+      const configRenames = renames[configPath] || {};
+      let originalProfileKey = currentProfileKey;
+
+      // Look for the original key that was renamed to the current key
+      for (const [originalKey, newKey] of Object.entries(configRenames)) {
+        if (newKey === currentProfileKey) {
+          originalProfileKey = originalKey;
+          break;
+        }
+      }
+
+      const originalProfilePath = `profiles.${originalProfileKey}`;
+      const originalPropertyPendingKey = `${originalProfilePath}.properties.${propertyName}`;
+
+      // Also check for nested path structure (for cases like zftp.zosmf -> zosmf)
+      let nestedPropertyPendingKey = "";
+      if (originalProfileKey.includes(".")) {
+        // Construct nested path with .profiles segments
+        const profileParts = originalProfileKey.split(".");
+        const pathParts = ["profiles"];
+        for (let i = 0; i < profileParts.length; i++) {
+          pathParts.push(profileParts[i]);
+          if (i < profileParts.length - 1) {
+            pathParts.push("profiles");
+          }
+        }
+        pathParts.push("properties", propertyName);
+        nestedPropertyPendingKey = pathParts.join(".");
+      }
+
+      const hasPendingChanges =
+        pendingChanges[configPath]?.[propertyPendingKey] !== undefined ||
+        pendingChanges[configPath]?.[originalPropertyPendingKey] !== undefined ||
+        (nestedPropertyPendingKey && pendingChanges[configPath]?.[nestedPropertyPendingKey] !== undefined);
+
+      // Debug logging for pending changes check
+      if (propertyName === "host" || propertyName === "port" || propertyName === "user" || propertyName === "password") {
+      }
+
+      if (hasPendingChanges) {
+        return false;
+      }
     }
 
     // Get all profile renames in the config
@@ -2545,6 +2795,10 @@ export function App() {
     const currentProfileType = getProfileType(currentProfileKey, selectedTab, configurations, pendingChanges, renames);
     const isProfileUntyped = !currentProfileType || currentProfileType.trim() === "";
 
+    // Debug logging for merged property detection
+    if (displayKey === "host" || displayKey === "port" || displayKey === "user" || displayKey === "password") {
+    }
+
     if (!showMergedProperties || isProfileUntyped || !displayKey) {
       return false;
     }
@@ -2559,7 +2813,11 @@ export function App() {
     const profilePath = profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".");
 
     // Check if this property is actually inherited
-    const isInherited = isPropertyActuallyInherited(profilePath, currentProfileKey, configPath);
+    const isInherited = isPropertyActuallyInherited(profilePath, currentProfileKey, configPath, displayKey);
+
+    // Debug logging for inheritance check
+    if (displayKey === "host" || displayKey === "port" || displayKey === "user" || displayKey === "password") {
+    }
 
     if (!isInherited) {
       return false;
@@ -2656,11 +2914,19 @@ export function App() {
 
       const result = !pathsEqual || (!jsonLocRefersToCurrentProfile && !jsonLocIsOldNameOfCurrentProfile && !isFromChildOfRenamedParent);
 
+      // Debug logging for final result (renamed profile path)
+      if (displayKey === "host" || displayKey === "port" || displayKey === "user" || displayKey === "password") {
+      }
+
       return result;
     } else {
       // For non-renamed profiles, use the original logic
       const jsonLocIndicatesDifferentProfile = jsonLoc && !jsonLoc.includes(currentProfilePathForComparison + ".properties");
       const result = !pathsEqual || jsonLocIndicatesDifferentProfile;
+
+      // Debug logging for final result
+      if (displayKey === "host" || displayKey === "port" || displayKey === "user" || displayKey === "password") {
+      }
 
       return result;
     }
@@ -2962,39 +3228,39 @@ export function App() {
       const profileNameParts = profilePathParts.slice(0, profileNameEndIndex);
 
       if (profileNameParts.length > 0) {
-        // Filter out "profiles" segments to get the actual profile name
-        const filteredProfileParts = profileNameParts.filter((part) => part !== "profiles");
-        const profileKey = filteredProfileParts.join(".");
-
         // Only create a pending profile entry if this is a profile-level property
         const propertyName = keyParts[keyParts.length - 1];
         const isProfileLevelProperty = propertyName === "type" || (keyParts.includes("properties") && !entry.secure);
 
         if (isProfileLevelProperty) {
+          // Use the entry.profile as the profile key, as it represents the actual profile this change belongs to
+          // This is important for moved profiles where the key structure might be different
+          const actualProfileKey = entry.profile;
+
           // Initialize the profile structure if it doesn't exist
-          if (!pendingProfiles[profileKey]) {
-            pendingProfiles[profileKey] = {};
+          if (!pendingProfiles[actualProfileKey]) {
+            pendingProfiles[actualProfileKey] = {};
           }
 
           // Add the property to the profile
           if (propertyName === "type") {
-            pendingProfiles[profileKey].type = entry.value;
+            pendingProfiles[actualProfileKey].type = entry.value;
           } else if (keyParts.includes("properties")) {
             // Only add non-secure properties to the properties object
             if (!entry.secure) {
-              if (!pendingProfiles[profileKey].properties) {
-                pendingProfiles[profileKey].properties = {};
+              if (!pendingProfiles[actualProfileKey].properties) {
+                pendingProfiles[actualProfileKey].properties = {};
               }
-              pendingProfiles[profileKey].properties[propertyName] = entry.value;
+              pendingProfiles[actualProfileKey].properties[propertyName] = entry.value;
             }
 
             // If this is a secure property, add it to the profile
             if (entry.secure) {
-              if (!pendingProfiles[profileKey].secure) {
-                pendingProfiles[profileKey].secure = [];
+              if (!pendingProfiles[actualProfileKey].secure) {
+                pendingProfiles[actualProfileKey].secure = [];
               }
-              if (!pendingProfiles[profileKey].secure.includes(propertyName)) {
-                pendingProfiles[profileKey].secure.push(propertyName);
+              if (!pendingProfiles[actualProfileKey].secure.includes(propertyName)) {
+                pendingProfiles[actualProfileKey].secure.push(propertyName);
               }
             }
           }
@@ -3182,17 +3448,53 @@ export function App() {
         return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
       });
 
-      // Add pending profiles that aren't already in the ordered list
-      const pendingProfileKeys = Object.keys(pendingProfiles).filter(
-        (key) => !orderedProfileKeys.includes(key) && !isProfileOrParentDeleted(key, deletedProfiles)
-      );
+      // Filter out any renamed profile keys that are intermediate steps in a move operation
+      // For example, if zosmf -> zosmf5 -> zftp.zosmf5, we don't want zosmf5 to appear in the root
+      const configRenames = renames[configPath] || {};
+      const finalRenamedProfileKeys = renamedProfileKeys.filter((renamedKey) => {
+        // Check if this renamed key is an intermediate step (exists as an original key in renames)
+        // If it exists as an original key, it means it's been moved further, so don't include it
+        return !Object.keys(configRenames).includes(renamedKey);
+      });
+
+      // Add any renamed profiles that are not in the original configuration
+      // This handles the case where a profile was renamed (e.g., zosmf -> zosmf5)
+      const renamedOnlyProfiles = Object.keys(configRenames).filter((originalKey) => {
+        // Only include if the original key is not in the ordered profile keys
+        // This means it was renamed from a profile that doesn't exist in the original config
+        return !orderedProfileKeys.includes(originalKey);
+      });
+
+      // Apply renames to these renamed-only profiles
+      const renamedOnlyProfileKeys = renamedOnlyProfiles.map((profileKey) => {
+        return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
+      });
+
+      // Combine all renamed profile keys
+      const allRenamedProfileKeys = [...finalRenamedProfileKeys, ...renamedOnlyProfileKeys];
+
+      // Add pending profiles that aren't already represented in the renamed profile keys
+      // We need to check if the renamed version of the pending profile is already in the renamed list
+      const pendingProfileKeys = Object.keys(pendingProfiles).filter((key) => {
+        // Check if this pending profile is deleted
+        if (isProfileOrParentDeleted(key, deletedProfiles)) {
+          return false;
+        }
+
+        // Get the renamed version of this pending profile key
+        const renamedPendingKey = getRenamedProfileKeyWithNested(key, configPath, renames);
+
+        // Check if this renamed pending key is already in the renamed profile keys
+        // This handles the case where a profile was moved (e.g., zosmf5 moved into zftp becomes zftp.zosmf5)
+        return !allRenamedProfileKeys.includes(renamedPendingKey);
+      });
 
       // Apply renames to pending profile keys as well, including nested profiles
       const renamedPendingProfileKeys = pendingProfileKeys.map((profileKey) => {
         return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
       });
 
-      const filteredProfileKeys = [...renamedProfileKeys, ...renamedPendingProfileKeys];
+      const filteredProfileKeys = [...allRenamedProfileKeys, ...renamedPendingProfileKeys];
 
       // Apply profile sorting based on the current sort order
       // For natural sort order, maintain the original order of renamed profiles

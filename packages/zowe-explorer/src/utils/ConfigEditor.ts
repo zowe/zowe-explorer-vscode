@@ -674,9 +674,9 @@ export class ConfigEditor extends WebView {
     ): Array<{ originalKey: string; newKey: string; configPath: string }> {
         const updatedRenames: Array<{ originalKey: string; newKey: string; configPath: string }> = [];
         const processedRenames = new Map<string, string>(); // originalKey -> newKey mapping
-        const allRenames = new Map<string, string>(); // Track all renames for reverse lookup
 
-        // First pass: collect all renames
+        // First pass: collect all renames to build a complete mapping
+        const allRenames = new Map<string, string>();
         for (const rename of renames) {
             allRenames.set(rename.originalKey, rename.newKey);
         }
@@ -721,16 +721,24 @@ export class ConfigEditor extends WebView {
                 for (let i = 0; i < updatedRenames.length; i++) {
                     const childRename = updatedRenames[i];
                     const childOriginalParts = childRename.originalKey.split(".");
+                    const childNewParts = childRename.newKey.split(".");
 
                     // Check if this child rename starts with the parent we're renaming
-                    if (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) {
+                    // Either in the original key or the new key
+                    const childStartsWithParent =
+                        (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) ||
+                        (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey);
+
+                    if (childStartsWithParent) {
                         // Update the child's original key to use the new parent name
-                        const childRemainingParts = childOriginalParts.slice(1);
-                        const updatedChildOriginalKey = `${parentNewKey}.${childRemainingParts.join(".")}`;
+                        let updatedChildOriginalKey = childRename.originalKey;
+                        if (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) {
+                            const childRemainingParts = childOriginalParts.slice(1);
+                            updatedChildOriginalKey = `${parentNewKey}.${childRemainingParts.join(".")}`;
+                        }
 
                         // Update the child's new key to use the new parent name if it also starts with the old parent
                         let updatedChildNewKey = childRename.newKey;
-                        const childNewParts = childRename.newKey.split(".");
                         if (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey) {
                             const childNewRemainingParts = childNewParts.slice(1);
                             updatedChildNewKey = `${parentNewKey}.${childNewRemainingParts.join(".")}`;
@@ -753,15 +761,18 @@ export class ConfigEditor extends WebView {
                 configPath: rename.configPath,
             });
 
-            // Track this rename for future reference
-            processedRenames.set(rename.originalKey, rename.newKey);
+            // Track this rename for future reference - use the updated keys
+            processedRenames.set(updatedOriginalKey, updatedNewKey);
         }
+
+        // Second pass is no longer needed - the first pass handles child renames correctly
 
         return updatedRenames;
     }
 
     private async handleProfileRenames(renames: Array<{ originalKey: string; newKey: string; configPath: string }>): Promise<void> {
         if (!renames || renames.length === 0) {
+            console.log(`[SERVER RENAME HANDLER] No renames to process`);
             return;
         }
 
@@ -783,19 +794,17 @@ export class ConfigEditor extends WebView {
             const bNewLength = b.newKey.split(".").length;
             return aNewLength - bNewLength;
         });
+        console.log(`[SERVER SORTED RENAMES]`, sortedRenames);
 
         // Update rename keys to reflect parent renames that have already been processed
         const updatedRenames = this.updateRenameKeysForParentChanges(sortedRenames);
 
-        for (const rename of updatedRenames) {
+        // Filter out no-op renames (where originalKey === newKey)
+        const filteredRenames = updatedRenames.filter((rename) => rename.originalKey !== rename.newKey);
+
+        for (const rename of filteredRenames) {
             try {
                 console.log(`Processing rename: ${rename.originalKey} -> ${rename.newKey}`);
-
-                // Skip if the original and new keys are the same (no-op rename)
-                if (rename.originalKey === rename.newKey) {
-                    console.log(`Skipping no-op rename: ${rename.originalKey}`);
-                    continue;
-                }
 
                 // Pre-validate the rename operation before making any changes
                 let originalPath: string;
@@ -1431,6 +1440,34 @@ export class ConfigEditor extends WebView {
         return updatedMessage;
     }
 
+    private redactSecureValues(knownArgs: any): any {
+        if (!knownArgs || typeof knownArgs !== "object") {
+            return knownArgs;
+        }
+
+        // Handle array case
+        if (Array.isArray(knownArgs)) {
+            return knownArgs.map((item) => this.redactSecureValues(item));
+        }
+
+        const redacted = { ...knownArgs };
+        for (const [key, value] of Object.entries(redacted)) {
+            if (value && typeof value === "object") {
+                // Check if this is a secure field
+                if ("secure" in value && value.secure === true) {
+                    redacted[key] = {
+                        ...value,
+                        value: "REDACTED",
+                    };
+                } else {
+                    // Recursively process nested objects
+                    redacted[key] = this.redactSecureValues(value);
+                }
+            }
+        }
+        return redacted;
+    }
+
     private async getPendingMergedArgsForProfile(
         profPath: string,
         configPath: string,
@@ -1510,7 +1547,10 @@ export class ConfigEditor extends WebView {
         }
 
         const mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
-        return mergedArgs.knownArgs;
+        console.log("[DEBUG] Original knownArgs structure:", JSON.stringify(mergedArgs.knownArgs, null, 2));
+        const redacted = this.redactSecureValues(mergedArgs.knownArgs);
+        console.log("[DEBUG] Redacted knownArgs structure:", JSON.stringify(redacted, null, 2));
+        return redacted;
     }
 
     private simulateDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string, teamConfig: any): void {
@@ -1758,7 +1798,10 @@ export class ConfigEditor extends WebView {
             }
 
             const mergedArgs = profInfo.mergeArgsForProfile(tempProfile, { getSecureVals: true });
-            return mergedArgs.knownArgs || [];
+            console.log("[DEBUG] Wizard Original knownArgs structure:", JSON.stringify(mergedArgs.knownArgs, null, 2));
+            const redacted = this.redactSecureValues(mergedArgs.knownArgs);
+            console.log("[DEBUG] Wizard Redacted knownArgs structure:", JSON.stringify(redacted, null, 2));
+            return redacted || [];
         } finally {
             try {
                 teamConfig.delete(tempProfilePath);
