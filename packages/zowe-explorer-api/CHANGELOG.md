@@ -4,6 +4,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
+- Added new `get`Count` API to provide the ability to return the total number of data sets for a given filter.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
+
 ### New features and enhancements
 
 ### Bug fixes
@@ -35,7 +37,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added grid state management functions `getGridState()` and `setGridState()` to the `Table.View` class to allow extensions to save and restore the complete state of the table view, including column positions, sorting, filtering, and other grid configurations. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
   New `ProfilesCache.isCertFileValid()` method to check validity of profile's certificate file if certificate auth used, returning a boolean value. [#3699](https://github.com/zowe/zowe-explorer-vscode/issues/3699)
 - Changed `request` property in the `PollRequest` type to now support both asynchronous and synchronous functions. [#3764](https://github.com/zowe/zowe-explorer-vscode/pull/3764/)
-- Added new `get`Count` API to provide the ability to return the total number of data sets for a given filter.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 
 ### Bug fixes
 
