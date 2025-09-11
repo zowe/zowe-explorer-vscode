@@ -353,10 +353,17 @@ export namespace ZoweExplorerZosmf {
         }
 
         public deleteDataSet(dataSetName: string, options?: zosfiles.IDeleteDatasetOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Delete.dataSet(this.getSession(), dataSetName, {
-                responseTimeout: this.profile?.profile?.responseTimeout,
-                ...options,
-            });
+            if (options.volume == "*VSAM*") {
+                return zosfiles.Delete.vsam(this.getSession(), dataSetName, {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...options,
+                });
+            } else {
+                return zosfiles.Delete.dataSet(this.getSession(), dataSetName, {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...options,
+                });
+            }
         }
 
         public dataSetsMatchingPattern(filter: string[], options?: zosfiles.IDsmListOptions): Promise<zosfiles.IZosFilesResponse> {
