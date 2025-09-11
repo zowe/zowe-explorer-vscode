@@ -4,9 +4,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
-- Added new `get`Count` API to provide the ability to return the total number of data sets for a given filter.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
-
 ### New features and enhancements
+
+- Added new `get`Count` API to provide the ability to return the total number of data sets for a given filter.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 
 ### Bug fixes
 
