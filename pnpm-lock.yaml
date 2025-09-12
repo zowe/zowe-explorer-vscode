@@ -161,7 +161,7 @@ importers:
         specifier: ^8.26.0
         version: 8.26.2(@zowe/core-for-zowe-sdk@8.26.2(@zowe/imperative@8.26.2))(@zowe/imperative@8.26.2)
       '@zowe/zowe-explorer-api':
-        specifier: 3.3.0-SNAPSHOT
+        specifier: 3.4.0-SNAPSHOT
         version: link:../zowe-explorer-api
       dayjs:
         specifier: ^1.11.10
@@ -216,7 +216,7 @@ importers:
         specifier: ^2.4.1
         version: 2.4.2
       eslint-plugin-zowe-explorer:
-        specifier: 3.3.0-SNAPSHOT
+        specifier: 3.4.0-SNAPSHOT
         version: link:../eslint-plugin-zowe-explorer
       expect-webdriverio:
         specifier: ^4.15.4
@@ -241,7 +241,7 @@ importers:
         version: 19.0.5
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@types/node@20.19.11)(typescript@5.9.2)
+        version: 10.9.2(@types/node@22.18.0)(typescript@5.9.2)
       wdio-vscode-service:
         specifier: ^6.1.3
         version: 6.1.3(webdriverio@8.46.0(encoding@0.1.13))
@@ -319,7 +319,7 @@ importers:
         specifier: ^8.26.0
         version: 8.26.2(@zowe/core-for-zowe-sdk@8.26.2(@zowe/imperative@8.26.2))(@zowe/imperative@8.26.2)
       '@zowe/zowe-explorer-api':
-        specifier: 3.3.0-SNAPSHOT
+        specifier: 3.4.0-SNAPSHOT
         version: link:../zowe-explorer-api
 
   packages/zowe-explorer/src/webviews:
@@ -360,19 +360,19 @@ importers:
     devDependencies:
       '@preact/preset-vite':
         specifier: ^2.10.1
-        version: 2.10.2(@babel/core@7.28.3)(preact@10.27.1)(vite@6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))
+        version: 2.10.2(@babel/core@7.28.3)(preact@10.27.1)(vite@6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))
       typescript:
         specifier: ^5.3.3
         version: 5.9.2
       vite:
-        specifier: ^6.2.7
-        version: 6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
+        specifier: ^6.3.6
+        version: 6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
       vite-plugin-checker:
         specifier: ^0.9.1
-        version: 0.9.3(eslint@8.57.1)(optionator@0.9.4)(typescript@5.9.2)(vite@6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))
+        version: 0.9.3(eslint@8.57.1)(optionator@0.9.4)(typescript@5.9.2)(vite@6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))
       vite-plugin-static-copy:
         specifier: ^2.3.2
-        version: 2.3.2(vite@6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))
+        version: 2.3.2(vite@6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))
 
 packages:
 
@@ -6703,8 +6703,8 @@ packages:
     peerDependencies:
       vite: 5.x || 6.x || 7.x
 
-  vite@6.3.5:
-    resolution: {integrity: sha512-cZn6NDFE7wdTpINgs++ZJ4N49W2vRp8LCKrn3Ob1kYNtOo21vfDoaV5GzBfLU4MovSAB8uNRm4jgzVQZ+mBzPQ==}
+  vite@6.3.6:
+    resolution: {integrity: sha512-0msEVHJEScQbhkbVTb/4iHZdJ6SXp/AvxL2sjwYQFfBqleHtnCqv1J3sa9zbWz/6kW1m9Tfzn92vW+kZ1WV6QA==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
     peerDependencies:
@@ -8014,18 +8014,18 @@ snapshots:
 
   '@popperjs/core@2.11.8': {}
 
-  '@preact/preset-vite@2.10.2(@babel/core@7.28.3)(preact@10.27.1)(vite@6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))':
+  '@preact/preset-vite@2.10.2(@babel/core@7.28.3)(preact@10.27.1)(vite@6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))':
     dependencies:
       '@babel/core': 7.28.3
       '@babel/plugin-transform-react-jsx': 7.27.1(@babel/core@7.28.3)
       '@babel/plugin-transform-react-jsx-development': 7.27.1(@babel/core@7.28.3)
-      '@prefresh/vite': 2.4.10(preact@10.27.1)(vite@6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))
+      '@prefresh/vite': 2.4.10(preact@10.27.1)(vite@6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))
       '@rollup/pluginutils': 4.2.1
       babel-plugin-transform-hook-names: 1.0.2(@babel/core@7.28.3)
       debug: 4.4.1(supports-color@8.1.1)
       picocolors: 1.1.1
-      vite: 6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
-      vite-prerender-plugin: 0.5.11(vite@6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))
+      vite: 6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
+      vite-prerender-plugin: 0.5.11(vite@6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))
     transitivePeerDependencies:
       - preact
       - supports-color
@@ -8038,7 +8038,7 @@ snapshots:
 
   '@prefresh/utils@1.2.1': {}
 
-  '@prefresh/vite@2.4.10(preact@10.27.1)(vite@6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))':
+  '@prefresh/vite@2.4.10(preact@10.27.1)(vite@6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1))':
     dependencies:
       '@babel/core': 7.28.3
       '@prefresh/babel-plugin': 0.5.2
@@ -8046,7 +8046,7 @@ snapshots:
       '@prefresh/utils': 1.2.1
       '@rollup/pluginutils': 4.2.1
       preact: 10.27.1
-      vite: 6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
+      vite: 6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -14349,6 +14349,25 @@ snapshots:
       typescript: 5.9.2
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+    optional: true
+
+  ts-node@10.9.2(@types/node@22.18.0)(typescript@5.9.2):
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@tsconfig/node10': 1.0.11
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.4
+      '@types/node': 22.18.0
+      acorn: 8.15.0
+      acorn-walk: 8.3.4
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.2
+      make-error: 1.3.6
+      typescript: 5.9.2
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
 
   tsconfig-paths@4.2.0:
     dependencies:
@@ -14565,7 +14584,7 @@ snapshots:
 
   version-range@4.15.0: {}
 
-  vite-plugin-checker@0.9.3(eslint@8.57.1)(optionator@0.9.4)(typescript@5.9.2)(vite@6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)):
+  vite-plugin-checker@0.9.3(eslint@8.57.1)(optionator@0.9.4)(typescript@5.9.2)(vite@6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)):
     dependencies:
       '@babel/code-frame': 7.27.1
       chokidar: 4.0.3
@@ -14575,23 +14594,23 @@ snapshots:
       strip-ansi: 7.1.0
       tiny-invariant: 1.3.3
       tinyglobby: 0.2.14
-      vite: 6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
+      vite: 6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
       vscode-uri: 3.1.0
     optionalDependencies:
       eslint: 8.57.1
       optionator: 0.9.4
       typescript: 5.9.2
 
-  vite-plugin-static-copy@2.3.2(vite@6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)):
+  vite-plugin-static-copy@2.3.2(vite@6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)):
     dependencies:
       chokidar: 3.6.0
       fast-glob: 3.3.3
       fs-extra: 11.3.1
       p-map: 7.0.3
       picocolors: 1.1.1
-      vite: 6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
+      vite: 6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
 
-  vite-prerender-plugin@0.5.11(vite@6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)):
+  vite-prerender-plugin@0.5.11(vite@6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)):
     dependencies:
       kolorist: 1.8.0
       magic-string: 0.30.18
@@ -14599,9 +14618,9 @@ snapshots:
       simple-code-frame: 1.3.0
       source-map: 0.7.6
       stack-trace: 1.0.0-pre2
-      vite: 6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
+      vite: 6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
 
-  vite@6.3.5(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1):
+  vite@6.3.6(@types/node@22.18.0)(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1):
     dependencies:
       esbuild: 0.25.9
       fdir: 6.5.0(picomatch@4.0.3)
