@@ -135,6 +135,9 @@ export class Profiles extends ProfilesCache {
         if (profilePath && !allPaths.includes(profilePath)) {
             allPaths.push(profilePath);
         }
+        if (!allPaths.includes(profName)) {
+            allPaths.push(profName);
+        }
 
         return allPaths.some((path) => teamConfig.api.secure.secureFields().includes(path + ".properties.tokenValue"));
     }
