@@ -132,7 +132,7 @@ export class Profiles extends ProfilesCache {
         }
         const defaultBase = Constants.PROFILES_CACHE.getDefaultProfile?.("base");
         const profilePath = defaultBase && teamConfig.api.profiles.getProfilePathFromName(defaultBase.name);
-        if (profilePath) {
+        if (profilePath && !allPaths.includes(profilePath)) {
             allPaths.push(profilePath);
         }
 
