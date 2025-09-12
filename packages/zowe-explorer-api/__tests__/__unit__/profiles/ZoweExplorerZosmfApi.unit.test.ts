@@ -588,6 +588,11 @@ describe("ZosmfMvsApi", () => {
             args: ["dsname", fakeProperties],
         },
         {
+            name: "deleteDataSet",
+            spy: jest.spyOn(zosfiles.Delete, "vsam"),
+            args: ["dsname", { volume: "*VSAM*", ...fakeProperties }],
+        },
+        {
             name: "dataSetsMatchingPattern",
             spy: jest.spyOn(zosfiles.List, "dataSetsMatchingPattern"),
             args: [["SAMPLE.A*", "SAMPLE.B*"], fakeProperties],
