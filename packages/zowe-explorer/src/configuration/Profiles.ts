@@ -102,13 +102,41 @@ export class Profiles extends ProfilesCache {
      * Checks if the profile has a secure token.
      * Note: This is a workaround to maintain backward compatibility.
      * @param theProfile - The profile to check.
-     * @returns True if the profile has a secure token, false otherwise.
+     * @returns True if the profile, a parent on the profile, or the default base profile has a secure token, false otherwise.
      */
     private async profileHasSecureToken(theProfile: imperative.IProfileLoaded): Promise<boolean> {
         const teamConfig = (await this.getProfileInfo()).getTeamConfig();
         const profName = teamConfig.api.profiles.getProfilePathFromName(theProfile.name);
-        const tokenValue = profName + ".properties.tokenValue";
-        return teamConfig.api.secure.secureFields().includes(tokenValue);
+
+        const parts = profName.split(".profiles.");
+        const paths: string[] = [];
+
+        // Build cumulative paths
+        let currentPath = parts[0];
+
+        for (let i = 1; i < parts.length; i++) {
+            currentPath += ".profiles." + parts[i];
+            paths.push(currentPath);
+        }
+
+        // Add all intermediate paths by working backwards
+        const allPaths: string[] = [];
+        for (const path of paths) {
+            const segments = path.split(".profiles.");
+            for (let j = 1; j <= segments.length; j++) {
+                const subPath = segments.slice(0, j).join(".profiles.");
+                if (!allPaths.includes(subPath)) {
+                    allPaths.push(subPath);
+                }
+            }
+        }
+        const defaultBase = Constants.PROFILES_CACHE.getDefaultProfile?.("base");
+        const profilePath = defaultBase && teamConfig.api.profiles.getProfilePathFromName(defaultBase.name);
+        if (profilePath) {
+            allPaths.push(profilePath);
+        }
+
+        return allPaths.some((path) => teamConfig.api.secure.secureFields().includes(path + ".properties.tokenValue"));
     }
 
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
