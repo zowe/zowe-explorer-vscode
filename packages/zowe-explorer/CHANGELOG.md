@@ -10,6 +10,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed regression with checking if token authentication should be leveraged. [#3855](https://github.com/zowe/zowe-explorer-vscode/pull/3855)
+
 ## `3.3.0`
 
 ### New features and enhancements
