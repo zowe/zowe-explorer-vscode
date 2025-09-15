@@ -419,11 +419,12 @@ export function App() {
 
     // Update changes to use new profile names
     const updatedChanges = updateChangesForRenames(changes, renamesData);
-    const updatedDeleteKeys = updateChangesForRenames(deleteKeys, renamesData);
+    // Don't update deletion keys - they should remain as constructed
+    // const updatedDeleteKeys = updateChangesForRenames(deleteKeys, renamesData);
 
     const result = {
       changes: updatedChanges,
-      deletions: updatedDeleteKeys,
+      deletions: deleteKeys,
       defaultsChanges,
       defaultsDeleteKeys: defaultsDeleteKeys,
       renames: renamesData,
@@ -604,16 +605,15 @@ export function App() {
       }))
     );
 
-    console.log(`[SAVE DEBUG] Renames being sent to server:`, renamesData);
-
     // Update changes to use new profile names before sending to backend
     const updatedChanges = updateChangesForRenames(changes, renamesData);
-    const updatedDeleteKeys = updateChangesForRenames(deleteKeys, renamesData);
+    // Don't update deletion keys - they should remain as constructed
+    // const updatedDeleteKeys = updateChangesForRenames(deleteKeys, renamesData);
 
     vscodeApi.postMessage({
       command: "SAVE_CHANGES",
       changes: updatedChanges,
-      deletions: updatedDeleteKeys,
+      deletions: deleteKeys,
       defaultsChanges,
       defaultsDeleteKeys: defaultsDeleteKeys,
       otherChanges,
@@ -1655,7 +1655,31 @@ export function App() {
   // Helper function to get the current effective name of a profile (considering pending renames)
   const getCurrentEffectiveName = (profileKey: string, configPath: string): string => {
     const currentRenames = renames[configPath] || {};
-    return currentRenames[profileKey] || profileKey;
+    let effectiveName = profileKey;
+
+    // Apply renames iteratively to handle chained renames
+    let changed = true;
+    let iteration = 0;
+    while (changed && iteration < 10) {
+      // Safety limit to prevent infinite loops
+      changed = false;
+      iteration++;
+
+      for (const [originalKey, newKey] of Object.entries(currentRenames)) {
+        if (effectiveName === originalKey) {
+          effectiveName = newKey;
+          changed = true;
+          break;
+        }
+        if (effectiveName.startsWith(originalKey + ".")) {
+          const newEffectiveName = effectiveName.replace(originalKey + ".", newKey + ".");
+          effectiveName = newEffectiveName;
+          changed = true;
+          break;
+        }
+      }
+    }
+    return effectiveName;
   };
 
   const handleRenameProfile = (originalKey: string, newKey: string): boolean => {
@@ -2068,11 +2092,14 @@ export function App() {
     if (selectedTab === null) return;
     const configPath = configurations[selectedTab!]!.configPath;
 
-    // Construct the full profile path
+    // Get the current effective profile key considering pending renames
+    const effectiveProfileKey = getCurrentEffectiveName(profileKey, configPath);
+
+    // Construct the full profile path using the effective profile key
     let fullProfilePath: string;
-    if (profileKey.includes(".")) {
+    if (effectiveProfileKey.includes(".")) {
       // Nested profile, construct the full path
-      const profileParts = profileKey.split(".");
+      const profileParts = effectiveProfileKey.split(".");
       const pathArray = ["profiles"];
       for (let i = 0; i < profileParts.length; i++) {
         pathArray.push(profileParts[i]);
@@ -2083,7 +2110,7 @@ export function App() {
       fullProfilePath = pathArray.join(".");
     } else {
       // Top-level profile
-      fullProfilePath = `profiles.${profileKey}`;
+      fullProfilePath = `profiles.${effectiveProfileKey}`;
     }
 
     // Add to deletions - we'll add all profile-related keys to deletions
@@ -2099,14 +2126,14 @@ export function App() {
       return newDeletions;
     });
 
-    // Clear any pending changes for this profile
+    // Clear any pending changes for this profile (using both original and effective keys)
     setPendingChanges((prev) => {
       const newState = { ...prev };
       if (newState[configPath]) {
         // Remove all pending changes that belong to this profile
         Object.keys(newState[configPath]).forEach((key) => {
           const entry = newState[configPath][key];
-          if (entry.profile === profileKey) {
+          if (entry.profile === profileKey || entry.profile === effectiveProfileKey) {
             delete newState[configPath][key];
           }
         });
@@ -3301,8 +3328,11 @@ export function App() {
   const isProfileOrParentDeleted = (profileKey: string, deletedProfiles: string[]): boolean => {
     if (selectedTab === null) return false;
 
-    // Use the current profile key (after renames) to check the current hierarchy
-    const profileParts = profileKey.split(".");
+    // Get the current effective profile key considering pending renames
+    const effectiveProfileKey = getCurrentEffectiveName(profileKey, configurations[selectedTab!]!.configPath);
+
+    // Use the effective profile key to check the current hierarchy
+    const profileParts = effectiveProfileKey.split(".");
 
     // Check each level of the current profile hierarchy
     for (let i = 0; i < profileParts.length; i++) {
@@ -3329,7 +3359,6 @@ export function App() {
         return true;
       }
     }
-
     return false;
   };
 
@@ -3515,31 +3544,24 @@ export function App() {
         let renamedKey = profileKey;
         const configRenames = renames[configPath] || {};
 
-        console.log(`[RENDER DEBUG] Processing pending profile: ${profileKey}`);
-        console.log(`[RENDER DEBUG] Available renames:`, configRenames);
-
         // Apply renames iteratively to handle chained renames
         let changed = true;
         while (changed) {
           changed = false;
           for (const [originalKey, newKey] of Object.entries(configRenames)) {
             if (renamedKey === originalKey) {
-              console.log(`[RENDER DEBUG] Exact match: ${renamedKey} -> ${newKey}`);
               renamedKey = newKey;
               changed = true;
               break;
             }
             if (renamedKey.startsWith(originalKey + ".")) {
               const newRenamedKey = renamedKey.replace(originalKey + ".", newKey + ".");
-              console.log(`[RENDER DEBUG] Partial match: ${renamedKey} -> ${newRenamedKey}`);
               renamedKey = newRenamedKey;
               changed = true;
               break;
             }
           }
         }
-
-        console.log(`[RENDER DEBUG] Final renamed key: ${profileKey} -> ${renamedKey}`);
         return renamedKey;
       });
 
@@ -3547,6 +3569,11 @@ export function App() {
       const pendingProfileKeysSet = new Set(renamedPendingProfileKeys);
 
       const filteredOriginalKeys = allRenamedProfileKeys.filter((profileKey) => {
+        // Check if this profile is deleted
+        if (isProfileOrParentDeleted(profileKey, deletedProfiles)) {
+          return false;
+        }
+
         // If this profile key has a pending version, filter it out
         const hasExactPendingMatch = pendingProfileKeysSet.has(profileKey);
 
@@ -3560,10 +3587,6 @@ export function App() {
         });
 
         const shouldKeep = !hasExactPendingMatch && !isResultOfRenameWithPending;
-        console.log(
-          `[RENDER DEBUG] Profile ${profileKey}: hasExactPendingMatch=${hasExactPendingMatch}, isResultOfRenameWithPending=${isResultOfRenameWithPending}, shouldKeep=${shouldKeep}`
-        );
-
         return shouldKeep;
       });
 
