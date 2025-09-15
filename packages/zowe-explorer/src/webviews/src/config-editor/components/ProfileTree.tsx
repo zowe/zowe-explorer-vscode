@@ -364,7 +364,7 @@ export function ProfileTree({
     const canDrop = draggedProfile && draggedProfile !== node.key && !isInvalidDrop(draggedProfile, node.key);
 
     return (
-      <div key={node.key}>
+      <div className="profile-tree-node" key={node.key}>
         <div
           className={`profile-tree-item ${isSelected ? "selected" : ""} ${isDragging ? "dragging" : ""} ${isDragOver ? "drag-over" : ""}`}
           style={{
@@ -564,7 +564,7 @@ export function ProfileTree({
   };
 
   return (
-    <div style={{ width: "100%" }}>
+    <div style={{ width: "100%" }} className="profile-tree">
       {draggedProfile && !isDraggingRootProfile && renderRootDropZone()}
       {treeNodes.map((node) => renderNode(node))}
     </div>
