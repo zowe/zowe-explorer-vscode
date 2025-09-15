@@ -2826,7 +2826,23 @@ export function App() {
     if (displayKey === "host" || displayKey === "port" || displayKey === "user" || displayKey === "password") {
     }
 
-    if (!isInherited) {
+    // Special case: if isPropertyActuallyInherited returns false but this is a profile with the same name
+    // in a different config file, we should still consider it as inherited
+    const isSameProfileNameInDifferentConfig = (() => {
+      if (isInherited) return false; // Already handled by isPropertyActuallyInherited
+
+      // Check if the profile names match (indicating same profile name in different configs)
+      if (profilePath === currentProfileKey) {
+        // Check if the source comes from a different config file
+        const selectedConfigPath = configurations[selectedTab!]?.configPath;
+        const osLocString = osLoc.join("");
+        return selectedConfigPath !== osLocString;
+      }
+
+      return false;
+    })();
+
+    if (!isInherited && !isSameProfileNameInDifferentConfig) {
       return false;
     }
 
@@ -2929,11 +2945,29 @@ export function App() {
     } else {
       // For non-renamed profiles, use the original logic
       const jsonLocIndicatesDifferentProfile = jsonLoc && !jsonLoc.includes(currentProfilePathForComparison + ".properties");
-      const result = !pathsEqual || jsonLocIndicatesDifferentProfile;
 
-      // Debug logging for final result
-      if (displayKey === "host" || displayKey === "port" || displayKey === "user" || displayKey === "password") {
-      }
+      // Check if this property comes from a profile with the same name in a different config file
+      // This handles the case where profiles with the same name exist in different configs (e.g., "zosmf" in both user and project configs)
+      const isFromSameProfileNameInDifferentConfig = (() => {
+        if (!jsonLoc || !osLoc || !selectedConfigPath) return false;
+
+        // Extract the profile name from jsonLoc
+        const jsonLocParts = jsonLoc.split(".");
+        const profilePathParts = jsonLocParts.slice(1, -2);
+        const sourceProfilePath = profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".");
+
+        // Get the current profile name being viewed
+        const currentProfileName = extractProfileKeyFromPath(path);
+
+        // Check if the source profile name matches the current profile name but comes from a different config
+        const osLocString = osLoc.join("");
+        const isDifferentConfig = selectedConfigPath !== osLocString;
+        const isSameProfileName = sourceProfilePath === currentProfileName;
+
+        return isDifferentConfig && isSameProfileName;
+      })();
+
+      const result = !pathsEqual || jsonLocIndicatesDifferentProfile || isFromSameProfileNameInDifferentConfig;
 
       return result;
     }
