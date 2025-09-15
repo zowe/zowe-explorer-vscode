@@ -208,47 +208,70 @@ export class ConfigEditor extends WebView {
                 break;
             }
             case "SAVE_CHANGES": {
-                // Process renames first
-                if (message.renames && Array.isArray(message.renames)) {
-                    await this.handleProfileRenames(message.renames);
-                }
-
-                // Update profile changes to use new names after renames are processed
-                let updatedMessage = message;
-                if (message.renames && Array.isArray(message.renames)) {
-                    updatedMessage = await this.updateProfileChangesForRenames(message, message.renames);
-                }
-
-                // Process changes with updated profile names
-                const parsedChanges = this.parseConfigChanges(updatedMessage);
-                for (const change of parsedChanges) {
-                    if (change.defaultsChanges || change.defaultsDeleteKeys) {
-                        await this.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath);
+                try {
+                    // Process renames first
+                    if (message.renames && Array.isArray(message.renames)) {
+                        await this.handleProfileRenames(message.renames);
                     }
 
-                    if (change.changes || change.deletions) {
-                        await this.handleProfileChanges(change.changes, change.deletions, change.configPath);
+                    // Update profile changes to use new names after renames are processed
+                    let updatedMessage = message;
+                    if (message.renames && Array.isArray(message.renames)) {
+                        updatedMessage = await this.updateProfileChangesForRenames(message, message.renames);
                     }
+
+                    // Process changes with updated profile names
+                    const parsedChanges = this.parseConfigChanges(updatedMessage);
+                    for (const change of parsedChanges) {
+                        if (change.defaultsChanges || change.defaultsDeleteKeys) {
+                            await this.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath);
+                        }
+
+                        if (change.changes || change.deletions) {
+                            await this.handleProfileChanges(change.changes, change.deletions, change.configPath);
+                        }
+                    }
+
+                    if (message.otherChanges) {
+                        await this.handleOtherChanges(message.otherChanges);
+                    }
+
+                    await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+
+                    const configs = await this.getLocalConfigs();
+                    const secureValuesAllowed = await this.areSecureValuesAllowed();
+
+                    await this.panel.webview.postMessage({
+                        command: "CONFIGURATIONS",
+                        contents: configs,
+                        secureValuesAllowed,
+                    });
+
+                    await this.panel.webview.postMessage({
+                        command: "DISABLE_OVERLAY",
+                    });
+                } catch (error) {
+                    // If a critical error occurred during save, cancel the entire operation
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    console.error("Save operation failed:", errorMessage);
+
+                    // Refresh configurations to clear the saving state and show current state
+                    await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+                    const configs = await this.getLocalConfigs();
+                    const secureValuesAllowed = await this.areSecureValuesAllowed();
+
+                    await this.panel.webview.postMessage({
+                        command: "CONFIGURATIONS",
+                        contents: configs,
+                        secureValuesAllowed,
+                    });
+
+                    await this.panel.webview.postMessage({
+                        command: "DISABLE_OVERLAY",
+                    });
+
+                    // Don't re-throw the error to prevent unhandled promise rejection
                 }
-
-                if (message.otherChanges) {
-                    await this.handleOtherChanges(message.otherChanges);
-                }
-
-                await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
-
-                const configs = await this.getLocalConfigs();
-                const secureValuesAllowed = await this.areSecureValuesAllowed();
-
-                await this.panel.webview.postMessage({
-                    command: "CONFIGURATIONS",
-                    contents: configs,
-                    secureValuesAllowed,
-                });
-
-                await this.panel.webview.postMessage({
-                    command: "DISABLE_OVERLAY",
-                });
                 break;
             }
             case "OPEN_CONFIG_FILE": {
@@ -772,29 +795,19 @@ export class ConfigEditor extends WebView {
 
     private async handleProfileRenames(renames: Array<{ originalKey: string; newKey: string; configPath: string }>): Promise<void> {
         if (!renames || renames.length === 0) {
-            console.log(`[SERVER RENAME HANDLER] No renames to process`);
             return;
         }
 
         const profInfo = new ProfileInfo("zowe");
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
-        // Sort renames by length (shortest first) to ensure parent renames are processed before child renames
-        const sortedRenames = renames.sort((a, b) => {
-            const aOriginalLength = a.originalKey.split(".").length;
-            const bOriginalLength = b.originalKey.split(".").length;
-
-            // Primary sort: by original key length (shortest first)
-            if (aOriginalLength !== bOriginalLength) {
-                return aOriginalLength - bOriginalLength;
-            }
-
-            // Secondary sort: by new key length (shortest first)
-            const aNewLength = a.newKey.split(".").length;
-            const bNewLength = b.newKey.split(".").length;
-            return aNewLength - bNewLength;
+        // Process renames in order - sort by depth to ensure parent renames happen before child renames
+        const sortedRenames = [...renames].sort((a, b) => {
+            // Sort by depth (shorter paths first) to ensure parents are processed before children
+            const depthA = a.newKey.split(".").length;
+            const depthB = b.newKey.split(".").length;
+            return depthA - depthB;
         });
-        console.log(`[SERVER SORTED RENAMES]`, sortedRenames);
 
         // Update rename keys to reflect parent renames that have already been processed
         const updatedRenames = this.updateRenameKeysForParentChanges(sortedRenames);
@@ -802,10 +815,11 @@ export class ConfigEditor extends WebView {
         // Filter out no-op renames (where originalKey === newKey)
         const filteredRenames = updatedRenames.filter((rename) => rename.originalKey !== rename.newKey);
 
+        // Get the team config once for all renames
+        const teamConfig = profInfo.getTeamConfig();
+
         for (const rename of filteredRenames) {
             try {
-                console.log(`Processing rename: ${rename.originalKey} -> ${rename.newKey}`);
-
                 // Pre-validate the rename operation before making any changes
                 let originalPath: string;
                 let newPath: string;
@@ -822,18 +836,12 @@ export class ConfigEditor extends WebView {
                 }
 
                 // Check for circular reference BEFORE making any changes
-                console.log(`Checking circular reference: ${rename.originalKey} -> ${rename.newKey}`);
                 if (this.wouldCreateCircularReference(rename.originalKey, rename.newKey)) {
-                    console.log(`Circular reference detected: ${rename.originalKey} -> ${rename.newKey}`);
-                    vscode.window.showErrorMessage(
-                        `Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Would create circular reference`
-                    );
-                    continue; // Skip this rename and continue with others
+                    const errorMessage = `Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Would create circular reference`;
+                    vscode.window.showErrorMessage(`Save operation cancelled: ${errorMessage}`);
+                    throw new Error(`Critical error during profile rename: ${errorMessage}`);
                 }
-                console.log(`No circular reference: ${rename.originalKey} -> ${rename.newKey}`);
 
-                // Get the team config
-                const teamConfig = profInfo.getTeamConfig();
                 const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
 
                 if (!targetLayer) {
@@ -899,18 +907,16 @@ export class ConfigEditor extends WebView {
                 // Check if the original profile exists
                 const originalProfile = configMoveAPI.get(originalPath);
                 if (!originalProfile) {
-                    vscode.window.showErrorMessage(`Cannot rename profile '${rename.originalKey}': Profile does not exist`);
+                    // If the original profile doesn't exist, it's likely being created through changes
+                    // rather than renamed from an existing profile. Skip this rename operation silently.
                     continue; // Skip this rename and continue with others
                 }
 
                 const existingTargetProfile = configMoveAPI.get(newPath);
-                console.log(`Checking if target profile exists: ${newPath}, exists: ${!!existingTargetProfile}`);
                 if (existingTargetProfile) {
-                    console.log(`Target profile already exists: ${rename.newKey}`);
-                    vscode.window.showErrorMessage(
-                        `Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Profile '${rename.newKey}' already exists`
-                    );
-                    continue; // Skip this rename and continue with others
+                    const errorMessage = `Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Profile '${rename.newKey}' already exists`;
+                    vscode.window.showErrorMessage(`Save operation cancelled: ${errorMessage}`);
+                    throw new Error(`Critical error during profile rename: ${errorMessage}`);
                 }
 
                 // Validate ConfigMoveAPI before use
@@ -931,6 +937,13 @@ export class ConfigEditor extends WebView {
                     }
                 } catch (moveError) {
                     const errorMessage = this.handleMoveUtilsError(moveError, "move profile", originalPath, newPath);
+
+                    // Check if this is a critical error that should cancel the entire save operation
+                    if (this.isCriticalMoveError(moveError)) {
+                        vscode.window.showErrorMessage(`Save operation cancelled: ${errorMessage}`);
+                        throw new Error(`Critical error during profile rename: ${errorMessage}`);
+                    }
+
                     vscode.window.showErrorMessage(errorMessage);
                     continue; // Skip this rename and continue with others
                 }
@@ -948,16 +961,24 @@ export class ConfigEditor extends WebView {
                     // Log the error but don't fail the entire rename operation
                     console.warn(errorMessage);
                 }
-
-                await teamConfig.save();
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
+
+                // Check if this is a critical error that should cancel the entire save operation
+                if (this.isCriticalMoveError(error)) {
+                    // Re-throw critical errors so they can be caught by the outer try-catch block
+                    throw error;
+                }
+
                 vscode.window.showErrorMessage(
                     `Unexpected error renaming profile from '${rename.originalKey}' to '${rename.newKey}': ${errorMessage}`
                 );
                 // Don't throw the error - continue with other renames
             }
         }
+
+        // Save all changes once after all renames are processed successfully
+        await teamConfig.save();
     }
 
     private constructNestedProfilePath(profileKey: string): string {
@@ -1035,6 +1056,21 @@ export class ConfigEditor extends WebView {
         const errorMessage = error instanceof Error ? error.message : String(error);
         const simulationPrefix = isSimulation ? "Simulation failed for " : "";
         return `${simulationPrefix}${operation} from '${originalKey}' to '${newKey}': ${errorMessage}`;
+    }
+
+    private isCriticalMoveError(error: any): boolean {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+
+        // Critical errors that should cancel the entire save operation
+        const criticalErrorPatterns = [
+            /Profile.*already exists/i,
+            /Target profile already exists/i,
+            /Profile with name.*already exists/i,
+            /Cannot rename profile.*Profile.*already exists/i,
+            /Cannot rename profile.*Would create circular reference/i,
+        ];
+
+        return criticalErrorPatterns.some((pattern) => pattern.test(errorMessage));
     }
 
     /**
@@ -1501,45 +1537,40 @@ export class ConfigEditor extends WebView {
         // So we need to look for the profile using the new name (after rename simulation)
         let profileNameToLookup = profPath;
 
-        // Check if this profile or any of its parents was renamed and use the new name for lookup
+        // Apply renames to get the current effective profile name
         if (renames && Array.isArray(renames)) {
-            // First check for exact match
-            let rename = renames.find((r) => r.originalKey === profPath && r.configPath === configPath);
+            const configRenames = renames.filter((r) => r.configPath === configPath);
 
-            if (rename) {
-                // Exact match found
-                profileNameToLookup = rename.newKey;
-            } else if (profPath.includes(".")) {
-                // Handle nested profiles with multiple potential renames
-                const profileParts = profPath.split(".");
-                let currentPath = "";
+            // Apply renames iteratively until no more changes
+            let changed = true;
+            while (changed) {
+                changed = false;
 
-                // Build the new path incrementally
-                for (let i = 0; i < profileParts.length; i++) {
-                    const nextPath = currentPath ? `${currentPath}.${profileParts[i]}` : profileParts[i];
+                for (const rename of configRenames) {
+                    // Check for exact match
+                    if (profileNameToLookup === rename.originalKey) {
+                        profileNameToLookup = rename.newKey;
+                        changed = true;
+                        break;
+                    }
 
-                    // Check if this specific path level has a rename
-                    const levelRename = renames.find((r) => r.originalKey === nextPath && r.configPath === configPath);
-
-                    if (levelRename) {
-                        // This level was renamed, use the new name
-                        currentPath = levelRename.newKey;
-                    } else {
-                        // This level wasn't renamed, add the original part
-                        currentPath = nextPath;
+                    // Check for partial matches (parent renames affecting children)
+                    if (profileNameToLookup.startsWith(rename.originalKey + ".")) {
+                        profileNameToLookup = profileNameToLookup.replace(rename.originalKey + ".", rename.newKey + ".");
+                        changed = true;
+                        break;
                     }
                 }
-
-                profileNameToLookup = currentPath;
             }
         }
 
-        // Look for the profile using the name after rename simulation
-        let profile = allProfiles.find((prof) => prof.profName === profileNameToLookup && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
+        // Look for the profile using the original name first
+        // The allProfiles array contains profiles from the original configuration
+        let profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
 
-        // If still not found, try with the original name as fallback
+        // If not found with original name, try with the current effective name
         if (!profile && profileNameToLookup !== profPath) {
-            profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
+            profile = allProfiles.find((prof) => prof.profName === profileNameToLookup && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
         }
 
         if (!profile) {
@@ -1571,21 +1602,8 @@ export class ConfigEditor extends WebView {
             return;
         }
 
-        // Sort renames by length (shortest first) to ensure parent renames are processed before child renames
-        const sortedRenames = renames.sort((a, b) => {
-            const aOriginalLength = a.originalKey.split(".").length;
-            const bOriginalLength = b.originalKey.split(".").length;
-
-            // Primary sort: by original key length (shortest first)
-            if (aOriginalLength !== bOriginalLength) {
-                return aOriginalLength - bOriginalLength;
-            }
-
-            // Secondary sort: by new key length (shortest first)
-            const aNewLength = a.newKey.split(".").length;
-            const bNewLength = b.newKey.split(".").length;
-            return aNewLength - bNewLength;
-        });
+        // Process renames in order - no special sorting needed since client handles consolidation
+        const sortedRenames = renames;
 
         for (const rename of sortedRenames) {
             try {

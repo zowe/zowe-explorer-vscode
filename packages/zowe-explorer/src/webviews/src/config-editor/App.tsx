@@ -230,6 +230,22 @@ export function App() {
     [setLocalStorageValue]
   );
 
+  // Helper function to extract profile name from a key
+  const extractProfileFromKey = useCallback((key: string): string => {
+    const parts = key.split(".");
+    const profileParts: string[] = [];
+
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i] === "profiles" && i + 1 < parts.length) {
+        // Found a profile name
+        profileParts.push(parts[i + 1]);
+        i++; // Skip the profile name in the next iteration
+      }
+    }
+
+    return profileParts.join(".");
+  }, []);
+
   // Helper function to update changes for renames
   const updateChangesForRenames = useCallback((changes: any[], renames: any[]) => {
     if (!renames || renames.length === 0) {
@@ -251,6 +267,11 @@ export function App() {
       // Update profile references in the change
       for (const rename of renames) {
         if (rename.configPath === change.configPath) {
+          // Skip if the change is already using the new profile name
+          if (updatedChange.profile === rename.newKey) {
+            continue;
+          }
+
           // Update profile name in the change path
           if (updatedChange.profile === rename.originalKey) {
             updatedChange.profile = rename.newKey;
@@ -285,13 +306,35 @@ export function App() {
               }
             } else {
               // Handle simple renames
-              const keyParts = updatedChange.key.split(".");
+              // For simple renames, we need to replace the original key with the new key
+              // but we need to be careful about the context
+              let updatedKey = updatedChange.key;
+
+              // For simple renames like 'b' -> 'a.b', we need to replace 'b' with 'a.b'
+              // but only when 'b' appears as a profile name (preceded by 'profiles')
+              const keyParts = updatedKey.split(".");
+              let updated = false;
+
               for (let i = 0; i < keyParts.length; i++) {
-                if (keyParts[i] === rename.originalKey) {
+                if (keyParts[i] === rename.originalKey && i > 0 && keyParts[i - 1] === "profiles") {
+                  // Check if this key already represents the correct profile structure
+                  // For example, if we're renaming 'b' to 'a.b' and the key is 'profiles.a.profiles.b',
+                  // this already represents the correct structure for profile 'a.b'
+                  const currentProfileFromKey = extractProfileFromKey(updatedKey);
+                  if (currentProfileFromKey === rename.newKey) {
+                    // The key already represents the correct profile, don't update it
+                    continue;
+                  }
+
+                  // This is a profile name that needs to be replaced
                   keyParts[i] = rename.newKey;
+                  updated = true;
                 }
               }
-              updatedChange.key = keyParts.join(".");
+
+              if (updated) {
+                updatedChange.key = keyParts.join(".");
+              }
             }
           }
 
@@ -552,6 +595,7 @@ export function App() {
     }));
 
     // Prepare renames data for save
+    // Send all renames - let the server handle non-existent profiles
     const renamesData = Object.entries(renamesRef.current).flatMap(([configPath, configRenames]) =>
       Object.entries(configRenames).map(([originalKey, newKey]) => ({
         originalKey,
@@ -559,6 +603,8 @@ export function App() {
         configPath,
       }))
     );
+
+    console.log(`[SAVE DEBUG] Renames being sent to server:`, renamesData);
 
     // Update changes to use new profile names before sending to backend
     const updatedChanges = updateChangesForRenames(changes, renamesData);
@@ -1285,7 +1331,7 @@ export function App() {
     if (renames[configPath] && Object.keys(renames[configPath]).length > 0) {
       const configRenames = renames[configPath];
 
-      // Sort renames by length of newKey (longest first) to handle nested renames correctly
+      // Convert to array and sort by newKey length (longest first) to handle nested renames correctly
       const sortedRenames = Object.entries(configRenames).sort(([, a], [, b]) => b.length - a.length);
 
       let changed = true;
@@ -1385,234 +1431,207 @@ export function App() {
     originalKey: string,
     newKey: string
   ): { [originalKey: string]: string } => {
-    // Check for circular renames and remove conflicting ones
     const tempRenames = { ...existingRenames };
 
-    // If the new rename creates a circular dependency, remove the conflicting rename
-    // Note: This function is called after circular rename validation in handleRenameProfile,
-    // so this case should not occur in normal operation, but we keep it as a safety measure
-    // However, we need to be careful not to remove renames that are part of a cancellation
-    if (tempRenames[newKey] === originalKey) {
-      // Check if this is actually a cancellation (moving back to original location)
-      // If originalKey is the target of an existing rename, this might be a cancellation
-      const isCancellation = Object.entries(tempRenames).some(([origKey, targetKey]) => targetKey === originalKey && origKey === newKey);
-
-      if (!isCancellation) {
-        // This creates a circular dependency: originalKey -> newKey -> originalKey
-        // Remove the conflicting rename
-        delete tempRenames[newKey];
-      }
-    }
-
-    // Check if the new key conflicts with existing renames
-    const conflictingRename = Object.entries(tempRenames).find(([_, targetKey]) => targetKey === newKey);
-
-    if (conflictingRename) {
-      // Update the conflicting rename to use a non-conflicting target
-      const [conflictingOriginalKey, conflictingTargetKey] = conflictingRename;
-
-      // If the conflicting target starts with the original key, update it to use the new key
-      if (conflictingTargetKey.startsWith(originalKey + ".")) {
-        const remainingPath = conflictingTargetKey.substring(originalKey.length + 1);
-        const updatedTargetKey = `${newKey}.${remainingPath}`;
-        tempRenames[conflictingOriginalKey] = updatedTargetKey;
-      } else {
-        // Generate a unique target key by appending a number
-        let counter = 1;
-        let newTargetKey = `${conflictingTargetKey}_${counter}`;
-
-        // Keep trying until we find a non-conflicting target
-        while (Object.values(tempRenames).includes(newTargetKey) || newTargetKey === newKey) {
-          counter++;
-          newTargetKey = `${conflictingTargetKey}_${counter}`;
-        }
-
-        tempRenames[conflictingOriginalKey] = newTargetKey;
-      }
-    }
-
-    // Handle rename cancellation (when newKey === originalKey)
+    // Handle cancellation
     if (newKey === originalKey) {
-      // Remove the rename entry to cancel it
       delete tempRenames[originalKey];
-
-      // Also need to update any child renames that were affected by this parent rename
-      // Find any child renames that start with the original key and update them back
-      Object.keys(tempRenames).forEach((key) => {
-        const value = tempRenames[key];
-        if (value.startsWith(originalKey + ".")) {
-          // This is a child rename that was affected by the parent rename
-          // Update it back to use the original parent name
-          const remainingPath = value.substring(originalKey.length + 1);
-          tempRenames[key] = originalKey + "." + remainingPath;
-        }
-      });
-    } else {
-      // Check if this rename is canceling an existing rename
-      // For example: if we have "zftp" -> "tso.zftp" and now we're doing "tso.zftp" -> "zftp"
-      // This is only a cancellation if the newKey matches the originalKey of the existing rename
-      const existingRename = Object.entries(tempRenames).find(([_, targetKey]) => targetKey === originalKey);
-
-      if (existingRename) {
-        const [existingOriginalKey, existingTargetKey] = existingRename;
-
-        // Only treat this as a cancellation if the newKey matches the existingOriginalKey
-        // This means we're moving back to the original location
-        if (newKey === existingOriginalKey) {
-          // Remove the existing rename
-          delete tempRenames[existingOriginalKey];
-
-          // Update any child renames that were affected by the canceled rename
-          Object.keys(tempRenames).forEach((key) => {
-            const value = tempRenames[key];
-            if (value.startsWith(existingTargetKey + ".")) {
-              // This is a child rename that was affected by the canceled parent rename
-              // Update it back to use the original parent name
-              const remainingPath = value.substring(existingTargetKey.length + 1);
-              const newValue = existingOriginalKey + "." + remainingPath;
-              tempRenames[key] = newValue;
-            }
-          });
-
-          // Don't add the new rename since we're canceling
-          return tempRenames;
-        }
-        // If newKey !== existingOriginalKey, this is not a cancellation but a continuation
-        // of the rename chain, so we should keep both renames
-      }
-
-      // Add the new rename
-      tempRenames[originalKey] = newKey;
+      return tempRenames;
     }
 
-    // Convert to array format for processing with updateRenameKeysForParentChanges logic
-    const renamesArray = Object.entries(tempRenames).map(([orig, newName]) => ({
-      originalKey: orig,
-      newKey: newName,
-      configPath: configurations[selectedTab!]?.configPath || "",
-    }));
+    // Add/update the rename
+    tempRenames[originalKey] = newKey;
 
-    // Sort by depth (shortest first) to ensure parent renames are processed before child renames
-    const sortedRenames = renamesArray.sort((a, b) => {
-      const aLength = a.originalKey.split(".").length;
-      const bLength = b.originalKey.split(".").length;
-      return aLength - bLength;
-    });
-
-    // Apply the same logic as updateRenameKeysForParentChanges
-    const updatedRenames = updateRenameKeysForParentChangesClient(sortedRenames);
-
-    // Convert back to object format and remove any no-op renames (where originalKey === newKey)
-    const consolidated: { [originalKey: string]: string } = {};
-    updatedRenames.forEach((rename) => {
-      if (rename.originalKey !== rename.newKey) {
-        consolidated[rename.originalKey] = rename.newKey;
-      }
-    });
-
-    return consolidated;
+    // Consolidate conflicting renames
+    return consolidateConflictingRenames(tempRenames);
   };
 
-  // Client-side version of updateRenameKeysForParentChanges
-  const updateRenameKeysForParentChangesClient = (
-    renames: Array<{ originalKey: string; newKey: string; configPath: string }>
-  ): Array<{ originalKey: string; newKey: string; configPath: string }> => {
-    const updatedRenames: Array<{ originalKey: string; newKey: string; configPath: string }> = [];
-    const processedRenames = new Map<string, string>(); // originalKey -> newKey mapping
+  const consolidateConflictingRenames = (renames: { [originalKey: string]: string }): { [originalKey: string]: string } => {
+    const consolidated = { ...renames };
+    console.log("[CONSOLIDATION] Starting with renames:", consolidated);
+    let changed = true;
+    let iterations = 0;
+    const maxIterations = 10; // Prevent infinite loops
 
-    // First pass: collect all renames to build a complete mapping
-    const allRenames = new Map<string, string>();
-    for (const rename of renames) {
-      allRenames.set(rename.originalKey, rename.newKey);
-    }
+    while (changed && iterations < maxIterations) {
+      changed = false;
+      iterations++;
+      const keys = Object.keys(consolidated);
+      console.log(`[CONSOLIDATION] Iteration ${iterations}, keys:`, keys);
 
-    for (const rename of renames) {
-      let updatedOriginalKey = rename.originalKey;
-      let updatedNewKey = rename.newKey;
+      if (iterations >= maxIterations) {
+        console.warn("[CONSOLIDATION] Maximum iterations reached, breaking to prevent infinite loop");
+        break;
+      }
 
-      // Check if any parent of this profile has been renamed
-      const originalParts = rename.originalKey.split(".");
-      const newParts = rename.newKey.split(".");
+      // First pass: detect and remove opposing renames (A->B, B->A)
+      for (const originalKey of keys) {
+        const newKey = consolidated[originalKey];
+        if (consolidated[newKey] === originalKey) {
+          console.log(`[CONSOLIDATION] Found opposing renames: ${originalKey} <-> ${newKey}, removing both`);
 
-      // Update the original key to reflect any parent renames
-      for (let i = 0; i < originalParts.length; i++) {
-        const parentPath = originalParts.slice(0, i + 1).join(".");
-        if (processedRenames.has(parentPath)) {
-          // Replace the parent part in the original key
-          const newParentPath = processedRenames.get(parentPath)!;
-          const remainingParts = originalParts.slice(i + 1);
-          updatedOriginalKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
+          // Before removing, check if any child renames need to be updated
+          // Find all renames that have the newKey as a parent
+          for (const [childOriginalKey, childNewKey] of Object.entries(consolidated)) {
+            if (childNewKey.startsWith(newKey + ".")) {
+              // This child was depending on the newKey, update it to use originalKey instead
+              const childSuffix = childNewKey.substring(newKey.length + 1);
+              const updatedChildKey = originalKey + "." + childSuffix;
+              console.log(`[CONSOLIDATION] Updating child after opposing rename removal: ${childOriginalKey} (${childNewKey}) -> ${updatedChildKey}`);
+              consolidated[childOriginalKey] = updatedChildKey;
+            }
+          }
+
+          delete consolidated[originalKey];
+          delete consolidated[newKey];
+          changed = true;
         }
       }
 
-      // Update the new key to reflect any parent renames
-      for (let i = 0; i < newParts.length; i++) {
-        const parentPath = newParts.slice(0, i + 1).join(".");
-        if (processedRenames.has(parentPath)) {
-          // Replace the parent part in the new key
-          const newParentPath = processedRenames.get(parentPath)!;
-          const remainingParts = newParts.slice(i + 1);
-          updatedNewKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
+      if (changed) continue; // Restart the loop after removing opposing renames
+
+      // Second pass: handle parent-child dependencies
+      // Only update child renames when the parent rename is NOT being renamed again
+      for (const originalKey of keys) {
+        const newKey = consolidated[originalKey];
+
+        // Check if this parent itself is being renamed (i.e., if newKey is a target of another rename)
+        const isParentBeingRenamed = Object.values(consolidated).includes(newKey);
+        if (isParentBeingRenamed) {
+          console.log(`[CONSOLIDATION] Skipping child updates for ${originalKey} -> ${newKey} because parent is being renamed again`);
+          continue;
         }
-      }
 
-      // Handle child-first scenario: if this is a parent rename, update any existing child renames
-      if (originalParts.length === 1) {
-        // This is a parent rename
-        const parentOriginalKey = rename.originalKey;
-        const parentNewKey = rename.newKey;
+        // Check if any other renames have this originalKey as a parent in their target
+        for (const [otherOriginalKey, otherNewKey] of Object.entries(consolidated)) {
+          if (otherOriginalKey !== originalKey) {
+            // Check if otherNewKey starts with originalKey + "."
+            if (otherNewKey.startsWith(originalKey + ".")) {
+              // This is a child of the renamed parent, update its path
+              const childSuffix = otherNewKey.substring(originalKey.length + 1);
+              const updatedChildKey = newKey + "." + childSuffix;
+              console.log(`[CONSOLIDATION] Updating child: ${otherOriginalKey} (${otherNewKey}) -> ${updatedChildKey}`);
 
-        // Find and update any child renames that reference this parent
-        for (let i = 0; i < updatedRenames.length; i++) {
-          const childRename = updatedRenames[i];
-          const childOriginalParts = childRename.originalKey.split(".");
-          const childNewParts = childRename.newKey.split(".");
+              // Check if this creates a conflict with an existing rename
+              const conflictingKey = Object.keys(consolidated).find((k) => consolidated[k] === updatedChildKey);
+              if (conflictingKey && conflictingKey !== otherOriginalKey) {
+                // There's a conflict, we need to resolve it
+                // For now, we'll keep the existing rename and skip this update
+                console.log(`[CONSOLIDATION] Conflict detected, skipping update for ${otherOriginalKey}`);
+                continue;
+              }
 
-          // Check if this child rename starts with the parent we're renaming
-          // Either in the original key or the new key
-          const childStartsWithParent =
-            (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) ||
-            (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey);
-
-          if (childStartsWithParent) {
-            // Update the child's original key to use the new parent name
-            let updatedChildOriginalKey = childRename.originalKey;
-            if (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) {
-              const childRemainingParts = childOriginalParts.slice(1);
-              updatedChildOriginalKey = `${parentNewKey}.${childRemainingParts.join(".")}`;
+              consolidated[otherOriginalKey] = updatedChildKey;
+              changed = true;
             }
-
-            // Update the child's new key to use the new parent name if it also starts with the old parent
-            let updatedChildNewKey = childRename.newKey;
-            if (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey) {
-              const childNewRemainingParts = childNewParts.slice(1);
-              updatedChildNewKey = `${parentNewKey}.${childNewRemainingParts.join(".")}`;
-            }
-
-            // Update the child rename in the array
-            updatedRenames[i] = {
-              originalKey: updatedChildOriginalKey,
-              newKey: updatedChildNewKey,
-              configPath: childRename.configPath,
-            };
           }
         }
       }
 
-      // Add the updated rename
-      updatedRenames.push({
-        originalKey: updatedOriginalKey,
-        newKey: updatedNewKey,
-        configPath: rename.configPath,
+      // Third pass: handle parent renames that affect children
+      // This handles cases where a parent is renamed and we need to update children to use the final target
+      for (const [originalKey, newKey] of Object.entries(consolidated)) {
+        // Check if this parent is being renamed (i.e., if newKey is a target of another rename)
+        const parentRename = Object.entries(consolidated).find(([k, v]) => v === newKey && k !== originalKey);
+        if (parentRename) {
+          const [, parentNewKey] = parentRename;
+          console.log(`[CONSOLIDATION] Parent ${originalKey} -> ${newKey} is being renamed to ${parentNewKey}`);
+
+          // Update children of this parent to use the final target
+          for (const [otherOriginalKey, otherNewKey] of Object.entries(consolidated)) {
+            if (otherOriginalKey !== originalKey && otherNewKey.startsWith(newKey + ".")) {
+              const childSuffix = otherNewKey.substring(newKey.length + 1);
+              const finalChildKey = parentNewKey + "." + childSuffix;
+              console.log(`[CONSOLIDATION] Updating child to final target: ${otherOriginalKey} (${otherNewKey}) -> ${finalChildKey}`);
+
+              // Check for conflicts
+              const conflictingKey = Object.keys(consolidated).find((k) => consolidated[k] === finalChildKey);
+              if (!conflictingKey || conflictingKey === otherOriginalKey) {
+                consolidated[otherOriginalKey] = finalChildKey;
+                changed = true;
+              }
+            }
+          }
+        }
+      }
+
+      // Additional third pass: handle cases where a child's parent part is being renamed
+      // This handles cases like zosmf -> zftp.zosmf where zftp is being renamed to tso.zftp
+      for (const [originalKey, newKey] of Object.entries(consolidated)) {
+        // Look for other renames that have this originalKey as a parent in their target
+        for (const [otherOriginalKey, otherNewKey] of Object.entries(consolidated)) {
+          if (otherOriginalKey !== originalKey && otherNewKey.startsWith(originalKey + ".")) {
+            // This is a child of the renamed parent
+            const childSuffix = otherNewKey.substring(originalKey.length + 1);
+            const finalChildKey = newKey + "." + childSuffix;
+            console.log(`[CONSOLIDATION] Updating child to use final parent target: ${otherOriginalKey} (${otherNewKey}) -> ${finalChildKey}`);
+
+            // Check for conflicts
+            const conflictingKey = Object.keys(consolidated).find((k) => consolidated[k] === finalChildKey);
+            if (!conflictingKey || conflictingKey === otherOriginalKey) {
+              consolidated[otherOriginalKey] = finalChildKey;
+              changed = true;
+            }
+          }
+        }
+      }
+
+      // Fourth pass: sort renames to ensure parent renames happen before child renames
+      // This prevents conflicts where a child rename creates a structure that conflicts with a parent rename
+      const sortedRenames = Object.entries(consolidated).sort(([, newKeyA], [, newKeyB]) => {
+        // Sort by depth (shorter paths first) to ensure parents are processed before children
+        const depthA = newKeyA.split(".").length;
+        const depthB = newKeyB.split(".").length;
+        return depthA - depthB;
       });
 
-      // Track this rename for future reference - use the updated keys
-      processedRenames.set(updatedOriginalKey, updatedNewKey);
+      // Rebuild consolidated object with sorted order
+      const sortedConsolidated: { [originalKey: string]: string } = {};
+      for (const [originalKey, newKey] of sortedRenames) {
+        sortedConsolidated[originalKey] = newKey;
+      }
+
+      console.log(`[CONSOLIDATION] Sorted renames by depth:`, sortedConsolidated);
+      Object.assign(consolidated, sortedConsolidated);
+
+      // Fifth pass: handle direct conflicts only (not chaining)
+      if (!changed) {
+        for (let i = 0; i < keys.length; i++) {
+          for (let j = i + 1; j < keys.length; j++) {
+            const key1 = keys[i];
+            const key2 = keys[j];
+            const target1 = consolidated[key1];
+            const target2 = consolidated[key2];
+
+            // Only consolidate if two profiles rename to the same target
+            if (target1 === target2) {
+              // Keep the shorter original key, remove the longer one
+              if (key1.length <= key2.length) {
+                delete consolidated[key2];
+                changed = true;
+                break;
+              } else {
+                delete consolidated[key1];
+                changed = true;
+                break;
+              }
+            }
+          }
+          if (changed) break;
+        }
+      }
     }
 
-    // Second pass is no longer needed - the first pass handles child renames correctly
+    console.log(`[CONSOLIDATION] Final consolidated renames:`, consolidated);
 
-    return updatedRenames;
+    // Additional debugging: check for potential conflicts
+    const targets = Object.values(consolidated);
+    const duplicateTargets = targets.filter((target, index) => targets.indexOf(target) !== index);
+    if (duplicateTargets.length > 0) {
+      console.log(`[CONSOLIDATION] WARNING: Duplicate targets found:`, duplicateTargets);
+    }
+
+    return consolidated;
   };
 
   // Helper functions now imported from utils
@@ -2003,6 +2022,13 @@ export function App() {
         }
 
         parentKeys.forEach((parentKey) => {
+          // Check if this parent key is already a target of another rename operation
+          const isRenameTarget = Object.values(renames[configPath] || {}).includes(parentKey);
+          if (isRenameTarget) {
+            // This parent profile is already being created by another rename, skip it
+            return;
+          }
+
           // Check if the parent profile exists in original profiles or as a renamed profile
           const existsAsOriginal = existingProfileKeys.includes(parentKey);
           const existsAsRenamed = allCurrentProfileKeys.includes(parentKey);
@@ -3473,28 +3499,75 @@ export function App() {
       // Combine all renamed profile keys
       const allRenamedProfileKeys = [...finalRenamedProfileKeys, ...renamedOnlyProfileKeys];
 
-      // Add pending profiles that aren't already represented in the renamed profile keys
-      // We need to check if the renamed version of the pending profile is already in the renamed list
+      // Add all pending profiles - we'll filter out conflicts later
       const pendingProfileKeys = Object.keys(pendingProfiles).filter((key) => {
         // Check if this pending profile is deleted
         if (isProfileOrParentDeleted(key, deletedProfiles)) {
           return false;
         }
 
-        // Get the renamed version of this pending profile key
-        const renamedPendingKey = getRenamedProfileKeyWithNested(key, configPath, renames);
-
-        // Check if this renamed pending key is already in the renamed profile keys
-        // This handles the case where a profile was moved (e.g., zosmf5 moved into zftp becomes zftp.zosmf5)
-        return !allRenamedProfileKeys.includes(renamedPendingKey);
+        // Include all pending profiles - we'll handle conflicts in the filtering step
+        return true;
       });
 
       // Apply renames to pending profile keys as well, including nested profiles
       const renamedPendingProfileKeys = pendingProfileKeys.map((profileKey) => {
-        return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
+        let renamedKey = profileKey;
+        const configRenames = renames[configPath] || {};
+
+        console.log(`[RENDER DEBUG] Processing pending profile: ${profileKey}`);
+        console.log(`[RENDER DEBUG] Available renames:`, configRenames);
+
+        // Apply renames iteratively to handle chained renames
+        let changed = true;
+        while (changed) {
+          changed = false;
+          for (const [originalKey, newKey] of Object.entries(configRenames)) {
+            if (renamedKey === originalKey) {
+              console.log(`[RENDER DEBUG] Exact match: ${renamedKey} -> ${newKey}`);
+              renamedKey = newKey;
+              changed = true;
+              break;
+            }
+            if (renamedKey.startsWith(originalKey + ".")) {
+              const newRenamedKey = renamedKey.replace(originalKey + ".", newKey + ".");
+              console.log(`[RENDER DEBUG] Partial match: ${renamedKey} -> ${newRenamedKey}`);
+              renamedKey = newRenamedKey;
+              changed = true;
+              break;
+            }
+          }
+        }
+
+        console.log(`[RENDER DEBUG] Final renamed key: ${profileKey} -> ${renamedKey}`);
+        return renamedKey;
       });
 
-      const filteredProfileKeys = [...allRenamedProfileKeys, ...renamedPendingProfileKeys];
+      // Filter out original profile keys that have pending profiles (renamed versions)
+      const pendingProfileKeysSet = new Set(renamedPendingProfileKeys);
+
+      const filteredOriginalKeys = allRenamedProfileKeys.filter((profileKey) => {
+        // If this profile key has a pending version, filter it out
+        const hasExactPendingMatch = pendingProfileKeysSet.has(profileKey);
+
+        // Also check if this profile key is the result of a rename that has a pending version
+        // For example, if we have renames {b: 'a.b', a.b: 'a.b1'} and pending profile 'b'
+        // then 'a.b' should be filtered out because 'b' becomes 'a.b1' in pending
+        const isResultOfRenameWithPending = Object.keys(renames[configPath] || {}).some((originalKey) => {
+          const renamedKey = getRenamedProfileKeyWithNested(originalKey, configPath, renames);
+          const hasPendingOriginal = Object.keys(pendingProfiles).includes(originalKey);
+          return profileKey === renamedKey && hasPendingOriginal;
+        });
+
+        const shouldKeep = !hasExactPendingMatch && !isResultOfRenameWithPending;
+        console.log(
+          `[RENDER DEBUG] Profile ${profileKey}: hasExactPendingMatch=${hasExactPendingMatch}, isResultOfRenameWithPending=${isResultOfRenameWithPending}, shouldKeep=${shouldKeep}`
+        );
+
+        return shouldKeep;
+      });
+
+      const filteredProfileKeys = [...filteredOriginalKeys, ...renamedPendingProfileKeys];
 
       // Apply profile sorting based on the current sort order
       // For natural sort order, maintain the original order of renamed profiles
