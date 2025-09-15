@@ -2143,113 +2143,32 @@ export function App() {
 
     // If this profile is currently selected, or if the selected profile is a child of this profile, select the nearest profile
     if (selectedProfileKey === profileKey || (selectedProfileKey && selectedProfileKey.startsWith(profileKey + "."))) {
-      // Get the current list of available profiles to find the nearest one
-      const profilesObj = configurations[selectedTab!]?.properties?.profiles;
-      if (profilesObj) {
-        const pendingProfiles = extractPendingProfiles(configPath);
-        const deletedProfiles = deletions[configPath] || [];
+      const nearestProfileKey = findOptimalReplacementProfile(profileKey, configPath);
 
-        // Get profile keys in original order from the configuration
-        const getOrderedProfileKeys = (profiles: any, parentKey = ""): string[] => {
-          const keys: string[] = [];
-          for (const key of Object.keys(profiles)) {
-            const profile = profiles[key];
-            const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+      // Set the nearest profile as selected, or null if no profile available
+      setSelectedProfileKey(nearestProfileKey);
 
-            // Add this profile key if it's not deleted
-            if (!isProfileOrParentDeleted(qualifiedKey, deletedProfiles)) {
-              keys.push(qualifiedKey);
-            }
+      // Also update the stored profiles for this config
+      if (configPath) {
+        setSelectedProfilesByConfig((prev) => ({
+          ...prev,
+          [configPath]: nearestProfileKey,
+        }));
+      }
 
-            // Recursively add nested profiles
-            if (profile.profiles) {
-              keys.push(...getOrderedProfileKeys(profile.profiles, qualifiedKey));
-            }
-          }
-          return keys;
-        };
+      // If we found a nearest profile, get its merged properties
+      if (nearestProfileKey) {
+        // Get the correct profile name for merged properties (handles renames)
+        const profileNameForMergedProperties = getProfileNameForMergedProperties(nearestProfileKey, configPath);
 
-        const orderedProfileKeys = getOrderedProfileKeys(profilesObj);
-        const pendingProfileKeys = Object.keys(pendingProfiles).filter(
-          (key) => !orderedProfileKeys.includes(key) && !isProfileOrParentDeleted(key, deletedProfiles)
-        );
-        const availableProfileKeys = [...orderedProfileKeys, ...pendingProfileKeys];
-
-        // Find the nearest profile that's not being deleted
-        let nearestProfileKey: string | null = null;
-
-        // Find the nearest profile that's not being deleted
-        if (profileKey.includes(".")) {
-          // For nested profiles, try to find the parent first
-          const profileParts = profileKey.split(".");
-          const parentKey = profileParts.slice(0, -1).join(".");
-
-          if (availableProfileKeys.includes(parentKey) && !isProfileOrParentDeleted(parentKey, deletedProfiles)) {
-            nearestProfileKey = parentKey;
-          }
-        }
-
-        // If no parent found, find the next available profile
-        if (!nearestProfileKey) {
-          const currentIndex = availableProfileKeys.indexOf(profileKey);
-          if (currentIndex !== -1) {
-            // Try to find the next profile
-            for (let i = currentIndex + 1; i < availableProfileKeys.length; i++) {
-              const candidateProfile = availableProfileKeys[i];
-              if (!isProfileOrParentDeleted(candidateProfile, deletedProfiles)) {
-                nearestProfileKey = candidateProfile;
-                break;
-              }
-            }
-
-            // If no next profile found, try to find the previous profile
-            if (!nearestProfileKey) {
-              for (let i = currentIndex - 1; i >= 0; i--) {
-                const candidateProfile = availableProfileKeys[i];
-                if (!isProfileOrParentDeleted(candidateProfile, deletedProfiles)) {
-                  nearestProfileKey = candidateProfile;
-                  break;
-                }
-              }
-            }
-          }
-        }
-
-        // Set the nearest profile as selected, or null if no profile available
-        setSelectedProfileKey(nearestProfileKey);
-
-        // Also update the stored profiles for this config
-        if (configPath) {
-          setSelectedProfilesByConfig((prev) => ({
-            ...prev,
-            [configPath]: nearestProfileKey,
-          }));
-        }
-
-        // If we found a nearest profile, get its merged properties
-        if (nearestProfileKey) {
-          // Get the correct profile name for merged properties (handles renames)
-          const profileNameForMergedProperties = getProfileNameForMergedProperties(nearestProfileKey, configPath);
-
-          const changes = formatPendingChanges();
-          vscodeApi.postMessage({
-            command: "GET_MERGED_PROPERTIES",
-            profilePath: profileNameForMergedProperties,
-            configPath: configPath,
-            changes: changes,
-            renames: changes.renames,
-          });
-        }
-      } else {
-        // Fallback to clearing selection if no profiles object available
-        setSelectedProfileKey(null);
-        if (configPath) {
-          setSelectedProfilesByConfig((prev) => ({
-            ...prev,
-            [configPath]: null,
-          }));
-        }
-        // Don't clear merged properties here - they will be updated when a new profile is selected
+        const changes = formatPendingChanges();
+        vscodeApi.postMessage({
+          command: "GET_MERGED_PROPERTIES",
+          profilePath: profileNameForMergedProperties,
+          configPath: configPath,
+          changes: changes,
+          renames: changes.renames,
+        });
       }
     }
   };
@@ -3361,6 +3280,101 @@ export function App() {
     }
     return false;
   };
+
+  // Memoized function to get available profiles for optimal performance
+  const getAvailableProfilesForConfig = useCallback(
+    (configPath: string): string[] => {
+      const profilesObj = configurations[selectedTab!]?.properties?.profiles;
+      if (!profilesObj) {
+        return [];
+      }
+
+      const pendingProfiles = extractPendingProfiles(configPath);
+      const deletedProfiles = deletions[configPath] || [];
+
+      // Get all available profiles (existing + pending) that are not deleted
+      const getAvailableProfiles = (profiles: any, parentKey = ""): string[] => {
+        const available: string[] = [];
+        for (const key of Object.keys(profiles)) {
+          const profile = profiles[key];
+          const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+
+          // Only include profiles that are not deleted
+          if (!isProfileOrParentDeleted(qualifiedKey, deletedProfiles)) {
+            available.push(qualifiedKey);
+          }
+
+          // Recursively add nested profiles
+          if (profile.profiles) {
+            available.push(...getAvailableProfiles(profile.profiles, qualifiedKey));
+          }
+        }
+        return available;
+      };
+
+      const existingProfiles = getAvailableProfiles(profilesObj);
+      const pendingProfileKeys = Object.keys(pendingProfiles).filter(
+        (key) => !existingProfiles.includes(key) && !isProfileOrParentDeleted(key, deletedProfiles)
+      );
+
+      return [...existingProfiles, ...pendingProfileKeys];
+    },
+    [configurations, selectedTab, deletions, extractPendingProfiles, isProfileOrParentDeleted]
+  );
+
+  // Optimized function to find the best replacement profile after deletion
+  const findOptimalReplacementProfile = useCallback(
+    (deletedProfileKey: string, configPath: string): string | null => {
+      const allAvailableProfiles = getAvailableProfilesForConfig(configPath);
+
+      if (allAvailableProfiles.length === 0) {
+        return null;
+      }
+
+      // Strategy 1: If deleting a nested profile, prefer its parent
+      if (deletedProfileKey.includes(".")) {
+        const parentKey = deletedProfileKey.split(".").slice(0, -1).join(".");
+        if (allAvailableProfiles.includes(parentKey)) {
+          return parentKey;
+        }
+      }
+
+      // Strategy 2: Find siblings (profiles at the same level)
+      const deletedParts = deletedProfileKey.split(".");
+      if (deletedParts.length > 1) {
+        const parentKey = deletedParts.slice(0, -1).join(".");
+        const siblings = allAvailableProfiles.filter((profile) => profile.startsWith(parentKey + ".") && profile !== deletedProfileKey);
+        if (siblings.length > 0) {
+          // Return the first sibling (maintains order)
+          return siblings[0];
+        }
+      }
+
+      // Strategy 3: Find the next profile in the list (maintains user's workflow)
+      const currentIndex = allAvailableProfiles.indexOf(deletedProfileKey);
+      if (currentIndex !== -1) {
+        // Try next profile first (user was likely working down the list)
+        for (let i = currentIndex + 1; i < allAvailableProfiles.length; i++) {
+          const candidate = allAvailableProfiles[i];
+          if (candidate !== deletedProfileKey) {
+            return candidate;
+          }
+        }
+
+        // If no next profile, try previous profile
+        for (let i = currentIndex - 1; i >= 0; i--) {
+          const candidate = allAvailableProfiles[i];
+          if (candidate !== deletedProfileKey) {
+            return candidate;
+          }
+        }
+      }
+
+      // Strategy 4: Fallback to first available profile
+      return allAvailableProfiles[0] || null;
+    },
+    [getAvailableProfilesForConfig]
+  );
 
   // Helper function to sort profiles at each level
   const sortProfilesAtLevel = useCallback(
