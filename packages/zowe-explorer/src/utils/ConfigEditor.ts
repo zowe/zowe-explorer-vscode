@@ -1578,9 +1578,7 @@ export class ConfigEditor extends WebView {
         }
 
         const mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
-        console.log("[DEBUG] Original knownArgs structure:", JSON.stringify(mergedArgs.knownArgs, null, 2));
         const redacted = this.redactSecureValues(mergedArgs.knownArgs);
-        console.log("[DEBUG] Redacted knownArgs structure:", JSON.stringify(redacted, null, 2));
         return redacted;
     }
 
@@ -1816,9 +1814,7 @@ export class ConfigEditor extends WebView {
             }
 
             const mergedArgs = profInfo.mergeArgsForProfile(tempProfile, { getSecureVals: true });
-            console.log("[DEBUG] Wizard Original knownArgs structure:", JSON.stringify(mergedArgs.knownArgs, null, 2));
             const redacted = this.redactSecureValues(mergedArgs.knownArgs);
-            console.log("[DEBUG] Wizard Redacted knownArgs structure:", JSON.stringify(redacted, null, 2));
             return redacted || [];
         } finally {
             try {
