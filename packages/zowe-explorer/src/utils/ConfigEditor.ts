@@ -803,10 +803,18 @@ export class ConfigEditor extends WebView {
 
         // Process renames in order - sort by depth to ensure parent renames happen before child renames
         const sortedRenames = [...renames].sort((a, b) => {
-            // Sort by depth (shorter paths first) to ensure parents are processed before children
+            // Primary sort: by newKey depth (shorter paths first)
             const depthA = a.newKey.split(".").length;
             const depthB = b.newKey.split(".").length;
-            return depthA - depthB;
+
+            if (depthA !== depthB) {
+                return depthA - depthB;
+            }
+
+            // Secondary sort: by originalKey depth when newKey depths are equal
+            const originalDepthA = a.originalKey.split(".").length;
+            const originalDepthB = b.originalKey.split(".").length;
+            return originalDepthA - originalDepthB;
         });
 
         // Update rename keys to reflect parent renames that have already been processed
@@ -1601,9 +1609,28 @@ export class ConfigEditor extends WebView {
         }
 
         // Process renames in order - no special sorting needed since client handles consolidation
-        const sortedRenames = renames;
+        const sortedRenames = [...renames].sort((a, b) => {
+            // Primary sort: by newKey depth (shorter paths first)
+            const depthA = a.newKey.split(".").length;
+            const depthB = b.newKey.split(".").length;
 
-        for (const rename of sortedRenames) {
+            if (depthA !== depthB) {
+                return depthA - depthB;
+            }
+
+            // Secondary sort: by originalKey depth when newKey depths are equal
+            const originalDepthA = a.originalKey.split(".").length;
+            const originalDepthB = b.originalKey.split(".").length;
+            return originalDepthA - originalDepthB;
+        });
+
+        // Update rename keys to reflect parent renames that have already been processed
+        const updatedRenames = this.updateRenameKeysForParentChanges(sortedRenames);
+
+        // Filter out no-op renames (where originalKey === newKey)
+        const filteredRenames = updatedRenames.filter((rename) => rename.originalKey !== rename.newKey);
+
+        for (const rename of filteredRenames) {
             try {
                 // Skip if the original and new keys are the same (no-op rename)
                 if (rename.originalKey === rename.newKey) {
