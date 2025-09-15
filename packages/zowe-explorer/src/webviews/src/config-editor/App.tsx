@@ -258,25 +258,37 @@ export function App() {
       // Update profile references in the change using iterative rename application
       if (updatedChange.profile) {
         let effectiveProfileName = updatedChange.profile;
+        const appliedRenames = new Set(); // Track which renames we've already applied
 
         // Apply renames iteratively to handle chained renames
         let changed = true;
         let iteration = 0;
         while (changed && iteration < 10) {
-          // Safety limit to prevent infinite loops
           changed = false;
           iteration++;
 
           for (const rename of renames) {
             if (rename.configPath === change.configPath) {
+              const renameKey = `${rename.originalKey}->${rename.newKey}`;
+
+              // Skip if we've already applied this exact rename to avoid loops
+              if (appliedRenames.has(renameKey)) {
+                continue;
+              }
+
               if (effectiveProfileName === rename.originalKey) {
                 effectiveProfileName = rename.newKey;
+                appliedRenames.add(renameKey);
                 changed = true;
                 break;
               }
+
+              // Use word boundary matching to prevent partial matches
+              // Only match if originalKey is followed by a dot (not part of a longer name)
               if (effectiveProfileName.startsWith(rename.originalKey + ".")) {
                 const newEffectiveName = effectiveProfileName.replace(rename.originalKey + ".", rename.newKey + ".");
                 effectiveProfileName = newEffectiveName;
+                appliedRenames.add(renameKey);
                 changed = true;
                 break;
               }
@@ -289,16 +301,24 @@ export function App() {
 
       // Update the key field to use new profile name - handle complex nested paths
       if (updatedChange.key) {
-        // Apply renames iteratively to the key as well
         let updatedKey = updatedChange.key;
         let keyChanged = true;
         let keyIteration = 0;
+        const appliedKeyRenames = new Set(); // Track applied renames for keys
+
         while (keyChanged && keyIteration < 10) {
           keyChanged = false;
           keyIteration++;
 
           for (const rename of renames) {
             if (rename.configPath === change.configPath) {
+              const renameKey = `${rename.originalKey}->${rename.newKey}`;
+
+              // Skip if we've already applied this exact rename
+              if (appliedKeyRenames.has(renameKey)) {
+                continue;
+              }
+
               const originalKeyParts = rename.originalKey.split(".");
               const newKeyParts = rename.newKey.split(".");
 
@@ -310,7 +330,9 @@ export function App() {
                 const newPattern = "profiles." + newKeyParts.join(".profiles.");
 
                 if (updatedKey.includes(originalPattern)) {
-                  updatedKey = updatedKey.replace(originalPattern, newPattern);
+                  // Use replaceAll to handle all occurrences, but this should be exact pattern matches
+                  updatedKey = updatedKey.replaceAll(originalPattern, newPattern);
+                  appliedKeyRenames.add(renameKey);
                   keyChanged = true;
                   break;
                 }
@@ -340,6 +362,7 @@ export function App() {
 
                 if (updated) {
                   updatedKey = keyParts.join(".");
+                  appliedKeyRenames.add(renameKey);
                   keyChanged = true;
                   break;
                 }
@@ -353,16 +376,24 @@ export function App() {
 
       // Update the path array to use new profile name
       if (updatedChange.path && Array.isArray(updatedChange.path)) {
-        // Apply renames iteratively to the path as well
         let updatedPath = [...updatedChange.path];
         let pathChanged = true;
         let pathIteration = 0;
+        const appliedPathRenames = new Set(); // Track applied renames for paths
+
         while (pathChanged && pathIteration < 10) {
           pathChanged = false;
           pathIteration++;
 
           for (const rename of renames) {
             if (rename.configPath === change.configPath) {
+              const renameKey = `${rename.originalKey}->${rename.newKey}`;
+
+              // Skip if we've already applied this exact rename
+              if (appliedPathRenames.has(renameKey)) {
+                continue;
+              }
+
               const originalKeyParts = rename.originalKey.split(".");
               const newKeyParts = rename.newKey.split(".");
 
@@ -381,6 +412,7 @@ export function App() {
                   if (matches) {
                     // Replace the matched segment with the new key parts
                     updatedPath.splice(i, originalKeyParts.length, ...newKeyParts);
+                    appliedPathRenames.add(renameKey);
                     pathChanged = true;
                     break;
                   }
@@ -388,6 +420,7 @@ export function App() {
               } else {
                 // Handle simple path updates
                 const newPath = updatedPath.map((pathPart: string) => {
+                  // Only replace exact matches, not partial matches
                   if (pathPart === rename.originalKey) {
                     return rename.newKey;
                   }
@@ -396,6 +429,7 @@ export function App() {
 
                 if (JSON.stringify(newPath) !== JSON.stringify(updatedPath)) {
                   updatedPath = newPath;
+                  appliedPathRenames.add(renameKey);
                   pathChanged = true;
                 }
               }
