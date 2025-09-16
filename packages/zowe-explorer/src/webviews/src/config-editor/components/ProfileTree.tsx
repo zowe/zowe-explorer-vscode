@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from "react";
-import { getOriginalProfileKeyWithNested } from "../utils/profileUtils";
+import React, { useState } from "react";
 
-const MAX_RENAMES_PER_PROFILE = 3;
+const MAX_RENAMES_PER_PROFILE = 5;
 
 interface ProfileTreeProps {
   profileKeys: string[];
@@ -72,44 +71,57 @@ export function ProfileTree({
     return currentRenameCount >= MAX_RENAMES_PER_PROFILE;
   };
 
-  // Memoized helper function to check if a profile was renamed via the modal (not drag-drop)
-  const hasModalRename = useMemo(() => {
-    return (profileKey: string): boolean => {
-      if (!configurations || selectedTab === null || selectedTab === undefined || !renameCounts || !renames) {
-        return false;
+  // Helper function to find the original key from a current profile key
+  const findOriginalKey = (currentKey: string): string => {
+    if (!configurations || selectedTab === null || selectedTab === undefined || !renames) {
+      return currentKey;
+    }
+
+    const configPath = configurations[selectedTab]?.configPath;
+    if (!configPath || !renames[configPath]) {
+      return currentKey;
+    }
+
+    const configRenames = renames[configPath];
+
+    // Get all original profile keys from the configuration
+    const config = configurations[selectedTab];
+    if (!config) {
+      return currentKey;
+    }
+    const getAllOriginalKeys = (profiles: any, parentKey = ""): string[] => {
+      const keys: string[] = [];
+      for (const key of Object.keys(profiles)) {
+        const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+        keys.push(qualifiedKey);
+        if (profiles[key].profiles) {
+          keys.push(...getAllOriginalKeys(profiles[key].profiles, qualifiedKey));
+        }
       }
-
-      const configPath = configurations[selectedTab]?.configPath;
-      if (!configPath || !renameCounts[configPath]) {
-        return false;
-      }
-
-      // Use the optimized utility function to find the original key
-      const originalProfileKey = findOriginalKey(profileKey);
-      const currentRenameCount = renameCounts[configPath][originalProfileKey] || 0;
-
-      // If there's a rename count, it means this profile (or its original) was renamed via the modal
-      // Drag-drop operations don't increment the rename count
-      return currentRenameCount > 0;
+      return keys;
     };
-  }, [configurations, selectedTab, renameCounts, renames]);
 
-  // Memoized helper function to find the original key from a current profile key
-  const findOriginalKey = useMemo(() => {
-    return (currentKey: string): string => {
-      if (!configurations || selectedTab === null || selectedTab === undefined || !renames) {
-        return currentKey;
+    const originalKeys = getAllOriginalKeys(config.properties?.profiles || {});
+
+    // Find which original key would produce the current key
+    for (const origKey of originalKeys) {
+      // Apply renames to see if this original key produces the current key
+      let renamedKey = origKey;
+
+      // Follow the chain of renames to find the final renamed key
+      const visited = new Set<string>();
+      while (configRenames[renamedKey] && !visited.has(renamedKey)) {
+        visited.add(renamedKey);
+        renamedKey = configRenames[renamedKey];
       }
 
-      const configPath = configurations[selectedTab]?.configPath;
-      if (!configPath || !renames[configPath]) {
-        return currentKey;
+      if (renamedKey === currentKey) {
+        return origKey;
       }
+    }
 
-      // Use the optimized utility function instead of recreating the entire profile tree
-      return getOriginalProfileKeyWithNested(currentKey, configPath, renames);
-    };
-  }, [configurations, selectedTab, renames]);
+    return currentKey;
+  };
 
   const getEffectiveExpandedNodes = (): Set<string> => {
     if (!isFilteringActive || !hasNestedProfiles) {
@@ -186,42 +198,6 @@ export function ProfileTree({
     setExpandedNodes(newExpanded);
   };
 
-  // Helper function to detect complex rename chains that could cause performance issues
-  const hasComplexRenameChain = (profileKey: string): boolean => {
-    if (!configurations || selectedTab === null || selectedTab === undefined || !renames) {
-      return false;
-    }
-
-    const configPath = configurations[selectedTab]?.configPath;
-    if (!configPath || !renames[configPath]) {
-      return false;
-    }
-
-    const configRenames = renames[configPath];
-
-    // Check if this profile is part of a complex rename chain
-    // A complex chain is one where a profile has been renamed multiple times
-    const originalKey = findOriginalKey(profileKey);
-
-    // Count how many renames are in the chain
-    let chainLength = 0;
-    let currentKey = originalKey;
-    const visited = new Set<string>();
-
-    while (configRenames[currentKey] && !visited.has(currentKey)) {
-      visited.add(currentKey);
-      chainLength++;
-      currentKey = configRenames[currentKey];
-
-      // If we have more than 3 renames in the chain, consider it complex
-      if (chainLength > 3) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
   // Drag and drop handlers
   const handleDragStart = (e: any, profileKey: string) => {
     e.stopPropagation();
@@ -229,16 +205,6 @@ export function ProfileTree({
     // Prevent dragging if rename limit is reached
     if (hasReachedRenameLimit(profileKey)) {
       e.preventDefault();
-      return;
-    }
-
-    // Prevent dragging if this would create a complex rename chain
-    if (hasComplexRenameChain(profileKey)) {
-      e.preventDefault();
-      // Log error and prevent drag to avoid performance issues
-      console.error(
-        "Cannot drag this profile: Complex rename chains are not supported to prevent performance issues. Please save your changes and refresh to reset the profile structure."
-      );
       return;
     }
 
@@ -294,41 +260,6 @@ export function ProfileTree({
       return;
     }
 
-    // Check if this drop would create a complex rename chain
-    try {
-      const originalKey = findOriginalKey(draggedProfile);
-      const configPath = configurations?.[selectedTab!]?.configPath;
-
-      if (configPath && renames?.[configPath]) {
-        const configRenames = renames[configPath];
-        let chainLength = 0;
-        let currentKey = originalKey;
-        const visited = new Set<string>();
-
-        while (configRenames[currentKey] && !visited.has(currentKey)) {
-          visited.add(currentKey);
-          chainLength++;
-          currentKey = configRenames[currentKey];
-
-          // If we have more than 3 renames in the chain, prevent the drop
-          if (chainLength > 3) {
-            setDraggedProfile(null);
-            setDragOverProfile(null);
-            console.error(
-              "Cannot complete this drag operation: Complex rename chains are not supported to prevent performance issues. Please save your changes and refresh to reset the profile structure."
-            );
-            return;
-          }
-        }
-      }
-    } catch (error) {
-      // If there's any error during the check, clear the drag state and show error
-      setDraggedProfile(null);
-      setDragOverProfile(null);
-      console.error("Drag operation failed due to complex profile structure. Please save your changes and refresh to reset the profile structure.");
-      return;
-    }
-
     // Extract only the profile name (last part) from the dragged profile
     const draggedProfileName = draggedProfile.split(".").pop() || draggedProfile;
 
@@ -369,43 +300,16 @@ export function ProfileTree({
 
     // Check if the new profile key already exists and is not the dragged profile itself
     if (allCurrentProfileKeys.includes(newProfileKey) && newProfileKey !== draggedProfile) {
-      // Find the original key for the dragged profile to get all names in its rename chain
-      const originalKey = findOriginalKey(draggedProfile);
+      // Find a unique name by appending a number
+      let counter = 1;
+      let uniqueNewProfileKey = `${newProfileKey}_${counter}`;
 
-      // Get all names that are part of the current rename chain for this profile
-      const namesInRenameChain = new Set<string>();
-      if (renames && configurations && selectedTab !== null && selectedTab !== undefined) {
-        const configPath = configurations[selectedTab]?.configPath;
-        if (configPath && renames[configPath]) {
-          const configRenames = renames[configPath];
-
-          // Add the original key
-          namesInRenameChain.add(originalKey);
-
-          // Follow the rename chain to collect all intermediate names
-          let currentKey = originalKey;
-          const visited = new Set<string>();
-          while (configRenames[currentKey] && !visited.has(currentKey)) {
-            visited.add(currentKey);
-            namesInRenameChain.add(configRenames[currentKey]);
-            currentKey = configRenames[currentKey];
-          }
-        }
+      while (allCurrentProfileKeys.includes(uniqueNewProfileKey)) {
+        counter++;
+        uniqueNewProfileKey = `${newProfileKey}_${counter}`;
       }
 
-      // Only create a unique name if the conflict is not with a name in our rename chain
-      if (!namesInRenameChain.has(newProfileKey)) {
-        // Find a unique name by appending a number
-        let counter = 1;
-        let uniqueNewProfileKey = `${newProfileKey}_${counter}`;
-
-        while (allCurrentProfileKeys.includes(uniqueNewProfileKey)) {
-          counter++;
-          uniqueNewProfileKey = `${newProfileKey}_${counter}`;
-        }
-
-        newProfileKey = uniqueNewProfileKey;
-      }
+      newProfileKey = uniqueNewProfileKey;
     }
 
     // Only call rename if the key actually changes
@@ -515,7 +419,7 @@ export function ProfileTree({
             transition: "all 0.2s ease",
             userSelect: "none",
           }}
-          draggable={!hasReachedRenameLimit(node.key) && !hasModalRename(node.key)}
+          draggable={!hasReachedRenameLimit(node.key)}
           onDragStart={(e) => handleDragStart(e, node.key)}
           onDragOver={(e) => handleDragOver(e, node.key)}
           onDragLeave={handleDragLeave}
@@ -664,43 +568,16 @@ export function ProfileTree({
           // Check if the new profile key already exists and is not the dragged profile itself
           let newProfileKey = draggedProfileName;
           if (allCurrentProfileKeys.includes(newProfileKey) && newProfileKey !== draggedProfile) {
-            // Find the original key for the dragged profile to get all names in its rename chain
-            const originalKey = findOriginalKey(draggedProfile);
+            // Find a unique name by appending a number
+            let counter = 1;
+            let uniqueNewProfileKey = `${newProfileKey}_${counter}`;
 
-            // Get all names that are part of the current rename chain for this profile
-            const namesInRenameChain = new Set<string>();
-            if (renames && configurations && selectedTab !== null && selectedTab !== undefined) {
-              const configPath = configurations[selectedTab]?.configPath;
-              if (configPath && renames[configPath]) {
-                const configRenames = renames[configPath];
-
-                // Add the original key
-                namesInRenameChain.add(originalKey);
-
-                // Follow the rename chain to collect all intermediate names
-                let currentKey = originalKey;
-                const visited = new Set<string>();
-                while (configRenames[currentKey] && !visited.has(currentKey)) {
-                  visited.add(currentKey);
-                  namesInRenameChain.add(configRenames[currentKey]);
-                  currentKey = configRenames[currentKey];
-                }
-              }
+            while (allCurrentProfileKeys.includes(uniqueNewProfileKey)) {
+              counter++;
+              uniqueNewProfileKey = `${newProfileKey}_${counter}`;
             }
 
-            // Only create a unique name if the conflict is not with a name in our rename chain
-            if (!namesInRenameChain.has(newProfileKey)) {
-              // Find a unique name by appending a number
-              let counter = 1;
-              let uniqueNewProfileKey = `${newProfileKey}_${counter}`;
-
-              while (allCurrentProfileKeys.includes(uniqueNewProfileKey)) {
-                counter++;
-                uniqueNewProfileKey = `${newProfileKey}_${counter}`;
-              }
-
-              newProfileKey = uniqueNewProfileKey;
-            }
+            newProfileKey = uniqueNewProfileKey;
           }
 
           // Call the rename handler to move to root
