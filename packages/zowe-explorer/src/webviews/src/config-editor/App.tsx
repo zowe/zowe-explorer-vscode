@@ -687,6 +687,7 @@ export function App() {
     setDefaultsDeletions({});
     setAutostoreChanges({});
     setRenames({});
+    setRenameCounts({});
 
     // Refresh configurations after save
     vscodeApi.postMessage({ command: "GET_PROFILES" });
@@ -2404,7 +2405,6 @@ export function App() {
         };
       });
     }
-
     // Close the modal
     setRenameProfileModalOpen(false);
 
@@ -4763,18 +4763,6 @@ export function App() {
           const osLoc = mergedPropData?.osLoc;
           const secure = mergedPropData?.secure;
           const isSecureProperty = isFromMergedProps && jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure) : false;
-
-          // Debug merged property rendering
-          if (isFromMergedProps) {
-            console.log("=== MERGED PROPERTY RENDERING DEBUG ===");
-            console.log("displayKey:", displayKey);
-            console.log("mergedPropData:", mergedPropData);
-            console.log("jsonLoc:", jsonLoc);
-            console.log("osLoc:", osLoc);
-            console.log("isSecureProperty:", isSecureProperty);
-            console.log("=== END MERGED PROPERTY RENDERING DEBUG ===");
-          }
-
           // If this is a merged property that was deleted, treat it as deleted (not merged)
           const isDeletedMergedProperty = isFromMergedProps && isInDeletions;
 
@@ -4899,11 +4887,9 @@ export function App() {
                         value={(() => {
                           if (isFromMergedProps && !isDeletedMergedProperty) {
                             const mergedValue = stringifyValueByType(mergedPropData?.value);
-                            console.log("Using merged value for number input:", mergedValue);
                             return mergedValue;
                           } else {
                             const pendingValueStr = stringifyValueByType(pendingValue);
-                            console.log("Using pending value for number input:", pendingValueStr);
                             return pendingValueStr;
                           }
                         })()}
@@ -4930,7 +4916,6 @@ export function App() {
                         value={(() => {
                           if (isFromMergedProps && !isDeletedMergedProperty) {
                             const mergedValue = String(mergedPropData?.value ?? "");
-                            console.log("Using merged value for input:", mergedValue);
                             return mergedValue;
                           } else {
                             const pendingValueStr = stringifyValueByType(pendingValue);

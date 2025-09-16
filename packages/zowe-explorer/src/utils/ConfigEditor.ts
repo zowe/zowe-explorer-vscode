@@ -807,20 +807,27 @@ export class ConfigEditor extends WebView {
 
         for (const rename of renames) {
             const targetKey = `${rename.newKey}:${rename.configPath}`;
+            const renameTail = rename.originalKey.split(".").pop()!;
 
             if (seenTargets.has(targetKey)) {
-                // This target key already exists, keep the one with the shorter original key path
-                // (prefer more direct renames over chained ones)
                 const existing = seenTargets.get(targetKey)!;
+                const existingTail = existing.originalKey.split(".").pop()!;
+
+                if (renameTail === existingTail) {
+                    // Same newKey + configPath + same ending segment -> allow both
+                    finalRenames.push(rename);
+                    continue;
+                }
+
+                // Otherwise, keep the one with the shorter original key path
                 if (rename.originalKey.split(".").length < existing.originalKey.split(".").length) {
-                    // Replace with the shorter path
                     const index = finalRenames.findIndex((r) => r === existing);
                     if (index !== -1) {
                         finalRenames[index] = rename;
                         seenTargets.set(targetKey, rename);
                     }
                 }
-                // Otherwise, skip this duplicate
+                // else skip
             } else {
                 finalRenames.push(rename);
                 seenTargets.set(targetKey, rename);

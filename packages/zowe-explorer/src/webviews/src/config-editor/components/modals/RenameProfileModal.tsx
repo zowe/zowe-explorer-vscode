@@ -279,7 +279,7 @@ export function RenameProfileModal({
                 <div>
                   <div style={{ fontWeight: "500" }}>Rename full profile path</div>
                   <div style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}>
-                    Change the entire profile path (e.g., "tso" → "newparent.tso")
+                    Change the entire profile path (e.g., "tso" -> "newparent.tso")
                   </div>
                 </div>
               </label>
