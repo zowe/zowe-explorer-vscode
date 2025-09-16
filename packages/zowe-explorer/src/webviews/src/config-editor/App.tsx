@@ -1610,6 +1610,56 @@ export function App() {
         }
       }
 
+      // Fourth pass: handle parent renames that affect child renames
+      // This handles cases where a parent rename affects existing child renames
+      for (const [originalKey, newKey] of Object.entries(consolidated)) {
+        // Check if this is a parent rename (single level)
+        if (originalKey.split(".").length === 1) {
+          // Find all child renames that start with this parent
+          for (const [childOriginalKey] of Object.entries(consolidated)) {
+            if (childOriginalKey !== originalKey && childOriginalKey.startsWith(originalKey + ".")) {
+              // This is a child of the renamed parent
+              const childSuffix = childOriginalKey.substring(originalKey.length + 1);
+              const newChildKey = newKey + "." + childSuffix;
+
+              // Update the child rename to use the new parent
+              consolidated[childOriginalKey] = newChildKey;
+              changed = true;
+            }
+          }
+        }
+      }
+
+      // Fifth pass: remove intermediate renames that are no longer needed
+      // This handles cases where a parent rename makes an intermediate child rename obsolete
+      for (const [originalKey, newKey] of Object.entries(consolidated)) {
+        // Check if this rename is intermediate (i.e., its target is also being renamed)
+        const isIntermediate = Object.keys(consolidated).some((k) => k !== originalKey && consolidated[k] === newKey);
+
+        if (isIntermediate) {
+          // Find the final target for this intermediate rename
+          let finalTarget = newKey;
+          let currentTarget = newKey;
+
+          // Follow the chain to find the final target
+          while (Object.keys(consolidated).some((k) => k !== originalKey && consolidated[k] === currentTarget)) {
+            const nextTarget = Object.entries(consolidated).find(([k, v]) => v === currentTarget && k !== originalKey);
+            if (nextTarget) {
+              finalTarget = nextTarget[1];
+              currentTarget = finalTarget;
+            } else {
+              break;
+            }
+          }
+
+          // Update the original rename to point directly to the final target
+          if (finalTarget !== newKey) {
+            consolidated[originalKey] = finalTarget;
+            changed = true;
+          }
+        }
+      }
+
       // Additional third pass: handle cases where a child's parent part is being renamed
       // This handles cases like zosmf -> zftp.zosmf where zftp is being renamed to tso.zftp
       for (const [originalKey, newKey] of Object.entries(consolidated)) {
@@ -1675,7 +1725,39 @@ export function App() {
       }
     }
 
-    return consolidated;
+    // Final cleanup: remove intermediate renames that are no longer needed
+    const finalConsolidated = { ...consolidated };
+    const keysToRemove: string[] = [];
+
+    // First, identify all intermediate renames
+    for (const [originalKey, newKey] of Object.entries(finalConsolidated)) {
+      // Check if this rename is intermediate (its target is also a key in the renames)
+      const isIntermediate = Object.keys(finalConsolidated).some((k) => k !== originalKey && finalConsolidated[k] === newKey);
+
+      if (isIntermediate) {
+        // This is an intermediate rename, mark it for removal
+        keysToRemove.push(originalKey);
+      }
+    }
+
+    // Also check for renames that are targets of other renames but not sources
+    // These should be removed as they're intermediate steps
+    for (const [originalKey, newKey] of Object.entries(finalConsolidated)) {
+      // Check if this newKey is a target of another rename
+      const isTargetOfAnother = Object.entries(finalConsolidated).some(([k, v]) => k !== originalKey && v === newKey);
+
+      if (isTargetOfAnother && !keysToRemove.includes(originalKey)) {
+        // This rename's target is being used by another rename, so this is intermediate
+        keysToRemove.push(originalKey);
+      }
+    }
+
+    // Remove the intermediate renames
+    for (const key of keysToRemove) {
+      delete finalConsolidated[key];
+    }
+
+    return finalConsolidated;
   };
 
   // Helper function to get expanded nodes for a config

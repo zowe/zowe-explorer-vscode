@@ -720,6 +720,7 @@ export class ConfigEditor extends WebView {
                     const newParentPath = processedRenames.get(parentPath)!;
                     const remainingParts = originalParts.slice(i + 1);
                     updatedOriginalKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
+                    break; // Only apply the first matching parent rename
                 }
             }
 
@@ -731,6 +732,7 @@ export class ConfigEditor extends WebView {
                     const newParentPath = processedRenames.get(parentPath)!;
                     const remainingParts = newParts.slice(i + 1);
                     updatedNewKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
+                    break; // Only apply the first matching parent rename
                 }
             }
 
@@ -793,6 +795,41 @@ export class ConfigEditor extends WebView {
         return updatedRenames;
     }
 
+    /**
+     * Removes duplicate renames that target the same final key
+     * This prevents conflicts when multiple renames result in the same target profile
+     */
+    private removeDuplicateRenames(
+        renames: Array<{ originalKey: string; newKey: string; configPath: string }>
+    ): Array<{ originalKey: string; newKey: string; configPath: string }> {
+        const finalRenames: Array<{ originalKey: string; newKey: string; configPath: string }> = [];
+        const seenTargets = new Map<string, { originalKey: string; newKey: string; configPath: string }>();
+
+        for (const rename of renames) {
+            const targetKey = `${rename.newKey}:${rename.configPath}`;
+
+            if (seenTargets.has(targetKey)) {
+                // This target key already exists, keep the one with the shorter original key path
+                // (prefer more direct renames over chained ones)
+                const existing = seenTargets.get(targetKey)!;
+                if (rename.originalKey.split(".").length < existing.originalKey.split(".").length) {
+                    // Replace with the shorter path
+                    const index = finalRenames.findIndex((r) => r === existing);
+                    if (index !== -1) {
+                        finalRenames[index] = rename;
+                        seenTargets.set(targetKey, rename);
+                    }
+                }
+                // Otherwise, skip this duplicate
+            } else {
+                finalRenames.push(rename);
+                seenTargets.set(targetKey, rename);
+            }
+        }
+
+        return finalRenames;
+    }
+
     private async handleProfileRenames(renames: Array<{ originalKey: string; newKey: string; configPath: string }>): Promise<void> {
         if (!renames || renames.length === 0) {
             return;
@@ -820,8 +857,11 @@ export class ConfigEditor extends WebView {
         // Update rename keys to reflect parent renames that have already been processed
         const updatedRenames = this.updateRenameKeysForParentChanges(sortedRenames);
 
+        // Remove duplicate renames that target the same final key
+        const finalRenames = this.removeDuplicateRenames(updatedRenames);
+
         // Filter out no-op renames (where originalKey === newKey)
-        const filteredRenames = updatedRenames.filter((rename) => rename.originalKey !== rename.newKey);
+        const filteredRenames = finalRenames.filter((rename) => rename.originalKey !== rename.newKey);
 
         // Get the team config once for all renames
         const teamConfig = profInfo.getTeamConfig();
@@ -1627,8 +1667,11 @@ export class ConfigEditor extends WebView {
         // Update rename keys to reflect parent renames that have already been processed
         const updatedRenames = this.updateRenameKeysForParentChanges(sortedRenames);
 
+        // Remove duplicate renames that target the same final key
+        const finalRenames = this.removeDuplicateRenames(updatedRenames);
+
         // Filter out no-op renames (where originalKey === newKey)
-        const filteredRenames = updatedRenames.filter((rename) => rename.originalKey !== rename.newKey);
+        const filteredRenames = finalRenames.filter((rename) => rename.originalKey !== rename.newKey);
 
         for (const rename of filteredRenames) {
             try {
