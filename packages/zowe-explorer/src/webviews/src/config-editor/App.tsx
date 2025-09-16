@@ -791,8 +791,15 @@ export function App() {
         if (Array.isArray(event.data.mergedArgs)) {
           event.data.mergedArgs.forEach((item: any) => {
             if (item.argName && item.argValue !== undefined) {
+              // Get the correct value from the source configuration
+              let correctValue = item.argValue;
+
+              // The argValue is already correct from the backend, so we can use it directly
+              // The backend has already resolved the correct value from the source configuration
+              correctValue = item.argValue;
+
               mergedPropsData[item.argName] = {
-                value: item.argValue,
+                value: correctValue,
                 jsonLoc: item.argLoc?.jsonLoc,
                 osLoc: item.argLoc?.osLoc,
                 secure: item.secure,
@@ -4037,8 +4044,21 @@ export function App() {
           }
         };
 
+        // Filter out deleted properties from combinedConfig before adding to entriesForSorting
+        const filteredCombinedConfig = { ...combinedConfig };
+        const configPath = configurations[selectedTab!]?.configPath;
+        const deletionsList = deletions[configPath] ?? [];
+
+        // Remove deleted properties from the combined config
+        Object.keys(filteredCombinedConfig).forEach((key) => {
+          const propertyFullKey = [...path, key].join(".");
+          if (deletionsList.includes(propertyFullKey)) {
+            delete filteredCombinedConfig[key];
+          }
+        });
+
         // Add secure properties to the entries for sorting, but mark them as secure
-        const entriesForSorting = Object.entries(combinedConfig);
+        const entriesForSorting = Object.entries(filteredCombinedConfig);
 
         // Add secure properties from the parent object if they're not already in the properties
         const parentConfigPath = path.slice(0, -1);
@@ -4071,7 +4091,6 @@ export function App() {
 
         // Also add pending secure properties that might not be in the parent's secure array yet
         const currentProfileKey = extractProfileKeyFromPath(path);
-        const configPath = configurations[selectedTab!]?.configPath;
         if (configPath && currentProfileKey) {
           Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
             if (entry.profile === currentProfileKey && entry.secure) {
@@ -4099,12 +4118,18 @@ export function App() {
             // 1. Not already in the entries
             // 2. Not in the original properties
             // 3. Property is allowed by the schema (only if profile has a type)
+            // 4. Property is not in deletions
             const isAllowedBySchema = !profileType || allowedProperties.includes(propertyName);
+
+            // Check if this property is in deletions
+            const propertyFullKey = [...path, propertyName].join(".");
+            const isInDeletions = (deletions[configPath] ?? []).includes(propertyFullKey);
 
             if (
               !entriesForSorting.some(([existingKey]) => existingKey === propertyName) &&
               !originalProperties?.hasOwnProperty(propertyName) &&
-              isAllowedBySchema
+              isAllowedBySchema &&
+              !isInDeletions
             ) {
               // Add merged property with a special flag to identify it as merged
               entriesForSorting.push([
@@ -4130,9 +4155,50 @@ export function App() {
         const fullKey = currentPath.join(".");
         const displayKey = key.split(".").pop();
 
+        // Check if this property is in deletions, considering profile renames
+        const isInDeletions = (() => {
+          const deletionsList = deletions[configPath] ?? [];
+
+          // Direct check with current fullKey
+          if (deletionsList.includes(fullKey)) {
+            return true;
+          }
+
+          // Check if this property was deleted using the original profile name
+          const currentProfileKey = extractProfileKeyFromPath(path);
+          const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
+
+          if (originalProfileKey !== currentProfileKey) {
+            // Construct the fullKey using the original profile name
+            const originalPath = [...path];
+            // Replace the profile key in the path with the original profile key
+            const profileKeyIndex = originalPath.findIndex((_, index) => {
+              // Find where the profile key starts in the path
+              const pathUpToIndex = originalPath.slice(0, index + 1).join(".");
+              return pathUpToIndex.includes(currentProfileKey);
+            });
+
+            if (profileKeyIndex !== -1) {
+              // Reconstruct the path with the original profile key
+              const pathBeforeProfile = originalPath.slice(0, profileKeyIndex);
+              const pathAfterProfile = originalPath.slice(profileKeyIndex + 1);
+              const originalProfileParts = originalProfileKey.split(".");
+
+              // Insert the original profile parts into the path
+              const reconstructedPath = [...pathBeforeProfile, ...originalProfileParts, ...pathAfterProfile];
+              const originalFullKey = reconstructedPath.join(".");
+
+              if (deletionsList.includes(originalFullKey)) {
+                return true;
+              }
+            }
+          }
+
+          return false;
+        })();
+
         // Check if this is a merged property that should be shown even if the original was deleted
         const isMergedProperty = showMergedProperties && mergedProps && displayKey && mergedProps[displayKey];
-        const isInDeletions = (deletions[configPath] ?? []).includes(fullKey);
 
         if (isInDeletions && !isMergedProperty) {
           return null;
@@ -4360,6 +4426,20 @@ export function App() {
           const secure = mergedPropData?.secure;
           const isSecureProperty = isFromMergedProps && jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure) : false;
 
+          // Debug merged property rendering
+          if (isFromMergedProps) {
+            console.log("=== MERGED PROPERTY RENDERING DEBUG ===");
+            console.log("displayKey:", displayKey);
+            console.log("mergedPropData:", mergedPropData);
+            console.log("jsonLoc:", jsonLoc);
+            console.log("osLoc:", osLoc);
+            console.log("isSecureProperty:", isSecureProperty);
+            console.log("=== END MERGED PROPERTY RENDERING DEBUG ===");
+          }
+
+          // If this is a merged property that was deleted, treat it as deleted (not merged)
+          const isDeletedMergedProperty = isFromMergedProps && isInDeletions;
+
           // Check if this is a local secure property (in the current profile's secure array)
           const isLocalSecureProperty = displayKey && path && configPath ? isPropertySecure(fullKey, displayKey, path, mergedProps) : false;
 
@@ -4375,7 +4455,7 @@ export function App() {
               <span
                 className="config-label"
                 style={
-                  isFromMergedProps
+                  isFromMergedProps && !isDeletedMergedProperty
                     ? {
                         color: "var(--vscode-descriptionForeground)",
                         cursor: "pointer",
@@ -4435,11 +4515,11 @@ export function App() {
                         className="config-input"
                         type="password"
                         placeholder="••••••••"
-                        value={isFromMergedProps ? "••••••••" : stringifyValueByType(pendingValue)}
+                        value={isFromMergedProps && !isDeletedMergedProperty ? "••••••••" : stringifyValueByType(pendingValue)}
                         onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
-                        disabled={isFromMergedProps}
+                        disabled={isFromMergedProps && !isDeletedMergedProperty}
                         style={
-                          isFromMergedProps
+                          isFromMergedProps && !isDeletedMergedProperty
                             ? {
                                 backgroundColor: "var(--vscode-input-disabledBackground)",
                                 color: "var(--vscode-disabledForeground)",
@@ -4457,9 +4537,9 @@ export function App() {
                         className="config-input"
                         value={stringifyValueByType(pendingValue)}
                         onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
-                        disabled={isFromMergedProps}
+                        disabled={isFromMergedProps && !isDeletedMergedProperty}
                         style={
-                          isFromMergedProps
+                          isFromMergedProps && !isDeletedMergedProperty
                             ? {
                                 backgroundColor: "var(--vscode-input-disabledBackground)",
                                 color: "var(--vscode-disabledForeground)",
@@ -4478,11 +4558,21 @@ export function App() {
                       <input
                         className="config-input"
                         type="number"
-                        value={stringifyValueByType(pendingValue)}
+                        value={(() => {
+                          if (isFromMergedProps && !isDeletedMergedProperty) {
+                            const mergedValue = stringifyValueByType(mergedPropData?.value);
+                            console.log("Using merged value for number input:", mergedValue);
+                            return mergedValue;
+                          } else {
+                            const pendingValueStr = stringifyValueByType(pendingValue);
+                            console.log("Using pending value for number input:", pendingValueStr);
+                            return pendingValueStr;
+                          }
+                        })()}
                         onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
-                        disabled={isFromMergedProps}
+                        disabled={isFromMergedProps && !isDeletedMergedProperty}
                         style={
-                          isFromMergedProps
+                          isFromMergedProps && !isDeletedMergedProperty
                             ? {
                                 backgroundColor: "var(--vscode-input-disabledBackground)",
                                 color: "var(--vscode-disabledForeground)",
@@ -4499,11 +4589,21 @@ export function App() {
                         className="config-input"
                         type="text"
                         placeholder=""
-                        value={isFromMergedProps ? String(mergedPropData?.value ?? "") : stringifyValueByType(pendingValue)}
+                        value={(() => {
+                          if (isFromMergedProps && !isDeletedMergedProperty) {
+                            const mergedValue = String(mergedPropData?.value ?? "");
+                            console.log("Using merged value for input:", mergedValue);
+                            return mergedValue;
+                          } else {
+                            const pendingValueStr = stringifyValueByType(pendingValue);
+                            console.log("Using pending value for input:", pendingValueStr);
+                            return pendingValueStr;
+                          }
+                        })()}
                         onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
-                        disabled={isFromMergedProps}
+                        disabled={isFromMergedProps && !isDeletedMergedProperty}
                         style={
-                          isFromMergedProps
+                          isFromMergedProps && !isDeletedMergedProperty
                             ? {
                                 backgroundColor: "var(--vscode-input-disabledBackground)",
                                 color: "var(--vscode-disabledForeground)",
@@ -4521,54 +4621,62 @@ export function App() {
               )}
               {displayKey !== "type" &&
                 displayKey &&
-                (!isFromMergedProps || isSecurePropertyForSorting) &&
                 (() => {
                   const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps);
                   const canBeSecure = canPropertyBeSecure(displayKey, path);
-                  return (
-                    <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                      {canBeSecure &&
-                        !isSecure &&
-                        (secureValuesAllowed ? (
-                          <button
-                            className="action-button"
-                            onClick={() => handleToggleSecure(fullKey, displayKey, path)}
-                            title="Make property secure"
-                          >
-                            <span className="codicon codicon-unlock"></span>
+                  const showSecureButton = canBeSecure && !isSecure && (!isFromMergedProps || isSecurePropertyForSorting);
+                  const showDeleteButton = !isFromMergedProps;
+                  const showUnlinkButton = isFromMergedProps && !isDeletedMergedProperty;
+
+                  // Only show the flex container if there are buttons to display
+                  if (showSecureButton || showDeleteButton || showUnlinkButton) {
+                    return (
+                      <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                        {showSecureButton &&
+                          (secureValuesAllowed ? (
+                            <button
+                              className="action-button"
+                              onClick={() => handleToggleSecure(fullKey, displayKey, path)}
+                              title="Make property secure"
+                            >
+                              <span className="codicon codicon-unlock"></span>
+                            </button>
+                          ) : (
+                            <button
+                              className="action-button"
+                              onClick={() => {
+                                vscodeApi.postMessage({
+                                  command: "OPEN_VSCODE_SETTINGS",
+                                  searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
+                                });
+                              }}
+                              title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
+                            >
+                              <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                            </button>
+                          ))}
+                        {showDeleteButton && (
+                          <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
+                            <span className="codicon codicon-trash"></span>
                           </button>
-                        ) : (
+                        )}
+                        {showUnlinkButton && (
                           <button
                             className="action-button"
-                            onClick={() => {
-                              vscodeApi.postMessage({
-                                command: "OPEN_VSCODE_SETTINGS",
-                                searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
-                              });
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUnlinkMergedProperty(displayKey, fullKey);
                             }}
-                            title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
+                            title="Overwrite merged property"
                           >
-                            <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                            <span className="codicon codicon-add"></span>
                           </button>
-                        ))}
-                      <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
-                        <span className="codicon codicon-trash"></span>
-                      </button>
-                    </div>
-                  );
+                        )}
+                      </div>
+                    );
+                  }
+                  return null;
                 })()}
-              {displayKey !== "type" && isFromMergedProps && (
-                <button
-                  className="action-button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleUnlinkMergedProperty(displayKey, fullKey);
-                  }}
-                  title="Overwrite merged property"
-                >
-                  <span className="codicon codicon-add"></span>
-                </button>
-              )}
             </div>
           );
 
@@ -4576,9 +4684,9 @@ export function App() {
             <div
               key={fullKey}
               className="config-item"
-              onClick={isFromMergedProps && jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
+              onClick={isFromMergedProps && !isDeletedMergedProperty && jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
               title={
-                isFromMergedProps && jsonLoc
+                isFromMergedProps && !isDeletedMergedProperty && jsonLoc
                   ? (() => {
                       // Extract logical profile path from jsonLoc
                       const jsonLocParts = jsonLoc.split(".");
@@ -4621,7 +4729,7 @@ export function App() {
                     })()
                   : undefined
               }
-              style={isFromMergedProps && jsonLoc ? { cursor: "pointer" } : {}}
+              style={isFromMergedProps && !isDeletedMergedProperty && jsonLoc ? { cursor: "pointer" } : {}}
             >
               {readOnlyContainer}
             </div>
