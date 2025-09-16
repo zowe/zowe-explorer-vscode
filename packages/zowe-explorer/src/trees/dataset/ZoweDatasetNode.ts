@@ -133,7 +133,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 this.contextValue === Constants.DS_DS_CONTEXT ||
                 this.contextValue === Constants.DS_FAV_CONTEXT ||
                 this.contextValue === Constants.DS_PDS_CONTEXT ||
-                this.contextValue === Constants.PDS_FAV_CONTEXT
+                this.contextValue === Constants.PDS_FAV_CONTEXT ||
+                this.contextValue === Constants.VSAM_CONTEXT
             ) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
@@ -393,6 +394,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             profile: cachedProfile,
                         });
                     }
+                    dsNode = elementChildren[altLabel];
                 } else if (SharedContext.isSession(this)) {
                     // Creates a ZoweDatasetNode for a PS
                     const cachedEncoding = this.getEncodingInMap(item.dsname);
