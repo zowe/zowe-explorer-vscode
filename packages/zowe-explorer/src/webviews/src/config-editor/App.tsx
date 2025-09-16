@@ -4204,8 +4204,6 @@ export function App() {
             const isAllowedBySchema = !profileType || allowedProperties.includes(propertyName);
 
             // Check if the local property is in deletions (we want to show merged properties even when local is deleted)
-            const localPropertyFullKey = [...path, propertyName].join(".");
-            const isLocalPropertyInDeletions = (deletions[configPath] ?? []).includes(localPropertyFullKey);
 
             if (
               !entriesForSorting.some(([existingKey]) => existingKey === propertyName) &&
