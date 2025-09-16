@@ -233,12 +233,28 @@ export function getOriginalProfileKey(
 ): string {
     const configRenames = renames[configPath];
     if (configRenames) {
-        // Find the original key that was renamed to this renamed key
-        for (const [originalKey, newKey] of Object.entries(configRenames)) {
-            if (newKey === renamedKey) {
-                return originalKey;
+        // Follow the chain of renames backwards to find the true original key
+        const visited = new Set<string>();
+        let currentKey = renamedKey;
+
+        while (true) {
+            // Find if this current key is the target of any rename
+            let foundOriginal = false;
+            for (const [originalKey, newKey] of Object.entries(configRenames)) {
+                if (newKey === currentKey && !visited.has(originalKey)) {
+                    visited.add(originalKey);
+                    currentKey = originalKey;
+                    foundOriginal = true;
+                    break;
+                }
+            }
+
+            if (!foundOriginal) {
+                break;
             }
         }
+
+        return currentKey;
     }
     return renamedKey;
 }

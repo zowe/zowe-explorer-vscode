@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+const MAX_RENAMES_PER_PROFILE = 5;
+
 interface ProfileTreeProps {
   profileKeys: string[];
   selectedProfileKey: string | null;
@@ -12,11 +14,12 @@ interface ProfileTreeProps {
   isFilteringActive?: boolean;
   expandedNodes: Set<string>;
   setExpandedNodes: React.Dispatch<React.SetStateAction<Set<string>>>;
-  onProfileRename?: (originalKey: string, newKey: string) => boolean;
+  onProfileRename?: (originalKey: string, newKey: string, isDragDrop?: boolean) => boolean;
   // Add props to help find original keys
   configurations?: any[];
   selectedTab?: number | null;
   renames?: { [configPath: string]: { [originalKey: string]: string } };
+  renameCounts?: { [configPath: string]: { [profileKey: string]: number } };
 }
 
 interface ProfileNode {
@@ -43,12 +46,30 @@ export function ProfileTree({
   configurations,
   selectedTab,
   renames,
+  renameCounts,
 }: ProfileTreeProps) {
   const hasNestedProfiles = profileKeys.some((key) => key.includes("."));
 
   // Drag and drop state
   const [draggedProfile, setDraggedProfile] = useState<string | null>(null);
   const [dragOverProfile, setDragOverProfile] = useState<string | null>(null);
+
+  // Helper function to check if a profile has reached the rename limit
+  const hasReachedRenameLimit = (profileKey: string): boolean => {
+    if (!configurations || selectedTab === null || selectedTab === undefined || !renameCounts || !renames) {
+      return false;
+    }
+
+    const configPath = configurations[selectedTab]?.configPath;
+    if (!configPath || !renameCounts[configPath]) {
+      return false;
+    }
+
+    // Get the original profile key to check rename limit
+    const originalProfileKey = findOriginalKey(profileKey);
+    const currentRenameCount = renameCounts[configPath][originalProfileKey] || 0;
+    return currentRenameCount >= MAX_RENAMES_PER_PROFILE;
+  };
 
   // Helper function to find the original key from a current profile key
   const findOriginalKey = (currentKey: string): string => {
@@ -86,8 +107,12 @@ export function ProfileTree({
     for (const origKey of originalKeys) {
       // Apply renames to see if this original key produces the current key
       let renamedKey = origKey;
-      if (configRenames[origKey]) {
-        renamedKey = configRenames[origKey];
+
+      // Follow the chain of renames to find the final renamed key
+      const visited = new Set<string>();
+      while (configRenames[renamedKey] && !visited.has(renamedKey)) {
+        visited.add(renamedKey);
+        renamedKey = configRenames[renamedKey];
       }
 
       if (renamedKey === currentKey) {
@@ -176,6 +201,12 @@ export function ProfileTree({
   // Drag and drop handlers
   const handleDragStart = (e: any, profileKey: string) => {
     e.stopPropagation();
+
+    // Prevent dragging if rename limit is reached
+    if (hasReachedRenameLimit(profileKey)) {
+      e.preventDefault();
+      return;
+    }
 
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = "move";
@@ -285,7 +316,7 @@ export function ProfileTree({
     if (draggedProfile !== newProfileKey) {
       // Find the original key for the dragged profile
       const originalKey = findOriginalKey(draggedProfile);
-      const success = onProfileRename(originalKey, newProfileKey);
+      const success = onProfileRename(originalKey, newProfileKey, true); // true indicates this is a drag-drop operation
 
       // If the rename failed (e.g., due to circular rename), don't clear drag state
       // This allows the user to try again or cancel the drag operation
@@ -388,7 +419,7 @@ export function ProfileTree({
             transition: "all 0.2s ease",
             userSelect: "none",
           }}
-          draggable={true}
+          draggable={!hasReachedRenameLimit(node.key)}
           onDragStart={(e) => handleDragStart(e, node.key)}
           onDragOver={(e) => handleDragOver(e, node.key)}
           onDragLeave={handleDragLeave}
@@ -551,7 +582,7 @@ export function ProfileTree({
 
           // Call the rename handler to move to root
           const originalKey = findOriginalKey(draggedProfile);
-          onProfileRename(originalKey, newProfileKey);
+          onProfileRename(originalKey, newProfileKey, true); // true indicates this is a drag-drop operation
 
           // Clear drag state
           setDraggedProfile(null);

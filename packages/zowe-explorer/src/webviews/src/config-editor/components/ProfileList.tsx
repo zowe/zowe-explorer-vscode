@@ -30,11 +30,12 @@ interface ProfileListProps {
   expandedNodes: Set<string>;
   setExpandedNodes: React.Dispatch<React.SetStateAction<Set<string>>>;
   // Drag and drop props
-  onProfileRename?: (originalKey: string, newKey: string) => boolean;
+  onProfileRename?: (originalKey: string, newKey: string, isDragDrop?: boolean) => boolean;
   // Props for finding original keys
   configurations?: any[];
   selectedTab?: number | null;
   renames?: { [configPath: string]: { [originalKey: string]: string } };
+  renameCounts?: { [configPath: string]: { [profileKey: string]: number } };
 }
 
 export function ProfileList({
@@ -57,6 +58,7 @@ export function ProfileList({
   configurations,
   selectedTab,
   renames,
+  renameCounts,
 }: ProfileListProps) {
   const [filteredProfileKeys, setFilteredProfileKeys] = useState<string[]>(sortedProfileKeys);
   const [isFilteringActive, setIsFilteringActive] = useState<boolean>(false);
@@ -191,6 +193,7 @@ export function ProfileList({
             configurations={configurations}
             selectedTab={selectedTab}
             renames={renames}
+            renameCounts={renameCounts}
           />
         ) : (
           filteredProfileKeys.map((profileKey) => (

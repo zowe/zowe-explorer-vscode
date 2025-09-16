@@ -80,6 +80,7 @@ const LOCAL_STORAGE_KEYS = {
 // Profile sort order options - now imported from utils
 
 const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
+const MAX_RENAMES_PER_PROFILE = 1;
 
 // Helper functions now imported from utils
 
@@ -94,6 +95,7 @@ export function App() {
   const [deletions, setDeletions] = useState<{ [configPath: string]: string[] }>({});
   const [defaultsDeletions, setDefaultsDeletions] = useState<{ [configPath: string]: string[] }>({});
   const [renames, setRenames] = useState<{ [configPath: string]: { [originalKey: string]: string } }>({});
+  const [renameCounts, setRenameCounts] = useState<{ [configPath: string]: { [profileKey: string]: number } }>({});
   const [autostoreChanges, setAutostoreChanges] = useState<{ [configPath: string]: boolean }>({});
   const [hiddenItems, setHiddenItems] = useState<{ [configPath: string]: { [key: string]: { path: string } } }>({});
   const [schemaValidations, setSchemaValidations] = useState<{ [configPath: string]: schemaValidation | undefined }>({});
@@ -744,6 +746,8 @@ export function App() {
           setSelectedProfileKey(pendingSaveSelection.profile);
           setPendingSaveSelection(null);
           setIsSaving(false);
+          // Reset rename counts after successful save
+          setRenameCounts({});
           // Increment sort order version to trigger re-render with updated merged properties after save
           setSortOrderVersion((prev) => prev + 1);
         } else {
@@ -1075,6 +1079,7 @@ export function App() {
     setDefaultsDeletions({});
     setAutostoreChanges({});
     setRenames({});
+    setRenameCounts({});
 
     // Request fresh configurations from the backend
     vscodeApi.postMessage({ command: "GET_PROFILES" });
@@ -1806,7 +1811,7 @@ export function App() {
     return effectiveName;
   };
 
-  const handleRenameProfile = (originalKey: string, newKey: string): boolean => {
+  const handleRenameProfile = (originalKey: string, newKey: string, isDragDrop: boolean = false): boolean => {
     if (selectedTab === null) return false;
     const configPath = configurations[selectedTab!]!.configPath;
 
@@ -1815,6 +1820,18 @@ export function App() {
     if (currentEffectiveName !== originalKey) {
       // Use the current effective name as the original key
       originalKey = currentEffectiveName;
+    }
+
+    // Check rename limit - only for actual renames, not drag and drop operations
+    if (!isDragDrop) {
+      const currentRenameCount = renameCounts[configPath]?.[originalKey] || 0;
+      if (currentRenameCount >= MAX_RENAMES_PER_PROFILE) {
+        vscodeApi.postMessage({
+          command: "SHOW_ERROR_MESSAGE",
+          message: `Cannot rename '${originalKey}': Profile has already been renamed once. Please save your changes and refresh to reset the limit.`,
+        });
+        return false;
+      }
     }
 
     // Check for circular renames before proceeding (same validation as rename modal)
@@ -2203,6 +2220,21 @@ export function App() {
         });
 
         return newState;
+      });
+    }
+
+    // Update rename count for this profile - only for actual renames, not drag and drop operations
+    if (!isDragDrop) {
+      setRenameCounts((prev) => {
+        const configCounts = prev[configPath] || {};
+        const currentCount = configCounts[originalKey] || 0;
+        return {
+          ...prev,
+          [configPath]: {
+            ...configCounts,
+            [originalKey]: currentCount + 1,
+          },
+        };
       });
     }
 
@@ -3689,7 +3721,20 @@ export function App() {
       const renamedOnlyProfiles = Object.keys(configRenames).filter((originalKey) => {
         // Only include if the original key is not in the ordered profile keys
         // This means it was renamed from a profile that doesn't exist in the original config
-        return !orderedProfileKeys.includes(originalKey);
+        if (orderedProfileKeys.includes(originalKey)) {
+          return false;
+        }
+
+        // Filter out intermediate renames that are part of a chain
+        // An intermediate rename is one where the originalKey is also a target of another rename
+        // AND the newKey is also an originalKey (meaning it will be renamed again)
+        const newKey = configRenames[originalKey];
+        const isIntermediate = Object.values(configRenames).includes(originalKey) && Object.keys(configRenames).includes(newKey);
+        if (isIntermediate) {
+          return false;
+        }
+
+        return true;
       });
 
       // Apply renames to these renamed-only profiles
@@ -3807,6 +3852,7 @@ export function App() {
           configurations={configurations}
           selectedTab={selectedTab}
           renames={renames}
+          renameCounts={renameCounts}
         />
       );
     },
@@ -3837,6 +3883,7 @@ export function App() {
       getRenamedProfileKeyWithNested,
       profileSortOrder || "natural",
       sortProfilesAtLevel,
+      renameCounts,
     ]
   );
 
@@ -3926,7 +3973,50 @@ export function App() {
               >
                 <span className={`codicon codicon-${showMergedProperties ? "eye-closed" : "eye"}`}></span>
               </button>
-              <button className="profile-action-button" onClick={() => setRenameProfileModalOpen(true)} title="Rename profile">
+              <button
+                className="profile-action-button"
+                onClick={() => setRenameProfileModalOpen(true)}
+                title={(() => {
+                  if (selectedProfileKey) {
+                    const configPath = configurations[selectedTab!]?.configPath;
+                    if (configPath) {
+                      // Get the original profile key to check rename limit
+                      const originalProfileKey = getOriginalProfileKeyWithNested(selectedProfileKey, configPath, renames);
+                      const currentRenameCount = renameCounts[configPath]?.[originalProfileKey] || 0;
+                      if (currentRenameCount >= MAX_RENAMES_PER_PROFILE) {
+                        return `Profile has already been renamed once. Save and refresh to reset.`;
+                      }
+                    }
+                  }
+                  return "Rename profile";
+                })()}
+                disabled={(() => {
+                  if (selectedProfileKey) {
+                    const configPath = configurations[selectedTab!]?.configPath;
+                    if (configPath) {
+                      // Get the original profile key to check rename limit
+                      const originalProfileKey = getOriginalProfileKeyWithNested(selectedProfileKey, configPath, renames);
+                      const currentRenameCount = renameCounts[configPath]?.[originalProfileKey] || 0;
+                      return currentRenameCount >= MAX_RENAMES_PER_PROFILE;
+                    }
+                  }
+                  return false;
+                })()}
+                style={(() => {
+                  if (selectedProfileKey) {
+                    const configPath = configurations[selectedTab!]?.configPath;
+                    if (configPath) {
+                      // Get the original profile key to check rename limit
+                      const originalProfileKey = getOriginalProfileKeyWithNested(selectedProfileKey, configPath, renames);
+                      const currentRenameCount = renameCounts[configPath]?.[originalProfileKey] || 0;
+                      if (currentRenameCount >= MAX_RENAMES_PER_PROFILE) {
+                        return { opacity: 0.5, cursor: "not-allowed" };
+                      }
+                    }
+                  }
+                  return {};
+                })()}
+              >
                 <span className="codicon codicon-edit"></span>
               </button>
               <button className="profile-action-button" onClick={() => handleDeleteProfile(selectedProfileKey)} title="Delete profile">
