@@ -4203,15 +4203,16 @@ export function App() {
             // 4. Property is not in deletions
             const isAllowedBySchema = !profileType || allowedProperties.includes(propertyName);
 
-            // Check if this property is in deletions
-            const propertyFullKey = [...path, propertyName].join(".");
-            const isInDeletions = (deletions[configPath] ?? []).includes(propertyFullKey);
+            // Check if the local property is in deletions (we want to show merged properties even when local is deleted)
+            const localPropertyFullKey = [...path, propertyName].join(".");
+            const isLocalPropertyInDeletions = (deletions[configPath] ?? []).includes(localPropertyFullKey);
 
             if (
               !entriesForSorting.some(([existingKey]) => existingKey === propertyName) &&
               !originalProperties?.hasOwnProperty(propertyName) &&
-              isAllowedBySchema &&
-              !isInDeletions
+              isAllowedBySchema
+              // Note: We intentionally don't check isLocalPropertyInDeletions here because
+              // we want to show merged properties even when the local property is deleted
             ) {
               // Add merged property with a special flag to identify it as merged
               entriesForSorting.push([
@@ -4280,7 +4281,7 @@ export function App() {
         })();
 
         // Check if this is a merged property that should be shown even if the original was deleted
-        const isMergedProperty = showMergedProperties && mergedProps && displayKey && mergedProps[displayKey];
+        const isMergedProperty = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath);
 
         if (isInDeletions && !isMergedProperty) {
           return null;
