@@ -1811,6 +1811,77 @@ export function App() {
     return effectiveName;
   };
 
+  // Helper function to detect closed loops in rename chains
+  const detectClosedLoops = (renames: { [originalKey: string]: string }): string[][] => {
+    const loops: string[][] = [];
+    const visited = new Set<string>();
+
+    for (const [originalKey] of Object.entries(renames)) {
+      if (visited.has(originalKey)) continue;
+
+      const loop: string[] = [];
+      let currentKey = originalKey;
+      const currentVisited = new Set<string>();
+
+      // Follow the rename chain to detect loops
+      while (currentKey && !currentVisited.has(currentKey)) {
+        currentVisited.add(currentKey);
+        loop.push(currentKey);
+
+        if (renames[currentKey]) {
+          currentKey = renames[currentKey];
+        } else {
+          break;
+        }
+      }
+
+      // If we found a loop (currentKey is in currentVisited), it's a closed loop
+      if (currentKey && currentVisited.has(currentKey)) {
+        // Find the start of the loop
+        const loopStartIndex = loop.indexOf(currentKey);
+        const closedLoop = loop.slice(loopStartIndex);
+        loops.push(closedLoop);
+
+        // Mark all keys in the loop as visited
+        closedLoop.forEach((key) => visited.add(key));
+      }
+    }
+
+    return loops;
+  };
+
+  // Helper function to check if a rename would cancel out an existing rename chain
+  const checkIfRenameCancelsOut = (currentRenames: { [originalKey: string]: string }, originalKey: string, newKey: string): boolean => {
+    // If this is a direct opposite (A -> B followed by B -> A), it cancels out
+    if (currentRenames[newKey] === originalKey) {
+      return true;
+    }
+
+    // Check if this rename would result in the profile ending up back where it started
+    // by following the rename chain from the original key
+    const visited = new Set<string>();
+    let currentKey = originalKey;
+
+    // Follow the existing rename chain
+    while (currentRenames[currentKey] && !visited.has(currentKey)) {
+      visited.add(currentKey);
+      currentKey = currentRenames[currentKey];
+    }
+
+    // If the new rename would take us back to the original starting point, it cancels out
+    if (currentKey === newKey) {
+      return true;
+    }
+
+    // Check if the new rename creates a cycle that ends back at the original key
+    // This handles cases like: A -> B, then B -> A (direct opposite)
+    if (newKey === originalKey) {
+      return true;
+    }
+
+    return false;
+  };
+
   const handleRenameProfile = (originalKey: string, newKey: string, isDragDrop: boolean = false): boolean => {
     if (selectedTab === null) return false;
     const configPath = configurations[selectedTab!]!.configPath;
@@ -1870,7 +1941,57 @@ export function App() {
 
     // Update the renames state with consolidation
     setRenames((prev) => {
-      const updatedRenames = consolidateRenames(prev[configPath] || {}, originalKey, newKey);
+      const currentRenames = prev[configPath] || {};
+
+      // Check for opposite renames and remove both if they cancel out
+      let updatedRenames = { ...currentRenames };
+
+      // Check if this rename would cancel out an existing rename chain
+      const wouldCancelOut = checkIfRenameCancelsOut(currentRenames, originalKey, newKey);
+
+      if (wouldCancelOut) {
+        // This rename cancels out the existing chain, remove all related renames
+        // Find all renames that are part of the same chain and remove them
+        const renamesToRemove = new Set<string>();
+
+        // Add the current original key
+        renamesToRemove.add(originalKey);
+
+        // Find all keys in the rename chain that should be removed
+        let currentKey = originalKey;
+        while (currentRenames[currentKey]) {
+          const targetKey = currentRenames[currentKey];
+          renamesToRemove.add(currentKey);
+          currentKey = targetKey;
+        }
+
+        // Remove all renames in the chain
+        for (const keyToRemove of renamesToRemove) {
+          delete updatedRenames[keyToRemove];
+        }
+      } else {
+        // Apply the new rename
+        updatedRenames[originalKey] = newKey;
+      }
+
+      // Apply consolidation to handle any other conflicts
+      updatedRenames = consolidateRenames(updatedRenames, originalKey, newKey);
+
+      // Detect and remove closed loops
+      const closedLoops = detectClosedLoops(updatedRenames);
+      if (closedLoops.length > 0) {
+        // Remove all keys that are part of closed loops
+        const keysToRemove = new Set<string>();
+        closedLoops.forEach((loop) => {
+          loop.forEach((key) => keysToRemove.add(key));
+        });
+
+        // Remove all keys in closed loops
+        keysToRemove.forEach((key) => {
+          delete updatedRenames[key];
+        });
+      }
+
       return {
         ...prev,
         [configPath]: updatedRenames,
@@ -1878,7 +1999,53 @@ export function App() {
     });
 
     // Update the selected profile key based on the consolidated renames
-    const updatedRenames = consolidateRenames(renames[configPath] || {}, originalKey, newKey);
+    const currentRenamesForSelection = renames[configPath] || {};
+    let updatedRenamesForSelection = { ...currentRenamesForSelection };
+
+    // Check for opposite renames and remove both if they cancel out
+    const wouldCancelOutForSelection = checkIfRenameCancelsOut(currentRenamesForSelection, originalKey, newKey);
+
+    if (wouldCancelOutForSelection) {
+      // This rename cancels out the existing chain, remove all related renames
+      const renamesToRemove = new Set<string>();
+
+      // Add the current original key
+      renamesToRemove.add(originalKey);
+
+      // Find all keys in the rename chain that should be removed
+      let currentKey = originalKey;
+      while (currentRenamesForSelection[currentKey]) {
+        const targetKey = currentRenamesForSelection[currentKey];
+        renamesToRemove.add(currentKey);
+        currentKey = targetKey;
+      }
+
+      // Remove all renames in the chain
+      for (const keyToRemove of renamesToRemove) {
+        delete updatedRenamesForSelection[keyToRemove];
+      }
+    } else {
+      // Apply the new rename
+      updatedRenamesForSelection[originalKey] = newKey;
+    }
+
+    // Apply consolidation to handle any other conflicts
+    let updatedRenames = consolidateRenames(updatedRenamesForSelection, originalKey, newKey);
+
+    // Detect and remove closed loops
+    const closedLoops = detectClosedLoops(updatedRenames);
+    if (closedLoops.length > 0) {
+      // Remove all keys that are part of closed loops
+      const keysToRemove = new Set<string>();
+      closedLoops.forEach((loop) => {
+        loop.forEach((key) => keysToRemove.add(key));
+      });
+
+      // Remove all keys in closed loops
+      keysToRemove.forEach((key) => {
+        delete updatedRenames[key];
+      });
+    }
 
     // Find what the selectedProfileKey should be after consolidation
     let newSelectedProfileKey = selectedProfileKey;
