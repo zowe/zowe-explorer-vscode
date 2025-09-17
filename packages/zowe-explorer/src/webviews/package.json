@@ -29,8 +29,8 @@
     "es-toolkit": "^1.16.0",
     "marked": "^15.0.11",
     "preact": "^10.16.0",
-    "preact-render-to-string": "^6.5.4"
-    //pnpm install zustand
+    "preact-render-to-string": "^6.5.4",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.1",

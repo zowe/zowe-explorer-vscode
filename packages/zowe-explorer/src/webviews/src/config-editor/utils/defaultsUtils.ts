@@ -1,9 +1,18 @@
-import { createStateVariables, useConsolidatedState } from "../App";
+import { 
+  useConfigurations, 
+  useSelectedTab, 
+  usePendingChanges, 
+  useRenames, 
+  useConfigEditorActions 
+} from "../store";
 import { getProfileType } from "./profileUtils";
 
 export const handleSetAsDefault = (profileKey: string) => {
-    const { state, setState, ...refs } = useConsolidatedState();
-    const { configurations, selectedTab, pendingChanges, renames, setPendingDefaults, setDefaultsDeletions } = createStateVariables(state, setState);
+    const configurations = useConfigurations();
+    const selectedTab = useSelectedTab();
+    const pendingChanges = usePendingChanges();
+    const renames = useRenames();
+    const { setPendingDefaults, setDefaultsDeletions } = useConfigEditorActions();
     const profileType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
     if (!profileType) {
         return;
@@ -12,7 +21,7 @@ export const handleSetAsDefault = (profileKey: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
 
     // Set the default for this profile type
-    setPendingDefaults((prev) => ({
+    setPendingDefaults((prev: any) => ({
         ...prev,
         [configPath]: {
             ...prev[configPath],
@@ -21,8 +30,8 @@ export const handleSetAsDefault = (profileKey: string) => {
     }));
 
     // Remove any deletion for this default
-    setDefaultsDeletions((prev) => ({
+    setDefaultsDeletions((prev: any) => ({
         ...prev,
-        [configPath]: prev[configPath]?.filter((k) => k !== profileType) ?? [],
+        [configPath]: prev[configPath]?.filter((k: any) => k !== profileType) ?? [],
     }));
 };

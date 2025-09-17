@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
 import { isSecureOrigin } from "../utils";
@@ -55,12 +55,10 @@ import {
 import {
   formatPendingChangesHelper,
   getAvailableProfilesByType,
-  getAvailableProfilesForConfigHelper,
   getProfileTypeFromPath,
   handleDeleteProfile,
   isProfileDefault,
   isProfileOrParentDeleted,
-  findOptimalReplacementProfileHelper,
 } from "./utils/profileUtils";
 
 // Hooks
@@ -69,29 +67,60 @@ import { ProfileDetails } from "./components/ProfileDetails";
 import { handleSetAsDefault } from "./utils/defaultsUtils";
 import { updateShowMergedProperties } from "./utils/storageUtils";
 
+// Zustand store
+import {
+  useConfigurations,
+  useSelectedTab,
+  useFlattenedConfig,
+  useFlattenedDefaults,
+  usePendingChanges,
+  usePendingDefaults,
+  useDeletions,
+  useDefaultsDeletions,
+  useRenames,
+  useRenameCounts,
+  useAutostoreChanges,
+  useHiddenItems,
+  useSchemaValidations,
+  useSelectedProfileKey,
+  useSelectedProfilesByConfig,
+  useMergedProperties,
+  useShowMergedProperties,
+  usePendingMergedPropertiesRequest,
+  useViewMode,
+  usePropertySortOrder,
+  useProfileSortOrder,
+  useSortOrderVersion,
+  useIsSaving,
+  usePendingSaveSelection,
+  useIsNavigating,
+  useProfileSearchTerm,
+  useProfileFilterType,
+  useHasWorkspace,
+  useSecureValuesAllowed,
+  useHasPromptedForZeroConfigs,
+  useExpandedNodesByConfig,
+  useNewProfileKeyPath,
+  useNewProfileKey,
+  useNewProfileValue,
+  useNewProfileModalOpen,
+  useFocusValueInput,
+  useSaveModalOpen,
+  useNewLayerModalOpen,
+  useNewLayerName,
+  useNewLayerPath,
+  useIsSecure,
+  useShowDropdown,
+  useAddConfigModalOpen,
+  useProfileMenuOpen,
+  useRenameProfileModalOpen,
+  useConfigEditorActions,
+  type Configuration,
+  type PendingChange,
+  type PendingDefault,
+} from "./store";
+
 const vscodeApi = acquireVsCodeApi();
-
-// Types
-type Configuration = {
-  configPath: string;
-  properties: any;
-  secure: string[];
-  global?: boolean;
-  user?: boolean;
-  schemaPath?: string;
-};
-
-type PendingChange = {
-  value: string | number | boolean | Record<string, any>;
-  path: string[];
-  profile: string;
-  secure?: boolean;
-};
-
-type PendingDefault = {
-  value: string;
-  path: string[];
-};
 
 // LocalStorage keys for config editor settings
 export const LOCAL_STORAGE_KEYS = {
@@ -107,107 +136,17 @@ export const LOCAL_STORAGE_KEYS = {
 const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
 const MAX_RENAMES_PER_PROFILE = 1;
 
-// Consolidated state interface
-interface ConsolidatedState {
-  // Core data
-  configurations: Configuration[];
-  selectedTab: number | null;
-  flattenedConfig: { [key: string]: { value: string; path: string[] } };
-  flattenedDefaults: { [key: string]: { value: string; path: string[] } };
-  pendingChanges: { [configPath: string]: { [key: string]: PendingChange } };
-  pendingDefaults: { [configPath: string]: { [key: string]: PendingDefault } };
-  deletions: { [configPath: string]: string[] };
-  defaultsDeletions: { [configPath: string]: string[] };
-  renames: { [configPath: string]: { [originalKey: string]: string } };
-  renameCounts: { [configPath: string]: { [profileKey: string]: number } };
-  autostoreChanges: { [configPath: string]: boolean };
-  hiddenItems: { [configPath: string]: { [key: string]: { path: string } } };
-  schemaValidations: { [configPath: string]: schemaValidation | undefined };
-  selectedProfileKey: string | null;
-  selectedProfilesByConfig: { [configPath: string]: string | null };
-  mergedProperties: any;
-  showMergedProperties: boolean;
-  pendingMergedPropertiesRequest: string | null;
-  viewMode: "flat" | "tree";
-  propertySortOrder: PropertySortOrder;
-  profileSortOrder: ProfileSortOrder | null;
-  sortOrderVersion: number;
-  isSaving: boolean;
-  pendingSaveSelection: { tab: number | null; profile: string | null } | null;
-  isNavigating: boolean;
-  profileSearchTerm: string;
-  profileFilterType: string | null;
-  hasWorkspace: boolean;
-  secureValuesAllowed: boolean;
-  hasPromptedForZeroConfigs: boolean;
-  expandedNodesByConfig: { [configPath: string]: Set<string> };
-  newProfileKeyPath: string[] | null;
-  newProfileKey: string;
-  newProfileValue: string;
-  newProfileModalOpen: boolean;
-  focusValueInput: boolean;
-  saveModalOpen: boolean;
-  newLayerModalOpen: boolean;
-  newLayerName: string;
-  newLayerPath: string[] | null;
-  isSecure: boolean;
-  showDropdown: boolean;
-  addConfigModalOpen: boolean;
-  profileMenuOpen: string | null;
-  renameProfileModalOpen: boolean;
-}
+// Create refs for current state values (needed for some legacy functionality)
+const useConfigEditorRefs = () => {
+  const configurations = useConfigurations();
+  const pendingChanges = usePendingChanges();
+  const deletions = useDeletions();
+  const pendingDefaults = usePendingDefaults();
+  const defaultsDeletions = useDefaultsDeletions();
+  const autostoreChanges = useAutostoreChanges();
+  const renames = useRenames();
+  const selectedProfileKey = useSelectedProfileKey();
 
-// Function that creates all your state variables and setters
-export const useConsolidatedState = () => {
-  const [state, setState] = useState<ConsolidatedState>({
-    configurations: [],
-    selectedTab: null,
-    flattenedConfig: {},
-    flattenedDefaults: {},
-    pendingChanges: {},
-    pendingDefaults: {},
-    deletions: {},
-    defaultsDeletions: {},
-    renames: {},
-    renameCounts: {},
-    autostoreChanges: {},
-    hiddenItems: {},
-    schemaValidations: {},
-    selectedProfileKey: null,
-    selectedProfilesByConfig: {},
-    mergedProperties: null,
-    showMergedProperties: true,
-    pendingMergedPropertiesRequest: null,
-    viewMode: "tree",
-    propertySortOrder: "alphabetical",
-    profileSortOrder: null,
-    sortOrderVersion: 0,
-    isSaving: false,
-    pendingSaveSelection: null,
-    isNavigating: false,
-    profileSearchTerm: "",
-    profileFilterType: null,
-    hasWorkspace: false,
-    secureValuesAllowed: true,
-    hasPromptedForZeroConfigs: false,
-    expandedNodesByConfig: {},
-    newProfileKeyPath: null,
-    newProfileKey: "",
-    newProfileValue: "",
-    newProfileModalOpen: false,
-    focusValueInput: false,
-    saveModalOpen: false,
-    newLayerModalOpen: false,
-    newLayerName: "",
-    newLayerPath: null,
-    isSecure: false,
-    showDropdown: false,
-    addConfigModalOpen: false,
-    profileMenuOpen: null,
-    renameProfileModalOpen: false,
-  });
-
-  // Create refs for current state values
   const configurationsRef = useRef<Configuration[]>([]);
   const pendingChangesRef = useRef<{ [configPath: string]: { [key: string]: PendingChange } }>({});
   const deletionsRef = useRef<{ [configPath: string]: string[] }>({});
@@ -218,21 +157,16 @@ export const useConsolidatedState = () => {
   const selectedProfileKeyRef = useRef<string | null>(null);
 
   // Update refs whenever state changes
-  configurationsRef.current = state.configurations;
-  pendingChangesRef.current = state.pendingChanges;
-  deletionsRef.current = state.deletions;
-  pendingDefaultsRef.current = state.pendingDefaults;
-  defaultsDeletionsRef.current = state.defaultsDeletions;
-  autostoreChangesRef.current = state.autostoreChanges;
-  renamesRef.current = state.renames;
-  selectedProfileKeyRef.current = state.selectedProfileKey;
-
-  useEffect(() => {}, [state.mergedProperties]);
+  configurationsRef.current = configurations;
+  pendingChangesRef.current = pendingChanges;
+  deletionsRef.current = deletions;
+  pendingDefaultsRef.current = pendingDefaults;
+  defaultsDeletionsRef.current = defaultsDeletions;
+  autostoreChangesRef.current = autostoreChanges;
+  renamesRef.current = renames;
+  selectedProfileKeyRef.current = selectedProfileKey;
 
   return {
-    state,
-    setState,
-    // Refs
     configurationsRef,
     pendingChangesRef,
     deletionsRef,
@@ -244,482 +178,112 @@ export const useConsolidatedState = () => {
   };
 };
 
-// Wrapper function that gives you all the individual variables and setters
-export const createStateVariables = (state: ConsolidatedState, setState: React.Dispatch<React.SetStateAction<ConsolidatedState>>) => {
-  // Individual variables (exactly as you had them)
-  const configurations = state.configurations;
-  const selectedTab = state.selectedTab;
-  const flattenedConfig = state.flattenedConfig;
-  const flattenedDefaults = state.flattenedDefaults;
-  const pendingChanges = state.pendingChanges;
-  const pendingDefaults = state.pendingDefaults;
-  const deletions = state.deletions;
-  const defaultsDeletions = state.defaultsDeletions;
-  const renames = state.renames;
-  const renameCounts = state.renameCounts;
-  const autostoreChanges = state.autostoreChanges;
-  const hiddenItems = state.hiddenItems;
-  const schemaValidations = state.schemaValidations;
-  const selectedProfileKey = state.selectedProfileKey;
-  const selectedProfilesByConfig = state.selectedProfilesByConfig;
-  const mergedProperties = state.mergedProperties;
-  const showMergedProperties = state.showMergedProperties;
-  const pendingMergedPropertiesRequest = state.pendingMergedPropertiesRequest;
-  const viewMode = state.viewMode;
-  const propertySortOrder = state.propertySortOrder;
-  const profileSortOrder = state.profileSortOrder;
-  const sortOrderVersion = state.sortOrderVersion;
-  const isSaving = state.isSaving;
-  const pendingSaveSelection = state.pendingSaveSelection;
-  const isNavigating = state.isNavigating;
-  const profileSearchTerm = state.profileSearchTerm;
-  const profileFilterType = state.profileFilterType;
-  const hasWorkspace = state.hasWorkspace;
-  const secureValuesAllowed = state.secureValuesAllowed;
-  const hasPromptedForZeroConfigs = state.hasPromptedForZeroConfigs;
-  const expandedNodesByConfig = state.expandedNodesByConfig;
-  const newProfileKeyPath = state.newProfileKeyPath;
-  const newProfileKey = state.newProfileKey;
-  const newProfileValue = state.newProfileValue;
-  const newProfileModalOpen = state.newProfileModalOpen;
-  const focusValueInput = state.focusValueInput;
-  const saveModalOpen = state.saveModalOpen;
-  const newLayerModalOpen = state.newLayerModalOpen;
-  const newLayerName = state.newLayerName;
-  const newLayerPath = state.newLayerPath;
-  const isSecure = state.isSecure;
-  const showDropdown = state.showDropdown;
-  const addConfigModalOpen = state.addConfigModalOpen;
-  const profileMenuOpen = state.profileMenuOpen;
-  const renameProfileModalOpen = state.renameProfileModalOpen;
-
-  // Individual setters (exactly as you had them)
-  const setConfigurations = (value: Configuration[] | ((prev: Configuration[]) => Configuration[])) => {
-    setState((prev) => ({ ...prev, configurations: typeof value === "function" ? value(prev.configurations) : value }));
-  };
-
-  const setSelectedTab = (value: number | null | ((prev: number | null) => number | null)) => {
-    setState((prev) => ({ ...prev, selectedTab: typeof value === "function" ? value(prev.selectedTab) : value }));
-  };
-
-  const setFlattenedConfig = (
-    value:
-      | { [key: string]: { value: string; path: string[] } }
-      | ((prev: { [key: string]: { value: string; path: string[] } }) => { [key: string]: { value: string; path: string[] } })
-  ) => {
-    setState((prev) => ({ ...prev, flattenedConfig: typeof value === "function" ? value(prev.flattenedConfig) : value }));
-  };
-
-  const setFlattenedDefaults = (
-    value:
-      | { [key: string]: { value: string; path: string[] } }
-      | ((prev: { [key: string]: { value: string; path: string[] } }) => { [key: string]: { value: string; path: string[] } })
-  ) => {
-    setState((prev) => ({ ...prev, flattenedDefaults: typeof value === "function" ? value(prev.flattenedDefaults) : value }));
-  };
-
-  const setPendingChanges = (
-    value:
-      | { [configPath: string]: { [key: string]: PendingChange } }
-      | ((prev: { [configPath: string]: { [key: string]: PendingChange } }) => { [configPath: string]: { [key: string]: PendingChange } })
-  ) => {
-    setState((prev) => ({ ...prev, pendingChanges: typeof value === "function" ? value(prev.pendingChanges) : value }));
-  };
-
-  const setPendingDefaults = (
-    value:
-      | { [configPath: string]: { [key: string]: PendingDefault } }
-      | ((prev: { [configPath: string]: { [key: string]: PendingDefault } }) => { [configPath: string]: { [key: string]: PendingDefault } })
-  ) => {
-    setState((prev) => ({ ...prev, pendingDefaults: typeof value === "function" ? value(prev.pendingDefaults) : value }));
-  };
-
-  const setDeletions = (
-    value: { [configPath: string]: string[] } | ((prev: { [configPath: string]: string[] }) => { [configPath: string]: string[] })
-  ) => {
-    setState((prev) => ({ ...prev, deletions: typeof value === "function" ? value(prev.deletions) : value }));
-  };
-
-  const setDefaultsDeletions = (
-    value: { [configPath: string]: string[] } | ((prev: { [configPath: string]: string[] }) => { [configPath: string]: string[] })
-  ) => {
-    setState((prev) => ({ ...prev, defaultsDeletions: typeof value === "function" ? value(prev.defaultsDeletions) : value }));
-  };
-
-  const setRenames = (
-    value:
-      | { [configPath: string]: { [originalKey: string]: string } }
-      | ((prev: { [configPath: string]: { [originalKey: string]: string } }) => { [configPath: string]: { [originalKey: string]: string } })
-  ) => {
-    setState((prev) => ({ ...prev, renames: typeof value === "function" ? value(prev.renames) : value }));
-  };
-
-  const setRenameCounts = (
-    value:
-      | { [configPath: string]: { [profileKey: string]: number } }
-      | ((prev: { [configPath: string]: { [profileKey: string]: number } }) => { [configPath: string]: { [profileKey: string]: number } })
-  ) => {
-    setState((prev) => ({ ...prev, renameCounts: typeof value === "function" ? value(prev.renameCounts) : value }));
-  };
-
-  const setAutostoreChanges = (
-    value: { [configPath: string]: boolean } | ((prev: { [configPath: string]: boolean }) => { [configPath: string]: boolean })
-  ) => {
-    setState((prev) => ({ ...prev, autostoreChanges: typeof value === "function" ? value(prev.autostoreChanges) : value }));
-  };
-
-  const setHiddenItems = (
-    value:
-      | { [configPath: string]: { [key: string]: { path: string } } }
-      | ((prev: { [configPath: string]: { [key: string]: { path: string } } }) => { [configPath: string]: { [key: string]: { path: string } } })
-  ) => {
-    setState((prev) => ({ ...prev, hiddenItems: typeof value === "function" ? value(prev.hiddenItems) : value }));
-  };
-
-  const setSchemaValidations = (
-    value:
-      | { [configPath: string]: schemaValidation | undefined }
-      | ((prev: { [configPath: string]: schemaValidation | undefined }) => { [configPath: string]: schemaValidation | undefined })
-  ) => {
-    setState((prev) => ({ ...prev, schemaValidations: typeof value === "function" ? value(prev.schemaValidations) : value }));
-  };
-
-  const setSelectedProfileKey = (value: string | null | ((prev: string | null) => string | null)) => {
-    setState((prev) => ({ ...prev, selectedProfileKey: typeof value === "function" ? value(prev.selectedProfileKey) : value }));
-  };
-
-  const setSelectedProfilesByConfig = (
-    value: { [configPath: string]: string | null } | ((prev: { [configPath: string]: string | null }) => { [configPath: string]: string | null })
-  ) => {
-    setState((prev) => ({ ...prev, selectedProfilesByConfig: typeof value === "function" ? value(prev.selectedProfilesByConfig) : value }));
-  };
-
-  const setMergedProperties = (value: any | ((prev: any) => any)) => {
-    setState((prev) => ({ ...prev, mergedProperties: typeof value === "function" ? value(prev.mergedProperties) : value }));
-  };
-
-  const setShowMergedProperties = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, showMergedProperties: typeof value === "function" ? value(prev.showMergedProperties) : value }));
-  };
-
-  const setPendingMergedPropertiesRequest = (value: string | null | ((prev: string | null) => string | null)) => {
-    setState((prev) => ({
-      ...prev,
-      pendingMergedPropertiesRequest: typeof value === "function" ? value(prev.pendingMergedPropertiesRequest) : value,
-    }));
-  };
-
-  const setViewMode = (value: "flat" | "tree" | ((prev: "flat" | "tree") => "flat" | "tree")) => {
-    setState((prev) => ({ ...prev, viewMode: typeof value === "function" ? value(prev.viewMode) : value }));
-  };
-
-  const setPropertySortOrder = (value: PropertySortOrder | ((prev: PropertySortOrder) => PropertySortOrder)) => {
-    setState((prev) => ({ ...prev, propertySortOrder: typeof value === "function" ? value(prev.propertySortOrder) : value }));
-  };
-
-  const setProfileSortOrder = (value: ProfileSortOrder | null | ((prev: ProfileSortOrder | null) => ProfileSortOrder | null)) => {
-    setState((prev) => ({ ...prev, profileSortOrder: typeof value === "function" ? value(prev.profileSortOrder) : value }));
-  };
-
-  const setSortOrderVersion = (value: number | ((prev: number) => number)) => {
-    setState((prev) => ({ ...prev, sortOrderVersion: typeof value === "function" ? value(prev.sortOrderVersion) : value }));
-  };
-
-  const setIsSaving = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, isSaving: typeof value === "function" ? value(prev.isSaving) : value }));
-  };
-
-  const setPendingSaveSelection = (
-    value:
-      | { tab: number | null; profile: string | null }
-      | null
-      | ((prev: { tab: number | null; profile: string | null } | null) => { tab: number | null; profile: string | null } | null)
-  ) => {
-    setState((prev) => ({ ...prev, pendingSaveSelection: typeof value === "function" ? value(prev.pendingSaveSelection) : value }));
-  };
-
-  const setIsNavigating = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, isNavigating: typeof value === "function" ? value(prev.isNavigating) : value }));
-  };
-
-  const setProfileSearchTerm = (value: string | ((prev: string) => string)) => {
-    setState((prev) => ({ ...prev, profileSearchTerm: typeof value === "function" ? value(prev.profileSearchTerm) : value }));
-  };
-
-  const setProfileFilterType = (value: string | null | ((prev: string | null) => string | null)) => {
-    setState((prev) => ({ ...prev, profileFilterType: typeof value === "function" ? value(prev.profileFilterType) : value }));
-  };
-
-  const setHasWorkspace = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, hasWorkspace: typeof value === "function" ? value(prev.hasWorkspace) : value }));
-  };
-
-  const setSecureValuesAllowed = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, secureValuesAllowed: typeof value === "function" ? value(prev.secureValuesAllowed) : value }));
-  };
-
-  const setHasPromptedForZeroConfigs = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, hasPromptedForZeroConfigs: typeof value === "function" ? value(prev.hasPromptedForZeroConfigs) : value }));
-  };
-
-  const setExpandedNodesByConfig = (
-    value: { [configPath: string]: Set<string> } | ((prev: { [configPath: string]: Set<string> }) => { [configPath: string]: Set<string> })
-  ) => {
-    setState((prev) => ({ ...prev, expandedNodesByConfig: typeof value === "function" ? value(prev.expandedNodesByConfig) : value }));
-  };
-
-  const setNewProfileKeyPath = (value: string[] | null | ((prev: string[] | null) => string[] | null)) => {
-    setState((prev) => ({ ...prev, newProfileKeyPath: typeof value === "function" ? value(prev.newProfileKeyPath) : value }));
-  };
-
-  const setNewProfileKey = (value: string | ((prev: string) => string)) => {
-    setState((prev) => ({ ...prev, newProfileKey: typeof value === "function" ? value(prev.newProfileKey) : value }));
-  };
-
-  const setNewProfileValue = (value: string | ((prev: string) => string)) => {
-    setState((prev) => ({ ...prev, newProfileValue: typeof value === "function" ? value(prev.newProfileValue) : value }));
-  };
-
-  const setNewProfileModalOpen = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, newProfileModalOpen: typeof value === "function" ? value(prev.newProfileModalOpen) : value }));
-  };
-
-  const setFocusValueInput = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, focusValueInput: typeof value === "function" ? value(prev.focusValueInput) : value }));
-  };
-
-  const setSaveModalOpen = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, saveModalOpen: typeof value === "function" ? value(prev.saveModalOpen) : value }));
-  };
-
-  const setNewLayerModalOpen = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, newLayerModalOpen: typeof value === "function" ? value(prev.newLayerModalOpen) : value }));
-  };
-
-  const setNewLayerName = (value: string | ((prev: string) => string)) => {
-    setState((prev) => ({ ...prev, newLayerName: typeof value === "function" ? value(prev.newLayerName) : value }));
-  };
-
-  const setNewLayerPath = (value: string[] | null | ((prev: string[] | null) => string[] | null)) => {
-    setState((prev) => ({ ...prev, newLayerPath: typeof value === "function" ? value(prev.newLayerPath) : value }));
-  };
-
-  const setIsSecure = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, isSecure: typeof value === "function" ? value(prev.isSecure) : value }));
-  };
-
-  const setShowDropdown = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, showDropdown: typeof value === "function" ? value(prev.showDropdown) : value }));
-  };
-
-  const setAddConfigModalOpen = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, addConfigModalOpen: typeof value === "function" ? value(prev.addConfigModalOpen) : value }));
-  };
-
-  const setProfileMenuOpen = (value: string | null | ((prev: string | null) => string | null)) => {
-    setState((prev) => ({ ...prev, profileMenuOpen: typeof value === "function" ? value(prev.profileMenuOpen) : value }));
-  };
-
-  const setRenameProfileModalOpen = (value: boolean | ((prev: boolean) => boolean)) => {
-    setState((prev) => ({ ...prev, renameProfileModalOpen: typeof value === "function" ? value(prev.renameProfileModalOpen) : value }));
-  };
-
-  return {
-    // Variables
-    configurations,
-    selectedTab,
-    flattenedConfig,
-    flattenedDefaults,
-    pendingChanges,
-    pendingDefaults,
-    deletions,
-    defaultsDeletions,
-    renames,
-    renameCounts,
-    autostoreChanges,
-    hiddenItems,
-    schemaValidations,
-    selectedProfileKey,
-    selectedProfilesByConfig,
-    mergedProperties,
-    showMergedProperties,
-    pendingMergedPropertiesRequest,
-    viewMode,
-    propertySortOrder,
-    profileSortOrder,
-    sortOrderVersion,
-    isSaving,
-    pendingSaveSelection,
-    isNavigating,
-    profileSearchTerm,
-    profileFilterType,
-    hasWorkspace,
-    secureValuesAllowed,
-    hasPromptedForZeroConfigs,
-    expandedNodesByConfig,
-    newProfileKeyPath,
-    newProfileKey,
-    newProfileValue,
-    newProfileModalOpen,
-    focusValueInput,
-    saveModalOpen,
-    newLayerModalOpen,
-    newLayerName,
-    newLayerPath,
-    isSecure,
-    showDropdown,
-    addConfigModalOpen,
-    profileMenuOpen,
-    renameProfileModalOpen,
-
-    // Setters
-    setConfigurations,
-    setSelectedTab,
-    setFlattenedConfig,
-    setFlattenedDefaults,
-    setPendingChanges,
-    setPendingDefaults,
-    setDeletions,
-    setDefaultsDeletions,
-    setRenames,
-    setRenameCounts,
-    setAutostoreChanges,
-    setHiddenItems,
-    setSchemaValidations,
-    setSelectedProfileKey,
-    setSelectedProfilesByConfig,
-    setMergedProperties,
-    setShowMergedProperties,
-    setPendingMergedPropertiesRequest,
-    setViewMode,
-    setPropertySortOrder,
-    setProfileSortOrder,
-    setSortOrderVersion,
-    setIsSaving,
-    setPendingSaveSelection,
-    setIsNavigating,
-    setProfileSearchTerm,
-    setProfileFilterType,
-    setHasWorkspace,
-    setSecureValuesAllowed,
-    setHasPromptedForZeroConfigs,
-    setExpandedNodesByConfig,
-    setNewProfileKeyPath,
-    setNewProfileKey,
-    setNewProfileValue,
-    setNewProfileModalOpen,
-    setFocusValueInput,
-    setSaveModalOpen,
-    setNewLayerModalOpen,
-    setNewLayerName,
-    setNewLayerPath,
-    setIsSecure,
-    setShowDropdown,
-    setAddConfigModalOpen,
-    setProfileMenuOpen,
-    setRenameProfileModalOpen,
-  };
-};
-
 export function App() {
   console.log("test");
-  const { state, setState, ...refs } = useConsolidatedState();
+  
+  // Get all state values from Zustand store
+  const configurations = useConfigurations();
+  const selectedTab = useSelectedTab();
+  const flattenedConfig = useFlattenedConfig();
+  const flattenedDefaults = useFlattenedDefaults();
+  const pendingChanges = usePendingChanges();
+  const pendingDefaults = usePendingDefaults();
+  const deletions = useDeletions();
+  const defaultsDeletions = useDefaultsDeletions();
+  const renames = useRenames();
+  const renameCounts = useRenameCounts();
+  const autostoreChanges = useAutostoreChanges();
+  const hiddenItems = useHiddenItems();
+  const schemaValidations = useSchemaValidations();
+  const selectedProfileKey = useSelectedProfileKey();
+  const selectedProfilesByConfig = useSelectedProfilesByConfig();
+  const mergedProperties = useMergedProperties();
+  const showMergedProperties = useShowMergedProperties();
+  const pendingMergedPropertiesRequest = usePendingMergedPropertiesRequest();
+  const viewMode = useViewMode();
+  const propertySortOrder = usePropertySortOrder();
+  const profileSortOrder = useProfileSortOrder();
+  const sortOrderVersion = useSortOrderVersion();
+  const isSaving = useIsSaving();
+  const pendingSaveSelection = usePendingSaveSelection();
+  const isNavigating = useIsNavigating();
+  const profileSearchTerm = useProfileSearchTerm();
+  const profileFilterType = useProfileFilterType();
+  const hasWorkspace = useHasWorkspace();
+  const secureValuesAllowed = useSecureValuesAllowed();
+  const hasPromptedForZeroConfigs = useHasPromptedForZeroConfigs();
+  const expandedNodesByConfig = useExpandedNodesByConfig();
+  const newProfileKeyPath = useNewProfileKeyPath();
+  const newProfileKey = useNewProfileKey();
+  const newProfileValue = useNewProfileValue();
+  const newProfileModalOpen = useNewProfileModalOpen();
+  const focusValueInput = useFocusValueInput();
+  const saveModalOpen = useSaveModalOpen();
+  const newLayerModalOpen = useNewLayerModalOpen();
+  const newLayerName = useNewLayerName();
+  const newLayerPath = useNewLayerPath();
+  const isSecure = useIsSecure();
+  const showDropdown = useShowDropdown();
+  const addConfigModalOpen = useAddConfigModalOpen();
+  const profileMenuOpen = useProfileMenuOpen();
+  const renameProfileModalOpen = useRenameProfileModalOpen();
 
-  // destructure state variables + setters
+  // Get all actions from Zustand store
+  const actions = useConfigEditorActions();
+
+  // Get refs for legacy functionality
+  const refs = useConfigEditorRefs();
+
+  // Destructure actions for easier access
   const {
-    configurations,
     setConfigurations,
-    selectedTab,
     setSelectedTab,
-    flattenedConfig,
     setFlattenedConfig,
-    flattenedDefaults,
     setFlattenedDefaults,
-    pendingChanges,
     setPendingChanges,
-    pendingDefaults,
     setPendingDefaults,
-    deletions,
     setDeletions,
-    defaultsDeletions,
     setDefaultsDeletions,
-    renames,
     setRenames,
-    renameCounts,
     setRenameCounts,
-    autostoreChanges,
     setAutostoreChanges,
-    hiddenItems,
     setHiddenItems,
-    schemaValidations,
     setSchemaValidations,
-    selectedProfileKey,
     setSelectedProfileKey,
-    selectedProfilesByConfig,
     setSelectedProfilesByConfig,
-    mergedProperties,
     setMergedProperties,
-    showMergedProperties,
     setShowMergedProperties,
-    pendingMergedPropertiesRequest,
     setPendingMergedPropertiesRequest,
-    viewMode,
     setViewMode,
-    propertySortOrder,
     setPropertySortOrder,
-    profileSortOrder,
     setProfileSortOrder,
-    sortOrderVersion,
     setSortOrderVersion,
-    isSaving,
     setIsSaving,
-    pendingSaveSelection,
     setPendingSaveSelection,
-    isNavigating,
     setIsNavigating,
-    profileSearchTerm,
     setProfileSearchTerm,
-    profileFilterType,
     setProfileFilterType,
-    hasWorkspace,
     setHasWorkspace,
-    secureValuesAllowed,
     setSecureValuesAllowed,
-    hasPromptedForZeroConfigs,
     setHasPromptedForZeroConfigs,
-    expandedNodesByConfig,
     setExpandedNodesByConfig,
-    newProfileKeyPath,
     setNewProfileKeyPath,
-    newProfileKey,
     setNewProfileKey,
-    newProfileValue,
     setNewProfileValue,
-    newProfileModalOpen,
     setNewProfileModalOpen,
-    focusValueInput,
     setFocusValueInput,
-    saveModalOpen,
     setSaveModalOpen,
-    newLayerModalOpen,
     setNewLayerModalOpen,
-    newLayerName,
     setNewLayerName,
-    newLayerPath,
     setNewLayerPath,
-    isSecure,
     setIsSecure,
-    showDropdown,
     setShowDropdown,
-    addConfigModalOpen,
     setAddConfigModalOpen,
-    profileMenuOpen,
     setProfileMenuOpen,
-    renameProfileModalOpen,
     setRenameProfileModalOpen,
-  } = createStateVariables(state, setState);
+  } = actions;
 
-  // destructure refs (already synced in useConsolidatedState)
+  // destructure refs (already synced in useConfigEditorRefs)
   const {
     configurationsRef,
     pendingChangesRef,
@@ -730,6 +294,11 @@ export function App() {
     renamesRef,
     selectedProfileKeyRef,
   } = refs;
+
+  // Handle mergedProperties changes (equivalent to the original useEffect)
+  useEffect(() => {
+    // This effect runs whenever mergedProperties changes
+  }, [mergedProperties]);
 
   // LocalStorage functions
   const getLocalStorageValue = useCallback((key: string, defaultValue: any) => {
@@ -3277,61 +2846,7 @@ export function App() {
     return pendingProfiles;
   };
 
-  /*
-    const getAvailableProfilesForConfig = useCallback(
-    (configPath: string): string[] => {
-      const profilesObj = configurations[selectedTab!]?.properties?.profiles;
-      if (!profilesObj) {
-        return [];
-      }
 
-      const pendingProfiles = extractPendingProfiles(configPath);
-      const deletedProfiles = deletions[configPath] || [];
-
-      // Get all available profiles (existing + pending) that are not deleted
-      const getAvailableProfiles = (profiles: any, parentKey = ""): string[] => {
-        const available: string[] = [];
-        for (const key of Object.keys(profiles)) {
-          const profile = profiles[key];
-          const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
-
-          // Only include profiles that are not deleted
-          if (!isProfileOrParentDeleted(qualifiedKey, deletedProfiles)) {
-            available.push(qualifiedKey);
-          }
-
-          // Recursively add nested profiles
-          if (profile.profiles) {
-            available.push(...getAvailableProfiles(profile.profiles, qualifiedKey));
-          }
-        }
-        return available;
-      };
-
-      const existingProfiles = getAvailableProfiles(profilesObj);
-      const pendingProfileKeys = Object.keys(pendingProfiles).filter(
-        (key) => !existingProfiles.includes(key) && !isProfileOrParentDeleted(key, deletedProfiles)
-      );
-
-      return [...existingProfiles, ...pendingProfileKeys];
-    },
-    [configurations, selectedTab, deletions, extractPendingProfiles, isProfileOrParentDeleted]
-  ); */
-  // Memoized function to get available profiles for optimal performance
-  const getAvailableProfilesForConfig = useCallback(
-    (configPath: string) => {
-      return getAvailableProfilesForConfigHelper(configPath);
-    },
-    [configurations, selectedTab, deletions, extractPendingProfiles, isProfileOrParentDeleted] /////HERE
-  );
-
-  // Optimized function to find the best replacement profile after deletion
-  const findOptimalReplacementProfile = useCallback(
-    (deletedProfileKey: string, configPath: string): string | null => {
-      return findOptimalReplacementProfileHelper(deletedProfileKey, configPath);
-    },
-    [getAvailableProfilesForConfig]
-  );
 
   // Helper function to sort profiles at each level
   const sortProfilesAtLevel = useCallback(

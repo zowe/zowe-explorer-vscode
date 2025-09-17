@@ -1,7 +1,16 @@
-import { createStateVariables, useConsolidatedState } from "../App";
 import {
-  extractPendingProfiles,
-  flattenProfiles,
+  useSelectedProfileKey,
+  useConfigurations,
+  useSelectedTab,
+  usePendingChanges,
+  useRenames,
+  useShowMergedProperties,
+  useRenameCounts,
+  usePropertySortOrder,
+  useSortOrderVersion,
+  useConfigEditorActions,
+} from "../store";
+import {
   getOriginalProfileKeyWithNested,
   getProfileType,
   handleDeleteProfile,
@@ -11,21 +20,16 @@ import { handleSetAsDefault } from "../utils/defaultsUtils";
 import { updateShowMergedProperties } from "../utils/storageUtils";
 
 export const ProfileDetails = (vscodeApi: any) => {
-  const { state, setState, ...refs } = useConsolidatedState();
-  const {
-    selectedProfileKey,
-    configurations,
-    selectedTab,
-    pendingChanges,
-    renames,
-    showMergedProperties,
-    renameCounts,
-    mergedProperties,
-    propertySortOrder,
-    sortOrderVersion,
-    setPendingDefaults,
-    setRenameProfileModalOpen,
-  } = createStateVariables(state, setState);
+  const selectedProfileKey = useSelectedProfileKey();
+  const configurations = useConfigurations();
+  const selectedTab = useSelectedTab();
+  const pendingChanges = usePendingChanges();
+  const renames = useRenames();
+  const showMergedProperties = useShowMergedProperties();
+  const renameCounts = useRenameCounts();
+  const propertySortOrder = usePropertySortOrder();
+  const sortOrderVersion = useSortOrderVersion();
+  const { setPendingDefaults, setRenameProfileModalOpen } = useConfigEditorActions();
 
   const MAX_RENAMES_PER_PROFILE = 1;
   return (
@@ -58,7 +62,7 @@ export const ProfileDetails = (vscodeApi: any) => {
                   const profileType = getProfileType(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
                   if (profileType) {
                     const configPath = configurations[selectedTab!]!.configPath;
-                    setPendingDefaults((prev) => ({
+                    setPendingDefaults((prev: any) => ({
                       ...prev,
                       [configPath]: {
                         ...prev[configPath],
@@ -140,11 +144,9 @@ export const ProfileDetails = (vscodeApi: any) => {
           if (!currentConfig) {
             return null;
           }
-          const flatProfiles = flattenProfiles(currentConfig.properties?.profiles || {});
           const configPath = currentConfig.configPath;
 
           // Use the helper function to extract pending profiles
-          const pendingProfiles = extractPendingProfiles(configPath);
 
           // For profile data lookup, we need to find where the data is actually stored in the original configuration
           // The data is always stored at the original location before any renames
@@ -156,7 +158,7 @@ export const ProfileDetails = (vscodeApi: any) => {
             const configRenames = renames[configPath];
 
             // Sort renames by length of newKey (longest first) to handle nested renames correctly
-            const sortedRenames = Object.entries(configRenames).sort(([, a], [, b]) => b.length - a.length);
+            const sortedRenames = Object.entries(configRenames).sort(([, a], [, b]) => (b as string).length - (a as string).length);
 
             let changed = true;
 
@@ -204,7 +206,6 @@ export const ProfileDetails = (vscodeApi: any) => {
           // Pass the effective profile object (without pending changes) to renderConfig
           // so that renderConfig can properly combine existing and pending changes
           // For newly created profiles, use the pending profile data as the base
-          const effectiveProfile = flatProfiles[effectiveProfileKey] || pendingProfiles[effectiveProfileKey] || {};
 
           // Check if this profile has pending renames - if so, don't show merged properties
           // We need to check if the selected profile key is a renamed version of another profile
@@ -225,7 +226,6 @@ export const ProfileDetails = (vscodeApi: any) => {
           });
           // We can still show merged properties even with parent renames, as long as we request them
           // using the correct profile name (which getProfileNameForMergedProperties handles)
-          const shouldShowMergedProperties = showMergedProperties;
           console.log("test");
           return (
             <div key={`${selectedProfileKey}-${propertySortOrder}-${sortOrderVersion}`}>

@@ -12,7 +12,17 @@
 import { flattenProfiles, extractProfileKeyFromPath } from "./configUtils";
 import { getNestedProperty } from "./generalUtils";
 import { PendingChange } from "./configUtils";
-import { useConsolidatedState, createStateVariables } from "../App";
+import { 
+  useConfigurations, 
+  useSelectedTab, 
+  usePendingChanges, 
+  useDeletions, 
+  useRenames, 
+  useConfigEditorActions,
+  usePendingDefaults,
+  useDefaultsDeletions,
+  useSelectedProfileKey
+} from "../store";
 import { getCurrentEffectiveName, getProfileNameForMergedProperties, updateChangesForRenames } from "./renameUtils";
 // Types
 export interface Configuration {
@@ -506,9 +516,11 @@ export function getAllProfileKeys(profiles: any, parentKey = ""): string[] {
 
 // Helper function to check if a profile is set as default
 export const isProfileDefault = (profileKey: string): boolean => {
-    const { state, setState, ...refs } = useConsolidatedState();
-
-    const { configurations, selectedTab, pendingChanges, renames, pendingDefaults } = createStateVariables(state, setState);
+    const configurations = useConfigurations();
+    const selectedTab = useSelectedTab();
+    const pendingChanges = usePendingChanges();
+    const renames = useRenames();
+    const pendingDefaults = usePendingDefaults();
     if (selectedTab === null) return false;
     const configPath = configurations[selectedTab!]!.configPath;
     const profileType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
@@ -547,17 +559,15 @@ export const isProfileDefault = (profileKey: string): boolean => {
 };
 
 export const handleDeleteProfile = (profileKey: string, vscodeApi: any) => {
-    const { state, setState, ...refs } = useConsolidatedState();
-    const {
-        selectedTab,
-        configurations,
-        renames,
-        setDeletions,
+    const selectedTab = useSelectedTab();
+    const configurations = useConfigurations();
+    const renames = useRenames();
+    const { setDeletions,
         setPendingChanges,
-        selectedProfileKey,
         setSelectedProfileKey,
         setSelectedProfilesByConfig,
-    } = createStateVariables(state, setState);
+    } = useConfigEditorActions();
+    const selectedProfileKey = useSelectedProfileKey();
 
     if (selectedTab === null) return;
     const configPath = configurations[selectedTab!]!.configPath;
@@ -584,7 +594,7 @@ export const handleDeleteProfile = (profileKey: string, vscodeApi: any) => {
     }
 
     // Add to deletions - we'll add all profile-related keys to deletions
-    setDeletions((prev) => {
+    setDeletions((prev: any) => {
         const newDeletions = { ...prev };
         if (!newDeletions[configPath]) {
             newDeletions[configPath] = [];
@@ -597,7 +607,7 @@ export const handleDeleteProfile = (profileKey: string, vscodeApi: any) => {
     });
 
     // Clear any pending changes for this profile (using both original and effective keys)
-    setPendingChanges((prev) => {
+    setPendingChanges((prev: any) => {
         const newState = { ...prev };
         if (newState[configPath]) {
             // Remove all pending changes that belong to this profile
@@ -620,7 +630,7 @@ export const handleDeleteProfile = (profileKey: string, vscodeApi: any) => {
 
         // Also update the stored profiles for this config
         if (configPath) {
-            setSelectedProfilesByConfig((prev) => ({
+            setSelectedProfilesByConfig((prev: any) => ({
                 ...prev,
                 [configPath]: nearestProfileKey,
             }));
@@ -691,8 +701,9 @@ export function findOptimalReplacementProfileHelper(deletedProfileKey: string, c
 }
 
 export function getAvailableProfilesForConfigHelper(configPath: string): string[] {
-    const { state, setState, ...refs } = useConsolidatedState();
-    const { selectedTab, configurations, deletions } = createStateVariables(state, setState);
+    const selectedTab = useSelectedTab();
+    const configurations = useConfigurations();
+    const deletions = useDeletions();
 
     const profilesObj = configurations[selectedTab!]?.properties?.profiles;
     if (!profilesObj) {
@@ -731,12 +742,11 @@ export function getAvailableProfilesForConfigHelper(configPath: string): string[
 }
 
 export const extractPendingProfiles = (configPath: string): { [key: string]: any } => {
-    const { state, setState, ...refs } = useConsolidatedState();
-    const { pendingChanges } = createStateVariables(state, setState);
+    const pendingChanges = usePendingChanges();
 
     const pendingProfiles: { [key: string]: any } = {};
 
-    Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
+    Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]: [string, any]) => {
         if (!entry.profile) return;
 
         const keyParts = key.split(".");
@@ -803,8 +813,9 @@ export const extractPendingProfiles = (configPath: string): { [key: string]: any
 
 // Helper function to check if a profile or its parent is deleted
 export const isProfileOrParentDeleted = (profileKey: string, deletedProfiles: string[]): boolean => {
-    const { state, setState, ...refs } = useConsolidatedState();
-    const { selectedTab, configurations, renames } = createStateVariables(state, setState);
+    const selectedTab = useSelectedTab();
+    const configurations = useConfigurations();
+    const renames = useRenames();
     if (selectedTab === null) return false;
 
     // Get the current effective profile key considering pending renames
@@ -842,31 +853,34 @@ export const isProfileOrParentDeleted = (profileKey: string, deletedProfiles: st
 };
 
 export const formatPendingChangesHelper = () => {
-    const { state, setState, ...refs } = useConsolidatedState();
-    const { deletions, pendingChanges, renames, pendingDefaults, defaultsDeletions } = createStateVariables(state, setState);
-    const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
+    const deletions = useDeletions();
+    const pendingChanges = usePendingChanges();
+    const renames = useRenames();
+    const pendingDefaults = usePendingDefaults();
+    const defaultsDeletions = useDefaultsDeletions();
+    const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]: [string, any]) =>
         Object.keys(changesForPath).map((key) => {
             const { value, path, profile, secure } = changesForPath[key];
             return { key, value, path, profile, configPath, secure };
         })
     );
 
-    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
+    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]: [string, any]) => keys.map((key: any) => ({ key, configPath, secure: false })));
 
-    const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
+    const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]: [string, any]) =>
         Object.keys(changesForPath).map((key) => {
             const { value, path } = changesForPath[key];
             return { key, value, path, configPath, secure: false };
         })
     );
 
-    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
-        keys.map((key) => ({ key, configPath, secure: false }))
+    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]: [string, any]) =>
+        keys.map((key: any) => ({ key, configPath, secure: false }))
     );
 
     // Prepare renames data
-    const renamesData = Object.entries(renames).flatMap(([configPath, configRenames]) =>
-        Object.entries(configRenames).map(([originalKey, newKey]) => ({
+    const renamesData = Object.entries(renames).flatMap(([configPath, configRenames]: [string, any]) =>
+        Object.entries(configRenames).map(([originalKey, newKey]: [string, any]) => ({
             originalKey,
             newKey,
             configPath,
