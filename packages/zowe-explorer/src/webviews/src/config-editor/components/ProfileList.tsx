@@ -11,7 +11,7 @@ interface ProfileListProps {
   vscodeApi: any;
   onProfileSelect: (profileKey: string) => void;
   onProfileMenuToggle: (profileKey: string | null) => void;
-  onDeleteProfile: (profileKey: string) => void;
+  onDeleteProfile: (profileKey: string, vscodeApi: any) => void;
   onSetAsDefault: (profileKey: string) => void;
   isProfileDefault: (profileKey: string) => boolean;
   getProfileType: (profileKey: string) => string | null;

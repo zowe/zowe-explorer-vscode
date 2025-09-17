@@ -10,7 +10,10 @@
  */
 
 import { flattenProfiles, extractProfileKeyFromPath } from "./configUtils";
+import { getNestedProperty } from "./generalUtils";
 import { PendingChange } from "./configUtils";
+import { useConsolidatedState, createStateVariables } from "../App";
+import { getCurrentEffectiveName, getProfileNameForMergedProperties, updateChangesForRenames } from "./renameUtils";
 // Types
 export interface Configuration {
     configPath: string;
@@ -453,7 +456,6 @@ export function getAvailableProfilesByType(
             }
         }
     });
-
     return [...profilesOfType, ...Array.from(pendingProfiles)];
 }
 
@@ -502,17 +504,384 @@ export function getAllProfileKeys(profiles: any, parentKey = ""): string[] {
     return keys;
 }
 
-/**
- * Get nested property from an object using a path array
- */
-function getNestedProperty(obj: any, path: string[]): any {
-    let current = obj;
-    for (const segment of path) {
-        if (current && typeof current === "object" && current.hasOwnProperty(segment)) {
-            current = current[segment];
-        } else {
-            return undefined;
+// Helper function to check if a profile is set as default
+export const isProfileDefault = (profileKey: string): boolean => {
+    const { state, setState, ...refs } = useConsolidatedState();
+
+    const { configurations, selectedTab, pendingChanges, renames, pendingDefaults } = createStateVariables(state, setState);
+    if (selectedTab === null) return false;
+    const configPath = configurations[selectedTab!]!.configPath;
+    const profileType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
+
+    if (!profileType) return false;
+
+    // Check if this profile was renamed and get the original profile name
+    const originalProfileKey = getOriginalProfileKeyWithNested(profileKey, configPath, renames);
+
+    // Check pending defaults first
+    const pendingDefault = pendingDefaults[configPath]?.[profileType];
+    if (pendingDefault) {
+        return pendingDefault.value === profileKey || pendingDefault.value === originalProfileKey;
+    }
+
+    // Check existing defaults
+    const config = configurations[selectedTab!].properties;
+    const defaults = config.defaults || {};
+
+    // Check if the current profile is the default
+    if (defaults[profileType] === profileKey || defaults[profileType] === originalProfileKey) {
+        return true;
+    }
+
+    // Check if this profile should be the default due to renames (simulate backend logic)
+    // This handles the case where a default profile was renamed and should remain the default
+    const configRenames = renames[configPath] || {};
+    for (const [originalKey, newKey] of Object.entries(configRenames)) {
+        // If the original profile was the default and this is the renamed version
+        if (defaults[profileType] === originalKey && newKey === profileKey) {
+            return true;
         }
     }
-    return current;
+
+    return false;
+};
+
+export const handleDeleteProfile = (profileKey: string, vscodeApi: any) => {
+    const { state, setState, ...refs } = useConsolidatedState();
+    const {
+        selectedTab,
+        configurations,
+        renames,
+        setDeletions,
+        setPendingChanges,
+        selectedProfileKey,
+        setSelectedProfileKey,
+        setSelectedProfilesByConfig,
+    } = createStateVariables(state, setState);
+
+    if (selectedTab === null) return;
+    const configPath = configurations[selectedTab!]!.configPath;
+
+    // Get the current effective profile key considering pending renames
+    const effectiveProfileKey = getCurrentEffectiveName(profileKey, configPath, renames);
+
+    // Construct the full profile path using the effective profile key
+    let fullProfilePath: string;
+    if (effectiveProfileKey.includes(".")) {
+        // Nested profile, construct the full path
+        const profileParts = effectiveProfileKey.split(".");
+        const pathArray = ["profiles"];
+        for (let i = 0; i < profileParts.length; i++) {
+            pathArray.push(profileParts[i]);
+            if (i < profileParts.length - 1) {
+                pathArray.push("profiles");
+            }
+        }
+        fullProfilePath = pathArray.join(".");
+    } else {
+        // Top-level profile
+        fullProfilePath = `profiles.${effectiveProfileKey}`;
+    }
+
+    // Add to deletions - we'll add all profile-related keys to deletions
+    setDeletions((prev) => {
+        const newDeletions = { ...prev };
+        if (!newDeletions[configPath]) {
+            newDeletions[configPath] = [];
+        }
+
+        // Add the full profile path to deletions
+        newDeletions[configPath].push(fullProfilePath);
+
+        return newDeletions;
+    });
+
+    // Clear any pending changes for this profile (using both original and effective keys)
+    setPendingChanges((prev) => {
+        const newState = { ...prev };
+        if (newState[configPath]) {
+            // Remove all pending changes that belong to this profile
+            Object.keys(newState[configPath]).forEach((key) => {
+                const entry = newState[configPath][key];
+                if (entry.profile === profileKey || entry.profile === effectiveProfileKey) {
+                    delete newState[configPath][key];
+                }
+            });
+        }
+        return newState;
+    });
+
+    // If this profile is currently selected, or if the selected profile is a child of this profile, select the nearest profile
+    if (selectedProfileKey === profileKey || (selectedProfileKey && selectedProfileKey.startsWith(profileKey + "."))) {
+        const nearestProfileKey = findOptimalReplacementProfileHelper(profileKey, configPath);
+
+        // Set the nearest profile as selected, or null if no profile available
+        setSelectedProfileKey(nearestProfileKey);
+
+        // Also update the stored profiles for this config
+        if (configPath) {
+            setSelectedProfilesByConfig((prev) => ({
+                ...prev,
+                [configPath]: nearestProfileKey,
+            }));
+        }
+
+        // If we found a nearest profile, get its merged properties
+        if (nearestProfileKey) {
+            // Get the correct profile name for merged properties (handles renames)
+            const profileNameForMergedProperties = getProfileNameForMergedProperties(nearestProfileKey, configPath, renames);
+
+            const changes = formatPendingChangesHelper();
+            vscodeApi.postMessage({
+                command: "GET_MERGED_PROPERTIES",
+                profilePath: profileNameForMergedProperties,
+                configPath: configPath,
+                changes: changes,
+                renames: changes.renames,
+            });
+        }
+    }
+};
+
+export function findOptimalReplacementProfileHelper(deletedProfileKey: string, configPath: string): string | null {
+    const allAvailableProfiles = getAvailableProfilesForConfigHelper(configPath);
+
+    if (allAvailableProfiles.length === 0) {
+        return null;
+    }
+
+    // Strategy 1: If deleting a nested profile, prefer its parent
+    if (deletedProfileKey.includes(".")) {
+        const parentKey = deletedProfileKey.split(".").slice(0, -1).join(".");
+        if (allAvailableProfiles.includes(parentKey)) {
+            return parentKey;
+        }
+    }
+
+    // Strategy 2: Find siblings (profiles at the same level)
+    const deletedParts = deletedProfileKey.split(".");
+    if (deletedParts.length > 1) {
+        const parentKey = deletedParts.slice(0, -1).join(".");
+        const siblings = allAvailableProfiles.filter((profile: any) => profile.startsWith(parentKey + ".") && profile !== deletedProfileKey);
+        if (siblings.length > 0) {
+            return siblings[0];
+        }
+    }
+
+    // Strategy 3: Find the next profile in the list
+    const currentIndex = allAvailableProfiles.indexOf(deletedProfileKey);
+    if (currentIndex !== -1) {
+        for (let i = currentIndex + 1; i < allAvailableProfiles.length; i++) {
+            const candidate = allAvailableProfiles[i];
+            if (candidate !== deletedProfileKey) {
+                return candidate;
+            }
+        }
+
+        for (let i = currentIndex - 1; i >= 0; i--) {
+            const candidate = allAvailableProfiles[i];
+            if (candidate !== deletedProfileKey) {
+                return candidate;
+            }
+        }
+    }
+
+    // Strategy 4: Fallback
+    return allAvailableProfiles[0] || null;
 }
+
+export function getAvailableProfilesForConfigHelper(configPath: string): string[] {
+    const { state, setState, ...refs } = useConsolidatedState();
+    const { selectedTab, configurations, deletions } = createStateVariables(state, setState);
+
+    const profilesObj = configurations[selectedTab!]?.properties?.profiles;
+    if (!profilesObj) {
+        return [];
+    }
+
+    const pendingProfiles = extractPendingProfiles(configPath);
+    const deletedProfiles = deletions[configPath] || [];
+
+    // Get all available profiles (existing + pending) that are not deleted
+    const getAvailableProfiles = (profiles: any, parentKey = ""): string[] => {
+        const available: string[] = [];
+        for (const key of Object.keys(profiles)) {
+            const profile = profiles[key];
+            const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+
+            // Only include profiles that are not deleted
+            if (!isProfileOrParentDeleted(qualifiedKey, deletedProfiles)) {
+                available.push(qualifiedKey);
+            }
+
+            // Recursively add nested profiles
+            if (profile.profiles) {
+                available.push(...getAvailableProfiles(profile.profiles, qualifiedKey));
+            }
+        }
+        return available;
+    };
+
+    const existingProfiles = getAvailableProfiles(profilesObj);
+    const pendingProfileKeys = Object.keys(pendingProfiles).filter(
+        (key) => !existingProfiles.includes(key) && !isProfileOrParentDeleted(key, deletedProfiles)
+    );
+
+    return [...existingProfiles, ...pendingProfileKeys];
+}
+
+export const extractPendingProfiles = (configPath: string): { [key: string]: any } => {
+    const { state, setState, ...refs } = useConsolidatedState();
+    const { pendingChanges } = createStateVariables(state, setState);
+
+    const pendingProfiles: { [key: string]: any } = {};
+
+    Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
+        if (!entry.profile) return;
+
+        const keyParts = key.split(".");
+        if (keyParts[0] !== "profiles") return;
+
+        // Remove "profiles" prefix and get the profile path
+        const profilePathParts = keyParts.slice(1);
+
+        // Find where the profile name ends (before "type" or "properties")
+        let profileNameEndIndex = profilePathParts.length;
+        for (let i = 0; i < profilePathParts.length; i++) {
+            if (profilePathParts[i] === "type" || profilePathParts[i] === "properties") {
+                profileNameEndIndex = i;
+                break;
+            }
+        }
+
+        // Extract just the profile name parts
+        const profileNameParts = profilePathParts.slice(0, profileNameEndIndex);
+
+        if (profileNameParts.length > 0) {
+            // Only create a pending profile entry if this is a profile-level property
+            const propertyName = keyParts[keyParts.length - 1];
+            const isProfileLevelProperty = propertyName === "type" || (keyParts.includes("properties") && !entry.secure);
+
+            if (isProfileLevelProperty) {
+                // Use the entry.profile as the profile key, as it represents the actual profile this change belongs to
+                // This is important for moved profiles where the key structure might be different
+                const actualProfileKey = entry.profile;
+
+                // Initialize the profile structure if it doesn't exist
+                if (!pendingProfiles[actualProfileKey]) {
+                    pendingProfiles[actualProfileKey] = {};
+                }
+
+                // Add the property to the profile
+                if (propertyName === "type") {
+                    pendingProfiles[actualProfileKey].type = entry.value;
+                } else if (keyParts.includes("properties")) {
+                    // Only add non-secure properties to the properties object
+                    if (!entry.secure) {
+                        if (!pendingProfiles[actualProfileKey].properties) {
+                            pendingProfiles[actualProfileKey].properties = {};
+                        }
+                        pendingProfiles[actualProfileKey].properties[propertyName] = entry.value;
+                    }
+
+                    // If this is a secure property, add it to the profile
+                    if (entry.secure) {
+                        if (!pendingProfiles[actualProfileKey].secure) {
+                            pendingProfiles[actualProfileKey].secure = [];
+                        }
+                        if (!pendingProfiles[actualProfileKey].secure.includes(propertyName)) {
+                            pendingProfiles[actualProfileKey].secure.push(propertyName);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    return pendingProfiles;
+};
+
+// Helper function to check if a profile or its parent is deleted
+export const isProfileOrParentDeleted = (profileKey: string, deletedProfiles: string[]): boolean => {
+    const { state, setState, ...refs } = useConsolidatedState();
+    const { selectedTab, configurations, renames } = createStateVariables(state, setState);
+    if (selectedTab === null) return false;
+
+    // Get the current effective profile key considering pending renames
+    const effectiveProfileKey = getCurrentEffectiveName(profileKey, configurations[selectedTab!]!.configPath, renames);
+
+    // Use the effective profile key to check the current hierarchy
+    const profileParts = effectiveProfileKey.split(".");
+
+    // Check each level of the current profile hierarchy
+    for (let i = 0; i < profileParts.length; i++) {
+        const currentLevelProfileKey = profileParts.slice(0, i + 1).join(".");
+        let fullProfilePath: string;
+
+        if (i === 0) {
+            // Top-level profile
+            fullProfilePath = `profiles.${currentLevelProfileKey}`;
+        } else {
+            // Nested profile - construct the full path for this specific level
+            const pathArray = ["profiles"];
+            for (let j = 0; j <= i; j++) {
+                pathArray.push(profileParts[j]);
+                if (j < i) {
+                    pathArray.push("profiles");
+                }
+            }
+            fullProfilePath = pathArray.join(".");
+        }
+
+        // If any parent profile is deleted, hide this profile
+        if (deletedProfiles.includes(fullProfilePath)) {
+            return true;
+        }
+    }
+    return false;
+};
+
+export const formatPendingChangesHelper = () => {
+    const { state, setState, ...refs } = useConsolidatedState();
+    const { deletions, pendingChanges, renames, pendingDefaults, defaultsDeletions } = createStateVariables(state, setState);
+    const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
+        Object.keys(changesForPath).map((key) => {
+            const { value, path, profile, secure } = changesForPath[key];
+            return { key, value, path, profile, configPath, secure };
+        })
+    );
+
+    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
+
+    const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
+        Object.keys(changesForPath).map((key) => {
+            const { value, path } = changesForPath[key];
+            return { key, value, path, configPath, secure: false };
+        })
+    );
+
+    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
+        keys.map((key) => ({ key, configPath, secure: false }))
+    );
+
+    // Prepare renames data
+    const renamesData = Object.entries(renames).flatMap(([configPath, configRenames]) =>
+        Object.entries(configRenames).map(([originalKey, newKey]) => ({
+            originalKey,
+            newKey,
+            configPath,
+        }))
+    );
+
+    const updatedChanges = updateChangesForRenames(changes, renamesData);
+
+    const result = {
+        changes: updatedChanges,
+        deletions: deleteKeys,
+        defaultsChanges,
+        defaultsDeleteKeys: defaultsDeleteKeys,
+        renames: renamesData,
+    };
+
+    return result;
+};

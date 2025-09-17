@@ -4,10 +4,6 @@
  * conflict resolution, and loop detection.
  */
 
-/**
- * Updates changes to use new profile names after renames.
- * Handles complex nested profile renames and chained renames.
- */
 export const updateChangesForRenames = (changes: any[], renames: any[]) => {
     if (!renames || renames.length === 0) {
         return changes;

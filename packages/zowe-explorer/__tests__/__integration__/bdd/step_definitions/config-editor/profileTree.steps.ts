@@ -53,7 +53,7 @@ Then('the profile tree should contain 4 nodes with titles "zosmf1", "zosmf2", "z
             }
         },
         {
-            timeout: 15000,
+            timeout: 5000,
             timeoutMsg: "Profile elements not found within timeout",
         }
     );
@@ -90,38 +90,6 @@ Then('the profile tree should contain 4 nodes with titles "zosmf1", "zosmf2", "z
             if (profileNameSpan) {
                 const text = await profileNameSpan.getText();
                 texts.push(text);
-            }
-        }
-    }
-
-    // If we didn't find any profiles in the expected structure, try a more flexible approach
-    if (texts.length === 0) {
-        // Look for any elements that might contain profile names
-        const allSpans = await browser.$$("span");
-
-        for (const span of allSpans) {
-            try {
-                const text = await span.getText();
-                if (text && expectedTitles.includes(text)) {
-                    texts.push(text);
-                }
-            } catch (error) {
-                // Ignore errors getting text from spans
-            }
-        }
-
-        // Also try looking for any div elements that might contain profile names
-        const allDivs = await browser.$$("div");
-
-        for (const div of allDivs) {
-            try {
-                const text = await div.getText();
-                if (text && expectedTitles.includes(text)) {
-                    texts.push(text);
-                    console.log("Found profile text in div:", text);
-                }
-            } catch (error) {
-                // Ignore errors getting text from divs
             }
         }
     }
