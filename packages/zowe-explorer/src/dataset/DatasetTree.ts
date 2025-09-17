@@ -1088,7 +1088,13 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             }
                             options.attributes = true;
                             options.responseTimeout = childProfile.profile?.responseTimeout;
-                            const memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
+                            let memResponse;
+                            try {
+                                memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
+                            } catch (err) {
+                                ZoweLogger.error(`Failed to get members for data set ${child.getLabel()}`);
+                                continue;
+                            }
                             let existing = false;
                             for (const mem of memResponse.apiResponse.items) {
                                 existing = this.checkFilterPattern(mem.member, item.member);
