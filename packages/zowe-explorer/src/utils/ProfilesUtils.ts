@@ -99,11 +99,7 @@ export class ProfilesUtils {
             ProfilesUtils.PROFILE_SECURITY = false;
             ZoweLogger.info(vscode.l10n.t(`Zowe Explorer profiles are being set as unsecured.`));
         } else {
-            if (settingEnabled && credentialManager) {
-                ProfilesUtils.PROFILE_SECURITY = credentialManager;
-            } else {
-                ProfilesUtils.PROFILE_SECURITY = Constants.ZOWE_CLI_SCM;
-            }
+            ProfilesUtils.PROFILE_SECURITY = credentialManager ?? Constants.ZOWE_CLI_SCM;
             ZoweLogger.info(vscode.l10n.t(`Zowe Explorer profiles are being set as secured.`));
         }
         if (currentProfileSecurity !== ProfilesUtils.PROFILE_SECURITY) {
