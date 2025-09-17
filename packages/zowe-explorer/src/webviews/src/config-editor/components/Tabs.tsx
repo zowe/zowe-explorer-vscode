@@ -12,6 +12,7 @@ interface TabsProps {
   pendingChanges: { [configPath: string]: any };
   autostoreChanges: { [configPath: string]: boolean };
   renames: { [configPath: string]: { [originalKey: string]: string } };
+  deletions: { [configPath: string]: string[] };
 }
 
 export function Tabs({
@@ -26,6 +27,7 @@ export function Tabs({
   pendingChanges,
   autostoreChanges,
   renames,
+  deletions,
 }: TabsProps) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabIndex: number } | null>(null);
 
@@ -122,7 +124,8 @@ export function Tabs({
             const hasPendingChanges =
               (pendingChanges[config.configPath] && Object.keys(pendingChanges[config.configPath]).length > 0) ||
               autostoreChanges[config.configPath] !== undefined ||
-              (renames[config.configPath] && Object.keys(renames[config.configPath]).length > 0);
+              (renames[config.configPath] && Object.keys(renames[config.configPath]).length > 0) ||
+              (deletions[config.configPath] && deletions[config.configPath].length > 0);
             return (
               <div
                 key={index}

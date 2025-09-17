@@ -12,6 +12,7 @@ interface ProfileTreeProps {
   getProfileType: (profileKey: string) => string | null;
   hasPendingSecureChanges: (profileKey: string) => boolean;
   hasPendingRename: (profileKey: string) => boolean;
+  hasPendingDeletions: (profileKey: string) => boolean;
   isFilteringActive?: boolean;
   expandedNodes: Set<string>;
   setExpandedNodes: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -40,6 +41,7 @@ export function ProfileTree({
   isProfileDefault,
   hasPendingSecureChanges,
   hasPendingRename,
+  hasPendingDeletions,
   isFilteringActive,
   expandedNodes,
   setExpandedNodes,
@@ -486,6 +488,7 @@ export function ProfileTree({
     const hasSecureChanges = hasPendingSecureChanges(node.key);
     const isDefault = isProfileDefault(node.key);
     const hasRename = hasPendingRename(node.key);
+    const hasDeletions = hasPendingDeletions(node.key);
     const isDragging = draggedProfile === node.key;
     const isDragOver = dragOverProfile === node.key;
     const canDrop = draggedProfile && draggedProfile !== node.key && !isInvalidDrop(draggedProfile, node.key);
@@ -559,7 +562,7 @@ export function ProfileTree({
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
-              opacity: hasPendingChanges || hasSecureChanges || hasRename ? 0.7 : 1,
+              opacity: hasPendingChanges || hasSecureChanges || hasRename || hasDeletions ? 0.7 : 1,
               pointerEvents: "none",
             }}
             draggable={false}

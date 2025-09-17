@@ -18,6 +18,7 @@ interface ProfileListProps {
   viewMode: "flat" | "tree";
   hasPendingSecureChanges: (profileKey: string) => boolean;
   hasPendingRename: (profileKey: string) => boolean;
+  hasPendingDeletions: (profileKey: string) => boolean;
   // Search and filter props
   searchTerm: string;
   filterType: string | null;
@@ -48,6 +49,7 @@ export function ProfileList({
   viewMode,
   hasPendingSecureChanges,
   hasPendingRename,
+  hasPendingDeletions,
   searchTerm,
   filterType,
   onSearchChange,
@@ -186,6 +188,7 @@ export function ProfileList({
             getProfileType={getProfileType}
             hasPendingSecureChanges={hasPendingSecureChanges}
             hasPendingRename={hasPendingRename}
+            hasPendingDeletions={hasPendingDeletions}
             isFilteringActive={isFilteringActive}
             expandedNodes={expandedNodes}
             setExpandedNodes={setExpandedNodes}
@@ -228,7 +231,13 @@ export function ProfileList({
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
-                  opacity: pendingProfiles[profileKey] || hasPendingSecureChanges(profileKey) || hasPendingRename(profileKey) ? 0.7 : 1,
+                  opacity:
+                    pendingProfiles[profileKey] ||
+                    hasPendingSecureChanges(profileKey) ||
+                    hasPendingRename(profileKey) ||
+                    hasPendingDeletions(profileKey)
+                      ? 0.7
+                      : 1,
                 }}
               >
                 {profileKey}
