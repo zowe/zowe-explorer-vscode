@@ -777,9 +777,52 @@ export function getProfileTypeFromPath(path: string[]): string | null {
 /**
  * Check if a property can be secure
  */
-export function canPropertyBeSecure(_displayKey: string, _path: string[]): boolean {
-    // This function needs to be implemented with the full logic from App.tsx
-    // For now, return false as a placeholder
+export function canPropertyBeSecure(
+    displayKey: string, 
+    path: string[], 
+    selectedTab: number | null,
+    configurations: Configuration[],
+    schemaValidations: { [configPath: string]: schemaValidation | undefined },
+    getProfileTypeFn: typeof getProfileType,
+    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
+    renames: { [configPath: string]: { [originalKey: string]: string } },
+    selectedProfileKey?: string | null
+): boolean {
+    if (!displayKey || selectedTab === null) {
+        return false;
+    }
+
+    const config = configurations[selectedTab];
+    if (!config) {
+        return false;
+    }
+
+    const configPath = config.configPath;
+    const schemaValidation = schemaValidations[configPath];
+    
+    if (!schemaValidation) {
+        return false;
+    }
+
+    // For add profile modal, we can use the selectedProfileKey to get the profile type
+    if (selectedProfileKey) {
+        const currentProfileType = getProfileTypeFn(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
+        if (currentProfileType) {
+            const propertySchema = schemaValidation.propertySchema[currentProfileType] || {};
+            return propertySchema[displayKey]?.secure === true;
+        }
+    }
+
+    // Fallback: check all profile types for this property
+    if (schemaValidation.propertySchema) {
+        for (const profileType in schemaValidation.propertySchema) {
+            const propertySchema = schemaValidation.propertySchema[profileType];
+            if (propertySchema[displayKey]?.secure === true) {
+                return true;
+            }
+        }
+    }
+
     return false;
 }
 

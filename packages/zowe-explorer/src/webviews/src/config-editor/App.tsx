@@ -1065,8 +1065,18 @@ export function App() {
 
   // Wrapper function for canPropertyBeSecure that provides the necessary parameters
   const canPropertyBeSecureWrapper = useCallback((displayKey: string, path: string[]): boolean => {
-    return canPropertyBeSecure(displayKey, path);
-  }, []);
+    return canPropertyBeSecure(
+      displayKey, 
+      path, 
+      selectedTab, 
+      configurations, 
+      schemaValidations, 
+      getProfileType, 
+      pendingChanges, 
+      renames,
+      selectedProfileKey
+    );
+  }, [selectedTab, configurations, schemaValidations, pendingChanges, renames, selectedProfileKey]);
 
   // Wrapper function for handleToggleSecure that provides the necessary parameters
   const handleToggleSecureWrapper = useCallback((fullKey: string, displayKey: string, path: string[]): void => {

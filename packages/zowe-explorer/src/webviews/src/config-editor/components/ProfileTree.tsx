@@ -247,10 +247,19 @@ export function ProfileTree({
       e.dataTransfer.setData("text/plain", profileKey);
       e.dataTransfer.setData("application/json", JSON.stringify({ profileKey }));
 
-      // Set a custom drag image to make it more obvious
       const dragImage = e.target.cloneNode(true);
       dragImage.style.opacity = "0.5";
-      e.dataTransfer.setDragImage(dragImage, 0, 0);
+      
+      // Calculate the offset based on mouse position within the element
+      const rect = e.target.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
+      
+      // Ensure the offset is within reasonable bounds
+      const clampedOffsetX = Math.max(0, Math.min(offsetX, rect.width));
+      const clampedOffsetY = Math.max(0, Math.min(offsetY, rect.height));
+      
+      e.dataTransfer.setDragImage(dragImage, clampedOffsetX, clampedOffsetY);
     }
 
     // Use setTimeout to ensure the drag operation starts before setting state

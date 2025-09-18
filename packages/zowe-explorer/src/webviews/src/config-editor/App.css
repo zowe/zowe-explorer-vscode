@@ -12,18 +12,23 @@ body {
     transition: all 0.2s ease;
 }
 
-.profile-tree-item.drag-over {
-    background-color: var(--vscode-button-hoverBackground) !important;
-    border: 2px dashed var(--vscode-button-background) !important;
-    transition: all 0.2s ease;
-}
-
+/* Improve drag image appearance on Mac */
 .profile-tree-item[draggable="true"] {
     cursor: grab;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .profile-tree-item[draggable="true"]:active {
     cursor: grabbing;
+}
+
+.profile-tree-item.drag-over {
+    background-color: var(--vscode-button-hoverBackground) !important;
+    border: 2px dashed var(--vscode-button-background) !important;
+    transition: all 0.2s ease;
 }
 
 body {
