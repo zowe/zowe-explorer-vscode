@@ -55,7 +55,6 @@ interface RenderProfileDetailsProps {
   hiddenItems: { [configPath: string]: { [key: string]: { path: string } } };
   secureValuesAllowed: boolean;
   SORT_ORDER_OPTIONS: PropertySortOrder[];
-  renameCounts: { [configPath: string]: { [profileKey: string]: number } };
   mergedProperties: any;
   pendingDefaults: { [configPath: string]: { [key: string]: PendingDefault } };
 
@@ -100,9 +99,8 @@ interface RenderProfileDetailsProps {
   isPropertySecure: (fullKey: string, displayKey: string, path: string[], mergedProps?: any) => boolean;
   canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
   isMergedPropertySecure: (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean) => boolean;
+  isProfileAffectedByDragDrop: (profileKey: string) => boolean;
 
-  // Constants
-  MAX_RENAMES_PER_PROFILE: number;
 }
 
 export const RenderProfileDetails = ({
@@ -120,7 +118,6 @@ export const RenderProfileDetails = ({
   hiddenItems,
   secureValuesAllowed,
   SORT_ORDER_OPTIONS,
-  renameCounts,
   mergedProperties,
   isProfileDefault,
   getProfileType,
@@ -150,7 +147,7 @@ export const RenderProfileDetails = ({
   isPropertySecure,
   canPropertyBeSecure,
   isMergedPropertySecure,
-  MAX_RENAMES_PER_PROFILE,
+  isProfileAffectedByDragDrop,
 }: RenderProfileDetailsProps) => {
   const renderProfileDetails = useCallback(() => {
     return (
@@ -210,46 +207,16 @@ export const RenderProfileDetails = ({
               <button
                 className="profile-action-button"
                 onClick={() => setRenameProfileModalOpen(true)}
-                title={(() => {
-                  if (selectedProfileKey) {
-                    const configPath = configurations[selectedTab!]?.configPath;
-                    if (configPath) {
-                      // Get the original profile key to check rename limit
-                      const originalProfileKey = getOriginalProfileKeyWithNested(selectedProfileKey, configPath, renames);
-                      const currentRenameCount = renameCounts[configPath]?.[originalProfileKey] || 0;
-                      if (currentRenameCount >= MAX_RENAMES_PER_PROFILE) {
-                        return `Profile has already been renamed once. Save and refresh to reset.`;
-                      }
-                    }
-                  }
-                  return "Rename profile";
-                })()}
-                disabled={(() => {
-                  if (selectedProfileKey) {
-                    const configPath = configurations[selectedTab!]?.configPath;
-                    if (configPath) {
-                      // Get the original profile key to check rename limit
-                      const originalProfileKey = getOriginalProfileKeyWithNested(selectedProfileKey, configPath, renames);
-                      const currentRenameCount = renameCounts[configPath]?.[originalProfileKey] || 0;
-                      return currentRenameCount >= MAX_RENAMES_PER_PROFILE;
-                    }
-                  }
-                  return false;
-                })()}
-                style={(() => {
-                  if (selectedProfileKey) {
-                    const configPath = configurations[selectedTab!]?.configPath;
-                    if (configPath) {
-                      // Get the original profile key to check rename limit
-                      const originalProfileKey = getOriginalProfileKeyWithNested(selectedProfileKey, configPath, renames);
-                      const currentRenameCount = renameCounts[configPath]?.[originalProfileKey] || 0;
-                      if (currentRenameCount >= MAX_RENAMES_PER_PROFILE) {
-                        return { opacity: 0.5, cursor: "not-allowed" };
-                      }
-                    }
-                  }
-                  return {};
-                })()}
+                title={
+                  selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey)
+                    ? "Cannot rename: This profile or a related profile has been moved via drag-and-drop. Save and refresh to enable renaming."
+                    : "Rename profile"
+                }
+                disabled={selectedProfileKey ? isProfileAffectedByDragDrop(selectedProfileKey) : false}
+                style={{
+                  opacity: selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? 0.5 : 1,
+                  cursor: selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? "not-allowed" : "pointer"
+                }}
               >
                 <span className="codicon codicon-edit"></span>
               </button>
@@ -418,8 +385,6 @@ export const RenderProfileDetails = ({
     propertySortOrder,
     sortOrderVersion,
     mergedProperties,
-    renameCounts,
-    MAX_RENAMES_PER_PROFILE,
   ]);
 
   return renderProfileDetails();

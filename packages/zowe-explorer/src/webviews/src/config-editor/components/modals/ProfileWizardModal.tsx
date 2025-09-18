@@ -74,6 +74,58 @@ export function ProfileWizardModal({
   stringifyValueByType,
   vscodeApi,
 }: ProfileWizardModalProps) {
+  
+  // Auth order helper functions
+  const isAuthOrderProperty = (key: string): boolean => {
+    if (!key || typeof key !== "string") {
+      return false;
+    }
+    return key.toLowerCase() === "authorder";
+  };
+
+  const handleAuthMethodClick = (authMethod: string) => {
+    const currentValue = wizardNewPropertyValue.trim();
+    const authMethods = currentValue ? currentValue.split(",").map(m => m.trim()) : [];
+    
+    if (!authMethods.includes(authMethod)) {
+      const newAuthMethods = [...authMethods, authMethod];
+      const newValue = newAuthMethods.join(", ");
+      onNewPropertyValueChange(newValue);
+    }
+  };
+
+  const getAuthMethodTooltip = (authMethod: string): string => {
+    switch (authMethod) {
+      case "basic":
+        return "User & password authentication";
+      case "token":
+        return "API ML token authentication";
+      case "bearer":
+        return "Bearer token authentication";
+      case "cert-pem":
+        return "PEM certificate authentication";
+      default:
+        return authMethod;
+    }
+  };
+
+  const isAuthMethodAlreadyAdded = (authMethod: string): boolean => {
+    const currentValue = wizardNewPropertyValue.trim();
+    const authMethods = currentValue ? currentValue.split(",").map(m => m.trim()) : [];
+    return authMethods.includes(authMethod);
+  };
+
+  const isValidAuthOrder = (value: string): boolean => {
+    if (!value.trim()) return true;
+    
+    const validAuthTypes = ["basic", "token", "bearer", "cert-pem"];
+    const authMethods = value.split(",").map(m => m.trim());
+    
+    const uniqueMethods = new Set(authMethods);
+    if (uniqueMethods.size !== authMethods.length) return false;
+    
+    return authMethods.every(method => validAuthTypes.includes(method));
+  };
   if (!isOpen) return null;
 
   const isFileProperty = (key: string): boolean => {
@@ -273,6 +325,38 @@ export function ProfileWizardModal({
                     </ul>
                   )}
                 </div>
+
+                {/* Auth Order Buttons */}
+                {isAuthOrderProperty(wizardNewPropertyKey.trim()) && (
+                  <div className="auth-order-buttons">
+                    <label className="auth-order-label">
+                      {l10n.t("Select Authentication Order")}:
+                    </label>
+                    <div className="auth-order-button-container">
+                      {["token", "basic", "bearer", "cert-pem"].map((authMethod) => {
+                        const isDisabled = isAuthMethodAlreadyAdded(authMethod);
+                        return (
+                          <button
+                            key={authMethod}
+                            type="button"
+                            onClick={() => handleAuthMethodClick(authMethod)}
+                            className={`auth-order-button ${isDisabled ? 'disabled' : ''}`}
+                            disabled={isDisabled}
+                            title={getAuthMethodTooltip(authMethod)}
+                          >
+                            {authMethod}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {!isValidAuthOrder(wizardNewPropertyValue) && (
+                      <div className="auth-order-error">
+                        {l10n.t("Invalid format. Use: basic, token, bearer, cert-pem")}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="wizard-property-value-row">
                   {(() => {
                     const propertyType = getPropertyType(wizardNewPropertyKey.trim());
@@ -329,6 +413,9 @@ export function ProfileWizardModal({
                         />
                       );
                     } else {
+                      const isAuthOrder = isAuthOrderProperty(wizardNewPropertyKey.trim());
+                      const hasValidationError = isAuthOrder && !isValidAuthOrder(wizardNewPropertyValue);
+                      
                       return (
                         <input
                           type="text"
@@ -341,8 +428,8 @@ export function ProfileWizardModal({
                               onCancel();
                             }
                           }}
-                          className="modal-input wizard-property-value-input"
-                          placeholder={l10n.t("Property value")}
+                          className={`modal-input wizard-property-value-input ${hasValidationError ? 'error' : ''}`}
+                          placeholder={isAuthOrder ? l10n.t("e.g., basic, token") : l10n.t("Property value")}
                         />
                       );
                     }
@@ -414,8 +501,8 @@ export function ProfileWizardModal({
                   onClick={onAddProperty}
                   disabled={
                     !wizardNewPropertyKey.trim() ||
-                    !wizardNewPropertyValue.trim() ||
-                    wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim())
+                    wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) ||
+                    (isAuthOrderProperty(wizardNewPropertyKey.trim()) && !isValidAuthOrder(wizardNewPropertyValue))
                   }
                   className="wizard-add-property-button"
                 >

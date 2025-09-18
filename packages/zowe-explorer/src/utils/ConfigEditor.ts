@@ -9,10 +9,10 @@
  *
  */
 
-import { DeferredPromise, WebView, ZoweVsCodeExtension, FileManagement } from "@zowe/zowe-explorer-api";
+import { DeferredPromise, WebView, ZoweVsCodeExtension, FileManagement, ProfilesCache } from "@zowe/zowe-explorer-api";
 import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
 import * as vscode from "vscode";
-import { ProfileInfo, Config, ConfigBuilder, ConfigSchema } from "@zowe/imperative";
+import { ProfileInfo, Config, ConfigBuilder, ConfigSchema, ProfileCredentials } from "@zowe/imperative";
 import * as path from "path";
 import * as fs from "fs";
 import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
@@ -26,6 +26,7 @@ import {
     updateDefaultsAfterRename,
     simulateDefaultsUpdateAfterRename,
 } from "../webviews/src/config-editor/utils/MoveUtils";
+import { Profiles } from "../configuration/Profiles";
 
 export class ConfigEditor extends WebView {
     public userSubmission: DeferredPromise<{
@@ -81,7 +82,7 @@ export class ConfigEditor extends WebView {
     }
 
     protected async getLocalConfigs(): Promise<any[]> {
-        const profInfo = new ProfileInfo("zowe");
+        const profInfo = new ProfileInfo("zowe",{overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring)});
         try {
             await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
         } catch (err) {

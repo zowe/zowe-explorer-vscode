@@ -49,7 +49,6 @@ interface RenderProfilesProps {
   profileSearchTerm: string;
   profileFilterType: string | null;
   profileSortOrder: ProfileSortOrder;
-  renameCounts: { [configPath: string]: { [profileKey: string]: number } };
 
   // Handler functions
   handleProfileSelection: (profileKey: string) => void;
@@ -94,7 +93,6 @@ export const RenderProfiles = ({
   profileSearchTerm,
   profileFilterType,
   profileSortOrder,
-  renameCounts,
   handleProfileSelection,
   setProfileMenuOpen,
   handleDeleteProfile,
@@ -341,7 +339,6 @@ export const RenderProfiles = ({
           configurations={configurations}
           selectedTab={selectedTab}
           renames={renames}
-          renameCounts={renameCounts}
         />
       );
     },
@@ -372,7 +369,6 @@ export const RenderProfiles = ({
       getRenamedProfileKeyWithNested,
       profileSortOrder || "natural",
       sortProfilesAtLevel,
-      renameCounts,
     ]
   );
 

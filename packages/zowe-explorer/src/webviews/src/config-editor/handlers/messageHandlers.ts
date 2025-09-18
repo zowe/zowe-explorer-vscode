@@ -68,7 +68,6 @@ interface MessageHandlerProps {
     setViewMode: React.Dispatch<React.SetStateAction<"flat" | "tree">>;
     setPropertySortOrder: React.Dispatch<React.SetStateAction<"alphabetical" | "merged-first" | "non-merged-first">>;
     setProfileSortOrder: React.Dispatch<React.SetStateAction<"natural" | "alphabetical" | "reverse-alphabetical" | null>>;
-    setRenameCounts: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [profileKey: string]: number } }>>;
     setSecureValuesAllowed: React.Dispatch<React.SetStateAction<boolean>>;
     setSchemaValidations: React.Dispatch<React.SetStateAction<{ [configPath: string]: schemaValidation | undefined }>>;
     setAddConfigModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -102,7 +101,6 @@ export const handleConfigurationsMessage = (data: any, props: MessageHandlerProp
         setSelectedProfileKey,
         setPendingSaveSelection,
         setIsSaving,
-        setRenameCounts,
         setSortOrderVersion,
         selectedProfilesByConfig,
         setSelectedProfilesByConfig,
@@ -138,8 +136,6 @@ export const handleConfigurationsMessage = (data: any, props: MessageHandlerProp
         setSelectedProfileKey(pendingSaveSelection.profile);
         setPendingSaveSelection(null);
         setIsSaving(false);
-        // Reset rename counts after successful save
-        setRenameCounts({});
         // Increment sort order version to trigger re-render with updated merged properties after save
         setSortOrderVersion((prev) => prev + 1);
     } else {

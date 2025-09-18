@@ -175,7 +175,7 @@ export function useProfileWizard({
     };
 
     const handleWizardAddProperty = () => {
-        if (!wizardNewPropertyKey.trim() || !wizardNewPropertyValue.trim()) return;
+        if (!wizardNewPropertyKey.trim()) return;
 
         // Check if the key already exists
         const keyExists = wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim());

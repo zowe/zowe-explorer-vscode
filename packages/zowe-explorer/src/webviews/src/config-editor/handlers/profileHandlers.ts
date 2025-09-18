@@ -52,27 +52,25 @@ interface ProfileHandlerProps {
     setExpandedNodesByConfig: React.Dispatch<React.SetStateAction<{ [configPath: string]: Set<string> }>>;
     setPendingDefaults: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: PendingDefault } }>>;
     setPendingChanges: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: PendingChange } }>>;
-    setRenameCounts: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [profileKey: string]: number } }>>;
     setRenameProfileModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setDeletions: React.Dispatch<React.SetStateAction<{ [configPath: string]: string[] }>>;
     setSelectedTab: React.Dispatch<React.SetStateAction<number | null>>;
     setIsNavigating: React.Dispatch<React.SetStateAction<boolean>>;
+    setDragDroppedProfiles: React.Dispatch<React.SetStateAction<{ [configPath: string]: Set<string> }>>;
 
     // State values
     selectedTab: number | null;
     configurations: Configuration[];
     renames: { [configPath: string]: { [originalKey: string]: string } };
-    renameCounts: { [configPath: string]: { [profileKey: string]: number } };
+    dragDroppedProfiles: { [configPath: string]: Set<string> };
     selectedProfileKey: string | null;
     pendingMergedPropertiesRequest: string | null;
-
-    // Constants
-    MAX_RENAMES_PER_PROFILE: number;
 
     // Functions
     formatPendingChanges: () => any;
     extractPendingProfiles: (configPath: string) => { [key: string]: any };
     findOptimalReplacementProfile: (profileKey: string, configPath: string) => string | null;
+    getAvailableProfilesForConfig: (configPath: string) => string[];
     vscodeApi: any;
 }
 
@@ -81,10 +79,8 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
         selectedTab,
         configurations,
         renames,
-        renameCounts,
         selectedProfileKey,
         pendingMergedPropertiesRequest,
-        MAX_RENAMES_PER_PROFILE,
         formatPendingChanges,
         extractPendingProfiles,
         vscodeApi,
@@ -96,8 +92,8 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
         setExpandedNodesByConfig,
         setPendingDefaults,
         setPendingChanges,
-        setRenameCounts,
         setRenameProfileModalOpen,
+        setDragDroppedProfiles,
     } = props;
 
     if (selectedTab === null) return false;
@@ -110,17 +106,6 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
         originalKey = currentEffectiveName;
     }
 
-    // Check rename limit - only for actual renames, not drag and drop operations
-    if (!isDragDrop) {
-        const currentRenameCount = renameCounts[configPath]?.[originalKey] || 0;
-        if (currentRenameCount >= MAX_RENAMES_PER_PROFILE) {
-            vscodeApi.postMessage({
-                command: "SHOW_ERROR_MESSAGE",
-                message: `Cannot rename '${originalKey}': Profile has already been renamed once. Please save your changes and refresh to reset the limit.`,
-            });
-            return false;
-        }
-    }
 
     // Check for circular renames before proceeding (same validation as rename modal)
     const currentRenames = renames[configPath] || {};
@@ -607,20 +592,55 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
         });
     }
 
-    // Update rename count for this profile - only for actual renames, not drag and drop operations
-    if (!isDragDrop) {
-        setRenameCounts((prev) => {
-            const configCounts = prev[configPath] || {};
-            const currentCount = configCounts[originalKey] || 0;
-            return {
-                ...prev,
-                [configPath]: {
-                    ...configCounts,
-                    [originalKey]: currentCount + 1,
-                },
+    // Track drag-drop operations to disable rename button for affected profiles
+    if (isDragDrop) {
+        setDragDroppedProfiles((prev) => {
+            const newState = { ...prev };
+            if (!newState[configPath]) {
+                newState[configPath] = new Set();
+            }
+            
+            // Add the original profile and all its parents/children to the drag-dropped set
+            const addProfileAndRelated = (profileKey: string) => {
+                newState[configPath].add(profileKey);
+                
+                // Add all parent profiles
+                const parts = profileKey.split(".");
+                for (let i = 1; i < parts.length; i++) {
+                    const parentKey = parts.slice(0, i).join(".");
+                    newState[configPath].add(parentKey);
+                }
+                
+                // Add all child profiles that exist in the configuration or renames
+                const config = configurations[selectedTab].properties;
+                const flatProfiles = flattenProfiles(config.profiles);
+                Object.keys(flatProfiles).forEach((existingProfile) => {
+                    if (existingProfile.startsWith(profileKey + ".")) {
+                        newState[configPath].add(existingProfile);
+                    }
+                });
+                
+                // Also check renamed profiles
+                Object.keys(renames[configPath] || {}).forEach((origProfile) => {
+                    if (origProfile.startsWith(profileKey + ".")) {
+                        newState[configPath].add(origProfile);
+                    }
+                });
+                Object.values(renames[configPath] || {}).forEach((renamedProfile) => {
+                    if (renamedProfile.startsWith(profileKey + ".")) {
+                        newState[configPath].add(renamedProfile);
+                    }
+                });
             };
+            
+            // Add both the original and new profile keys and their related profiles
+            addProfileAndRelated(originalKey);
+            addProfileAndRelated(newKey);
+            
+            return newState;
         });
     }
+
     // Close the modal
     setRenameProfileModalOpen(false);
 
@@ -638,7 +658,7 @@ export const handleDeleteProfile = (profileKey: string, props: ProfileHandlerPro
         setSelectedProfileKey,
         setSelectedProfilesByConfig,
         formatPendingChanges,
-        findOptimalReplacementProfile,
+        getAvailableProfilesForConfig,
         vscodeApi,
     } = props;
 
@@ -696,7 +716,64 @@ export const handleDeleteProfile = (profileKey: string, props: ProfileHandlerPro
 
     // If this profile is currently selected, or if the selected profile is a child of this profile, select the nearest profile
     if (selectedProfileKey === profileKey || (selectedProfileKey && selectedProfileKey.startsWith(profileKey + "."))) {
-        const nearestProfileKey = findOptimalReplacementProfile(profileKey, configPath);
+        // Create a custom replacement profile finder that excludes the deleted profile and its children
+        const findReplacementExcludingDeleted = (deletedProfileKey: string, configPath: string): string | null => {
+            const allAvailableProfiles = getAvailableProfilesForConfig(configPath);
+            
+            // Filter out the deleted profile and all its children
+            const filteredProfiles = allAvailableProfiles.filter(profile => {
+                return profile !== deletedProfileKey && !profile.startsWith(deletedProfileKey + ".");
+            });
+
+            if (filteredProfiles.length === 0) {
+                return null;
+            }
+
+            // Strategy 1: If deleting a nested profile, prefer its parent (if not being deleted)
+            if (deletedProfileKey.includes(".")) {
+                const parentKey = deletedProfileKey.split(".").slice(0, -1).join(".");
+                if (filteredProfiles.includes(parentKey)) {
+                    return parentKey;
+                }
+            }
+
+            // Strategy 2: Find siblings (profiles at the same level) that aren't being deleted
+            const deletedParts = deletedProfileKey.split(".");
+            if (deletedParts.length > 1) {
+                const parentKey = deletedParts.slice(0, -1).join(".");
+                const siblings = filteredProfiles.filter((profile) => 
+                    profile.startsWith(parentKey + ".") && profile !== deletedProfileKey
+                );
+                if (siblings.length > 0) {
+                    return siblings[0];
+                }
+            }
+
+            // Strategy 3: Find the next profile in the list (maintains user's workflow)
+            const currentIndex = filteredProfiles.indexOf(deletedProfileKey);
+            if (currentIndex !== -1) {
+                // Try next profile first (user was likely working down the list)
+                for (let i = currentIndex + 1; i < filteredProfiles.length; i++) {
+                    const candidate = filteredProfiles[i];
+                    if (candidate !== deletedProfileKey) {
+                        return candidate;
+                    }
+                }
+
+                // If no next profile, try previous profile
+                for (let i = currentIndex - 1; i >= 0; i--) {
+                    const candidate = filteredProfiles[i];
+                    if (candidate !== deletedProfileKey) {
+                        return candidate;
+                    }
+                }
+            }
+
+            // Strategy 4: Fallback to first available profile
+            return filteredProfiles[0] || null;
+        };
+
+        const nearestProfileKey = findReplacementExcludingDeleted(profileKey, configPath);
 
         // Set the nearest profile as selected, or null if no profile available
         setSelectedProfileKey(nearestProfileKey);

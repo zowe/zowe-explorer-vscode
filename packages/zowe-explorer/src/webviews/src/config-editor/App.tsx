@@ -106,7 +106,6 @@ const LOCAL_STORAGE_KEYS = {
 // Profile sort order options - now imported from utils
 
 const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
-const MAX_RENAMES_PER_PROFILE = 1;
 
 // Helper functions now imported from utils
 
@@ -121,7 +120,7 @@ export function App() {
   const [deletions, setDeletions] = useState<{ [configPath: string]: string[] }>({});
   const [defaultsDeletions, setDefaultsDeletions] = useState<{ [configPath: string]: string[] }>({});
   const [renames, setRenames] = useState<{ [configPath: string]: { [originalKey: string]: string } }>({});
-  const [renameCounts, setRenameCounts] = useState<{ [configPath: string]: { [profileKey: string]: number } }>({});
+  const [dragDroppedProfiles, setDragDroppedProfiles] = useState<{ [configPath: string]: Set<string> }>({});
   const [autostoreChanges, setAutostoreChanges] = useState<{ [configPath: string]: boolean }>({});
   const [hiddenItems, setHiddenItems] = useState<{ [configPath: string]: { [key: string]: { path: string } } }>({});
   const [schemaValidations, setSchemaValidations] = useState<{ [configPath: string]: schemaValidation | undefined }>({});
@@ -504,7 +503,7 @@ export function App() {
     setDefaultsDeletions({});
     setAutostoreChanges({});
     setRenames({});
-    setRenameCounts({});
+    setDragDroppedProfiles({});
 
     // Refresh configurations after save
     vscodeApi.postMessage({ command: "GET_PROFILES" });
@@ -567,7 +566,6 @@ export function App() {
         setViewMode,
         setPropertySortOrder,
         setProfileSortOrder,
-        setRenameCounts,
         setSecureValuesAllowed,
         setSchemaValidations,
         setAddConfigModalOpen,
@@ -719,6 +717,16 @@ export function App() {
     const currentSelectedTab = selectedTab;
     const currentSelectedProfileKey = selectedProfileKey;
 
+    // Convert the current selected profile key to its original key before clearing renames
+    let originalSelectedProfileKey = currentSelectedProfileKey;
+    if (currentSelectedProfileKey && currentSelectedTab !== null) {
+      const configPath = configurations[currentSelectedTab]?.configPath;
+      if (configPath) {
+        // Get the original profile key by reversing the renames
+        originalSelectedProfileKey = getProfileNameForMergedProperties(currentSelectedProfileKey, configPath, renames);
+      }
+    }
+
     // Clear all state first
     setHiddenItems({});
     setPendingChanges({});
@@ -727,7 +735,7 @@ export function App() {
     setDefaultsDeletions({});
     setAutostoreChanges({});
     setRenames({});
-    setRenameCounts({});
+    setDragDroppedProfiles({});
 
     // Request fresh configurations from the backend
     vscodeApi.postMessage({ command: "GET_PROFILES" });
@@ -737,19 +745,17 @@ export function App() {
       if (currentSelectedTab !== null) {
         setSelectedTab(currentSelectedTab);
       }
-      if (currentSelectedProfileKey !== null) {
-        setSelectedProfileKey(currentSelectedProfileKey);
+      if (originalSelectedProfileKey !== null) {
+        setSelectedProfileKey(originalSelectedProfileKey);
 
         // Refresh merged properties for the selected profile after clearing changes
         const configPath = currentSelectedTab !== null ? configurations[currentSelectedTab]?.configPath : undefined;
         if (configPath) {
-          // Get the correct profile name for merged properties (handles renames)
-          const profileNameForMergedProperties = getProfileNameForMergedProperties(currentSelectedProfileKey, configPath, renames);
-
+          // After refresh, the profile name is the original name (no renames to handle)
           const changes = formatPendingChanges();
           vscodeApi.postMessage({
             command: "GET_MERGED_PROPERTIES",
-            profilePath: profileNameForMergedProperties,
+            profilePath: originalSelectedProfileKey,
             configPath: configPath,
             changes: changes,
             renames: changes.renames,
@@ -757,7 +763,7 @@ export function App() {
         }
       }
     }, 100);
-  }, [selectedTab, selectedProfileKey, configurations, formatPendingChanges]);
+  }, [selectedTab, selectedProfileKey, configurations, formatPendingChanges, renames]);
 
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
@@ -1157,6 +1163,35 @@ export function App() {
     [profileSortOrder]
   );
 
+  // Function to check if a profile is affected by drag-drop operations
+  const isProfileAffectedByDragDrop = useCallback(
+    (profileKey: string): boolean => {
+      if (selectedTab === null) return false;
+      const configPath = configurations[selectedTab]?.configPath;
+      if (!configPath || !dragDroppedProfiles[configPath]) return false;
+      
+      const dragDroppedSet = dragDroppedProfiles[configPath];
+      
+      // Check if the profile itself is drag-dropped
+      if (dragDroppedSet.has(profileKey)) return true;
+      
+      // Check if any parent is drag-dropped
+      const parts = profileKey.split(".");
+      for (let i = 1; i < parts.length; i++) {
+        const parentKey = parts.slice(0, i).join(".");
+        if (dragDroppedSet.has(parentKey)) return true;
+      }
+      
+      // Check if any child is drag-dropped
+      for (const dragDroppedProfile of dragDroppedSet) {
+        if (dragDroppedProfile.startsWith(profileKey + ".")) return true;
+      }
+      
+      return false;
+    },
+    [selectedTab, configurations, dragDroppedProfiles]
+  );
+
   // Memoized function to get available profiles for optimal performance
   const getAvailableProfilesForConfig = useCallback(
     (configPath: string): string[] => {
@@ -1264,27 +1299,25 @@ export function App() {
         setExpandedNodesByConfig,
         setPendingDefaults,
         setPendingChanges,
-        setRenameCounts,
         setRenameProfileModalOpen,
         setDeletions,
         setSelectedTab,
         setIsNavigating,
+        setDragDroppedProfiles,
 
         // State values
         selectedTab,
         configurations,
         renames,
-        renameCounts,
+        dragDroppedProfiles,
         selectedProfileKey,
         pendingMergedPropertiesRequest,
-
-        // Constants
-        MAX_RENAMES_PER_PROFILE,
 
         // Functions
         formatPendingChanges,
         extractPendingProfiles: extractPendingProfilesWrapper,
         findOptimalReplacementProfile,
+        getAvailableProfilesForConfig,
         vscodeApi,
       });
     },
@@ -1292,13 +1325,13 @@ export function App() {
       selectedTab,
       configurations,
       renames,
-      renameCounts,
+      dragDroppedProfiles,
       selectedProfileKey,
       pendingMergedPropertiesRequest,
-      MAX_RENAMES_PER_PROFILE,
       formatPendingChanges,
       extractPendingProfiles,
       findOptimalReplacementProfile,
+      getAvailableProfilesForConfig,
       setRenames,
       setSelectedProfileKey,
       setPendingMergedPropertiesRequest,
@@ -1307,7 +1340,6 @@ export function App() {
       setExpandedNodesByConfig,
       setPendingDefaults,
       setPendingChanges,
-      setRenameCounts,
       setRenameProfileModalOpen,
       setDeletions,
       setSelectedTab,
@@ -1328,27 +1360,27 @@ export function App() {
         setExpandedNodesByConfig,
         setPendingDefaults,
         setPendingChanges,
-        setRenameCounts,
         setRenameProfileModalOpen,
         setDeletions,
         setSelectedTab,
         setIsNavigating,
+        setDragDroppedProfiles,
 
         // State values
         selectedTab,
         configurations,
         renames,
-        renameCounts,
+        dragDroppedProfiles,
         selectedProfileKey,
         pendingMergedPropertiesRequest,
 
         // Constants
-        MAX_RENAMES_PER_PROFILE,
 
         // Functions
         formatPendingChanges,
         extractPendingProfiles: extractPendingProfilesWrapper,
         findOptimalReplacementProfile,
+        getAvailableProfilesForConfig,
         vscodeApi,
       });
     },
@@ -1356,13 +1388,13 @@ export function App() {
       selectedTab,
       configurations,
       renames,
-      renameCounts,
+      dragDroppedProfiles,
       selectedProfileKey,
       pendingMergedPropertiesRequest,
-      MAX_RENAMES_PER_PROFILE,
       formatPendingChanges,
       extractPendingProfiles,
       findOptimalReplacementProfile,
+      getAvailableProfilesForConfig,
       setRenames,
       setSelectedProfileKey,
       setPendingMergedPropertiesRequest,
@@ -1371,7 +1403,6 @@ export function App() {
       setExpandedNodesByConfig,
       setPendingDefaults,
       setPendingChanges,
-      setRenameCounts,
       setRenameProfileModalOpen,
       setDeletions,
       setSelectedTab,
@@ -1392,27 +1423,27 @@ export function App() {
         setExpandedNodesByConfig,
         setPendingDefaults,
         setPendingChanges,
-        setRenameCounts,
         setRenameProfileModalOpen,
         setDeletions,
         setSelectedTab,
         setIsNavigating,
+        setDragDroppedProfiles,
 
         // State values
         selectedTab,
         configurations,
         renames,
-        renameCounts,
+        dragDroppedProfiles,
         selectedProfileKey,
         pendingMergedPropertiesRequest,
 
         // Constants
-        MAX_RENAMES_PER_PROFILE,
 
         // Functions
         formatPendingChanges,
         extractPendingProfiles: extractPendingProfilesWrapper,
         findOptimalReplacementProfile,
+        getAvailableProfilesForConfig,
         vscodeApi,
       });
     },
@@ -1420,13 +1451,13 @@ export function App() {
       selectedTab,
       configurations,
       renames,
-      renameCounts,
+      dragDroppedProfiles,
       selectedProfileKey,
       pendingMergedPropertiesRequest,
-      MAX_RENAMES_PER_PROFILE,
       formatPendingChanges,
       extractPendingProfiles,
       findOptimalReplacementProfile,
+      getAvailableProfilesForConfig,
       setRenames,
       setSelectedProfileKey,
       setPendingMergedPropertiesRequest,
@@ -1435,7 +1466,6 @@ export function App() {
       setExpandedNodesByConfig,
       setPendingDefaults,
       setPendingChanges,
-      setRenameCounts,
       setRenameProfileModalOpen,
       setDeletions,
       setSelectedTab,
@@ -1456,27 +1486,27 @@ export function App() {
         setExpandedNodesByConfig,
         setPendingDefaults,
         setPendingChanges,
-        setRenameCounts,
         setRenameProfileModalOpen,
         setDeletions,
         setSelectedTab,
         setIsNavigating,
+        setDragDroppedProfiles,
 
         // State values
         selectedTab,
         configurations,
         renames,
-        renameCounts,
+        dragDroppedProfiles,
         selectedProfileKey,
         pendingMergedPropertiesRequest,
 
         // Constants
-        MAX_RENAMES_PER_PROFILE,
 
         // Functions
         formatPendingChanges,
         extractPendingProfiles: extractPendingProfilesWrapper,
         findOptimalReplacementProfile,
+        getAvailableProfilesForConfig,
         vscodeApi,
       });
       navigateHandler(jsonLoc, osLoc);
@@ -1485,13 +1515,13 @@ export function App() {
       selectedTab,
       configurations,
       renames,
-      renameCounts,
+      dragDroppedProfiles,
       selectedProfileKey,
       pendingMergedPropertiesRequest,
-      MAX_RENAMES_PER_PROFILE,
       formatPendingChanges,
       extractPendingProfiles,
       findOptimalReplacementProfile,
+      getAvailableProfilesForConfig,
       setRenames,
       setSelectedProfileKey,
       setPendingMergedPropertiesRequest,
@@ -1500,7 +1530,6 @@ export function App() {
       setExpandedNodesByConfig,
       setPendingDefaults,
       setPendingChanges,
-      setRenameCounts,
       setRenameProfileModalOpen,
       setDeletions,
       setSelectedTab,
@@ -1619,7 +1648,6 @@ export function App() {
             profileSearchTerm={profileSearchTerm}
             profileFilterType={profileFilterType}
             profileSortOrder={profileSortOrder || "natural"}
-            renameCounts={renameCounts}
             handleProfileSelection={handleProfileSelection}
             setProfileMenuOpen={setProfileMenuOpen}
             handleDeleteProfile={handleDeleteProfile}
@@ -1656,7 +1684,6 @@ export function App() {
             hiddenItems={hiddenItems}
             secureValuesAllowed={secureValuesAllowed}
             SORT_ORDER_OPTIONS={SORT_ORDER_OPTIONS}
-            renameCounts={renameCounts}
             mergedProperties={mergedProperties}
             pendingDefaults={pendingDefaults}
             isProfileDefault={isProfileDefaultWrapper}
@@ -1689,7 +1716,7 @@ export function App() {
             }
             canPropertyBeSecure={canPropertyBeSecureWrapper}
             isMergedPropertySecure={isMergedPropertySecure}
-            MAX_RENAMES_PER_PROFILE={MAX_RENAMES_PER_PROFILE}
+            isProfileAffectedByDragDrop={isProfileAffectedByDragDrop}
           />
         )}
         renderDefaults={(defaults) => (

@@ -1121,6 +1121,7 @@ ul {
 /* Auth Order Button Styles */
 .auth-order-buttons {
     margin-bottom: 1rem;
+    min-height: 3rem;
 }
 
 .auth-order-label {
@@ -1132,30 +1133,59 @@ ul {
 
 .auth-order-button-container {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.375rem;
     flex-wrap: wrap;
 }
 
 .auth-order-button {
-    padding: 0.5rem 1rem;
+    padding: 0.25rem 0.5rem;
     border: 1px solid var(--vscode-button-border);
-    border-radius: 4px;
+    border-radius: 3px;
     background-color: var(--vscode-button-secondaryBackground);
     color: var(--vscode-button-secondaryForeground);
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     transition: all 0.2s ease;
     font-family: var(--vscode-font-family, monospace);
+    min-width: auto;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.auth-order-button:hover {
+.auth-order-button:hover:not(:disabled) {
     background-color: var(--vscode-button-secondaryHoverBackground);
     border-color: var(--vscode-button-hoverBackground);
 }
 
-.auth-order-button:active {
+.auth-order-button:active:not(:disabled) {
     background-color: var(--vscode-button-background);
     color: var(--vscode-button-foreground);
+}
+
+.auth-order-button.disabled,
+.auth-order-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border-color: var(--vscode-button-border);
+}
+
+.auth-order-button.disabled:hover,
+.auth-order-button:disabled:hover {
+    background-color: var(--vscode-button-secondaryBackground);
+    border-color: var(--vscode-button-border);
+}
+
+.auth-order-error {
+    color: var(--vscode-errorForeground);
+    font-size: 0.7rem;
+    margin-top: 0.25rem;
+    line-height: 1.2;
+    max-height: 1.2rem;
+    overflow: hidden;
 }
 
 /* Common utility classes */

@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { getOriginalProfileKeyWithNested } from "../utils/profileUtils";
 
-const MAX_RENAMES_PER_PROFILE = 3;
 
 interface ProfileTreeProps {
   profileKeys: string[];
@@ -20,7 +19,6 @@ interface ProfileTreeProps {
   configurations?: any[];
   selectedTab?: number | null;
   renames?: { [configPath: string]: { [originalKey: string]: string } };
-  renameCounts?: { [configPath: string]: { [profileKey: string]: number } };
 }
 
 interface ProfileNode {
@@ -47,7 +45,6 @@ export function ProfileTree({
   configurations,
   selectedTab,
   renames,
-  renameCounts,
 }: ProfileTreeProps) {
   const hasNestedProfiles = profileKeys.some((key) => key.includes("."));
 
@@ -55,44 +52,7 @@ export function ProfileTree({
   const [draggedProfile, setDraggedProfile] = useState<string | null>(null);
   const [dragOverProfile, setDragOverProfile] = useState<string | null>(null);
 
-  // Helper function to check if a profile has reached the rename limit
-  const hasReachedRenameLimit = (profileKey: string): boolean => {
-    if (!configurations || selectedTab === null || selectedTab === undefined || !renameCounts || !renames) {
-      return false;
-    }
 
-    const configPath = configurations[selectedTab]?.configPath;
-    if (!configPath || !renameCounts[configPath]) {
-      return false;
-    }
-
-    // Get the original profile key to check rename limit
-    const originalProfileKey = findOriginalKey(profileKey);
-    const currentRenameCount = renameCounts[configPath][originalProfileKey] || 0;
-    return currentRenameCount >= MAX_RENAMES_PER_PROFILE;
-  };
-
-  // Memoized helper function to check if a profile was renamed via the modal (not drag-drop)
-  const hasModalRename = useMemo(() => {
-    return (profileKey: string): boolean => {
-      if (!configurations || selectedTab === null || selectedTab === undefined || !renameCounts || !renames) {
-        return false;
-      }
-
-      const configPath = configurations[selectedTab]?.configPath;
-      if (!configPath || !renameCounts[configPath]) {
-        return false;
-      }
-
-      // Use the optimized utility function to find the original key
-      const originalProfileKey = findOriginalKey(profileKey);
-      const currentRenameCount = renameCounts[configPath][originalProfileKey] || 0;
-
-      // If there's a rename count, it means this profile (or its original) was renamed via the modal
-      // Drag-drop operations don't increment the rename count
-      return currentRenameCount > 0;
-    };
-  }, [configurations, selectedTab, renameCounts, renames]);
 
   // Memoized helper function to find the original key from a current profile key
   const findOriginalKey = useMemo(() => {
@@ -187,60 +147,13 @@ export function ProfileTree({
   };
 
   // Helper function to detect complex rename chains that could cause performance issues
-  const hasComplexRenameChain = (profileKey: string): boolean => {
-    if (!configurations || selectedTab === null || selectedTab === undefined || !renames) {
-      return false;
-    }
-
-    const configPath = configurations[selectedTab]?.configPath;
-    if (!configPath || !renames[configPath]) {
-      return false;
-    }
-
-    const configRenames = renames[configPath];
-
-    // Check if this profile is part of a complex rename chain
-    // A complex chain is one where a profile has been renamed multiple times
-    const originalKey = findOriginalKey(profileKey);
-
-    // Count how many renames are in the chain
-    let chainLength = 0;
-    let currentKey = originalKey;
-    const visited = new Set<string>();
-
-    while (configRenames[currentKey] && !visited.has(currentKey)) {
-      visited.add(currentKey);
-      chainLength++;
-      currentKey = configRenames[currentKey];
-
-      // If we have more than 3 renames in the chain, consider it complex
-      if (chainLength > 3) {
-        return true;
-      }
-    }
-
-    return false;
-  };
 
   // Drag and drop handlers
   const handleDragStart = (e: any, profileKey: string) => {
     e.stopPropagation();
 
-    // Prevent dragging if rename limit is reached
-    if (hasReachedRenameLimit(profileKey)) {
-      e.preventDefault();
-      return;
-    }
+    // Drag is now always allowed - restrictions are handled in the drop handler
 
-    // Prevent dragging if this would create a complex rename chain
-    if (hasComplexRenameChain(profileKey)) {
-      e.preventDefault();
-      // Log error and prevent drag to avoid performance issues
-      console.error(
-        "Cannot drag this profile: Complex rename chains are not supported to prevent performance issues. Please save your changes and refresh to reset the profile structure."
-      );
-      return;
-    }
 
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = "move";
@@ -303,40 +216,7 @@ export function ProfileTree({
       return;
     }
 
-    // Check if this drop would create a complex rename chain
-    try {
-      const originalKey = findOriginalKey(draggedProfile);
-      const configPath = configurations?.[selectedTab!]?.configPath;
-
-      if (configPath && renames?.[configPath]) {
-        const configRenames = renames[configPath];
-        let chainLength = 0;
-        let currentKey = originalKey;
-        const visited = new Set<string>();
-
-        while (configRenames[currentKey] && !visited.has(currentKey)) {
-          visited.add(currentKey);
-          chainLength++;
-          currentKey = configRenames[currentKey];
-
-          // If we have more than 3 renames in the chain, prevent the drop
-          if (chainLength > 3) {
-            setDraggedProfile(null);
-            setDragOverProfile(null);
-            console.error(
-              "Cannot complete this drag operation: Complex rename chains are not supported to prevent performance issues. Please save your changes and refresh to reset the profile structure."
-            );
-            return;
-          }
-        }
-      }
-    } catch (error) {
-      // If there's any error during the check, clear the drag state and show error
-      setDraggedProfile(null);
-      setDragOverProfile(null);
-      console.error("Drag operation failed due to complex profile structure. Please save your changes and refresh to reset the profile structure.");
-      return;
-    }
+    // The drag-drop restrictions are now handled in the profile handlers
 
     // Extract only the profile name (last part) from the dragged profile
     const draggedProfileName = draggedProfile.split(".").pop() || draggedProfile;
@@ -524,7 +404,7 @@ export function ProfileTree({
             transition: "all 0.2s ease",
             userSelect: "none",
           }}
-          draggable={!hasReachedRenameLimit(node.key) && !hasModalRename(node.key)}
+          draggable={true}
           onDragStart={(e) => handleDragStart(e, node.key)}
           onDragOver={(e) => handleDragOver(e, node.key)}
           onDragLeave={handleDragLeave}

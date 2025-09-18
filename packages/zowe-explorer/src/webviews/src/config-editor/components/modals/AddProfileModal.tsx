@@ -86,6 +86,40 @@ export function AddProfileModal({
     }
   };
 
+  const getAuthMethodTooltip = (authMethod: string): string => {
+    switch (authMethod) {
+      case "basic":
+        return "User & password authentication";
+      case "token":
+        return "API ML token authentication";
+      case "bearer":
+        return "Bearer token authentication";
+      case "cert-pem":
+        return "PEM certificate authentication";
+      default:
+        return authMethod;
+    }
+  };
+
+  const isAuthMethodAlreadyAdded = (authMethod: string): boolean => {
+    const currentValue = newProfileValue.trim();
+    const authMethods = currentValue ? currentValue.split(",").map(m => m.trim()) : [];
+    return authMethods.includes(authMethod);
+  };
+
+  const isValidAuthOrder = (value: string): boolean => {
+    if (!value.trim()) return true; // Empty is valid (will be validated on save)
+    
+    const validAuthTypes = ["basic", "token", "bearer", "cert-pem"];
+    const authMethods = value.split(",").map(m => m.trim());
+    
+    // Check if all methods are valid and no duplicates
+    const uniqueMethods = new Set(authMethods);
+    if (uniqueMethods.size !== authMethods.length) return false; // Duplicates found
+    
+    return authMethods.every(method => validAuthTypes.includes(method));
+  };
+
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
       onAdd();
@@ -148,20 +182,30 @@ export function AddProfileModal({
         {isAuthOrderProperty(newProfileKey.trim()) && (
           <div className="auth-order-buttons">
             <label className="auth-order-label">
-              {l10n.t("Select Authentication Methods")}:
+              {l10n.t("Select Authentication Order")}:
             </label>
             <div className="auth-order-button-container">
-              {["token", "basic", "bearer", "cert-pem"].map((authMethod) => (
-                <button
-                  key={authMethod}
-                  type="button"
-                  onClick={() => handleAuthMethodClick(authMethod)}
-                  className="auth-order-button"
-                >
-                  {authMethod}
-                </button>
-              ))}
+              {["token", "basic", "bearer", "cert-pem"].map((authMethod) => {
+                const isDisabled = isAuthMethodAlreadyAdded(authMethod);
+                return (
+                  <button
+                    key={authMethod}
+                    type="button"
+                    onClick={() => handleAuthMethodClick(authMethod)}
+                    className={`auth-order-button ${isDisabled ? 'disabled' : ''}`}
+                    disabled={isDisabled}
+                    title={getAuthMethodTooltip(authMethod)}
+                  >
+                    {authMethod}
+                  </button>
+                );
+              })}
             </div>
+            {!isValidAuthOrder(newProfileValue) && (
+              <div className="auth-order-error">
+                {l10n.t("Invalid format. Use: basic, token, bearer, cert-pem")}
+              </div>
+            )}
           </div>
         )}
 
@@ -203,14 +247,17 @@ export function AddProfileModal({
                 />
               );
             } else {
+              const isAuthOrder = isAuthOrderProperty(newProfileKey.trim());
+              const hasValidationError = isAuthOrder && !isValidAuthOrder(newProfileValue);
+              
               return (
                 <input
                   type="text"
                   value={newProfileValue}
                   onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
                   onKeyDown={handleKeyDown}
-                  className="modal-input add-profile-input"
-                  placeholder={l10n.t("Value")}
+                  className={`modal-input add-profile-input ${hasValidationError ? 'error' : ''}`}
+                  placeholder={isAuthOrder ? l10n.t("e.g., basic, token") : l10n.t("Value")}
                 />
               );
             }
@@ -288,7 +335,11 @@ export function AddProfileModal({
             <button className="wizard-button secondary" onClick={onCancel}>
               {l10n.t("Cancel")}
             </button>
-            <button className="wizard-button primary" onClick={onAdd}>
+            <button 
+              className="wizard-button primary" 
+              onClick={onAdd}
+              disabled={isAuthOrderProperty(newProfileKey.trim()) && !isValidAuthOrder(newProfileValue)}
+            >
               {l10n.t("Add")}
             </button>
           </div>

@@ -412,17 +412,30 @@ export const consolidateConflictingRenames = (renames: { [originalKey: string]: 
         // Fourth pass: handle parent renames that affect child renames
         // This handles cases where a parent rename affects existing child renames
         for (const [originalKey, newKey] of Object.entries(consolidated)) {
-            // Check if this is a parent rename (single level)
-            if (originalKey.split(".").length === 1) {
-                // Find all child renames that start with this parent
-                for (const [childOriginalKey] of Object.entries(consolidated)) {
-                    if (childOriginalKey !== originalKey && childOriginalKey.startsWith(originalKey + ".")) {
-                        // This is a child of the renamed parent
+            // Find all child renames that need to be updated due to parent rename
+            for (const [childOriginalKey, childNewKey] of Object.entries(consolidated)) {
+                if (childOriginalKey !== originalKey) {
+                    // Check if the child's current target starts with the old parent path
+                    if (childNewKey.startsWith(originalKey + ".")) {
+                        // This child's target needs to be updated to use the new parent path
+                        const childSuffix = childNewKey.substring(originalKey.length + 1);
+                        const updatedChildTarget = newKey + "." + childSuffix;
+                        
+                        // Only update if it would actually change something
+                        if (updatedChildTarget !== childNewKey) {
+                            consolidated[childOriginalKey] = updatedChildTarget;
+                            changed = true;
+                        }
+                    }
+                    // Also check if the child's original key starts with the old parent path
+                    else if (childOriginalKey.startsWith(originalKey + ".")) {
+                        // This child's original key is under the renamed parent
                         const childSuffix = childOriginalKey.substring(originalKey.length + 1);
-                        const newChildKey = newKey + "." + childSuffix;
-
-                        // Update the child rename to use the new parent
-                        consolidated[childOriginalKey] = newChildKey;
+                        const newChildOriginalKey = newKey + "." + childSuffix;
+                        
+                        // Move the rename entry to use the new parent path
+                        consolidated[newChildOriginalKey] = childNewKey;
+                        delete consolidated[childOriginalKey];
                         changed = true;
                     }
                 }
