@@ -14,3 +14,5 @@ export * from "./MoveUtils";
 export * from "./profileUtils";
 export * from "./propertyUtils";
 export * from "./generalUtils";
+export * from "./profileHelpers";
+export * from "./sortingUtils";

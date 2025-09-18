@@ -351,7 +351,8 @@ export function getAvailableProfilesByType(
     profileType: string,
     selectedTab: number | null,
     configurations: Configuration[],
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } }
+    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
+    renames: { [configPath: string]: { [originalKey: string]: string } } = {}
 ): string[] {
     if (selectedTab === null) return [];
 
@@ -383,7 +384,7 @@ export function getAvailableProfilesByType(
         if (profilesWithPendingTypeChanges.has(profileKey)) {
             return false;
         }
-        const profileTypeValue = getProfileType(profileKey, selectedTab, configurations, pendingChanges, {});
+        const profileTypeValue = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
         return profileTypeValue === profileType;
     });
 
@@ -408,7 +409,12 @@ export function getAvailableProfilesByType(
         }
     });
 
-    return [...profilesOfType, ...Array.from(pendingProfiles)];
+    // Apply renames to all profile names, including nested profiles
+    const configPath = configurations[selectedTab].configPath;
+    const renamedProfilesOfType = profilesOfType.map((profileKey) => getRenamedProfileKeyWithNested(profileKey, configPath, renames));
+    const renamedPendingProfiles = Array.from(pendingProfiles).map((profileKey) => getRenamedProfileKeyWithNested(profileKey, configPath, renames));
+
+    return [...renamedProfilesOfType, ...renamedPendingProfiles];
 }
 
 /**

@@ -29,7 +29,6 @@ import {
   getRenamedProfileKey,
   getRenamedProfileKeyWithNested,
   getOriginalProfileKey,
-  getOriginalProfileKeyWithNested,
   getPropertyTypeForAddProfile,
   fetchTypeOptions,
   PropertySortOrder,
@@ -48,6 +47,10 @@ import {
   hasPendingSecureChanges,
   extractPendingProfiles,
   isProfileOrParentDeleted,
+  getAvailableProfilesByType,
+  isProfileDefault,
+  isCurrentProfileUntyped,
+  sortProfilesAtLevel,
 } from "./utils";
 
 // Rename utilities
@@ -910,52 +913,6 @@ export function App() {
     setFocusValueInput(true);
   };
 
-  // Helper function to check if current profile is untyped
-  const isCurrentProfileUntyped = (): boolean => {
-    if (!selectedProfileKey) return false;
-    const profileType = getProfileType(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
-    return !profileType || profileType.trim() === "";
-  };
-
-  // Helper function to check if a profile is set as default
-  const isProfileDefault = (profileKey: string): boolean => {
-    if (selectedTab === null) return false;
-    const configPath = configurations[selectedTab!]!.configPath;
-    const profileType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
-
-    if (!profileType) return false;
-
-    // Check if this profile was renamed and get the original profile name
-    const originalProfileKey = getOriginalProfileKeyWithNested(profileKey, configPath, renames);
-
-    // Check pending defaults first
-    const pendingDefault = pendingDefaults[configPath]?.[profileType];
-    if (pendingDefault) {
-      return pendingDefault.value === profileKey || pendingDefault.value === originalProfileKey;
-    }
-
-    // Check existing defaults
-    const config = configurations[selectedTab!].properties;
-    const defaults = config.defaults || {};
-
-    // Check if the current profile is the default
-    if (defaults[profileType] === profileKey || defaults[profileType] === originalProfileKey) {
-      return true;
-    }
-
-    // Check if this profile should be the default due to renames (simulate backend logic)
-    // This handles the case where a default profile was renamed and should remain the default
-    const configRenames = renames[configPath] || {};
-    for (const [originalKey, newKey] of Object.entries(configRenames)) {
-      // If the original profile was the default and this is the renamed version
-      if (defaults[profileType] === originalKey && newKey === profileKey) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
   const handleSetAsDefault = (profileKey: string) => {
     const profileType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
     if (!profileType) {
@@ -1147,6 +1104,35 @@ export function App() {
     return deletedProfiles.some((deletedProfile) => profileKey === deletedProfile || profileKey.startsWith(deletedProfile + "."));
   }, []);
 
+  // Wrapper function for getAvailableProfilesByType that provides the necessary parameters
+  const getAvailableProfilesByTypeWrapper = useCallback(
+    (profileType: string): string[] => {
+      return getAvailableProfilesByType(profileType, selectedTab, configurations, pendingChanges, renames);
+    },
+    [selectedTab, configurations, pendingChanges, renames]
+  );
+
+  // Wrapper function for isProfileDefault that provides the necessary parameters
+  const isProfileDefaultWrapper = useCallback(
+    (profileKey: string): boolean => {
+      return isProfileDefault(profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames);
+    },
+    [selectedTab, configurations, pendingChanges, pendingDefaults, renames]
+  );
+
+  // Wrapper function for isCurrentProfileUntyped that provides the necessary parameters
+  const isCurrentProfileUntypedWrapper = useCallback((): boolean => {
+    return isCurrentProfileUntyped(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
+  }, [selectedProfileKey, selectedTab, configurations, pendingChanges, renames]);
+
+  // Wrapper function for sortProfilesAtLevel that provides the necessary parameters
+  const sortProfilesAtLevelWrapper = useCallback(
+    (profileKeys: string[]): string[] => {
+      return sortProfilesAtLevel(profileKeys, profileSortOrder);
+    },
+    [profileSortOrder]
+  );
+
   // Memoized function to get available profiles for optimal performance
   const getAvailableProfilesForConfig = useCallback(
     (configPath: string): string[] => {
@@ -1239,91 +1225,6 @@ export function App() {
       return allAvailableProfiles[0] || null;
     },
     [getAvailableProfilesForConfig]
-  );
-
-  // Helper function to sort profiles at each level
-  const sortProfilesAtLevel = useCallback(
-    (profileKeys: string[]): string[] => {
-      const currentProfileSortOrder = profileSortOrder || "natural";
-      if (currentProfileSortOrder === "natural") {
-        return profileKeys; // No sorting, maintain original order
-      }
-
-      // Create a map of profiles with their depth and parent information
-      const profileInfo = profileKeys.map((profileKey) => {
-        const parts = profileKey.split(".");
-        const depth = parts.length - 1;
-        const parentKey = parts.length > 1 ? parts.slice(0, -1).join(".") : "";
-        return { profileKey, depth, parentKey, parts };
-      });
-
-      // Sort profiles while maintaining parent-child relationships
-      const sortedProfiles: string[] = [];
-      const processedProfiles = new Set<string>();
-
-      // Helper function to add a profile and its descendants
-      const addProfileAndDescendants = (profileKey: string) => {
-        if (processedProfiles.has(profileKey)) return;
-
-        // Find all profiles that have this profile as a parent
-        const children = profileInfo.filter((info) => info.parentKey === profileKey);
-
-        // Sort children based on the current sort order
-        // For renamed profiles, we need to be more careful about sorting
-        if (currentProfileSortOrder === "alphabetical") {
-          children.sort((a, b) => {
-            // Extract just the profile name (last part) for comparison
-            const aName = a.parts[a.parts.length - 1];
-            const bName = b.parts[b.parts.length - 1];
-            return aName.localeCompare(bName);
-          });
-        } else if (currentProfileSortOrder === "reverse-alphabetical") {
-          children.sort((a, b) => {
-            // Extract just the profile name (last part) for comparison
-            const aName = a.parts[a.parts.length - 1];
-            const bName = b.parts[b.parts.length - 1];
-            return bName.localeCompare(aName);
-          });
-        }
-
-        // Add the current profile
-        sortedProfiles.push(profileKey);
-        processedProfiles.add(profileKey);
-
-        // Recursively add all children
-        children.forEach((child) => {
-          addProfileAndDescendants(child.profileKey);
-        });
-      };
-
-      // Get all top-level profiles (depth 0)
-      const topLevelProfiles = profileInfo.filter((info) => info.depth === 0);
-
-      // Sort top-level profiles
-      if (currentProfileSortOrder === "alphabetical") {
-        topLevelProfiles.sort((a, b) => {
-          // Extract just the profile name (last part) for comparison
-          const aName = a.parts[a.parts.length - 1];
-          const bName = b.parts[b.parts.length - 1];
-          return aName.localeCompare(bName);
-        });
-      } else if (currentProfileSortOrder === "reverse-alphabetical") {
-        topLevelProfiles.sort((a, b) => {
-          // Extract just the profile name (last part) for comparison
-          const aName = a.parts[a.parts.length - 1];
-          const bName = b.parts[b.parts.length - 1];
-          return bName.localeCompare(aName);
-        });
-      }
-
-      // Process each top-level profile and its descendants
-      topLevelProfiles.forEach((info) => {
-        addProfileAndDescendants(info.profileKey);
-      });
-
-      return sortedProfiles;
-    },
-    [profileSortOrder]
   );
 
   // Wrapper function for handleRenameProfile that provides the necessary props
@@ -1641,70 +1542,6 @@ export function App() {
     setNewLayerModalOpen(false);
   };
 
-  const getAvailableProfilesByType = (profileType: string) => {
-    if (selectedTab === null) return [];
-
-    const config = configurations[selectedTab].properties;
-    const flatProfiles = flattenProfiles(config.profiles);
-    const profileNames = Object.keys(flatProfiles);
-
-    // Get all profiles that have pending type changes
-    const profilesWithPendingTypeChanges = new Set<string>();
-    Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([key, entry]) => {
-      if (entry.profile) {
-        const keyParts = key.split(".");
-        const isTypeKey = keyParts[keyParts.length - 1] === "type";
-        if (isTypeKey) {
-          // Extract the profile name from the key path
-          const profilePathParts = keyParts.slice(0, -1); // Remove "type" from the end
-          if (profilePathParts[0] === "profiles") {
-            const profileNameParts = profilePathParts.slice(1);
-            const profileName = profileNameParts.join(".");
-            profilesWithPendingTypeChanges.add(profileName);
-          }
-        }
-      }
-    });
-
-    // Filter profiles by type, excluding those with pending type changes
-    const profilesOfType = profileNames.filter((profileKey) => {
-      // Skip profiles that have pending type changes
-      if (profilesWithPendingTypeChanges.has(profileKey)) {
-        return false;
-      }
-      const profileTypeValue = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
-      return profileTypeValue === profileType;
-    });
-
-    // Include pending profiles from pendingChanges that match the type
-    const pendingProfiles = new Set<string>();
-    Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([key, entry]) => {
-      if (entry.profile) {
-        // Check if the pending profile has the correct type
-        const keyParts = key.split(".");
-        const isTypeKey = keyParts[keyParts.length - 1] === "type";
-        if (isTypeKey && entry.value === profileType) {
-          // Extract the profile name from the key path
-          // Remove "profiles" prefix and get just the profile name
-          const profilePathParts = keyParts.slice(0, -1); // Remove "type" from the end
-          if (profilePathParts[0] === "profiles") {
-            // Remove "profiles" prefix and get the actual profile name
-            const profileNameParts = profilePathParts.slice(1);
-            const profileName = profileNameParts.join(".");
-            pendingProfiles.add(profileName);
-          }
-        }
-      }
-    });
-
-    // Apply renames to all profile names, including nested profiles
-    const configPath = configurations[selectedTab].configPath;
-    const renamedProfilesOfType = profilesOfType.map((profileKey) => getRenamedProfileKeyWithNested(profileKey, configPath, renames));
-    const renamedPendingProfiles = Array.from(pendingProfiles).map((profileKey) => getRenamedProfileKeyWithNested(profileKey, configPath, renames));
-
-    return [...renamedProfilesOfType, ...renamedPendingProfiles];
-  };
-
   const handleAddNewConfig = () => {
     setAddConfigModalOpen(true);
   };
@@ -1774,8 +1611,8 @@ export function App() {
             getProfileType={getProfileType}
             hasPendingSecureChanges={hasPendingSecureChangesWrapper}
             hasPendingRename={hasPendingRename}
-            isProfileDefault={isProfileDefault}
-            sortProfilesAtLevel={sortProfilesAtLevel}
+            isProfileDefault={isProfileDefaultWrapper}
+            sortProfilesAtLevel={sortProfilesAtLevelWrapper}
             getExpandedNodesForConfig={getExpandedNodesForConfig}
           />
         )}
@@ -1798,7 +1635,7 @@ export function App() {
             renameCounts={renameCounts}
             mergedProperties={mergedProperties}
             pendingDefaults={pendingDefaults}
-            isProfileDefault={isProfileDefault}
+            isProfileDefault={isProfileDefaultWrapper}
             getProfileType={getProfileType}
             handleSetAsDefault={handleSetAsDefault}
             setPendingDefaults={setPendingDefaults}
@@ -1821,7 +1658,7 @@ export function App() {
             ensureProfileProperties={ensureProfileProperties}
             filterSecureProperties={filterSecurePropertiesWrapper}
             mergePendingSecureProperties={mergePendingSecurePropertiesWrapper}
-            isCurrentProfileUntyped={isCurrentProfileUntyped}
+            isCurrentProfileUntyped={isCurrentProfileUntypedWrapper}
             isPropertyFromMergedProps={isPropertyFromMergedPropsWrapper}
             isPropertySecure={isPropertySecure}
             canPropertyBeSecure={canPropertyBeSecureWrapper}
@@ -1839,7 +1676,7 @@ export function App() {
             renames={renames}
             handleDefaultsChange={handleDefaultsChange}
             getWizardTypeOptions={getWizardTypeOptions}
-            getAvailableProfilesByType={getAvailableProfilesByType}
+            getAvailableProfilesByType={getAvailableProfilesByTypeWrapper}
           />
         )}
         onProfileWizard={() => setWizardModalOpen(true)}
