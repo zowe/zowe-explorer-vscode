@@ -1090,7 +1090,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             try {
                                 memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
                             } catch (err) {
-                                ZoweLogger.error(`Failed to get members for data set ${child.getLabel()}`);
+                                ZoweLogger.error(`Failed to get members for data set ${label}`);
                                 continue;
                             }
                             let existing = false;
