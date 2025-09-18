@@ -773,7 +773,7 @@ export function App() {
 
     // Check if this property is currently secure
     const displayKey = path[path.length - 1];
-    const currentSecure = isPropertySecure(key, displayKey, path);
+    const currentSecure = isPropertySecure(key, displayKey, path, undefined, selectedTab, configurations, pendingChanges);
 
     // When a user changes a property, maintain its current secure state
     // This ensures that secure properties stay secure when modified
@@ -1079,8 +1079,18 @@ export function App() {
 
   // Wrapper function for handleToggleSecure that provides the necessary parameters
   const handleToggleSecureWrapper = useCallback((fullKey: string, displayKey: string, path: string[]): void => {
-    return handleToggleSecure(fullKey, displayKey, path);
-  }, []);
+    return handleToggleSecure(
+      fullKey, 
+      displayKey, 
+      path, 
+      selectedTab, 
+      configurations, 
+      pendingChanges, 
+      setPendingChanges, 
+      selectedProfileKey, 
+      renames
+    );
+  }, [selectedTab, configurations, pendingChanges, setPendingChanges, selectedProfileKey, renames]);
 
   // Wrapper function for hasPendingSecureChanges that provides the necessary parameters
   const hasPendingSecureChangesWrapper = useCallback(
@@ -1674,7 +1684,9 @@ export function App() {
             mergePendingSecureProperties={mergePendingSecurePropertiesWrapper}
             isCurrentProfileUntyped={isCurrentProfileUntypedWrapper}
             isPropertyFromMergedProps={isPropertyFromMergedPropsWrapper}
-            isPropertySecure={isPropertySecure}
+            isPropertySecure={(fullKey: string, displayKey: string, path: string[], mergedProps?: any) => 
+              isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges)
+            }
             canPropertyBeSecure={canPropertyBeSecureWrapper}
             isMergedPropertySecure={isMergedPropertySecure}
             MAX_RENAMES_PER_PROFILE={MAX_RENAMES_PER_PROFILE}

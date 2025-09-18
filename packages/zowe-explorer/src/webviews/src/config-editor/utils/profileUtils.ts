@@ -828,18 +828,103 @@ export function canPropertyBeSecure(
 /**
  * Check if a property is secure
  */
-export function isPropertySecure(_fullKey: string, _displayKey: string, _path: string[], _mergedProps?: any): boolean {
-    // This function needs to be implemented with the full logic from App.tsx
-    // For now, return false as a placeholder
+export function isPropertySecure(
+    fullKey: string, 
+    displayKey: string, 
+    path: string[], 
+    mergedProps?: any,
+    selectedTab?: number | null,
+    configurations?: Configuration[],
+    pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } }
+): boolean {
+    if (!displayKey || !path || path.length === 0) {
+        return false;
+    }
+
+    // If this is a merged property, check if it's secure from the merged data
+    if (mergedProps && mergedProps[displayKey]) {
+        const mergedPropData = mergedProps[displayKey];
+        if (mergedPropData.secure !== undefined) {
+            return mergedPropData.secure;
+        }
+    }
+
+    // Check if this property is in pending changes with secure flag
+    if (selectedTab !== null && selectedTab !== undefined && configurations && pendingChanges) {
+        const config = configurations[selectedTab];
+        if (config) {
+            const configPath = config.configPath;
+            const pendingChange = pendingChanges[configPath]?.[fullKey];
+            if (pendingChange && pendingChange.secure !== undefined) {
+                return pendingChange.secure;
+            }
+        }
+    }
+
+    // Check if this property is in the secure array of the current configuration
+    if (selectedTab !== null && selectedTab !== undefined && configurations) {
+        const config = configurations[selectedTab];
+        if (config && config.secure) {
+            // Check if the full key path is in the secure array
+            return config.secure.includes(fullKey);
+        }
+    }
+
     return false;
 }
 
 /**
  * Handle toggling secure property status
  */
-export function handleToggleSecure(_fullKey: string, _displayKey: string, _path: string[]): void {
-    // This function needs to be implemented with the full logic from App.tsx
-    // For now, do nothing as a placeholder
+export function handleToggleSecure(
+    fullKey: string, 
+    displayKey: string, 
+    path: string[],
+    selectedTab?: number | null,
+    configurations?: Configuration[],
+    pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } },
+    setPendingChanges?: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: PendingChange } }>>,
+    selectedProfileKey?: string | null,
+    renames?: { [configPath: string]: { [originalKey: string]: string } }
+): void {
+    if (selectedTab === null || selectedTab === undefined || !configurations || !pendingChanges || !setPendingChanges) {
+        return;
+    }
+
+    const config = configurations[selectedTab];
+    if (!config) {
+        return;
+    }
+
+    const configPath = config.configPath;
+    const currentPendingChange = pendingChanges[configPath]?.[fullKey];
+    
+    // Get the current secure status
+    const currentSecure = isPropertySecure(fullKey, displayKey, path, undefined, selectedTab, configurations, pendingChanges);
+    
+    // Determine the profile key
+    let profileKey = selectedProfileKey || extractProfileKeyFromPath(path);
+    if (selectedProfileKey && renames && renames[configPath]) {
+        profileKey = getRenamedProfileKeyWithNested(selectedProfileKey, configPath, renames);
+    }
+
+    // Toggle the secure status
+    const newSecure = !currentSecure;
+    
+    // Update pending changes
+    setPendingChanges((prev) => ({
+        ...prev,
+        [configPath]: {
+            ...prev[configPath],
+            [fullKey]: {
+                ...currentPendingChange,
+                value: currentPendingChange?.value || "",
+                path,
+                profile: profileKey,
+                secure: newSecure,
+            },
+        },
+    }));
 }
 
 /**

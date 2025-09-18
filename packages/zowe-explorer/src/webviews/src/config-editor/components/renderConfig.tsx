@@ -82,7 +82,7 @@ interface RenderConfigProps {
   mergePendingSecureProperties: (value: any[], path: string[], configPath: string) => any[];
   isCurrentProfileUntyped: () => boolean;
   isPropertyFromMergedProps: (displayKey: string | undefined, path: string[], mergedProps: any, configPath: string) => boolean;
-  isPropertySecure: (fullKey: string, displayKey: string, path: string[], mergedProps?: any) => boolean;
+  isPropertySecure: (fullKey: string, displayKey: string, path: string[], mergedProps?: any, selectedTab?: number | null, configurations?: Configuration[], pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } }) => boolean;
   canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
   isMergedPropertySecure: (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean) => boolean;
 
@@ -577,7 +577,7 @@ export const RenderConfig = ({
           const isDeletedMergedProperty = isFromMergedProps && isInDeletions;
 
           // Check if this is a local secure property (in the current profile's secure array)
-          const isLocalSecureProperty = displayKey && path && configPath ? isPropertySecure(fullKey, displayKey, path, mergedProps) : false;
+          const isLocalSecureProperty = displayKey && path && configPath ? isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges) : false;
 
           // Check if this is a secure property that was added for sorting
           const isSecureForSorting = isSecurePropertyForSorting;
@@ -755,7 +755,7 @@ export const RenderConfig = ({
               {displayKey !== "type" &&
                 displayKey &&
                 (() => {
-                  const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps);
+                  const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges);
                   const canBeSecure = canPropertyBeSecure(displayKey, path);
                   const showSecureButton = canBeSecure && !isSecure && (!isFromMergedProps || isSecurePropertyForSorting);
                   const showDeleteButton = !isFromMergedProps;
