@@ -835,8 +835,28 @@ export function isProfileOrParentDeleted(profileKey: string, deletions: { [confi
     const configDeletions = deletions[configPath];
     if (!configDeletions) return false;
 
+    // Extract profile names from deletion keys (deletion keys are full paths like "profiles.profile1.profiles.profile2")
+    const deletedProfiles = new Set<string>();
+    configDeletions.forEach((key) => {
+        // Extract profile name from deletion key
+        const keyParts = key.split(".");
+        if (keyParts[0] === "profiles" && keyParts.length >= 2) {
+            // Handle all profile types (simple, nested, deeply nested)
+            // The deletion key structure is: profiles.profile1.profiles.profile2.profiles.profile3...
+            // We need to extract: profile1.profile2.profile3...
+            const profileParts: string[] = [];
+            for (let i = 1; i < keyParts.length; i++) {
+                if (keyParts[i] !== "profiles") {
+                    profileParts.push(keyParts[i]);
+                }
+            }
+            const profileName = profileParts.join(".");
+            deletedProfiles.add(profileName);
+        }
+    });
+
     // Check if the profile itself is deleted
-    if (configDeletions.includes(profileKey)) {
+    if (deletedProfiles.has(profileKey)) {
         return true;
     }
 
@@ -844,7 +864,7 @@ export function isProfileOrParentDeleted(profileKey: string, deletions: { [confi
     const profileParts = profileKey.split(".");
     for (let i = 1; i < profileParts.length; i++) {
         const parentKey = profileParts.slice(0, i).join(".");
-        if (configDeletions.includes(parentKey)) {
+        if (deletedProfiles.has(parentKey)) {
             return true;
         }
     }

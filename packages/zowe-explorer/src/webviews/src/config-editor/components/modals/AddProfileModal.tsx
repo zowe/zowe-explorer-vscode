@@ -63,6 +63,29 @@ export function AddProfileModal({
     return false;
   };
 
+  const isAuthOrderProperty = (key: string): boolean => {
+    // Check if key is defined and not null
+    if (!key || typeof key !== "string") {
+      return false;
+    }
+
+    // Check if key is "authorder" (case insensitive)
+    return key.toLowerCase() === "authorder";
+  };
+
+  const handleAuthMethodClick = (authMethod: string) => {
+    const currentValue = newProfileValue.trim();
+    const authMethods = currentValue ? currentValue.split(",").map(m => m.trim()) : [];
+    
+    // Check if the auth method is already in the list
+    if (!authMethods.includes(authMethod)) {
+      // Add the new auth method
+      const newAuthMethods = [...authMethods, authMethod];
+      const newValue = newAuthMethods.join(", ");
+      onNewProfileValueChange(newValue);
+    }
+  };
+
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
       onAdd();
@@ -120,6 +143,27 @@ export function AddProfileModal({
             </ul>
           )}
         </div>
+
+        {/* Auth Order Buttons */}
+        {isAuthOrderProperty(newProfileKey.trim()) && (
+          <div className="auth-order-buttons">
+            <label className="auth-order-label">
+              {l10n.t("Select Authentication Methods")}:
+            </label>
+            <div className="auth-order-button-container">
+              {["token", "basic", "bearer", "cert-pem"].map((authMethod) => (
+                <button
+                  key={authMethod}
+                  type="button"
+                  onClick={() => handleAuthMethodClick(authMethod)}
+                  className="auth-order-button"
+                >
+                  {authMethod}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="add-profile-input-row">
           {(() => {

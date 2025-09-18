@@ -1113,6 +1113,46 @@ ul {
     font-size: 12px;
 }
 
+/* Auth Order Button Styles */
+.auth-order-buttons {
+    margin-bottom: 1rem;
+}
+
+.auth-order-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--vscode-descriptionForeground);
+}
+
+.auth-order-button-container {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.auth-order-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--vscode-button-border);
+    border-radius: 4px;
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    font-family: var(--vscode-font-family, monospace);
+}
+
+.auth-order-button:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+    border-color: var(--vscode-button-hoverBackground);
+}
+
+.auth-order-button:active {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+}
+
 /* Common utility classes */
 .flex {
     display: flex;
