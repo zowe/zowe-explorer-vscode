@@ -340,20 +340,23 @@ export function App() {
         const profileName = profileParts.join(".");
         deletedProfiles.add(profileName);
 
+        // Also add the renamed version of the deleted profile if it exists
+        const renamedDeletedProfile = getRenamedProfileKeyWithNested(profileName, configPath, renames);
+        if (renamedDeletedProfile !== profileName) {
+          deletedProfiles.add(renamedDeletedProfile);
+        }
+
         // Also add all child profiles of this deleted profile
         // For example, if "parent" is deleted, also exclude "parent.child", "parent.child.grandchild", etc.
-        // But only if they haven't been renamed away from being children
+        // We need to check both original and renamed profile names
         profileNames.forEach((existingProfile) => {
           if (existingProfile.startsWith(profileName + ".")) {
-            // Check if this child profile has been renamed and is no longer a child of the deleted profile
-            const configPath = configurations[selectedTab].configPath;
-            const renamedProfile = getRenamedProfileKeyWithNested(existingProfile, configPath, renames);
+            // This is a child of the deleted profile, so it should also be deleted
+            deletedProfiles.add(existingProfile);
 
-            // Only add to deleted profiles if the renamed version is still a child of the deleted profile
-            // This means the renamed profile should still start with the deleted profile name
-            if (renamedProfile.startsWith(profileName + ".")) {
-              deletedProfiles.add(existingProfile);
-            }
+            // Also add the renamed version to deleted profiles
+            const renamedProfile = getRenamedProfileKeyWithNested(existingProfile, configPath, renames);
+            deletedProfiles.add(renamedProfile);
           }
         });
       }
@@ -371,13 +374,15 @@ export function App() {
     // Remove deleted profiles
     deletedProfiles.forEach((profile) => allProfiles.delete(profile));
 
-    return Array.from(allProfiles).sort((a, b) => {
+    const result = Array.from(allProfiles).sort((a, b) => {
       // Always put "root" first
       if (a === "root") return -1;
       if (b === "root") return 1;
       // Sort other profiles alphabetically
       return a.localeCompare(b);
     });
+
+    return result;
   }, [selectedTab, configurations, pendingChanges, deletions, renames]);
 
   // Profile Wizard hook

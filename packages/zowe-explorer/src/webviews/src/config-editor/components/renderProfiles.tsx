@@ -124,7 +124,33 @@ export const RenderProfiles = ({
       const pendingProfiles = extractPendingProfiles(configPath);
 
       // Filter out deleted profiles and their children
-      const deletedProfiles = deletions[configPath] || [];
+      const deletedKeys = deletions[configPath] || [];
+
+      // Parse deletion keys to extract profile names
+      const deletedProfiles: string[] = [];
+      deletedKeys.forEach((key) => {
+        // Extract profile name from deletion key
+        const keyParts = key.split(".");
+        if (keyParts[0] === "profiles" && keyParts.length >= 2) {
+          // Handle all profile types (simple, nested, deeply nested)
+          // The deletion key structure is: profiles.profile1.profiles.profile2.profiles.profile3...
+          // We need to extract: profile1.profile2.profile3...
+          const profileParts: string[] = [];
+          for (let i = 1; i < keyParts.length; i++) {
+            if (keyParts[i] !== "profiles") {
+              profileParts.push(keyParts[i]);
+            }
+          }
+          const profileName = profileParts.join(".");
+          deletedProfiles.push(profileName);
+
+          // Also add the renamed version of the deleted profile if it exists
+          const renamedDeletedProfile = getRenamedProfileKeyWithNested(profileName, configPath, renames);
+          if (renamedDeletedProfile !== profileName) {
+            deletedProfiles.push(renamedDeletedProfile);
+          }
+        }
+      });
 
       // Get profile keys in original order from the configuration
       const getOrderedProfileKeys = (profiles: any, parentKey = ""): string[] => {
