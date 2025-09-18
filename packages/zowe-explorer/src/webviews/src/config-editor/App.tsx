@@ -1064,10 +1064,9 @@ export function App() {
   );
 
   // Wrapper function for canPropertyBeSecure that provides the necessary parameters
-  const canPropertyBeSecureWrapper = useCallback((displayKey: string, path: string[]): boolean => {
+  const canPropertyBeSecureWrapper = useCallback((displayKey: string, _path: string[]): boolean => {
     return canPropertyBeSecure(
       displayKey, 
-      path, 
       selectedTab, 
       configurations, 
       schemaValidations, 
@@ -1776,16 +1775,13 @@ export function App() {
         wizardNewPropertyValue={wizardNewPropertyValue}
         wizardNewPropertySecure={wizardNewPropertySecure}
         wizardMergedProperties={wizardMergedProperties}
-        setWizardModalOpen={setWizardModalOpen}
         setWizardRootProfile={setWizardRootProfile}
         setWizardSelectedType={setWizardSelectedType}
         setWizardProfileName={setWizardProfileName}
-        setWizardProperties={setWizardProperties}
         setWizardShowKeyDropdown={setWizardShowKeyDropdown}
         setWizardNewPropertyKey={setWizardNewPropertyKey}
         setWizardNewPropertyValue={setWizardNewPropertyValue}
         setWizardNewPropertySecure={setWizardNewPropertySecure}
-        setWizardMergedProperties={setWizardMergedProperties}
         getWizardTypeOptions={getWizardTypeOptions}
         getWizardPropertyOptions={getWizardPropertyOptions}
         getPropertyType={getPropertyType}
@@ -1799,8 +1795,6 @@ export function App() {
         requestWizardMergedProperties={requestWizardMergedProperties}
         handleWizardPopulateDefaults={handleWizardPopulateDefaults}
         selectedTab={selectedTab}
-        configurations={configurations}
-        schemaValidations={schemaValidations}
         secureValuesAllowed={secureValuesAllowed}
         vscodeApi={vscodeApi}
         getAvailableProfiles={getAvailableProfiles}

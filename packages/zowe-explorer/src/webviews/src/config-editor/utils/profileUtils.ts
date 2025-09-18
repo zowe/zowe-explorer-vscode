@@ -779,7 +779,6 @@ export function getProfileTypeFromPath(path: string[]): string | null {
  */
 export function canPropertyBeSecure(
     displayKey: string, 
-    path: string[], 
     selectedTab: number | null,
     configurations: Configuration[],
     schemaValidations: { [configPath: string]: schemaValidation | undefined },

@@ -13,21 +13,7 @@ import { useEffect } from "react";
 import { ProfileWizardModal } from "./modals/ProfileWizardModal";
 
 // Types
-type Configuration = {
-  configPath: string;
-  properties: any;
-  secure: string[];
-  global?: boolean;
-  user?: boolean;
-  schemaPath?: string;
-};
 
-type PendingChange = {
-  value: string | number | boolean | Record<string, any>;
-  path: string[];
-  profile: string;
-  secure?: boolean;
-};
 
 // Props interface for the WizardManager component
 interface WizardManagerProps {
@@ -42,16 +28,13 @@ interface WizardManagerProps {
   wizardNewPropertyValue: string;
   wizardNewPropertySecure: boolean;
   wizardMergedProperties: { [key: string]: any };
-  setWizardModalOpen: (open: boolean) => void;
   setWizardRootProfile: (profile: string) => void;
   setWizardSelectedType: (type: string) => void;
   setWizardProfileName: (name: string) => void;
-  setWizardProperties: React.Dispatch<React.SetStateAction<{ key: string; value: string | boolean | number | Object; secure?: boolean }[]>>;
   setWizardShowKeyDropdown: (show: boolean) => void;
   setWizardNewPropertyKey: (key: string) => void;
   setWizardNewPropertyValue: (value: string) => void;
   setWizardNewPropertySecure: (secure: boolean) => void;
-  setWizardMergedProperties: React.Dispatch<React.SetStateAction<{ [key: string]: any }>>;
 
   // Wizard functions from useProfileWizard hook
   getWizardTypeOptions: () => string[];
@@ -69,8 +52,6 @@ interface WizardManagerProps {
 
   // Additional props needed for wizard functionality
   selectedTab: number | null;
-  configurations: Configuration[];
-  schemaValidations: { [configPath: string]: any };
   secureValuesAllowed: boolean;
   vscodeApi: any;
   getAvailableProfiles: () => string[];
@@ -94,16 +75,13 @@ export const WizardManager = ({
   wizardNewPropertyValue,
   wizardNewPropertySecure,
   wizardMergedProperties,
-  setWizardModalOpen,
   setWizardRootProfile,
   setWizardSelectedType,
   setWizardProfileName,
-  setWizardProperties,
   setWizardShowKeyDropdown,
   setWizardNewPropertyKey,
   setWizardNewPropertyValue,
   setWizardNewPropertySecure,
-  setWizardMergedProperties,
   getWizardTypeOptions,
   getWizardPropertyOptions,
   getPropertyType,
@@ -117,8 +95,6 @@ export const WizardManager = ({
   requestWizardMergedProperties,
   handleWizardPopulateDefaults,
   selectedTab,
-  configurations,
-  schemaValidations,
   secureValuesAllowed,
   vscodeApi,
   getAvailableProfiles,
