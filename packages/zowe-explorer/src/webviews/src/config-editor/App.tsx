@@ -711,60 +711,6 @@ export function App() {
     };
   }, [profileMenuOpen]);
 
-  // Handle refresh functionality
-  const handleRefresh = useCallback(() => {
-    // Store current selection before clearing
-    const currentSelectedTab = selectedTab;
-    const currentSelectedProfileKey = selectedProfileKey;
-
-    // Convert the current selected profile key to its original key before clearing renames
-    let originalSelectedProfileKey = currentSelectedProfileKey;
-    if (currentSelectedProfileKey && currentSelectedTab !== null) {
-      const configPath = configurations[currentSelectedTab]?.configPath;
-      if (configPath) {
-        // Get the original profile key by reversing the renames
-        originalSelectedProfileKey = getProfileNameForMergedProperties(currentSelectedProfileKey, configPath, renames);
-      }
-    }
-
-    // Clear all state first
-    setHiddenItems({});
-    setPendingChanges({});
-    setDeletions({});
-    setPendingDefaults({});
-    setDefaultsDeletions({});
-    setAutostoreChanges({});
-    setRenames({});
-    setDragDroppedProfiles({});
-
-    // Request fresh configurations from the backend
-    vscodeApi.postMessage({ command: "GET_PROFILES" });
-
-    // Restore selection after a brief delay to allow configurations to update
-    setTimeout(() => {
-      if (currentSelectedTab !== null) {
-        setSelectedTab(currentSelectedTab);
-      }
-      if (originalSelectedProfileKey !== null) {
-        setSelectedProfileKey(originalSelectedProfileKey);
-
-        // Refresh merged properties for the selected profile after clearing changes
-        const configPath = currentSelectedTab !== null ? configurations[currentSelectedTab]?.configPath : undefined;
-        if (configPath) {
-          // After refresh, the profile name is the original name (no renames to handle)
-          const changes = formatPendingChanges();
-          vscodeApi.postMessage({
-            command: "GET_MERGED_PROPERTIES",
-            profilePath: originalSelectedProfileKey,
-            configPath: configPath,
-            changes: changes,
-            renames: changes.renames,
-          });
-        }
-      }
-    }, 100);
-  }, [selectedTab, selectedProfileKey, configurations, formatPendingChanges, renames]);
-
   const handleChange = (key: string, value: string) => {
     const configPath = configurations[selectedTab!]!.configPath;
     const path = flattenedConfig[key]?.path ?? key.split(".");
@@ -983,7 +929,7 @@ export function App() {
     const configPath = configurations[index]?.configPath;
     if (configPath) {
       const previouslySelectedProfile = selectedProfilesByConfig[configPath];
-      if (previouslySelectedProfile) {
+      if (previouslySelectedProfile && doesProfileExist(previouslySelectedProfile, configPath)) {
         setSelectedProfileKey(previouslySelectedProfile);
 
         // Get the correct profile name for merged properties (handles renames)
@@ -999,7 +945,7 @@ export function App() {
           renames: changes.renames,
         });
       } else {
-        // No previously selected profile for this config, clear selection
+        // No previously selected profile for this config or profile no longer exists, clear selection
         setSelectedProfileKey(null);
         setMergedProperties(null);
       }
@@ -1070,33 +1016,39 @@ export function App() {
   );
 
   // Wrapper function for canPropertyBeSecure that provides the necessary parameters
-  const canPropertyBeSecureWrapper = useCallback((displayKey: string, _path: string[]): boolean => {
-    return canPropertyBeSecure(
-      displayKey, 
-      selectedTab, 
-      configurations, 
-      schemaValidations, 
-      getProfileType, 
-      pendingChanges, 
-      renames,
-      selectedProfileKey
-    );
-  }, [selectedTab, configurations, schemaValidations, pendingChanges, renames, selectedProfileKey]);
+  const canPropertyBeSecureWrapper = useCallback(
+    (displayKey: string, _path: string[]): boolean => {
+      return canPropertyBeSecure(
+        displayKey,
+        selectedTab,
+        configurations,
+        schemaValidations,
+        getProfileType,
+        pendingChanges,
+        renames,
+        selectedProfileKey
+      );
+    },
+    [selectedTab, configurations, schemaValidations, pendingChanges, renames, selectedProfileKey]
+  );
 
   // Wrapper function for handleToggleSecure that provides the necessary parameters
-  const handleToggleSecureWrapper = useCallback((fullKey: string, displayKey: string, path: string[]): void => {
-    return handleToggleSecure(
-      fullKey, 
-      displayKey, 
-      path, 
-      selectedTab, 
-      configurations, 
-      pendingChanges, 
-      setPendingChanges, 
-      selectedProfileKey, 
-      renames
-    );
-  }, [selectedTab, configurations, pendingChanges, setPendingChanges, selectedProfileKey, renames]);
+  const handleToggleSecureWrapper = useCallback(
+    (fullKey: string, displayKey: string, path: string[]): void => {
+      return handleToggleSecure(
+        fullKey,
+        displayKey,
+        path,
+        selectedTab,
+        configurations,
+        pendingChanges,
+        setPendingChanges,
+        selectedProfileKey,
+        renames
+      );
+    },
+    [selectedTab, configurations, pendingChanges, setPendingChanges, selectedProfileKey, renames]
+  );
 
   // Wrapper function for hasPendingSecureChanges that provides the necessary parameters
   const hasPendingSecureChangesWrapper = useCallback(
@@ -1169,24 +1121,24 @@ export function App() {
       if (selectedTab === null) return false;
       const configPath = configurations[selectedTab]?.configPath;
       if (!configPath || !dragDroppedProfiles[configPath]) return false;
-      
+
       const dragDroppedSet = dragDroppedProfiles[configPath];
-      
+
       // Check if the profile itself is drag-dropped
       if (dragDroppedSet.has(profileKey)) return true;
-      
+
       // Check if any parent is drag-dropped
       const parts = profileKey.split(".");
       for (let i = 1; i < parts.length; i++) {
         const parentKey = parts.slice(0, i).join(".");
         if (dragDroppedSet.has(parentKey)) return true;
       }
-      
+
       // Check if any child is drag-dropped
       for (const dragDroppedProfile of dragDroppedSet) {
         if (dragDroppedProfile.startsWith(profileKey + ".")) return true;
       }
-      
+
       return false;
     },
     [selectedTab, configurations, dragDroppedProfiles]
@@ -1231,6 +1183,73 @@ export function App() {
     },
     [configurations, selectedTab, deletions, extractPendingProfiles, isProfileOrParentDeleted]
   );
+
+  // Helper function to check if a profile exists in the current configuration
+  const doesProfileExist = useCallback(
+    (profileKey: string, configPath: string): boolean => {
+      const availableProfiles = getAvailableProfilesForConfig(configPath);
+      return availableProfiles.includes(profileKey);
+    },
+    [getAvailableProfilesForConfig]
+  );
+
+  // Handle refresh functionality
+  const handleRefresh = useCallback(() => {
+    // Store current selection before clearing
+    const currentSelectedTab = selectedTab;
+    const currentSelectedProfileKey = selectedProfileKey;
+
+    // Convert the current selected profile key to its original key before clearing renames
+    let originalSelectedProfileKey = currentSelectedProfileKey;
+    if (currentSelectedProfileKey && currentSelectedTab !== null) {
+      const configPath = configurations[currentSelectedTab]?.configPath;
+      if (configPath) {
+        // Get the original profile key by reversing the renames
+        originalSelectedProfileKey = getProfileNameForMergedProperties(currentSelectedProfileKey, configPath, renames);
+      }
+    }
+
+    // Clear all state first
+    setHiddenItems({});
+    setPendingChanges({});
+    setDeletions({});
+    setPendingDefaults({});
+    setDefaultsDeletions({});
+    setAutostoreChanges({});
+    setRenames({});
+    setDragDroppedProfiles({});
+
+    // Request fresh configurations from the backend
+    vscodeApi.postMessage({ command: "GET_PROFILES" });
+
+    // Restore selection after a brief delay to allow configurations to update
+    setTimeout(() => {
+      if (currentSelectedTab !== null) {
+        setSelectedTab(currentSelectedTab);
+      }
+      if (originalSelectedProfileKey !== null) {
+        // Check if the profile still exists after refresh
+        const configPath = currentSelectedTab !== null ? configurations[currentSelectedTab]?.configPath : undefined;
+        if (configPath && doesProfileExist(originalSelectedProfileKey, configPath)) {
+          setSelectedProfileKey(originalSelectedProfileKey);
+
+          // Refresh merged properties for the selected profile after clearing changes
+          const changes = formatPendingChanges();
+          vscodeApi.postMessage({
+            command: "GET_MERGED_PROPERTIES",
+            profilePath: originalSelectedProfileKey,
+            configPath: configPath,
+            changes: changes,
+            renames: changes.renames,
+          });
+        } else {
+          // Profile no longer exists, clear selection
+          setSelectedProfileKey(null);
+          setMergedProperties(null);
+        }
+      }
+    }, 100);
+  }, [selectedTab, selectedProfileKey, configurations, formatPendingChanges, renames, doesProfileExist]);
 
   // Optimized function to find the best replacement profile after deletion
   const findOptimalReplacementProfile = useCallback(
@@ -1711,7 +1730,7 @@ export function App() {
             mergePendingSecureProperties={mergePendingSecurePropertiesWrapper}
             isCurrentProfileUntyped={isCurrentProfileUntypedWrapper}
             isPropertyFromMergedProps={isPropertyFromMergedPropsWrapper}
-            isPropertySecure={(fullKey: string, displayKey: string, path: string[], mergedProps?: any) => 
+            isPropertySecure={(fullKey: string, displayKey: string, path: string[], mergedProps?: any) =>
               isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges)
             }
             canPropertyBeSecure={canPropertyBeSecureWrapper}

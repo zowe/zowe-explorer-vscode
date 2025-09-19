@@ -229,8 +229,11 @@ export const RenderProfiles = ({
         return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
       });
 
-      // Combine all renamed profile keys
+      // Combine all renamed profile keys and remove duplicates
       const allRenamedProfileKeys = [...finalRenamedProfileKeys, ...renamedOnlyProfileKeys];
+
+      // Remove duplicates from allRenamedProfileKeys
+      const uniqueRenamedProfileKeys = Array.from(new Set(allRenamedProfileKeys));
 
       // Add all pending profiles - we'll filter out conflicts later
       const pendingProfileKeys = Object.keys(pendingProfiles).filter((key) => {
@@ -271,15 +274,16 @@ export const RenderProfiles = ({
 
       // Filter out original profile keys that have pending profiles (renamed versions)
       const pendingProfileKeysSet = new Set(renamedPendingProfileKeys);
+      const originalPendingProfileKeysSet = new Set(pendingProfileKeys);
 
-      const filteredOriginalKeys = allRenamedProfileKeys.filter((profileKey) => {
+      const filteredOriginalKeys = uniqueRenamedProfileKeys.filter((profileKey) => {
         // Check if this profile is deleted
         if (isProfileOrParentDeleted(profileKey, deletedProfiles)) {
           return false;
         }
 
-        // If this profile key has a pending version, filter it out
-        const hasExactPendingMatch = pendingProfileKeysSet.has(profileKey);
+        // If this profile key has a pending version (either renamed or original), filter it out
+        const hasExactPendingMatch = pendingProfileKeysSet.has(profileKey) || originalPendingProfileKeysSet.has(profileKey);
 
         // Also check if this profile key is the result of a rename that has a pending version
         // For example, if we have renames {b: 'a.b', a.b: 'a.b1'} and pending profile 'b'
@@ -287,18 +291,71 @@ export const RenderProfiles = ({
         const isResultOfRenameWithPending = Object.keys(renames[configPath] || {}).some((originalKey) => {
           const renamedKey = getRenamedProfileKeyWithNested(originalKey, configPath, renames);
           const hasPendingOriginal = Object.keys(pendingProfiles).includes(originalKey);
-          return profileKey === renamedKey && hasPendingOriginal;
+          const shouldFilter = profileKey === renamedKey && hasPendingOriginal;
+
+          return shouldFilter;
         });
 
-        const shouldKeep = !hasExactPendingMatch && !isResultOfRenameWithPending;
+        // Additional check: if this profile key exists in the renamed pending profiles,
+        // it means there's a pending profile that will become this key, so filter it out
+        const isTargetOfPendingRename = renamedPendingProfileKeys.includes(profileKey);
+
+        const shouldKeep = !hasExactPendingMatch && !isResultOfRenameWithPending && !isTargetOfPendingRename;
+
         return shouldKeep;
       });
 
-      const filteredProfileKeys = [...filteredOriginalKeys, ...renamedPendingProfileKeys];
+      // For natural sort order, we need to preserve the original order
+      // This means we should merge the profiles in their original positions, not append pending ones at the end
+      let finalProfileKeys: string[];
+
+      if (profileSortOrder === "natural") {
+        // For natural sort order, maintain the original order by merging profiles in their original positions
+        // Use filteredOriginalKeys which already has the correct filtering applied
+        const originalProfileKeys = filteredOriginalKeys;
+
+        // Create a map to track which profiles have pending versions
+        const pendingMap = new Map<string, string>();
+        renamedPendingProfileKeys.forEach((pendingKey) => {
+          // Find the original key that this pending profile corresponds to
+          const originalKey = Object.keys(pendingProfiles).find((origKey) => {
+            const renamedKey = getRenamedProfileKeyWithNested(origKey, configPath, renames);
+            return renamedKey === pendingKey;
+          });
+          if (originalKey) {
+            pendingMap.set(originalKey, pendingKey);
+          }
+        });
+
+        // Build the final list maintaining original order
+        finalProfileKeys = [];
+        const processedPendingKeys = new Set<string>();
+
+        originalProfileKeys.forEach((originalKey) => {
+          const pendingVersion = pendingMap.get(originalKey);
+          if (pendingVersion) {
+            // Use the pending version instead of the original
+            finalProfileKeys.push(pendingVersion);
+            processedPendingKeys.add(pendingVersion);
+          } else {
+            // Use the original profile
+            finalProfileKeys.push(originalKey);
+          }
+        });
+
+        // Add any pending profiles that don't correspond to existing profiles (newly created profiles)
+        renamedPendingProfileKeys.forEach((pendingKey) => {
+          if (!processedPendingKeys.has(pendingKey)) {
+            finalProfileKeys.push(pendingKey);
+          }
+        });
+      } else {
+        // For other sort orders, use the existing logic
+        finalProfileKeys = [...filteredOriginalKeys, ...renamedPendingProfileKeys];
+      }
 
       // Apply profile sorting based on the current sort order
-      // For natural sort order, maintain the original order of renamed profiles
-      const sortedProfileKeys = profileSortOrder === "natural" ? filteredProfileKeys : sortProfilesAtLevel(filteredProfileKeys);
+      const sortedProfileKeys = profileSortOrder === "natural" ? finalProfileKeys : sortProfilesAtLevel(finalProfileKeys);
 
       return (
         <ProfileList

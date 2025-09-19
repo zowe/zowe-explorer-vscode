@@ -778,7 +778,7 @@ export function getProfileTypeFromPath(path: string[]): string | null {
  * Check if a property can be secure
  */
 export function canPropertyBeSecure(
-    displayKey: string, 
+    displayKey: string,
     selectedTab: number | null,
     configurations: Configuration[],
     schemaValidations: { [configPath: string]: schemaValidation | undefined },
@@ -798,7 +798,7 @@ export function canPropertyBeSecure(
 
     const configPath = config.configPath;
     const schemaValidation = schemaValidations[configPath];
-    
+
     if (!schemaValidation) {
         return false;
     }
@@ -829,9 +829,9 @@ export function canPropertyBeSecure(
  * Check if a property is secure
  */
 export function isPropertySecure(
-    fullKey: string, 
-    displayKey: string, 
-    path: string[], 
+    fullKey: string,
+    displayKey: string,
+    path: string[],
     mergedProps?: any,
     selectedTab?: number | null,
     configurations?: Configuration[],
@@ -864,9 +864,26 @@ export function isPropertySecure(
     // Check if this property is in the secure array of the current configuration
     if (selectedTab !== null && selectedTab !== undefined && configurations) {
         const config = configurations[selectedTab];
-        if (config && config.secure) {
-            // Check if the full key path is in the secure array
-            return config.secure.includes(fullKey);
+        if (config) {
+            // Extract the property name from the full key (last part of the path)
+            const keyParts = fullKey.split(".");
+            const propertyName = keyParts[keyParts.length - 1];
+
+            // First check the global secure array
+            if (config.secure && config.secure.includes(propertyName)) {
+                return true;
+            }
+
+            // Then check the profile's secure array
+            // The path should be something like ["profiles", "profileName", "properties", "propertyName"]
+            // We need to find the profile and check its secure array
+            if (path.length >= 2 && path[0] === "profiles") {
+                const profileName = path[1];
+                const profile = config.properties?.profiles?.[profileName];
+                if (profile && profile.secure && Array.isArray(profile.secure)) {
+                    return profile.secure.includes(propertyName);
+                }
+            }
         }
     }
 
@@ -877,8 +894,8 @@ export function isPropertySecure(
  * Handle toggling secure property status
  */
 export function handleToggleSecure(
-    fullKey: string, 
-    displayKey: string, 
+    fullKey: string,
+    displayKey: string,
     path: string[],
     selectedTab?: number | null,
     configurations?: Configuration[],
@@ -898,10 +915,10 @@ export function handleToggleSecure(
 
     const configPath = config.configPath;
     const currentPendingChange = pendingChanges[configPath]?.[fullKey];
-    
+
     // Get the current secure status
     const currentSecure = isPropertySecure(fullKey, displayKey, path, undefined, selectedTab, configurations, pendingChanges);
-    
+
     // Determine the profile key
     let profileKey = selectedProfileKey || extractProfileKeyFromPath(path);
     if (selectedProfileKey && renames && renames[configPath]) {
@@ -910,7 +927,7 @@ export function handleToggleSecure(
 
     // Toggle the secure status
     const newSecure = !currentSecure;
-    
+
     // Update pending changes
     setPendingChanges((prev) => ({
         ...prev,
