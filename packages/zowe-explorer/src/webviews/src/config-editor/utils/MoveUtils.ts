@@ -37,6 +37,9 @@ export function moveProfile(api: ConfigMoveAPI, layerActive: () => IConfigLayer,
         throw new Error(`Target profile already exists at path: ${targetPath}`);
     }
 
+    // Get secure properties from source before moving
+    const sourceSecure = sourceProfile.secure || [];
+
     // Copy the profile to the new location
     api.set(targetPath, sourceProfile);
 
@@ -44,7 +47,7 @@ export function moveProfile(api: ConfigMoveAPI, layerActive: () => IConfigLayer,
     api.delete(sourcePath);
 
     // Move secure properties if they exist
-    moveSecureProperties(api, layerActive, sourcePath, targetPath);
+    moveSecureProperties(api, layerActive, sourcePath, targetPath, sourceSecure);
 }
 
 export function getSecurePropertiesForProfile(api: ConfigMoveAPI, profilePath: string): string[] {
@@ -52,11 +55,11 @@ export function getSecurePropertiesForProfile(api: ConfigMoveAPI, profilePath: s
     return profile?.secure || [];
 }
 
-export function moveSecureProperties(api: ConfigMoveAPI, layerActive: () => IConfigLayer, sourcePath: string, targetPath: string): void {
-    const sourceSecure = getSecurePropertiesForProfile(api, targetPath);
+export function moveSecureProperties(api: ConfigMoveAPI, layerActive: () => IConfigLayer, sourcePath: string, targetPath: string, sourceSecure: string[]): void {
+    // Get secure properties from the target path (which now contains the moved profile)
     const targetSecure = getSecurePropertiesForProfile(api, targetPath);
 
-    // Update secure arrays
+    // Update secure arrays to move secure properties from source to target
     updateSecureArrays(layerActive, sourcePath, targetPath, sourceSecure, targetSecure);
 }
 
