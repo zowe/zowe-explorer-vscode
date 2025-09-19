@@ -99,14 +99,6 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
     if (selectedTab === null) return false;
     const configPath = configurations[selectedTab!]!.configPath;
 
-    // Debug drag-drop operations only
-    if (isDragDrop) {
-        console.log(`Drag-drop: ${originalKey} -> ${newKey}`);
-        // Show current renames state after each drag-drop
-        const currentRenames = renames[configPath] || {};
-        console.log("Current renames state:", currentRenames);
-    }
-
     // Check if we need to use the current effective name instead of the original key
     const currentEffectiveName = getCurrentEffectiveName(originalKey, configPath, renames);
     if (currentEffectiveName !== originalKey) {

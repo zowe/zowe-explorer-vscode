@@ -102,7 +102,16 @@ interface RenderProfileDetailsProps {
   ) => any[];
   isCurrentProfileUntyped: () => boolean;
   isPropertyFromMergedProps: (displayKey: string | undefined, path: string[], mergedProps: any, configPath: string) => boolean;
-  isPropertySecure: (fullKey: string, displayKey: string, path: string[], mergedProps?: any) => boolean;
+  isPropertySecure: (
+    fullKey: string,
+    displayKey: string,
+    path: string[],
+    mergedProps?: any,
+    selectedTab?: number | null,
+    configurations?: Configuration[],
+    pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } },
+    renames?: { [configPath: string]: { [originalKey: string]: string } }
+  ) => boolean;
   canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
   isMergedPropertySecure: (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean) => boolean;
   isProfileAffectedByDragDrop: (profileKey: string) => boolean;

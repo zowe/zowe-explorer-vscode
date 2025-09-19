@@ -132,7 +132,6 @@ export function App() {
   // Track merged properties requests to prevent duplicates
   const [pendingMergedPropertiesRequest, setPendingMergedPropertiesRequest] = useState<string | null>(null);
 
-  // Debug logging for merged properties state changes
   useEffect(() => {}, [mergedProperties]);
   const [viewMode, setViewMode] = useState<"flat" | "tree">("tree");
   const [propertySortOrder, setPropertySortOrder] = useState<PropertySortOrder>("alphabetical");
@@ -725,7 +724,7 @@ export function App() {
 
     // Check if this property is currently secure
     const displayKey = path[path.length - 1];
-    const currentSecure = isPropertySecure(key, displayKey, path, undefined, selectedTab, configurations, pendingChanges);
+    const currentSecure = isPropertySecure(key, displayKey, path, undefined, selectedTab, configurations, pendingChanges, renames);
 
     // When a user changes a property, maintain its current secure state
     // This ensures that secure properties stay secure when modified
@@ -1731,7 +1730,7 @@ export function App() {
             isCurrentProfileUntyped={isCurrentProfileUntypedWrapper}
             isPropertyFromMergedProps={isPropertyFromMergedPropsWrapper}
             isPropertySecure={(fullKey: string, displayKey: string, path: string[], mergedProps?: any) =>
-              isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges)
+              isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames)
             }
             canPropertyBeSecure={canPropertyBeSecureWrapper}
             isMergedPropertySecure={isMergedPropertySecure}

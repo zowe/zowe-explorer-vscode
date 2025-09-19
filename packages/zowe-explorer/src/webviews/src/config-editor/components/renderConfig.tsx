@@ -95,7 +95,8 @@ interface RenderConfigProps {
     mergedProps?: any,
     selectedTab?: number | null,
     configurations?: Configuration[],
-    pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } }
+    pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } },
+    renames?: { [configPath: string]: { [originalKey: string]: string } }
   ) => boolean;
   canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
   isMergedPropertySecure: (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean) => boolean;
@@ -593,15 +594,11 @@ export const RenderConfig = ({
           // Check if this is a local secure property (in the current profile's secure array)
           const isLocalSecureProperty =
             displayKey && path && configPath
-              ? isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges)
+              ? isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames)
               : false;
 
           // Check if this is a secure property that was added for sorting
           const isSecureForSorting = isSecurePropertyForSorting;
-
-          // Debug logging for secure properties
-          if (isSecurePropertyForSorting) {
-          }
 
           const readOnlyContainer = (
             <div className="config-item-container" style={displayKey === "type" ? { gap: "0px" } : {}}>
@@ -746,7 +743,6 @@ export const RenderConfig = ({
                             return mergedValue;
                           } else {
                             const pendingValueStr = stringifyValueByType(pendingValue);
-                            console.log("Using pending value for input:", pendingValueStr);
                             return pendingValueStr;
                           }
                         })()}
@@ -772,7 +768,7 @@ export const RenderConfig = ({
               {displayKey !== "type" &&
                 displayKey &&
                 (() => {
-                  const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges);
+                  const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames);
                   const canBeSecure = canPropertyBeSecure(displayKey, path);
                   const showSecureButton = canBeSecure && !isSecure && (!isFromMergedProps || isSecurePropertyForSorting);
                   const showDeleteButton = !isFromMergedProps;

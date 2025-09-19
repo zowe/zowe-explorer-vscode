@@ -293,9 +293,6 @@ export const consolidateRenames = (
 ): { [originalKey: string]: string } => {
     const tempRenames = { ...existingRenames };
 
-    console.log(`=== CONSOLIDATING ${originalKey} -> ${newKey} ===`);
-    console.log("Before:", existingRenames);
-
     // Handle cancellation
     if (newKey === originalKey) {
         delete tempRenames[originalKey];
@@ -307,7 +304,6 @@ export const consolidateRenames = (
 
     // Consolidate conflicting renames
     const result = consolidateConflictingRenames(tempRenames);
-    console.log("After:", result);
     return result;
 };
 
@@ -610,7 +606,7 @@ export const consolidateConflictingRenames = (renames: { [originalKey: string]: 
     }
 
     // Third, identify orphaned renames where the source profile's parent has been moved
-    for (const [originalKey, newKey] of Object.entries(finalConsolidated)) {
+    for (const [originalKey, _] of Object.entries(finalConsolidated)) {
         if (originalKey.includes(".") && !keysToRemove.includes(originalKey)) {
             // This is a nested profile, check if its parent has been renamed
             const parentKey = originalKey.substring(0, originalKey.lastIndexOf("."));
@@ -620,7 +616,6 @@ export const consolidateConflictingRenames = (renames: { [originalKey: string]: 
             if (parentRename && !originalKey.startsWith(parentRename + ".")) {
                 // The parent was renamed but this child rename wasn't updated accordingly
                 // This creates an orphaned rename that should be removed
-                console.log(`Removing orphaned rename: ${originalKey} -> ${newKey} (parent ${parentKey} moved to ${parentRename})`);
                 keysToRemove.push(originalKey);
             }
         }
