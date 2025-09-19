@@ -235,6 +235,16 @@ export namespace MainframeInteraction {
         getContents(dataSetName: string, options?: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse>;
 
         /**
+         * Retrieve all members of a partitioned data set and save them to a directory.
+         *
+         * @param {string} dataSetName
+         * @param {string} directoryPath
+         * @param {zosfiles.IDownloadOptions} [options]
+         * @returns {Promise<zosfiles.IZosFilesResponse>}
+         */
+        downloadAllMembers(dataSetName: string, options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse>;
+
+        /**
          * Uploads a given buffer as the contents of a file to a data set or member.
          *
          * @param {Buffer} buffer
