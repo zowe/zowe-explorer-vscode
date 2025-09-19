@@ -9,10 +9,11 @@
  *
  */
 
-import { ProfileInfo } from "@zowe/imperative";
-import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { ProfileCredentials, ProfileInfo } from "@zowe/imperative";
+import { ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import { ConfigSchemaHelpers } from "./ConfigSchemaHelpers";
+import { Profiles } from "../configuration/Profiles";
 
 export type ChangeEntry = {
     key: string;
@@ -31,7 +32,9 @@ export class ConfigChangeHandlers {
      * @param activeLayer - Path to the active configuration layer
      */
     public static async handleDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string): Promise<void> {
-        const profInfo = new ProfileInfo("zowe");
+        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+                    credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+                    onlyCheckActiveLayer: true, });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         if (activeLayer !== profInfo.getTeamConfig().api.layers.get().path) {
@@ -64,7 +67,9 @@ export class ConfigChangeHandlers {
         configPath: string,
         areSecureValuesAllowed: () => Promise<boolean>
     ): Promise<void> {
-        const profInfo = new ProfileInfo("zowe");
+        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            onlyCheckActiveLayer: true, });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         // Check if secure values are allowed before processing changes

@@ -99,6 +99,7 @@ export class ConfigEditor extends WebView {
         const profInfo = new ProfileInfo("zowe", {
             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            onlyCheckActiveLayer: true,
         });
         try {
             await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
@@ -205,7 +206,9 @@ export class ConfigEditor extends WebView {
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
-        const profInfo = new ProfileInfo("zowe");
+        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            onlyCheckActiveLayer: true, });
         switch (message.command.toLocaleUpperCase()) {
             case "GET_PROFILES": {
                 await this.messageHandlers.handleGetProfiles();
@@ -398,7 +401,9 @@ export class ConfigEditor extends WebView {
             return;
         }
 
-        const profInfo = new ProfileInfo("zowe");
+        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            onlyCheckActiveLayer: true, });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         // Process renames in order - sort by depth to ensure parent renames happen before child renames
@@ -631,7 +636,9 @@ export class ConfigEditor extends WebView {
         }
 
         // Initialize TeamConfig for profile API access
-        const profInfo = new ProfileInfo("zowe");
+        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            onlyCheckActiveLayer: true, });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         const updatedMessage = { ...message };
@@ -696,7 +703,9 @@ export class ConfigEditor extends WebView {
         changes: any,
         renames?: Array<{ originalKey: string; newKey: string; configPath: string }>
     ): Promise<any> {
-        const profInfo = new ProfileInfo("zowe");
+        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            onlyCheckActiveLayer: true, });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         const teamConfig = profInfo.getTeamConfig();
@@ -763,7 +772,22 @@ export class ConfigEditor extends WebView {
             return;
         }
 
+        const activateLayer = teamConfig.layers.find((layer) => layer.path === configPath);
+        if (activateLayer) {
+            teamConfig.api.layers.activate(activateLayer.user, activateLayer.global);
+                }
+
+        const secFields = teamConfig.api.secure.secureFields({user: activateLayer?.user, global: activateLayer?.global});
+
         const mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
+
+        if(mergedArgs.knownArgs){
+            mergedArgs.knownArgs.forEach((arg) => {
+                if(arg.argLoc && arg.argLoc.osLoc && secFields.includes(arg.argLoc.jsonLoc)) {
+                    arg.secure = true;
+                }
+                });
+        }
         const redacted = this.profileOperations.redactSecureValues(mergedArgs.knownArgs);
         return redacted;
     }
@@ -959,7 +983,9 @@ export class ConfigEditor extends WebView {
             return [];
         }
 
-        const profInfo = new ProfileInfo("zowe");
+        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            onlyCheckActiveLayer: true, });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         const teamConfig = profInfo.getTeamConfig();

@@ -10,9 +10,10 @@
  */
 
 import * as vscode from "vscode";
-import { ProfileInfo } from "@zowe/imperative";
-import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { ProfileCredentials, ProfileInfo } from "@zowe/imperative";
+import { ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
+import { Profiles } from "../configuration/Profiles";
 
 export class ConfigEditorMessageHandlers {
     constructor(
@@ -22,7 +23,9 @@ export class ConfigEditorMessageHandlers {
     ) {}
 
     async handleGetProfiles(): Promise<void> {
-        const profInfo = new ProfileInfo("zowe");
+        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+            onlyCheckActiveLayer: true, });
         try {
             await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
         } catch (err) {

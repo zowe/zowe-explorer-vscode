@@ -870,9 +870,19 @@ export function isPropertySecure(
             const keyParts = fullKey.split(".");
             const propertyName = keyParts[keyParts.length - 1];
 
+
             // First check the global secure array
             if (config.secure && config.secure.includes(propertyName)) {
                 return true;
+            }
+
+            // Direct check for profile secure array - simplified approach
+            if (path.length >= 2 && path[0] === "profiles" && path[1] && path[2] === "properties") {
+                const profileName = path[1];
+                const profile = config.properties?.profiles?.[profileName];
+                if (profile && profile.secure && Array.isArray(profile.secure) && profile.secure.includes(propertyName)) {
+                    return true;
+                }
             }
 
             // Then check the profile's secure array
@@ -934,9 +944,9 @@ export function isPropertySecure(
                             Array.isArray(currentProfile[currentPathSegment].secure)
                         ) {
                             const isSecure = currentProfile[currentPathSegment].secure.includes(propertyName);
-
+                            
+                            
                             return isSecure;
-                        } else {
                         }
                         break;
                     } else {
