@@ -1113,7 +1113,8 @@ describe("ProfilesUtils unit tests", () => {
             Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn().mockReturnValue({}), configurable: true });
             Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
 
-            await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.toBe(ProfilesConvertStatus.ConvertSelected);
+            await (ProfilesUtils as any).v1ProfileOptions();
+            expect(ZoweLocalStorage.setValue).toHaveBeenCalled();
 
             expect(infoMsgSpy).toHaveBeenCalledTimes(2);
             infoMsgSpy.mockRestore();
@@ -1155,8 +1156,10 @@ describe("ProfilesUtils unit tests", () => {
 
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
             jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
-            await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.toBe(ProfilesConvertStatus.CreateNewSelected);
+            await (ProfilesUtils as any).v1ProfileOptions();
+            expect(ZoweLocalStorage.setValue).toHaveBeenCalled();
 
+            expect(infoMsgSpy).toHaveBeenCalledTimes(1);
             infoMsgSpy.mockRestore();
             profInfoSpy.mockRestore();
         });
@@ -1197,9 +1200,8 @@ describe("ProfilesUtils unit tests", () => {
                     onlyV1ProfilesExist: true,
                 },
             });
-            const v1ProfileOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockResolvedValue(ProfilesConvertStatus.CreateNewSelected);
+            const v1ProfileOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions");
             await ProfilesUtils.handleV1MigrationStatus();
-            expect(executeCommandMock.mock.lastCall?.[0]).toBe("zowe.ds.addSession");
             expect(v1ProfileOptsMock).toHaveBeenCalled();
             blockMocks.getValueMock.mockRestore();
             blockMocks.setValueMock.mockRestore();
