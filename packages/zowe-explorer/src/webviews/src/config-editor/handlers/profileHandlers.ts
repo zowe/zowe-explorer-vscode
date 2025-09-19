@@ -771,6 +771,57 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
         });
     }
 
+    // Preserve existing secure properties when profile is renamed
+    // This ensures that secure properties that exist in the original config are carried over
+    const config = configurations[selectedTab];
+    const flatProfiles = flattenProfiles(config.properties.profiles);
+    const originalProfile = flatProfiles[originalKey];
+
+    if (originalProfile && originalProfile.secure && Array.isArray(originalProfile.secure) && originalProfile.secure.length > 0) {
+        // Helper function to construct new path for nested profiles
+        const constructNewPath = (newProfileKey: string): string => {
+            if (newProfileKey.includes(".")) {
+                // For nested profiles, construct path with "profiles" segments
+                const profileParts = newProfileKey.split(".");
+                const pathParts = ["profiles"];
+                for (let i = 0; i < profileParts.length; i++) {
+                    pathParts.push(profileParts[i]);
+                    if (i < profileParts.length - 1) {
+                        pathParts.push("profiles");
+                    }
+                }
+                return pathParts.join(".");
+            } else {
+                // Top-level profile
+                return `profiles.${newProfileKey}`;
+            }
+        };
+
+        setPendingChanges((prev) => {
+            const newState = { ...prev };
+            if (!newState[configPath]) {
+                newState[configPath] = {};
+            }
+
+            // Create pending changes for each existing secure property
+            originalProfile.secure.forEach((secureProperty: string) => {
+                const secureKey = `${constructNewPath(newKey)}.secure.${secureProperty}`;
+
+                // Only add if not already in pending changes
+                if (!newState[configPath][secureKey]) {
+                    newState[configPath][secureKey] = {
+                        value: "", // Secure properties don't store values in pending changes
+                        path: ["secure", secureProperty],
+                        profile: newKey,
+                        secure: true,
+                    };
+                }
+            });
+
+            return newState;
+        });
+    }
+
     // Close the modal
     setRenameProfileModalOpen(false);
 

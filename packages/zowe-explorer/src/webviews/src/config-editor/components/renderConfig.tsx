@@ -79,10 +79,24 @@ interface RenderConfigProps {
   mergeMergedProperties: (combinedConfig: any, path: string[], mergedProps: any, configPath: string) => any;
   ensureProfileProperties: (combinedConfig: any, path: string[]) => any;
   filterSecureProperties: (value: any, combinedConfig: any, configPath?: string) => any;
-  mergePendingSecureProperties: (value: any[], path: string[], configPath: string) => any[];
+  mergePendingSecureProperties: (
+    value: any[],
+    path: string[],
+    configPath: string,
+    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
+    renames?: { [configPath: string]: { [originalKey: string]: string } }
+  ) => any[];
   isCurrentProfileUntyped: () => boolean;
   isPropertyFromMergedProps: (displayKey: string | undefined, path: string[], mergedProps: any, configPath: string) => boolean;
-  isPropertySecure: (fullKey: string, displayKey: string, path: string[], mergedProps?: any, selectedTab?: number | null, configurations?: Configuration[], pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } }) => boolean;
+  isPropertySecure: (
+    fullKey: string,
+    displayKey: string,
+    path: string[],
+    mergedProps?: any,
+    selectedTab?: number | null,
+    configurations?: Configuration[],
+    pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } }
+  ) => boolean;
   canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
   isMergedPropertySecure: (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean) => boolean;
 
@@ -380,7 +394,7 @@ export const RenderConfig = ({
         // Merge pending secure properties for secure arrays
         let renderValue: any[] = Array.isArray(value) ? value : [];
         if (isArray && key === "secure") {
-          renderValue = mergePendingSecureProperties(value, path, configPath);
+          renderValue = mergePendingSecureProperties(value, path, configPath, pendingChanges, renames);
         }
 
         if (isParent) {
@@ -577,7 +591,10 @@ export const RenderConfig = ({
           const isDeletedMergedProperty = isFromMergedProps && isInDeletions;
 
           // Check if this is a local secure property (in the current profile's secure array)
-          const isLocalSecureProperty = displayKey && path && configPath ? isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges) : false;
+          const isLocalSecureProperty =
+            displayKey && path && configPath
+              ? isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges)
+              : false;
 
           // Check if this is a secure property that was added for sorting
           const isSecureForSorting = isSecurePropertyForSorting;

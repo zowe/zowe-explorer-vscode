@@ -1259,7 +1259,8 @@ export function mergePendingSecureProperties(
     value: any[],
     path: string[],
     configPath: string,
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } }
+    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
+    renames?: { [configPath: string]: { [originalKey: string]: string } }
 ): any[] {
     const pendingSecureProps: string[] = Object.entries(pendingChanges[configPath] ?? {})
         .filter(([, entry]) => {
@@ -1281,10 +1282,43 @@ export function mergePendingSecureProperties(
                 currentProfileName = path[1] || "";
             }
 
-            return (
-                actualPath === expectedSecurePath &&
-                (entry.profile === currentProfileName || entry.profile.split(".").slice(0, -2).join(".") === currentProfileName)
-            );
+            // Check if the entry profile matches the current profile name
+            // This handles both direct matches and renamed profiles
+            const entryProfileMatches =
+                entry.profile === currentProfileName || entry.profile.split(".").slice(0, -2).join(".") === currentProfileName;
+
+            // Also check if this is a renamed profile by looking at the renames mapping
+            let renamedProfileMatches = false;
+            if (renames && renames[configPath]) {
+                // Check if the current profile name is a renamed version of the entry profile
+                for (const [originalKey, newKey] of Object.entries(renames[configPath])) {
+                    if (newKey === currentProfileName && originalKey === entry.profile) {
+                        renamedProfileMatches = true;
+                        break;
+                    }
+                    // Also check for nested profile renames
+                    if (newKey.startsWith(currentProfileName + ".") && originalKey.startsWith(entry.profile + ".")) {
+                        renamedProfileMatches = true;
+                        break;
+                    }
+                }
+
+                // Also check if the entry profile is a renamed version of the current profile name
+                // This handles the case where the entry.profile has been updated to the new name
+                for (const [originalKey, newKey] of Object.entries(renames[configPath])) {
+                    if (originalKey === currentProfileName && newKey === entry.profile) {
+                        renamedProfileMatches = true;
+                        break;
+                    }
+                    // Also check for nested profile renames
+                    if (originalKey.startsWith(currentProfileName + ".") && newKey.startsWith(entry.profile + ".")) {
+                        renamedProfileMatches = true;
+                        break;
+                    }
+                }
+            }
+
+            return actualPath === expectedSecurePath && (entryProfileMatches || renamedProfileMatches);
         })
         .map(([, entry]) => String(entry.path[entry.path.length - 1]));
 

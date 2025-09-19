@@ -93,7 +93,13 @@ interface RenderProfileDetailsProps {
   mergeMergedProperties: (combinedConfig: any, path: string[], mergedProps: any, configPath: string) => any;
   ensureProfileProperties: (combinedConfig: any, path: string[]) => any;
   filterSecureProperties: (value: any, combinedConfig: any, configPath?: string) => any;
-  mergePendingSecureProperties: (value: any[], path: string[], configPath: string) => any[];
+  mergePendingSecureProperties: (
+    value: any[],
+    path: string[],
+    configPath: string,
+    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
+    renames?: { [configPath: string]: { [originalKey: string]: string } }
+  ) => any[];
   isCurrentProfileUntyped: () => boolean;
   isPropertyFromMergedProps: (displayKey: string | undefined, path: string[], mergedProps: any, configPath: string) => boolean;
   isPropertySecure: (fullKey: string, displayKey: string, path: string[], mergedProps?: any) => boolean;

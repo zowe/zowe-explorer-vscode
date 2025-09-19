@@ -990,9 +990,9 @@ export function App() {
   // Wrapper function for mergePendingSecureProperties that provides the necessary parameters
   const mergePendingSecurePropertiesWrapper = useCallback(
     (value: any[], path: string[], configPath: string): any[] => {
-      return mergePendingSecureProperties(value, path, configPath, pendingChanges);
+      return mergePendingSecureProperties(value, path, configPath, pendingChanges, renames);
     },
-    [pendingChanges]
+    [pendingChanges, renames]
   );
 
   // Wrapper function for isPropertyFromMergedProps that provides the necessary parameters
