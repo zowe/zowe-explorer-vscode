@@ -611,7 +611,7 @@ ul {
     position: absolute;
     right: 8px;
     top: 50%;
-    transform: translateY(-70%);
+    transform: translateY(-75%);
     background: transparent !important;
     border: none;
     padding: 0;
@@ -623,21 +623,19 @@ ul {
     height: 16px;
     width: 16px;
     z-index: 1;
+    color: var(--vscode-button-secondaryForeground) !important;
 }
 
-/* Select placeholder styling - only affects the displayed value, not dropdown options */
 .config-input.placeholder-style {
     color: #666 !important;
     font-style: italic !important;
 }
 
-/* Ensure dropdown options maintain their normal styling */
 .config-input.placeholder-style option {
     color: var(--vscode-input-foreground) !important;
     font-style: normal !important;
 }
 
-/* Responsive design for smaller screens */
 @media (max-width: 1200px) {
     .panel-content {
         gap: 1rem;
@@ -858,6 +856,11 @@ ul {
 .wizard-property-buttons {
     display: flex;
     gap: 0.25rem;
+    min-width: 0;
+}
+
+.wizard-property-buttons:empty {
+    display: none;
 }
 
 .wizard-secure-toggle {
@@ -1103,6 +1106,11 @@ ul {
     gap: 4px;
     align-items: center;
     height: 32px;
+    min-width: 0;
+}
+
+.add-profile-buttons:empty {
+    display: none;
 }
 
 .add-profile-actions {

@@ -777,19 +777,91 @@ export class ConfigEditor extends WebView {
             teamConfig.api.layers.activate(activateLayer.user, activateLayer.global);
                 }
 
-        const secFields = teamConfig.api.secure.secureFields({user: activateLayer?.user, global: activateLayer?.global});
-
         const mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
 
         if(mergedArgs.knownArgs){
             mergedArgs.knownArgs.forEach((arg) => {
-                if(arg.argLoc && arg.argLoc.osLoc && secFields.includes(arg.argLoc.jsonLoc)) {
-                    arg.secure = true;
+                if(arg.argLoc && arg.argLoc.osLoc && arg.argLoc.jsonLoc) {
+                    // Check if this specific field path is secure, respecting layer precedence
+                    // Layers are ordered by precedence: project (highest) -> user -> global (lowest)
+                    // We need to find the first layer that has a definition for this field
+                    let isSecure = false;
+                    let fieldFound = false;
+                    
+                    // Sort layers by precedence (user layers override global layers)
+                    const sortedLayers = [...teamConfig.layers].sort((a, b) => {
+                        // User layers have higher precedence than global layers
+                        if (a.user && !b.user) return -1;
+                        if (!a.user && b.user) return 1;
+                        // If both are same type, maintain original order
+                        return 0;
+                    });
+                    
+                    for (const layer of sortedLayers) {
+                        const secFields = teamConfig.api.secure.secureFields({user: layer.user, global: layer.global});
+                        
+                        // Check if this layer has the field defined (either as secure or insecure)
+                        // We need to check if the field exists in this layer's properties
+                        const layerHasField = this.layerHasField(layer, arg.argLoc.jsonLoc);
+                        
+                        if (layerHasField) {
+                            fieldFound = true;
+                            // If the field is in the secure array, it's secure
+                            isSecure = secFields.includes(arg.argLoc.jsonLoc);
+                            break; // Use the first layer that has this field
+                        }
+                    }
+                    
+                    // If no layer explicitly defines this field, check if it's secure in any layer
+                    if (!fieldFound) {
+                        for (const layer of teamConfig.layers) {
+                            const secFields = teamConfig.api.secure.secureFields({user: layer.user, global: layer.global});
+                            if (secFields.includes(arg.argLoc.jsonLoc)) {
+                                isSecure = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (isSecure) {
+                        arg.secure = true;
+                    }
                 }
                 });
         }
         const redacted = this.profileOperations.redactSecureValues(mergedArgs.knownArgs);
         return redacted;
+    }
+
+    /**
+     * Check if a layer has a specific field defined in its properties
+     * @param layer - The configuration layer to check
+     * @param jsonLoc - The JSON location path of the field
+     * @returns true if the layer has this field defined
+     */
+    private layerHasField(layer: any, jsonLoc: string): boolean {
+        if (!layer.properties || !layer.properties.profiles) {
+            return false;
+        }
+        
+        // Parse the jsonLoc to find the field in the layer's properties
+        // jsonLoc format is typically like "profiles.profileName.properties.fieldName"
+        const pathParts = jsonLoc.split('.');
+        
+        if (pathParts.length < 4 || pathParts[0] !== 'profiles') {
+            return false;
+        }
+        
+        const profileName = pathParts[1];
+        const profile = layer.properties.profiles[profileName];
+        
+        if (!profile || !profile.properties) {
+            return false;
+        }
+        
+        // Check if the field exists in the profile's properties
+        const fieldName = pathParts[pathParts.length - 1];
+        return fieldName in profile.properties;
     }
 
     private simulateDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string, teamConfig: any): void {
@@ -1061,6 +1133,59 @@ export class ConfigEditor extends WebView {
             }
 
             const mergedArgs = profInfo.mergeArgsForProfile(tempProfile, { getSecureVals: true });
+
+            // Apply the same secure field precedence logic as in getPendingMergedArgsForProfile
+            if(mergedArgs.knownArgs){
+                mergedArgs.knownArgs.forEach((arg) => {
+                    if(arg.argLoc && arg.argLoc.osLoc && arg.argLoc.jsonLoc) {
+                        // Check if this specific field path is secure, respecting layer precedence
+                        // Layers are ordered by precedence: project (highest) -> user -> global (lowest)
+                        // We need to find the first layer that has a definition for this field
+                        let isSecure = false;
+                        let fieldFound = false;
+                        
+                        // Sort layers by precedence (user layers override global layers)
+                        const sortedLayers = [...teamConfig.layers].sort((a, b) => {
+                            // User layers have higher precedence than global layers
+                            if (a.user && !b.user) return -1;
+                            if (!a.user && b.user) return 1;
+                            // If both are same type, maintain original order
+                            return 0;
+                        });
+                        
+                        for (const layer of sortedLayers) {
+                            const secFields = teamConfig.api.secure.secureFields({user: layer.user, global: layer.global});
+                            
+                            // Check if this layer has the field defined (either as secure or insecure)
+                            // We need to check if the field exists in this layer's properties
+                            const layerHasField = this.layerHasField(layer, arg.argLoc.jsonLoc);
+                            
+                            if (layerHasField) {
+                                fieldFound = true;
+                                // If the field is in the secure array, it's secure
+                                isSecure = secFields.includes(arg.argLoc.jsonLoc);
+                                break; // Use the first layer that has this field
+                            }
+                        }
+                        
+                        // If no layer explicitly defines this field, check if it's secure in any layer
+                        if (!fieldFound) {
+                            for (const layer of teamConfig.layers) {
+                                const secFields = teamConfig.api.secure.secureFields({user: layer.user, global: layer.global});
+                                if (secFields.includes(arg.argLoc.jsonLoc)) {
+                                    isSecure = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (isSecure) {
+                            arg.secure = true;
+                        }
+                    }
+                });
+            }
+
             const redacted = this.profileOperations.redactSecureValues(mergedArgs.knownArgs);
             return redacted || [];
         } finally {

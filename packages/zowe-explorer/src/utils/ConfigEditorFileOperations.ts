@@ -287,7 +287,7 @@ export class ConfigEditorFileOperations {
         try {
             const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
                 credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-                onlyCheckActiveLayer: true, });
+                 });
             await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
             const teamConfig = profInfo.getTeamConfig();
 

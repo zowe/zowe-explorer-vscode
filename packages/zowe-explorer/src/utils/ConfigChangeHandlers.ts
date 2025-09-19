@@ -34,7 +34,7 @@ export class ConfigChangeHandlers {
     public static async handleDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string): Promise<void> {
         const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
                     credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-                    onlyCheckActiveLayer: true, });
+                     });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         if (activeLayer !== profInfo.getTeamConfig().api.layers.get().path) {
@@ -69,7 +69,7 @@ export class ConfigChangeHandlers {
     ): Promise<void> {
         const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-            onlyCheckActiveLayer: true, });
+             });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         // Check if secure values are allowed before processing changes

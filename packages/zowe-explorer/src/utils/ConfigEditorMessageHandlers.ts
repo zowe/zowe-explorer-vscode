@@ -25,7 +25,7 @@ export class ConfigEditorMessageHandlers {
     async handleGetProfiles(): Promise<void> {
         const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-            onlyCheckActiveLayer: true, });
+             });
         try {
             await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
         } catch (err) {

@@ -597,9 +597,6 @@ export const RenderConfig = ({
               ? isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames)
               : false;
 
-          // Check if this property should be secure by default based on schema
-          const shouldBeSecureByDefault = displayKey && canPropertyBeSecure(displayKey, path) && 
-            (displayKey === "user" || displayKey === "password" || displayKey === "tokenValue");
 
           // Check if this is a secure property that was added for sorting
           const isSecureForSorting = isSecurePropertyForSorting;
@@ -663,7 +660,7 @@ export const RenderConfig = ({
                       )
                     : undefined;
 
-                  if (isSecureProperty || isLocalSecureProperty || isSecureForSorting || shouldBeSecureByDefault) {
+                  if (isSecureProperty || isLocalSecureProperty || isSecureForSorting) {
                     return (
                       <input
                         className="config-input"
