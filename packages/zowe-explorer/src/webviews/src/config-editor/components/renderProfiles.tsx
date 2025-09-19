@@ -269,6 +269,17 @@ export const RenderProfiles = ({
             }
           }
         }
+
+        // Special case: if renames object is empty and this pending profile should be moved back to root
+        // Check if this pending profile is a nested version of a root profile that should be moved back
+        if (Object.keys(configRenames).length === 0 && renamedKey.includes(".")) {
+          const rootProfileName = renamedKey.split(".").pop();
+          if (rootProfileName && uniqueRenamedProfileKeys.includes(rootProfileName)) {
+            // This pending profile should be renamed to the root profile name
+            renamedKey = rootProfileName;
+          }
+        }
+
         return renamedKey;
       });
 
@@ -300,7 +311,25 @@ export const RenderProfiles = ({
         // it means there's a pending profile that will become this key, so filter it out
         const isTargetOfPendingRename = renamedPendingProfileKeys.includes(profileKey);
 
-        const shouldKeep = !hasExactPendingMatch && !isResultOfRenameWithPending && !isTargetOfPendingRename;
+        // Special case: if there's a pending profile that should be renamed to this key
+        // but the renames object is empty, we need to check if the pending profile
+        // should actually be renamed to this key (e.g., when moving back to original location)
+        const shouldRenamePendingToThisKey =
+          !isTargetOfPendingRename &&
+          Object.keys(renames[configPath] || {}).length === 0 &&
+          pendingProfileKeys.some((pendingKey) => {
+            // Check if this pending profile should be renamed to the current profileKey
+            // This happens when moving a profile back to its original location
+            return (
+              pendingKey !== profileKey &&
+              (pendingKey.endsWith("." + profileKey) ||
+                pendingKey === profileKey + ".pending" ||
+                // Check if the pending profile is a nested version of this profile
+                pendingKey.includes("." + profileKey + "."))
+            );
+          });
+
+        const shouldKeep = !hasExactPendingMatch && !isResultOfRenameWithPending && !isTargetOfPendingRename && !shouldRenamePendingToThisKey;
 
         return shouldKeep;
       });

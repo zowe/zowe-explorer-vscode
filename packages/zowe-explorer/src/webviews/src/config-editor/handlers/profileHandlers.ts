@@ -99,13 +99,20 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
     if (selectedTab === null) return false;
     const configPath = configurations[selectedTab!]!.configPath;
 
+    // Debug drag-drop operations only
+    if (isDragDrop) {
+        console.log(`Drag-drop: ${originalKey} -> ${newKey}`);
+        // Show current renames state after each drag-drop
+        const currentRenames = renames[configPath] || {};
+        console.log("Current renames state:", currentRenames);
+    }
+
     // Check if we need to use the current effective name instead of the original key
     const currentEffectiveName = getCurrentEffectiveName(originalKey, configPath, renames);
     if (currentEffectiveName !== originalKey) {
         // Use the current effective name as the original key
         originalKey = currentEffectiveName;
     }
-
 
     // Check for circular renames before proceeding (same validation as rename modal)
     const currentRenames = renames[configPath] || {};
@@ -525,6 +532,129 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
         return prev;
     });
 
+    // Update any pending changes that reference the old profile name
+    setPendingChanges((prev) => {
+        const configChanges = prev[configPath] || {};
+        const updatedChanges: { [key: string]: PendingChange } = {};
+        let hasChanges = false;
+
+        // Helper function to construct new path for nested profiles
+        const constructNewPath = (newProfileKey: string): string => {
+            if (newProfileKey.includes(".")) {
+                // For nested profiles, construct path with "profiles" segments
+                const profileParts = newProfileKey.split(".");
+                const pathParts = ["profiles"];
+                for (let i = 0; i < profileParts.length; i++) {
+                    pathParts.push(profileParts[i]);
+                    if (i < profileParts.length - 1) {
+                        pathParts.push("profiles");
+                    }
+                }
+                return pathParts.join(".");
+            } else {
+                // Top-level profile
+                return `profiles.${newProfileKey}`;
+            }
+        };
+
+        // Helper function to construct old path for nested profiles
+        const constructOldPath = (profileKey: string): string => {
+            if (profileKey.includes(".")) {
+                // For nested profiles, construct path with "profiles" segments
+                const profileParts = profileKey.split(".");
+                const pathParts = ["profiles"];
+                for (let i = 0; i < profileParts.length; i++) {
+                    pathParts.push(profileParts[i]);
+                    if (i < profileParts.length - 1) {
+                        pathParts.push("profiles");
+                    }
+                }
+                return pathParts.join(".");
+            } else {
+                // Top-level profile
+                return `profiles.${profileKey}`;
+            }
+        };
+
+        // Process each pending change entry
+        Object.entries(configChanges).forEach(([changeKey, changeEntry]) => {
+            let newChangeKey = changeKey;
+            let newChangeEntry = { ...changeEntry };
+
+            // Check if this pending change belongs to the profile being renamed
+            if (changeEntry.profile === originalKey) {
+                // Update the profile field
+                newChangeEntry.profile = newKey;
+
+                // Update the key path to reflect the new profile structure
+                const oldProfilePath = constructOldPath(originalKey);
+                const newProfilePath = constructNewPath(newKey);
+
+                if (changeKey.startsWith(oldProfilePath)) {
+                    newChangeKey = changeKey.replace(oldProfilePath, newProfilePath);
+                    hasChanges = true;
+                }
+            }
+            // Check if this pending change belongs to a child profile being renamed
+            else if (changeEntry.profile.startsWith(originalKey + ".")) {
+                const childPath = changeEntry.profile.substring(originalKey.length + 1);
+                newChangeEntry.profile = newKey + "." + childPath;
+
+                // Update the key path for child profiles
+                const oldChildProfilePath = constructOldPath(changeEntry.profile);
+                const newChildProfilePath = constructNewPath(newKey + "." + childPath);
+
+                if (changeKey.startsWith(oldChildProfilePath)) {
+                    newChangeKey = changeKey.replace(oldChildProfilePath, newChildProfilePath);
+                    hasChanges = true;
+                }
+            }
+            // Check consolidated renames
+            else {
+                for (const [origKey, renamedValue] of Object.entries(updatedRenames)) {
+                    if (changeEntry.profile === origKey) {
+                        newChangeEntry.profile = renamedValue;
+
+                        const oldProfilePath = constructOldPath(origKey);
+                        const newProfilePath = constructNewPath(renamedValue);
+
+                        if (changeKey.startsWith(oldProfilePath)) {
+                            newChangeKey = changeKey.replace(oldProfilePath, newProfilePath);
+                            hasChanges = true;
+                        }
+                        break;
+                    }
+                    // Check child profiles of consolidated renames
+                    else if (changeEntry.profile.startsWith(origKey + ".")) {
+                        const childPath = changeEntry.profile.substring(origKey.length + 1);
+                        newChangeEntry.profile = renamedValue + "." + childPath;
+
+                        const oldChildProfilePath = constructOldPath(changeEntry.profile);
+                        const newChildProfilePath = constructNewPath(renamedValue + "." + childPath);
+
+                        if (changeKey.startsWith(oldChildProfilePath)) {
+                            newChangeKey = changeKey.replace(oldChildProfilePath, newChildProfilePath);
+                            hasChanges = true;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Add the entry (either updated or original)
+            updatedChanges[newChangeKey] = newChangeEntry;
+        });
+
+        if (hasChanges) {
+            return {
+                ...prev,
+                [configPath]: updatedChanges,
+            };
+        }
+
+        return prev;
+    });
+
     // If the new key is nested, create parent profiles as pending profiles
     if (newKey.includes(".")) {
         const parentParts = newKey.split(".");
@@ -599,18 +729,18 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
             if (!newState[configPath]) {
                 newState[configPath] = new Set();
             }
-            
+
             // Add the original profile and all its parents/children to the drag-dropped set
             const addProfileAndRelated = (profileKey: string) => {
                 newState[configPath].add(profileKey);
-                
+
                 // Add all parent profiles
                 const parts = profileKey.split(".");
                 for (let i = 1; i < parts.length; i++) {
                     const parentKey = parts.slice(0, i).join(".");
                     newState[configPath].add(parentKey);
                 }
-                
+
                 // Add all child profiles that exist in the configuration or renames
                 const config = configurations[selectedTab].properties;
                 const flatProfiles = flattenProfiles(config.profiles);
@@ -619,7 +749,7 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
                         newState[configPath].add(existingProfile);
                     }
                 });
-                
+
                 // Also check renamed profiles
                 Object.keys(renames[configPath] || {}).forEach((origProfile) => {
                     if (origProfile.startsWith(profileKey + ".")) {
@@ -632,11 +762,11 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
                     }
                 });
             };
-            
+
             // Add both the original and new profile keys and their related profiles
             addProfileAndRelated(originalKey);
             addProfileAndRelated(newKey);
-            
+
             return newState;
         });
     }
@@ -719,9 +849,9 @@ export const handleDeleteProfile = (profileKey: string, props: ProfileHandlerPro
         // Create a custom replacement profile finder that excludes the deleted profile and its children
         const findReplacementExcludingDeleted = (deletedProfileKey: string, configPath: string): string | null => {
             const allAvailableProfiles = getAvailableProfilesForConfig(configPath);
-            
+
             // Filter out the deleted profile and all its children
-            const filteredProfiles = allAvailableProfiles.filter(profile => {
+            const filteredProfiles = allAvailableProfiles.filter((profile) => {
                 return profile !== deletedProfileKey && !profile.startsWith(deletedProfileKey + ".");
             });
 
@@ -741,9 +871,7 @@ export const handleDeleteProfile = (profileKey: string, props: ProfileHandlerPro
             const deletedParts = deletedProfileKey.split(".");
             if (deletedParts.length > 1) {
                 const parentKey = deletedParts.slice(0, -1).join(".");
-                const siblings = filteredProfiles.filter((profile) => 
-                    profile.startsWith(parentKey + ".") && profile !== deletedProfileKey
-                );
+                const siblings = filteredProfiles.filter((profile) => profile.startsWith(parentKey + ".") && profile !== deletedProfileKey);
                 if (siblings.length > 0) {
                     return siblings[0];
                 }

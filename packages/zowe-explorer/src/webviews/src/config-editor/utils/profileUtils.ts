@@ -876,12 +876,31 @@ export function isPropertySecure(
 
             // Then check the profile's secure array
             // The path should be something like ["profiles", "profileName", "properties", "propertyName"]
+            // For nested profiles, it might be ["profiles", "parentProfile", "profiles", "nestedProfile", "properties", "propertyName"]
             // We need to find the profile and check its secure array
             if (path.length >= 2 && path[0] === "profiles") {
-                const profileName = path[1];
-                const profile = config.properties?.profiles?.[profileName];
-                if (profile && profile.secure && Array.isArray(profile.secure)) {
-                    return profile.secure.includes(propertyName);
+                // For nested profiles, we need to navigate through the profile hierarchy
+                let currentProfile = config.properties?.profiles;
+                let i = 1;
+
+                // Navigate through the profile hierarchy
+                while (i < path.length && currentProfile) {
+                    const profileName = path[i];
+
+                    if (path[i + 1] === "profiles") {
+                        // This is a nested profile, go deeper
+                        currentProfile = currentProfile[profileName]?.profiles;
+                        i += 2; // Skip "profiles" and move to next profile name
+                    } else if (path[i + 1] === "properties") {
+                        // We've reached the properties level, check the secure array
+                        if (currentProfile[profileName] && currentProfile[profileName].secure && Array.isArray(currentProfile[profileName].secure)) {
+                            return currentProfile[profileName].secure.includes(propertyName);
+                        }
+                        break;
+                    } else {
+                        // This shouldn't happen in a valid path
+                        break;
+                    }
                 }
             }
         }

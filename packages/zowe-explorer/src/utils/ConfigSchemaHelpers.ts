@@ -154,7 +154,6 @@ export class ConfigSchemaHelpers {
                         path: propPath,
                         description: propSchema.description,
                     });
-                    console.log(`Found non-string property: ${propName} with type: ${type}`);
                 }
             } else if (Array.isArray(type)) {
                 // Handle union types (array of types) - only include if array doesn't include "string"
@@ -164,7 +163,6 @@ export class ConfigSchemaHelpers {
                         path: propPath,
                         description: propSchema.description,
                     });
-                    console.log(`Found non-string property: ${propName} with type:`, type);
                 }
             }
         }

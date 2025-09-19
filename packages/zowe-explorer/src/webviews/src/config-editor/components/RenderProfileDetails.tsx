@@ -15,7 +15,7 @@ import { useCallback } from "react";
 import { RenderConfig } from "./renderConfig";
 
 // Utils
-import { flattenProfiles, getOriginalProfileKeyWithNested, PropertySortOrder, schemaValidation } from "../utils";
+import { flattenProfiles, PropertySortOrder, schemaValidation } from "../utils";
 
 // Types
 type Configuration = {
@@ -100,7 +100,6 @@ interface RenderProfileDetailsProps {
   canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
   isMergedPropertySecure: (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean) => boolean;
   isProfileAffectedByDragDrop: (profileKey: string) => boolean;
-
 }
 
 export const RenderProfileDetails = ({
@@ -215,7 +214,7 @@ export const RenderProfileDetails = ({
                 disabled={selectedProfileKey ? isProfileAffectedByDragDrop(selectedProfileKey) : false}
                 style={{
                   opacity: selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? 0.5 : 1,
-                  cursor: selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? "not-allowed" : "pointer"
+                  cursor: selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? "not-allowed" : "pointer",
                 }}
               >
                 <span className="codicon codicon-edit"></span>
@@ -233,10 +232,10 @@ export const RenderProfileDetails = ({
               return null;
             }
             const flatProfiles = flattenProfiles(currentConfig.properties?.profiles || {});
-            const configPath = currentConfig.configPath;
+            const currentConfigPath = currentConfig.configPath;
 
             // Use the helper function to extract pending profiles
-            const pendingProfiles = extractPendingProfiles(configPath);
+            const pendingProfiles = extractPendingProfiles(currentConfigPath);
 
             // For profile data lookup, we need to find where the data is actually stored in the original configuration
             // The data is always stored at the original location before any renames
@@ -244,8 +243,8 @@ export const RenderProfileDetails = ({
             let effectiveProfileKey = selectedProfileKey;
 
             // Apply reverse renames step by step
-            if (renames[configPath] && Object.keys(renames[configPath]).length > 0) {
-              const configRenames = renames[configPath];
+            if (renames[currentConfigPath] && Object.keys(renames[currentConfigPath]).length > 0) {
+              const configRenames = renames[currentConfigPath];
 
               // Sort renames by length of newKey (longest first) to handle nested renames correctly
               const sortedRenames = Object.entries(configRenames).sort(([, a], [, b]) => b.length - a.length);
@@ -277,17 +276,21 @@ export const RenderProfileDetails = ({
 
             let effectivePath: string[];
 
-            // Construct the profile path using the effective profile key
-            const effectiveProfilePathParts = effectiveProfileKey.split(".");
-            if (effectiveProfilePathParts.length === 1) {
+            // For pending profiles that have been renamed, use the selected profile key to construct the path
+            // This ensures RenderConfig looks for pending changes in the correct location
+            const pathProfileKey = pendingProfiles[selectedProfileKey] ? selectedProfileKey : effectiveProfileKey;
+
+            // Construct the profile path using the appropriate profile key
+            const profilePathParts = pathProfileKey.split(".");
+            if (profilePathParts.length === 1) {
               // Top-level profile
-              effectivePath = ["profiles", effectiveProfileKey];
+              effectivePath = ["profiles", pathProfileKey];
             } else {
               // Nested profile - need to construct path like ["profiles", "project_base", "profiles", "tso"]
               effectivePath = ["profiles"];
-              for (let i = 0; i < effectiveProfilePathParts.length; i++) {
-                effectivePath.push(effectiveProfilePathParts[i]);
-                if (i < effectiveProfilePathParts.length - 1) {
+              for (let i = 0; i < profilePathParts.length; i++) {
+                effectivePath.push(profilePathParts[i]);
+                if (i < profilePathParts.length - 1) {
                   effectivePath.push("profiles");
                 }
               }
@@ -296,12 +299,15 @@ export const RenderProfileDetails = ({
             // Pass the effective profile object (without pending changes) to renderConfig
             // so that renderConfig can properly combine existing and pending changes
             // For newly created profiles, use the pending profile data as the base
-            const effectiveProfile = flatProfiles[effectiveProfileKey] || pendingProfiles[effectiveProfileKey] || {};
+            // Check both the effective profile key and the selected profile key for pending profiles
+            // This handles cases where a profile was renamed via drag-drop
+            const effectiveProfile =
+              flatProfiles[effectiveProfileKey] || pendingProfiles[effectiveProfileKey] || pendingProfiles[selectedProfileKey] || {};
 
             // Check if this profile has pending renames - if so, don't show merged properties
             // We need to check if the selected profile key is a renamed version of another profile
             // OR if any of its parent profiles have been renamed
-            Object.values(renames[configPath] || {}).some((newKey) => {
+            Object.values(renames[currentConfigPath] || {}).some((newKey) => {
               // Check if this profile is directly renamed
               if (newKey === selectedProfileKey) return true;
 
@@ -309,7 +315,7 @@ export const RenderProfileDetails = ({
               const profileParts = selectedProfileKey.split(".");
               for (let i = 1; i <= profileParts.length; i++) {
                 const parentKey = profileParts.slice(0, i).join(".");
-                if (Object.values(renames[configPath] || {}).some((renamedKey) => renamedKey === parentKey)) {
+                if (Object.values(renames[currentConfigPath] || {}).some((renamedKey) => renamedKey === parentKey)) {
                   return true;
                 }
               }
