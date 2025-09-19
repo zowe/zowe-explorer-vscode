@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added new `get`Count` API to provide the ability to return the total number of data sets for a given filter.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
+
 ### Bug fixes
 
 - Fixed an issue where secure credentials and headers were being logged to the Zowe logger and VSCode output channel. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
