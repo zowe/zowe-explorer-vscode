@@ -43,7 +43,7 @@ export class ProfilesCache {
         this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
     }
 
-    public static requireKeyring(this: void): NodeModule {
+    public static requireKeyring(this: void): NodeJS.Module {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-var-requires
         return require("@zowe/secrets-for-zowe-sdk").keyring;
     }
@@ -232,6 +232,11 @@ export class ProfilesCache {
         }
         this.checkForEnvVarAndUpdate();
         this.profilesForValidation = [];
+
+        imperative.Censor.setCensoredOptions({
+            config: mProfileInfo.getTeamConfig(),
+            profiles: [...this.getCoreProfileTypes(), ...this.getConfigArray()],
+        });
     }
 
     /**
