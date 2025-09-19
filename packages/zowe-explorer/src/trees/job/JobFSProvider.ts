@@ -242,7 +242,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
         }
 
-        try {
+        await AuthUtils.retryRequest(metadata.profile, async () => {
             const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
             if (jesApi.downloadSingleSpool) {
                 const spoolDownloadObject: IDownloadSpoolContentParms = {
@@ -261,10 +261,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 const jobEntry = this.lookupParentDirectory(uri) as JobEntry;
                 bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id, spoolEncoding));
             }
-        } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, spoolEntry.metadata.profile);
-            throw err;
-        }
+        });
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
 
