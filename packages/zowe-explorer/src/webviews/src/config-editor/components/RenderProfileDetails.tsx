@@ -92,7 +92,7 @@ interface RenderProfileDetailsProps {
   mergePendingChangesForProfile: (baseObj: any, path: string[], configPath: string) => any;
   mergeMergedProperties: (combinedConfig: any, path: string[], mergedProps: any, configPath: string) => any;
   ensureProfileProperties: (combinedConfig: any, path: string[]) => any;
-  filterSecureProperties: (value: any, combinedConfig: any, configPath?: string) => any;
+  filterSecureProperties: (value: any, combinedConfig: any, configPath?: string, pendingChanges?: any, deletions?: any, mergedProps?: any) => any;
   mergePendingSecureProperties: (
     value: any[],
     path: string[],

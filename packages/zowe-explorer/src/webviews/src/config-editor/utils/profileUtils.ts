@@ -870,7 +870,6 @@ export function isPropertySecure(
             const keyParts = fullKey.split(".");
             const propertyName = keyParts[keyParts.length - 1];
 
-
             // First check the global secure array
             if (config.secure && config.secure.includes(propertyName)) {
                 return true;
@@ -944,8 +943,7 @@ export function isPropertySecure(
                             Array.isArray(currentProfile[currentPathSegment].secure)
                         ) {
                             const isSecure = currentProfile[currentPathSegment].secure.includes(propertyName);
-                            
-                            
+
                             return isSecure;
                         }
                         break;
@@ -1329,7 +1327,8 @@ export function filterSecureProperties(
     combinedConfig: any,
     configPath: string | undefined,
     pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    deletions: { [configPath: string]: string[] }
+    deletions: { [configPath: string]: string[] },
+    mergedProps?: any
 ): any {
     if (combinedConfig.secure && Array.isArray(combinedConfig.secure)) {
         const secureProperties = combinedConfig.secure;
@@ -1337,6 +1336,10 @@ export function filterSecureProperties(
 
         Object.keys(filteredProperties).forEach((propKey) => {
             if (secureProperties.includes(propKey)) {
+                // Check if this property is in merged properties and has secure: false
+                // If so, don't filter it out even though it's in the local secure array
+                const isInsecureInMergedProps = mergedProps && mergedProps[propKey] && mergedProps[propKey].secure === false;
+
                 // Don't filter out properties that are in the deletions list (they should be shown as merged properties)
                 const isInDeletions = configPath && (deletions[configPath] ?? []).some((deletion) => deletion.includes(`properties.${propKey}`));
 
@@ -1351,7 +1354,7 @@ export function filterSecureProperties(
                         return propertyName === propKey && !entry.secure && key.includes("properties");
                     });
 
-                if (!isInDeletions && !hasPendingInsecureProperty) {
+                if (!isInDeletions && !hasPendingInsecureProperty && !isInsecureInMergedProps) {
                     delete filteredProperties[propKey];
                 }
             }

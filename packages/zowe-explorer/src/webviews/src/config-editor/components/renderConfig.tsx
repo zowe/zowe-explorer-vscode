@@ -78,7 +78,7 @@ interface RenderConfigProps {
   mergePendingChangesForProfile: (baseObj: any, path: string[], configPath: string) => any;
   mergeMergedProperties: (combinedConfig: any, path: string[], mergedProps: any, configPath: string) => any;
   ensureProfileProperties: (combinedConfig: any, path: string[]) => any;
-  filterSecureProperties: (value: any, combinedConfig: any, configPath?: string) => any;
+  filterSecureProperties: (value: any, combinedConfig: any, configPath?: string, pendingChanges?: any, deletions?: any, mergedProps?: any) => any;
   mergePendingSecureProperties: (
     value: any[],
     path: string[],
@@ -369,7 +369,7 @@ export const RenderConfig = ({
 
         // Filter secure properties from properties object
         if (key === "properties") {
-          const filteredValue = filterSecureProperties(value, combinedConfig, configPath);
+          const filteredValue = filterSecureProperties(value, combinedConfig, configPath, pendingChanges, deletions, mergedProps);
           // Always render the properties section, even if empty, so users can add properties
           if (filteredValue === null) {
             // Return an empty properties object instead of null so the header still renders
@@ -597,7 +597,6 @@ export const RenderConfig = ({
               ? isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames)
               : false;
 
-
           // Check if this is a secure property that was added for sorting
           const isSecureForSorting = isSecurePropertyForSorting;
 
@@ -771,9 +770,9 @@ export const RenderConfig = ({
                 (() => {
                   const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames);
                   const canBeSecure = canPropertyBeSecure(displayKey, path);
-                  
+
                   const showSecureButton = canBeSecure && !isSecure && !isFromMergedProps;
-                  
+
                   const showDeleteButton = !isFromMergedProps;
                   const showUnlinkButton = isFromMergedProps && !isDeletedMergedProperty;
 

@@ -980,8 +980,8 @@ export function App() {
 
   // Wrapper function for filterSecureProperties that provides the necessary parameters
   const filterSecurePropertiesWrapper = useCallback(
-    (value: any, combinedConfig: any, configPath?: string): any => {
-      return filterSecureProperties(value, combinedConfig, configPath, pendingChanges, deletions);
+    (value: any, combinedConfig: any, configPath?: string, pendingChanges?: any, deletions?: any, mergedProps?: any): any => {
+      return filterSecureProperties(value, combinedConfig, configPath, pendingChanges || {}, deletions || {}, mergedProps);
     },
     [pendingChanges, deletions]
   );
