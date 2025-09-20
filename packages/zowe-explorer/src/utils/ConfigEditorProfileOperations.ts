@@ -23,98 +23,118 @@ export class ConfigEditorProfileOperations {
         renames: Array<{ originalKey: string; newKey: string; configPath: string }>
     ): Array<{ originalKey: string; newKey: string; configPath: string }> {
         const updatedRenames: Array<{ originalKey: string; newKey: string; configPath: string }> = [];
-        const processedRenames = new Map<string, string>(); // originalKey -> newKey mapping
 
-        // First pass: collect all renames to build a complete mapping
-        const allRenames = new Map<string, string>();
+        // Group renames by configPath to ensure consolidation only happens within the same config
+        const renamesByConfigPath = new Map<string, Array<{ originalKey: string; newKey: string; configPath: string }>>();
+
         for (const rename of renames) {
-            allRenames.set(rename.originalKey, rename.newKey);
+            if (!renamesByConfigPath.has(rename.configPath)) {
+                renamesByConfigPath.set(rename.configPath, []);
+            }
+            renamesByConfigPath.get(rename.configPath)!.push(rename);
         }
 
-        for (const rename of renames) {
-            let updatedOriginalKey = rename.originalKey;
-            let updatedNewKey = rename.newKey;
+        // Process each configPath separately
+        for (const [configPath, configRenames] of renamesByConfigPath) {
+            const processedRenames = new Map<string, string>(); // originalKey -> newKey mapping (per configPath)
 
-            // Check if any parent of this profile has been renamed
-            const originalParts = rename.originalKey.split(".");
-            const newParts = rename.newKey.split(".");
-
-            // Update the original key to reflect any parent renames
-            for (let i = 0; i < originalParts.length; i++) {
-                const parentPath = originalParts.slice(0, i + 1).join(".");
-                if (processedRenames.has(parentPath)) {
-                    // Replace the parent part in the original key
-                    const newParentPath = processedRenames.get(parentPath)!;
-                    const remainingParts = originalParts.slice(i + 1);
-                    updatedOriginalKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
-                    break; // Only apply the first matching parent rename
-                }
+            // First pass: collect all renames to build a complete mapping for this configPath
+            const allRenames = new Map<string, string>();
+            for (const rename of configRenames) {
+                allRenames.set(rename.originalKey, rename.newKey);
             }
 
-            // Update the new key to reflect any parent renames
-            for (let i = 0; i < newParts.length; i++) {
-                const parentPath = newParts.slice(0, i + 1).join(".");
-                if (processedRenames.has(parentPath)) {
-                    // Replace the parent part in the new key
-                    const newParentPath = processedRenames.get(parentPath)!;
-                    const remainingParts = newParts.slice(i + 1);
-                    updatedNewKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
-                    break; // Only apply the first matching parent rename
-                }
-            }
+            for (const rename of configRenames) {
+                let updatedOriginalKey = rename.originalKey;
+                let updatedNewKey = rename.newKey;
 
-            // Handle child-first scenario: if this is a parent rename, update any existing child renames
-            if (originalParts.length === 1) {
-                // This is a parent rename
-                const parentOriginalKey = rename.originalKey;
-                const parentNewKey = rename.newKey;
+                // Check if any parent of this profile has been renamed (only within the same configPath)
+                const originalParts = rename.originalKey.split(".");
+                const newParts = rename.newKey.split(".");
 
-                // Find and update any child renames that reference this parent
-                for (let i = 0; i < updatedRenames.length; i++) {
-                    const childRename = updatedRenames[i];
-                    const childOriginalParts = childRename.originalKey.split(".");
-                    const childNewParts = childRename.newKey.split(".");
-
-                    // Check if this child rename starts with the parent we're renaming
-                    // Either in the original key or the new key
-                    const childStartsWithParent =
-                        (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) ||
-                        (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey);
-
-                    if (childStartsWithParent) {
-                        // Update the child's original key to use the new parent name
-                        let updatedChildOriginalKey = childRename.originalKey;
-                        if (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) {
-                            const childRemainingParts = childOriginalParts.slice(1);
-                            updatedChildOriginalKey = `${parentNewKey}.${childRemainingParts.join(".")}`;
-                        }
-
-                        // Update the child's new key to use the new parent name if it also starts with the old parent
-                        let updatedChildNewKey = childRename.newKey;
-                        if (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey) {
-                            const childNewRemainingParts = childNewParts.slice(1);
-                            updatedChildNewKey = `${parentNewKey}.${childNewRemainingParts.join(".")}`;
-                        }
-
-                        // Update the child rename in the array
-                        updatedRenames[i] = {
-                            originalKey: updatedChildOriginalKey,
-                            newKey: updatedChildNewKey,
-                            configPath: childRename.configPath,
-                        };
+                // Update the original key to reflect any parent renames
+                for (let i = 0; i < originalParts.length; i++) {
+                    const parentPath = originalParts.slice(0, i + 1).join(".");
+                    if (processedRenames.has(parentPath)) {
+                        // Replace the parent part in the original key
+                        const newParentPath = processedRenames.get(parentPath)!;
+                        const remainingParts = originalParts.slice(i + 1);
+                        updatedOriginalKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
+                        break; // Only apply the first matching parent rename
                     }
                 }
+
+                // Update the new key to reflect any parent renames
+                for (let i = 0; i < newParts.length; i++) {
+                    const parentPath = newParts.slice(0, i + 1).join(".");
+                    if (processedRenames.has(parentPath)) {
+                        // Replace the parent part in the new key
+                        const newParentPath = processedRenames.get(parentPath)!;
+                        const remainingParts = newParts.slice(i + 1);
+                        updatedNewKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
+                        break; // Only apply the first matching parent rename
+                    }
+                }
+
+                // Handle child-first scenario: if this is a parent rename, update any existing child renames
+                if (originalParts.length === 1) {
+                    // This is a parent rename
+                    const parentOriginalKey = rename.originalKey;
+                    const parentNewKey = rename.newKey;
+
+                    // Find and update any child renames that reference this parent (only within the same configPath)
+                    for (let i = 0; i < updatedRenames.length; i++) {
+                        const childRename = updatedRenames[i];
+
+                        // Only process child renames from the same configPath
+                        if (childRename.configPath !== configPath) {
+                            continue;
+                        }
+
+                        const childOriginalParts = childRename.originalKey.split(".");
+                        const childNewParts = childRename.newKey.split(".");
+
+                        // Check if this child rename starts with the parent we're renaming
+                        // Either in the original key or the new key
+                        const childStartsWithParent =
+                            (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) ||
+                            (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey);
+
+                        if (childStartsWithParent) {
+                            // Update the child's original key to use the new parent name
+                            let updatedChildOriginalKey = childRename.originalKey;
+                            if (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) {
+                                const childRemainingParts = childOriginalParts.slice(1);
+                                updatedChildOriginalKey = `${parentNewKey}.${childRemainingParts.join(".")}`;
+                            }
+
+                            // Update the child's new key to use the new parent name if it also starts with the old parent
+                            let updatedChildNewKey = childRename.newKey;
+                            if (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey) {
+                                const childNewRemainingParts = childNewParts.slice(1);
+                                updatedChildNewKey = `${parentNewKey}.${childNewRemainingParts.join(".")}`;
+                            }
+
+                            // Update the child rename in the array
+                            updatedRenames[i] = {
+                                originalKey: updatedChildOriginalKey,
+                                newKey: updatedChildNewKey,
+                                configPath: childRename.configPath,
+                            };
+                        }
+                    }
+                }
+
+                // Add the updated rename
+                updatedRenames.push({
+                    originalKey: updatedOriginalKey,
+                    newKey: updatedNewKey,
+                    configPath: rename.configPath,
+                });
+
+                // Track this rename for future reference - use the updated keys
+                processedRenames.set(updatedOriginalKey, updatedNewKey);
             }
-
-            // Add the updated rename
-            updatedRenames.push({
-                originalKey: updatedOriginalKey,
-                newKey: updatedNewKey,
-                configPath: rename.configPath,
-            });
-
-            // Track this rename for future reference - use the updated keys
-            processedRenames.set(updatedOriginalKey, updatedNewKey);
         }
 
         return updatedRenames;
@@ -122,39 +142,54 @@ export class ConfigEditorProfileOperations {
 
     /**
      * Removes duplicate renames that target the same final key
+     * Note: This function only consolidates renames within the same configPath
      */
     removeDuplicateRenames(
         renames: Array<{ originalKey: string; newKey: string; configPath: string }>
     ): Array<{ originalKey: string; newKey: string; configPath: string }> {
         const finalRenames: Array<{ originalKey: string; newKey: string; configPath: string }> = [];
-        const seenTargets = new Map<string, { originalKey: string; newKey: string; configPath: string }>();
+
+        // Group renames by configPath to ensure consolidation only happens within the same config
+        const renamesByConfigPath = new Map<string, Array<{ originalKey: string; newKey: string; configPath: string }>>();
 
         for (const rename of renames) {
-            const targetKey = `${rename.newKey}:${rename.configPath}`;
-            const renameTail = rename.originalKey.split(".").pop()!;
+            if (!renamesByConfigPath.has(rename.configPath)) {
+                renamesByConfigPath.set(rename.configPath, []);
+            }
+            renamesByConfigPath.get(rename.configPath)!.push(rename);
+        }
 
-            if (seenTargets.has(targetKey)) {
-                const existing = seenTargets.get(targetKey)!;
-                const existingTail = existing.originalKey.split(".").pop()!;
+        // Process each configPath separately
+        for (const [, configRenames] of renamesByConfigPath) {
+            const seenTargets = new Map<string, { originalKey: string; newKey: string; configPath: string }>();
 
-                if (renameTail === existingTail) {
-                    // Same newKey + configPath + same ending segment -> allow both
-                    finalRenames.push(rename);
-                    continue;
-                }
+            for (const rename of configRenames) {
+                const targetKey = rename.newKey; // Only use newKey since we're processing within the same configPath
+                const renameTail = rename.originalKey.split(".").pop()!;
 
-                // Otherwise, keep the one with the shorter original key path
-                if (rename.originalKey.split(".").length < existing.originalKey.split(".").length) {
-                    const index = finalRenames.findIndex((r) => r === existing);
-                    if (index !== -1) {
-                        finalRenames[index] = rename;
-                        seenTargets.set(targetKey, rename);
+                if (seenTargets.has(targetKey)) {
+                    const existing = seenTargets.get(targetKey)!;
+                    const existingTail = existing.originalKey.split(".").pop()!;
+
+                    if (renameTail === existingTail) {
+                        // Same newKey + same ending segment -> allow both
+                        finalRenames.push(rename);
+                        continue;
                     }
+
+                    // Otherwise, keep the one with the shorter original key path
+                    if (rename.originalKey.split(".").length < existing.originalKey.split(".").length) {
+                        const index = finalRenames.findIndex((r) => r === existing);
+                        if (index !== -1) {
+                            finalRenames[index] = rename;
+                            seenTargets.set(targetKey, rename);
+                        }
+                    }
+                    // else skip
+                } else {
+                    finalRenames.push(rename);
+                    seenTargets.set(targetKey, rename);
                 }
-                // else skip
-            } else {
-                finalRenames.push(rename);
-                seenTargets.set(targetKey, rename);
             }
         }
 
@@ -357,14 +392,14 @@ export class ConfigEditorProfileOperations {
                 // For array items, check if the item itself is secure
                 if (item && typeof item === "object" && "secure" in item && item.secure === true) {
                     const redactedItem = { ...item };
-                    
+
                     // Check for different possible value field names
                     if ("argValue" in redactedItem) {
                         redactedItem.argValue = "REDACTED";
                     } else if ("value" in redactedItem) {
                         redactedItem.value = "REDACTED";
                     }
-                    
+
                     return redactedItem;
                 } else {
                     // Recursively process nested objects
@@ -380,14 +415,14 @@ export class ConfigEditorProfileOperations {
                 if ("secure" in value && value.secure === true) {
                     // Redact the appropriate value field based on the data structure
                     const redactedValue = { ...value };
-                    
+
                     // Check for different possible value field names
                     if ("argValue" in redactedValue) {
                         redactedValue.argValue = "REDACTED";
                     } else if ("value" in redactedValue) {
                         redactedValue.value = "REDACTED";
                     }
-                    
+
                     redacted[key] = redactedValue;
                 } else {
                     // Recursively process nested objects

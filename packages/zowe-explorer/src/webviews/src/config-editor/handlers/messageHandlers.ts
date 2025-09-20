@@ -183,6 +183,26 @@ export const handleDisableOverlayMessage = (props: MessageHandlerProps) => {
     setSaveModalOpen(false);
 };
 
+/**
+ * Convert string values back to their proper types based on dataType
+ */
+function convertValueToProperType(value: any, dataType?: string): any {
+    if (dataType === "boolean") {
+        if (typeof value === "string") {
+            return value.toLowerCase() === "true";
+        }
+        return Boolean(value);
+    } else if (dataType === "number") {
+        if (typeof value === "string") {
+            const num = Number(value);
+            return isNaN(num) ? value : num;
+        }
+        return value;
+    }
+    // For other types (string, object, etc.), return as-is
+    return value;
+}
+
 // Handle MERGED_PROPERTIES message
 export const handleMergedPropertiesMessage = (data: any, props: MessageHandlerProps) => {
     const { setMergedProperties, setPendingMergedPropertiesRequest } = props;
@@ -192,12 +212,8 @@ export const handleMergedPropertiesMessage = (data: any, props: MessageHandlerPr
     if (Array.isArray(data.mergedArgs)) {
         data.mergedArgs.forEach((item: any) => {
             if (item.argName && item.argValue !== undefined) {
-                // Get the correct value from the source configuration
-                let correctValue = item.argValue;
-
-                // The argValue is already correct from the backend, so we can use it directly
-                // The backend has already resolved the correct value from the source configuration
-                correctValue = item.argValue;
+                // Convert the value to its proper type based on dataType
+                const correctValue = convertValueToProperType(item.argValue, item.dataType);
 
                 mergedPropsData[item.argName] = {
                     value: correctValue,

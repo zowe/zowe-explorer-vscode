@@ -388,9 +388,19 @@ export const RenderConfig = ({
         const isParent =
           typeof value === "object" && value !== null && !Array.isArray(value) && !isSecurePropertyForSorting && !isMergedPropertyForSorting;
         const isArray = Array.isArray(value);
+        // Check if this property is from merged properties and should use the merged value
+        const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath);
+        const mergedPropData = displayKey ? mergedProps?.[displayKey] : undefined;
+
         const pendingValue =
           (pendingChanges[configPath] ?? {})[fullKey]?.value ??
-          (isSecurePropertyForSorting ? "" : isMergedPropertyForSorting ? value._mergedValue : value);
+          (isSecurePropertyForSorting
+            ? ""
+            : isMergedPropertyForSorting
+            ? value._mergedValue
+            : isFromMergedProps && mergedPropData
+            ? mergedPropData.value
+            : value);
 
         // Merge pending secure properties for secure arrays
         let renderValue: any[] = Array.isArray(value) ? value : [];
@@ -557,7 +567,7 @@ export const RenderConfig = ({
                     className="config-input"
                     type={isSecureProperty ? "password" : "text"}
                     placeholder={isSecureProperty ? "••••••••" : ""}
-                    value={isSecureProperty ? "••••••••" : String(mergedPropData?.value ?? "")}
+                    value={isSecureProperty ? "••••••••" : stringifyValueByType(mergedPropData?.value ?? "")}
                     disabled={true}
                     style={{
                       backgroundColor: "var(--vscode-input-disabledBackground)",
@@ -581,9 +591,7 @@ export const RenderConfig = ({
             );
           }
 
-          // Check if this property is from merged properties
-          const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath);
-          const mergedPropData = displayKey ? mergedProps?.[displayKey] : undefined;
+          // isFromMergedProps and mergedPropData are already calculated above
           const jsonLoc = mergedPropData?.jsonLoc;
           const osLoc = mergedPropData?.osLoc;
           const secure = mergedPropData?.secure;
@@ -739,8 +747,7 @@ export const RenderConfig = ({
                         placeholder=""
                         value={(() => {
                           if (isFromMergedProps && !isDeletedMergedProperty) {
-                            const mergedValue = String(mergedPropData?.value ?? "");
-                            return mergedValue;
+                            return stringifyValueByType(mergedPropData?.value ?? "");
                           } else {
                             const pendingValueStr = stringifyValueByType(pendingValue);
                             return pendingValueStr;

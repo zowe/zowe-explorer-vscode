@@ -1883,8 +1883,23 @@ export function App() {
           if (Array.isArray(data.mergedArgs)) {
             data.mergedArgs.forEach((item: any) => {
               if (item.argName && item.argValue !== undefined) {
+                // Convert the value to its proper type based on dataType
+                let correctValue = item.argValue;
+                if (item.dataType === "boolean") {
+                  if (typeof item.argValue === "string") {
+                    correctValue = item.argValue.toLowerCase() === "true";
+                  } else {
+                    correctValue = Boolean(item.argValue);
+                  }
+                } else if (item.dataType === "number") {
+                  if (typeof item.argValue === "string") {
+                    const num = Number(item.argValue);
+                    correctValue = isNaN(num) ? item.argValue : num;
+                  }
+                }
+
                 mergedPropsData[item.argName] = {
-                  value: item.argValue,
+                  value: correctValue,
                   dataType: item.dataType,
                   secure: item.secure,
                   argLoc: item.argLoc,

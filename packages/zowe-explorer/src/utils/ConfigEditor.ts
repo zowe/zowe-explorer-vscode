@@ -99,7 +99,6 @@ export class ConfigEditor extends WebView {
         const profInfo = new ProfileInfo("zowe", {
             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-            onlyCheckActiveLayer: true,
         });
         try {
             await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
@@ -206,9 +205,10 @@ export class ConfigEditor extends WebView {
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
-        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+        const profInfo = new ProfileInfo("zowe", {
+            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-            onlyCheckActiveLayer: true, });
+        });
         switch (message.command.toLocaleUpperCase()) {
             case "GET_PROFILES": {
                 await this.messageHandlers.handleGetProfiles();
@@ -401,9 +401,10 @@ export class ConfigEditor extends WebView {
             return;
         }
 
-        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+        const profInfo = new ProfileInfo("zowe", {
+            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-            onlyCheckActiveLayer: true, });
+        });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         // Process renames in order - sort by depth to ensure parent renames happen before child renames
@@ -431,9 +432,7 @@ export class ConfigEditor extends WebView {
         // Filter out no-op renames (where originalKey === newKey)
         const filteredRenames = finalRenames.filter((rename) => rename.originalKey !== rename.newKey);
 
-        // Get the team config once for all renames
-        const teamConfig = profInfo.getTeamConfig();
-
+        // Apply renames to configuration files first, then get team config
         for (const rename of filteredRenames) {
             try {
                 // Pre-validate the rename operation before making any changes
@@ -458,6 +457,8 @@ export class ConfigEditor extends WebView {
                     throw new Error(`Critical error during profile rename: ${errorMessage}`);
                 }
 
+                // Get fresh team config for this rename to avoid stale references
+                const teamConfig = profInfo.getTeamConfig();
                 const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
 
                 if (!targetLayer) {
@@ -594,6 +595,12 @@ export class ConfigEditor extends WebView {
                     // Log the error but don't fail the entire rename operation
                     console.warn(errorMessage);
                 }
+
+                // Save changes immediately after each rename to avoid stale references
+                await teamConfig.save();
+
+                // Refresh ProfileInfo to pick up the changes
+                await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
 
@@ -609,9 +616,6 @@ export class ConfigEditor extends WebView {
                 // Don't throw the error - continue with other renames
             }
         }
-
-        // Save all changes once after all renames are processed successfully
-        await teamConfig.save();
     }
 
     private parseConfigChanges(data: LayerModifications): LayerModifications[] {
@@ -636,9 +640,10 @@ export class ConfigEditor extends WebView {
         }
 
         // Initialize TeamConfig for profile API access
-        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+        const profInfo = new ProfileInfo("zowe", {
+            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-            onlyCheckActiveLayer: true, });
+        });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         const updatedMessage = { ...message };
@@ -703,9 +708,10 @@ export class ConfigEditor extends WebView {
         changes: any,
         renames?: Array<{ originalKey: string; newKey: string; configPath: string }>
     ): Promise<any> {
-        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+        const profInfo = new ProfileInfo("zowe", {
+            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-            onlyCheckActiveLayer: true, });
+        });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         const teamConfig = profInfo.getTeamConfig();
@@ -775,19 +781,19 @@ export class ConfigEditor extends WebView {
         const activateLayer = teamConfig.layers.find((layer) => layer.path === configPath);
         if (activateLayer) {
             teamConfig.api.layers.activate(activateLayer.user, activateLayer.global);
-                }
+        }
 
         const mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
 
-        if(mergedArgs.knownArgs){
+        if (mergedArgs.knownArgs) {
             mergedArgs.knownArgs.forEach((arg) => {
-                if(arg.argLoc && arg.argLoc.osLoc && arg.argLoc.jsonLoc) {
+                if (arg.argLoc && arg.argLoc.osLoc && arg.argLoc.jsonLoc) {
                     // Check if this specific field path is secure, respecting layer precedence
                     // Layers are ordered by precedence: project (highest) -> user -> global (lowest)
                     // We need to find the first layer that has a definition for this field
                     let isSecure = false;
                     let fieldFound = false;
-                    
+
                     // Sort layers by precedence (user layers override global layers)
                     const sortedLayers = [...teamConfig.layers].sort((a, b) => {
                         // User layers have higher precedence than global layers
@@ -796,14 +802,14 @@ export class ConfigEditor extends WebView {
                         // If both are same type, maintain original order
                         return 0;
                     });
-                    
+
                     for (const layer of sortedLayers) {
-                        const secFields = teamConfig.api.secure.secureFields({user: layer.user, global: layer.global});
-                        
+                        const secFields = teamConfig.api.secure.secureFields({ user: layer.user, global: layer.global });
+
                         // Check if this layer has the field defined (either as secure or insecure)
                         // We need to check if the field exists in this layer's properties
                         const layerHasField = this.layerHasField(layer, arg.argLoc.jsonLoc);
-                        
+
                         if (layerHasField) {
                             fieldFound = true;
                             // If the field is in the secure array, it's secure
@@ -811,23 +817,23 @@ export class ConfigEditor extends WebView {
                             break; // Use the first layer that has this field
                         }
                     }
-                    
+
                     // If no layer explicitly defines this field, check if it's secure in any layer
                     if (!fieldFound) {
                         for (const layer of teamConfig.layers) {
-                            const secFields = teamConfig.api.secure.secureFields({user: layer.user, global: layer.global});
+                            const secFields = teamConfig.api.secure.secureFields({ user: layer.user, global: layer.global });
                             if (secFields.includes(arg.argLoc.jsonLoc)) {
                                 isSecure = true;
                                 break;
                             }
                         }
                     }
-                    
+
                     if (isSecure) {
                         arg.secure = true;
                     }
                 }
-                });
+            });
         }
         const redacted = this.profileOperations.redactSecureValues(mergedArgs.knownArgs);
         return redacted;
@@ -843,22 +849,22 @@ export class ConfigEditor extends WebView {
         if (!layer.properties || !layer.properties.profiles) {
             return false;
         }
-        
+
         // Parse the jsonLoc to find the field in the layer's properties
         // jsonLoc format is typically like "profiles.profileName.properties.fieldName"
-        const pathParts = jsonLoc.split('.');
-        
-        if (pathParts.length < 4 || pathParts[0] !== 'profiles') {
+        const pathParts = jsonLoc.split(".");
+
+        if (pathParts.length < 4 || pathParts[0] !== "profiles") {
             return false;
         }
-        
+
         const profileName = pathParts[1];
         const profile = layer.properties.profiles[profileName];
-        
+
         if (!profile || !profile.properties) {
             return false;
         }
-        
+
         // Check if the field exists in the profile's properties
         const fieldName = pathParts[pathParts.length - 1];
         return fieldName in profile.properties;
@@ -1055,9 +1061,10 @@ export class ConfigEditor extends WebView {
             return [];
         }
 
-        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+        const profInfo = new ProfileInfo("zowe", {
+            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-            onlyCheckActiveLayer: true, });
+        });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
         const teamConfig = profInfo.getTeamConfig();
@@ -1135,15 +1142,15 @@ export class ConfigEditor extends WebView {
             const mergedArgs = profInfo.mergeArgsForProfile(tempProfile, { getSecureVals: true });
 
             // Apply the same secure field precedence logic as in getPendingMergedArgsForProfile
-            if(mergedArgs.knownArgs){
+            if (mergedArgs.knownArgs) {
                 mergedArgs.knownArgs.forEach((arg) => {
-                    if(arg.argLoc && arg.argLoc.osLoc && arg.argLoc.jsonLoc) {
+                    if (arg.argLoc && arg.argLoc.osLoc && arg.argLoc.jsonLoc) {
                         // Check if this specific field path is secure, respecting layer precedence
                         // Layers are ordered by precedence: project (highest) -> user -> global (lowest)
                         // We need to find the first layer that has a definition for this field
                         let isSecure = false;
                         let fieldFound = false;
-                        
+
                         // Sort layers by precedence (user layers override global layers)
                         const sortedLayers = [...teamConfig.layers].sort((a, b) => {
                             // User layers have higher precedence than global layers
@@ -1152,14 +1159,14 @@ export class ConfigEditor extends WebView {
                             // If both are same type, maintain original order
                             return 0;
                         });
-                        
+
                         for (const layer of sortedLayers) {
-                            const secFields = teamConfig.api.secure.secureFields({user: layer.user, global: layer.global});
-                            
+                            const secFields = teamConfig.api.secure.secureFields({ user: layer.user, global: layer.global });
+
                             // Check if this layer has the field defined (either as secure or insecure)
                             // We need to check if the field exists in this layer's properties
                             const layerHasField = this.layerHasField(layer, arg.argLoc.jsonLoc);
-                            
+
                             if (layerHasField) {
                                 fieldFound = true;
                                 // If the field is in the secure array, it's secure
@@ -1167,18 +1174,18 @@ export class ConfigEditor extends WebView {
                                 break; // Use the first layer that has this field
                             }
                         }
-                        
+
                         // If no layer explicitly defines this field, check if it's secure in any layer
                         if (!fieldFound) {
                             for (const layer of teamConfig.layers) {
-                                const secFields = teamConfig.api.secure.secureFields({user: layer.user, global: layer.global});
+                                const secFields = teamConfig.api.secure.secureFields({ user: layer.user, global: layer.global });
                                 if (secFields.includes(arg.argLoc.jsonLoc)) {
                                     isSecure = true;
                                     break;
                                 }
                             }
                         }
-                        
+
                         if (isSecure) {
                             arg.secure = true;
                         }
