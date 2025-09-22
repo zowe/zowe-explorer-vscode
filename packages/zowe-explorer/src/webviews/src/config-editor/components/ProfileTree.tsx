@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { getOriginalProfileKeyWithNested } from "../utils/profileUtils";
 
-
 interface ProfileTreeProps {
   profileKeys: string[];
   selectedProfileKey: string | null;
@@ -36,6 +35,7 @@ export function ProfileTree({
   pendingProfiles,
   onProfileSelect,
   isProfileDefault,
+  getProfileType,
   hasPendingSecureChanges,
   hasPendingRename,
   isFilteringActive,
@@ -51,8 +51,6 @@ export function ProfileTree({
   // Drag and drop state
   const [draggedProfile, setDraggedProfile] = useState<string | null>(null);
   const [dragOverProfile, setDragOverProfile] = useState<string | null>(null);
-
-
 
   // Memoized helper function to find the original key from a current profile key
   const findOriginalKey = useMemo(() => {
@@ -154,7 +152,6 @@ export function ProfileTree({
 
     // Drag is now always allowed - restrictions are handled in the drop handler
 
-
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", profileKey);
@@ -162,16 +159,16 @@ export function ProfileTree({
 
       const dragImage = e.target.cloneNode(true);
       dragImage.style.opacity = "0.5";
-      
+
       // Calculate the offset based on mouse position within the element
       const rect = e.target.getBoundingClientRect();
       const offsetX = e.clientX - rect.left;
       const offsetY = e.clientY - rect.top;
-      
+
       // Ensure the offset is within reasonable bounds
       const clampedOffsetX = Math.max(0, Math.min(offsetX, rect.width));
       const clampedOffsetY = Math.max(0, Math.min(offsetY, rect.height));
-      
+
       e.dataTransfer.setDragImage(dragImage, clampedOffsetX, clampedOffsetY);
     }
 
@@ -380,7 +377,17 @@ export function ProfileTree({
     const canDrop = draggedProfile && draggedProfile !== node.key && !isInvalidDrop(draggedProfile, node.key);
 
     return (
-      <div className="profile-tree-node" key={node.key}>
+      <div
+        className="profile-tree-node"
+        key={node.key}
+        data-testid="profile-tree-node"
+        data-profile-key={node.key}
+        data-profile-name={node.name}
+        data-profile-type={getProfileType(node.key)}
+        data-profile-level={node.level}
+        data-has-children={node.hasChildren}
+        data-is-expanded={node.isExpanded}
+      >
         <div
           className={`profile-tree-item ${isSelected ? "selected" : ""} ${isDragging ? "dragging" : ""} ${isDragOver ? "drag-over" : ""}`}
           style={{
@@ -452,6 +459,8 @@ export function ProfileTree({
               pointerEvents: "none",
             }}
             draggable={false}
+            data-testid="profile-name"
+            data-profile-name={node.name}
           >
             {node.name}
           </span>
@@ -607,7 +616,7 @@ export function ProfileTree({
   };
 
   return (
-    <div style={{ width: "100%" }} className="profile-tree">
+    <div style={{ width: "100%" }} className="profile-tree" data-testid="profile-tree" data-profile-count={profileKeys.length}>
       {draggedProfile && !isDraggingRootProfile && renderRootDropZone()}
       {treeNodes.map((node) => renderNode(node))}
     </div>

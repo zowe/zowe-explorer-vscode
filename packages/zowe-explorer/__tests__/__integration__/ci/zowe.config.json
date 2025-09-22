@@ -40,11 +40,87 @@
         "rejectUnauthorized": false
       },
       "secure": []
+    },
+    "ssh1": {
+      "type": "ssh",
+      "properties": {
+        "host": "localhost",
+        "port": 22,
+        "user": "sshuser",
+        "password": "sshpass"
+      }
+    },
+    "tso1": {
+      "type": "tso",
+      "properties": {
+        "account": "100000000",
+        "host": "localhost",
+        "user": "tsouser",
+        "password": "tsopass"
+      }
+    },
+    "zosmf-dev": {
+      "type": "zosmf",
+      "properties": {
+        "account": "200000000",
+        "host": "dev.localhost",
+        "rejectUnauthorized": false,
+        "user": "devuser",
+        "password": "devpass"
+      }
+    },
+    "zosmf-prod": {
+      "type": "zosmf",
+      "properties": {
+        "account": "300000000",
+        "host": "prod.localhost",
+        "rejectUnauthorized": true,
+        "user": "produser",
+        "password": "prodpass"
+      }
+    },
+    "test-profile": {
+      "type": "base",
+      "properties": {
+        "host": "test.localhost",
+        "rejectUnauthorized": false
+      }
+    },
+    "special-chars": {
+      "type": "base",
+      "properties": {
+        "host": "special-chars.localhost",
+        "rejectUnauthorized": false
+      }
+    },
+    "nested": {
+      "type": "base",
+      "properties": {
+        "host": "nested.localhost"
+      },
+      "profiles": {
+        "child1": {
+          "type": "zosmf",
+          "properties": {
+            "host": "child1.localhost",
+            "user": "child1user"
+          }
+        },
+        "child2": {
+          "type": "ssh",
+          "properties": {
+            "host": "child2.localhost",
+            "user": "child2user"
+          }
+        }
+      }
     }
   },
   "defaults": {
     "zosmf": "zosmf1",
-    "base": "base"
+    "base": "base",
+    "ssh": "ssh1",
+    "tso": "tso1"
   },
   "autoStore": true
 }

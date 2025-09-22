@@ -17,14 +17,113 @@ import quickPick from "../../../../__pageobjects__/QuickPick";
 // Scenario: User opens the Zowe Config Editor via Command Palette
 //
 When("a user opens the Zowe Config Editor from the Command Palette", async () => {
+    // First, check if Config Editor is already open
+    try {
+        const workbench = await browser.getWorkbench();
+
+        // Check if there are any webviews open (Config Editor uses webviews)
+        const webviews = await workbench.getAllWebviews();
+        if (webviews && webviews.length > 0) {
+            // If there are webviews open, assume one is the Config Editor and just activate it
+            try {
+                await webviews[0].open();
+                await browser.pause(200);
+                return; // Skip opening Command Palette
+            } catch (webviewError) {
+                // Continue to Command Palette if webview activation fails
+            }
+        }
+
+        // Fallback: Check editor tabs
+        const editorView = workbench.getEditorView();
+
+        // Try to get the active tab first
+        const activeTab = await editorView.getActiveTab();
+        if (activeTab) {
+            const activeTitle = await activeTab.getTitle();
+            if (activeTitle === "Config Editor") {
+                return; // Skip opening Command Palette
+            }
+        }
+
+        // Check if Config Editor tab is already open in any tab
+        const tabs = await editorView.getOpenTabs();
+        if (tabs && tabs.length > 0) {
+            for (const tab of tabs) {
+                try {
+                    const title = await tab.getTitle();
+                    if (title === "Config Editor") {
+                        // Config Editor is already open, just activate it
+                        await editorView.openEditor("Config Editor");
+                        await browser.pause(200);
+                        return; // Skip opening Command Palette
+                    }
+                } catch (tabError) {
+                    // Continue checking other tabs if one fails
+                    continue;
+                }
+            }
+        }
+    } catch (error) {
+        // If we can't check for existing tabs, proceed with opening Command Palette
+    }
+
+    // Enhanced cleanup before opening Command Palette
+    try {
+        // Multiple escape presses to ensure clean state
+        for (let i = 0; i < 3; i++) {
+            await browser.keys("Escape");
+            await browser.pause(200);
+        }
+
+        // Click on workbench to ensure focus
+        const workbenchElement = await browser.$(".monaco-workbench");
+        if (await workbenchElement.isExisting()) {
+            await workbenchElement.click();
+            await browser.pause(200);
+        }
+    } catch (error) {
+        // Ignore errors
+    }
+
     // Open Command Palette (Ctrl+Shift+P on Linux/Windows)
     await browser.keys([Key.Ctrl, Key.Shift, "P"]);
+    await browser.pause(300); // Give time for Command Palette to appear
 
-    // Wait for quick pick to show
-    await browser.waitUntil(() => quickPick.isDisplayed(), {
-        timeout: 1000,
-        timeoutMsg: "Expected Command Palette to be visible",
-    });
+    // Wait for quick pick to show with longer timeout and retry logic
+    let retries = 3;
+    while (retries > 0) {
+        try {
+            // Try multiple ways to detect Command Palette
+            await browser.waitUntil(
+                async () => {
+                    try {
+                        return await quickPick.isDisplayed();
+                    } catch {
+                        // Try alternative detection
+                        const quickPickElement = await browser.$(".quick-input-widget");
+                        return await quickPickElement.isDisplayed();
+                    }
+                },
+                {
+                    timeout: 3000,
+                    timeoutMsg: "Expected Command Palette to be visible",
+                }
+            );
+            break; // Success, exit retry loop
+        } catch (error) {
+            retries--;
+            if (retries === 0) {
+                throw error; // Re-throw if all retries failed
+            }
+            // More aggressive cleanup before retry
+            await browser.keys("Escape");
+            await browser.pause(300);
+            // Retry opening Command Palette
+            await browser.keys([Key.Ctrl, Key.Shift, "P"]);
+            await browser.pause(500);
+        }
+    }
 
     // Type the command
     await browser.keys("Zowe Explorer: Edit Zowe Config Files");

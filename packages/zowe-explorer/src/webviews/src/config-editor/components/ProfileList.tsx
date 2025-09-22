@@ -154,6 +154,10 @@ export function ProfileList({
         maxHeight: "calc(100vh - 200px)",
         overflow: "hidden",
       }}
+      data-testid="profile-list"
+      data-view-mode={viewMode}
+      data-profile-count={filteredProfileKeys.length}
+      data-total-profiles={sortedProfileKeys.length}
     >
       {/* Search and Filter Component - Sticky */}
       <div
@@ -218,6 +222,11 @@ export function ProfileList({
                 }
               }}
               title={profileKey}
+              data-testid="profile-list-item"
+              data-profile-key={profileKey}
+              data-profile-name={profileKey}
+              data-profile-type={getProfileType(profileKey)}
+              data-is-selected={selectedProfileKey === profileKey}
             >
               <span
                 style={{
@@ -227,6 +236,8 @@ export function ProfileList({
                   whiteSpace: "nowrap",
                   opacity: pendingProfiles[profileKey] || hasPendingSecureChanges(profileKey) || hasPendingRename(profileKey) ? 0.7 : 1,
                 }}
+                data-testid="profile-name"
+                data-profile-name={profileKey}
               >
                 {profileKey}
               </span>

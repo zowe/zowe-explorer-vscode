@@ -71,6 +71,8 @@ export function Panels({
                     className="header-button"
                     title={viewMode === "tree" ? "Switch to flat view" : "Switch to tree view"}
                     onClick={onViewModeToggle}
+                    data-testid="view-mode-toggle"
+                    data-current-view={viewMode}
                     style={{
                       padding: "2px",
                       height: "20px",

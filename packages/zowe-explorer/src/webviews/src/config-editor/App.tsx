@@ -1634,7 +1634,7 @@ export function App() {
   };
 
   return (
-    <div className="app-container">
+    <div className="app-container" data-testid="config-editor-app" data-config-count={configurations.length} data-selected-tab={selectedTab}>
       <Tabs
         configurations={configurations}
         selectedTab={selectedTab}

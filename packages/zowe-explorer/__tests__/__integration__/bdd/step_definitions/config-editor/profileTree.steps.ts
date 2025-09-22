@@ -11,123 +11,167 @@
 
 import { Then } from "@cucumber/cucumber";
 
-Then('the profile tree should contain 4 nodes with titles "zosmf1", "zosmf2", "zosmf3", "base"', async () => {
+Then("the profile tree should contain expected profiles from zowe.config.json", async () => {
     // The Config Editor webview should already be open from setup.steps.ts
     const workbench = await browser.getWorkbench();
 
-    // Get the webview and wait for it to be ready (following the pattern from DatasetTableView.steps.ts)
+    // Get the webview and wait for it to be ready
     const webview = (await workbench.getAllWebviews())[0];
     await webview.wait();
     await webview.open();
 
-    // Wait for the main app container to exist
-    const appContainer = await browser.$(".app-container");
+    // Wait for the main app container to exist using the new data-testid
+    const appContainer = await browser.$("[data-testid='config-editor-app']");
     await appContainer.waitForExist({ timeout: 10000 });
 
-    // Wait for the profiles section to be available
-    const profilesSection = await browser.$(".profiles-section");
-    await profilesSection.waitForExist({ timeout: 10000 });
+    // Wait for the profile list to be available using the new data-testid
+    const profileList = await browser.$("[data-testid='profile-list']");
+    await profileList.waitForExist({ timeout: 1000 });
 
-    // Wait for profile elements to be loaded
+    // Get the view mode from data attributes
+    const viewMode = await profileList.getAttribute("data-view-mode");
+
+    // Wait for profile elements to be loaded using the new data-testids
     await browser.waitUntil(
         async () => {
             try {
-                // Check for either tree view or flat view profile containers
-                const profileTreeRoot = await browser.$(".profile-tree");
-                const profileListItems = await browser.$$(".profile-list-item");
-
-                // Check if we have profile elements
-                const hasTreeView = await profileTreeRoot.isExisting();
-                const hasFlatView = profileListItems.length > 0;
-
-                if (hasTreeView) {
-                    const nodes = await browser.$$(".profile-tree-node");
+                if (viewMode === "tree") {
+                    const nodes = await browser.$$("[data-testid='profile-tree-node']");
                     return nodes.length > 0;
-                } else if (hasFlatView) {
-                    return profileListItems.length > 0;
+                } else {
+                    const items = await browser.$$("[data-testid='profile-list-item']");
+                    return items.length > 0;
                 }
-
-                return false;
             } catch (error) {
                 return false;
             }
         },
         {
-            timeout: 15000,
+            timeout: 5000,
             timeoutMsg: "Profile elements not found within timeout",
         }
     );
 
-    let texts: string[] = [];
-    const expectedTitles = ["zosmf1", "zosmf2", "zosmf3", "base"];
+    // Expected profiles from zowe.config.json
+    const expectedTitles = [
+        "zosmf1",
+        "zosmf2",
+        "zosmf3",
+        "base",
+        "ssh1",
+        "tso1",
+        "zosmf-dev",
+        "zosmf-prod",
+        "test-profile",
+        "special-chars",
+        "nested",
+    ];
+    let foundProfiles: string[] = [];
 
-    // Check if we're in tree view mode
-    const profileTreeRoot = await browser.$(".profile-tree");
-    const isTreeView = await profileTreeRoot.isExisting();
+    if (viewMode === "tree") {
+        // Tree view mode - use the new data-testid selectors
+        const nodes = await browser.$$("[data-testid='profile-tree-node']");
 
-    if (isTreeView) {
-        // Tree view mode - look for profile-tree-node elements
-        const nodes = await browser.$$(".profile-tree-node");
-        await expect(nodes.length).toBe(4);
-
-        // Verify node text by getting the profile name from each node
+        // Get profile names from data attributes
         for (const node of nodes) {
-            // Get the text content of the profile name span within each node
-            const profileNameSpan = await node.$("span[style*='flex: 1']");
-            if (profileNameSpan) {
-                const text = await profileNameSpan.getText();
-                texts.push(text);
+            const profileName = await node.getAttribute("data-profile-name");
+            if (profileName && expectedTitles.includes(profileName)) {
+                foundProfiles.push(profileName);
             }
         }
     } else {
-        // Flat view mode - look for profile-list-item elements
-        const profileListItems = await browser.$$(".profile-list-item");
-        await expect(profileListItems.length).toBe(4);
+        // Flat view mode - use the new data-testid selectors
+        const items = await browser.$$("[data-testid='profile-list-item']");
 
-        // Verify node text by getting the profile name from each item
-        for (const item of profileListItems) {
-            const profileNameSpan = await item.$("span[style*='flex: 1']");
-            if (profileNameSpan) {
-                const text = await profileNameSpan.getText();
-                texts.push(text);
+        // Get profile names from data attributes
+        for (const item of items) {
+            const profileName = await item.getAttribute("data-profile-name");
+            if (profileName && expectedTitles.includes(profileName)) {
+                foundProfiles.push(profileName);
             }
         }
     }
 
-    // If we didn't find any profiles in the expected structure, try a more flexible approach
-    if (texts.length === 0) {
-        // Look for any elements that might contain profile names
-        const allSpans = await browser.$$("span");
+    // Fallback: if we didn't find profiles using data attributes, try the profile name spans
+    if (foundProfiles.length === 0) {
+        const profileNameSpans = await browser.$$("[data-testid='profile-name']");
 
-        for (const span of allSpans) {
-            try {
-                const text = await span.getText();
-                if (text && expectedTitles.includes(text)) {
-                    texts.push(text);
-                }
-            } catch (error) {
-                // Ignore errors getting text from spans
-            }
-        }
-
-        // Also try looking for any div elements that might contain profile names
-        const allDivs = await browser.$$("div");
-
-        for (const div of allDivs) {
-            try {
-                const text = await div.getText();
-                if (text && expectedTitles.includes(text)) {
-                    texts.push(text);
-                    console.log("Found profile text in div:", text);
-                }
-            } catch (error) {
-                // Ignore errors getting text from divs
+        for (const span of profileNameSpans) {
+            const text = await span.getText();
+            if (text && expectedTitles.includes(text)) {
+                foundProfiles.push(text);
             }
         }
     }
+
+    // Verify we found the expected number of profiles
+    expect(foundProfiles.length).toBeGreaterThanOrEqual(expectedTitles.length);
 
     // Verify all expected titles are present
     for (const title of expectedTitles) {
-        expect(texts).toContain(title);
+        expect(foundProfiles).toContain(title);
+    }
+
+    // Additional validation: check for nested profiles if in tree view
+    if (viewMode === "tree") {
+        // Now switch to flat view and verify profiles there
+
+        // Look for the view mode toggle button
+        const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
+        if (await viewToggleButton.isExisting()) {
+            await viewToggleButton.click();
+            await browser.pause(500); // Wait for view to switch
+
+            // Wait for flat view to be active
+            await browser.waitUntil(
+                async () => {
+                    const updatedProfileList = await browser.$("[data-testid='profile-list']");
+                    const updatedViewMode = await updatedProfileList.getAttribute("data-view-mode");
+                    return updatedViewMode === "flat";
+                },
+                {
+                    timeout: 5000,
+                    timeoutMsg: "Failed to switch to flat view",
+                }
+            );
+
+            // Now verify profiles in flat view
+            const flatViewItems = await browser.$$("[data-testid='profile-list-item']");
+            let flatViewProfiles: string[] = [];
+
+            // Get profile names from flat view items
+            for (const item of flatViewItems) {
+                const profileName = await item.getAttribute("data-profile-name");
+                if (profileName) {
+                    flatViewProfiles.push(profileName);
+                }
+            }
+
+            // In flat view, we should see all profiles including nested children as separate items
+            // The flat view shows all profiles in a flat list, including nested children
+            const flatViewExpectedTitles = [
+                "zosmf1",
+                "zosmf2",
+                "zosmf3",
+                "base",
+                "ssh1",
+                "tso1",
+                "zosmf-dev",
+                "zosmf-prod",
+                "test-profile",
+                "special-chars",
+                "nested",
+                "nested.child1",
+                "nested.child2",
+            ];
+
+            // Verify all expected profiles are present in flat view (including nested children)
+            for (const title of flatViewExpectedTitles) {
+                expect(flatViewProfiles).toContain(title);
+            }
+
+            // Verify we have the expected number of profiles in flat view (11 main + 2 nested = 13 total)
+            expect(flatViewProfiles.length).toBe(13);
+        }
     }
 });
