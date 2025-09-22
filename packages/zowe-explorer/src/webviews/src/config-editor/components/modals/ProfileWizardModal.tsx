@@ -549,7 +549,7 @@ export function ProfileWizardModal({
                           className="wizard-property-item inherited"
                           title={`Inherited from: ${profilePath} (${fullConfigPath})`}
                         >
-                          <span className="wizard-property-key">{key}:</span>
+                          <span className="wizard-property-key">{key}</span>
                           <div className="wizard-property-value-container">
                             {propData.secure ? (
                               <span className="wizard-property-value-display">********</span>
@@ -569,7 +569,9 @@ export function ProfileWizardModal({
                           const propertyType = getPropertyType(prop.key);
                           return (
                             <div key={index} className="wizard-property-item">
-                              <span className="wizard-property-key">{prop.key}:</span>
+                              <span title={propertyDescriptions[prop.key] || ""} className="wizard-property-key">
+                                {prop.key}
+                              </span>
                               <div className="wizard-property-actions">
                                 <div className="wizard-property-value-container">
                                   {prop.secure ? (

@@ -838,7 +838,7 @@ export const RenderConfig = ({
           return (
             <div
               key={fullKey}
-              className="config-item"
+              className="config-item property-entry"
               onClick={isFromMergedProps && !isDeletedMergedProperty && jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
               title={
                 isFromMergedProps && !isDeletedMergedProperty && jsonLoc

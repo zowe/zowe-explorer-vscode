@@ -308,10 +308,10 @@ export function RenameProfileModal({
           </div>
         </div>
         <div className="modal-actions">
-          <button className="modal-button secondary" onClick={onCancel}>
+          <button className="modal-button secondary" id="rename-cancel" onClick={onCancel}>
             Cancel
           </button>
-          <button className="modal-button primary" onClick={handleSubmit}>
+          <button className="modal-button primary" id="rename-confirm" onClick={handleSubmit}>
             Rename
           </button>
         </div>

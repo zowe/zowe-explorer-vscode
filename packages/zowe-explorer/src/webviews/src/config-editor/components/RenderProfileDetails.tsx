@@ -172,6 +172,7 @@ export const RenderProfileDetails = ({
             <div className="profile-actions">
               <button
                 className="profile-action-button"
+                id="open-with-highlight"
                 onClick={() => {
                   const configPath = configurations[selectedTab!]?.configPath;
                   if (configPath) {
@@ -188,6 +189,7 @@ export const RenderProfileDetails = ({
               </button>
               <button
                 className="profile-action-button"
+                id="set-as-default"
                 onClick={() => {
                   if (isProfileDefault(selectedProfileKey)) {
                     // If already default, deselect it by setting to empty
@@ -213,6 +215,7 @@ export const RenderProfileDetails = ({
               </button>
               <button
                 className="profile-action-button"
+                id="merge-property-toggle"
                 onClick={() => setShowMergedPropertiesWithStorage(!showMergedProperties)}
                 title={showMergedProperties ? "Hide merged properties" : "Show merged properties"}
               >
@@ -220,6 +223,7 @@ export const RenderProfileDetails = ({
               </button>
               <button
                 className="profile-action-button"
+                id="rename-profile"
                 onClick={() => setRenameProfileModalOpen(true)}
                 title={
                   selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey)
@@ -234,7 +238,12 @@ export const RenderProfileDetails = ({
               >
                 <span className="codicon codicon-edit"></span>
               </button>
-              <button className="profile-action-button" onClick={() => handleDeleteProfile(selectedProfileKey)} title="Delete profile">
+              <button
+                className="profile-action-button"
+                id="delete-profile"
+                onClick={() => handleDeleteProfile(selectedProfileKey)}
+                title="Delete profile"
+              >
                 <span className="codicon codicon-trash"></span>
               </button>
             </div>

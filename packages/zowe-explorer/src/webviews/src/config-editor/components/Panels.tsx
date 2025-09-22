@@ -63,6 +63,7 @@ export function Panels({
                     onProfileSortOrderChange(newSortOrder);
                   }}
                   title={`Click to change sort order. Current: ${getProfileSortOrderDisplayName(profileSortOrder)}`}
+                  id="change-profile-sort-order"
                 >
                   Profiles
                 </h2>

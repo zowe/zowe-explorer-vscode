@@ -102,7 +102,6 @@
         "child1": {
           "type": "zosmf",
           "properties": {
-            "host": "child1.localhost",
             "user": "child1user"
           }
         },

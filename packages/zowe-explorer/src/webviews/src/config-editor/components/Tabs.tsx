@@ -268,7 +268,7 @@ export function Tabs({
               e.currentTarget.style.backgroundColor = "transparent";
             }}
           >
-            <span className="codicon codicon-go-to-file" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
+            <span id="open-file" className="codicon codicon-go-to-file" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
             Open File
           </div>
           <div
@@ -319,7 +319,7 @@ export function Tabs({
                 e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
-              <span className="codicon codicon-file-code" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
+              <span id="open-schema" className="codicon codicon-file-code" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
               Open Schema
             </div>
           )}
