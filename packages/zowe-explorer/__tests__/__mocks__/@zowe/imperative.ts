@@ -437,3 +437,9 @@ export class AuthOrder {
         // this.originalAuthOrder.makingRequestForToken(...args);
     }
 }
+
+export class Censor {
+    public static censorRawData(data: string): string {
+        return data;
+    }
+}
