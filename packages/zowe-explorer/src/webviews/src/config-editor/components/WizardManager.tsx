@@ -14,7 +14,6 @@ import { ProfileWizardModal } from "./modals/ProfileWizardModal";
 
 // Types
 
-
 // Props interface for the WizardManager component
 interface WizardManagerProps {
   // Wizard state and handlers from useProfileWizard hook
@@ -39,6 +38,7 @@ interface WizardManagerProps {
   // Wizard functions from useProfileWizard hook
   getWizardTypeOptions: () => string[];
   getWizardPropertyOptions: () => string[];
+  getWizardPropertyDescriptions: () => { [key: string]: string };
   getPropertyType: (propertyKey: string) => string | undefined;
   isProfileNameTaken: () => boolean;
   handleWizardAddProperty: () => void;
@@ -84,6 +84,7 @@ export const WizardManager = ({
   setWizardNewPropertySecure,
   getWizardTypeOptions,
   getWizardPropertyOptions,
+  getWizardPropertyDescriptions,
   getPropertyType,
   isProfileNameTaken,
   handleWizardAddProperty,
@@ -146,6 +147,7 @@ export const WizardManager = ({
       availableProfiles={getAvailableProfiles()}
       typeOptions={getWizardTypeOptions()}
       propertyOptions={getWizardPropertyOptions()}
+      propertyDescriptions={getWizardPropertyDescriptions()}
       isProfileNameTaken={isProfileNameTaken()}
       secureValuesAllowed={secureValuesAllowed}
       onRootProfileChange={setWizardRootProfile}

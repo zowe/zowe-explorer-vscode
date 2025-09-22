@@ -104,6 +104,36 @@ export function useProfileWizard({
             .sort((a, b) => a.localeCompare(b));
     };
 
+    const getWizardPropertyDescriptions = () => {
+        if (selectedTab === null) return {};
+
+        // Get property descriptions from schema validation
+        const propertyDescriptions: { [key: string]: string } = {};
+        const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema || {};
+
+        if (wizardSelectedType && propertySchema[wizardSelectedType]) {
+            // If a specific type is selected, get descriptions from that type
+            Object.entries(propertySchema[wizardSelectedType]).forEach(([key, schema]) => {
+                if (schema && typeof schema === "object" && "description" in schema && schema.description) {
+                    propertyDescriptions[key] = schema.description as string;
+                }
+            });
+        } else {
+            // If no type is selected, get descriptions from all available types
+            Object.values(propertySchema).forEach((typeSchema: any) => {
+                if (typeSchema && typeof typeSchema === "object") {
+                    Object.entries(typeSchema).forEach(([key, schema]: [string, any]) => {
+                        if (schema && typeof schema === "object" && "description" in schema && schema.description && !propertyDescriptions[key]) {
+                            propertyDescriptions[key] = schema.description as string;
+                        }
+                    });
+                }
+            });
+        }
+
+        return propertyDescriptions;
+    };
+
     const getPropertyType = (propertyKey: string): string | undefined => {
         if (selectedTab === null) return undefined;
         if (!wizardSelectedType) return undefined;
@@ -498,6 +528,7 @@ export function useProfileWizard({
         // Functions
         getWizardTypeOptions,
         getWizardPropertyOptions,
+        getWizardPropertyDescriptions,
         getPropertyType,
         isProfileNameTaken,
         handleWizardAddProperty,

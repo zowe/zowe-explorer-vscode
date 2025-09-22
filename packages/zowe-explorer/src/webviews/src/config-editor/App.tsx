@@ -31,6 +31,7 @@ import {
   getOriginalProfileKey,
   getPropertyTypeForAddProfile,
   fetchTypeOptions,
+  getPropertyDescriptions,
   PropertySortOrder,
   ProfileSortOrder,
   isPropertyActuallyInherited,
@@ -407,6 +408,7 @@ export function App() {
     setWizardMergedProperties,
     getWizardTypeOptions,
     getWizardPropertyOptions,
+    getWizardPropertyDescriptions,
     getPropertyType,
     isProfileNameTaken,
     handleWizardAddProperty,
@@ -1776,6 +1778,11 @@ export function App() {
             ? fetchTypeOptions(newProfileKeyPath, selectedTab, configurations, schemaValidations, getProfileType, pendingChanges, renames)
             : []
         }
+        propertyDescriptions={
+          newProfileKeyPath
+            ? getPropertyDescriptions(newProfileKeyPath, selectedTab, configurations, schemaValidations, getProfileType, pendingChanges, renames)
+            : {}
+        }
         isSecure={isSecure}
         secureValuesAllowed={secureValuesAllowed}
         getPropertyType={(propertyKey: string) =>
@@ -1841,6 +1848,7 @@ export function App() {
         setWizardNewPropertySecure={setWizardNewPropertySecure}
         getWizardTypeOptions={getWizardTypeOptions}
         getWizardPropertyOptions={getWizardPropertyOptions}
+        getWizardPropertyDescriptions={getWizardPropertyDescriptions}
         getPropertyType={getPropertyType}
         isProfileNameTaken={isProfileNameTaken}
         handleWizardAddProperty={handleWizardAddProperty}

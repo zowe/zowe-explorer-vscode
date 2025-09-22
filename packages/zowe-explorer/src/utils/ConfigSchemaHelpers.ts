@@ -156,7 +156,7 @@ export class ConfigSchemaHelpers {
                     });
                 }
             } else if (Array.isArray(type)) {
-                // Handle union types (array of types) - only include if array doesn't include "string"
+                // Handle union types (array of types) - only include if array doesn't include "string"modify
                 if (!type.includes("string")) {
                     result.set(propName, {
                         type,

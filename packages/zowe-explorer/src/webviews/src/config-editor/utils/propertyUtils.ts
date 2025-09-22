@@ -94,6 +94,53 @@ export function getPropertyTypeForConfigEditor(
 }
 
 /**
+ * Get property descriptions for dropdown tooltips
+ */
+export function getPropertyDescriptions(
+    path: string[],
+    selectedTab: number | null,
+    configurations: Configuration[],
+    schemaValidations: { [configPath: string]: schemaValidation | undefined },
+    getProfileTypeFn: typeof getProfileType,
+    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
+    renames: { [configPath: string]: { [originalKey: string]: string } }
+): { [key: string]: string } {
+    const { configPath } = configurations[selectedTab!]!;
+
+    // Extract the profile key from the path
+    const profileKey = extractProfileKeyFromPath(path);
+
+    // Get the profile type, which will include pending changes
+    const resolvedType = getProfileTypeFn(profileKey, selectedTab, configurations, pendingChanges, renames);
+
+    // Get property descriptions from schema validation
+    const propertyDescriptions: { [key: string]: string } = {};
+    const propertySchema = schemaValidations[configPath]?.propertySchema || {};
+
+    if (resolvedType && propertySchema[resolvedType]) {
+        // If profile has a type, get descriptions from that type
+        Object.entries(propertySchema[resolvedType]).forEach(([key, schema]) => {
+            if (schema && typeof schema === "object" && "description" in schema && schema.description) {
+                propertyDescriptions[key] = schema.description as string;
+            }
+        });
+    } else {
+        // If no type is selected, get descriptions from all available types
+        Object.values(propertySchema).forEach((typeSchema: any) => {
+            if (typeSchema && typeof typeSchema === "object") {
+                Object.entries(typeSchema).forEach(([key, schema]: [string, any]) => {
+                    if (schema && typeof schema === "object" && "description" in schema && schema.description && !propertyDescriptions[key]) {
+                        propertyDescriptions[key] = schema.description as string;
+                    }
+                });
+            }
+        });
+    }
+
+    return propertyDescriptions;
+}
+
+/**
  * Get options for input key for profile dropdown
  */
 export function fetchTypeOptions(
