@@ -702,9 +702,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                                 .map((p) => p.trim())
                         ),
                     ];
-                    const allDatasetsCount = await mvsApi.getCount(dsPatterns);
+                    const getCountResponse = await mvsApi.getCount(dsPatterns);
                     this.paginatorData = {
-                        totalItems: allDatasetsCount,
+                        totalItems: (getCountResponse as any).count,
+                        lastItemName: (getCountResponse as any).lastItem,
                     };
                 } else {
                     //if getCount() not present for zosmf and extender profiles
