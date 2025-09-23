@@ -989,7 +989,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             node.dirty = true;
             syncSessionNode((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue), nonFaveNode);
             let dataSet: IDataSet;
-            const dsSets: (IDataSet & { memberPattern?: string })[] = [];
+            const dsSets: IDataSet[] = [];
             const dsNames = pattern.split(",");
 
             for (const ds of dsNames) {
