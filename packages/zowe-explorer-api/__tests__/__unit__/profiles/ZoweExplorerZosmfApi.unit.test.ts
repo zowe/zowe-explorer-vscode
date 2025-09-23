@@ -642,11 +642,11 @@ describe("ZosmfMvsApi", () => {
         test("returns correct count when successful and response is array", async () => {
             const mockResponse = {
                 success: true,
-                apiResponse: [{ name: "DATASET1" }, { name: "DATASET2" }],
+                apiResponse: [{ dsname: "DATASET1" }, { dsname: "DATASET2" }],
             };
             dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
             const result = await mvsApi.getCount(patterns);
-            expect(result).toBe(2);
+            expect(result).toStrictEqual({ count: 2, lastItem: "DATASET2" });
             expect(dataSetsMatchingPatternSpy).toHaveBeenCalledWith(
                 expect.any(Object), // session
                 patterns,
@@ -660,7 +660,7 @@ describe("ZosmfMvsApi", () => {
             };
             dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
             const result = await mvsApi.getCount(patterns);
-            expect(result).toBe(0);
+            expect(result).toStrictEqual({ count: -1, lastItem: "" });
         });
         test("returns 0 when apiResponse is empty or undefined", async () => {
             const mockResponse = {
@@ -669,18 +669,18 @@ describe("ZosmfMvsApi", () => {
             };
             dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
             const result = await mvsApi.getCount(patterns);
-            expect(result).toBe(0);
+            expect(result).toStrictEqual({ count: -1, lastItem: "" });
         });
         test("handles mixed format: array and items fallback", async () => {
             const mockResponse = {
                 success: true,
                 apiResponse: {
-                    items: [{}, {}, {}, {}], // 4 items
+                    items: [{ dsname: "DS1" }, { dsname: "DS2" }, { dsname: "DS3" }, { dsname: "DS4" }], // 4 items
                 },
             };
             dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
             const result = await mvsApi.getCount(patterns);
-            expect(result).toBe(4);
+            expect(result).toStrictEqual({ count: 4, lastItem: "DS4" });
         });
     });
 });

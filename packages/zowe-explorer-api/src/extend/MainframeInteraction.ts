@@ -392,7 +392,7 @@ export namespace MainframeInteraction {
          * Get count for all the datasets accordingly to dataSetPatterns
          *
          */
-        getCount?(dataSetPatterns: string[]): Promise<number>;
+        getCount?(dataSetPatterns: string[]): Promise<Object>;
     }
 
     /**

@@ -409,7 +409,7 @@ export namespace ZoweExplorerZosmf {
             );
         }
 
-        public async getCount(dataSetPatterns: string[]): Promise<number> {
+        public async getCount(dataSetPatterns: string[]): Promise<Object> {
             let allDatasets: IZosmfListResponse[] = [];
             const response: IZosFilesResponse[] = [];
             response.push(await this.dataSetsMatchingPattern(dataSetPatterns, { attributes: false }));
@@ -419,7 +419,8 @@ export namespace ZoweExplorerZosmf {
                     const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
                     return responseItems ? [...arr, ...responseItems] : arr;
                 }, []);
-            return allDatasets.length !== 0 ? Number(allDatasets.length) : 0;
+            const datasetCount = allDatasets.length !== 0 ? Number(allDatasets.length) : -1;
+            return { count: datasetCount ? datasetCount : -1, lastItem: allDatasets.length > 0 ? allDatasets[allDatasets.length - 1].dsname : "" };
         }
     }
 
