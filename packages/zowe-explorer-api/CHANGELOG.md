@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added support for `jobEncoding` profile property when submitting jobs with the `ZosmfJesApi` class. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
+
 ### Bug fixes
 
 - Fixed an issue where secure credentials and headers were being logged to the Zowe logger and VSCode output channel. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
