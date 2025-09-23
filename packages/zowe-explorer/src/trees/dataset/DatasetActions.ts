@@ -619,11 +619,19 @@ export class DatasetActions {
      * @param {IZoweDatasetTreeNode} node - The node selected for deletion
      * @param datasetProvider - the tree which contains the nodes
      */
-    public static async deleteDatasetPrompt(datasetProvider: Types.IZoweDatasetTreeType, node?: IZoweDatasetTreeNode): Promise<void> {
+    public static async deleteDatasetPrompt(
+        datasetProvider: Types.IZoweDatasetTreeType,
+        node?: IZoweDatasetTreeNode,
+        nodeList?: IZoweDatasetTreeNode[]
+    ): Promise<void> {
         ZoweLogger.trace("dataset.actions.deleteDatasetPrompt called.");
         let nodes: IZoweDatasetTreeNode[];
-        const treeView = datasetProvider.getTreeView();
-        let selectedNodes = treeView.selection;
+        let selectedNodes;
+        if (node || nodeList) {
+            selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
+        } else {
+            selectedNodes = datasetProvider.getTreeView().selection;
+        }
         let includedSelection = false;
         if (node) {
             for (const item of selectedNodes) {
