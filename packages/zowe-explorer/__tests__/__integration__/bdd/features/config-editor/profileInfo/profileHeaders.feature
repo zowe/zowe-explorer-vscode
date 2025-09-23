@@ -1,22 +1,21 @@
-# Test 1
-# Open config editor
-# Set the profile list to flat view
-# Click the "zosmf1" entry in the profile list
-# Click "open config with profile highlighted" button in profile header (id="open-with-highlight")
-# zowe.config.json should be open
-# Close zowe.config.json
-# Click the "zosmf2" entry in the profile list
-# Click the "set as default" button (id="set-as-default")
-# Save the changes
-# check zowe.config.json that defaults.zosmf = "zosmf2" (get file contents, json parse, check default.zosmf)
-# Click the "nested.child1" entry in the profile list
-# There should be three entries (denoted by property-entry class) and only 1 of them should have cursor: pointer
-# Click the "hide merged" properties button in the header (id="merge-property-toggle")
-# There shuld be zero entries (property-entry class) that have cursor: pointer
-# Click the rename profile button (id="rename-profile")
-# Append "1" to the profile name in the modal that appears (id: profile-name)
-# Click the rename-confirm button (id: "rename-confirm" or press enter)
-# Click the "test-profile" entry in the profile list
-# Click the delete button (id: delete-profile")
-# Save the changes
-# Check that profile nested.child11 exists and that test-profile does not (get json, parse, check entries in profiles in json)
+Feature: Profile Headers and Configuration Management
+
+  Background:
+    When a user opens the Zowe Config Editor from the Command Palette
+    Then the Zowe Config Editor webview should be opened
+    And the profile list is set to flat view mode
+
+  Scenario: Test profile header functionality
+    # Test 1: Set profile as default and verify configuration
+    #When the user clicks on the "test-profile" profile entry
+    #And the user clicks the "set as default" button
+    #And the user saves the changes
+    #Then the zowe.config.json should have "test-profile" as the default base profile
+
+    # Test 2: View profile properties and toggle merged properties
+    When the user clicks on the "nested.child1" profile entry
+    Then the profile selection should be successful
+    Then there should be 4 profile properties
+    When the user clicks the "hide merged properties" button
+    Then there should be 2 profile properties
+    Then the hide merged properties button click should be successful

@@ -55,6 +55,7 @@ interface RenderProfileDetailsProps {
   hiddenItems: { [configPath: string]: { [key: string]: { path: string } } };
   secureValuesAllowed: boolean;
   SORT_ORDER_OPTIONS: PropertySortOrder[];
+  propertyDescriptions: { [key: string]: string };
   mergedProperties: any;
   pendingDefaults: { [configPath: string]: { [key: string]: PendingDefault } };
 
@@ -132,6 +133,7 @@ export const RenderProfileDetails = ({
   hiddenItems,
   secureValuesAllowed,
   SORT_ORDER_OPTIONS,
+  propertyDescriptions,
   mergedProperties,
   isProfileDefault,
   getProfileType,
@@ -368,6 +370,7 @@ export const RenderProfileDetails = ({
                   hiddenItems={hiddenItems}
                   secureValuesAllowed={secureValuesAllowed}
                   SORT_ORDER_OPTIONS={SORT_ORDER_OPTIONS}
+                  propertyDescriptions={propertyDescriptions}
                   handleChange={handleChange}
                   handleDeleteProperty={handleDeleteProperty}
                   handleUnlinkMergedProperty={handleUnlinkMergedProperty}

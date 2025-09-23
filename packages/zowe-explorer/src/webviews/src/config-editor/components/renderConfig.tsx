@@ -63,6 +63,7 @@ interface RenderConfigProps {
   hiddenItems: { [configPath: string]: { [key: string]: { path: string } } };
   secureValuesAllowed: boolean;
   SORT_ORDER_OPTIONS: PropertySortOrder[];
+  propertyDescriptions: { [key: string]: string };
 
   // Handler functions
   handleChange: (key: string, value: string) => void;
@@ -122,6 +123,7 @@ export const RenderConfig = ({
   hiddenItems,
   secureValuesAllowed,
   SORT_ORDER_OPTIONS,
+  propertyDescriptions,
   handleChange,
   handleDeleteProperty,
   handleUnlinkMergedProperty,
@@ -532,6 +534,7 @@ export const RenderConfig = ({
               <div
                 key={fullKey}
                 className="config-item"
+                data-testid="profile-property-entry"
                 onClick={jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
                 title={
                   jsonLoc
@@ -553,9 +556,10 @@ export const RenderConfig = ({
                 }
                 style={{ cursor: jsonLoc ? "pointer" : "default" }}
               >
-                <div className="config-item-container">
+                <div className="config-item-container " data-testid="profile-property-container">
                   <span
                     className="config-label"
+                    title={displayKey ? propertyDescriptions[displayKey] || "" : ""}
                     style={{
                       color: "var(--vscode-descriptionForeground)",
                       cursor: "pointer",
@@ -609,9 +613,10 @@ export const RenderConfig = ({
           const isSecureForSorting = isSecurePropertyForSorting;
 
           const readOnlyContainer = (
-            <div className="config-item-container" style={displayKey === "type" ? { gap: "0px" } : {}}>
+            <div className="config-item-container " data-testid="profile-property-container" style={displayKey === "type" ? { gap: "0px" } : {}}>
               <span
                 className="config-label"
+                title={displayKey ? propertyDescriptions[displayKey] || "" : ""}
                 style={
                   isFromMergedProps && !isDeletedMergedProperty
                     ? {
@@ -839,6 +844,7 @@ export const RenderConfig = ({
             <div
               key={fullKey}
               className="config-item property-entry"
+              data-testid="profile-property-entry"
               onClick={isFromMergedProps && !isDeletedMergedProperty && jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
               title={
                 isFromMergedProps && !isDeletedMergedProperty && jsonLoc
@@ -925,6 +931,7 @@ export const RenderConfig = ({
       SORT_ORDER_OPTIONS,
       getSortOrderDisplayName,
       setPropertySortOrderWithStorage,
+      propertyDescriptions,
     ]
   );
 

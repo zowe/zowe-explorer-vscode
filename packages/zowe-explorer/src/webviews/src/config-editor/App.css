@@ -1394,3 +1394,60 @@ ul {
 .header-level-1[style*="cursor: pointer"]:hover {
     color: var(--vscode-button-foreground);
 }
+
+/* Auth Order Button Styles */
+.auth-order-buttons {
+    margin-top: 8px;
+}
+
+.auth-order-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground);
+}
+
+.auth-order-button-container {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.auth-order-button {
+    padding: 4px 8px;
+    border: 1px solid var(--vscode-button-border);
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 400;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+
+.auth-order-button:hover {
+    background-color: var(--vscode-button-hoverBackground);
+    border-color: var(--vscode-button-hoverBorder);
+    opacity: 1;
+}
+
+.auth-order-button.selected {
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border-color: var(--vscode-button-border);
+    font-weight: 600;
+    opacity: 1;
+}
+
+.auth-order-button.selected:hover {
+    background-color: var(--vscode-button-hoverBackground);
+    border-color: var(--vscode-button-hoverBorder);
+    color: var(--vscode-button-foreground);
+}
+
+.auth-order-error {
+    margin-top: 8px;
+    color: var(--vscode-errorForeground);
+    font-size: 12px;
+}

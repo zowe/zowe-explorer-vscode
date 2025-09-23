@@ -88,7 +88,13 @@ export function ProfileWizardModal({
     const currentValue = wizardNewPropertyValue.trim();
     const authMethods = currentValue ? currentValue.split(",").map((m) => m.trim()) : [];
 
-    if (!authMethods.includes(authMethod)) {
+    if (authMethods.includes(authMethod)) {
+      // Remove the auth method if it's already present
+      const newAuthMethods = authMethods.filter((method) => method !== authMethod);
+      const newValue = newAuthMethods.join(", ");
+      onNewPropertyValueChange(newValue);
+    } else {
+      // Add the auth method if it's not present
       const newAuthMethods = [...authMethods, authMethod];
       const newValue = newAuthMethods.join(", ");
       onNewPropertyValueChange(newValue);
@@ -334,15 +340,14 @@ export function ProfileWizardModal({
                     <label className="auth-order-label">{l10n.t("Select Authentication Order")}:</label>
                     <div className="auth-order-button-container">
                       {["token", "basic", "bearer", "cert-pem"].map((authMethod) => {
-                        const isDisabled = isAuthMethodAlreadyAdded(authMethod);
+                        const isSelected = isAuthMethodAlreadyAdded(authMethod);
                         return (
                           <button
                             key={authMethod}
                             type="button"
                             onClick={() => handleAuthMethodClick(authMethod)}
-                            className={`auth-order-button ${isDisabled ? "disabled" : ""}`}
-                            disabled={isDisabled}
-                            title={getAuthMethodTooltip(authMethod)}
+                            className={`auth-order-button ${isSelected ? "selected" : ""}`}
+                            title={`${getAuthMethodTooltip(authMethod)} (${isSelected ? "Click to remove" : "Click to add"})`}
                           >
                             {authMethod}
                           </button>

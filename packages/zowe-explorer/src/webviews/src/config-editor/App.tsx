@@ -1737,6 +1737,7 @@ export function App() {
             canPropertyBeSecure={canPropertyBeSecureWrapper}
             isMergedPropertySecure={isMergedPropertySecure}
             isProfileAffectedByDragDrop={isProfileAffectedByDragDrop}
+            propertyDescriptions={getWizardPropertyDescriptions()}
           />
         )}
         renderDefaults={(defaults) => (

@@ -23,14 +23,17 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
 
         // Check if there are any webviews open (Config Editor uses webviews)
         const webviews = await workbench.getAllWebviews();
+        console.log(`Found ${webviews.length} webviews`);
         if (webviews && webviews.length > 0) {
             // If there are webviews open, assume one is the Config Editor and just activate it
             try {
                 await webviews[0].open();
-                await browser.pause(200);
+                await browser.pause(50);
+                console.log("Successfully activated existing webview");
                 return; // Skip opening Command Palette
             } catch (webviewError) {
                 // Continue to Command Palette if webview activation fails
+                console.log("Webview activation failed, continuing to Command Palette");
             }
         }
 
@@ -55,7 +58,7 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
                     if (title === "Config Editor") {
                         // Config Editor is already open, just activate it
                         await editorView.openEditor("Config Editor");
-                        await browser.pause(200);
+                        await browser.pause(50);
                         return; // Skip opening Command Palette
                     }
                 } catch (tabError) {
@@ -66,6 +69,7 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
         }
     } catch (error) {
         // If we can't check for existing tabs, proceed with opening Command Palette
+        console.log("Error checking for existing Config Editor, proceeding to Command Palette");
     }
 
     // Enhanced cleanup before opening Command Palette
@@ -73,14 +77,14 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
         // Multiple escape presses to ensure clean state
         for (let i = 0; i < 3; i++) {
             await browser.keys("Escape");
-            await browser.pause(200);
+            await browser.pause(50);
         }
 
         // Click on workbench to ensure focus
         const workbenchElement = await browser.$(".monaco-workbench");
         if (await workbenchElement.isExisting()) {
             await workbenchElement.click();
-            await browser.pause(200);
+            await browser.pause(50);
         }
     } catch (error) {
         // Ignore errors
@@ -88,42 +92,24 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
 
     // Open Command Palette (Ctrl+Shift+P on Linux/Windows)
     await browser.keys([Key.Ctrl, Key.Shift, "P"]);
-    await browser.pause(300); // Give time for Command Palette to appear
+    await browser.pause(100); // Give time for Command Palette to appear
 
-    // Wait for quick pick to show with longer timeout and retry logic
-    let retries = 3;
-    while (retries > 0) {
-        try {
-            // Try multiple ways to detect Command Palette
-            await browser.waitUntil(
-                async () => {
-                    try {
-                        return await quickPick.isDisplayed();
-                    } catch {
-                        // Try alternative detection
-                        const quickPickElement = await browser.$(".quick-input-widget");
-                        return await quickPickElement.isDisplayed();
-                    }
-                },
-                {
-                    timeout: 3000,
-                    timeoutMsg: "Expected Command Palette to be visible",
-                }
-            );
-            break; // Success, exit retry loop
-        } catch (error) {
-            retries--;
-            if (retries === 0) {
-                throw error; // Re-throw if all retries failed
+    // Wait for quick pick to show
+    await browser.waitUntil(
+        async () => {
+            try {
+                return await quickPick.isDisplayed();
+            } catch {
+                // Try alternative detection
+                const quickPickElement = await browser.$(".quick-input-widget");
+                return await quickPickElement.isDisplayed();
             }
-            // More aggressive cleanup before retry
-            await browser.keys("Escape");
-            await browser.pause(300);
-            // Retry opening Command Palette
-            await browser.keys([Key.Ctrl, Key.Shift, "P"]);
-            await browser.pause(500);
+        },
+        {
+            timeout: 3000,
+            timeoutMsg: "Expected Command Palette to be visible",
         }
-    }
+    );
 
     // Type the command
     await browser.keys("Zowe Explorer: Edit Zowe Config Files");
@@ -147,7 +133,7 @@ Then("the Zowe Config Editor webview should be opened", async () => {
             }
         },
         {
-            timeout: 5000,
+            timeout: 3000,
             timeoutMsg: "Expected Zowe Config Editor to be opened",
         }
     );
