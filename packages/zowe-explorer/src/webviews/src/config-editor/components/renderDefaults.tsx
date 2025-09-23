@@ -157,6 +157,7 @@ export const RenderDefaults = ({
                     <div className="config-item-container defaults-container">
                       <span className="config-label">{key}</span>
                       <select
+                        id={`default-dropdown-${key}`}
                         className={`config-input ${!displayValue ? "placeholder-style" : ""}`}
                         value={displayValue}
                         onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLSelectElement).value)}

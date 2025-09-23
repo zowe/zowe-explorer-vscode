@@ -21,15 +21,15 @@ Then("the profile list should be in tree view mode", async () => {
     await webview.open();
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 10000 });
+    await profileList.waitForExist({ timeout: 1000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
     expect(viewMode).toBe("tree");
 });
 
-When("the user switches to flat view mode", async () => {
+When("the user switches to flat view mode", async function () {
     const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
-    await viewToggleButton.waitForExist({ timeout: 5000 });
+    await viewToggleButton.waitForExist({ timeout: 1000 });
     await viewToggleButton.click();
     await browser.pause(50);
 
@@ -40,7 +40,7 @@ When("the user switches to flat view mode", async () => {
             return viewMode === "flat";
         },
         {
-            timeout: 5000,
+            timeout: 1000,
             timeoutMsg: "Failed to switch to flat view",
         }
     );
@@ -48,14 +48,14 @@ When("the user switches to flat view mode", async () => {
 
 When("the user clicks on the search input field", async () => {
     const searchInput = await browser.$("input[placeholder='Search...']");
-    await searchInput.waitForExist({ timeout: 5000 });
+    await searchInput.waitForExist({ timeout: 1000 });
     await searchInput.click();
     await browser.pause(50);
 });
 
 When("the user types {string} in the search field", async (searchTerm: string) => {
     const searchInput = await browser.$("input[placeholder='Search...']");
-    await searchInput.waitForExist({ timeout: 5000 });
+    await searchInput.waitForExist({ timeout: 1000 });
 
     await searchInput.clearValue();
 
@@ -66,16 +66,16 @@ When("the user types {string} in the search field", async (searchTerm: string) =
 
 When("the user clicks the clear search button", async () => {
     const clearButton = await browser.$("button[title='Clear search']");
-    await clearButton.waitForExist({ timeout: 5000 });
+    await clearButton.waitForExist({ timeout: 1000 });
     await clearButton.click();
-    await browser.pause(300); // Wait for search to clear
+    await browser.pause(50);
 });
 
 Then("the profile list should show only profiles containing {string}", async (searchTerm: string) => {
-    await browser.pause(500);
+    await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 5000 });
+    await profileList.waitForExist({ timeout: 1000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -95,10 +95,10 @@ Then("the profile list should show only profiles containing {string}", async (se
 });
 
 Then("the profile list should show all profiles", async () => {
-    await browser.pause(500);
+    await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 5000 });
+    await profileList.waitForExist({ timeout: 100 });
 
     const totalProfiles = await profileList.getAttribute("data-total-profiles");
     const visibleProfiles = await profileList.getAttribute("data-profile-count");
@@ -150,7 +150,7 @@ Then("the profile list should show no profiles", async () => {
     await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 5000 });
+    await profileList.waitForExist({ timeout: 1000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -166,7 +166,7 @@ Then("the profile list should show no profiles", async () => {
 
 Then("the profile count should be {int}", async (expectedCount: number) => {
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 5000 });
+    await profileList.waitForExist({ timeout: 1000 });
 
     const actualCount = await profileList.getAttribute("data-profile-count");
     expect(parseInt(actualCount)).toBe(expectedCount);
@@ -176,7 +176,7 @@ Then("the profile list should show the nested profile and its children", async (
     await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 5000 });
+    await profileList.waitForExist({ timeout: 1000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 

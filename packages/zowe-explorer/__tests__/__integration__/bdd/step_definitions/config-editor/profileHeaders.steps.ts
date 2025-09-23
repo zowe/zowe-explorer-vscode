@@ -12,34 +12,34 @@
 import { Given, When, Then } from "@cucumber/cucumber";
 import * as fs from "fs";
 import * as path from "path";
+import { verifyProfiles } from "./profileTree.steps";
 
 declare const browser: any;
 declare const expect: any;
 
 // Background steps - Config Editor opening is handled by Setup.steps.ts
 
-Given("the profile list is set to flat view mode", async () => {
-    const workbench = await browser.getWorkbench();
+Given("the profile list is set to flat view mode", async function () {
+    this.workbench = await browser.getWorkbench();
 
     // Get the webview and wait for it to be ready
-    const webview = (await workbench.getAllWebviews())[0];
-    await webview.wait();
-    await webview.open();
+    this.webview = (await this.workbench.getAllWebviews())[0];
+    await this.webview.wait();
+    await this.webview.open();
 
     // Wait for the main app container to exist first
     const appContainer = await browser.$("[data-testid='config-editor-app']");
-    await appContainer.waitForExist({ timeout: 5000 });
+    await appContainer.waitForExist({ timeout: 1000 });
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 3000 });
+    await profileList.waitForExist({ timeout: 1000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
     if (viewMode !== "flat") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
-        await viewToggleButton.waitForExist({ timeout: 3000 });
+        await viewToggleButton.waitForExist({ timeout: 1000 });
         await viewToggleButton.click();
-        await browser.pause(100);
 
         await browser.waitUntil(
             async () => {
@@ -48,7 +48,7 @@ Given("the profile list is set to flat view mode", async () => {
                 return updatedViewMode === "flat";
             },
             {
-                timeout: 3000,
+                timeout: 1000,
                 timeoutMsg: "Failed to switch to flat view",
             }
         );
@@ -57,30 +57,26 @@ Given("the profile list is set to flat view mode", async () => {
 
 // Helper function to ensure Config Editor is ready
 async function ensureConfigEditorReady() {
-    // Wait for the main app container to exist
     const appContainer = await browser.$("[data-testid='config-editor-app']");
-    await appContainer.waitForExist({ timeout: 5000 });
-    await browser.pause(100); // Give time for the app to fully load
+    await appContainer.waitForExist({ timeout: 1000 });
 }
 
-// Profile interaction steps
-When("the user clicks on the {string} profile entry", async (profileName: string) => {
+When("the user clicks on the {string} profile entry", async function (profileName: string) {
     await ensureConfigEditorReady();
 
     const profileItem = await browser.$(`[data-testid='profile-list-item'][data-profile-name='${profileName}']`);
-    await profileItem.waitForExist({ timeout: 3000 });
+    await profileItem.waitForExist({ timeout: 1000 });
     await profileItem.click();
     await browser.pause(50);
 });
 
-When("the user clicks the {string} button", async (buttonText: string) => {
+When("the user clicks the {string} button", async function (buttonText: string) {
     await ensureConfigEditorReady();
 
     // Wait for profile details section to be ready
     const profileDetailsSection = await browser.$(".profile-details-section");
-    await profileDetailsSection.waitForExist({ timeout: 3000 });
-    await browser.pause(100); // Give more time for profile details to load
-
+    await profileDetailsSection.waitForExist({ timeout: 1000 });
+    await browser.pause(50);
     let button;
 
     switch (buttonText) {
@@ -104,22 +100,22 @@ When("the user clicks the {string} button", async (buttonText: string) => {
             // Look for button with trash icon
             button = await browser.$(".profile-action-button .codicon-trash");
             break;
-        case "rename-confirm":
+        case "rename confirm":
             button = await browser.$("#rename-confirm");
             break;
         default:
             throw new Error(`Unknown button: ${buttonText}`);
     }
 
-    await button.waitForExist({ timeout: 3000 });
+    await button.waitForExist({ timeout: 1000 });
     await button.click();
     await browser.pause(50);
 });
 
-When("the user appends {string} to the profile name in the modal", async (textToAppend: string) => {
+When("the user appends {string} to the profile name in the modal", async function (textToAppend: string) {
     await ensureConfigEditorReady();
     const profileNameInput = await browser.$("#profile-name");
-    await profileNameInput.waitForExist({ timeout: 3000 });
+    await profileNameInput.waitForExist({ timeout: 1000 });
 
     const currentValue = await profileNameInput.getValue();
     await profileNameInput.setValue(currentValue + textToAppend);
@@ -131,7 +127,7 @@ When("the user saves the changes", async () => {
 
     // Click the Save button in the footer
     const saveButton = await browser.$(".footer button[title='Save all changes']");
-    await saveButton.waitForExist({ timeout: 3000 });
+    await saveButton.waitForExist({ timeout: 1000 });
     await saveButton.click();
     await browser.pause(500); // Wait for save to complete
 });
@@ -179,7 +175,7 @@ Then("the zowe.config.json file should be open", async () => {
                 }
             },
             {
-                timeout: 5000,
+                timeout: 1000,
                 timeoutMsg: "Expected zowe.config.json to be opened",
             }
         );
@@ -188,7 +184,7 @@ Then("the zowe.config.json file should be open", async () => {
 
 Then("the zowe.config.json should have {string} as the default zosmf profile", async (expectedDefault: string) => {
     // Get the zowe.config.json file path
-    const configPath = await getZoweConfigPath();
+    const configPath = path.join(process.cwd(), "..", "ci", "zowe.config.json");
 
     // Read and parse the config file
     const configContent = fs.readFileSync(configPath, "utf8");
@@ -199,7 +195,7 @@ Then("the zowe.config.json should have {string} as the default zosmf profile", a
 
 Then("the zowe.config.json should have {string} as the default base profile", async (expectedDefault: string) => {
     // Get the zowe.config.json file path
-    const configPath = await getZoweConfigPath();
+    const configPath = path.join(process.cwd(), "..", "ci", "zowe.config.json");
 
     // Read and parse the config file
     const configContent = fs.readFileSync(configPath, "utf8");
@@ -219,7 +215,7 @@ Then("there should be {int} profile properties", async (expectedCount: number) =
 
     // Wait for profile details section to be ready
     const profileDetailsSection = await browser.$(".profile-details-section");
-    await profileDetailsSection.waitForExist({ timeout: 3000 });
+    await profileDetailsSection.waitForExist({ timeout: 1000 });
     await browser.pause(50);
 
     const propertyEntries = await browser.$$("[data-testid='profile-property-entry']");
@@ -227,127 +223,109 @@ Then("there should be {int} profile properties", async (expectedCount: number) =
     expect(propertyEntries.length).toBe(expectedCount);
 });
 
-Then("only one property entry should have cursor pointer styling", async () => {
-    await ensureConfigEditorReady();
-    const propertyEntries = await browser.$$(".config-item.property-entry");
-    let pointerCount = 0;
-
-    for (const entry of propertyEntries) {
-        const cursorStyle = await entry.getCSSProperty("cursor");
-        if (cursorStyle.value === "pointer") {
-            pointerCount++;
-        }
-    }
-
-    expect(pointerCount).toBe(1);
-});
-
-Then("there should be zero property entries with cursor pointer styling", async () => {
-    await ensureConfigEditorReady();
-    const propertyEntries = await browser.$$(".config-item.property-entry");
-    let pointerCount = 0;
-
-    for (const entry of propertyEntries) {
-        const cursorStyle = await entry.getCSSProperty("cursor");
-        if (cursorStyle.value === "pointer") {
-            pointerCount++;
-        }
-    }
-
-    expect(pointerCount).toBe(0);
-});
-
-Then("the button click should be successful", async () => {
-    // Just verify that the button click completed without errors
-    // The button click itself is the test - if we get here, it worked
-    await browser.pause(100); // Give time for any side effects to complete
-
-    // Clean up any overlays or focus issues that might interfere with subsequent clicks
+Then("the button click should be successful", async function () {
+    await browser.pause(50);
     try {
-        // Click on the webview to ensure it has focus
         const webview = await browser.$("[data-testid='config-editor-app']");
         if (await webview.isExisting()) {
             await webview.click();
             await browser.pause(50);
         }
 
-        // Press Escape to close any open modals or overlays
         await browser.keys("Escape");
         await browser.pause(50);
     } catch (error) {}
 });
 
-Then("the set as default button click should be successful", async () => {
-    await browser.pause(100);
+Then("the set as default button click should be successful", async function () {
+    await browser.pause(50);
 });
 
-Then("the profile selection should be successful", async () => {
-    await browser.pause(100);
+Then("the profile selection should be successful", async function () {
+    await browser.pause(50);
 });
 
-Then("the hide merged properties button click should be successful", async () => {
-    await browser.pause(100);
+Then("the hide merged properties button click should be successful", async function () {
+    await browser.pause(50);
 });
 
-Then("the rename profile button click should be successful", async () => {
-    await browser.pause(100);
+Then("the rename profile button click should be successful", async function () {
+    await browser.pause(50);
 });
 
-Then("the delete profile button click should be successful", async () => {
-    await browser.pause(100);
+Then("the delete profile button click should be successful", async function () {
+    await browser.pause(50);
 });
 
-Then("the profile should be renamed to {string}", async (expectedName: string) => {
+Then("the profile should be renamed to {string}", async function (expectedName: string) {
     await ensureConfigEditorReady();
-    // Verify the profile appears in the list with the new name
     const renamedProfile = await browser.$(`[data-testid='profile-list-item'][data-profile-name='${expectedName}']`);
-    await renamedProfile.waitForExist({ timeout: 3000 });
+    await renamedProfile.waitForExist({ timeout: 1000 });
 
-    // Also verify in the config file
-    const configPath = await getZoweConfigPath();
+    const configPath = path.join(process.cwd(), "..", "ci", "zowe.config.json");
     const configContent = fs.readFileSync(configPath, "utf8");
     const config = JSON.parse(configContent);
 
     expect(config.profiles?.[expectedName]).toBeDefined();
 });
 
-Then("the {string} profile should exist in the configuration", async (profileName: string) => {
-    const configPath = await getZoweConfigPath();
+Then("the {string} profile should exist in the configuration", async function (profileName: string) {
+    const configPath = path.join(process.cwd(), "..", "ci", "zowe.config.json");
     const configContent = fs.readFileSync(configPath, "utf8");
     const config = JSON.parse(configContent);
 
     expect(config.profiles?.[profileName]).toBeDefined();
 });
 
-Then("the {string} should not exist in the configuration", async (profileName: string) => {
-    const configPath = await getZoweConfigPath();
+Then("the {string} should not exist in the configuration", async function (profileName: string) {
+    const configPath = path.join(process.cwd(), "..", "ci", "zowe.config.json");
     const configContent = fs.readFileSync(configPath, "utf8");
     const config = JSON.parse(configContent);
 
     expect(config.profiles?.[profileName]).toBeUndefined();
 });
 
-// Helper function to get zowe.config.json path
-async function getZoweConfigPath(): Promise<string> {
-    // Use the test data config file - we're already in __tests__/__integration__/bdd
-    const testConfigPath = path.join(process.cwd(), "..", "ci", "zowe.config.json");
-    if (fs.existsSync(testConfigPath)) {
-        return testConfigPath;
+Then("the profile tree should contain expected profiles from zowe.config.json with proper renames", async function () {
+    this.workbench = await browser.getWorkbench();
+    await verifyProfiles(
+        ["zosmf1", "zosmf2", "zosmf3", "base", "ssh1", "tso1", "zosmf-dev_test", "zosmf-prod", "test-profile", "special-chars", "nested"],
+        [
+            "zosmf1",
+            "zosmf2",
+            "zosmf3",
+            "base",
+            "ssh1",
+            "tso1",
+            "zosmf-dev_test",
+            "zosmf-prod",
+            "test-profile",
+            "special-chars",
+            "nested",
+            "nested.child1",
+            "nested.child2_test",
+        ],
+        this.workbench
+    );
+});
+Then("the profile tree should contain expected profiles from zowe.config.json with proper deletions", async function () {
+    this.workbench = await browser.getWorkbench();
+    await verifyProfiles(
+        ["zosmf1", "zosmf2", "zosmf3", "base", "ssh1", "tso1", "zosmf-prod", "test-profile", "special-chars", "nested"],
+        ["zosmf1", "zosmf2", "zosmf3", "base", "ssh1", "tso1", "zosmf-prod", "test-profile", "special-chars", "nested", "nested.child1"],
+        this.workbench
+    );
+});
+Then("the profile tree should contain expected profiles from zowe.config.json with proper nested profile deletions", async function () {
+    this.workbench = await browser.getWorkbench();
+    await verifyProfiles(
+        ["zosmf1", "zosmf2", "zosmf3", "base", "ssh1", "tso1", "zosmf-prod", "test-profile", "special-chars"],
+        ["zosmf1", "zosmf2", "zosmf3", "base", "ssh1", "tso1", "zosmf-prod", "test-profile", "special-chars"],
+        this.workbench
+    );
+});
+
+Then("close the webview workbench", async function () {
+    if (this.webview) {
+        this.webview.close();
     }
-
-    // Fallback to other possible locations if test file doesn't exist
-    const possiblePaths = [
-        path.join(process.cwd(), "zowe.config.json"),
-        path.join(process.env.HOME || process.env.USERPROFILE || "", ".zowe", "settings", "imperative", "zowe.config.json"),
-        path.join(process.env.HOME || process.env.USERPROFILE || "", ".zowe", "zowe.config.json"),
-        path.join(process.env.USERPROFILE || "", ".zowe", "zowe.config.json"), // Windows specific
-    ];
-
-    for (const configPath of possiblePaths) {
-        if (fs.existsSync(configPath)) {
-            return configPath;
-        }
-    }
-
-    return testConfigPath;
-}
+});

@@ -12,12 +12,14 @@
 import { When, Then } from "@cucumber/cucumber";
 import { Key } from "webdriverio";
 import quickPick from "../../../../__pageobjects__/QuickPick";
+import { restoreZoweConfig } from "../../features/config-editor/utils";
 
 //
 // Scenario: User opens the Zowe Config Editor via Command Palette
 //
 When("a user opens the Zowe Config Editor from the Command Palette", async () => {
     // First, check if Config Editor is already open
+    restoreZoweConfig();
     try {
         const workbench = await browser.getWorkbench();
 
@@ -67,6 +69,12 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
                 }
             }
         }
+        try {
+            const webviews = await workbench.getAllWebviews();
+            for (const webview of webviews) {
+                await webview.close();
+            }
+        } catch (error) {}
     } catch (error) {
         // If we can't check for existing tabs, proceed with opening Command Palette
         console.log("Error checking for existing Config Editor, proceeding to Command Palette");
@@ -74,13 +82,11 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
 
     // Enhanced cleanup before opening Command Palette
     try {
-        // Multiple escape presses to ensure clean state
         for (let i = 0; i < 3; i++) {
             await browser.keys("Escape");
             await browser.pause(50);
         }
 
-        // Click on workbench to ensure focus
         const workbenchElement = await browser.$(".monaco-workbench");
         if (await workbenchElement.isExisting()) {
             await workbenchElement.click();
@@ -90,9 +96,8 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
         // Ignore errors
     }
 
-    // Open Command Palette (Ctrl+Shift+P on Linux/Windows)
     await browser.keys([Key.Ctrl, Key.Shift, "P"]);
-    await browser.pause(100); // Give time for Command Palette to appear
+    await browser.pause(50);
 
     // Wait for quick pick to show
     await browser.waitUntil(
@@ -106,7 +111,7 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
             }
         },
         {
-            timeout: 3000,
+            timeout: 1000,
             timeoutMsg: "Expected Command Palette to be visible",
         }
     );
@@ -118,7 +123,7 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
     await browser.keys(Key.Enter);
 });
 
-Then("the Zowe Config Editor webview should be opened", async () => {
+Then("the Zowe Config Editor webview should be opened", async function () {
     const workbench = await browser.getWorkbench();
     const editorView = workbench.getEditorView();
 
@@ -133,7 +138,7 @@ Then("the Zowe Config Editor webview should be opened", async () => {
             }
         },
         {
-            timeout: 3000,
+            timeout: 1000,
             timeoutMsg: "Expected Zowe Config Editor to be opened",
         }
     );

@@ -127,6 +127,7 @@ export function Tabs({
               <div
                 key={index}
                 className={`tab ${selectedTab === index ? "active" : ""}`}
+                id={`global:${config.global},user:${config.user}`}
                 onClick={() => onTabChange(index)}
                 onContextMenu={(e) => handleTabRightClick(e, index)}
               >
@@ -267,6 +268,7 @@ export function Tabs({
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
             }}
+            id="tab-open-file"
           >
             <span id="open-file" className="codicon codicon-go-to-file" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
             Open File
@@ -318,6 +320,7 @@ export function Tabs({
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = "transparent";
               }}
+              id="tab-open-schema"
             >
               <span id="open-schema" className="codicon codicon-file-code" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
               Open Schema
@@ -344,6 +347,7 @@ export function Tabs({
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
             }}
+            id="tab-toggle-autostore"
           >
             <span className="codicon codicon-settings-gear" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
             {(() => {

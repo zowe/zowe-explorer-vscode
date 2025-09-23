@@ -16,7 +16,7 @@ declare const expect: any;
 
 When("the user selects {string} from the type filter dropdown", async (filterType: string) => {
     const typeFilterSelect = await browser.$("select");
-    await typeFilterSelect.waitForExist({ timeout: 5000 });
+    await typeFilterSelect.waitForExist({ timeout: 1000 });
 
     // Select the option by visible text
     await typeFilterSelect.selectByVisibleText(filterType);
@@ -28,7 +28,7 @@ Then("the profile list should show only profiles of type {string}", async (expec
     await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 5000 });
+    await profileList.waitForExist({ timeout: 1000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -57,7 +57,7 @@ Then("the profile list should show profiles of type {string} and their parents i
     await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 5000 });
+    await profileList.waitForExist({ timeout: 1000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
     expect(viewMode).toBe("tree"); // Ensure we're in tree view
@@ -83,7 +83,7 @@ Then("the profile list should show only profiles containing {string} and of type
     await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 5000 });
+    await profileList.waitForExist({ timeout: 1000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
