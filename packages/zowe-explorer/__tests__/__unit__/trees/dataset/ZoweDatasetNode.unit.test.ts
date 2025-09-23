@@ -1856,7 +1856,7 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
     });
     it("uses getCount from mvsApi when available to set totalItems", async () => {
         const mocks = createGlobalMocks(); // Get existing mocks
-        const getCountMock = jest.fn().mockResolvedValue(42);
+        const getCountMock = jest.fn().mockResolvedValue({ count: 42, lastItem: "SOME.DATASET" });
         mocks.mvsApi.getCount = getCountMock;
         const sessionNode = new ZoweDatasetNode({
             label: "sestest",
