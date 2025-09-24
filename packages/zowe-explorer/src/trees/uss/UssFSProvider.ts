@@ -77,8 +77,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
 
-        const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+        if (AuthHandler.sessTypeFromProfile(uriInfo.profile) === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
+            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+        }
+        const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
+
         // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on USS files only
         if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
             return entry;
@@ -207,6 +211,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
         const entryExists = this.exists(uri);
+
+        if (AuthHandler.sessTypeFromProfile(uriInfo.profile) === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
+            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+        }
 
         // Wait for any ongoing authentication process to complete
         await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);

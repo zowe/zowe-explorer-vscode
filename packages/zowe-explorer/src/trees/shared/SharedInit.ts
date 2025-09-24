@@ -24,6 +24,7 @@ import {
     imperative,
     AuthHandler,
     FsAbstractUtils,
+    UriFsInfo,
 } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
@@ -445,15 +446,28 @@ export class SharedInit {
         const profInfo = Profiles.getInstance();
         const profileNames = new Set<string>();
 
+        let uriMap = new Map<string, UriFsInfo>();
         if (profileType) {
             profInfo.getProfiles(profileType).forEach((prof) => profileNames.add(prof.name));
             newWorkspaces = newWorkspaces.filter((f) => {
-                const uriInfo = FsAbstractUtils.getInfoForUri(f.uri);
+                const uriInfo = FsAbstractUtils.getInfoForUri(f.uri, profInfo);
+                uriMap[f.uri.path] = uriInfo;
                 return profileNames.has(uriInfo.profileName);
             });
         }
 
         for (const folder of newWorkspaces) {
+            const uriInfo = uriMap[folder.uri.path];
+
+            const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
+            if (
+                (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN ||
+                    session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE) &&
+                !uriInfo.profile.profile.tokenValue
+            ) {
+                throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+            }
+
             try {
                 await (folder.uri.scheme === ZoweScheme.DS ? DatasetFSProvider.instance : UssFSProvider.instance).remoteLookupForResource(folder.uri);
             } catch (err) {

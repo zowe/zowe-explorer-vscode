@@ -27,6 +27,7 @@ import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { SharedContext } from "../trees/shared/SharedContext";
+import { ImperativeError } from "@zowe/imperative";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -47,7 +48,9 @@ export class AuthUtils {
         if (AuthHandler.isProfileLocked(profile) && AuthHandler.wasAuthCancelled(profile)) {
             // The original error doesn't matter here, we just need to trigger the flow.
             await this.handleProfileAuthOnError(
-                new Error("User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate."),
+                new ImperativeError({
+                    msg: "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate. (All configured authentication methods failed)",
+                }),
                 profile
             );
         }
