@@ -20,6 +20,7 @@ import * as zowe from "@zowe/cli";
 import { ZoweLogger, sessionMap } from "../../../src/extension";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 import * as tmp from "tmp";
+import { tmpdir } from "os";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -63,7 +64,7 @@ describe("FtpUssApi", () => {
     });
 
     it("should view uss files.", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const localFile = tmp.tmpNameSync({ tmpdir: tmpdir() });
         const response = TestUtils.getSingleLineStream();
         UssUtils.downloadFile = jest.fn().mockReturnValue(response);
 
@@ -93,7 +94,7 @@ describe("FtpUssApi", () => {
     };
 
     it("should upload uss files.", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const localFile = tmp.tmpNameSync({ tmpdir: tmpdir() });
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
         const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
@@ -229,7 +230,7 @@ describe("FtpUssApi", () => {
         jest.spyOn(UssUtils, "downloadFile").mockImplementationOnce(() => {
             throw new Error("Download file failed.");
         });
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const localFile = tmp.tmpNameSync({ tmpdir: tmpdir() });
         const mockParams = {
             ussFilePath: "/a/b/d.txt",
             options: {
