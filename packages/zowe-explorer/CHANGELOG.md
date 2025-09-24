@@ -8,9 +8,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Added support to delete VSAM data sets. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
 - Adopted the new `getCount` API for calculating total items in pagination.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
+- Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
 
 ### Bug fixes
 
+- Fixed regression where a profile was incorrectly detected as using basic authentication, specifically when `tokenValue` was set in the secure array of a parent profile or a default base profile instead of a service profile. [#3855](https://github.com/zowe/zowe-explorer-vscode/pull/3855)
 - Fixed an issue where secure credentials and headers were being logged to the Zowe logger and VSCode output channel. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
 - Updated Zowe SDKs to `8.27.0` for technical currency. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
 
