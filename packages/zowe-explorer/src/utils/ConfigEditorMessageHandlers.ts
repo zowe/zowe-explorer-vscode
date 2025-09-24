@@ -23,14 +23,13 @@ export class ConfigEditorMessageHandlers {
     ) {}
 
     async handleGetProfiles(): Promise<void> {
-        const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+        const profInfo = new ProfileInfo("zowe", {
+            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-             });
+        });
         try {
             await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
-        } catch (err) {
-            // Let getLocalConfigs handle any errors
-        }
+        } catch (err) {}
 
         const configurations = await this.getLocalConfigs();
         const secureValuesAllowed = await this.areSecureValuesAllowed();

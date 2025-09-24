@@ -12,10 +12,6 @@
 import { ConfigMoveAPI, IConfigLayer } from "../webviews/src/config-editor/utils/MoveUtils";
 
 export class ConfigEditorProfileOperations {
-    constructor() {
-        // No dependencies needed for this class
-    }
-
     /**
      * Updates rename keys to handle both parent-first and child-first rename scenarios.
      */
@@ -204,22 +200,15 @@ export class ConfigEditorProfileOperations {
         // 1. The new key is a direct child of the original key AND
         // 2. The original key is already a child of the new key in the existing hierarchy
 
-        // First, check if newKey is a direct child of originalKey
         if (!newKey.startsWith(originalKey + ".")) {
             return false; // Not a child relationship, so no circular reference possible
         }
-
-        // Extract the child part
         const childPart = newKey.substring(originalKey.length + 1);
-
-        // Check if the child part contains the original key (indicating a potential circular reference)
-        // This would happen if we're trying to rename 'parent' to 'parent.child' where 'child'
-        // already contains a reference to 'parent'
         if (childPart.includes(originalKey)) {
             return true;
         }
 
-        // Additional check: if we're renaming a parent to be a child of itself
+        // check if we're renaming a parent to be a child of itself
         // e.g., 'parent' -> 'parent.parent' or 'parent' -> 'parent.child.parent'
         const childParts = childPart.split(".");
         for (const part of childParts) {
@@ -235,7 +224,6 @@ export class ConfigEditorProfileOperations {
      * Checks if a rename operation is creating a nested profile structure
      */
     isNestedProfileCreation(originalKey: string, newKey: string): boolean {
-        // This is a nested profile creation if:
         // 1. The new key starts with the original key + "."
         // 2. The original key is a single-level profile (no dots)
         return newKey.startsWith(originalKey + ".") && !originalKey.includes(".");
@@ -258,10 +246,8 @@ export class ConfigEditorProfileOperations {
             throw new Error(`Source profile not found at path: ${originalPath}`);
         }
 
-        // Extract the child profile name from the new key
         const childProfileName = newKey.substring(originalKey.length + 1);
 
-        // Create the new parent profile structure
         const newParentProfile = {
             ...originalProfile,
             profiles: {
@@ -269,14 +255,9 @@ export class ConfigEditorProfileOperations {
             },
         };
 
-        // Remove the profiles property from the child profile to avoid duplication
         const childProfile = { ...originalProfile };
         delete childProfile.profiles;
-
-        // Set the new parent profile structure
         configMoveAPI.set(originalPath, newParentProfile);
-
-        // Update the child profile within the parent
         const childPath = `${originalPath}.profiles.${childProfileName}`;
         configMoveAPI.set(childPath, childProfile);
 
