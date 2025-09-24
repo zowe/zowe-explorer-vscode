@@ -11,6 +11,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed regression where a profile was incorrectly detected as using basic authentication, specifically when `tokenValue` was set in the secure array of a parent profile or a default base profile instead of a service profile. [#3855](https://github.com/zowe/zowe-explorer-vscode/pull/3855)
 - Fixed an issue where secure credentials and headers were being logged to the Zowe logger and VSCode output channel. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
 - Updated Zowe SDKs to `8.27.0` for technical currency. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
 
