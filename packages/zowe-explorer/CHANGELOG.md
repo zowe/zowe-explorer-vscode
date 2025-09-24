@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Resolved an issue where a member wildcard was not passed to the pattern option on the `allMembers` MVS API when listing data set search patterns that included a member wildcard. [#2978](https://github.com/zowe/zowe-explorer-vscode/issues/2978)
+
 ## `2.18.2`
 
 ### Bug fixes
