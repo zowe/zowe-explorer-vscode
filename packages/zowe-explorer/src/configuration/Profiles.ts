@@ -108,16 +108,20 @@ export class Profiles extends ProfilesCache {
         const teamConfig = (await this.getProfileInfo()).getTeamConfig();
         const profName = teamConfig.api.profiles.getProfilePathFromName(theProfile.name);
 
-        const parts = profName.split(".profiles.");
-        const paths: string[] = [];
+        const getCumulativePaths = (profName: string): string[] => {
+            const parts = profName.split(".profiles.");
+            return parts.slice(1).reduce(
+                (acc, part) => {
+                    const previousPath = acc.length > 0 ? acc[acc.length - 1] : parts[0];
+                    const currentPath = `${previousPath}.profiles.${part}`;
+                    acc.push(currentPath);
+                    return acc;
+                },
+                [parts[0]]
+            );
+        };
 
-        // Build cumulative paths
-        let currentPath = parts[0];
-
-        for (let i = 1; i < parts.length; i++) {
-            currentPath += ".profiles." + parts[i];
-            paths.push(currentPath);
-        }
+        const paths = getCumulativePaths(profName);
 
         // Add all intermediate paths by working backwards
         const allPaths: string[] = [];
@@ -130,6 +134,7 @@ export class Profiles extends ProfilesCache {
                 }
             }
         }
+
         const defaultBase = Constants.PROFILES_CACHE.getDefaultProfile?.("base");
         const profilePath = defaultBase && teamConfig.api.profiles.getProfilePathFromName(defaultBase.name);
         if (profilePath && !allPaths.includes(profilePath)) {
