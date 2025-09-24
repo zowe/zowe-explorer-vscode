@@ -890,8 +890,8 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
-                AuthHandler.unlockProfile(serviceProfile, true);
                 ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
+                AuthHandler.unlockProfile(serviceProfile, true);
             }
             return loginOk;
         } catch (err) {
