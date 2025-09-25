@@ -31,7 +31,6 @@ import {
     IFetchResult,
     NavigationTreeItem,
     PersistenceSchemaEnum,
-    IDataSetCount,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -48,6 +47,7 @@ import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
+import { IDataSetCount } from "@zowe/zowe-explorer-api/src/globals/Interface";
 
 //IDataSetCount type definition
 // type IDataSetCount = {

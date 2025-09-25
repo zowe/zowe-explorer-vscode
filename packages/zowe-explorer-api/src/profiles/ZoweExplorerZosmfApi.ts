@@ -24,15 +24,11 @@ import { ProfilesCache } from "../profiles/ProfilesCache";
 import { VscSettings } from "../vscode/doc/VscSettings";
 import { IZosmfListResponse, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { IDataSetInfo } from "../dataset";
+import { IDataSetCount } from "../globals/Interface";
 
 /**
  * Implementations of Zowe Explorer API for z/OSMF profiles
- */
-export interface IDataSetCount {
-    count: number;
-    lastItem?: string;
-}
-export namespace ZoweExplorerZosmf {
+ */ export namespace ZoweExplorerZosmf {
     /**
      * An implementation of the Zowe Explorer API Common interface for zOSMF.
      */

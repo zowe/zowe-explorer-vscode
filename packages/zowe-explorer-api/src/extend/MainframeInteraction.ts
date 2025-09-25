@@ -16,7 +16,7 @@ import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { Types } from "../Types";
-import { IDataSetCount } from "..";
+import { IDataSetCount } from "../globals/Interface";
 
 export namespace MainframeInteraction {
     export interface ICommon {
