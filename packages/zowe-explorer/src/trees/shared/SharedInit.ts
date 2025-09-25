@@ -24,6 +24,7 @@ import {
     imperative,
     AuthHandler,
     FsAbstractUtils,
+    FsJobsUtils,
 } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
@@ -52,6 +53,7 @@ import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 import { ZoweUriHandler } from "../../utils/UriHandler";
 import { TroubleshootError } from "../../utils/TroubleshootError";
 import { ReleaseNotes } from "../../utils/ReleaseNotes";
+import { JobFSProvider } from "../job/JobFSProvider";
 
 export class SharedInit {
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
@@ -70,7 +72,9 @@ export class SharedInit {
                 if (vscode.window.activeTextEditor) {
                     // Notify spool provider for "manual poll" key event in open spool files
                     const doc = vscode.window.activeTextEditor.document;
-                    if (doc.uri.scheme === "zosspool") {
+                    const entry = JobFSProvider.instance.lookup(doc.uri, false);
+                    const isSpool = FsJobsUtils.isSpoolEntry(entry);
+                    if (isSpool) {
                         await JobActions.spoolFilePollEvent(doc);
                     }
                 }
