@@ -529,6 +529,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const uriInfo = FsAbstractUtils.getInfoForUri(uri);
         await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
+        if (AuthHandler.sessTypeFromProfile(uriInfo.profile) === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
+            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+        }
+
         try {
             ds = this._lookupAsFile(uri) as DsEntry;
         } catch (err) {

@@ -458,18 +458,16 @@ export class SharedInit {
 
         for (const folder of newWorkspaces) {
             const uriInfo = uriMap[folder.uri.path];
-
             const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
-            if (
-                (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN ||
-                    session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE) &&
-                !uriInfo.profile.profile.tokenValue
-            ) {
-                throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
-            }
-
             try {
-                await (folder.uri.scheme === ZoweScheme.DS ? DatasetFSProvider.instance : UssFSProvider.instance).remoteLookupForResource(folder.uri);
+                if (
+                    (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN ||
+                        session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE) &&
+                    !uriInfo.profile.profile.tokenValue
+                ) {
+                    throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+                }
+                await vscode.workspace.fs.readDirectory(folder.uri.with({ query: "fetch=true" }));
             } catch (err) {
                 if (err instanceof Error) {
                     ZoweLogger.error(err.message);
