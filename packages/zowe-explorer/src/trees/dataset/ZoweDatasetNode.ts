@@ -31,6 +31,7 @@ import {
     IFetchResult,
     NavigationTreeItem,
     PersistenceSchemaEnum,
+    IDataSetCount,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -47,6 +48,12 @@ import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
+
+//IDataSetCount type definition
+// type IDataSetCount = {
+//     count: number;
+//     lastItem: string;
+// };
 
 /**
  * A type of TreeItem used to represent sessions and data sets
@@ -702,10 +709,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                                 .map((p) => p.trim())
                         ),
                     ];
-                    const getCountResponse = await mvsApi.getCount(dsPatterns);
+                    const getCountResponse: IDataSetCount = await mvsApi.getCount(dsPatterns);
                     this.paginatorData = {
-                        totalItems: (getCountResponse as any).count,
-                        lastItemName: (getCountResponse as any).lastItem,
+                        totalItems: getCountResponse.count,
+                        lastItemName: getCountResponse.lastItem,
                     };
                 } else {
                     //if getCount() not present for zosmf and extender profiles

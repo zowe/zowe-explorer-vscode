@@ -660,7 +660,7 @@ describe("ZosmfMvsApi", () => {
             };
             dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
             const result = await mvsApi.getCount(patterns);
-            expect(result).toStrictEqual({ count: -1, lastItem: "" });
+            expect(result).toStrictEqual({ count: -1, lastItem: undefined });
         });
         test("returns 0 when apiResponse is empty or undefined", async () => {
             const mockResponse = {
@@ -669,7 +669,7 @@ describe("ZosmfMvsApi", () => {
             };
             dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
             const result = await mvsApi.getCount(patterns);
-            expect(result).toStrictEqual({ count: -1, lastItem: "" });
+            expect(result).toStrictEqual({ count: -1, lastItem: undefined });
         });
         test("handles mixed format: array and items fallback", async () => {
             const mockResponse = {

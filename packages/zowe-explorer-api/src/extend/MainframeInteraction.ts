@@ -16,6 +16,7 @@ import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { Types } from "../Types";
+import { IDataSetCount } from "..";
 
 export namespace MainframeInteraction {
     export interface ICommon {
@@ -392,7 +393,7 @@ export namespace MainframeInteraction {
          * Get count for all the datasets accordingly to dataSetPatterns
          *
          */
-        getCount?(dataSetPatterns: string[]): Promise<Object>;
+        getCount?(dataSetPatterns: string[]): Promise<IDataSetCount>;
     }
 
     /**
