@@ -30,11 +30,6 @@ import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { Definitions } from "../configuration/Definitions";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 
-export enum ProfilesConvertStatus {
-    ConvertSelected,
-    CreateNewSelected,
-}
-
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
     private static noConfigDialogShown = false;
@@ -397,12 +392,7 @@ export class ProfilesUtils {
         if (upgradingFromV1 == null || !ProfilesUtils.mProfileInfo.onlyV1ProfilesExist) {
             return;
         }
-        const userSelection = await ProfilesUtils.v1ProfileOptions();
-
-        // Open the "Add Session" quick pick if the user selected "Create New" in the v1 migration prompt.
-        if (userSelection === ProfilesConvertStatus.CreateNewSelected) {
-            await vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
-        }
+        await ProfilesUtils.v1ProfileOptions();
     }
 
     /**
@@ -597,7 +587,7 @@ export class ProfilesUtils {
         }
     }
 
-    private static async v1ProfileOptions(): Promise<ProfilesConvertStatus | undefined> {
+    private static async v1ProfileOptions(): Promise<void> {
         const v1ProfileErrorMsg = vscode.l10n.t(
             "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles."
         );
@@ -609,15 +599,18 @@ export class ProfilesUtils {
             case createButton:
                 ZoweLogger.info("Create new team configuration chosen.");
                 await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, undefined);
-                return ProfilesConvertStatus.CreateNewSelected;
+                // Open the "Add Session" quick pick if the user selected "Create New" in the v1 migration prompt.
+                vscode.commands.executeCommand("zowe.ds.addSession", SharedTreeProviders.ds);
+                break;
             case convertButton:
                 ZoweLogger.info("Convert v1 profiles to team configuration chosen.");
-                await ProfilesUtils.convertV1Profs();
                 await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V1_MIGRATION_STATUS, undefined);
-                return ProfilesConvertStatus.ConvertSelected;
+                await ProfilesUtils.convertV1Profs();
+                break;
             default:
-                return undefined;
+                return;
         }
+        ProfilesUtils.noConfigDialogShown = true;
     }
 
     /**
@@ -702,6 +695,7 @@ export class ProfilesUtils {
                 successMsg.push(`Converted ${k} profile: ${v.join(", ")}`);
             }
             ZoweLogger.info(successMsg.join("\n"));
+            await profileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: undefined });
             const document = await vscode.workspace.openTextDocument(path.join(FileManagement.getZoweDir(), profileInfo.getTeamConfig().configName));
             if (document) {
                 await Gui.showTextDocument(document);
