@@ -26,6 +26,7 @@ import {
     type AttributeInfo,
     DataSetAttributesProvider,
     ZosEncoding,
+    MessageSeverity,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
@@ -45,6 +46,7 @@ import { Definitions } from "../../configuration/Definitions";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
+import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
 
 export class DatasetActions {
     public static typeEnum: zosfiles.CreateDataSetTypeEnum;
@@ -610,6 +612,334 @@ export class DatasetActions {
         } catch (e) {
             await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
         }
+    }
+
+    private static async getDataSetDownloadOptions(): Promise<Definitions.DataSetDownloadOptions> {
+        const dataSetDownloadOptions: Definitions.DataSetDownloadOptions =
+            ZoweLocalStorage.getValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS) ?? {};
+
+        dataSetDownloadOptions.overwrite ??= true;
+        dataSetDownloadOptions.generateDirectory ??= false;
+        dataSetDownloadOptions.preserveCase ??= false;
+        dataSetDownloadOptions.binary ??= false;
+        dataSetDownloadOptions.record ??= false;
+        dataSetDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
+
+        const optionItems: vscode.QuickPickItem[] = [
+            // TODO: Re-add overwrite option when enhancement is added to API to support it
+            // {
+            //     label: vscode.l10n.t("Overwrite"),
+            //     description: vscode.l10n.t("Overwrite existing files"),
+            //     picked: dataSetDownloadOptions.overwrite,
+            // },
+            {
+                label: vscode.l10n.t("Generate Directory Structure"),
+                description: vscode.l10n.t("Generates sub-folders based on the data set name"),
+                picked: dataSetDownloadOptions.generateDirectory,
+            },
+            {
+                label: vscode.l10n.t("Preserve Original Letter Case"),
+                description: vscode.l10n.t("Specifies if the automatically generated directories and files use the original letter case"),
+                picked: dataSetDownloadOptions.preserveCase,
+            },
+            {
+                label: vscode.l10n.t("Binary"),
+                description: vscode.l10n.t("Download members as binary files"),
+                picked: dataSetDownloadOptions.binary,
+            },
+            {
+                label: vscode.l10n.t("Record"),
+                description: vscode.l10n.t("Download members in record mode"),
+                picked: dataSetDownloadOptions.record,
+            },
+        ];
+
+        const optionsQuickPick = Gui.createQuickPick();
+        optionsQuickPick.title = vscode.l10n.t("Download Options");
+        optionsQuickPick.placeholder = vscode.l10n.t("Select download options");
+        optionsQuickPick.ignoreFocusOut = true;
+        optionsQuickPick.canSelectMany = true;
+        optionsQuickPick.items = optionItems;
+        optionsQuickPick.selectedItems = optionItems.filter((item) => item.picked);
+
+        const selectedOptions: vscode.QuickPickItem[] = await new Promise((resolve) => {
+            let wasAccepted = false;
+
+            optionsQuickPick.onDidAccept(() => {
+                wasAccepted = true;
+                resolve(Array.from(optionsQuickPick.selectedItems));
+                optionsQuickPick.hide();
+            });
+
+            optionsQuickPick.onDidHide(() => {
+                if (!wasAccepted) {
+                    resolve(null);
+                }
+            });
+
+            optionsQuickPick.show();
+        });
+        optionsQuickPick.dispose();
+
+        // Do this instead of checking for length because unchecking all options is a valid choice
+        if (selectedOptions === null) {
+            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+            return;
+        }
+
+        const dialogOptions: vscode.OpenDialogOptions = {
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            openLabel: vscode.l10n.t("Select Download Location"),
+            defaultUri: dataSetDownloadOptions.selectedPath,
+        };
+
+        const downloadPath = await Gui.showOpenDialog(dialogOptions);
+        if (!downloadPath || downloadPath.length === 0) {
+            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+            return;
+        }
+
+        const selectedPath = downloadPath[0].fsPath;
+        const getOption = (label: string): boolean => selectedOptions.some((opt) => opt.label === vscode.l10n.t(label));
+        dataSetDownloadOptions.overwrite = getOption("Overwrite");
+        dataSetDownloadOptions.generateDirectory = getOption("Generate Directory Structure");
+        dataSetDownloadOptions.preserveCase = getOption("Preserve Original Letter Case");
+        dataSetDownloadOptions.binary = getOption("Binary");
+        dataSetDownloadOptions.record = getOption("Record");
+        dataSetDownloadOptions.selectedPath = vscode.Uri.file(selectedPath);
+        await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS, dataSetDownloadOptions);
+
+        return dataSetDownloadOptions;
+    }
+
+    private static generateDirectoryPath(datasetName: string, selectedPath: vscode.Uri, generateDirectory: boolean, preserveCase: boolean): string {
+        if (!generateDirectory) {
+            return selectedPath.fsPath;
+        }
+
+        const dirsFromDataset = zosfiles.ZosFilesUtils.getDirsFromDataSet(datasetName);
+        return preserveCase ? path.join(selectedPath.fsPath, dirsFromDataset.toUpperCase()) : path.join(selectedPath.fsPath, dirsFromDataset);
+    }
+
+    private static async executeDownloadWithProgress(
+        title: string,
+        downloadFn: (progress?: vscode.Progress<{ message?: string; increment?: number }>) => Promise<void>,
+        successMessage: string,
+        node: IZoweDatasetTreeNode
+    ): Promise<void> {
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title,
+                cancellable: true,
+            },
+            async (progress) => {
+                try {
+                    await downloadFn(progress);
+                    Gui.showMessage(successMessage);
+                } catch (e) {
+                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+                }
+            }
+        );
+    }
+
+    /**
+     * Downloads all the members of a PDS
+     */
+    public static async downloadAllMembers(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadDataset called.");
+
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        const children = await node.getChildren();
+        if (!children || children.length === 0) {
+            Gui.showMessage(vscode.l10n.t("The selected data set has no members to download."));
+            return;
+        }
+
+        if (children.length > Constants.MIN_WARN_DOWNLOAD_FILES) {
+            const proceed = await Gui.showMessage(
+                vscode.l10n.t(
+                    "This data set has {0} members. Downloading a large number of files may take a long time. Do you want to continue?",
+                    children.length
+                ),
+                { severity: MessageSeverity.WARN, items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")], vsCodeOpts: { modal: true } }
+            );
+            if (proceed !== vscode.l10n.t("Yes")) {
+                return;
+            }
+        }
+
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions();
+        if (!dataSetDownloadOptions) {
+            return;
+        }
+        const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, binary, record, selectedPath } = dataSetDownloadOptions;
+
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading all members"),
+            async (progress) => {
+                let realPercentComplete = 0;
+                const realTotalEntries = children.length;
+                const task: imperative.ITaskWithStatus = {
+                    set percentComplete(value: number) {
+                        realPercentComplete = value;
+                        // eslint-disable-next-line no-magic-numbers
+                        Gui.reportProgress(progress, realTotalEntries, Math.floor((value * realTotalEntries) / 100), "");
+                    },
+                    get percentComplete(): number {
+                        return realPercentComplete;
+                    },
+                    statusMessage: "",
+                    stageName: 0, // TaskStage.IN_PROGRESS
+                };
+
+                const datasetName = node.label as string;
+                const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
+                const extensionMap = await DatasetUtils.getExtensionMap(node, preserveOriginalLetterCase);
+
+                const generatedFileDirectory = DatasetActions.generateDirectoryPath(
+                    datasetName,
+                    selectedPath,
+                    generateDirectory,
+                    preserveOriginalLetterCase
+                );
+
+                const downloadOptions: zosfiles.IDownloadOptions = {
+                    directory: generatedFileDirectory,
+                    maxConcurrentRequests,
+                    preserveOriginalLetterCase,
+                    extensionMap,
+                    binary,
+                    record,
+                    overwrite,
+                    task,
+                    responseTimeout: profile?.profile?.responseTimeout,
+                };
+
+                await ZoweExplorerApiRegister.getMvsApi(profile).downloadAllMembers(datasetName, downloadOptions);
+            },
+            vscode.l10n.t("Dataset downloaded successfully"),
+            node
+        );
+    }
+
+    /**
+     * Downloads a member
+     */
+    public static async downloadMember(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadMember called.");
+
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions();
+        if (!dataSetDownloadOptions) {
+            return;
+        }
+        const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, binary, record, selectedPath } = dataSetDownloadOptions;
+
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading member"),
+            async () => {
+                const parent = node.getParent() as IZoweDatasetTreeNode;
+                const datasetName = parent.getLabel() as string;
+                const memberName = node.getLabel() as string;
+                const fullDatasetName = `${datasetName}(${memberName})`;
+
+                const fileName = preserveOriginalLetterCase ? memberName : memberName.toLowerCase();
+
+                const extensionMap = await DatasetUtils.getExtensionMap(parent, preserveOriginalLetterCase);
+                const extension = extensionMap[fileName] ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+
+                const targetDirectory = generateDirectory
+                    ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, preserveOriginalLetterCase)
+                    : selectedPath.fsPath;
+                const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+
+                const downloadOptions = {
+                    file: filePath,
+                    binary,
+                    record,
+                    overwrite,
+                    responseTimeout: profile?.profile?.responseTimeout,
+                };
+
+                await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
+            },
+            vscode.l10n.t("Member downloaded successfully"),
+            node
+        );
+    }
+
+    /**
+     * Downloads a sequential data set
+     */
+    public static async downloadDataSet(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadDataSet called.");
+
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        if (SharedContext.isPds(node) || SharedContext.isVsam(node)) {
+            Gui.showMessage(vscode.l10n.t("Cannot download this type of data set."));
+            return;
+        }
+
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions();
+        if (!dataSetDownloadOptions) {
+            return;
+        }
+        const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, binary, record, selectedPath } = dataSetDownloadOptions;
+
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading data set"),
+            async () => {
+                const datasetName = node.getLabel() as string;
+
+                // Extract the last part as filename when generating directories
+                let fileName = preserveOriginalLetterCase ? datasetName : datasetName.toLowerCase();
+                if (generateDirectory) {
+                    const pathParts = fileName.split(".");
+                    fileName = pathParts[pathParts.length - 1];
+                }
+
+                const extension = DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+
+                const targetDirectory = generateDirectory
+                    ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, preserveOriginalLetterCase)
+                    : selectedPath.fsPath;
+                const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+
+                const downloadOptions = {
+                    file: filePath,
+                    binary,
+                    record,
+                    overwrite,
+                    responseTimeout: profile?.profile?.responseTimeout,
+                };
+
+                await ZoweExplorerApiRegister.getMvsApi(profile).getContents(datasetName, downloadOptions);
+            },
+            vscode.l10n.t("Data set downloaded successfully"),
+            node
+        );
     }
 
     /**

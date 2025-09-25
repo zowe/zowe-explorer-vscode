@@ -39,6 +39,22 @@ export namespace Definitions {
         caseSensitive?: boolean;
         regex?: boolean;
     };
+    export type DataSetDownloadOptions = {
+        overwrite?: boolean;
+        generateDirectory?: boolean;
+        preserveCase?: boolean;
+        binary?: boolean;
+        record?: boolean;
+        selectedPath?: vscode.Uri;
+    };
+    export type UssDownloadOptions = {
+        overwrite?: boolean;
+        generateDirectory?: boolean;
+        includeHidden?: boolean;
+        chooseEncoding?: boolean;
+        encoding?: ZosEncoding;
+        selectedPath?: vscode.Uri;
+    };
     export type FavoriteData = {
         profileName: string;
         label: string;
@@ -157,5 +173,7 @@ export namespace Definitions {
         V1_MIGRATION_STATUS = "zowe.v1MigrationStatus",
         DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
+        DS_DOWNLOAD_OPTIONS = "zowe.dsDownloadOptions",
+        USS_DOWNLOAD_OPTIONS = "zowe.ussDownloadOptions",
     }
 }
