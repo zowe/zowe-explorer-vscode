@@ -12,8 +12,9 @@
 import { promises as fs } from "fs";
 import * as path from "path";
 
-export async function restoreZoweConfig(configDir: string = path.join(process.cwd(), "..", "ci")): Promise<void> {
+export async function restoreZoweConfig(configDir: string = path.join(__dirname, "..", "..", "..", "ci")): Promise<void> {
     const backupPath = path.join(configDir, "zowe.config_backup.json");
+    const userPath = path.join(configDir, "zowe.config.user.json");
     const configPath = path.join(configDir, "zowe.config.json");
 
     try {
@@ -21,6 +22,16 @@ export async function restoreZoweConfig(configDir: string = path.join(process.cw
         const backupContent = await fs.readFile(backupPath, "utf-8");
         JSON.parse(backupContent);
         await fs.writeFile(configPath, backupContent, "utf-8");
+
+        // Try to delete user config file if it exists
+        try {
+            await fs.unlink(userPath);
+        } catch (unlinkError) {
+            // Ignore if user config file doesn't exist
+            if ((unlinkError as NodeJS.ErrnoException).code !== "ENOENT") {
+                throw unlinkError;
+            }
+        }
     } catch (error) {
         if (error instanceof Error) {
             if ((error as NodeJS.ErrnoException).code === "ENOENT") {

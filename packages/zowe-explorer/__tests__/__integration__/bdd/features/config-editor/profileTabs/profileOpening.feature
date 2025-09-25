@@ -18,3 +18,5 @@ Scenario: Test profile header buttons
     When a user right clicks a configuration tab and clicks toggle autostore
     And the user saves the changes
     Then autostore should be "true"
+    When a user clicks the add configuration layer button
+    Then a new file should be opened

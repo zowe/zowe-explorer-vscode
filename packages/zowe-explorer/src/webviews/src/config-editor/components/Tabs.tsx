@@ -156,6 +156,7 @@ export function Tabs({
           {configurations.length > 0 && (
             <div
               className="tab add-tab"
+              id="add-config-layer-button"
               onClick={onAddNewConfig}
               style={{
                 minWidth: "32px",

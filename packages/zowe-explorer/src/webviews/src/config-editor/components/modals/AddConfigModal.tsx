@@ -25,6 +25,7 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
 
     const types = [
       {
+        id: "global:true,user:false",
         value: "global-team",
         label: "Global Team Configuration",
         description: "Shared across all workspaces",
@@ -32,6 +33,7 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
         reason: hasGlobalTeam ? "Already exists" : currentConfigs >= 4 ? "Maximum configurations reached" : null,
       },
       {
+        id: "global:true,user:true",
         value: "global-user",
         label: "Global User Configuration",
         description: "Global team configuration overwrites",
@@ -39,6 +41,7 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
         reason: hasGlobalUser ? "Already exists" : currentConfigs >= 4 ? "Maximum configurations reached" : null,
       },
       {
+        id: "global:false,user:false",
         value: "project-team",
         label: "Project Team Configuration",
         description: "Team configuration overwrites for this project",
@@ -52,6 +55,7 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
           : null,
       },
       {
+        id: "global:false,user:true",
         value: "project-user",
         label: "Project User Configuration",
         description: "User configuration overwrites for this project",
@@ -161,6 +165,7 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
               {allConfigTypes.map((type) => (
                 <button
                   key={type.value}
+                  id={type.id}
                   onClick={() => !type.disabled && onAdd(type.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !type.disabled) {

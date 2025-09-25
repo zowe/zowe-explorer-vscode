@@ -15,7 +15,8 @@ import * as fs from "fs";
 import * as path from "path";
 
 When("a user right clicks a configuration tab and clicks open file", async () => {
-    const tab = await browser.$(`.tab`);
+    // Target the global team config tab (zowe.config.json) specifically
+    const tab = await browser.$(`[id="global:true,user:false"]`);
     await tab.waitForExist({ timeout: 1000 });
     await tab.click({ button: "right" });
 
@@ -25,13 +26,23 @@ When("a user right clicks a configuration tab and clicks open file", async () =>
 });
 
 When("a user right clicks a configuration tab and clicks open schema", async () => {
-    const tab = await browser.$(`.tab`);
+    // Target the global team config tab (zowe.config.json) specifically
+    const tab = await browser.$(`[id="global:true,user:false"]`);
     await tab.waitForExist({ timeout: 1000 });
     await tab.click({ button: "right" });
 
     const openFile = await browser.$(`[id="tab-open-schema"]`);
     await openFile.waitForExist({ timeout: 1000 });
     await openFile.click({ button: "left" });
+});
+
+When("a user clicks the add configuration layer button", async () => {
+    const addConfigButton = await browser.$(`[id="add-config-layer-button"]`);
+    await addConfigButton.waitForExist({ timeout: 1000 });
+    await addConfigButton.click({ button: "left" });
+    const addGlobalUserConfig = await browser.$(`[id="global:true,user:true"]`);
+    await addGlobalUserConfig.waitForExist({ timeout: 1000 });
+    await addGlobalUserConfig.click({ button: "left" });
 });
 
 Then("a new file should be opened", async () => {
@@ -49,6 +60,7 @@ When("a user right clicks a configuration tab and clicks toggle autostore", asyn
     await tab.click({ button: "right" });
 
     const openFile = await browser.$(`[id="tab-toggle-autostore"]`);
+
     await openFile.waitForExist({ timeout: 5000 });
     await openFile.click({ button: "left" });
     browser.keys(Key.Escape);
