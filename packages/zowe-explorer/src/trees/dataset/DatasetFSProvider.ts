@@ -817,12 +817,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
             await AuthUtils.reauthenticateIfCancelled(profile);
             await AuthHandler.waitForUnlock(entry.metadata.profile);
-            let attributes = await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).dataSet(fullName, {
-                attributes: true,
-            });
-            attributes = attributes.apiResponse.items;
             await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).deleteDataSet(fullName, {
-                volume: attributes[0].vols,
+                volume: entry.stats?.["vol"],
                 responseTimeout: entry.metadata.profile.profile?.responseTimeout,
             });
         } catch (err) {
