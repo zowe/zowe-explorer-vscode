@@ -40,11 +40,182 @@ export function moveProfile(api: ConfigMoveAPI, layerActive: () => IConfigLayer,
     // Get secure properties from source before moving
     const sourceSecure = sourceProfile.secure || [];
 
-    // Copy the profile to the new location
-    api.set(targetPath, sourceProfile);
+    // Use order-preserving move for same-level renames
+    if (isSameLevelRename(sourcePath, targetPath)) {
+        moveProfileInPlaceOrdered(api, layerActive, sourcePath, targetPath);
+    } else {
+        // For cross-level moves, use the original approach
+        api.set(targetPath, sourceProfile);
+        api.delete(sourcePath);
+    }
 
-    // Delete the original profile
-    api.delete(sourcePath);
+    // Move secure properties if they exist
+    moveSecureProperties(api, layerActive, sourcePath, targetPath, sourceSecure);
+}
+
+function isSameLevelRename(sourcePath: string, targetPath: string): boolean {
+    const sourceParts = sourcePath.split(".");
+    const targetParts = targetPath.split(".");
+
+    // Same level if parent paths are identical
+    if (sourceParts.length !== targetParts.length) {
+        return false;
+    }
+
+    // Check if all parts except the last are the same
+    for (let i = 0; i < sourceParts.length - 1; i++) {
+        if (sourceParts[i] !== targetParts[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function moveProfileInPlaceOrdered(api: ConfigMoveAPI, layerActive: () => IConfigLayer, sourcePath: string, targetPath: string): void {
+    const sourceParts = sourcePath.split(".");
+    const targetParts = targetPath.split(".");
+    const sourceName = sourceParts[sourceParts.length - 1];
+    const targetName = targetParts[targetParts.length - 1];
+
+    if (sourceParts.length === 1) {
+        // Root level profile rename
+        const currentLayer = layerActive();
+        const profiles = currentLayer.properties.profiles;
+
+        // Create new profiles object with renamed key
+        const newProfiles: { [key: string]: any } = {};
+        for (const [key, value] of Object.entries(profiles)) {
+            if (key === sourceName) {
+                newProfiles[targetName] = value;
+            } else {
+                newProfiles[key] = value;
+            }
+        }
+
+        // Update the layer with the new profiles object
+        currentLayer.properties.profiles = newProfiles;
+    } else {
+        // Nested profile rename
+        const parentPath = sourceParts.slice(0, -1).join(".");
+        const parentProfile = api.get(parentPath);
+
+        if (parentProfile) {
+            // Check if profiles are stored directly as properties or under a profiles property
+            if (parentProfile.profiles) {
+                // Create new profiles object with renamed key
+                const newProfiles: { [key: string]: any } = {};
+                for (const [key, value] of Object.entries(parentProfile.profiles)) {
+                    if (key === sourceName) {
+                        newProfiles[targetName] = value;
+                    } else {
+                        newProfiles[key] = value;
+                    }
+                }
+
+                // Update the parent profile
+                parentProfile.profiles = newProfiles;
+                api.set(parentPath, parentProfile);
+            } else {
+                // Profiles are stored directly as properties of the parent object
+                // Create new parent object with renamed key
+                const newParentProfile: { [key: string]: any } = {};
+                for (const [key, value] of Object.entries(parentProfile)) {
+                    if (key === sourceName) {
+                        newParentProfile[targetName] = value;
+                    } else {
+                        newParentProfile[key] = value;
+                    }
+                }
+
+                // Update the parent profile
+                api.set(parentPath, newParentProfile);
+
+                // Try alternative approach - update the parent's parent if direct update fails
+                if (parentPath !== "profiles") {
+                    const grandParentPath = parentPath.split(".").slice(0, -1).join(".");
+                    const grandParent = api.get(grandParentPath);
+                    if (grandParent) {
+                        // Update the parent within the grandparent
+                        const parentName = parentPath.split(".").pop();
+                        if (parentName && grandParent[parentName]) {
+                            grandParent[parentName] = newParentProfile;
+                            api.set(grandParentPath, grandParent);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+export function moveProfileInPlace(api: ConfigMoveAPI, layerActive: () => IConfigLayer, sourcePath: string, targetPath: string): void {
+    const sourceProfile = api.get(sourcePath);
+    if (!sourceProfile) {
+        throw new Error(`Source profile not found at path: ${sourcePath}`);
+    }
+
+    // Check if target profile already exists
+    const targetProfile = api.get(targetPath);
+    if (targetProfile) {
+        throw new Error(`Target profile already exists at path: ${targetPath}`);
+    }
+
+    // Get secure properties from source before moving
+    const sourceSecure = sourceProfile.secure || [];
+
+    // Get source and target path information
+    const sourcePathParts = sourcePath.split(".");
+    const sourceParentPath = sourcePathParts.slice(0, -1).join(".");
+    const sourceName = sourcePathParts[sourcePathParts.length - 1];
+
+    const targetPathParts = targetPath.split(".");
+    const targetParentPath = targetPathParts.slice(0, -1).join(".");
+    const targetName = targetPathParts[targetPathParts.length - 1];
+
+    // Handle the move operation
+    if (sourceParentPath === targetParentPath) {
+        // Same parent
+        renameProfileInPlace(api, layerActive, sourcePath, targetPath);
+        return;
+    }
+
+    // Different parents
+    if (sourceParentPath) {
+        const sourceParentProfile = api.get(sourceParentPath);
+        if (sourceParentProfile && sourceParentProfile.profiles) {
+            const profileData = sourceParentProfile.profiles[sourceName];
+            delete sourceParentProfile.profiles[sourceName];
+            api.set(sourceParentPath, sourceParentProfile);
+
+            // Add to target parent
+            if (targetParentPath) {
+                const targetParentProfile = api.get(targetParentPath);
+                if (targetParentProfile && targetParentProfile.profiles) {
+                    targetParentProfile.profiles[targetName] = profileData;
+                    api.set(targetParentPath, targetParentProfile);
+                }
+            } else {
+                // Moving to root level
+                const currentLayer = layerActive();
+                currentLayer.properties.profiles[targetName] = profileData;
+            }
+        }
+    } else {
+        // Moving from root level
+        const currentLayer = layerActive();
+        const profileData = currentLayer.properties.profiles[sourceName];
+        delete currentLayer.properties.profiles[sourceName];
+
+        // Add to target parent
+        if (targetParentPath) {
+            const targetParentProfile = api.get(targetParentPath);
+            if (targetParentProfile && targetParentProfile.profiles) {
+                targetParentProfile.profiles[targetName] = profileData;
+                api.set(targetParentPath, targetParentProfile);
+            }
+        }
+    }
 
     // Move secure properties if they exist
     moveSecureProperties(api, layerActive, sourcePath, targetPath, sourceSecure);
@@ -55,7 +226,13 @@ export function getSecurePropertiesForProfile(api: ConfigMoveAPI, profilePath: s
     return profile?.secure || [];
 }
 
-export function moveSecureProperties(api: ConfigMoveAPI, layerActive: () => IConfigLayer, sourcePath: string, targetPath: string, sourceSecure: string[]): void {
+export function moveSecureProperties(
+    api: ConfigMoveAPI,
+    layerActive: () => IConfigLayer,
+    sourcePath: string,
+    targetPath: string,
+    sourceSecure: string[]
+): void {
     // Get secure properties from the target path (which now contains the moved profile)
     const targetSecure = getSecurePropertiesForProfile(api, targetPath);
 
@@ -211,10 +388,67 @@ export function renameProfile(api: ConfigMoveAPI, layerActive: () => IConfigLaye
         throw new Error(`Profile with name '${newName}' already exists`);
     }
 
-    // Move the profile to the new location
-    moveProfile(api, layerActive, originalPath, newPath);
+    // Use in-place rename to preserve order instead of move operation
+    renameProfileInPlace(api, layerActive, originalPath, newPath);
 
     return newPath;
+}
+
+export function renameProfileInPlace(api: ConfigMoveAPI, layerActive: () => IConfigLayer, originalPath: string, newPath: string): void {
+    const originalProfile = api.get(originalPath);
+    if (!originalProfile) {
+        throw new Error(`Source profile not found at path: ${originalPath}`);
+    }
+
+    // Check if target profile already exists
+    const targetProfile = api.get(newPath);
+    if (targetProfile) {
+        throw new Error(`Target profile already exists at path: ${newPath}`);
+    }
+
+    // Get secure properties from source before renaming
+    const sourceSecure = originalProfile.secure || [];
+
+    // For in-place rename
+    const pathParts = originalPath.split(".");
+    const parentPath = pathParts.slice(0, -1).join(".");
+    const originalName = pathParts[pathParts.length - 1];
+
+    const newPathParts = newPath.split(".");
+    const newName = newPathParts[newPathParts.length - 1];
+
+    if (parentPath) {
+        // For nested profiles, update the parent's profiles object
+        const parentProfile = api.get(parentPath);
+        if (parentProfile && parentProfile.profiles) {
+            // Store the profile data
+            const profileData = parentProfile.profiles[originalName];
+
+            // Remove the old key and add the new key (preserves order)
+            delete parentProfile.profiles[originalName];
+            parentProfile.profiles[newName] = profileData;
+
+            // Update the parent object
+            api.set(parentPath, parentProfile);
+        }
+    } else {
+        // For root-level profiles, update the main profiles object
+        const currentLayer = layerActive();
+        const profiles = currentLayer.properties.profiles;
+
+        // Store the profile data
+        const profileData = profiles[originalName];
+
+        // Remove the old key and add the new key (preserves order)
+        delete profiles[originalName];
+        profiles[newName] = profileData;
+
+        // Update the layer
+        currentLayer.properties.profiles = profiles;
+    }
+
+    // Move secure properties if they exist
+    moveSecureProperties(api, layerActive, originalPath, newPath, sourceSecure);
 }
 
 export function updateDefaultsAfterRename(
@@ -236,9 +470,20 @@ export function updateDefaultsAfterRename(
 
         // Check each default entry
         Object.entries(updatedDefaults).forEach(([profileType, profileName]) => {
+            // Check if this profile was a default
             if (profileName === originalKey) {
-                // Update the default to reference the new profile name
+                // Update the default to reference the new profile
                 updatedDefaults[profileType] = newKey;
+                hasChanges = true;
+            }
+
+            // Check if any child profiles of the renamed profile were defaults
+            // This handles cases like: tso.zosmf is default, tso is renamed to tso1, so tso1.zosmf should remain default
+            if (profileName.startsWith(originalKey + ".")) {
+                // This is a child profile that was a default
+                const childPath = profileName.substring(originalKey.length + 1);
+                const newChildDefault = newKey + "." + childPath;
+                updatedDefaults[profileType] = newChildDefault;
                 hasChanges = true;
             }
         });
@@ -272,9 +517,19 @@ export function simulateDefaultsUpdateAfterRename(layerActive: () => IConfigLaye
 
         // Check each default entry and simulate the update
         Object.entries(simulatedDefaults).forEach(([profileType, profileName]) => {
+            // Check if this profile was a default
             if (profileName === originalKey) {
-                // Simulate updating the default to reference the new profile name
+                // Simulate updating the default to reference the new profile
                 simulatedDefaults[profileType] = newKey;
+            }
+
+            // Check if any child profiles of the renamed profile were defaults
+            // This handles cases like: tso.zosmf is default, tso is renamed to tso1, so tso1.zosmf should remain default
+            if (profileName.startsWith(originalKey + ".")) {
+                // This is a child profile that was a default
+                const childPath = profileName.substring(originalKey.length + 1);
+                const newChildDefault = newKey + "." + childPath;
+                simulatedDefaults[profileType] = newChildDefault;
             }
         });
 

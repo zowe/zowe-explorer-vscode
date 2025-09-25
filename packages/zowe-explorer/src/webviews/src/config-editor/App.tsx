@@ -373,16 +373,12 @@ export function App() {
     // Remove deleted profiles
     deletedProfiles.forEach((profile) => allProfiles.delete(profile));
 
-    const result = Array.from(allProfiles).sort((a, b) => {
-      // Always put "root" first
-      if (a === "root") return -1;
-      if (b === "root") return 1;
-      // Sort other profiles alphabetically
-      return a.localeCompare(b);
-    });
+    // Apply the user's preferred sort order instead of always sorting alphabetically
+    const profilesToSort = Array.from(allProfiles);
+    const result = sortProfilesAtLevel(profilesToSort, profileSortOrder);
 
     return result;
-  }, [selectedTab, configurations, pendingChanges, deletions, renames]);
+  }, [selectedTab, configurations, pendingChanges, deletions, renames, profileSortOrder]);
 
   // Profile Wizard hook
   const {

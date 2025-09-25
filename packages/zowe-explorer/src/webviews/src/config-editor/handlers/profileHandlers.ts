@@ -466,7 +466,7 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
 
         // Check each default entry against all consolidated renames
         Object.entries(updatedDefaults).forEach(([profileType, defaultEntry]) => {
-            // Check direct rename
+            // Check direct rename (full path match)
             if (defaultEntry.value === originalKey) {
                 updatedDefaults[profileType] = {
                     ...defaultEntry,
@@ -474,7 +474,7 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
                 };
                 hasChanges = true;
             }
-            // Check child renames
+            // Check child renames (for nested profiles)
             else if (defaultEntry.value.startsWith(originalKey + ".")) {
                 const childPath = defaultEntry.value.substring(originalKey.length + 1);
                 updatedDefaults[profileType] = {
@@ -504,10 +504,26 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
 
         // Check if the original profile was a default for any profile type
         for (const [profileType, defaultProfileName] of Object.entries(defaults)) {
-            if (defaultProfileName === originalKey) {
+            const defaultProfileNameStr = String(defaultProfileName);
+
+            // Check if this profile was a default
+            if (defaultProfileNameStr === originalKey) {
                 // The renamed profile was a default, create a pending default change
                 updatedDefaults[profileType] = {
                     value: newKey,
+                    path: [profileType],
+                };
+                hasChanges = true;
+            }
+
+            // Check if any child profiles of the renamed profile were defaults
+            // This handles cases like: tso.zosmf is default, tso is renamed to tso1, so tso1.zosmf should remain default
+            if (defaultProfileNameStr.startsWith(originalKey + ".")) {
+                // This is a child profile that was a default
+                const childPath = defaultProfileNameStr.substring(originalKey.length + 1);
+                const newChildDefault = newKey + "." + childPath;
+                updatedDefaults[profileType] = {
+                    value: newChildDefault,
                     path: [profileType],
                 };
                 hasChanges = true;

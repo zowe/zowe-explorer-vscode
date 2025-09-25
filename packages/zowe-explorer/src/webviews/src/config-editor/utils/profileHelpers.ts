@@ -64,7 +64,8 @@ export function isProfileDefault(
     const defaults = config.defaults || {};
 
     // Check if the current profile is the default
-    if (defaults[profileType] === profileKey || defaults[profileType] === originalProfileKey) {
+    const defaultValue = defaults[profileType];
+    if (defaultValue === profileKey || defaultValue === originalProfileKey) {
         return true;
     }
 
@@ -72,9 +73,19 @@ export function isProfileDefault(
     // This handles the case where a default profile was renamed and should remain the default
     const configRenames = renames[configPath] || {};
     for (const [originalKey, newKey] of Object.entries(configRenames)) {
-        // If the original profile was the default and this is the renamed version
-        if (defaults[profileType] === originalKey && newKey === profileKey) {
+        // Check if the original profile was the default and this is the renamed version
+        if (defaultValue === originalKey && newKey === profileKey) {
             return true;
+        }
+
+        // Check if this profile is a child of a renamed profile that was a default
+        // This handles cases like: tso.zosmf was default, tso was renamed to tso1, so tso1.zosmf should be default
+        if (defaultValue.startsWith(originalKey + ".") && profileKey.startsWith(newKey + ".")) {
+            const originalChildPath = defaultValue.substring(originalKey.length + 1);
+            const currentChildPath = profileKey.substring(newKey.length + 1);
+            if (originalChildPath === currentChildPath) {
+                return true;
+            }
         }
     }
 
