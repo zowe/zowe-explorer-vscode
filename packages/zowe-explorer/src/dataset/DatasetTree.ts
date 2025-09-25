@@ -989,7 +989,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             node.dirty = true;
             syncSessionNode((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue), nonFaveNode);
             let dataSet: IDataSet;
-            const dsSets: (IDataSet & { memberPattern?: string })[] = [];
+            const dsSets: IDataSet[] = [];
             const dsNames = pattern.split(",");
 
             for (const ds of dsNames) {
@@ -1083,10 +1083,16 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                         if (includes && child.contextValue.includes("pds")) {
                             const childProfile = child.getProfile();
                             const options: IListOptions = {};
-                            options.pattern = item.memberPattern;
+                            options.pattern = item.member;
                             options.attributes = true;
                             options.responseTimeout = childProfile.profile?.responseTimeout;
-                            const memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
+                            let memResponse;
+                            try {
+                                memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
+                            } catch (err) {
+                                ZoweLogger.error(`Failed to get members for data set ${label}`);
+                                continue;
+                            }
                             let existing = false;
                             for (const mem of memResponse.apiResponse.items) {
                                 existing = this.checkFilterPattern(mem.member, item.member);
