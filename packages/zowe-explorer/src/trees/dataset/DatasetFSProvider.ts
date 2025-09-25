@@ -537,7 +537,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
         // If the extenderProfileReady map does not contain the profile, create a deferred promise for the profile.
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
