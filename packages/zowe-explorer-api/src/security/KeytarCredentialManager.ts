@@ -73,7 +73,7 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
         this.preferredService = service;
     }
 
-    public static getSecurityModules(moduleName: string): NodeModule | undefined {
+    public static getSecurityModules(moduleName: string): NodeJS.Module | undefined {
         let imperativeIsSecure = false;
         try {
             const fileName = path.join(FileManagement.getZoweDir(), "settings", "imperative.json");
@@ -203,7 +203,7 @@ export class KeytarCredentialManager extends imperative.AbstractCredentialManage
 /**
  * Imports the necessary security modules
  */
-export function getSecurityModules(moduleName: string): NodeModule | undefined {
+export function getSecurityModules(moduleName: string): NodeJS.Module | undefined {
     const r = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
     const appRoot = vscode.env.appRoot;
     try {
