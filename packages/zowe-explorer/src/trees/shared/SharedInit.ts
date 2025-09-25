@@ -465,7 +465,8 @@ export class SharedInit {
                         session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE) &&
                     !uriInfo.profile.profile.tokenValue
                 ) {
-                    throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+                    continue;
+                    // throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token4");
                 }
                 await vscode.workspace.fs.readDirectory(folder.uri.with({ query: "fetch=true" }));
             } catch (err) {

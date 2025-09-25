@@ -25,7 +25,7 @@ export class SharedTreeProviders {
         SharedTreeProviders.#ds = await initializers.ds();
         SharedTreeProviders.#uss = await initializers.uss();
         SharedTreeProviders.#job = await initializers.job();
-        await postInit();
+        void postInit();
 
         return SharedTreeProviders.providers;
     }
