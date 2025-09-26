@@ -9,7 +9,20 @@
  *
  */
 
-import { AuthHandler, ErrorCorrelator, Gui, imperative, ZoweExplorerApiType, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import {
+    AuthHandler,
+    DsEntry,
+    DsEntryMetadata,
+    ErrorCorrelator,
+    FilterEntry,
+    FsAbstractUtils,
+    Gui,
+    imperative,
+    PdsEntry,
+    ZoweExplorerApiType,
+    ZoweVsCodeExtension,
+    ZoweScheme,
+} from "@zowe/zowe-explorer-api";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { Constants } from "../../../src/configuration/Constants";
 import { MockedProperty } from "../../__mocks__/mockUtils";
@@ -17,11 +30,55 @@ import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
 import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
-import { MarkdownString, TreeItemCollapsibleState } from "vscode";
+import { MarkdownString, TreeItemCollapsibleState, Uri } from "vscode";
 import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
 import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
+import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
+import { Profiles } from "../../../src/configuration/Profiles";
+import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
 
 jest.mock("../../../src/tools/ZoweLocalStorage");
+const testProfile = createIProfile();
+const testUris = {
+    ps: Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PS" }),
+    pds: Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" }),
+    pdsMember: Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS/MEMBER1" }),
+    session: Uri.from({ scheme: ZoweScheme.DS, path: "/sestest" }),
+};
+const testEntries = {
+    ps: {
+        ...new DsEntry("USER.DATA.PS", false),
+        metadata: new DsEntryMetadata({
+            profile: testProfile,
+            path: "/USER.DATA.PS",
+        }),
+        etag: "OLDETAG",
+        isMember: false,
+    } as DsEntry,
+    pds: {
+        ...new PdsEntry("USER.DATA.PDS"),
+        metadata: new DsEntryMetadata({
+            profile: testProfile,
+            path: "/USER.DATA.PDS",
+        }),
+    } as PdsEntry,
+    pdsMember: {
+        ...new DsEntry("MEMBER1", true),
+        metadata: new DsEntryMetadata({
+            profile: testProfile,
+            path: "/USER.DATA.PDS/MEMBER1",
+        }),
+        isMember: true,
+    } as DsEntry,
+    session: {
+        ...new FilterEntry("sestest"),
+        metadata: {
+            profile: testProfile,
+            path: "/",
+        },
+    },
+};
 
 describe("AuthUtils", () => {
     beforeEach(() => {
@@ -136,7 +193,120 @@ describe("AuthUtils", () => {
         });
     });
 
+    describe("retryRequest", () => {
+        let loadNamedProfileMock;
+        let mockMvsApi;
+        let promptForAuthErrorMock;
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+
+            // Setup common mocks
+            loadNamedProfileMock = jest.fn().mockReturnValue(createIProfile());
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile: loadNamedProfileMock,
+            } as any);
+
+            mockMvsApi = {
+                dataSet: jest.fn(() => {
+                    throw new imperative.ImperativeError({
+                        msg: "All configured authentication methods failed",
+                    });
+                }),
+            };
+
+            promptForAuthErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation();
+
+            // Common spies setup
+            jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.ps);
+
+            jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testEntries.ps.metadata.profile,
+            });
+        });
+
+        afterEach(() => {
+            jest.clearAllMocks();
+        });
+
+        describe("JobFSProvider fetchSpoolAtUri auth error handling", () => {
+            const testAttempts = [0, 1, 3, 5, 25, 99];
+
+            test.each(testAttempts)("calls AuthUtils.handleProfileAuthOnError %i times when maxAttempts is %i", async (maxAttempts) => {
+                // Arrange
+                jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+                    if (key === "zowe.settings.maxExtenderRetry") {
+                        return maxAttempts;
+                    }
+                    return undefined;
+                });
+
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+                await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toBeDefined();
+
+                if (maxAttempts === 0) {
+                    expect(promptForAuthErrorMock).toHaveBeenCalledTimes(maxAttempts + 1);
+                } else {
+                    expect(promptForAuthErrorMock).toHaveBeenCalledTimes(maxAttempts);
+                }
+            });
+        });
+
+        describe("successful authentication retry", () => {
+            it("should return stat value when handleProfileAuthOnError receives correct credentials", async () => {
+                // Arrange
+                const maxRetries = 3;
+                jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+                    if (key === "zowe.settings.maxExtenderRetry") {
+                        return maxRetries;
+                    }
+                    return undefined;
+                });
+
+                const successfulMvsApi = {
+                    dataSet: jest.fn(() => ({ success: true })),
+                };
+
+                // Mock sequence: fail twice, then succeed
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi")
+                    .mockReturnValueOnce(mockMvsApi as any)
+                    .mockReturnValueOnce(mockMvsApi as any)
+                    .mockReturnValue(successfulMvsApi as any);
+
+                // Act
+                const statResult = await DatasetFSProvider.instance.stat(testUris.ps);
+                const fetchResult = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
+
+                // Assert
+                expect(statResult).toBeDefined();
+                expect(fetchResult).toBeDefined();
+                expect(promptForAuthErrorMock).toHaveBeenCalledTimes(2);
+            });
+        });
+    });
     describe("isUsingTokenAuth", () => {
+        it("should return false if shouldRemoveTokenFromProfile() returns true", async () => {
+            const profile = { name: "aProfile", type: "zosmf" } as any;
+            const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    ssoLogin: jest.fn().mockImplementation(),
+                    promptCredentials: jest.fn().mockImplementation(),
+                    getDefaultProfile: jest.fn().mockReturnValue("sestest"),
+                    shouldRemoveTokenFromProfile: jest.fn().mockReturnValue(true),
+                    loadNamedProfile: jest.fn(),
+                    getPropsForProfile: jest.fn().mockReturnValue([]),
+                } as any,
+                configurable: true,
+            });
+
+            const usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
+            expect(usingTokenAuth).toBe(false);
+            profilesCacheMock[Symbol.dispose]();
+        });
         it("should return true if getPropsForProfile() returns tokenValue", async () => {
             const profile = { name: "aProfile", type: "zosmf" } as any;
             const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {

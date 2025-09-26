@@ -27,6 +27,7 @@ import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { SharedContext } from "../trees/shared/SharedContext";
+import { ImperativeError } from "@zowe/imperative";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -45,17 +46,13 @@ export class AuthUtils {
      */
     public static async reauthenticateIfCancelled(profile: imperative.IProfileLoaded): Promise<void> {
         if (AuthHandler.isProfileLocked(profile) && AuthHandler.wasAuthCancelled(profile)) {
-            try {
-                // The original error doesn't matter here, we just need to trigger the flow.
-                await this.handleProfileAuthOnError(
-                    new Error("User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate."),
-                    profile
-                );
-            } catch (err) {
-                // If handleProfileAuthOnError fails (e.g., user cancels again),
-                // we should propagate that failure.
-                throw err;
-            }
+            // The original error doesn't matter here, we just need to trigger the flow.
+            await this.handleProfileAuthOnError(
+                new ImperativeError({
+                    msg: "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate. (All configured authentication methods failed)",
+                }),
+                profile
+            );
         }
     }
 
@@ -106,6 +103,63 @@ export class AuthUtils {
         } else if (AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
             AuthHandler.unlockProfile(profile);
+        }
+    }
+
+    public static promptCountForProfile: Record<string, number> = {};
+
+    public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
+        const maxAttempts = SettingsConfig.getDirectValue("zowe.settings.maxExtenderRetry", 0);
+        const profileName = profile?.name;
+        const shouldTrackPrompts = profileName != null;
+
+        if (shouldTrackPrompts && !this.promptCountForProfile[profileName]) {
+            this.promptCountForProfile[profileName] = 0;
+        }
+
+        for (let i = 0; i <= maxAttempts; i++) {
+            try {
+                const callbackValue = await callback();
+                if (shouldTrackPrompts) {
+                    delete this.promptCountForProfile[profileName];
+                }
+                return callbackValue;
+            } catch (err) {
+                if (err instanceof Error) {
+                    ZoweLogger.error(err.message);
+                }
+                if (maxAttempts <= 0) {
+                    if (profile) {
+                        await this.handleProfileAuthOnError(err, profile);
+                    }
+                    throw vscode.FileSystemError.Unavailable();
+                }
+                const currentPromptCount = shouldTrackPrompts ? this.promptCountForProfile[profileName] || 0 : 0;
+                if (maxAttempts <= 0 || i >= maxAttempts || currentPromptCount >= maxAttempts) {
+                    if (shouldTrackPrompts) {
+                        delete this.promptCountForProfile[profileName];
+                    }
+                    throw vscode.FileSystemError.Unavailable();
+                }
+                if (
+                    (err instanceof imperative.ImperativeError &&
+                        (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                            err.message.includes("All configured authentication methods failed"))) ||
+                    err.message.includes("HTTP(S) status 401")
+                ) {
+                    if (shouldTrackPrompts) {
+                        this.promptCountForProfile[profileName]++;
+                    }
+                    if (profile) {
+                        await this.handleProfileAuthOnError(err, profile);
+                    }
+                } else {
+                    if (shouldTrackPrompts) {
+                        delete this.promptCountForProfile[profileName];
+                    }
+                    throw err;
+                }
+            }
         }
     }
 
