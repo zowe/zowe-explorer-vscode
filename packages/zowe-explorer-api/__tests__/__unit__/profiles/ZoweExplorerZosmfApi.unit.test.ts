@@ -629,6 +629,60 @@ describe("ZosmfMvsApi", () => {
         await zosmfApi.copyDataSetCrossLpar("TO.NAME", "TO.MEMBER", undefined as any, loadedProfile);
         expect(copySpy).toHaveBeenCalled();
     });
+
+    describe("MvsApi.getCount", () => {
+        let mvsApi: ZoweExplorerZosmf.MvsApi;
+        let dataSetsMatchingPatternSpy: jest.SpyInstance;
+        const patterns = ["SAMPLE.A*", "SAMPLE.B*"];
+        beforeEach(() => {
+            jest.clearAllMocks();
+            mvsApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
+            dataSetsMatchingPatternSpy = jest.spyOn(zosfiles.List, "dataSetsMatchingPattern");
+        });
+        test("returns correct count when successful and response is array", async () => {
+            const mockResponse = {
+                success: true,
+                apiResponse: [{ dsname: "DATASET1" }, { dsname: "DATASET2" }],
+            };
+            dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
+            const result = await mvsApi.getCount(patterns);
+            expect(result).toStrictEqual({ count: 2, lastItem: "DATASET2" });
+            expect(dataSetsMatchingPatternSpy).toHaveBeenCalledWith(
+                expect.any(Object), // session
+                patterns,
+                expect.objectContaining({ attributes: false }) // options
+            );
+        });
+        test("returns 0 when response is not successful", async () => {
+            const mockResponse = {
+                success: false,
+                apiResponse: [],
+            };
+            dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
+            const result = await mvsApi.getCount(patterns);
+            expect(result).toStrictEqual({ count: -1, lastItem: undefined });
+        });
+        test("returns 0 when apiResponse is empty or undefined", async () => {
+            const mockResponse = {
+                success: true,
+                apiResponse: undefined,
+            };
+            dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
+            const result = await mvsApi.getCount(patterns);
+            expect(result).toStrictEqual({ count: -1, lastItem: undefined });
+        });
+        test("handles mixed format: array and items fallback", async () => {
+            const mockResponse = {
+                success: true,
+                apiResponse: {
+                    items: [{ dsname: "DS1" }, { dsname: "DS2" }, { dsname: "DS3" }, { dsname: "DS4" }], // 4 items
+                },
+            };
+            dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
+            const result = await mvsApi.getCount(patterns);
+            expect(result).toStrictEqual({ count: 4, lastItem: "DS4" });
+        });
+    });
 });
 
 describe("ZosmfJesApi", () => {
