@@ -438,7 +438,7 @@ export namespace ZoweExplorerZosmf {
         }
 
         public getJclForJob(job: zosjobs.IJob): Promise<string> {
-            return zosjobs.GetJobs.getJclForJob(this.getSession(), job);
+            return zosjobs.GetJobs.getJclCommon(this.getSession(), { ...job, encoding: this.profile?.profile?.encoding });
         }
 
         public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zosjobs.IJob> {
@@ -447,11 +447,10 @@ export namespace ZoweExplorerZosmf {
         }
 
         public async submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
-            const jesEncoding = this.profile?.profile?.jobEncoding;
-            if (jesEncoding == null) {
+            if (this.profile?.profile?.jobEncoding == null) {
                 return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
             } else {
-                const rawJcl = await zosfiles.Get.dataSet(this.getSession(), jobDataSet, { encoding: jesEncoding });
+                const rawJcl = await zosfiles.Get.dataSet(this.getSession(), jobDataSet, { encoding: this.profile?.profile?.encoding });
                 return this.submitJcl(rawJcl.toString());
             }
         }
