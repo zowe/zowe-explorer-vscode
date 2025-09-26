@@ -90,14 +90,11 @@ export class ProfilesUtils {
         const currentProfileSecurity = ProfilesUtils.PROFILE_SECURITY;
         const settingEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, true);
         const defaultCredentialManagerFound = ProfilesUtils.checkDefaultCredentialManager();
-        if (settingEnabled && credentialManager) {
-            ProfilesUtils.PROFILE_SECURITY = credentialManager;
-            return;
-        } else if (!settingEnabled || !defaultCredentialManagerFound) {
+        if (!settingEnabled || !defaultCredentialManagerFound) {
             ProfilesUtils.PROFILE_SECURITY = false;
             ZoweLogger.info(vscode.l10n.t(`Zowe Explorer profiles are being set as unsecured.`));
         } else {
-            ProfilesUtils.PROFILE_SECURITY = Constants.ZOWE_CLI_SCM;
+            ProfilesUtils.PROFILE_SECURITY = credentialManager ?? Constants.ZOWE_CLI_SCM;
             ZoweLogger.info(vscode.l10n.t(`Zowe Explorer profiles are being set as secured.`));
         }
         if (currentProfileSecurity !== ProfilesUtils.PROFILE_SECURITY) {
@@ -224,6 +221,7 @@ export class ProfilesUtils {
      */
     public static async fetchRegisteredPlugins(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.fetchRegisteredPlugins called.");
+
         const knownCredentialManagers = imperative.CredentialManagerOverride.getKnownCredMgrs();
         const credentialManager = knownCredentialManagers.find((knownCredentialManager) => {
             try {
