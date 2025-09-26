@@ -23,8 +23,7 @@ import { Types } from "../Types";
 import { ProfilesCache } from "../profiles/ProfilesCache";
 import { VscSettings } from "../vscode/doc/VscSettings";
 import { IZosmfListResponse, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
-import { IDataSetInfo } from "../dataset";
-import { IDataSetCount } from "../globals/Interface";
+import { IDataSetCount } from "../dataset/IDataSetCount";
 
 /**
  * Implementations of Zowe Explorer API for z/OSMF profiles

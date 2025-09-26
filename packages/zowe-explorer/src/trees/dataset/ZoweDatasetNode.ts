@@ -47,14 +47,7 @@ import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
-import { IDataSetCount } from "@zowe/zowe-explorer-api/src/globals/Interface";
-
-//IDataSetCount type definition
-// type IDataSetCount = {
-//     count: number;
-//     lastItem: string;
-// };
-
+import { IDataSetCount } from "@zowe/zowe-explorer-api/src/dataset/IDataSetCount";
 /**
  * A type of TreeItem used to represent sessions and data sets
  *
