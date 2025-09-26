@@ -1,4 +1,5 @@
 import React from "react";
+import { SortDropdown } from "./SortDropdown";
 
 // Profile sort order options
 const PROFILE_SORT_ORDER_OPTIONS: ("natural" | "alphabetical" | "reverse-alphabetical")[] = ["natural", "alphabetical", "reverse-alphabetical"];
@@ -50,23 +51,15 @@ export function Panels({
           <div className="panel-content">
             <div className="config-section profiles-section">
               <div className="profile-heading-container">
-                <h2
-                  style={{
-                    cursor: "pointer",
-                    userSelect: "none",
-                    textDecoration: "underline",
-                  }}
-                  onClick={() => {
-                    const currentIndex = PROFILE_SORT_ORDER_OPTIONS.indexOf(profileSortOrder);
-                    const nextIndex = (currentIndex + 1) % PROFILE_SORT_ORDER_OPTIONS.length;
-                    const newSortOrder = PROFILE_SORT_ORDER_OPTIONS[nextIndex];
-                    onProfileSortOrderChange(newSortOrder);
-                  }}
-                  title={`Click to change sort order. Current: ${getProfileSortOrderDisplayName(profileSortOrder)}`}
-                  id="change-profile-sort-order"
-                >
-                  Profiles
-                </h2>
+                <div className="sort-dropdown-container">
+                  <h2 style={{ margin: 0, fontSize: "16px", marginBottom: 0 }}>Profiles</h2>
+                  <SortDropdown<"natural" | "alphabetical" | "reverse-alphabetical">
+                    options={PROFILE_SORT_ORDER_OPTIONS}
+                    selectedOption={profileSortOrder}
+                    onOptionChange={onProfileSortOrderChange}
+                    getDisplayName={getProfileSortOrderDisplayName}
+                  />
+                </div>
                 <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
                   <button
                     className="header-button"

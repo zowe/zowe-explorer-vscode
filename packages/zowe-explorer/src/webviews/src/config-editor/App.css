@@ -238,6 +238,24 @@ div:has(> .vscode-panel) {
     overflow: auto;
 }
 
+/* Ensure sort dropdowns in profile details section can extend beyond container */
+.config-section.profile-details-section .sort-dropdown-container {
+    overflow: visible !important;
+    position: relative;
+    z-index: 10001;
+}
+
+/* Force parent containers to allow overflow when dropdown is present */
+.config-section.profile-details-section:has(.sort-dropdown-container) {
+    overflow: visible !important;
+}
+
+/* Make the dropdown list position relative to the viewport, not the container */
+.config-section.profile-details-section .sort-dropdown-list {
+    position: absolute !important;
+    z-index: 10000 !important;
+}
+
 .config-section.defaults-section {
     flex: 1;
     min-width: 200px;
@@ -1149,8 +1167,8 @@ ul {
     padding: 0.25rem 0.5rem;
     border: 1px solid var(--vscode-button-border);
     border-radius: 3px;
-    background-color: var(--vscode-button-secondaryBackground);
-    color: var(--vscode-button-secondaryForeground);
+    background-color: var(--vscode-button-secondaryBackground) !important;
+    color: var(--vscode-button-secondaryForeground) !important;
     cursor: pointer;
     font-size: 0.75rem;
     transition: all 0.2s ease;
@@ -1163,27 +1181,44 @@ ul {
 }
 
 .auth-order-button:hover:not(:disabled) {
-    background-color: var(--vscode-button-secondaryHoverBackground);
-    border-color: var(--vscode-button-hoverBackground);
+    background-color: var(--vscode-button-secondaryHoverBackground) !important;
+    border-color: var(--vscode-button-hoverBorder);
+    color: var(--vscode-button-secondaryForeground) !important;
 }
 
 .auth-order-button:active:not(:disabled) {
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-button-secondaryHoverBackground) !important;
+    color: var(--vscode-button-secondaryForeground) !important;
+    border-color: var(--vscode-button-hoverBorder);
+}
+
+.auth-order-button.selected {
+    background-color: var(--vscode-button-background) !important;
+    color: var(--vscode-button-foreground) !important;
+    border-color: var(--vscode-button-border);
+    font-weight: 600;
+}
+
+.auth-order-button.selected:hover {
+    background-color: var(--vscode-button-hoverBackground) !important;
+    border-color: var(--vscode-button-hoverBorder);
+    color: var(--vscode-button-foreground) !important;
 }
 
 .auth-order-button.disabled,
 .auth-order-button:disabled {
+    background-color: var(--vscode-button-secondaryBackground);
+    border-color: var(--vscode-button-border);
     opacity: 0.5;
     cursor: not-allowed;
-    background-color: var(--vscode-button-secondaryBackground);
-    color: var(--vscode-button-secondaryForeground);
-    border-color: var(--vscode-button-border);
 }
 
 .auth-order-button.disabled:hover,
 .auth-order-button:disabled:hover {
+    opacity: 0.5;
+    cursor: not-allowed;
     background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
     border-color: var(--vscode-button-border);
 }
 
@@ -1395,59 +1430,74 @@ ul {
     color: var(--vscode-button-foreground);
 }
 
-/* Auth Order Button Styles */
-.auth-order-buttons {
-    margin-top: 8px;
-}
-
-.auth-order-label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 12px;
-    color: var(--vscode-descriptionForeground);
-}
-
-.auth-order-button-container {
+/* Sort dropdown styles */
+.sort-dropdown-container {
     display: flex;
+    align-items: center;
     gap: 8px;
-    flex-wrap: wrap;
+    position: relative;
+    z-index: 10001;
 }
 
-.auth-order-button {
-    padding: 4px 8px;
-    border: 1px solid var(--vscode-button-border);
-    background-color: var(--vscode-button-secondaryBackground);
+.sort-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.sort-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
     color: var(--vscode-button-secondaryForeground);
-    border-radius: 4px;
     cursor: pointer;
-    font-size: 12px;
-    font-weight: 400;
+    padding: 4px;
+    border-radius: 3px;
     transition: all 0.2s ease;
-    opacity: 0.8;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
 }
 
-.auth-order-button:hover {
-    background-color: var(--vscode-button-hoverBackground);
-    border-color: var(--vscode-button-hoverBorder);
-    opacity: 1;
-}
-
-.auth-order-button.selected {
-    background-color: var(--vscode-button-secondaryBackground);
-    color: var(--vscode-button-secondaryForeground);
-    border-color: var(--vscode-button-border);
-    font-weight: 600;
-    opacity: 1;
-}
-
-.auth-order-button.selected:hover {
-    background-color: var(--vscode-button-hoverBackground);
-    border-color: var(--vscode-button-hoverBorder);
+.sort-dropdown-trigger:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
     color: var(--vscode-button-foreground);
 }
 
-.auth-order-error {
-    margin-top: 8px;
-    color: var(--vscode-errorForeground);
+.sort-dropdown-trigger:focus {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: -1px;
+}
+
+.sort-dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--vscode-dropdown-background);
+    border: 1px solid var(--vscode-dropdown-border);
+    border-radius: 3px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    max-height: 200px;
+    overflow-y: auto;
+    min-width: 150px;
+    white-space: nowrap;
+}
+
+.sort-dropdown-item {
+    padding: 6px 8px;
+    cursor: pointer;
     font-size: 12px;
+    color: var(--vscode-dropdown-foreground);
+    transition: background-color 0.2s ease;
+}
+
+.sort-dropdown-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.sort-dropdown-item.selected {
+    background-color: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
 }

@@ -12,6 +12,7 @@
 import { useCallback } from "react";
 import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
+import { SortDropdown } from "./SortDropdown";
 
 // Utils
 import {
@@ -414,30 +415,21 @@ export const RenderConfig = ({
           return (
             <div key={fullKey} className="config-item parent">
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <h3
-                  className={`header-level-${path.length > 3 ? 3 : path.length}`}
-                  style={{
-                    cursor: displayKey?.toLocaleLowerCase() === "properties" ? "pointer" : "default",
-                    userSelect: "none",
-                    textDecoration: displayKey?.toLocaleLowerCase() === "properties" ? "underline" : "none",
-                  }}
-                  onClick={() => {
-                    if (displayKey?.toLocaleLowerCase() === "properties") {
-                      const currentSortOrder = propertySortOrder || "alphabetical";
-                      const currentIndex = SORT_ORDER_OPTIONS.indexOf(currentSortOrder);
-                      const nextIndex = (currentIndex + 1) % SORT_ORDER_OPTIONS.length;
-                      const newSortOrder = SORT_ORDER_OPTIONS[nextIndex];
-                      setPropertySortOrderWithStorage(newSortOrder);
-                    }
-                  }}
-                  title={
-                    displayKey?.toLocaleLowerCase() === "properties"
-                      ? `Click to change sort order. Current: ${getSortOrderDisplayName(propertySortOrder)}`
-                      : undefined
-                  }
-                >
-                  {displayKey?.toLocaleLowerCase() === "properties" ? "Profile Properties" : displayKey}
-                </h3>
+                {displayKey?.toLocaleLowerCase() === "properties" ? (
+                  <div className="sort-dropdown-container">
+                    <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`} style={{ margin: 0, fontSize: "16px" }}>
+                      Profile Properties
+                    </h3>
+                    <SortDropdown<PropertySortOrder>
+                      options={SORT_ORDER_OPTIONS}
+                      selectedOption={propertySortOrder || "alphabetical"}
+                      onOptionChange={setPropertySortOrderWithStorage}
+                      getDisplayName={getSortOrderDisplayName}
+                    />
+                  </div>
+                ) : (
+                  <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>{displayKey}</h3>
+                )}
                 <button
                   className="header-button"
                   title={`Create new property for \"${extractProfileKeyFromPath(currentPath)}\"`}
