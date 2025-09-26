@@ -93,7 +93,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE) &&
             !uriInfo.profile.profile.tokenValue
         ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token4");
+            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
         const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
@@ -273,7 +273,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE) &&
             !uriInfo.profile.profile.tokenValue
         ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token2");
+            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
@@ -547,7 +547,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE) &&
             !uriInfo.profile.profile.tokenValue
         ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token4");
+            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
         try {

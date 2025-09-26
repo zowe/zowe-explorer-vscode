@@ -466,7 +466,6 @@ export class SharedInit {
                     !uriInfo.profile.profile.tokenValue
                 ) {
                     continue;
-                    // throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token4");
                 }
                 await vscode.workspace.fs.readDirectory(folder.uri.with({ query: "fetch=true" }));
             } catch (err) {

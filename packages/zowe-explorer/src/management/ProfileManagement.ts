@@ -17,6 +17,7 @@ import { ZoweLogger } from "../tools/ZoweLogger";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { Definitions } from "../configuration/Definitions";
+import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 
 export class ProfileManagement {
     public static getRegisteredProfileNameList(registeredTree: Definitions.Trees): string[] {
@@ -159,7 +160,9 @@ export class ProfileManagement {
                 break;
             }
             case this.tokenAuthLoginQpItem[this.AuthQpLabels.login]: {
-                await Profiles.getInstance().ssoLogin(node, profile.name);
+                const checkNode = await Profiles.getInstance().ssoLogin(node, profile.name);
+                node.collapsibleState = vscode.TreeItemCollapsibleState.None;
+                if (checkNode) SharedTreeProviders.getProviderForNode(node).nodeDataChanged(node);
                 break;
             }
             case this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]: {
