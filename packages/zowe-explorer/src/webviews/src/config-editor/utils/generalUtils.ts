@@ -19,11 +19,11 @@ export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetica
 export function getSortOrderDisplayName(sortOrder: PropertySortOrder): string {
     switch (sortOrder) {
         case "alphabetical":
-            return "alphabetical";
+            return "Alphabetical";
         case "merged-first":
-            return "merged first";
+            return "Merged First";
         case "non-merged-first":
-            return "merged last";
+            return "Merged Last";
         default:
             return sortOrder;
     }
