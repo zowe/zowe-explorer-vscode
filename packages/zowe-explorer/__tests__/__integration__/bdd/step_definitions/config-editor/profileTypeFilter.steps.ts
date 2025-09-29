@@ -18,7 +18,6 @@ When("the user selects {string} from the type filter dropdown", async (filterTyp
     const typeFilterSelect = await browser.$("select");
     await typeFilterSelect.waitForExist({ timeout: 1000 });
 
-    // Select the option by visible text
     await typeFilterSelect.selectByVisibleText(filterType);
 
     await browser.pause(50);
@@ -39,7 +38,6 @@ Then("the profile list should show only profiles of type {string}", async (expec
         profileElements = await browser.$$("[data-testid='profile-list-item']");
     }
 
-    // In flat view, all visible profiles should be of the expected type
     if (viewMode === "flat") {
         for (const element of profileElements) {
             const profileType = await element.getAttribute("data-profile-type");
@@ -49,7 +47,6 @@ Then("the profile list should show only profiles of type {string}", async (expec
         }
     }
 
-    // Verify we have at least one profile of the expected type
     expect(profileElements.length).toBeGreaterThan(0);
 });
 
@@ -64,8 +61,6 @@ Then("the profile list should show profiles of type {string} and their parents i
 
     const profileElements = await browser.$$("[data-testid='profile-tree-node']");
 
-    // In tree view, we should have at least one profile of the expected type
-    // and potentially some parent profiles that don't match the type
     let matchingCount = 0;
     for (const element of profileElements) {
         const profileType = await element.getAttribute("data-profile-type");
@@ -75,7 +70,6 @@ Then("the profile list should show profiles of type {string} and their parents i
     }
     expect(matchingCount).toBeGreaterThan(0);
 
-    // Verify we have at least one profile visible
     expect(profileElements.length).toBeGreaterThan(0);
 });
 
@@ -94,19 +88,15 @@ Then("the profile list should show only profiles containing {string} and of type
         profileElements = await browser.$$("[data-testid='profile-list-item']");
     }
 
-    // Verify that all visible profiles match both search term and type
     for (const element of profileElements) {
         const profileName = await element.getAttribute("data-profile-name");
         const profileType = await element.getAttribute("data-profile-type");
 
         if (profileName && profileType) {
-            // Check search term match (case insensitive)
             expect(profileName.toLowerCase()).toContain(searchTerm.toLowerCase());
-            // Check type match
             expect(profileType).toBe(expectedType);
         }
     }
 
-    // Verify we have at least one profile matching both criteria
     expect(profileElements.length).toBeGreaterThan(0);
 });

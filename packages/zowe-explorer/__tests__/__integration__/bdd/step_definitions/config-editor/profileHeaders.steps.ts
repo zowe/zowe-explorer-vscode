@@ -17,17 +17,13 @@ import { verifyProfiles } from "./profileTree.steps";
 declare const browser: any;
 declare const expect: any;
 
-// Background steps - Config Editor opening is handled by Setup.steps.ts
-
 Given("the profile list is set to flat view mode", async function () {
     this.workbench = await browser.getWorkbench();
 
-    // Get the webview and wait for it to be ready
     this.webview = (await this.workbench.getAllWebviews())[0];
     await this.webview.wait();
     await this.webview.open();
 
-    // Wait for the main app container to exist first
     const appContainer = await browser.$("[data-testid='config-editor-app']");
     await appContainer.waitForExist({ timeout: 1000 });
 
@@ -55,7 +51,6 @@ Given("the profile list is set to flat view mode", async function () {
     }
 });
 
-// Helper function to ensure Config Editor is ready
 async function ensureConfigEditorReady() {
     const appContainer = await browser.$("[data-testid='config-editor-app']");
     await appContainer.waitForExist({ timeout: 1000 });
@@ -73,7 +68,6 @@ When("the user clicks on the {string} profile entry", async function (profileNam
 When("the user clicks the {string} button", async function (buttonText: string) {
     await ensureConfigEditorReady();
 
-    // Wait for profile details section to be ready
     const profileDetailsSection = await browser.$(".profile-details-section");
     await profileDetailsSection.waitForExist({ timeout: 1000 });
     await browser.pause(50);
@@ -81,23 +75,18 @@ When("the user clicks the {string} button", async function (buttonText: string) 
 
     switch (buttonText) {
         case "open config with profile highlighted":
-            // Look for button with go-to-file icon
             button = await browser.$(".profile-action-button .codicon-go-to-file");
             break;
         case "set as default":
-            // Look for button with star icon
             button = await browser.$(".profile-action-button .codicon-star-empty, .profile-action-button .codicon-star-full");
             break;
         case "hide merged properties":
-            // Look for button with eye icon
             button = await browser.$(".profile-action-button .codicon-eye, .profile-action-button .codicon-eye-closed");
             break;
         case "rename profile":
-            // Look for button with rename-profile ID
             button = await browser.$("#rename-profile");
             break;
         case "delete profile":
-            // Look for button with trash icon
             button = await browser.$(".profile-action-button .codicon-trash");
             break;
         case "rename confirm":
@@ -125,11 +114,10 @@ When("the user appends {string} to the profile name in the modal", async functio
 When("the user saves the changes", async () => {
     await ensureConfigEditorReady();
 
-    // Click the Save button in the footer
     const saveButton = await browser.$(".footer button[title='Save all changes']");
     await saveButton.waitForExist({ timeout: 1000 });
     await saveButton.click();
-    await browser.pause(500); // Wait for save to complete
+    await browser.pause(500);
 });
 
 When("the user closes the zowe.config.json file", async () => {
@@ -137,11 +125,9 @@ When("the user closes the zowe.config.json file", async () => {
         const workbench = await browser.getWorkbench();
         const editorView = workbench.getEditorView();
 
-        // Try to close the zowe.config.json tab
         try {
             await editorView.closeEditor("zowe.config.json");
         } catch (error) {
-            // If that fails, try to close the active tab
             const activeTab = await editorView.getActiveTab();
             if (activeTab) {
                 const title = await activeTab.getTitle();
@@ -151,14 +137,10 @@ When("the user closes the zowe.config.json file", async () => {
             }
         }
         await browser.pause(50);
-    } catch (error) {
-        // For now, let's just pass this step since the main functionality worked
-    }
+    } catch (error) {}
 });
 
-// Verification steps
 Then("the zowe.config.json file should be open", async () => {
-    // Wait a bit for the file to open
     await browser.pause(500);
 
     try {
@@ -183,10 +165,8 @@ Then("the zowe.config.json file should be open", async () => {
 });
 
 Then("the zowe.config.json should have {string} as the default zosmf profile", async (expectedDefault: string) => {
-    // Get the zowe.config.json file path
     const configPath = path.join(process.cwd(), "..", "ci", "zowe.config.json");
 
-    // Read and parse the config file
     const configContent = fs.readFileSync(configPath, "utf8");
     const config = JSON.parse(configContent);
 
@@ -194,10 +174,8 @@ Then("the zowe.config.json should have {string} as the default zosmf profile", a
 });
 
 Then("the zowe.config.json should have {string} as the default base profile", async (expectedDefault: string) => {
-    // Get the zowe.config.json file path
     const configPath = path.join(process.cwd(), "..", "ci", "zowe.config.json");
 
-    // Read and parse the config file
     const configContent = fs.readFileSync(configPath, "utf8");
     const config = JSON.parse(configContent);
 
@@ -213,7 +191,6 @@ Then("there should be {int} property entries visible", async (expectedCount: num
 Then("there should be {int} profile properties", async (expectedCount: number) => {
     await ensureConfigEditorReady();
 
-    // Wait for profile details section to be ready
     const profileDetailsSection = await browser.$(".profile-details-section");
     await profileDetailsSection.waitForExist({ timeout: 1000 });
     await browser.pause(50);

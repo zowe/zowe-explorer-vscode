@@ -1,5 +1,6 @@
 import * as l10n from "@vscode/l10n";
 import { useModalClickOutside, useModalFocus } from "../../hooks";
+import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 
 interface AddProfileModalProps {
   isOpen: boolean;
@@ -253,13 +254,13 @@ export function AddProfileModal({
               const hasValidationError = isAuthOrder && !isValidAuthOrder(newProfileValue);
 
               return (
-                <input
-                  type="text"
+                <EnvVarAutocomplete
                   value={newProfileValue}
-                  onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
+                  onChange={onNewProfileValueChange}
                   onKeyDown={handleKeyDown}
                   className={`modal-input add-profile-input ${hasValidationError ? "error" : ""}`}
                   placeholder={isAuthOrder ? l10n.t("e.g., basic, token") : l10n.t("Value")}
+                  vscodeApi={vscodeApi}
                 />
               );
             }

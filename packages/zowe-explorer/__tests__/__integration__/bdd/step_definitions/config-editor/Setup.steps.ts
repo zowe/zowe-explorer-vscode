@@ -14,57 +14,42 @@ import { Key } from "webdriverio";
 import quickPick from "../../../../__pageobjects__/QuickPick";
 import { restoreZoweConfig } from "../../features/config-editor/utils";
 
-//
-// Scenario: User opens the Zowe Config Editor via Command Palette
-//
 When("a user opens the Zowe Config Editor from the Command Palette", async () => {
-    // First, check if Config Editor is already open
     restoreZoweConfig();
     try {
         const workbench = await browser.getWorkbench();
 
-        // Check if there are any webviews open (Config Editor uses webviews)
+        // Check if there are any webviews open
         const webviews = await workbench.getAllWebviews();
-        console.log(`Found ${webviews.length} webviews`);
         if (webviews && webviews.length > 0) {
-            // If there are webviews open, assume one is the Config Editor and just activate it
             try {
                 await webviews[0].open();
                 await browser.pause(50);
-                console.log("Successfully activated existing webview");
-                return; // Skip opening Command Palette
-            } catch (webviewError) {
-                // Continue to Command Palette if webview activation fails
-                console.log("Webview activation failed, continuing to Command Palette");
-            }
+                return;
+            } catch (webviewError) {}
         }
 
-        // Fallback: Check editor tabs
         const editorView = workbench.getEditorView();
 
-        // Try to get the active tab first
         const activeTab = await editorView.getActiveTab();
         if (activeTab) {
             const activeTitle = await activeTab.getTitle();
             if (activeTitle === "Config Editor") {
-                return; // Skip opening Command Palette
+                return;
             }
         }
 
-        // Check if Config Editor tab is already open in any tab
         const tabs = await editorView.getOpenTabs();
         if (tabs && tabs.length > 0) {
             for (const tab of tabs) {
                 try {
                     const title = await tab.getTitle();
                     if (title === "Config Editor") {
-                        // Config Editor is already open, just activate it
                         await editorView.openEditor("Config Editor");
                         await browser.pause(50);
-                        return; // Skip opening Command Palette
+                        return;
                     }
                 } catch (tabError) {
-                    // Continue checking other tabs if one fails
                     continue;
                 }
             }
@@ -76,11 +61,9 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
             }
         } catch (error) {}
     } catch (error) {
-        // If we can't check for existing tabs, proceed with opening Command Palette
         console.log("Error checking for existing Config Editor, proceeding to Command Palette");
     }
 
-    // Enhanced cleanup before opening Command Palette
     try {
         for (let i = 0; i < 3; i++) {
             await browser.keys("Escape");
@@ -92,20 +75,16 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
             await workbenchElement.click();
             await browser.pause(50);
         }
-    } catch (error) {
-        // Ignore errors
-    }
+    } catch (error) {}
 
     await browser.keys([Key.Ctrl, Key.Shift, "P"]);
     await browser.pause(50);
 
-    // Wait for quick pick to show
     await browser.waitUntil(
         async () => {
             try {
                 return await quickPick.isDisplayed();
             } catch {
-                // Try alternative detection
                 const quickPickElement = await browser.$(".quick-input-widget");
                 return await quickPickElement.isDisplayed();
             }
@@ -116,10 +95,8 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
         }
     );
 
-    // Type the command
     await browser.keys("Zowe Explorer: Edit Zowe Config Files");
 
-    // Hit Enter
     await browser.keys(Key.Enter);
 });
 
@@ -127,7 +104,6 @@ Then("the Zowe Config Editor webview should be opened", async function () {
     const workbench = await browser.getWorkbench();
     const editorView = workbench.getEditorView();
 
-    // Wait until we can open the editor by title
     await browser.waitUntil(
         async () => {
             try {
@@ -150,7 +126,6 @@ Then("the Zowe Config Editor webview should be opened", async function () {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// In your step definition
 Then("I wait for {int} seconds", async function (seconds) {
     await sleep(seconds * 1000);
 });

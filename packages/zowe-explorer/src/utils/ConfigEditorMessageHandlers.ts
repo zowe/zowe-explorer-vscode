@@ -166,4 +166,31 @@ export class ConfigEditorMessageHandlers {
     handleShowErrorMessage(message: any): void {
         vscode.window.showErrorMessage(message.message);
     }
+
+    async handleGetEnvVars(message: any): Promise<void> {
+        try {
+            const query = message.query || "";
+            const envVarNames: string[] = [];
+
+            // Get keys only for security
+            for (const key of Object.keys(process.env)) {
+                if (key.toLowerCase().includes(query.toLowerCase())) {
+                    envVarNames.push(key);
+                }
+            }
+
+            envVarNames.sort((a, b) => a.localeCompare(b));
+
+            await this.panel.webview.postMessage({
+                command: "ENV_VARS_RESPONSE",
+                envVars: envVarNames.slice(0, 100),
+            });
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            await this.panel.webview.postMessage({
+                command: "ENV_VARS_ERROR",
+                error: errorMessage,
+            });
+        }
+    }
 }

@@ -15,7 +15,6 @@ import * as fs from "fs";
 import * as path from "path";
 
 When("a user right clicks a configuration tab and clicks open file", async () => {
-    // Target the global team config tab (zowe.config.json) specifically
     const tab = await browser.$(`[id="global:true,user:false"]`);
     await tab.waitForExist({ timeout: 1000 });
     await tab.click({ button: "right" });
@@ -26,7 +25,6 @@ When("a user right clicks a configuration tab and clicks open file", async () =>
 });
 
 When("a user right clicks a configuration tab and clicks open schema", async () => {
-    // Target the global team config tab (zowe.config.json) specifically
     const tab = await browser.$(`[id="global:true,user:false"]`);
     await tab.waitForExist({ timeout: 1000 });
     await tab.click({ button: "right" });

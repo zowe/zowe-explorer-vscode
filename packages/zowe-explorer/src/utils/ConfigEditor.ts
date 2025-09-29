@@ -297,6 +297,10 @@ export class ConfigEditor extends WebView {
                 await this.messageHandlers.handleGetEnvInformation();
                 break;
             }
+            case "GET_ENV_VARS": {
+                await this.messageHandlers.handleGetEnvVars(message);
+                break;
+            }
             case "INITIAL_SELECTION": {
                 this.messageHandlers.handleInitialSelection(message, (selection) => {
                     this.initialSelection = selection;

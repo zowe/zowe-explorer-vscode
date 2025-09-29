@@ -13,23 +13,18 @@ import { Then } from "@cucumber/cucumber";
 import { Workbench } from "wdio-vscode-service";
 
 export async function verifyProfiles(expectedTreeTitles: string[], expectedFlatTitles: string[], workbench: Workbench) {
-    // Get the webview and wait for it to be ready
     const webview = (await workbench.getAllWebviews())[0];
     await webview.wait();
     await webview.open();
 
-    // Wait for the main app container
     const appContainer = await browser.$("[data-testid='config-editor-app']");
     await appContainer.waitForExist({ timeout: 10000 });
 
-    // Wait for the profile list
     const profileList = await browser.$("[data-testid='profile-list']");
     await profileList.waitForExist({ timeout: 1000 });
 
-    // Detect current view mode
     const viewMode = await profileList.getAttribute("data-view-mode");
 
-    // Wait until profiles are loaded
     await browser.waitUntil(
         async () => {
             const selector = viewMode === "tree" ? "[data-testid='profile-tree-node']" : "[data-testid='profile-list-item']";
@@ -39,7 +34,6 @@ export async function verifyProfiles(expectedTreeTitles: string[], expectedFlatT
         { timeout: 1000, timeoutMsg: "Profile elements not found within timeout" }
     );
 
-    // Collect found profiles
     const selector = viewMode === "tree" ? "[data-testid='profile-tree-node']" : "[data-testid='profile-list-item']";
     const elements = await browser.$$(selector);
 
@@ -49,13 +43,11 @@ export async function verifyProfiles(expectedTreeTitles: string[], expectedFlatT
         if (profileName) foundProfiles.push(profileName);
     }
 
-    // Validate tree mode
     for (const title of expectedTreeTitles) {
         expect(foundProfiles).toContain(title);
     }
     expect(foundProfiles.length).toBeGreaterThanOrEqual(expectedTreeTitles.length);
 
-    // If in tree mode, toggle and check flat mode
     if (viewMode === "tree") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
         if (await viewToggleButton.isExisting()) {

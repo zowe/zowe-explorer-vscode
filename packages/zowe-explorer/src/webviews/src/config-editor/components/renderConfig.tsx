@@ -13,6 +13,7 @@ import { useCallback } from "react";
 import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
 import { SortDropdown } from "./SortDropdown";
+import { EnvVarAutocomplete } from "./EnvVarAutocomplete";
 
 // Utils
 import {
@@ -434,6 +435,7 @@ export const RenderConfig = ({
                   className="header-button"
                   title={`Create new property for \"${extractProfileKeyFromPath(currentPath)}\"`}
                   onClick={() => openAddProfileModalAtPath(currentPath)}
+                  id="add-profile-property-button"
                   style={{
                     padding: "2px",
                     width: "20px",
@@ -703,6 +705,7 @@ export const RenderConfig = ({
                               }
                             : {}
                         }
+                        data-property-key={displayKey}
                       >
                         <option value="true">true</option>
                         <option value="false">false</option>
@@ -734,23 +737,25 @@ export const RenderConfig = ({
                               }
                             : {}
                         }
+                        data-property-key={displayKey}
                       />
                     );
                   } else {
+                    const currentValue = (() => {
+                      if (isFromMergedProps && !isDeletedMergedProperty) {
+                        return stringifyValueByType(mergedPropData?.value ?? "");
+                      } else {
+                        const pendingValueStr = stringifyValueByType(pendingValue);
+                        return pendingValueStr;
+                      }
+                    })();
+
                     return (
-                      <input
+                      <EnvVarAutocomplete
+                        value={currentValue}
+                        onChange={(value) => handleChange(fullKey, value)}
                         className="config-input"
-                        type="text"
                         placeholder=""
-                        value={(() => {
-                          if (isFromMergedProps && !isDeletedMergedProperty) {
-                            return stringifyValueByType(mergedPropData?.value ?? "");
-                          } else {
-                            const pendingValueStr = stringifyValueByType(pendingValue);
-                            return pendingValueStr;
-                          }
-                        })()}
-                        onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
                         disabled={isFromMergedProps && !isDeletedMergedProperty}
                         style={
                           isFromMergedProps && !isDeletedMergedProperty
@@ -762,6 +767,8 @@ export const RenderConfig = ({
                               }
                             : {}
                         }
+                        vscodeApi={vscodeApi}
+                        dataPropertyKey={displayKey}
                       />
                     );
                   }

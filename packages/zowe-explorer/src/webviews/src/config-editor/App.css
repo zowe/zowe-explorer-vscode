@@ -1360,6 +1360,103 @@ ul {
     white-space: nowrap;
 }
 
+/* Environment Variable Autocomplete Styles */
+.env-var-autocomplete-container {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.env-var-input {
+    flex: 1;
+    padding: 4px 8px;
+    border: 1px solid var(--vscode-input-border);
+    border-radius: 4px;
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    font-size: 13px;
+    font-family: var(--vscode-font-family);
+    min-width: 120px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.env-var-input:focus {
+    outline: none;
+    border-color: var(--vscode-button-background);
+    box-shadow: 0 0 0 1px var(--vscode-button-background);
+}
+
+.env-var-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: var(--vscode-dropdown-background);
+    border: 1px solid var(--vscode-dropdown-border);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 2px;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.env-var-suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--vscode-dropdown-border);
+}
+
+.env-var-suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.env-var-suggestion-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.env-var-suggestion-item.selected {
+    background-color: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
+}
+
+.env-var-suggestion-item.selected:hover {
+    background-color: var(--vscode-list-activeSelectionBackground);
+}
+
+.env-var-suggestion-name {
+    font-weight: 500;
+    color: var(--vscode-foreground);
+}
+
+/* Ensure dropdown appears above other elements */
+.env-var-suggestions {
+    z-index: 10000 !important;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 600px) {
+    .env-var-suggestions {
+        max-height: 150px;
+    }
+
+    .env-var-suggestion-item {
+        padding: 6px 10px;
+    }
+
+    .env-var-suggestion-name {
+        font-size: 12px;
+    }
+}
+
 .text-ellipsis {
     text-overflow: ellipsis;
 }

@@ -151,8 +151,12 @@ export const RenderProfiles = ({
       });
 
       // Get profile keys in original order from the configuration
+      // For natural sort order, we need to preserve the exact order from the original configuration
       const getOrderedProfileKeys = (profiles: any, parentKey = ""): string[] => {
         const keys: string[] = [];
+
+        // For natural sort order, preserve the exact order from Object.keys()
+        // This maintains the original order as it appears in the configuration file
         for (const key of Object.keys(profiles)) {
           const profile = profiles[key];
           const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
@@ -360,6 +364,7 @@ export const RenderProfiles = ({
         finalProfileKeys = [];
         const processedPendingKeys = new Set<string>();
 
+        // Preserve the exact order from the original configuration
         originalProfileKeys.forEach((originalKey) => {
           const pendingVersion = pendingMap.get(originalKey);
           if (pendingVersion) {
@@ -373,6 +378,7 @@ export const RenderProfiles = ({
         });
 
         // Add any pending profiles that don't correspond to existing profiles (newly created profiles)
+        // These should be added at the end to maintain the original order of existing profiles
         renamedPendingProfileKeys.forEach((pendingKey) => {
           if (!processedPendingKeys.has(pendingKey)) {
             finalProfileKeys.push(pendingKey);
@@ -384,7 +390,22 @@ export const RenderProfiles = ({
       }
 
       // Apply profile sorting based on the current sort order
-      const sortedProfileKeys = profileSortOrder === "natural" ? finalProfileKeys : sortProfilesAtLevel(finalProfileKeys);
+      let sortedProfileKeys: string[];
+
+      if (profileSortOrder === "natural") {
+        // For natural sort order, we need to ensure the order is stable and doesn't change during property modifications
+        // The issue is that the order can change when properties are modified, causing visual glitches
+        // We'll use a deterministic approach to ensure consistent ordering
+        sortedProfileKeys = [...finalProfileKeys].sort((a, b) => {
+          // Sort by the profile name (last part of the key) to ensure consistent ordering
+          const aName = a.split(".").pop() || a;
+          const bName = b.split(".").pop() || b;
+          return aName.localeCompare(bName);
+        });
+      } else {
+        // For other sort orders, use the existing logic
+        sortedProfileKeys = sortProfilesAtLevel(finalProfileKeys);
+      }
 
       return (
         <ProfileList

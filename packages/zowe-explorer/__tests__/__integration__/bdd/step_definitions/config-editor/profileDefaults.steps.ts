@@ -16,7 +16,6 @@ import * as path from "path";
 
 let foundOptions: string[] = [];
 
-// Check dropdown contents
 When("the user selects the {word} default dropdown", async (type: string) => {
     const dropdownSelector = `select[id="default-dropdown-${type}"]`;
     const typeFilterSelect = await browser.$(dropdownSelector);

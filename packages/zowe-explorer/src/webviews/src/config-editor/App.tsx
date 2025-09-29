@@ -25,6 +25,7 @@ import {
   flattenProfiles,
   extractProfileKeyFromPath,
   stringifyValueByType,
+  parseValueByType,
   getProfileType,
   getRenamedProfileKey,
   getRenamedProfileKeyWithNested,
@@ -782,11 +783,24 @@ export function App() {
     const fullKey = isSecure ? path.join(".").replace("secure", "properties") : path.join(".");
     const profileKey = extractProfileKeyFromPath(path);
 
+    // Get the property type and convert the value accordingly
+    const propertyType = getPropertyTypeForAddProfile(
+      newProfileKey.trim(),
+      selectedTab!,
+      configurations,
+      selectedProfileKey,
+      schemaValidations,
+      getProfileType,
+      pendingChanges,
+      renames
+    );
+    const convertedValue = parseValueByType(newProfileValue, propertyType);
+
     setPendingChanges((prev) => ({
       ...prev,
       [configPath]: {
         ...prev[configPath],
-        [fullKey]: { value: newProfileValue, path: path.slice(-1), profile: profileKey, secure: isSecure },
+        [fullKey]: { value: convertedValue, path: path.slice(-1), profile: profileKey, secure: isSecure },
       },
     }));
 

@@ -1,5 +1,6 @@
 import * as l10n from "@vscode/l10n";
 import { useModalClickOutside, useModalFocus } from "../../hooks";
+import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 
 interface ProfileWizardModalProps {
   isOpen: boolean;
@@ -167,15 +168,20 @@ export function ProfileWizardModal({
 
   return (
     <div className="modal-backdrop" onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick} onKeyDown={handleKeyDown} tabIndex={-1}>
-      <div className="modal wizard-modal" ref={modalRef} onClick={(e) => e.stopPropagation()}>
-        <h3 className="wizard-title">{l10n.t("Profile Wizard")}</h3>
+      <div className="modal wizard-modal" ref={modalRef} onClick={(e) => e.stopPropagation()} id="profile-wizard-modal">
+        <h3 className="wizard-title" id="profile-wizard-title">
+          {l10n.t("Profile Wizard")}
+        </h3>
         <div className="wizard-content">
           {/* Left Column */}
           <div className="wizard-left-column">
             {/* Parent Profile Selection */}
             <div>
-              <label className="wizard-label">{l10n.t("Parent Profile")}:</label>
+              <label className="wizard-label" id="parent-profile-label">
+                {l10n.t("Parent Profile")}:
+              </label>
               <select
+                id="parent-profile-select"
                 value={wizardRootProfile}
                 onChange={(e) => onRootProfileChange((e.target as HTMLSelectElement).value)}
                 onKeyDown={handleKeyDown}
@@ -191,8 +197,11 @@ export function ProfileWizardModal({
 
             {/* Profile Name */}
             <div>
-              <label className="wizard-label">{l10n.t("Profile Name")}:</label>
+              <label className="wizard-label" id="profile-name-label">
+                {l10n.t("Profile Name")}:
+              </label>
               <input
+                id="profile-name-input"
                 type="text"
                 value={wizardProfileName}
                 onKeyDown={(e) => {
@@ -223,14 +232,21 @@ export function ProfileWizardModal({
                 className={`modal-input wizard-input ${isProfileNameTaken ? "error" : ""}`}
                 placeholder={l10n.t("Enter profile name")}
               />
-              {isProfileNameTaken && <div className="wizard-error">{l10n.t("Profile name already exists under this root")}</div>}
+              {isProfileNameTaken && (
+                <div className="wizard-error" id="profile-name-error">
+                  {l10n.t("Profile name already exists under this root")}
+                </div>
+              )}
             </div>
 
             {/* Type Selection with Populate Defaults Button */}
             <div>
-              <label className="wizard-label">{l10n.t("Profile Type")}:</label>
+              <label className="wizard-label" id="profile-type-label">
+                {l10n.t("Profile Type")}:
+              </label>
               <div style={{ display: "flex", gap: "8px", alignItems: "stretch" }}>
                 <select
+                  id="profile-type-select"
                   value={wizardSelectedType}
                   onChange={(e) => onSelectedTypeChange((e.target as HTMLSelectElement).value)}
                   onKeyDown={handleKeyDown}
@@ -245,6 +261,7 @@ export function ProfileWizardModal({
                   ))}
                 </select>
                 <button
+                  id="populate-defaults-button"
                   onClick={onPopulateDefaults}
                   disabled={!wizardSelectedType}
                   className="wizard-button secondary"
@@ -269,14 +286,15 @@ export function ProfileWizardModal({
             </div>
 
             {/* Add New Property */}
-            <div className="wizard-add-property-section">
-              <label className="wizard-label">
+            <div className="wizard-add-property-section" id="add-property-section">
+              <label className="wizard-label" id="add-property-label">
                 {l10n.t("Add Property")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}:
               </label>
               <div className="wizard-property-form">
                 <div className="wizard-property-input-container">
                   <div style={{ position: "relative" }}>
                     <input
+                      id="new-property-key-input"
                       type="text"
                       value={wizardNewPropertyKey}
                       onChange={(e) => {
@@ -299,7 +317,12 @@ export function ProfileWizardModal({
                       style={{ paddingRight: "2rem" }}
                     />
                     {wizardNewPropertyKey && (
-                      <button onClick={() => onNewPropertyKeyChange("")} className="profile-clear-button" title="Clear input">
+                      <button
+                        id="clear-property-key-button"
+                        onClick={() => onNewPropertyKeyChange("")}
+                        className="profile-clear-button"
+                        title="Clear input"
+                      >
                         <span
                           className="codicon codicon-chrome-close"
                           style={{
@@ -311,15 +334,18 @@ export function ProfileWizardModal({
                     )}
                   </div>
                   {wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) && (
-                    <div className="wizard-error">{l10n.t("Property key already exists")}</div>
+                    <div className="wizard-error" id="property-key-exists-error">
+                      {l10n.t("Property key already exists")}
+                    </div>
                   )}
                   {wizardShowKeyDropdown && (
-                    <ul className="dropdown-list">
+                    <ul className="dropdown-list" id="property-key-dropdown">
                       {propertyOptions
                         .filter((opt) => opt.toLowerCase().includes(wizardNewPropertyKey.toLowerCase()))
                         .map((option, index) => (
                           <li
                             key={index}
+                            id={`property-key-option-${index}`}
                             className="dropdown-item"
                             title={propertyDescriptions[option] || ""}
                             onMouseDown={() => {
@@ -336,14 +362,17 @@ export function ProfileWizardModal({
 
                 {/* Auth Order Buttons */}
                 {isAuthOrderProperty(wizardNewPropertyKey.trim()) && (
-                  <div className="auth-order-buttons">
-                    <label className="auth-order-label">{l10n.t("Select Authentication Order")}:</label>
-                    <div className="auth-order-button-container">
+                  <div className="auth-order-buttons" id="auth-order-buttons">
+                    <label className="auth-order-label" id="auth-order-label">
+                      {l10n.t("Select Authentication Order")}:
+                    </label>
+                    <div className="auth-order-button-container" id="auth-order-button-container">
                       {["token", "basic", "bearer", "cert-pem"].map((authMethod) => {
                         const isSelected = isAuthMethodAlreadyAdded(authMethod);
                         return (
                           <button
                             key={authMethod}
+                            id={`auth-method-${authMethod}-button`}
                             type="button"
                             onClick={() => handleAuthMethodClick(authMethod)}
                             className={`auth-order-button ${isSelected ? "selected" : ""}`}
@@ -355,7 +384,9 @@ export function ProfileWizardModal({
                       })}
                     </div>
                     {!isValidAuthOrder(wizardNewPropertyValue) && (
-                      <div className="auth-order-error">{l10n.t("Invalid format. Use: basic, token, bearer, cert-pem")}</div>
+                      <div className="auth-order-error" id="auth-order-error">
+                        {l10n.t("Invalid format. Use: basic, token, bearer, cert-pem")}
+                      </div>
                     )}
                   </div>
                 )}
@@ -366,6 +397,7 @@ export function ProfileWizardModal({
                     if (wizardNewPropertySecure) {
                       return (
                         <input
+                          id="new-property-value-input"
                           type="password"
                           value={wizardNewPropertyValue}
                           onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
@@ -383,6 +415,7 @@ export function ProfileWizardModal({
                     } else if (propertyType === "boolean") {
                       return (
                         <select
+                          id="new-property-value-select"
                           value={wizardNewPropertyValue}
                           onChange={(e) => onNewPropertyValueChange((e.target as HTMLSelectElement).value)}
                           onKeyDown={(e) => {
@@ -401,6 +434,7 @@ export function ProfileWizardModal({
                     } else if (propertyType === "number") {
                       return (
                         <input
+                          id="new-property-value-number"
                           type="number"
                           value={wizardNewPropertyValue}
                           onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
@@ -420,10 +454,9 @@ export function ProfileWizardModal({
                       const hasValidationError = isAuthOrder && !isValidAuthOrder(wizardNewPropertyValue);
 
                       return (
-                        <input
-                          type="text"
+                        <EnvVarAutocomplete
                           value={wizardNewPropertyValue}
-                          onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
+                          onChange={onNewPropertyValueChange}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               onAddProperty();
@@ -433,6 +466,7 @@ export function ProfileWizardModal({
                           }}
                           className={`modal-input wizard-property-value-input ${hasValidationError ? "error" : ""}`}
                           placeholder={isAuthOrder ? l10n.t("e.g., basic, token") : l10n.t("Property value")}
+                          vscodeApi={vscodeApi}
                         />
                       );
                     }
@@ -440,6 +474,7 @@ export function ProfileWizardModal({
                   <div className="wizard-property-buttons">
                     {wizardNewPropertyKey && isFileProperty(wizardNewPropertyKey.trim()) && (
                       <button
+                        id="file-picker-button"
                         onClick={() => {
                           // Use VS Code's showOpenDialog API to get the full file path
                           if (vscodeApi) {
@@ -477,6 +512,7 @@ export function ProfileWizardModal({
                     {canPropertyBeSecureForWizard(wizardNewPropertyKey, wizardSelectedType) ? (
                       secureValuesAllowed ? (
                         <button
+                          id="secure-toggle-button"
                           onClick={onNewPropertySecureToggle}
                           className={`wizard-secure-toggle ${wizardNewPropertySecure ? "active" : "inactive"}`}
                           title={wizardNewPropertySecure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
@@ -485,6 +521,7 @@ export function ProfileWizardModal({
                         </button>
                       ) : (
                         <button
+                          id="secure-settings-button"
                           onClick={() => {
                             vscodeApi.postMessage({
                               command: "OPEN_VSCODE_SETTINGS",
@@ -501,6 +538,7 @@ export function ProfileWizardModal({
                   </div>
                 </div>
                 <button
+                  id="add-property-button"
                   onClick={onAddProperty}
                   disabled={
                     !wizardNewPropertyKey.trim() ||
@@ -516,11 +554,11 @@ export function ProfileWizardModal({
           </div>
 
           {/* Right Column - Properties List */}
-          <div className="wizard-right-column">
-            <label className="wizard-label">
+          <div className="wizard-right-column" id="properties-column">
+            <label className="wizard-label" id="properties-label">
               {l10n.t("Properties")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}:
             </label>
-            <div className="wizard-properties-container">
+            <div className="wizard-properties-container" id="properties-container">
               {/* Combined Properties - User properties take precedence over inherited ones */}
               {(() => {
                 // Get user property keys to check for overrides
@@ -551,6 +589,7 @@ export function ProfileWizardModal({
                       return (
                         <div
                           key={`inherited-${key}`}
+                          id={`inherited-property-${key}`}
                           className="wizard-property-item inherited"
                           title={`Inherited from: ${profilePath} (${fullConfigPath})`}
                         >
@@ -573,7 +612,7 @@ export function ProfileWizardModal({
                       ? wizardProperties.map((prop, index) => {
                           const propertyType = getPropertyType(prop.key);
                           return (
-                            <div key={index} className="wizard-property-item">
+                            <div key={index} id={`user-property-${index}`} className="wizard-property-item">
                               <span title={propertyDescriptions[prop.key] || ""} className="wizard-property-key">
                                 {prop.key}
                               </span>
@@ -581,6 +620,7 @@ export function ProfileWizardModal({
                                 <div className="wizard-property-value-container">
                                   {prop.secure ? (
                                     <input
+                                      id={`property-value-input-${index}`}
                                       type="password"
                                       value={stringifyValueByType(prop.value)}
                                       onChange={(e) => onPropertyValueChange(index, (e.target as HTMLInputElement).value)}
@@ -589,6 +629,7 @@ export function ProfileWizardModal({
                                     />
                                   ) : propertyType === "boolean" ? (
                                     <select
+                                      id={`property-value-select-${index}`}
                                       value={stringifyValueByType(prop.value)}
                                       onChange={(e) => onPropertyValueChange(index, (e.target as HTMLSelectElement).value)}
                                       className="modal-input wizard-property-value-input-small"
@@ -598,23 +639,25 @@ export function ProfileWizardModal({
                                     </select>
                                   ) : propertyType === "number" ? (
                                     <input
+                                      id={`property-value-number-${index}`}
                                       type="number"
                                       value={stringifyValueByType(prop.value)}
                                       onChange={(e) => onPropertyValueChange(index, (e.target as HTMLInputElement).value)}
                                       className="modal-input wizard-property-value-input-small"
                                     />
                                   ) : (
-                                    <input
-                                      type="text"
+                                    <EnvVarAutocomplete
                                       value={stringifyValueByType(prop.value)}
-                                      onChange={(e) => onPropertyValueChange(index, (e.target as HTMLInputElement).value)}
+                                      onChange={(value) => onPropertyValueChange(index, value)}
                                       className="modal-input wizard-property-value-input-small"
+                                      vscodeApi={vscodeApi}
                                     />
                                   )}
                                 </div>
                                 {canPropertyBeSecureForWizard(prop.key, wizardSelectedType) ? (
                                   secureValuesAllowed ? (
                                     <button
+                                      id={`property-secure-toggle-${index}`}
                                       onClick={() => onPropertySecureToggle(index)}
                                       className={`wizard-property-secure-toggle ${prop.secure ? "active" : "inactive"}`}
                                       title={prop.secure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
@@ -623,6 +666,7 @@ export function ProfileWizardModal({
                                     </button>
                                   ) : (
                                     <button
+                                      id={`property-secure-settings-${index}`}
                                       onClick={() => {
                                         vscodeApi.postMessage({
                                           command: "OPEN_VSCODE_SETTINGS",
@@ -637,6 +681,7 @@ export function ProfileWizardModal({
                                   )
                                 ) : null}
                                 <button
+                                  id={`remove-property-button-${index}`}
                                   onClick={() => onRemoveProperty(index)}
                                   className="wizard-button secondary"
                                   style={{
@@ -672,17 +717,26 @@ export function ProfileWizardModal({
 
                 const hasAnyProperties = wizardProperties.length > 0 || filteredInheritedProperties.length > 0;
 
-                return !hasAnyProperties ? <div className="wizard-no-properties">{l10n.t("No properties added yet")}</div> : null;
+                return !hasAnyProperties ? (
+                  <div className="wizard-no-properties" id="no-properties-message">
+                    {l10n.t("No properties added yet")}
+                  </div>
+                ) : null;
               })()}
             </div>
           </div>
         </div>
 
-        <div className="wizard-actions">
-          <button onClick={onCancel} className="wizard-button secondary">
+        <div className="wizard-actions" id="wizard-actions">
+          <button id="cancel-button" onClick={onCancel} className="wizard-button secondary">
             {l10n.t("Cancel")}
           </button>
-          <button onClick={onCreateProfile} disabled={!wizardProfileName.trim() || isProfileNameTaken} className="wizard-button primary">
+          <button
+            id="create-profile-button"
+            onClick={onCreateProfile}
+            disabled={!wizardProfileName.trim() || isProfileNameTaken}
+            className="wizard-button primary"
+          >
             {l10n.t("Create Profile")}
           </button>
         </div>

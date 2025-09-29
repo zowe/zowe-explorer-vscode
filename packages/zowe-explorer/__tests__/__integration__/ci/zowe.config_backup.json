@@ -90,7 +90,8 @@
       "type": "base",
       "properties": {
         "host": "special-chars.localhost",
-        "rejectUnauthorized": false
+        "rejectUnauthorized": false,
+        "port": 1234
       }
     },
     "nested": {
