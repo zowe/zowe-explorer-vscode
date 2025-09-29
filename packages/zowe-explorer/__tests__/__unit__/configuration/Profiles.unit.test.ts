@@ -854,6 +854,199 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
     });
 });
 
+describe("Profiles Unit Tests - function profileHasSecureToken", () => {
+    const globalMocks = createGlobalMocks();
+
+    const environmentSetup = (globalMocks): void => {
+        globalMocks.testProfile.profile.password = null;
+        globalMocks.testProfile.profile.tokenType = "";
+        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
+            value: [
+                {
+                    name: "sestest",
+                    message: "",
+                    type: "",
+                    status: "active",
+                    failNotFound: false,
+                },
+            ],
+            configurable: true,
+        });
+        Object.defineProperty(Profiles.getInstance(), "profilesValidationSetting", {
+            value: [
+                {
+                    name: "otherSestest",
+                    setting: false,
+                },
+            ],
+            configurable: true,
+        });
+    };
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        environmentSetup(globalMocks);
+    });
+
+    it("should extract parent profiles", async () => {
+        Object.defineProperty(Constants, "PROFILES_CACHE", { value: "test4" });
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                api: {
+                    profiles: {
+                        getProfilePathFromName: () => "profiles.test1.profiles.test2.profiles.test3",
+                    },
+                    secure: {
+                        secureFields: () => ["test1.test2.test3"],
+                    },
+                },
+            }),
+            isSecured: () => true,
+        } as any);
+        jest.spyOn(Profiles.getInstance(), "getDefaultProfile").mockReturnValue({} as any);
+        expect((Profiles.getInstance() as any).profileHasSecureToken("test1.test2.test3")).toBeTruthy();
+    });
+
+    it("should return false when no secure fields match any profile paths", async () => {
+        Object.defineProperty(Constants, "PROFILES_CACHE", { value: { getDefaultProfile: () => null } });
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                api: {
+                    profiles: {
+                        getProfilePathFromName: () => "profiles.test1.profiles.test2",
+                    },
+                    secure: {
+                        secureFields: () => ["someother.field.tokenValue"],
+                    },
+                },
+            }),
+            isSecured: () => true,
+        } as any);
+
+        const result = await (Profiles.getInstance() as any).profileHasSecureToken({ name: "test2" });
+        expect(result).toBeFalsy();
+    });
+
+    it("should return true when base profile has secure token", async () => {
+        const mockBaseProfile = { name: "base" };
+        Object.defineProperty(Constants, "PROFILES_CACHE", {
+            value: { getDefaultProfile: () => mockBaseProfile },
+        });
+
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                api: {
+                    profiles: {
+                        getProfilePathFromName: (name) => {
+                            if (name === "base") return "profiles.base";
+                            return "profiles.test1.profiles.test2";
+                        },
+                    },
+                    secure: {
+                        secureFields: () => ["profiles.base.properties.tokenValue"],
+                    },
+                },
+            }),
+            isSecured: () => true,
+        } as any);
+
+        const result = await (Profiles.getInstance() as any).profileHasSecureToken({ name: "test2" });
+        expect(result).toBeTruthy();
+    });
+
+    it("should handle empty secure fields array", async () => {
+        Object.defineProperty(Constants, "PROFILES_CACHE", { value: { getDefaultProfile: () => null } });
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                api: {
+                    profiles: {
+                        getProfilePathFromName: () => "profiles.test1.profiles.test2",
+                    },
+                    secure: {
+                        secureFields: () => [],
+                    },
+                },
+            }),
+            isSecured: () => true,
+        } as any);
+
+        const result = await (Profiles.getInstance() as any).profileHasSecureToken({ name: "test2" });
+        expect(result).toBeFalsy();
+    });
+
+    it("should handle complex nested profile hierarchy", async () => {
+        Object.defineProperty(Constants, "PROFILES_CACHE", { value: { getDefaultProfile: () => null } });
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                api: {
+                    profiles: {
+                        getProfilePathFromName: () => "profiles.level1.profiles.level2.profiles.level3.profiles.level4",
+                    },
+                    secure: {
+                        secureFields: () => ["profiles.level1.profiles.level2.properties.tokenValue", "other.field"],
+                    },
+                },
+            }),
+            isSecured: () => true,
+        } as any);
+
+        const result = await (Profiles.getInstance() as any).profileHasSecureToken({ name: "level4" });
+        expect(result).toBeTruthy();
+    });
+
+    it("should not include duplicate paths in allPaths array", async () => {
+        Object.defineProperty(Constants, "PROFILES_CACHE", { value: { getDefaultProfile: () => null } });
+        const secureFieldsSpy = jest.fn().mockReturnValue(["profiles.test1.properties.tokenValue"]);
+
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                api: {
+                    profiles: {
+                        getProfilePathFromName: () => "profiles.test1.profiles.test1", // duplicate segment
+                    },
+                    secure: {
+                        secureFields: secureFieldsSpy,
+                    },
+                },
+            }),
+            isSecured: () => true,
+        } as any);
+
+        const result = await (Profiles.getInstance() as any).profileHasSecureToken({ name: "test1" });
+
+        // Should still work correctly even with duplicate segments
+        expect(result).toBeTruthy();
+        expect(secureFieldsSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle base profile when it matches an existing path", async () => {
+        const mockBaseProfile = { name: "test1" };
+        Object.defineProperty(Constants, "PROFILES_CACHE", {
+            value: { getDefaultProfile: () => mockBaseProfile },
+        });
+
+        jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            getTeamConfig: () => ({
+                api: {
+                    profiles: {
+                        getProfilePathFromName: (name) => {
+                            if (name === "test1") return "profiles.test1";
+                            return "profiles.test1.profiles.test2";
+                        },
+                    },
+                    secure: {
+                        secureFields: () => ["profiles.test1.properties.tokenValue"],
+                    },
+                },
+            }),
+            isSecured: () => true,
+        } as any);
+
+        const result = await (Profiles.getInstance() as any).profileHasSecureToken({ name: "test2" });
+        expect(result).toBeTruthy();
+    });
+});
+
 describe("Profiles Unit Tests - function checkCurrentProfile", () => {
     const environmentSetup = (globalMocks): void => {
         globalMocks.testProfile.profile.password = null;
