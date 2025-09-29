@@ -185,6 +185,8 @@ export class Profiles extends ProfilesCache {
                 ZoweLogger.debug(`Profile ${theProfile.name} is using token auth, prompting for missing credentials`);
                 try {
                     const loggedIn = await Profiles.getInstance().ssoLogin(null, theProfile.name);
+                    node.collapsibleState = vscode.TreeItemCollapsibleState.None;
+                    if (loggedIn) SharedTreeProviders.getProviderForNode(node).nodeDataChanged(node);
                     theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
 
                     if (!loggedIn) {
