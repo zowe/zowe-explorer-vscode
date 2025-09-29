@@ -6,9 +6,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Updated Zowe SDKs to `8.27.0` for technical currency. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
+
 ### Bug fixes
 
 - Fixed issues seen when user is prompted, having v1 profiles and chooses convert or create new config options.[#3757](https://github.com/zowe/zowe-explorer-vscode/issues/3757)
+- Fixed an error encountered when deleting members in a PDS. [#3874](https://github.com/zowe/zowe-explorer-vscode/issues/3874)
 
 ## `3.3.0`
 
