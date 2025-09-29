@@ -161,8 +161,10 @@ export class ProfileManagement {
             }
             case this.tokenAuthLoginQpItem[this.AuthQpLabels.login]: {
                 const checkNode = await Profiles.getInstance().ssoLogin(node, profile.name);
-                node.collapsibleState = vscode.TreeItemCollapsibleState.None;
-                if (checkNode) SharedTreeProviders.getProviderForNode(node).nodeDataChanged(node);
+                if (checkNode) {
+                    node.collapsibleState = vscode.TreeItemCollapsibleState.None;
+                    SharedTreeProviders.getProviderForNode(node).nodeDataChanged(node);
+                }
                 break;
             }
             case this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]: {
