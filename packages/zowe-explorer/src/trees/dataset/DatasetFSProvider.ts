@@ -818,6 +818,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             await AuthUtils.reauthenticateIfCancelled(profile);
             await AuthHandler.waitForUnlock(entry.metadata.profile);
             await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).deleteDataSet(fullName, {
+                volume: entry.stats?.["vol"],
                 responseTimeout: entry.metadata.profile.profile?.responseTimeout,
             });
         } catch (err) {
