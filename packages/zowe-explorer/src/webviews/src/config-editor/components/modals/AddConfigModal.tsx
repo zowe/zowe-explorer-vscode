@@ -15,7 +15,6 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
   const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, "button:not([disabled])");
 
-  // Get all configuration types with their availability status
   const getAllConfigTypes = () => {
     const currentConfigs = configurations.length;
     const hasGlobalTeam = configurations.some((c) => c.global && !c.user);
@@ -78,7 +77,6 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
 
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
-      // Find the first available config type and add it
       const firstAvailableType = availableTypes[0];
       if (firstAvailableType) {
         onAdd(firstAvailableType.value);

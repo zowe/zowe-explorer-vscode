@@ -12,7 +12,6 @@
 import { useCallback } from "react";
 import * as l10n from "@vscode/l10n";
 
-// Types
 type Configuration = {
   configPath: string;
   properties: any;
@@ -27,7 +26,6 @@ type PendingDefault = {
   path: string[];
 };
 
-// Props interface for the renderDefaults component
 interface RenderDefaultsProps {
   defaults: { [key: string]: any };
   configurations: Configuration[];
@@ -35,11 +33,7 @@ interface RenderDefaultsProps {
   pendingDefaults: { [configPath: string]: { [key: string]: PendingDefault } };
   defaultsDeletions: { [configPath: string]: string[] };
   renames: { [configPath: string]: { [originalKey: string]: string } };
-
-  // Handler functions
   handleDefaultsChange: (key: string, value: string) => void;
-
-  // Utility functions
   getWizardTypeOptions: () => string[];
   getAvailableProfilesByType: (profileType: string) => string[];
 }
@@ -59,10 +53,7 @@ export const RenderDefaults = ({
     (defaults: { [key: string]: any }) => {
       if (!defaults || typeof defaults !== "object") return null;
 
-      // Get all available property types from the schema
       const availableTypes = getWizardTypeOptions();
-
-      // Create a complete defaults object with all available types
       const completeDefaults = { ...defaults };
       availableTypes.forEach((type: string) => {
         if (!(type in completeDefaults)) {
@@ -90,22 +81,18 @@ export const RenderDefaults = ({
               if (defaultsDeletions[configurations[selectedTab!]!.configPath]?.includes(fullKey)) return null;
               const isParent = typeof value === "object" && value !== null && !Array.isArray(value);
               const isArray = Array.isArray(value);
-              // Calculate pending value considering both explicit pending defaults and simulated defaults from renames
               const getEffectiveDefaultValue = (profileType: string): string => {
                 const configPath = configurations[selectedTab!]!.configPath;
 
-                // Check explicit pending defaults first
                 const pendingDefault = pendingDefaults[configPath]?.[profileType];
                 if (pendingDefault) {
                   return pendingDefault.value;
                 }
 
-                // Check existing defaults
                 const config = configurations[selectedTab!].properties;
                 const defaults = config.defaults || {};
                 let defaultValue = defaults[profileType];
 
-                // Apply renames to the default value (simulate backend logic)
                 if (defaultValue) {
                   const configRenames = renames[configPath] || {};
                   for (const [originalKey, newKey] of Object.entries(configRenames)) {

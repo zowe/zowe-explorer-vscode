@@ -11,7 +11,6 @@
 
 import { useEffect } from "react";
 
-// REF: https://codepen.io/iamsidd_j/pen/qBRWNQQ?editors=1010
 export function useEnhancedDatalist(inputId: string | null, datalistId: string) {
     useEffect(() => {
         if (!inputId) return;
@@ -84,7 +83,7 @@ export function useEnhancedDatalist(inputId: string | null, datalistId: string) 
                 input.removeEventListener("keydown", onKeyDown);
                 options.forEach((opt) => opt.removeEventListener("click", () => onClick(opt)));
             };
-        }, 0); // allow modal to render
+        }, 0);
 
         return () => clearTimeout(timeout);
     }, [inputId, datalistId]);

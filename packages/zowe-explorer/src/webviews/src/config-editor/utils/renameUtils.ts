@@ -9,16 +9,6 @@
  *
  */
 
-/**
- * Utility functions for handling profile renames in the configuration editor.
- * These functions manage complex rename operations including chained renames,
- * conflict resolution, and loop detection.
- */
-
-/**
- * Updates changes to use new profile names after renames.
- * Handles complex nested profile renames and chained renames.
- */
 export const updateChangesForRenames = (changes: any[], renames: any[]) => {
     if (!renames || renames.length === 0) {
         return changes;
@@ -27,12 +17,9 @@ export const updateChangesForRenames = (changes: any[], renames: any[]) => {
     return changes.map((change) => {
         const updatedChange = { ...change };
 
-        // Update profile references in the change using iterative rename application
         if (updatedChange.profile) {
             let effectiveProfileName = updatedChange.profile;
-            const appliedRenames = new Set(); // Track which renames we've already applied
-
-            // Apply renames iteratively to handle chained renames
+            const appliedRenames = new Set();
             let changed = true;
             let iteration = 0;
             while (changed && iteration < 10) {
@@ -43,7 +30,6 @@ export const updateChangesForRenames = (changes: any[], renames: any[]) => {
                     if (rename.configPath === change.configPath) {
                         const renameKey = `${rename.originalKey}->${rename.newKey}`;
 
-                        // Skip if we've already applied this exact rename to avoid loops
                         if (appliedRenames.has(renameKey)) {
                             continue;
                         }
@@ -55,8 +41,6 @@ export const updateChangesForRenames = (changes: any[], renames: any[]) => {
                             break;
                         }
 
-                        // Use word boundary matching to prevent partial matches
-                        // Only match if originalKey is followed by a dot (not part of a longer name)
                         if (effectiveProfileName.startsWith(rename.originalKey + ".")) {
                             const newEffectiveName = effectiveProfileName.replace(rename.originalKey + ".", rename.newKey + ".");
                             effectiveProfileName = newEffectiveName;
@@ -216,10 +200,6 @@ export const updateChangesForRenames = (changes: any[], renames: any[]) => {
     });
 };
 
-/**
- * Helper function to extract profile name from a key.
- * This is used by updateChangesForRenames and needs to be available.
- */
 const extractProfileFromKey = (key: string): string => {
     const parts = key.split(".");
     const profileParts: string[] = [];
@@ -235,12 +215,6 @@ const extractProfileFromKey = (key: string): string => {
     return profileParts.join(".");
 };
 
-/**
- * Gets the correct profile name for merged properties (handles renames).
- * For merged properties, we need to find where the data is actually stored in the original configuration.
- * The data is always stored at the original location before any renames.
- * We need to reverse all renames to get to the original location.
- */
 export const getProfileNameForMergedProperties = (
     profileKey: string,
     configPath: string,
@@ -283,9 +257,6 @@ export const getProfileNameForMergedProperties = (
     return effectiveProfileKey;
 };
 
-/**
- * Consolidates renames and handles chained renames.
- */
 export const consolidateRenames = (
     existingRenames: { [originalKey: string]: string },
     originalKey: string,
@@ -307,10 +278,6 @@ export const consolidateRenames = (
     return result;
 };
 
-/**
- * Handles conflicting renames with complex logic to resolve conflicts,
- * handle chained renames, and prevent infinite loops.
- */
 export const consolidateConflictingRenames = (renames: { [originalKey: string]: string }): { [originalKey: string]: string } => {
     const consolidated = { ...renames };
 
@@ -629,9 +596,6 @@ export const consolidateConflictingRenames = (renames: { [originalKey: string]: 
     return finalConsolidated;
 };
 
-/**
- * Gets the current effective name of a profile (considering pending renames).
- */
 export const getCurrentEffectiveName = (
     profileKey: string,
     configPath: string,
@@ -665,9 +629,6 @@ export const getCurrentEffectiveName = (
     return effectiveName;
 };
 
-/**
- * Detects closed loops in rename chains.
- */
 export const detectClosedLoops = (renames: { [originalKey: string]: string }): string[][] => {
     const loops: string[][] = [];
     const visited = new Set<string>();
@@ -706,9 +667,6 @@ export const detectClosedLoops = (renames: { [originalKey: string]: string }): s
     return loops;
 };
 
-/**
- * Checks if a rename would cancel out an existing rename chain.
- */
 export const checkIfRenameCancelsOut = (currentRenames: { [originalKey: string]: string }, originalKey: string, newKey: string): boolean => {
     // If this is a direct opposite (A -> B followed by B -> A), it cancels out
     if (currentRenames[newKey] === originalKey) {
@@ -740,9 +698,6 @@ export const checkIfRenameCancelsOut = (currentRenames: { [originalKey: string]:
     return false;
 };
 
-/**
- * Checks if a profile has been renamed.
- */
 export const hasPendingRename = (
     profileKey: string,
     configPath: string,

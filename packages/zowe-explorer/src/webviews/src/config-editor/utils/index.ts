@@ -9,41 +9,35 @@
  *
  */
 
-// Export from configUtils (primary source for types and basic functions)
 export * from "./configUtils";
 export * from "./MoveUtils";
 export * from "./propertyUtils";
 export * from "./generalUtils";
 export * from "./sortingUtils";
 
-// Export types and functions from profileUtils
 export type { schemaValidation } from "./profileUtils";
 export {
-  getProfileType,
-  getRenamedProfileKey,
-  getRenamedProfileKeyWithNested,
-  getOriginalProfileKey,
-  getOriginalProfileKeyWithNested,
-  isPropertyActuallyInherited,
-  mergePendingChangesForProfile,
-  mergeMergedProperties,
-  ensureProfileProperties,
-  filterSecureProperties,
-  mergePendingSecureProperties,
-  isPropertyFromMergedProps,
-  isMergedPropertySecure,
-  canPropertyBeSecure,
-  isPropertySecure,
-  handleToggleSecure,
-  hasPendingSecureChanges,
-  extractPendingProfiles,
-  isProfileOrParentDeleted,
-  getAvailableProfilesByType,
-  getProfileTypeFromPath
+    getProfileType,
+    getRenamedProfileKey,
+    getRenamedProfileKeyWithNested,
+    getOriginalProfileKey,
+    getOriginalProfileKeyWithNested,
+    isPropertyActuallyInherited,
+    mergePendingChangesForProfile,
+    mergeMergedProperties,
+    ensureProfileProperties,
+    filterSecureProperties,
+    mergePendingSecureProperties,
+    isPropertyFromMergedProps,
+    isMergedPropertySecure,
+    canPropertyBeSecure,
+    isPropertySecure,
+    handleToggleSecure,
+    hasPendingSecureChanges,
+    extractPendingProfiles,
+    isProfileOrParentDeleted,
+    getAvailableProfilesByType,
+    getProfileTypeFromPath,
 } from "./profileUtils";
 
-// Export functions from profileHelpers
-export {
-  isProfileDefault,
-  isCurrentProfileUntyped
-} from "./profileHelpers";
+export { isProfileDefault, isCurrentProfileUntyped } from "./profileHelpers";

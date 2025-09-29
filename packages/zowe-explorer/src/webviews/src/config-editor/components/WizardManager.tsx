@@ -12,11 +12,7 @@
 import { useEffect } from "react";
 import { ProfileWizardModal } from "./modals/ProfileWizardModal";
 
-// Types
-
-// Props interface for the WizardManager component
 interface WizardManagerProps {
-  // Wizard state and handlers from useProfileWizard hook
   wizardModalOpen: boolean;
   wizardRootProfile: string;
   wizardSelectedType: string;
@@ -34,8 +30,6 @@ interface WizardManagerProps {
   setWizardNewPropertyKey: (key: string) => void;
   setWizardNewPropertyValue: (value: string) => void;
   setWizardNewPropertySecure: (secure: boolean) => void;
-
-  // Wizard functions from useProfileWizard hook
   getWizardTypeOptions: () => string[];
   getWizardPropertyOptions: () => string[];
   getWizardPropertyDescriptions: () => { [key: string]: string };
@@ -49,8 +43,6 @@ interface WizardManagerProps {
   handleWizardCancel: () => void;
   requestWizardMergedProperties: () => void;
   handleWizardPopulateDefaults: () => void;
-
-  // Additional props needed for wizard functionality
   selectedTab: number | null;
   secureValuesAllowed: boolean;
   vscodeApi: any;
@@ -58,8 +50,6 @@ interface WizardManagerProps {
   canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
   canPropertyBeSecureForWizard: (displayKey: string, profileType: string) => boolean;
   stringifyValueByType: (value: any, type?: string) => string;
-
-  // Event handlers for wizard-related messages
   onWizardMergedProperties: (data: any) => void;
   onFileSelected: (data: any) => void;
 }
@@ -105,19 +95,16 @@ export const WizardManager = ({
   onWizardMergedProperties,
   onFileSelected,
 }: WizardManagerProps) => {
-  // Trigger wizard merged properties request when root profile, type, or pending changes change
   useEffect(() => {
     if (wizardModalOpen && selectedTab !== null && (wizardRootProfile || wizardSelectedType)) {
-      // Debounce the request to prevent excessive calls
       const timeoutId = setTimeout(() => {
         requestWizardMergedProperties();
-      }, 1000); // 1 second delay
+      }, 1000);
 
       return () => clearTimeout(timeoutId);
     }
   }, [wizardRootProfile, wizardSelectedType, wizardModalOpen, selectedTab, requestWizardMergedProperties]);
 
-  // Handle wizard-related messages
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.command === "WIZARD_MERGED_PROPERTIES") {

@@ -9,13 +9,9 @@
  *
  */
 
-// Types
 export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-first";
 export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetical";
 
-/**
- * Get user-friendly display name for sort order
- */
 export function getSortOrderDisplayName(sortOrder: PropertySortOrder): string {
     switch (sortOrder) {
         case "alphabetical":
@@ -29,9 +25,6 @@ export function getSortOrderDisplayName(sortOrder: PropertySortOrder): string {
     }
 }
 
-/**
- * Get user-friendly display name for profile sort order
- */
 export function getProfileSortOrderDisplayName(sortOrder: ProfileSortOrder): string {
     switch (sortOrder) {
         case "natural":
@@ -45,9 +38,6 @@ export function getProfileSortOrderDisplayName(sortOrder: ProfileSortOrder): str
     }
 }
 
-/**
- * Get nested property from an object using a path array
- */
 export function getNestedProperty(obj: any, path: string[]): any {
     let current = obj;
     for (const segment of path) {

@@ -18,20 +18,15 @@ interface ProfileListProps {
   viewMode: "flat" | "tree";
   hasPendingSecureChanges: (profileKey: string) => boolean;
   hasPendingRename: (profileKey: string) => boolean;
-  // Search and filter props
   searchTerm: string;
   filterType: string | null;
   onSearchChange: (searchTerm: string) => void;
   onFilterChange: (filterType: string | null) => void;
-  // Profile sort order props
   profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical";
   onProfileSortOrderChange: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical") => void;
-  // Expanded nodes props
   expandedNodes: Set<string>;
   setExpandedNodes: React.Dispatch<React.SetStateAction<Set<string>>>;
-  // Drag and drop props
   onProfileRename?: (originalKey: string, newKey: string, isDragDrop?: boolean) => boolean;
-  // Props for finding original keys
   configurations?: any[];
   selectedTab?: number | null;
   renames?: { [configPath: string]: { [originalKey: string]: string } };

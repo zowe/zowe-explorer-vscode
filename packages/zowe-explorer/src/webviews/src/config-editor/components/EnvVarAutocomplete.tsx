@@ -42,13 +42,11 @@ export const EnvVarAutocomplete: React.FC<EnvVarAutocompleteProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Check if the current value starts with $ and extract the variable name
   const getCurrentVarName = useCallback((val: string) => {
     const match = val.match(/^\$([A-Za-z_][A-Za-z0-9_]*)/);
     return match ? match[1] : "";
   }, []);
 
-  // Request environment variables from the extension
   const requestEnvVars = useCallback(
     (query: string = "") => {
       if (!vscodeApi) return;
@@ -62,7 +60,6 @@ export const EnvVarAutocomplete: React.FC<EnvVarAutocompleteProps> = ({
     [vscodeApi]
   );
 
-  // Handle message from extension
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.command === "ENV_VARS_RESPONSE") {
@@ -75,7 +72,6 @@ export const EnvVarAutocomplete: React.FC<EnvVarAutocompleteProps> = ({
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  // Handle input change
   const handleInputChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       const newValue = (e.target as HTMLInputElement).value;
@@ -93,7 +89,6 @@ export const EnvVarAutocomplete: React.FC<EnvVarAutocompleteProps> = ({
     [onChange, getCurrentVarName, requestEnvVars]
   );
 
-  // Handle input focus
   const handleInputFocus = useCallback(() => {
     const varName = getCurrentVarName(value);
     if (varName) {
@@ -102,9 +97,7 @@ export const EnvVarAutocomplete: React.FC<EnvVarAutocompleteProps> = ({
     }
   }, [value, getCurrentVarName, requestEnvVars]);
 
-  // Handle input blur
   const handleInputBlur = useCallback(() => {
-    // Delay hiding suggestions to allow for dropdown clicks
     setTimeout(() => {
       if (!dropdownRef.current?.contains(document.activeElement)) {
         setShowSuggestions(false);
@@ -113,7 +106,6 @@ export const EnvVarAutocomplete: React.FC<EnvVarAutocompleteProps> = ({
     }, 150);
   }, []);
 
-  // Handle keyboard navigation
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (!showSuggestions || suggestions.length === 0) {
@@ -153,7 +145,6 @@ export const EnvVarAutocomplete: React.FC<EnvVarAutocompleteProps> = ({
     [showSuggestions, suggestions, selectedIndex, value, onChange, getCurrentVarName, onKeyDown]
   );
 
-  // Handle suggestion click
   const handleSuggestionClick = useCallback(
     (suggestion: string) => {
       const varName = getCurrentVarName(value);
@@ -166,7 +157,6 @@ export const EnvVarAutocomplete: React.FC<EnvVarAutocompleteProps> = ({
     [value, onChange, getCurrentVarName]
   );
 
-  // Filter suggestions based on current input
   const filteredSuggestions = suggestions.filter((suggestion) => suggestion.toLowerCase().includes(getCurrentVarName(value).toLowerCase()));
 
   return (

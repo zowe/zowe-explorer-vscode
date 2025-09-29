@@ -11,7 +11,6 @@
 
 import { getProfileType } from "./profileUtils";
 
-// Types
 export interface Configuration {
     configPath: string;
     properties: any;
@@ -33,9 +32,6 @@ export interface PendingDefault {
     path: string[];
 }
 
-/**
- * Check if a profile is set as default
- */
 export function isProfileDefault(
     profileKey: string,
     selectedTab: number | null,
@@ -50,36 +46,27 @@ export function isProfileDefault(
 
     if (!profileType) return false;
 
-    // Check if this profile was renamed and get the original profile name
     const originalProfileKey = getOriginalProfileKeyWithNested(profileKey, configPath, renames);
 
-    // Check pending defaults first
     const pendingDefault = pendingDefaults[configPath]?.[profileType];
     if (pendingDefault) {
         return pendingDefault.value === profileKey || pendingDefault.value === originalProfileKey;
     }
 
-    // Check existing defaults
     const config = configurations[selectedTab!].properties;
     const defaults = config.defaults || {};
 
-    // Check if the current profile is the default
     const defaultValue = defaults[profileType];
     if (defaultValue === profileKey || defaultValue === originalProfileKey) {
         return true;
     }
 
-    // Check if this profile should be the default due to renames (simulate backend logic)
-    // This handles the case where a default profile was renamed and should remain the default
     const configRenames = renames[configPath] || {};
     for (const [originalKey, newKey] of Object.entries(configRenames)) {
-        // Check if the original profile was the default and this is the renamed version
         if (defaultValue === originalKey && newKey === profileKey) {
             return true;
         }
 
-        // Check if this profile is a child of a renamed profile that was a default
-        // This handles cases like: tso.zosmf was default, tso was renamed to tso1, so tso1.zosmf should be default
         if (defaultValue.startsWith(originalKey + ".") && profileKey.startsWith(newKey + ".")) {
             const originalChildPath = defaultValue.substring(originalKey.length + 1);
             const currentChildPath = profileKey.substring(newKey.length + 1);
@@ -92,9 +79,6 @@ export function isProfileDefault(
     return false;
 }
 
-/**
- * Check if current profile is untyped
- */
 export function isCurrentProfileUntyped(
     selectedProfileKey: string | null,
     selectedTab: number | null,
@@ -107,9 +91,6 @@ export function isCurrentProfileUntyped(
     return !profileType || profileType.trim() === "";
 }
 
-/**
- * Helper function to get original profile key with nested structure
- */
 function getOriginalProfileKeyWithNested(
     profileKey: string,
     configPath: string,
@@ -117,13 +98,11 @@ function getOriginalProfileKeyWithNested(
 ): string {
     const configRenames = renames[configPath] || {};
 
-    // Find the original key by looking through all renames
     for (const [originalKey, newKey] of Object.entries(configRenames)) {
         if (newKey === profileKey) {
             return originalKey;
         }
     }
 
-    // If no rename found, return the current key
     return profileKey;
 }

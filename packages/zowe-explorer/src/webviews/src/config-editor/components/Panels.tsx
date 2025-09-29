@@ -1,10 +1,8 @@
 import React from "react";
 import { SortDropdown } from "./SortDropdown";
 
-// Profile sort order options
 const PROFILE_SORT_ORDER_OPTIONS: ("natural" | "alphabetical" | "reverse-alphabetical")[] = ["natural", "alphabetical", "reverse-alphabetical"];
 
-// Helper function to get user-friendly display name for profile sort order
 const getProfileSortOrderDisplayName = (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical"): string => {
   switch (sortOrder) {
     case "natural":
@@ -27,7 +25,6 @@ interface PanelsProps {
   onProfileWizard: () => void;
   viewMode: "flat" | "tree";
   onViewModeToggle: () => void;
-  // Profile sort order props
   profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical";
   onProfileSortOrderChange: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical") => void;
 }

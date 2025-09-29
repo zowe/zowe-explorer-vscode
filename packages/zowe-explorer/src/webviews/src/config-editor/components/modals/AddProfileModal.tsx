@@ -51,12 +51,10 @@ export function AddProfileModal({
   const modalRef = useModalFocus(isOpen, focusValueInput ? ".add-profile-input" : "#profile-type-input");
 
   const isFileProperty = (key: string): boolean => {
-    // Check if key is defined and not null
     if (!key || typeof key !== "string") {
       return false;
     }
 
-    // Keys that are file paths
     const filePaths = ["privateKey", "certFile", "certKeyFile"];
     for (const path of filePaths) {
       if (key.toLowerCase() === path.toLowerCase()) {
@@ -67,12 +65,10 @@ export function AddProfileModal({
   };
 
   const isAuthOrderProperty = (key: string): boolean => {
-    // Check if key is defined and not null
     if (!key || typeof key !== "string") {
       return false;
     }
 
-    // Check if key is "authorder" (case insensitive)
     return key.toLowerCase() === "authorder";
   };
 
@@ -81,12 +77,10 @@ export function AddProfileModal({
     const authMethods = currentValue ? currentValue.split(",").map((m) => m.trim()) : [];
 
     if (authMethods.includes(authMethod)) {
-      // Remove the auth method if it's already present
       const newAuthMethods = authMethods.filter((method) => method !== authMethod);
       const newValue = newAuthMethods.join(", ");
       onNewProfileValueChange(newValue);
     } else {
-      // Add the auth method if it's not present
       const newAuthMethods = [...authMethods, authMethod];
       const newValue = newAuthMethods.join(", ");
       onNewProfileValueChange(newValue);
@@ -120,9 +114,8 @@ export function AddProfileModal({
     const validAuthTypes = ["basic", "token", "bearer", "cert-pem"];
     const authMethods = value.split(",").map((m) => m.trim());
 
-    // Check if all methods are valid and no duplicates
     const uniqueMethods = new Set(authMethods);
-    if (uniqueMethods.size !== authMethods.length) return false; // Duplicates found
+    if (uniqueMethods.size !== authMethods.length) return false;
 
     return authMethods.every((method) => validAuthTypes.includes(method));
   };
@@ -269,7 +262,6 @@ export function AddProfileModal({
             {newProfileKey && isFileProperty(newProfileKey.trim()) && (
               <button
                 onClick={() => {
-                  // Use VS Code's showOpenDialog API to get the full file path
                   if (vscodeApi) {
                     vscodeApi.postMessage({
                       command: "SELECT_FILE",
@@ -278,7 +270,6 @@ export function AddProfileModal({
                       source: "addProfile",
                     });
                   } else {
-                    // Fallback to HTML file input if VS Code API is not available
                     const input = document.createElement("input");
                     input.type = "file";
                     input.accept = "*";
@@ -287,10 +278,7 @@ export function AddProfileModal({
                       const target = event.target as HTMLInputElement;
                       if (target.files && target.files.length > 0) {
                         const file = target.files[0];
-                        // In a webview context, we can't get the full file path directly
-                        // We'll use the file name and let the user know they may need to provide the full path
                         const fileName = file.name;
-                        // Try to get additional path info if available
                         const filePath = (file as any).webkitRelativePath || fileName;
                         onNewProfileValueChange(filePath);
                       }

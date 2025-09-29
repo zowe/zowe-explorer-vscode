@@ -163,7 +163,6 @@ export function useProfileWizard({
             }
         });
 
-        // Check pending changes
         const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([_, entry]) => {
             if (entry.profile) {
                 if (wizardRootProfile === "root") {
@@ -207,10 +206,9 @@ export function useProfileWizard({
     const handleWizardAddProperty = () => {
         if (!wizardNewPropertyKey.trim()) return;
 
-        // Check if the key already exists
         const keyExists = wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim());
         if (keyExists) {
-            return; // Don't add duplicate keys
+            return;
         }
 
         const propertyType = getPropertyType(wizardNewPropertyKey.trim());
@@ -247,7 +245,6 @@ export function useProfileWizard({
     };
 
     const handleWizardPropertySecureToggle = (index: number) => {
-        // Don't allow toggling secure state if secure values are not allowed
         if (!secureValuesAllowed) {
             return;
         }
@@ -274,10 +271,8 @@ export function useProfileWizard({
         // Get all existing profile names under the selected root
         const existingProfilesUnderRoot = Object.keys(flatProfiles).filter((profileKey) => {
             if (wizardRootProfile === "root") {
-                // For root, check if the profile name exists as a top-level profile
                 return profileKey === wizardProfileName.trim();
             } else {
-                // For nested profiles, check if the profile exists under the selected root
                 return (
                     profileKey === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
                     profileKey.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
@@ -285,7 +280,7 @@ export function useProfileWizard({
             }
         });
 
-        // Also check pending changes for profiles being created
+        // check pending changes for profiles being created
         const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([_, entry]) => {
             if (entry.profile) {
                 if (wizardRootProfile === "root") {
@@ -301,7 +296,7 @@ export function useProfileWizard({
         });
 
         if (existingProfilesUnderRoot.length > 0 || pendingProfilesUnderRoot) {
-            // Profile already exists, don't create it
+            // Profile already exists don't create it
             return;
         }
 
@@ -312,12 +307,10 @@ export function useProfileWizard({
             profilePath = ["profiles", wizardProfileName];
             newProfileKey = wizardProfileName;
         } else {
-            // For nested profiles, we need to build the path to the selected profile
-            // and then add "profiles" and the new profile name
+            // build the path to the selected profile
             const profileParts = wizardRootProfile.split(".");
             profilePath = ["profiles"];
 
-            // Build the path to the selected profile
             for (let i = 0; i < profileParts.length; i++) {
                 profilePath.push(profileParts[i]);
                 // Add "profiles" between each level
@@ -348,18 +341,12 @@ export function useProfileWizard({
                 },
             }));
         }
-
-        // Add properties
-
-        // If no properties/type are set, set an empty properties object on the profile
         if (wizardProperties.length === 0 && !wizardSelectedType) {
             wizardProperties.push({ key: "", value: {} });
         }
         wizardProperties.forEach((prop) => {
-            // Always use properties path, but set secure flag if needed
             const propertyPath = [...profilePath, "properties"];
 
-            // Logic for setting empty properties
             if (prop.key !== "") propertyPath.push(prop.key);
 
             const propertyKey = propertyPath.join(".");
@@ -378,7 +365,6 @@ export function useProfileWizard({
             }));
         });
 
-        // Automatically select the newly created profile
         setSelectedProfileKey(newProfileKey);
 
         // Reset wizard state
@@ -430,23 +416,18 @@ export function useProfileWizard({
         const configPath = configurations[selectedTab].configPath;
         const propertySchema = schemaValidations[configPath]?.propertySchema[wizardSelectedType] || {};
 
-        // Get existing property keys to avoid duplicates
         const existingKeys = new Set(wizardProperties.map((prop) => prop.key));
 
-        // Get merged property keys and values to check for existing values
         const mergedKeys = new Set(Object.keys(wizardMergedProperties));
 
-        // Create new properties from schema defaults
         const newProperties: { key: string; value: string | boolean | number | Object; secure?: boolean }[] = [];
         const populatedKeys = new Set<string>();
 
         Object.entries(propertySchema).forEach(([key, schema]: [string, any]) => {
-            // Skip if property already exists in wizard properties
             if (existingKeys.has(key)) {
                 return;
             }
 
-            // Check if property has a default value in schema
             if (schema.default !== undefined) {
                 // For port, always override merged values unless they're the same
                 if (key === "port") {
@@ -474,7 +455,6 @@ export function useProfileWizard({
             }
         });
 
-        // Add new properties to wizard properties
         if (newProperties.length > 0) {
             setWizardProperties((prev) => [...prev, ...newProperties]);
             setWizardPopulatedDefaults((prev) => new Set([...prev, ...populatedKeys]));

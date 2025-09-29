@@ -77,7 +77,6 @@ export function ProfileWizardModal({
   stringifyValueByType,
   vscodeApi,
 }: ProfileWizardModalProps) {
-  // Auth order helper functions
   const isAuthOrderProperty = (key: string): boolean => {
     if (!key || typeof key !== "string") {
       return false;
@@ -90,12 +89,10 @@ export function ProfileWizardModal({
     const authMethods = currentValue ? currentValue.split(",").map((m) => m.trim()) : [];
 
     if (authMethods.includes(authMethod)) {
-      // Remove the auth method if it's already present
       const newAuthMethods = authMethods.filter((method) => method !== authMethod);
       const newValue = newAuthMethods.join(", ");
       onNewPropertyValueChange(newValue);
     } else {
-      // Add the auth method if it's not present
       const newAuthMethods = [...authMethods, authMethod];
       const newValue = newAuthMethods.join(", ");
       onNewPropertyValueChange(newValue);
@@ -137,12 +134,10 @@ export function ProfileWizardModal({
   if (!isOpen) return null;
 
   const isFileProperty = (key: string): boolean => {
-    // Check if key is defined and not null
     if (!key || typeof key !== "string") {
       return false;
     }
 
-    // Keys that are file paths
     const filePaths = ["privateKey", "certFile", "certKeyFile"];
     for (const path of filePaths) {
       if (key.toLowerCase() === path.toLowerCase()) {
@@ -157,7 +152,6 @@ export function ProfileWizardModal({
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
-      // Only create profile if we have a valid profile name and it's not taken
       if (wizardProfileName.trim() && !isProfileNameTaken) {
         onCreateProfile();
       }

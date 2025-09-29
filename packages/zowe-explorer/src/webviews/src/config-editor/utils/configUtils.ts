@@ -51,13 +51,11 @@ export function flattenProfiles(profiles: any, parentKey = "", result: Record<st
         const profile = profiles[key];
         const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
 
-        // Create a copy of the profile without the nested profiles
         const profileCopy = { ...profile };
         delete profileCopy.profiles;
 
         result[qualifiedKey] = profileCopy;
 
-        // If this profile contains a nested `profiles` object, flatten those too
         if (profile.profiles) {
             flattenProfiles(profile.profiles, qualifiedKey, result);
         }
@@ -73,7 +71,6 @@ export function pathFromArray(arr: string[]): string {
 export function extractProfileKeyFromPath(path: string[]): string {
     if (path[0] === "profiles") {
         if (path.length > 2) {
-            // Check if this is a nested profile
             const profilesIndices = [];
             for (let i = 0; i < path.length; i++) {
                 if (path[i] === "profiles") {
@@ -81,14 +78,12 @@ export function extractProfileKeyFromPath(path: string[]): string {
                 }
             }
             if (profilesIndices.length > 1) {
-                // This is a nested profile - construct the full profile key
                 const profileParts = [];
                 for (let i = 1; i < path.length; i++) {
                     if (path[i] !== "profiles") {
                         profileParts.push(path[i]);
                     }
                 }
-                // Stop at the first occurrence of "properties" or "type" to get the actual profile name
                 const profileNameEndIndex = profileParts.findIndex((part) => part === "properties" || part === "type");
                 if (profileNameEndIndex !== -1) {
                     return profileParts.slice(0, profileNameEndIndex).join(".");
@@ -96,14 +91,11 @@ export function extractProfileKeyFromPath(path: string[]): string {
                     return profileParts.join(".");
                 }
             } else {
-                // Top-level profile
                 return path[1];
             }
         } else if (path.length === 2) {
-            // Top-level profile (e.g., ["profiles", "zxplore"])
             return path[1];
         } else {
-            // Fallback
             return path[0];
         }
     } else {
@@ -113,18 +105,16 @@ export function extractProfileKeyFromPath(path: string[]): string {
 
 export function sortConfigEntries(entries: [string, any][]): [string, any][] {
     return entries.sort(([keyA], [keyB]) => {
-        // Define the order: type, properties, secure, others
         const getOrder = (key: string) => {
             if (key === "type") return 0;
             if (key === "properties") return 2;
             if (key === "secure") return 3;
-            return 1; // All others
+            return 1;
         };
 
         const orderA = getOrder(keyA);
         const orderB = getOrder(keyB);
 
-        // If they're in the same section, sort alphabetically
         if (orderA === orderB) {
             return keyA.localeCompare(keyB);
         }

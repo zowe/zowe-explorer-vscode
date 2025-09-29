@@ -24,56 +24,42 @@ export function RenameProfileModal({
 }: RenameProfileModalProps) {
   const [newName, setNewName] = useState("");
   const [error, setError] = useState("");
-  // const [isFullPathMode, setIsFullPathMode] = useState(false);
-  const isFullPathMode = false; // Always use profile name only mode
+  const isFullPathMode = false;
   const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, "#profile-name");
 
   useEffect(() => {
     if (isOpen) {
-      // Initialize with the appropriate value based on mode
       const initialValue = isFullPathMode ? currentProfileKey : currentProfileName;
       const filteredValue = filterInputValue(initialValue);
       setNewName(filteredValue);
       setError("");
     } else {
-      // Reset state when modal is closed
       setNewName("");
       setError("");
-      // setIsFullPathMode(false);
     }
   }, [isOpen, currentProfileName, currentProfileKey, isFullPathMode]);
 
-  // Helper function to validate single profile name (alphanumeric + basic special chars)
   const isValidSingleProfileName = (name: string): boolean => {
-    // Allow alphanumeric characters and basic special characters (underscore, hyphen)
     const validChars = /^[a-zA-Z0-9_-]+$/;
     return validChars.test(name);
   };
 
-  // Helper function to validate full profile path (period-separated non-empty strings)
   const isValidFullProfilePath = (path: string): boolean => {
-    // Split by periods and check each part
     const parts = path.split(".");
 
-    // Check if any part is empty
     if (parts.some((part) => part.trim() === "")) {
       return false;
     }
 
-    // Check if each part contains only valid characters (alphanumeric + underscore + hyphen)
     const validPartChars = /^[a-zA-Z0-9_-]+$/;
     return parts.every((part) => validPartChars.test(part.trim()));
   };
 
-  // Helper function to filter input based on mode
   const filterInputValue = (value: string): string => {
     if (isFullPathMode) {
-      // For full path mode, allow alphanumeric, underscore, hyphen, and periods
-      // But ensure periods don't create empty segments
       return value.replace(/[^a-zA-Z0-9._-]/g, "");
     } else {
-      // For single name mode, only allow alphanumeric, underscore, and hyphen
       return value.replace(/[^a-zA-Z0-9_-]/g, "");
     }
   };

@@ -31,25 +31,20 @@ export function moveProfile(api: ConfigMoveAPI, layerActive: () => IConfigLayer,
         throw new Error(`Source profile not found at path: ${sourcePath}`);
     }
 
-    // Check if target profile already exists
     const targetProfile = api.get(targetPath);
     if (targetProfile) {
         throw new Error(`Target profile already exists at path: ${targetPath}`);
     }
 
-    // Get secure properties from source before moving
     const sourceSecure = sourceProfile.secure || [];
 
-    // Use order-preserving move for same-level renames
     if (isSameLevelRename(sourcePath, targetPath)) {
         moveProfileInPlaceOrdered(api, layerActive, sourcePath, targetPath);
     } else {
-        // For cross-level moves, use the original approach
         api.set(targetPath, sourceProfile);
         api.delete(sourcePath);
     }
 
-    // Move secure properties if they exist
     moveSecureProperties(api, layerActive, sourcePath, targetPath, sourceSecure);
 }
 
@@ -57,12 +52,10 @@ function isSameLevelRename(sourcePath: string, targetPath: string): boolean {
     const sourceParts = sourcePath.split(".");
     const targetParts = targetPath.split(".");
 
-    // Same level if parent paths are identical
     if (sourceParts.length !== targetParts.length) {
         return false;
     }
 
-    // Check if all parts except the last are the same
     for (let i = 0; i < sourceParts.length - 1; i++) {
         if (sourceParts[i] !== targetParts[i]) {
             return false;
@@ -79,11 +72,9 @@ function moveProfileInPlaceOrdered(api: ConfigMoveAPI, layerActive: () => IConfi
     const targetName = targetParts[targetParts.length - 1];
 
     if (sourceParts.length === 1) {
-        // Root level profile rename
         const currentLayer = layerActive();
         const profiles = currentLayer.properties.profiles;
 
-        // Create new profiles object with renamed key
         const newProfiles: { [key: string]: any } = {};
         for (const [key, value] of Object.entries(profiles)) {
             if (key === sourceName) {
@@ -93,17 +84,13 @@ function moveProfileInPlaceOrdered(api: ConfigMoveAPI, layerActive: () => IConfi
             }
         }
 
-        // Update the layer with the new profiles object
         currentLayer.properties.profiles = newProfiles;
     } else {
-        // Nested profile rename
         const parentPath = sourceParts.slice(0, -1).join(".");
         const parentProfile = api.get(parentPath);
 
         if (parentProfile) {
-            // Check if profiles are stored directly as properties or under a profiles property
             if (parentProfile.profiles) {
-                // Create new profiles object with renamed key
                 const newProfiles: { [key: string]: any } = {};
                 for (const [key, value] of Object.entries(parentProfile.profiles)) {
                     if (key === sourceName) {
@@ -113,12 +100,9 @@ function moveProfileInPlaceOrdered(api: ConfigMoveAPI, layerActive: () => IConfi
                     }
                 }
 
-                // Update the parent profile
                 parentProfile.profiles = newProfiles;
                 api.set(parentPath, parentProfile);
             } else {
-                // Profiles are stored directly as properties of the parent object
-                // Create new parent object with renamed key
                 const newParentProfile: { [key: string]: any } = {};
                 for (const [key, value] of Object.entries(parentProfile)) {
                     if (key === sourceName) {
@@ -128,15 +112,12 @@ function moveProfileInPlaceOrdered(api: ConfigMoveAPI, layerActive: () => IConfi
                     }
                 }
 
-                // Update the parent profile
                 api.set(parentPath, newParentProfile);
 
-                // Try alternative approach - update the parent's parent if direct update fails
                 if (parentPath !== "profiles") {
                     const grandParentPath = parentPath.split(".").slice(0, -1).join(".");
                     const grandParent = api.get(grandParentPath);
                     if (grandParent) {
-                        // Update the parent within the grandparent
                         const parentName = parentPath.split(".").pop();
                         if (parentName && grandParent[parentName]) {
                             grandParent[parentName] = newParentProfile;
@@ -155,16 +136,13 @@ export function moveProfileInPlace(api: ConfigMoveAPI, layerActive: () => IConfi
         throw new Error(`Source profile not found at path: ${sourcePath}`);
     }
 
-    // Check if target profile already exists
     const targetProfile = api.get(targetPath);
     if (targetProfile) {
         throw new Error(`Target profile already exists at path: ${targetPath}`);
     }
 
-    // Get secure properties from source before moving
     const sourceSecure = sourceProfile.secure || [];
 
-    // Get source and target path information
     const sourcePathParts = sourcePath.split(".");
     const sourceParentPath = sourcePathParts.slice(0, -1).join(".");
     const sourceName = sourcePathParts[sourcePathParts.length - 1];
@@ -172,15 +150,11 @@ export function moveProfileInPlace(api: ConfigMoveAPI, layerActive: () => IConfi
     const targetPathParts = targetPath.split(".");
     const targetParentPath = targetPathParts.slice(0, -1).join(".");
     const targetName = targetPathParts[targetPathParts.length - 1];
-
-    // Handle the move operation
     if (sourceParentPath === targetParentPath) {
-        // Same parent
         renameProfileInPlace(api, layerActive, sourcePath, targetPath);
         return;
     }
 
-    // Different parents
     if (sourceParentPath) {
         const sourceParentProfile = api.get(sourceParentPath);
         if (sourceParentProfile && sourceParentProfile.profiles) {
@@ -188,7 +162,6 @@ export function moveProfileInPlace(api: ConfigMoveAPI, layerActive: () => IConfi
             delete sourceParentProfile.profiles[sourceName];
             api.set(sourceParentPath, sourceParentProfile);
 
-            // Add to target parent
             if (targetParentPath) {
                 const targetParentProfile = api.get(targetParentPath);
                 if (targetParentProfile && targetParentProfile.profiles) {
@@ -196,18 +169,15 @@ export function moveProfileInPlace(api: ConfigMoveAPI, layerActive: () => IConfi
                     api.set(targetParentPath, targetParentProfile);
                 }
             } else {
-                // Moving to root level
                 const currentLayer = layerActive();
                 currentLayer.properties.profiles[targetName] = profileData;
             }
         }
     } else {
-        // Moving from root level
         const currentLayer = layerActive();
         const profileData = currentLayer.properties.profiles[sourceName];
         delete currentLayer.properties.profiles[sourceName];
 
-        // Add to target parent
         if (targetParentPath) {
             const targetParentProfile = api.get(targetParentPath);
             if (targetParentProfile && targetParentProfile.profiles) {
@@ -217,7 +187,6 @@ export function moveProfileInPlace(api: ConfigMoveAPI, layerActive: () => IConfi
         }
     }
 
-    // Move secure properties if they exist
     moveSecureProperties(api, layerActive, sourcePath, targetPath, sourceSecure);
 }
 
@@ -233,10 +202,7 @@ export function moveSecureProperties(
     targetPath: string,
     sourceSecure: string[]
 ): void {
-    // Get secure properties from the target path (which now contains the moved profile)
     const targetSecure = getSecurePropertiesForProfile(api, targetPath);
-
-    // Update secure arrays to move secure properties from source to target
     updateSecureArrays(layerActive, sourcePath, targetPath, sourceSecure, targetSecure);
 }
 
@@ -246,7 +212,6 @@ export function deleteProfileRecursively(api: ConfigMoveAPI, layerActive: () => 
         return;
     }
 
-    // Delete nested profiles first
     if (profile.profiles) {
         const nestedProfiles = Object.keys(profile.profiles);
         for (const nestedProfile of nestedProfiles) {
@@ -255,7 +220,6 @@ export function deleteProfileRecursively(api: ConfigMoveAPI, layerActive: () => 
         }
     }
 
-    // Delete the profile itself
     api.delete(profilePath);
 }
 
@@ -272,7 +236,6 @@ export function updateSecureArrays(
         const currentSecure = secureArray.secure || [];
         let updatedSecure = [...currentSecure];
 
-        // Remove secure properties from source path
         for (const secureProp of sourceSecure) {
             const sourceSecurePath = `${sourcePath}.secure.${secureProp}`;
             if (isSecurePropertyForProfile(secureArray.profilePath, sourceSecurePath)) {
@@ -280,7 +243,6 @@ export function updateSecureArrays(
             }
         }
 
-        // Add secure properties to target path
         for (const secureProp of targetSecure) {
             const targetSecurePath = `${targetPath}.secure.${secureProp}`;
             if (isSecurePropertyForProfile(secureArray.profilePath, targetSecurePath)) {
@@ -290,7 +252,6 @@ export function updateSecureArrays(
             }
         }
 
-        // Update the secure array
         if (JSON.stringify(updatedSecure) !== JSON.stringify(currentSecure)) {
             set(secureArray.profile, "secure", updatedSecure);
         }
@@ -330,7 +291,6 @@ export function isSecurePropertyForProfile(profilePath: string, securePropertyPa
     const profilePathParts = profilePath.split(".");
     const securePropertyPathParts = securePropertyPath.split(".");
 
-    // Check if the secure property belongs to this profile
     for (let i = 0; i < profilePathParts.length; i++) {
         if (profilePathParts[i] !== securePropertyPathParts[i]) {
             return false;
@@ -375,20 +335,16 @@ export function renameProfile(api: ConfigMoveAPI, layerActive: () => IConfigLaye
         throw new Error(`Profile not found at path: ${originalPath}`);
     }
 
-    // Extract the parent path and original name
     const pathParts = originalPath.split(".");
     const parentPath = pathParts.slice(0, -1).join(".");
 
-    // Construct the new path
     const newPath = parentPath ? `${parentPath}.${newName}` : newName;
 
-    // Check if the new name already exists
     const existingProfile = api.get(newPath);
     if (existingProfile) {
         throw new Error(`Profile with name '${newName}' already exists`);
     }
 
-    // Use in-place rename to preserve order instead of move operation
     renameProfileInPlace(api, layerActive, originalPath, newPath);
 
     return newPath;
@@ -400,16 +356,13 @@ export function renameProfileInPlace(api: ConfigMoveAPI, layerActive: () => ICon
         throw new Error(`Source profile not found at path: ${originalPath}`);
     }
 
-    // Check if target profile already exists
     const targetProfile = api.get(newPath);
     if (targetProfile) {
         throw new Error(`Target profile already exists at path: ${newPath}`);
     }
 
-    // Get secure properties from source before renaming
     const sourceSecure = originalProfile.secure || [];
 
-    // For in-place rename
     const pathParts = originalPath.split(".");
     const parentPath = pathParts.slice(0, -1).join(".");
     const originalName = pathParts[pathParts.length - 1];
@@ -418,36 +371,22 @@ export function renameProfileInPlace(api: ConfigMoveAPI, layerActive: () => ICon
     const newName = newPathParts[newPathParts.length - 1];
 
     if (parentPath) {
-        // For nested profiles, update the parent's profiles object
         const parentProfile = api.get(parentPath);
         if (parentProfile && parentProfile.profiles) {
-            // Store the profile data
             const profileData = parentProfile.profiles[originalName];
-
-            // Remove the old key and add the new key (preserves order)
             delete parentProfile.profiles[originalName];
             parentProfile.profiles[newName] = profileData;
-
-            // Update the parent object
             api.set(parentPath, parentProfile);
         }
     } else {
-        // For root-level profiles, update the main profiles object
         const currentLayer = layerActive();
         const profiles = currentLayer.properties.profiles;
-
-        // Store the profile data
         const profileData = profiles[originalName];
-
-        // Remove the old key and add the new key (preserves order)
         delete profiles[originalName];
         profiles[newName] = profileData;
-
-        // Update the layer
         currentLayer.properties.profiles = profiles;
     }
 
-    // Move secure properties if they exist
     moveSecureProperties(api, layerActive, originalPath, newPath, sourceSecure);
 }
 

@@ -29,7 +29,6 @@ export function Tabs({
 }: TabsProps) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabIndex: number } | null>(null);
 
-  // Detect OS for appropriate text
   const getRevealText = () => {
     const platform = navigator.platform.toLowerCase();
     if (platform.includes("mac")) {
@@ -42,7 +41,6 @@ export function Tabs({
   };
 
   const getTabLabel = (configPath: string) => {
-    // Extract just the filename from the full path
     const parts = configPath.split(/[/\\]/);
     return parts[parts.length - 1] || configPath;
   };
@@ -60,21 +58,18 @@ export function Tabs({
   const handleTabRightClick = (e: any, index: number) => {
     e.preventDefault();
 
-    // Ensure context menu stays within viewport bounds
     const menuWidth = 150;
-    const menuHeight = 160; // Increased height for additional menu item
+    const menuHeight = 160;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
     let x = e.clientX;
     let y = e.clientY;
 
-    // Adjust horizontal position if menu would go off-screen
     if (x + menuWidth > viewportWidth) {
       x = viewportWidth - menuWidth - 10;
     }
 
-    // Adjust vertical position if menu would go off-screen
     if (y + menuHeight > viewportHeight) {
       y = viewportHeight - menuHeight - 10;
     }
@@ -94,7 +89,6 @@ export function Tabs({
           onOpenSchemaFile(config.schemaPath);
         } else if (action === "autostore") {
           onToggleAutostore(config.configPath);
-          // Don't close the context menu immediately to allow multiple toggles
           return;
         }
       }
