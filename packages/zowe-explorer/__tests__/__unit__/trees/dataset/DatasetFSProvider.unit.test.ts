@@ -24,6 +24,7 @@ import {
     Gui,
     imperative,
     PdsEntry,
+    Types,
     ZoweExplorerApiType,
     ZoweScheme,
 } from "@zowe/zowe-explorer-api";
@@ -73,6 +74,7 @@ const testEntries = {
             path: "/USER.DATA.PS",
         }),
         isMember: false,
+        stats: { vol: "*VSAM*" } as unknown as Types.DatasetStats,
     } as DsEntry,
     session: {
         ...new FilterEntry("sestest"),
@@ -1294,11 +1296,6 @@ describe("DatasetFSProvider", () => {
             fakeSession.entries.set("USER.DATA.PS", fakePs);
             const mockMvsApi = {
                 deleteDataSet: jest.fn(),
-                dataSet: jest.fn().mockResolvedValue({
-                    apiResponse: {
-                        items: [fakePs],
-                    },
-                }),
             };
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
             const _lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePs);
@@ -1319,11 +1316,6 @@ describe("DatasetFSProvider", () => {
             fakePds.entries.set("MEMBER1", fakePdsMember);
             const mockMvsApi = {
                 deleteDataSet: jest.fn(),
-                dataSet: jest.fn().mockResolvedValue({
-                    apiResponse: {
-                        items: [fakePdsMember],
-                    },
-                }),
             };
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
             const _lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePdsMember);
@@ -1342,11 +1334,6 @@ describe("DatasetFSProvider", () => {
             const fakePds = { ...testEntries.pds };
             const mockMvsApi = {
                 deleteDataSet: jest.fn(),
-                dataSet: jest.fn().mockResolvedValue({
-                    apiResponse: {
-                        items: [fakePds],
-                    },
-                }),
             };
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
             const _lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePds);
@@ -1364,11 +1351,6 @@ describe("DatasetFSProvider", () => {
             const fakeVsam = { ...testEntries.vsam };
             const mockMvsApi = {
                 deleteDataSet: jest.fn(),
-                dataSet: jest.fn().mockResolvedValue({
-                    apiResponse: {
-                        items: [fakeVsam],
-                    },
-                }),
             };
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
             const _lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakeVsam);
@@ -1376,9 +1358,9 @@ describe("DatasetFSProvider", () => {
             jest.spyOn(FsDatasetsUtils, "isPdsEntry").mockReturnValue(true);
             jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue({ ...testEntries.session });
 
-            await DatasetFSProvider.instance.delete(testUris.pds, { recursive: false });
-            expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(fakeVsam.name, { responseTimeout: undefined });
-            expect(_lookupMock).toHaveBeenCalledWith(testUris.pds, false);
+            await DatasetFSProvider.instance.delete(testUris.vsam, { recursive: false });
+            expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(fakeVsam.name, { responseTimeout: undefined, volume: fakeVsam.stats.vol });
+            expect(_lookupMock).toHaveBeenCalledWith(testUris.vsam, false);
             expect(_fireSoonMock).toHaveBeenCalled();
         });
 
@@ -1390,11 +1372,6 @@ describe("DatasetFSProvider", () => {
             const sampleError = new Error("Data set does not exist on remote");
             const mockMvsApi = {
                 deleteDataSet: jest.fn().mockRejectedValue(sampleError),
-                dataSet: jest.fn().mockResolvedValue({
-                    apiResponse: {
-                        items: [fakePs],
-                    },
-                }),
             };
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
             const _lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePs);
