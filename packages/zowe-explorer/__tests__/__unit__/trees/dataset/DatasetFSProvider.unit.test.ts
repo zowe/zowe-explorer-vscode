@@ -997,7 +997,6 @@ describe("DatasetFSProvider", () => {
             jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
                 getCommonApi: () => ({
                     getSession: () => {
-                        console.log("HERE");
                         return { ...createIProfile(), ISession: { type: imperative.SessConstants.AUTH_TYPE_TOKEN } };
                     },
                 }),
