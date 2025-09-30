@@ -4846,6 +4846,66 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
         expect(fakeChildren[0].iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen).path);
         withProfileMock.mockRestore();
     });
+    it("does not apply member filters to data sets whose qualifiers differ from the pattern", () => {
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            {
+                label: "HLQ.USERID2.SOURCE",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                memberPattern: "",
+                pattern: "",
+            },
+            {
+                label: "HLQ.USERID1.SOURCE",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                memberPattern: "",
+                pattern: "",
+            },
+            {
+                label: "HLQ.USERID1.SOURCE.FINAL",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                memberPattern: "",
+                pattern: "",
+            },
+        ];
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+        testTree.applyPatternsToChildren(
+            fakeChildren as any[],
+            [
+                { dsn: "HLQ.USERID2.SOURCE", member: "R80297*" },
+                { dsn: "HLQ.USERID1.SOURCE", member: "R80297O1" },
+            ]
+        );
+        expect(fakeChildren[0].memberPattern).toBe("R80297*");
+        expect(fakeChildren[1].memberPattern).toBe("R80297O1");
+        expect(fakeChildren[2].memberPattern).toBe("");
+        withProfileMock.mockRestore();
+    });
+    it("merges multiple member filters for the same data set", () => {
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            {
+                label: "HLQ.USERID2.SOURCE",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                memberPattern: "",
+                pattern: "",
+            },
+        ];
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+        testTree.applyPatternsToChildren(
+            fakeChildren as any[],
+            [
+                { dsn: "HLQ.USERID2.SOURCE", member: "R80297B2" },
+                { dsn: "HLQ.USERID2.SOURCE", member: "EX1" },
+            ]
+        );
+        expect(fakeChildren[0].memberPattern).toBe("R80297B2,EX1");
+        withProfileMock.mockRestore();
+    });
 });
 
 describe("DataSetTree Unit Tests - Function handleDrag", () => {
