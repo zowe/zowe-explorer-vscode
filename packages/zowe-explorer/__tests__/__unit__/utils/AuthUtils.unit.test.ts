@@ -200,6 +200,13 @@ describe("AuthUtils", () => {
 
         beforeEach(() => {
             jest.clearAllMocks();
+            jest.restoreAllMocks();
+
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                getCommonApi: () => ({
+                    getSession: () => createISession(),
+                }),
+            } as any);
 
             // Setup common mocks
             loadNamedProfileMock = jest.fn().mockReturnValue(createIProfile());
@@ -1194,7 +1201,8 @@ describe("AuthUtils", () => {
             expect(handleProfileAuthOnErrorMock).toHaveBeenCalledTimes(1);
             expect(handleProfileAuthOnErrorMock).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    message: "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate.",
+                    message:
+                        "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate. (All configured authentication methods failed)",
                 }),
                 profile
             );
@@ -1211,7 +1219,8 @@ describe("AuthUtils", () => {
             expect(handleProfileAuthOnErrorMock).toHaveBeenCalledTimes(1);
             expect(handleProfileAuthOnErrorMock).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    message: "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate.",
+                    message:
+                        "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate. (All configured authentication methods failed)",
                 }),
                 profile
             );

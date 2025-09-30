@@ -27,6 +27,7 @@ import {
     Types,
     ZoweExplorerApiType,
     ZoweScheme,
+    ZoweVsCodeExtension,
 } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
@@ -448,6 +449,13 @@ describe("DatasetFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - existing promise", async () => {
+            jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                profile: testProfile,
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+            });
+
             const mockAllProfiles = [
                 { name: "sestest", type: "ssh" },
                 { name: "profile1", type: "zosmf" },
@@ -486,6 +494,12 @@ describe("DatasetFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - no existing promise", async () => {
+            jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                profile: testProfile,
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+            });
             jest.spyOn(ProfilesUtils.extenderProfileReady, "get").mockReturnValue(undefined);
             const mockAllProfiles = [
                 { name: "sestest", type: "ssh" },
@@ -980,6 +994,13 @@ describe("DatasetFSProvider", () => {
         });
 
         it("calls allMembers for a PDS member and invalidates its data if mtime is newer", async () => {
+            jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
+                profile: testProfile,
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+            });
+
             const fakePdsMember = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pdsMember)), testEntries.pdsMember);
             const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePdsMember);
             const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(testEntries.pds);
@@ -1007,7 +1028,7 @@ describe("DatasetFSProvider", () => {
                 throw new Error("invalid profile");
             });
             await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toThrow("invalid profile");
-            expect(lookupMock).toHaveBeenCalledWith(testUris.ps, false);
+            expect(lookupMock).not.toHaveBeenCalled();
         });
 
         describe("error handling", () => {

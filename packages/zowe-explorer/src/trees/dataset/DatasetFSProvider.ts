@@ -541,7 +541,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
-
         if (
             (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN ||
                 session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE) &&

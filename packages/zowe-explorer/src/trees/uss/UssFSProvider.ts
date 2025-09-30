@@ -76,12 +76,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
-
+        const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         if (AuthHandler.sessTypeFromProfile(uriInfo.profile) === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
-        const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
 
         // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on USS files only
         if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {

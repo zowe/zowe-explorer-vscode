@@ -21,9 +21,10 @@ import {
     UssFile,
     ZoweExplorerApiType,
     ZoweScheme,
+    ZoweVsCodeExtension,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
-import { createIProfile } from "../../../__mocks__/mockCreators/shared";
+import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
@@ -110,7 +111,13 @@ describe("UssFSProvider", () => {
 
     describe("stat", () => {
         const lookupMock = jest.spyOn((UssFSProvider as any).prototype, "lookup");
-
+        beforeEach(() => {
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                getCommonApi: () => ({
+                    getSession: () => createISession(),
+                }),
+            } as any);
+        });
         it("returns a file entry", async () => {
             lookupMock.mockReturnValueOnce(testEntries.file);
             const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
