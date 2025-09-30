@@ -221,7 +221,6 @@ export class ProfilesUtils {
      */
     public static async fetchRegisteredPlugins(): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.fetchRegisteredPlugins called.");
-
         const knownCredentialManagers = imperative.CredentialManagerOverride.getKnownCredMgrs();
         const credentialManager = knownCredentialManagers.find((knownCredentialManager) => {
             try {
