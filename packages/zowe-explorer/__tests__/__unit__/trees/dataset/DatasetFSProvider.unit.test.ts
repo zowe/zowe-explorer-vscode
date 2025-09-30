@@ -992,7 +992,23 @@ describe("DatasetFSProvider", () => {
             expect(res).toStrictEqual({ ...fakePs });
             expect(fakePs.wasAccessed).toBe(false);
         });
-
+        it("should throw an Unavailable error if the type is token and token value is undefined", async () => {
+            let errorMessage;
+            jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+                getCommonApi: () => ({
+                    getSession: () => {
+                        console.log("HERE");
+                        return { ...createIProfile(), ISession: { type: imperative.SessConstants.AUTH_TYPE_TOKEN } };
+                    },
+                }),
+            } as any);
+            try {
+                await DatasetFSProvider.instance.stat(testUris.ps);
+            } catch (err) {
+                errorMessage = `${err}`;
+            }
+            expect(errorMessage).toBe("Error: Profile is using token type but missing a token");
+        });
         it("calls allMembers for a PDS member and invalidates its data if mtime is newer", async () => {
             jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
                 profile: testProfile,
