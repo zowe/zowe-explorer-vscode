@@ -1,9 +1,15 @@
 import React from "react";
 import { SortDropdown } from "./SortDropdown";
 
-const PROFILE_SORT_ORDER_OPTIONS: ("natural" | "alphabetical" | "reverse-alphabetical")[] = ["natural", "alphabetical", "reverse-alphabetical"];
+const PROFILE_SORT_ORDER_OPTIONS: ("natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults")[] = [
+  "natural",
+  "alphabetical",
+  "reverse-alphabetical",
+  "type",
+  "defaults",
+];
 
-const getProfileSortOrderDisplayName = (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical"): string => {
+const getProfileSortOrderDisplayName = (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults"): string => {
   switch (sortOrder) {
     case "natural":
       return "Natural";
@@ -11,6 +17,10 @@ const getProfileSortOrderDisplayName = (sortOrder: "natural" | "alphabetical" | 
       return "Alphabetical";
     case "reverse-alphabetical":
       return "Reverse Alphabetical";
+    case "type":
+      return "By Type";
+    case "defaults":
+      return "By Defaults";
     default:
       return sortOrder;
   }
@@ -25,8 +35,8 @@ interface PanelsProps {
   onProfileWizard: () => void;
   viewMode: "flat" | "tree";
   onViewModeToggle: () => void;
-  profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical";
-  onProfileSortOrderChange: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical") => void;
+  profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
+  onProfileSortOrderChange: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults") => void;
 }
 
 export function Panels({
@@ -48,9 +58,9 @@ export function Panels({
           <div className="panel-content">
             <div className="config-section profiles-section">
               <div className="profile-heading-container">
+                <h2 style={{ margin: 0, fontSize: "16px", color: "var(--vscode-editor-foreground)" }}>Profiles</h2>
                 <div className="sort-dropdown-container">
-                  <h2 style={{ margin: 0, fontSize: "16px", marginBottom: 0 }}>Profiles</h2>
-                  <SortDropdown<"natural" | "alphabetical" | "reverse-alphabetical">
+                  <SortDropdown<"natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults">
                     options={PROFILE_SORT_ORDER_OPTIONS}
                     selectedOption={profileSortOrder}
                     onOptionChange={onProfileSortOrderChange}
@@ -72,7 +82,7 @@ export function Panels({
                       alignItems: "center",
                       justifyContent: "center",
                       backgroundColor: "transparent",
-                      color: "var(--vscode-button-secondaryForeground)",
+                      color: "var(--vscode-editor-foreground)",
                       borderRadius: "3px",
                       cursor: "pointer",
                       fontSize: "12px",
@@ -94,7 +104,7 @@ export function Panels({
                       alignItems: "center",
                       justifyContent: "center",
                       backgroundColor: "transparent",
-                      color: "var(--vscode-button-secondaryForeground)",
+                      color: "var(--vscode-editor-foreground)",
                       borderRadius: "3px",
                       cursor: "pointer",
                       fontSize: "12px",
@@ -109,12 +119,12 @@ export function Panels({
               {selectedTab === index && renderProfiles(config.properties.profiles)}
             </div>
             <div className="config-section profile-details-section">{selectedTab === index && renderProfileDetails()}</div>
-            <div className="config-section defaults-section">
+            {/* <div className="config-section defaults-section">
               <div className="defaults-heading-container">
                 <h2>Defaults</h2>
               </div>
               {selectedTab === index && renderDefaults(config.properties.defaults)}
-            </div>
+            </div> */}
           </div>
         </div>
       ))}

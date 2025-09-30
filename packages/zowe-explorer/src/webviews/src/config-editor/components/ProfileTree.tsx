@@ -1,6 +1,33 @@
 import React, { useState, useMemo } from "react";
 import { getOriginalProfileKeyWithNested } from "../utils/profileUtils";
 
+// Color map for profile types
+const PROFILE_TYPE_COLORS: { [key: string]: string } = {
+  zosmf: "#4A90E2",
+  tso: "#7ED321",
+  ssh: "#F5A623",
+  ca7: "#BD10E0",
+  caspool: "#50E3C2",
+  caview: "#B8E986",
+  cics: "#4A90E2",
+  db2: "#7ED321",
+  ebg: "#F5A623",
+  endevor: "#BD10E0",
+  "endevor-location": "#50E3C2",
+  fmp: "#B8E986",
+  idms: "#4A90E2",
+  ims: "#7ED321",
+  jclcheck: "#F5A623",
+  mat: "#BD10E0",
+  pma: "#50E3C2",
+  mq: "#B8E986",
+  ops: "#4A90E2",
+  sysview: "#7ED321",
+  "sysview-format": "#F5A623",
+  zftp: "#BD10E0",
+  base: "#50E3C2",
+};
+
 interface ProfileTreeProps {
   profileKeys: string[];
   selectedProfileKey: string | null;
@@ -18,6 +45,9 @@ interface ProfileTreeProps {
   configurations?: any[];
   selectedTab?: number | null;
   renames?: { [configPath: string]: { [originalKey: string]: string } };
+  onSetAsDefault?: (profileKey: string) => void;
+  setPendingDefaults?: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: { value: string; path: string[] } } }>>;
+  onFilterChange?: (filterType: string | null) => void;
 }
 
 interface ProfileNode {
@@ -45,6 +75,9 @@ export function ProfileTree({
   configurations,
   selectedTab,
   renames,
+  onSetAsDefault,
+  setPendingDefaults,
+  onFilterChange,
 }: ProfileTreeProps) {
   const hasNestedProfiles = profileKeys.some((key) => key.includes("."));
 
@@ -466,19 +499,95 @@ export function ProfileTree({
           </span>
 
           {/* Default profile indicator */}
-          {isDefault && (
-            <span
-              className="codicon codicon-star-full"
-              style={{
-                fontSize: "12px",
-                color: "var(--vscode-textPreformat-foreground)",
-                flexShrink: 0,
-                pointerEvents: "none",
-              }}
-              draggable={false}
-              title="Default profile"
-            />
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+            {getProfileType(node.key) && (
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const profileType = getProfileType(node.key);
+                  if (profileType && onFilterChange) {
+                    onFilterChange(profileType);
+                  }
+                }}
+                style={{
+                  fontSize: "11px",
+                  color: PROFILE_TYPE_COLORS[getProfileType(node.key)!] || "var(--vscode-button-secondaryForeground)",
+                  backgroundColor: PROFILE_TYPE_COLORS[getProfileType(node.key)!]
+                    ? `${PROFILE_TYPE_COLORS[getProfileType(node.key)!]}20`
+                    : "var(--vscode-badge-background)",
+                  border: `1px solid ${PROFILE_TYPE_COLORS[getProfileType(node.key)!] || "var(--vscode-button-secondaryForeground)"}`,
+                  padding: "2px 6px",
+                  borderRadius: "10px",
+                  fontWeight: "500",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  cursor: "pointer",
+                  transition: "opacity 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  lineHeight: "1",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = "0.8";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = "1";
+                }}
+                title={`Click to filter by ${getProfileType(node.key)} type`}
+              >
+                {getProfileType(node.key)}
+              </span>
+            )}
+            {getProfileType(node.key) && (
+              <button
+                className="profile-star-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const profileType = getProfileType(node.key);
+                  if (!profileType) return; // Don't allow interaction if no type
+
+                  if (isDefault) {
+                    // If already default, deselect it by setting to empty
+                    if (profileType && setPendingDefaults && configurations && selectedTab !== null && selectedTab !== undefined) {
+                      const configPath = configurations[selectedTab]!.configPath;
+                      setPendingDefaults((prev) => ({
+                        ...prev,
+                        [configPath]: {
+                          ...prev[configPath],
+                          [profileType]: { value: "", path: [profileType] },
+                        },
+                      }));
+                    }
+                  } else if (onSetAsDefault) {
+                    // Set as default
+                    onSetAsDefault(node.key);
+                  }
+                }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  padding: "2px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+                draggable={false}
+                title={isDefault ? "Click to remove default" : "Set as default"}
+              >
+                <span
+                  className={`codicon codicon-${isDefault ? "star-full" : "star-empty"}`}
+                  style={{
+                    fontSize: "14px",
+                    color: isDefault ? "var(--vscode-textPreformat-foreground)" : "var(--vscode-disabledForeground)",
+                    pointerEvents: "none",
+                  }}
+                />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Render children if expanded */}

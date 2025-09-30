@@ -82,7 +82,8 @@ export function getProfileType(
     };
 
     const pendingType = Object.entries(pendingChanges[configPath] ?? {}).find(([key, entry]) => {
-        if (!isProfileKeyMatch(entry.profile)) return false;
+        // Only match exact profile keys for type changes, not parent profiles
+        if (entry.profile !== profileKey && entry.profile !== originalProfileKey) return false;
         const keyParts = key.split(".");
         return keyParts[keyParts.length - 1] === "type";
     });

@@ -1489,6 +1489,8 @@ export function App() {
             setProfileFilterType={setProfileFilterType}
             setProfileSortOrderWithStorage={setProfileSortOrderWithStorage}
             setExpandedNodesForConfig={setExpandedNodesForConfig}
+            setPendingDefaults={setPendingDefaults}
+            onViewModeToggle={() => setViewModeWithStorage(viewMode === "tree" ? "flat" : "tree")}
             extractPendingProfiles={extractPendingProfilesWrapper}
             isProfileOrParentDeleted={isProfileOrParentDeletedForComponent}
             getRenamedProfileKey={getRenamedProfileKey}

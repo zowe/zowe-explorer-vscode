@@ -10,7 +10,7 @@
  */
 
 export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-first";
-export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetical";
+export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
 
 export function getSortOrderDisplayName(sortOrder: PropertySortOrder): string {
     switch (sortOrder) {
@@ -33,6 +33,10 @@ export function getProfileSortOrderDisplayName(sortOrder: ProfileSortOrder): str
             return "Alphabetical";
         case "reverse-alphabetical":
             return "Reverse Alphabetical";
+        case "type":
+            return "By Type";
+        case "defaults":
+            return "By Defaults";
         default:
             return sortOrder;
     }

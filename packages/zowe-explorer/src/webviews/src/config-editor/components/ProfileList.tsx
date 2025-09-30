@@ -2,6 +2,33 @@ import { useState, useEffect } from "react";
 import { ProfileSearchFilter } from "./ProfileSearchFilter";
 import { ProfileTree } from "./ProfileTree";
 
+// Color map for profile types
+const PROFILE_TYPE_COLORS: { [key: string]: string } = {
+  zosmf: "#4A90E2",
+  tso: "#7ED321",
+  ssh: "#F5A623",
+  ca7: "#BD10E0",
+  caspool: "#50E3C2",
+  caview: "#B8E986",
+  cics: "#4A90E2",
+  db2: "#7ED321",
+  ebg: "#F5A623",
+  endevor: "#BD10E0",
+  "endevor-location": "#50E3C2",
+  fmp: "#B8E986",
+  idms: "#4A90E2",
+  ims: "#7ED321",
+  jclcheck: "#F5A623",
+  mat: "#BD10E0",
+  pma: "#50E3C2",
+  mq: "#B8E986",
+  ops: "#4A90E2",
+  sysview: "#7ED321",
+  "sysview-format": "#F5A623",
+  zftp: "#BD10E0",
+  base: "#50E3C2",
+};
+
 interface ProfileListProps {
   sortedProfileKeys: string[];
   selectedProfileKey: string | null;
@@ -22,14 +49,16 @@ interface ProfileListProps {
   filterType: string | null;
   onSearchChange: (searchTerm: string) => void;
   onFilterChange: (filterType: string | null) => void;
-  profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical";
-  onProfileSortOrderChange: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical") => void;
+  profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
+  onProfileSortOrderChange: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults") => void;
   expandedNodes: Set<string>;
   setExpandedNodes: React.Dispatch<React.SetStateAction<Set<string>>>;
   onProfileRename?: (originalKey: string, newKey: string, isDragDrop?: boolean) => boolean;
   configurations?: any[];
   selectedTab?: number | null;
   renames?: { [configPath: string]: { [originalKey: string]: string } };
+  setPendingDefaults?: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: { value: string; path: string[] } } }>>;
+  onViewModeToggle?: () => void;
 }
 
 export function ProfileList({
@@ -37,6 +66,7 @@ export function ProfileList({
   selectedProfileKey,
   pendingProfiles,
   onProfileSelect,
+  onSetAsDefault,
   isProfileDefault,
   getProfileType,
   viewMode,
@@ -46,23 +76,37 @@ export function ProfileList({
   filterType,
   onSearchChange,
   onFilterChange,
+  profileSortOrder,
+  onProfileSortOrderChange,
   expandedNodes,
   setExpandedNodes,
   onProfileRename,
   configurations,
   selectedTab,
   renames,
+  setPendingDefaults,
+  onViewModeToggle,
 }: ProfileListProps) {
   const [filteredProfileKeys, setFilteredProfileKeys] = useState<string[]>(sortedProfileKeys);
   const [isFilteringActive, setIsFilteringActive] = useState<boolean>(false);
   const [lastSelectedProfileKey, setLastSelectedProfileKey] = useState<string | null>(null);
+
+  // Handle profile sort order change with auto-switch to flat view for type sorting
+  const handleProfileSortOrderChange = (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults") => {
+    onProfileSortOrderChange(sortOrder);
+
+    // Auto-switch to flat view when type sorting is selected in tree view
+    if (sortOrder === "type" && viewMode === "tree" && onViewModeToggle) {
+      onViewModeToggle();
+    }
+  };
 
   // Get unique profile types for filter dropdown
   const availableTypes = Array.from(
     new Set(sortedProfileKeys.map((key) => getProfileType(key)).filter((type): type is string => type !== null))
   ).sort();
 
-  // Filter profiles based on search term and type filter
+  // Filter and sort profiles based on search term, type filter, and sort order
   useEffect(() => {
     let filtered = sortedProfileKeys;
     let isFiltering = false;
@@ -79,6 +123,40 @@ export function ProfileList({
       isFiltering = true;
     }
 
+    // Apply type sorting if enabled
+    if (profileSortOrder === "type") {
+      filtered = filtered.sort((a, b) => {
+        const typeA = getProfileType(a);
+        const typeB = getProfileType(b);
+
+        // Profiles without types go to the end
+        if (!typeA && !typeB) return a.localeCompare(b);
+        if (!typeA) return 1;
+        if (!typeB) return -1;
+
+        // Sort by type first, then by name within the same type
+        const typeComparison = typeA.localeCompare(typeB);
+        if (typeComparison !== 0) return typeComparison;
+
+        return a.localeCompare(b);
+      });
+    }
+
+    // Apply defaults sorting if enabled
+    if (profileSortOrder === "defaults") {
+      filtered = filtered.sort((a, b) => {
+        const isDefaultA = isProfileDefault(a);
+        const isDefaultB = isProfileDefault(b);
+
+        // Default profiles come first
+        if (isDefaultA && !isDefaultB) return -1;
+        if (!isDefaultA && isDefaultB) return 1;
+
+        // Within the same default status, sort alphabetically
+        return a.localeCompare(b);
+      });
+    }
+
     // For tree view, expand filtered results to include parent profiles of matching children
     if (viewMode === "tree") {
       filtered = expandFilteredResultsForTree(filtered, sortedProfileKeys);
@@ -86,7 +164,7 @@ export function ProfileList({
 
     setFilteredProfileKeys(filtered);
     setIsFilteringActive(isFiltering);
-  }, [sortedProfileKeys, searchTerm, filterType, getProfileType, viewMode]);
+  }, [sortedProfileKeys, searchTerm, filterType, getProfileType, viewMode, profileSortOrder]);
 
   // Auto-expand parent nodes of selected profile to ensure it's visible
   // Only run this when the selected profile actually changes, not on every render
@@ -170,6 +248,8 @@ export function ProfileList({
           availableTypes={availableTypes}
           searchTerm={searchTerm}
           filterType={filterType}
+          profileSortOrder={profileSortOrder}
+          onProfileSortOrderChange={handleProfileSortOrderChange}
         />
       </div>
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
@@ -190,6 +270,9 @@ export function ProfileList({
             configurations={configurations}
             selectedTab={selectedTab}
             renames={renames}
+            onSetAsDefault={onSetAsDefault}
+            setPendingDefaults={setPendingDefaults}
+            onFilterChange={onFilterChange}
           />
         ) : (
           filteredProfileKeys.map((profileKey) => (
@@ -236,17 +319,93 @@ export function ProfileList({
               >
                 {profileKey}
               </span>
-              {isProfileDefault(profileKey) && (
-                <span
-                  className="codicon codicon-star-full"
-                  style={{
-                    fontSize: "12px",
-                    color: "var(--vscode-textPreformat-foreground)",
-                    flexShrink: 0,
-                  }}
-                  title="Default profile"
-                />
-              )}
+              <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+                {getProfileType(profileKey) && (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const profileType = getProfileType(profileKey);
+                      if (profileType) {
+                        onFilterChange(profileType);
+                      }
+                    }}
+                    style={{
+                      fontSize: "11px",
+                      color: PROFILE_TYPE_COLORS[getProfileType(profileKey)!] || "var(--vscode-button-secondaryForeground)",
+                      backgroundColor: PROFILE_TYPE_COLORS[getProfileType(profileKey)!]
+                        ? `${PROFILE_TYPE_COLORS[getProfileType(profileKey)!]}20`
+                        : "var(--vscode-badge-background)",
+                      border: `1px solid ${PROFILE_TYPE_COLORS[getProfileType(profileKey)!] || "var(--vscode-button-secondaryForeground)"}`,
+                      padding: "2px 6px",
+                      borderRadius: "10px",
+                      fontWeight: "500",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+                      cursor: "pointer",
+                      transition: "opacity 0.2s ease",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      lineHeight: "1",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = "0.8";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = "1";
+                    }}
+                    title={`Click to filter by ${getProfileType(profileKey)} type`}
+                  >
+                    {getProfileType(profileKey)}
+                  </span>
+                )}
+                {getProfileType(profileKey) && (
+                  <button
+                    className="profile-star-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const profileType = getProfileType(profileKey);
+                      if (!profileType) return; // Don't allow interaction if no type
+
+                      if (isProfileDefault(profileKey)) {
+                        // If already default, deselect it by setting to empty
+                        if (profileType && setPendingDefaults && configurations && selectedTab !== null && selectedTab !== undefined) {
+                          const configPath = configurations[selectedTab]!.configPath;
+                          setPendingDefaults((prev) => ({
+                            ...prev,
+                            [configPath]: {
+                              ...prev[configPath],
+                              [profileType]: { value: "", path: [profileType] },
+                            },
+                          }));
+                        }
+                      } else {
+                        // Set as default
+                        onSetAsDefault(profileKey);
+                      }
+                    }}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      padding: "2px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                    title={isProfileDefault(profileKey) ? "Click to remove default" : "Set as default"}
+                  >
+                    <span
+                      className={`codicon codicon-${isProfileDefault(profileKey) ? "star-full" : "star-empty"}`}
+                      style={{
+                        fontSize: "14px",
+                        color: isProfileDefault(profileKey) ? "var(--vscode-textPreformat-foreground)" : "var(--vscode-disabledForeground)",
+                      }}
+                    />
+                  </button>
+                )}
+              </div>
             </div>
           ))
         )}

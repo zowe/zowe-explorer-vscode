@@ -9,7 +9,7 @@
  *
  */
 
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 
 // Components
 import { ProfileList } from "./ProfileList";
@@ -60,6 +60,8 @@ interface RenderProfilesProps {
   setProfileFilterType: (type: string | null) => void;
   setProfileSortOrderWithStorage: (order: ProfileSortOrder) => void;
   setExpandedNodesForConfig: (configPath: string, nodes: Set<string>) => void;
+  setPendingDefaults: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: { value: string; path: string[] } } }>>;
+  onViewModeToggle?: () => void;
 
   // Utility functions
   extractPendingProfiles: (configPath: string) => { [key: string]: any };
@@ -102,6 +104,8 @@ export const RenderProfiles = ({
   setProfileFilterType,
   setProfileSortOrderWithStorage,
   setExpandedNodesForConfig,
+  setPendingDefaults,
+  onViewModeToggle,
   extractPendingProfiles,
   isProfileOrParentDeleted,
   getRenamedProfileKey,
@@ -446,6 +450,8 @@ export const RenderProfiles = ({
           configurations={configurations}
           selectedTab={selectedTab}
           renames={renames}
+          setPendingDefaults={setPendingDefaults}
+          onViewModeToggle={onViewModeToggle}
         />
       );
     },

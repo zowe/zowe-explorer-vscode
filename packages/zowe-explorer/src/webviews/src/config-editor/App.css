@@ -62,7 +62,8 @@ body {
 
 .vscode-panel > .panels {
     overflow: auto;
-    min-height: 400px;
+    min-height: 300px;
+    max-height: calc(100vh - 120px);
 }
 
 /* Ensure the webview container takes full height */
@@ -87,6 +88,9 @@ div:has(> .vscode-panel) {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    min-height: 0;
+    max-height: 100vh;
+    overflow: hidden;
 }
 
 .tabs {
@@ -230,6 +234,10 @@ div:has(> .vscode-panel) {
     flex-direction: column;
 }
 
+.config-section.profiles-section:has(.sort-dropdown-container) {
+    overflow: visible !important;
+}
+
 .config-section.profile-details-section {
     flex: 0 0 400px;
     width: 400px;
@@ -238,22 +246,19 @@ div:has(> .vscode-panel) {
     overflow: auto;
 }
 
-/* Ensure sort dropdowns in profile details section can extend beyond container */
 .config-section.profile-details-section .sort-dropdown-container {
     overflow: visible !important;
     position: relative;
-    z-index: 10001;
+    z-index: 5;
 }
 
-/* Force parent containers to allow overflow when dropdown is present */
 .config-section.profile-details-section:has(.sort-dropdown-container) {
     overflow: visible !important;
 }
 
-/* Make the dropdown list position relative to the viewport, not the container */
 .config-section.profile-details-section .sort-dropdown-list {
     position: absolute !important;
-    z-index: 10000 !important;
+    z-index: 5 !important;
 }
 
 .config-section.defaults-section {
@@ -287,12 +292,13 @@ div:has(> .vscode-panel) {
     white-space: nowrap;
     flex: 1;
     min-width: 0;
+    max-width: calc(100% - 100px);
 }
 
 .profile-actions {
     display: flex;
     gap: 8px;
-    width: 120px;
+    min-width: 120px;
     justify-content: flex-end;
     flex-shrink: 0;
 }
@@ -1518,6 +1524,10 @@ ul {
     color: var(--vscode-descriptionForeground);
 }
 
+.profile-star-button:hover .codicon-star-empty {
+    color: var(--vscode-textPreformat-foreground) !important;
+}
+
 /* Clickable header styles for property sorting */
 .header-level-1[style*="cursor: pointer"] {
     transition: color 0.2s ease;
@@ -1533,7 +1543,7 @@ ul {
     align-items: center;
     gap: 8px;
     position: relative;
-    z-index: 10001;
+    z-index: 500;
 }
 
 .sort-dropdown {
@@ -1547,7 +1557,7 @@ ul {
     justify-content: center;
     background-color: transparent;
     border: none;
-    color: var(--vscode-button-secondaryForeground);
+    color: var(--vscode-editor-foreground);
     cursor: pointer;
     padding: 4px;
     border-radius: 3px;
@@ -1575,7 +1585,7 @@ ul {
     border: 1px solid var(--vscode-dropdown-border);
     border-radius: 3px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    z-index: 10000;
+    z-index: 500;
     max-height: 200px;
     overflow-y: auto;
     min-width: 150px;

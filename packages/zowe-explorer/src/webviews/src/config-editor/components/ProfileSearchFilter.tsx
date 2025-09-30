@@ -5,9 +5,19 @@ interface ProfileSearchFilterProps {
   // Current values as props
   searchTerm: string;
   filterType: string | null;
+  profileSortOrder?: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
+  onProfileSortOrderChange?: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults") => void;
 }
 
-export function ProfileSearchFilter({ onSearchChange, onFilterChange, availableTypes, searchTerm, filterType }: ProfileSearchFilterProps) {
+export function ProfileSearchFilter({
+  onSearchChange,
+  onFilterChange,
+  availableTypes,
+  searchTerm,
+  filterType,
+  profileSortOrder,
+  onProfileSortOrderChange,
+}: ProfileSearchFilterProps) {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSearchChange((e.target as HTMLInputElement).value);
   };
