@@ -285,7 +285,7 @@ export function ProfileList({
                 padding: "6px 8px",
                 borderRadius: "4px",
                 border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "2px solid transparent",
-                backgroundColor: "var(--vscode-button-secondaryBackground)",
+                backgroundColor: "var(--vscode-input-background)",
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
@@ -331,9 +331,9 @@ export function ProfileList({
                     }}
                     style={{
                       fontSize: "11px",
-                      color: PROFILE_TYPE_COLORS[getProfileType(profileKey)!] || "var(--vscode-button-secondaryForeground)",
+                      color: /*PROFILE_TYPE_COLORS[getProfileType(profileKey)!] || */ "black",
                       backgroundColor: PROFILE_TYPE_COLORS[getProfileType(profileKey)!]
-                        ? `${PROFILE_TYPE_COLORS[getProfileType(profileKey)!]}20`
+                        ? `${PROFILE_TYPE_COLORS[getProfileType(profileKey)!]}`
                         : "var(--vscode-badge-background)",
                       border: `1px solid ${PROFILE_TYPE_COLORS[getProfileType(profileKey)!] || "var(--vscode-button-secondaryForeground)"}`,
                       padding: "2px 6px",
