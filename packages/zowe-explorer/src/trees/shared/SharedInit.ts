@@ -56,6 +56,7 @@ import { ReleaseNotes } from "../../utils/ReleaseNotes";
 import { JobFSProvider } from "../job/JobFSProvider";
 
 export class SharedInit {
+
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
 
@@ -72,9 +73,7 @@ export class SharedInit {
                 if (vscode.window.activeTextEditor) {
                     // Notify spool provider for "manual poll" key event in open spool files
                     const doc = vscode.window.activeTextEditor.document;
-                    const entry = JobFSProvider.instance.lookup(doc.uri, false);
-                    const isSpool = FsJobsUtils.isSpoolEntry(entry);
-                    if (isSpool) {
+                    if (SharedInit.isDocumentASpool(doc.uri)) {
                         await JobActions.spoolFilePollEvent(doc);
                     }
                 }
@@ -358,6 +357,12 @@ export class SharedInit {
                 },
             })
         );
+    }
+
+    public static isDocumentASpool(uri: vscode.Uri): Boolean {
+        const entry = JobFSProvider.instance.lookup(uri, false);
+        const isSpool = FsJobsUtils.isSpoolEntry(entry);
+        return isSpool;
     }
 
     public static watchConfigProfile(context: vscode.ExtensionContext): void {
