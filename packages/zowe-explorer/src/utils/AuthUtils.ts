@@ -64,7 +64,7 @@ export class AuthUtils {
      * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
      * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
-    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
+    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<boolean> {
         if (
             (err instanceof imperative.ImperativeError &&
                 (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
@@ -73,7 +73,7 @@ export class AuthUtils {
         ) {
             if (!(await AuthHandler.shouldHandleAuthError(profile.name))) {
                 ZoweLogger.debug(`[AuthUtils] Skipping authentication prompt for profile ${profile.name} due to debouncing`);
-                return;
+                return false;
             }
 
             // In the case of an authentication error, find a more user-friendly error message if available.
@@ -98,7 +98,7 @@ export class AuthUtils {
             } else {
                 // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
                 // This may throw AuthCancelledError if the user cancels the authentication prompt
-                await AuthHandler.lockProfile(profile, authOpts);
+                return await AuthHandler.lockProfile(profile, authOpts);
             }
         } else if (AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
@@ -151,7 +151,10 @@ export class AuthUtils {
                         this.promptCountForProfile[profileName]++;
                     }
                     if (profile) {
-                        await this.handleProfileAuthOnError(err, profile);
+                        const result = await this.handleProfileAuthOnError(err, profile);
+                        if (!result) {
+                            AuthHandler.authPromptLocks.get(profile.name)?.release();
+                        }
                     }
                 } else {
                     if (shouldTrackPrompts) {

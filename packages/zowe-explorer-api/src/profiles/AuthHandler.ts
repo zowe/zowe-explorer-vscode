@@ -58,7 +58,7 @@ export class AuthCancelledError extends vscode.FileSystemError {
 }
 
 export class AuthHandler {
-    private static authPromptLocks = new Map<string, Mutex>();
+    public static authPromptLocks = new Map<string, Mutex>();
     private static profileLocks = new Map<string, Mutex>();
     private static authCancelledProfiles = new Set<string>();
     private static enabledProfileTypes: Set<string> = new Set(["zosmf"]);
@@ -231,10 +231,12 @@ export class AuthHandler {
                     AuthHandler.unlockProfile(profileName, true);
                     return true;
                 }
-                // User cancelled the SSO login prompt
-                AuthHandler.setAuthCancelled(profileName, true);
-                if (params.throwErrorOnCancel) {
-                    throw new AuthCancelledError(profileName, "User cancelled SSO authentication");
+                if (userResp === undefined) {
+                    // User cancelled the SSO login prompt
+                    AuthHandler.setAuthCancelled(profileName, true);
+                    if (params.throwErrorOnCancel) {
+                        throw new AuthCancelledError(profileName, "User cancelled SSO authentication");
+                    }
                 }
                 return false;
             }
@@ -295,8 +297,9 @@ export class AuthHandler {
 
         // Prompt the user to re-authenticate if an error and options were provided
         if (authOpts) {
-            await AuthHandler.promptForAuthentication(profile, authOpts);
+            const result = await AuthHandler.promptForAuthentication(profile, authOpts);
             this.profileLocks.get(profileName)?.release();
+            return result;
         }
 
         return true;

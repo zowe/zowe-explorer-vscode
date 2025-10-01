@@ -78,7 +78,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
         const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-        if (AuthHandler.sessTypeFromProfile(uriInfo.profile) === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
+        const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
+        if (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
@@ -211,7 +212,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
         const entryExists = this.exists(uri);
 
-        if (AuthHandler.sessTypeFromProfile(uriInfo.profile) === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
+        const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
+        if (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
