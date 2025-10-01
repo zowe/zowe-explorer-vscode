@@ -28,13 +28,9 @@ import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import * as certWizard from "../../../../src/utils/CertificateWizard";
 import { FsAbstractUtils, Gui, imperative, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
-import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
-import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ReleaseNotes } from "../../../../src/utils/ReleaseNotes";
-import { SessConstants } from "@zowe/imperative";
-import exp from "constants";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
