@@ -161,5 +161,6 @@ export namespace Definitions {
         CONFIG_EDITOR_VIEW_MODE = "zowe.configEditor.viewMode",
         CONFIG_EDITOR_PROPERTY_SORT_ORDER = "zowe.configEditor.propertySortOrder",
         CONFIG_EDITOR_PROFILE_SORT_ORDER = "zowe.configEditor.profileSortOrder",
+        CONFIG_EDITOR_PROFILES_WIDTH_PERCENT = "zowe.configEditor.profilesWidthPercent",
     }
 }

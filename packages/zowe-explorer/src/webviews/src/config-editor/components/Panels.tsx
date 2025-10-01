@@ -43,7 +43,6 @@ export function Panels({
   configurations,
   selectedTab,
   renderProfiles,
-  renderDefaults,
   renderProfileDetails,
   onProfileWizard,
   viewMode,
@@ -118,6 +117,7 @@ export function Panels({
               </div>
               {selectedTab === index && renderProfiles(config.properties.profiles)}
             </div>
+            <div className="resize-divider" id={`resize-divider-${index}`}></div>
             <div className="config-section profile-details-section">{selectedTab === index && renderProfileDetails()}</div>
             {/* <div className="config-section defaults-section">
               <div className="defaults-heading-container">

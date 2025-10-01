@@ -4,29 +4,29 @@ import { ProfileTree } from "./ProfileTree";
 
 // Color map for profile types
 const PROFILE_TYPE_COLORS: { [key: string]: string } = {
-  zosmf: "#4A90E2",
-  tso: "#7ED321",
-  ssh: "#F5A623",
-  ca7: "#BD10E0",
-  caspool: "#50E3C2",
-  caview: "#B8E986",
-  cics: "#4A90E2",
-  db2: "#7ED321",
-  ebg: "#F5A623",
-  endevor: "#BD10E0",
-  "endevor-location": "#50E3C2",
-  fmp: "#B8E986",
-  idms: "#4A90E2",
-  ims: "#7ED321",
-  jclcheck: "#F5A623",
-  mat: "#BD10E0",
-  pma: "#50E3C2",
-  mq: "#B8E986",
-  ops: "#4A90E2",
-  sysview: "#7ED321",
-  "sysview-format": "#F5A623",
-  zftp: "#BD10E0",
-  base: "#50E3C2",
+  zosmf: "#DE0D2E",
+  tso: "#00F407",
+  ssh: "#FF8735",
+  ca7: "#810D49",
+  caspool: "#00735C",
+  caview: "#AB0D61",
+  cics: "#009175",
+  db2: "#D80D7B",
+  ebg: "#00AF8E",
+  endevor: "#FF2E95",
+  "endevor-location": "#00CBA7",
+  fmp: "#FF78AD",
+  idms: "#00EBC1",
+  ims: "#FFACC6",
+  jclcheck: "#86FFDE",
+  mat: "#FFD7E1",
+  pma: "#00306F",
+  mq: "#460B70",
+  ops: "#00489E",
+  sysview: "#B40AFC",
+  "sysview-format": "#005FCC",
+  zftp: "#8E06CD",
+  base: "#0079FA",
 };
 
 interface ProfileListProps {
@@ -273,6 +273,7 @@ export function ProfileList({
             onSetAsDefault={onSetAsDefault}
             setPendingDefaults={setPendingDefaults}
             onFilterChange={onFilterChange}
+            filterType={filterType}
           />
         ) : (
           filteredProfileKeys.map((profileKey) => (
@@ -326,7 +327,12 @@ export function ProfileList({
                       e.stopPropagation();
                       const profileType = getProfileType(profileKey);
                       if (profileType) {
-                        onFilterChange(profileType);
+                        // If clicking on the same type that's already filtered, clear the filter
+                        if (filterType === profileType) {
+                          onFilterChange(null);
+                        } else {
+                          onFilterChange(profileType);
+                        }
                       }
                     }}
                     style={{
@@ -354,7 +360,11 @@ export function ProfileList({
                     onMouseLeave={(e) => {
                       e.currentTarget.style.opacity = "1";
                     }}
-                    title={`Click to filter by ${getProfileType(profileKey)} type`}
+                    title={
+                      filterType === getProfileType(profileKey)
+                        ? `Click to clear ${getProfileType(profileKey)} filter`
+                        : `Click to filter by ${getProfileType(profileKey)} type`
+                    }
                   >
                     {getProfileType(profileKey)}
                   </span>

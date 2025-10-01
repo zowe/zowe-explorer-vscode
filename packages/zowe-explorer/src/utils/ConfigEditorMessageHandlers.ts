@@ -14,6 +14,7 @@ import { ProfileCredentials, ProfileInfo } from "@zowe/imperative";
 import { ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
 import { Profiles } from "../configuration/Profiles";
+import { Definitions } from "../configuration/Definitions";
 
 export class ConfigEditorMessageHandlers {
     constructor(
@@ -118,7 +119,9 @@ export class ConfigEditorMessageHandlers {
     async handleGetLocalStorageValue(message: any): Promise<void> {
         try {
             const { key } = message;
-            const value = LocalStorageAccess.getValue(key);
+            // Map string keys to enum keys for LocalStorageAccess
+            const enumKey = key as Definitions.LocalStorageKey;
+            const value = LocalStorageAccess.getValue(enumKey);
             await this.panel.webview.postMessage({
                 command: "LOCAL_STORAGE_VALUE",
                 key,
@@ -147,7 +150,9 @@ export class ConfigEditorMessageHandlers {
     async handleSetLocalStorageValue(message: any): Promise<void> {
         try {
             const { key, value } = message;
-            await LocalStorageAccess.setValue(key, value);
+            // Map string keys to enum keys for LocalStorageAccess
+            const enumKey = key as Definitions.LocalStorageKey;
+            await LocalStorageAccess.setValue(enumKey, value);
             await this.panel.webview.postMessage({
                 command: "LOCAL_STORAGE_SET_SUCCESS",
                 key,

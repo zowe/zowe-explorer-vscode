@@ -210,7 +210,7 @@ div:has(> .vscode-panel) {
 
 .panel-content {
     display: flex;
-    gap: clamp(1rem, 3vw, 2rem);
+    gap: 0;
     align-items: flex-start;
     min-height: 350px;
     overflow: auto;
@@ -227,11 +227,12 @@ div:has(> .vscode-panel) {
 .config-section.profiles-section {
     flex: 0 0 280px;
     width: 280px;
-    min-width: 280px;
-    max-width: 280px;
+    min-width: 200px;
+    max-width: 70%;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    transition: flex 0.1s ease;
 }
 
 .config-section.profiles-section:has(.sort-dropdown-container) {
@@ -239,11 +240,17 @@ div:has(> .vscode-panel) {
 }
 
 .config-section.profile-details-section {
-    flex: 0 0 400px;
-    width: 400px;
-    min-width: 400px;
-    max-width: 400px;
+    flex: 1;
+    min-width: 200px;
     overflow: auto;
+    transition: flex 0.1s ease;
+}
+
+.config-section.profile-details-section > div {
+    max-width: 400px;
+    width: 100%;
+    margin: 0;
+    padding: 0 16px;
 }
 
 .config-section.profile-details-section .sort-dropdown-container {
@@ -265,6 +272,49 @@ div:has(> .vscode-panel) {
     flex: 1;
     min-width: 200px;
     overflow: auto;
+}
+
+/* Resizable divider styles */
+.resize-divider {
+    width: 2px;
+    background-color: var(--vscode-tab-border);
+    cursor: col-resize;
+    position: relative;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease;
+    margin: 0 8px;
+    min-height: 100%;
+    align-self: stretch;
+}
+
+.resize-divider:hover {
+    background-color: var(--vscode-button-background);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.resize-divider:active {
+    background-color: var(--vscode-button-background);
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+}
+
+.resize-divider::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -2px;
+    right: -2px;
+    bottom: 0;
+    background-color: transparent;
+    cursor: col-resize;
+}
+
+.resize-divider.dragging {
+    background-color: var(--vscode-button-background);
+}
+
+.resize-divider.dragging::before {
+    background-color: var(--vscode-button-background);
+    opacity: 0.3;
 }
 
 .config-section h2 {
@@ -662,21 +712,19 @@ ul {
 
 @media (max-width: 1200px) {
     .panel-content {
-        gap: 1rem;
+        gap: 0;
     }
 
     .config-section.profiles-section {
         flex: 0 0 250px;
         width: 250px;
-        min-width: 250px;
-        max-width: 250px;
+        min-width: 200px;
+        max-width: 70%;
     }
 
     .config-section.profile-details-section {
-        flex: 0 0 350px;
-        width: 350px;
-        min-width: 350px;
-        max-width: 350px;
+        flex: 1;
+        min-width: 300px;
     }
 
     .config-item-container.defaults-container {
@@ -708,6 +756,11 @@ ul {
     .config-section.defaults-section {
         min-width: 100%;
         max-width: 100%;
+    }
+
+    /* Hide the resize divider when layout is stacked vertically */
+    .resize-divider {
+        display: none;
     }
 
     .config-item-container {
@@ -1549,6 +1602,10 @@ ul {
 .sort-dropdown {
     position: relative;
     display: inline-block;
+}
+
+.sort-dropdown-right {
+    margin-left: auto;
 }
 
 .sort-dropdown-trigger {

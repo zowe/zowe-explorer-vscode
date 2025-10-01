@@ -421,16 +421,17 @@ export const RenderConfig = ({
                     <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`} style={{ margin: 0, fontSize: "16px" }}>
                       Profile Properties
                     </h3>
-                    <SortDropdown<PropertySortOrder>
-                      options={SORT_ORDER_OPTIONS}
-                      selectedOption={propertySortOrder || "alphabetical"}
-                      onOptionChange={setPropertySortOrderWithStorage}
-                      getDisplayName={getSortOrderDisplayName}
-                    />
                   </div>
                 ) : (
                   <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>{displayKey}</h3>
                 )}
+                <SortDropdown<PropertySortOrder>
+                  options={SORT_ORDER_OPTIONS}
+                  selectedOption={propertySortOrder || "alphabetical"}
+                  onOptionChange={setPropertySortOrderWithStorage}
+                  getDisplayName={getSortOrderDisplayName}
+                  className="sort-dropdown-right"
+                />
                 <button
                   className="header-button"
                   title={`Create new property for \"${extractProfileKeyFromPath(currentPath)}\"`}

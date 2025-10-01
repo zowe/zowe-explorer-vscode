@@ -48,6 +48,7 @@ interface ProfileTreeProps {
   onSetAsDefault?: (profileKey: string) => void;
   setPendingDefaults?: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: { value: string; path: string[] } } }>>;
   onFilterChange?: (filterType: string | null) => void;
+  filterType?: string | null; // Added to support toggle behavior
 }
 
 interface ProfileNode {
@@ -78,6 +79,7 @@ export function ProfileTree({
   onSetAsDefault,
   setPendingDefaults,
   onFilterChange,
+  filterType,
 }: ProfileTreeProps) {
   const hasNestedProfiles = profileKeys.some((key) => key.includes("."));
 
@@ -506,7 +508,12 @@ export function ProfileTree({
                   e.stopPropagation();
                   const profileType = getProfileType(node.key);
                   if (profileType && onFilterChange) {
-                    onFilterChange(profileType);
+                    // If clicking on the same type that's already filtered, clear the filter
+                    if (filterType === profileType) {
+                      onFilterChange(null);
+                    } else {
+                      onFilterChange(profileType);
+                    }
                   }
                 }}
                 style={{
@@ -534,7 +541,11 @@ export function ProfileTree({
                 onMouseLeave={(e) => {
                   e.currentTarget.style.opacity = "1";
                 }}
-                title={`Click to filter by ${getProfileType(node.key)} type`}
+                title={
+                  filterType === getProfileType(node.key)
+                    ? `Click to clear ${getProfileType(node.key)} filter`
+                    : `Click to filter by ${getProfileType(node.key)} type`
+                }
               >
                 {getProfileType(node.key)}
               </span>

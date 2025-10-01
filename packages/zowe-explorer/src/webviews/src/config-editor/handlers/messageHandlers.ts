@@ -40,6 +40,7 @@ const LOCAL_STORAGE_KEYS = {
     VIEW_MODE: "zowe.configEditor.viewMode",
     PROPERTY_SORT_ORDER: "zowe.configEditor.propertySortOrder",
     PROFILE_SORT_ORDER: "zowe.configEditor.profileSortOrder",
+    PROFILES_WIDTH_PERCENT: "zowe.configEditor.profilesWidthPercent",
 } as const;
 
 // Message handler props interface
@@ -67,12 +68,13 @@ interface MessageHandlerProps {
     setSortOrderVersion: React.Dispatch<React.SetStateAction<number>>;
     setViewMode: React.Dispatch<React.SetStateAction<"flat" | "tree">>;
     setPropertySortOrder: React.Dispatch<React.SetStateAction<"alphabetical" | "merged-first" | "non-merged-first">>;
-    setProfileSortOrder: React.Dispatch<React.SetStateAction<"natural" | "alphabetical" | "reverse-alphabetical" | null>>;
+    setProfileSortOrder: React.Dispatch<React.SetStateAction<"natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults" | null>>;
     setSecureValuesAllowed: React.Dispatch<React.SetStateAction<boolean>>;
     setSchemaValidations: React.Dispatch<React.SetStateAction<{ [configPath: string]: schemaValidation | undefined }>>;
     setAddConfigModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setIsSaving: React.Dispatch<React.SetStateAction<boolean>>;
     setPendingSaveSelection: React.Dispatch<React.SetStateAction<{ tab: number | null; profile: string | null } | null>>;
+    setProfilesWidthPercent: React.Dispatch<React.SetStateAction<number>>;
 
     // Refs
     configurationsRef: React.MutableRefObject<Configuration[]>;
@@ -284,7 +286,7 @@ export const handleInitialSelectionMessage = (data: any, props: MessageHandlerPr
 
 // Handle LOCAL_STORAGE_VALUE message
 export const handleLocalStorageValueMessage = (data: any, props: MessageHandlerProps) => {
-    const { setShowMergedProperties, setSortOrderVersion, setViewMode, setPropertySortOrder, setProfileSortOrder } = props;
+    const { setShowMergedProperties, setSortOrderVersion, setViewMode, setPropertySortOrder, setProfileSortOrder, setProfilesWidthPercent } = props;
 
     // Handle localStorage value retrieval
     const { key, value } = data;
@@ -298,6 +300,8 @@ export const handleLocalStorageValueMessage = (data: any, props: MessageHandlerP
         setSortOrderVersion((prev) => prev + 1);
     } else if (key === LOCAL_STORAGE_KEYS.PROFILE_SORT_ORDER) {
         setProfileSortOrder(value !== undefined ? value : "natural");
+    } else if (key === LOCAL_STORAGE_KEYS.PROFILES_WIDTH_PERCENT) {
+        setProfilesWidthPercent(value !== undefined ? value : 35);
     }
 };
 

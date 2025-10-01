@@ -91,6 +91,7 @@ const LOCAL_STORAGE_KEYS = {
   VIEW_MODE: "zowe.configEditor.viewMode",
   PROPERTY_SORT_ORDER: "zowe.configEditor.propertySortOrder",
   PROFILE_SORT_ORDER: "zowe.configEditor.profileSortOrder",
+  PROFILES_WIDTH_PERCENT: "zowe.configEditor.profilesWidthPercent",
 } as const;
 
 const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
@@ -129,6 +130,33 @@ export function App() {
   const [secureValuesAllowed, setSecureValuesAllowed] = useState<boolean>(true);
   const [hasPromptedForZeroConfigs, setHasPromptedForZeroConfigs] = useState(false);
   const [expandedNodesByConfig, setExpandedNodesByConfig] = useState<{ [configPath: string]: Set<string> }>({});
+  const [profilesWidthPercent, setProfilesWidthPercent] = useState<number>(35);
+
+  // Function to apply stored width to panels
+  const applyStoredWidth = useCallback(() => {
+    const activePanel = document.querySelector(".panel.active .panel-content") as HTMLElement;
+    if (activePanel) {
+      const profilesSection = activePanel.querySelector(".profiles-section") as HTMLElement;
+      const profileDetailsSection = activePanel.querySelector(".profile-details-section") as HTMLElement;
+
+      if (profilesSection && profileDetailsSection) {
+        const panelWidth = activePanel.getBoundingClientRect().width;
+        const profilesWidth = (panelWidth * profilesWidthPercent) / 100;
+        const minProfilesWidth = 200;
+        const maxProfilesWidth = panelWidth * 0.7;
+
+        const constrainedWidth = Math.max(minProfilesWidth, Math.min(maxProfilesWidth, profilesWidth));
+
+        profilesSection.style.width = `${constrainedWidth}px`;
+        profilesSection.style.flex = `0 0 auto`;
+        profilesSection.style.maxWidth = `${maxProfilesWidth}px`;
+
+        profileDetailsSection.style.width = "";
+        profileDetailsSection.style.flex = "1";
+        profileDetailsSection.style.maxWidth = "";
+      }
+    }
+  }, [profilesWidthPercent]);
 
   const [newProfileKeyPath, setNewProfileKeyPath] = useState<string[] | null>(null);
   const [newProfileKey, setNewProfileKey] = useState("");
@@ -448,6 +476,7 @@ export function App() {
     getLocalStorageValue(LOCAL_STORAGE_KEYS.VIEW_MODE, "tree");
     getLocalStorageValue(LOCAL_STORAGE_KEYS.PROPERTY_SORT_ORDER, "alphabetical");
     getLocalStorageValue(LOCAL_STORAGE_KEYS.PROFILE_SORT_ORDER, "natural");
+    getLocalStorageValue(LOCAL_STORAGE_KEYS.PROFILES_WIDTH_PERCENT, 35);
   }, [getLocalStorageValue]);
 
   useEffect(() => {
@@ -499,6 +528,7 @@ export function App() {
         setAddConfigModalOpen,
         setIsSaving,
         setPendingSaveSelection,
+        setProfilesWidthPercent,
         configurationsRef,
         pendingSaveSelection,
         selectedTab,
@@ -597,6 +627,99 @@ export function App() {
     const isModalOpen = newProfileModalOpen || saveModalOpen || newLayerModalOpen || wizardModalOpen || renameProfileModalOpen;
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, wizardModalOpen, renameProfileModalOpen]);
+
+  // Apply stored width on initialization and when configurations change
+  useEffect(() => {
+    if (configurations.length > 0) {
+      setTimeout(applyStoredWidth, 100);
+    }
+  }, [profilesWidthPercent, configurations, applyStoredWidth]);
+
+  // Resize divider functionality
+  useEffect(() => {
+    const handleResize = (e: MouseEvent) => {
+      const divider = document.querySelector(".resize-divider.dragging") as HTMLElement;
+      if (!divider) return;
+
+      const panelContent = divider.closest(".panel-content") as HTMLElement;
+      if (!panelContent) return;
+
+      const profilesSection = panelContent.querySelector(".profiles-section") as HTMLElement;
+      const profileDetailsSection = panelContent.querySelector(".profile-details-section") as HTMLElement;
+
+      if (!profilesSection || !profileDetailsSection) return;
+
+      const panelRect = panelContent.getBoundingClientRect();
+      const mouseX = e.clientX - panelRect.left;
+      const panelWidth = panelRect.width;
+
+      // Calculate new widths in pixels
+      const dividerWidth = 22; // 22px for divider width and margins
+      const availableWidth = panelWidth - dividerWidth;
+
+      // Apply minimum and maximum constraints for profiles section only
+      const minProfilesWidth = 200;
+      const maxProfilesWidth = availableWidth * 0.7; // 70% of available width
+
+      // Calculate desired width for profiles section based on mouse position
+      const desiredProfilesWidth = mouseX;
+
+      // Constrain profiles section
+      const constrainedProfilesWidth = Math.max(minProfilesWidth, Math.min(maxProfilesWidth, desiredProfilesWidth));
+
+      // Apply the new width to profiles section only
+      profilesSection.style.width = `${constrainedProfilesWidth}px`;
+      profilesSection.style.flex = `0 0 auto`;
+      profilesSection.style.maxWidth = `${maxProfilesWidth}px`;
+
+      // Let details section use remaining space (flex: 1)
+      profileDetailsSection.style.width = "";
+      profileDetailsSection.style.flex = "1";
+      profileDetailsSection.style.maxWidth = "";
+    };
+
+    const handleMouseUp = () => {
+      const draggingDivider = document.querySelector(".resize-divider.dragging");
+      if (draggingDivider) {
+        draggingDivider.classList.remove("dragging");
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+
+        // Save the current width percentage to localStorage
+        const panelContent = draggingDivider.closest(".panel-content") as HTMLElement;
+        if (panelContent) {
+          const profilesSection = panelContent.querySelector(".profiles-section") as HTMLElement;
+          if (profilesSection) {
+            const panelWidth = panelContent.getBoundingClientRect().width;
+            const profilesWidth = profilesSection.getBoundingClientRect().width;
+            const newPercent = Math.round((profilesWidth / panelWidth) * 100);
+            setProfilesWidthPercent(newPercent);
+            setLocalStorageValue(LOCAL_STORAGE_KEYS.PROFILES_WIDTH_PERCENT, newPercent);
+          }
+        }
+      }
+    };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("resize-divider")) {
+        e.preventDefault();
+        target.classList.add("dragging");
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+      }
+    };
+
+    document.addEventListener("mousemove", handleResize);
+    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("mousedown", handleMouseDown);
+
+    return () => {
+      document.removeEventListener("mousemove", handleResize);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("mousedown", handleMouseDown);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -843,6 +966,9 @@ export function App() {
         setMergedProperties(null);
       }
     }
+
+    // Apply cached width when switching tabs
+    setTimeout(applyStoredWidth, 200);
   };
 
   const mergePendingChangesForProfileWrapper = useCallback(
@@ -1018,7 +1144,8 @@ export function App() {
 
   const getAvailableProfilesForConfig = useCallback(
     (configPath: string): string[] => {
-      const profilesObj = configurations[selectedTab!]?.properties?.profiles;
+      const config = configurations.find((c) => c.configPath === configPath);
+      const profilesObj = config?.properties?.profiles;
       if (!profilesObj) {
         return [];
       }
@@ -1064,6 +1191,16 @@ export function App() {
     const currentSelectedTab = selectedTab;
     const currentSelectedProfileKey = selectedProfileKey;
 
+    // Check if there are any pending changes before clearing
+    const hasPendingChanges =
+      Object.keys(pendingChanges).length > 0 ||
+      Object.keys(deletions).length > 0 ||
+      Object.keys(pendingDefaults).length > 0 ||
+      Object.keys(defaultsDeletions).length > 0 ||
+      Object.keys(autostoreChanges).length > 0 ||
+      Object.keys(renames).length > 0 ||
+      Object.keys(dragDroppedProfiles).length > 0;
+
     let originalSelectedProfileKey = currentSelectedProfileKey;
     if (currentSelectedProfileKey && currentSelectedTab !== null) {
       const configPath = configurations[currentSelectedTab]?.configPath;
@@ -1080,6 +1217,12 @@ export function App() {
     setAutostoreChanges({});
     setRenames({});
     setDragDroppedProfiles({});
+
+    // Clear search bar and type filter if there are no pending changes
+    if (!hasPendingChanges) {
+      setProfileSearchTerm("");
+      setProfileFilterType(null);
+    }
 
     vscodeApi.postMessage({ command: "GET_PROFILES" });
 
@@ -1106,7 +1249,21 @@ export function App() {
         }
       }
     }, 100);
-  }, [selectedTab, selectedProfileKey, configurations, formatPendingChanges, renames, doesProfileExist]);
+  }, [
+    selectedTab,
+    selectedProfileKey,
+    configurations,
+    formatPendingChanges,
+    renames,
+    doesProfileExist,
+    pendingChanges,
+    deletions,
+    pendingDefaults,
+    defaultsDeletions,
+    autostoreChanges,
+    renames,
+    dragDroppedProfiles,
+  ]);
 
   const findOptimalReplacementProfile = useCallback(
     (deletedProfileKey: string, configPath: string): string | null => {

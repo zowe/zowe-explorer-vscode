@@ -71,6 +71,7 @@ export class LocalStorageAccess extends ZoweLocalStorage {
         [Definitions.LocalStorageKey.CONFIG_EDITOR_VIEW_MODE]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [Definitions.LocalStorageKey.CONFIG_EDITOR_PROPERTY_SORT_ORDER]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [Definitions.LocalStorageKey.CONFIG_EDITOR_PROFILE_SORT_ORDER]: StorageAccessLevel.Read | StorageAccessLevel.Write,
+        [Definitions.LocalStorageKey.CONFIG_EDITOR_PROFILES_WIDTH_PERCENT]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [PersistenceSchemaEnum.Dataset]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [PersistenceSchemaEnum.USS]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [PersistenceSchemaEnum.Job]: StorageAccessLevel.Read | StorageAccessLevel.Write,

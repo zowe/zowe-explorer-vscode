@@ -42,45 +42,6 @@ export function getProfileType(
 
     const originalProfileKey = getOriginalProfileKeyWithNested(profileKey, configPath, renames);
 
-    const isProfileKeyMatch = (entryProfileKey: string): boolean => {
-        if (entryProfileKey === profileKey || entryProfileKey === originalProfileKey) {
-            return true;
-        }
-
-        if (entryProfileKey.includes(".") || profileKey.includes(".")) {
-            const renamedEntryProfileKey = getRenamedProfileKeyWithNested(entryProfileKey, configPath, renames);
-            if (renamedEntryProfileKey === profileKey) {
-                return true;
-            }
-
-            const originalOfCurrentKey = getOriginalProfileKey(profileKey, configPath, renames);
-            if (entryProfileKey === originalOfCurrentKey) {
-                return true;
-            }
-
-            const entryParts = entryProfileKey.split(".");
-            const currentParts = profileKey.split(".");
-
-            if (entryParts.length < currentParts.length) {
-                const currentParentKey = currentParts.slice(0, entryParts.length).join(".");
-                const renamedEntryKey = getRenamedProfileKeyWithNested(entryProfileKey, configPath, renames);
-                if (renamedEntryKey === currentParentKey) {
-                    return true;
-                }
-            }
-
-            if (currentParts.length < entryParts.length) {
-                const entryParentKey = entryParts.slice(0, currentParts.length).join(".");
-                const renamedEntryParentKey = getRenamedProfileKeyWithNested(entryParentKey, configPath, renames);
-                if (renamedEntryParentKey === profileKey) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    };
-
     const pendingType = Object.entries(pendingChanges[configPath] ?? {}).find(([key, entry]) => {
         // Only match exact profile keys for type changes, not parent profiles
         if (entry.profile !== profileKey && entry.profile !== originalProfileKey) return false;
