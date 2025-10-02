@@ -16,7 +16,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed regression where a profile was incorrectly detected as using basic authentication, specifically when `tokenValue` was set in the secure array of a parent profile or a default base profile instead of a service profile. [#3855](https://github.com/zowe/zowe-explorer-vscode/pull/3855)
 - Fixed an issue where secure credentials and headers were being logged to the Zowe logger and VSCode output channel. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
 - Fixed an error encountered when deleting members in a PDS. [#3874](https://github.com/zowe/zowe-explorer-vscode/issues/3874)
-- Fixed regression where PDS member attributes were no longer listed when using the "Show Attributes" feature from the context menu. [#3856](https://github.com/zowe/zowe-explorer-vscode/issues/3856)
+- Fixed regression where PDS member attributes were no longer listed when using the "Show Attributes" feature from the data set context menu. [#3856](https://github.com/zowe/zowe-explorer-vscode/issues/3856)
 
 ## `3.3.0`
 
