@@ -666,7 +666,7 @@ ul {
     height: 16px;
     background-repeat: no-repeat;
     background-size: contain;
-    margin-top: 3px;
+    margin-top: 2px !important;
 }
 
 .secure-checkbox-label {
