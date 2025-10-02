@@ -34,14 +34,8 @@ type PendingDefault = {
     path: string[];
 };
 
-// LocalStorage keys for config editor settings
-const LOCAL_STORAGE_KEYS = {
-    SHOW_MERGED_PROPERTIES: "zowe.configEditor.showMergedProperties",
-    VIEW_MODE: "zowe.configEditor.viewMode",
-    PROPERTY_SORT_ORDER: "zowe.configEditor.propertySortOrder",
-    PROFILE_SORT_ORDER: "zowe.configEditor.profileSortOrder",
-    PROFILES_WIDTH_PERCENT: "zowe.configEditor.profilesWidthPercent",
-} as const;
+// LocalStorage key for config editor settings
+const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
 
 // Message handler props interface
 interface MessageHandlerProps {
@@ -64,17 +58,13 @@ interface MessageHandlerProps {
     setNewProfileValue: React.Dispatch<React.SetStateAction<string>>;
     setHasWorkspace: React.Dispatch<React.SetStateAction<boolean>>;
     setSelectedProfilesByConfig: React.Dispatch<React.SetStateAction<{ [configPath: string]: string | null }>>;
-    setShowMergedProperties: React.Dispatch<React.SetStateAction<boolean>>;
+    setConfigEditorSettings: React.Dispatch<React.SetStateAction<any>>;
     setSortOrderVersion: React.Dispatch<React.SetStateAction<number>>;
-    setViewMode: React.Dispatch<React.SetStateAction<"flat" | "tree">>;
-    setPropertySortOrder: React.Dispatch<React.SetStateAction<"alphabetical" | "merged-first" | "non-merged-first">>;
-    setProfileSortOrder: React.Dispatch<React.SetStateAction<"natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults" | null>>;
     setSecureValuesAllowed: React.Dispatch<React.SetStateAction<boolean>>;
     setSchemaValidations: React.Dispatch<React.SetStateAction<{ [configPath: string]: schemaValidation | undefined }>>;
     setAddConfigModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setIsSaving: React.Dispatch<React.SetStateAction<boolean>>;
     setPendingSaveSelection: React.Dispatch<React.SetStateAction<{ tab: number | null; profile: string | null } | null>>;
-    setProfilesWidthPercent: React.Dispatch<React.SetStateAction<number>>;
 
     // Refs
     configurationsRef: React.MutableRefObject<Configuration[]>;
@@ -286,22 +276,29 @@ export const handleInitialSelectionMessage = (data: any, props: MessageHandlerPr
 
 // Handle LOCAL_STORAGE_VALUE message
 export const handleLocalStorageValueMessage = (data: any, props: MessageHandlerProps) => {
-    const { setShowMergedProperties, setSortOrderVersion, setViewMode, setPropertySortOrder, setProfileSortOrder, setProfilesWidthPercent } = props;
+    const { setConfigEditorSettings, setSortOrderVersion } = props;
 
     // Handle localStorage value retrieval
     const { key, value } = data;
-    if (key === LOCAL_STORAGE_KEYS.SHOW_MERGED_PROPERTIES) {
-        setShowMergedProperties(value !== undefined ? value : true);
-        setSortOrderVersion((prev) => prev + 1);
-    } else if (key === LOCAL_STORAGE_KEYS.VIEW_MODE) {
-        setViewMode(value !== undefined ? value : "tree");
-    } else if (key === LOCAL_STORAGE_KEYS.PROPERTY_SORT_ORDER) {
-        setPropertySortOrder(value !== undefined ? value : "alphabetical");
-        setSortOrderVersion((prev) => prev + 1);
-    } else if (key === LOCAL_STORAGE_KEYS.PROFILE_SORT_ORDER) {
-        setProfileSortOrder(value !== undefined ? value : "natural");
-    } else if (key === LOCAL_STORAGE_KEYS.PROFILES_WIDTH_PERCENT) {
-        setProfilesWidthPercent(value !== undefined ? value : 35);
+    if (key === CONFIG_EDITOR_SETTINGS_KEY) {
+        const settings =
+            value !== undefined
+                ? value
+                : {
+                      showMergedProperties: true,
+                      viewMode: "tree",
+                      propertySortOrder: "alphabetical",
+                      profileSortOrder: "natural",
+                      profilesWidthPercent: 35,
+                      defaultsCollapsed: true,
+                      profilesCollapsed: false,
+                  };
+        setConfigEditorSettings(settings);
+
+        // Trigger sort order version update if needed
+        if (settings.showMergedProperties !== undefined || settings.propertySortOrder !== undefined) {
+            setSortOrderVersion((prev) => prev + 1);
+        }
     }
 };
 

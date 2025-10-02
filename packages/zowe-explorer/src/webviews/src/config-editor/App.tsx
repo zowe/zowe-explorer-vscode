@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { isSecureOrigin } from "../utils";
 import { schemaValidation } from "../../../utils/ConfigSchemaHelpers";
+import { Definitions } from "../../../configuration/Definitions";
 import "./App.css";
 
 import {
@@ -86,13 +87,7 @@ type PendingDefault = {
   path: string[];
 };
 
-const LOCAL_STORAGE_KEYS = {
-  SHOW_MERGED_PROPERTIES: "zowe.configEditor.showMergedProperties",
-  VIEW_MODE: "zowe.configEditor.viewMode",
-  PROPERTY_SORT_ORDER: "zowe.configEditor.propertySortOrder",
-  PROFILE_SORT_ORDER: "zowe.configEditor.profileSortOrder",
-  PROFILES_WIDTH_PERCENT: "zowe.configEditor.profilesWidthPercent",
-} as const;
+const CONFIG_EDITOR_SETTINGS_KEY = Definitions.LocalStorageKey.CONFIG_EDITOR_SETTINGS;
 
 const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
 
@@ -113,13 +108,18 @@ export function App() {
   const [selectedProfileKey, setSelectedProfileKey] = useState<string | null>(null);
   const [selectedProfilesByConfig, setSelectedProfilesByConfig] = useState<{ [configPath: string]: string | null }>({});
   const [mergedProperties, setMergedProperties] = useState<any>(null);
-  const [showMergedProperties, setShowMergedProperties] = useState<boolean>(true);
-  const [pendingMergedPropertiesRequest, setPendingMergedPropertiesRequest] = useState<string | null>(null);
+  // Consolidated config editor settings
+  const [configEditorSettings, setConfigEditorSettings] = useState<Definitions.ConfigEditorSettings>({
+    showMergedProperties: true,
+    viewMode: "tree",
+    propertySortOrder: "alphabetical",
+    profileSortOrder: "natural",
+    profilesWidthPercent: 35,
+    defaultsCollapsed: true,
+    profilesCollapsed: false,
+  });
 
-  useEffect(() => {}, [mergedProperties]);
-  const [viewMode, setViewMode] = useState<"flat" | "tree">("tree");
-  const [propertySortOrder, setPropertySortOrder] = useState<PropertySortOrder>("alphabetical");
-  const [profileSortOrder, setProfileSortOrder] = useState<ProfileSortOrder | null>(null);
+  const [pendingMergedPropertiesRequest, setPendingMergedPropertiesRequest] = useState<string | null>(null);
   const [sortOrderVersion, setSortOrderVersion] = useState<number>(0);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [pendingSaveSelection, setPendingSaveSelection] = useState<{ tab: number | null; profile: string | null } | null>(null);
@@ -130,7 +130,29 @@ export function App() {
   const [secureValuesAllowed, setSecureValuesAllowed] = useState<boolean>(true);
   const [hasPromptedForZeroConfigs, setHasPromptedForZeroConfigs] = useState(false);
   const [expandedNodesByConfig, setExpandedNodesByConfig] = useState<{ [configPath: string]: Set<string> }>({});
-  const [profilesWidthPercent, setProfilesWidthPercent] = useState<number>(35);
+
+  // Destructured settings for easier access
+  const { showMergedProperties, viewMode, propertySortOrder, profileSortOrder, profilesWidthPercent, defaultsCollapsed, profilesCollapsed } =
+    configEditorSettings;
+
+  // Setters for individual settings
+  const setShowMergedProperties = (value: boolean) => {
+    setConfigEditorSettings((prev) => ({ ...prev, showMergedProperties: value }));
+    setSortOrderVersion((prev) => prev + 1);
+  };
+
+  const setViewMode = (value: "flat" | "tree") => {
+    setConfigEditorSettings((prev) => ({ ...prev, viewMode: value }));
+  };
+
+  const setPropertySortOrder = (value: PropertySortOrder) => {
+    setConfigEditorSettings((prev) => ({ ...prev, propertySortOrder: value }));
+    setSortOrderVersion((prev) => prev + 1);
+  };
+
+  const setProfileSortOrder = (value: ProfileSortOrder | null) => {
+    setConfigEditorSettings((prev) => ({ ...prev, profileSortOrder: value || "natural" }));
+  };
 
   // Function to apply stored width to panels
   const applyStoredWidth = useCallback(() => {
@@ -227,36 +249,52 @@ export function App() {
   }, []);
   const setShowMergedPropertiesWithStorage = useCallback(
     (value: boolean) => {
-      setShowMergedProperties(value);
-      setLocalStorageValue(LOCAL_STORAGE_KEYS.SHOW_MERGED_PROPERTIES, value);
+      setConfigEditorSettings((prev) => ({ ...prev, showMergedProperties: value }));
+      setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, showMergedProperties: value });
       setSortOrderVersion((prev) => prev + 1);
     },
-    [setLocalStorageValue]
+    [setLocalStorageValue, configEditorSettings]
   );
 
   const setViewModeWithStorage = useCallback(
     (value: "flat" | "tree") => {
-      setViewMode(value);
-      setLocalStorageValue(LOCAL_STORAGE_KEYS.VIEW_MODE, value);
+      setConfigEditorSettings((prev) => ({ ...prev, viewMode: value }));
+      setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, viewMode: value });
     },
-    [setLocalStorageValue]
+    [setLocalStorageValue, configEditorSettings]
   );
 
   const setPropertySortOrderWithStorage = useCallback(
     (value: PropertySortOrder) => {
-      setPropertySortOrder(value);
-      setLocalStorageValue(LOCAL_STORAGE_KEYS.PROPERTY_SORT_ORDER, value);
+      setConfigEditorSettings((prev) => ({ ...prev, propertySortOrder: value }));
+      setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, propertySortOrder: value });
       setSortOrderVersion((prev) => prev + 1);
     },
-    [setLocalStorageValue]
+    [setLocalStorageValue, configEditorSettings]
   );
 
   const setProfileSortOrderWithStorage = useCallback(
     (value: ProfileSortOrder) => {
-      setProfileSortOrder(value);
-      setLocalStorageValue(LOCAL_STORAGE_KEYS.PROFILE_SORT_ORDER, value);
+      setConfigEditorSettings((prev) => ({ ...prev, profileSortOrder: value }));
+      setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, profileSortOrder: value });
     },
-    [setLocalStorageValue]
+    [setLocalStorageValue, configEditorSettings]
+  );
+
+  const setDefaultsCollapsedWithStorage = useCallback(
+    (value: boolean) => {
+      setConfigEditorSettings((prev) => ({ ...prev, defaultsCollapsed: value }));
+      setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, defaultsCollapsed: value });
+    },
+    [setLocalStorageValue, configEditorSettings]
+  );
+
+  const setProfilesCollapsedWithStorage = useCallback(
+    (value: boolean) => {
+      setConfigEditorSettings((prev) => ({ ...prev, profilesCollapsed: value }));
+      setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, profilesCollapsed: value });
+    },
+    [setLocalStorageValue, configEditorSettings]
   );
 
   const formatPendingChanges = useCallback(() => {
@@ -472,11 +510,15 @@ export function App() {
   }, [selectedTab, selectedProfileKey]);
 
   useEffect(() => {
-    getLocalStorageValue(LOCAL_STORAGE_KEYS.SHOW_MERGED_PROPERTIES, true);
-    getLocalStorageValue(LOCAL_STORAGE_KEYS.VIEW_MODE, "tree");
-    getLocalStorageValue(LOCAL_STORAGE_KEYS.PROPERTY_SORT_ORDER, "alphabetical");
-    getLocalStorageValue(LOCAL_STORAGE_KEYS.PROFILE_SORT_ORDER, "natural");
-    getLocalStorageValue(LOCAL_STORAGE_KEYS.PROFILES_WIDTH_PERCENT, 35);
+    getLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, {
+      showMergedProperties: true,
+      viewMode: "tree",
+      propertySortOrder: "alphabetical",
+      profileSortOrder: "natural",
+      profilesWidthPercent: 35,
+      defaultsCollapsed: true,
+      profilesCollapsed: false,
+    });
   }, [getLocalStorageValue]);
 
   useEffect(() => {
@@ -528,7 +570,7 @@ export function App() {
         setAddConfigModalOpen,
         setIsSaving,
         setPendingSaveSelection,
-        setProfilesWidthPercent,
+        setConfigEditorSettings,
         configurationsRef,
         pendingSaveSelection,
         selectedTab,
@@ -693,8 +735,8 @@ export function App() {
             const panelWidth = panelContent.getBoundingClientRect().width;
             const profilesWidth = profilesSection.getBoundingClientRect().width;
             const newPercent = Math.round((profilesWidth / panelWidth) * 100);
-            setProfilesWidthPercent(newPercent);
-            setLocalStorageValue(LOCAL_STORAGE_KEYS.PROFILES_WIDTH_PERCENT, newPercent);
+            setConfigEditorSettings((prev) => ({ ...prev, profilesWidthPercent: newPercent }));
+            setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, profilesWidthPercent: newPercent });
           }
         }
       }
@@ -1750,6 +1792,10 @@ export function App() {
         onViewModeToggle={() => setViewModeWithStorage(viewMode === "tree" ? "flat" : "tree")}
         profileSortOrder={profileSortOrder || "natural"}
         onProfileSortOrderChange={setProfileSortOrderWithStorage}
+        defaultsCollapsed={defaultsCollapsed}
+        onDefaultsCollapsedChange={setDefaultsCollapsedWithStorage}
+        profilesCollapsed={profilesCollapsed}
+        onProfilesCollapsedChange={setProfilesCollapsedWithStorage}
       />
       <Footer
         onClearChanges={handleRefresh}

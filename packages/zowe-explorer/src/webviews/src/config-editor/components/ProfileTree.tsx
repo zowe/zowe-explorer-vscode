@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { getOriginalProfileKeyWithNested } from "../utils/profileUtils";
+import { getContrastTextColor } from "../utils/colorUtils";
 
 // Color map for profile types
 const PROFILE_TYPE_COLORS: { [key: string]: string } = {
@@ -518,7 +519,7 @@ export function ProfileTree({
                 }}
                 style={{
                   fontSize: "11px",
-                  color: "black",
+                  color: getContrastTextColor(PROFILE_TYPE_COLORS[getProfileType(node.key)!] || "#000000"),
                   backgroundColor: PROFILE_TYPE_COLORS[getProfileType(node.key)!]
                     ? `${PROFILE_TYPE_COLORS[getProfileType(node.key)!]}`
                     : "var(--vscode-badge-background)",

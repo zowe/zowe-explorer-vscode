@@ -16,6 +16,12 @@ import * as path from "path";
 
 let foundOptions: string[] = [];
 
+When("the user clicks the defaults toggle button to open the defaults section", async () => {
+    const defaultsToggleButton = await browser.$(".defaults-toggle-button");
+    await defaultsToggleButton.waitForExist({ timeout: 1000 });
+    await defaultsToggleButton.click();
+});
+
 When("the user selects the {word} default dropdown", async (type: string) => {
     const dropdownSelector = `select[id="default-dropdown-${type}"]`;
     const typeFilterSelect = await browser.$(dropdownSelector);

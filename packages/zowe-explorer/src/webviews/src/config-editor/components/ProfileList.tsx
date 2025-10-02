@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ProfileSearchFilter } from "./ProfileSearchFilter";
 import { ProfileTree } from "./ProfileTree";
+import { getContrastTextColor } from "../utils/colorUtils";
 
 // Color map for profile types
 const PROFILE_TYPE_COLORS: { [key: string]: string } = {
@@ -224,7 +225,7 @@ export function ProfileList({
         width: "100%",
         display: "flex",
         flexDirection: "column",
-        maxHeight: "calc(100vh - 200px)",
+        maxHeight: "400px",
         overflow: "hidden",
       }}
       data-testid="profile-list"
@@ -337,7 +338,7 @@ export function ProfileList({
                     }}
                     style={{
                       fontSize: "11px",
-                      color: /*PROFILE_TYPE_COLORS[getProfileType(profileKey)!] || */ "black",
+                      color: getContrastTextColor(PROFILE_TYPE_COLORS[getProfileType(profileKey)!] || "#000000"),
                       backgroundColor: PROFILE_TYPE_COLORS[getProfileType(profileKey)!]
                         ? `${PROFILE_TYPE_COLORS[getProfileType(profileKey)!]}`
                         : "var(--vscode-badge-background)",

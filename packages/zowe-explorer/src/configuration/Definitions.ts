@@ -149,6 +149,16 @@ export namespace Definitions {
         None,
         JustMigrated,
     }
+    export interface ConfigEditorSettings {
+        showMergedProperties: boolean;
+        viewMode: "flat" | "tree";
+        propertySortOrder: "alphabetical" | "merged-first" | "non-merged-first";
+        profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
+        profilesWidthPercent: number;
+        defaultsCollapsed: boolean;
+        profilesCollapsed: boolean;
+    }
+
     export enum LocalStorageKey {
         CLI_LOGGER_SETTING_PRESENTED = "zowe.cliLoggerSetting.presented",
         ENCODING_HISTORY = "zowe.encodingHistory",
@@ -157,10 +167,6 @@ export namespace Definitions {
         V1_MIGRATION_STATUS = "zowe.v1MigrationStatus",
         DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
-        CONFIG_EDITOR_SHOW_MERGED_PROPERTIES = "zowe.configEditor.showMergedProperties",
-        CONFIG_EDITOR_VIEW_MODE = "zowe.configEditor.viewMode",
-        CONFIG_EDITOR_PROPERTY_SORT_ORDER = "zowe.configEditor.propertySortOrder",
-        CONFIG_EDITOR_PROFILE_SORT_ORDER = "zowe.configEditor.profileSortOrder",
-        CONFIG_EDITOR_PROFILES_WIDTH_PERCENT = "zowe.configEditor.profilesWidthPercent",
+        CONFIG_EDITOR_SETTINGS = "zowe.configEditor.settings",
     }
 }

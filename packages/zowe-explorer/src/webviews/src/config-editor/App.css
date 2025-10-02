@@ -45,10 +45,11 @@ body {
     align-items: center;
     gap: 8px;
     padding: 12px 16px;
-    border-top: 1px solid var(--vscode-tab-border);
     background: var(--vscode-editor-background);
     flex-shrink: 0;
-    margin-top: 8px;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
 }
 
 /* Ensure the main content area takes remaining space */
@@ -62,8 +63,7 @@ body {
 
 .vscode-panel > .panels {
     overflow: auto;
-    min-height: 300px;
-    max-height: calc(100vh - 120px);
+    max-height: calc(100vh - 160px);
 }
 
 /* Ensure the webview container takes full height */
@@ -91,6 +91,7 @@ div:has(> .vscode-panel) {
     min-height: 0;
     max-height: 100vh;
     overflow: hidden;
+    padding-bottom: 0;
 }
 
 .tabs {
@@ -193,14 +194,12 @@ div:has(> .vscode-panel) {
     overflow: auto;
     display: flex;
     flex-direction: column;
-    min-height: 400px;
-    flex: 1;
+    flex: 0 0 auto;
 }
 
 .panel {
     display: none;
     overflow: auto;
-    min-height: 350px;
 }
 
 .panel.active {
@@ -211,17 +210,16 @@ div:has(> .vscode-panel) {
 .panel-content {
     display: flex;
     gap: 0;
-    align-items: flex-start;
-    min-height: 350px;
+    align-items: stretch;
     overflow: auto;
 }
 
 .config-section {
-    margin-bottom: 24px;
     display: flex;
     flex-direction: column;
     min-height: 0;
     overflow: auto;
+    align-self: stretch;
 }
 
 .config-section.profiles-section {
@@ -270,8 +268,46 @@ div:has(> .vscode-panel) {
 
 .config-section.defaults-section {
     flex: 1;
-    min-width: 200px;
+    min-width: 0;
     overflow: auto;
+    margin-top: 16px;
+}
+
+.defaults-toggle-button {
+    transition: all 0.2s ease;
+    padding: 6px 0;
+}
+
+.profiles-toggle-button {
+    transition: all 0.2s ease;
+    padding: 6px 0;
+    text-align: left;
+    justify-content: flex-start;
+}
+
+.profiles-content {
+    margin-top: 16px;
+}
+
+/* Add margin to profile list when profiles section is expanded */
+.config-section.profiles-section .profile-list-container {
+    margin-top: 16px;
+}
+
+.defaults-toggle-button:hover {
+    background-color: var(--vscode-list-hoverBackground) !important;
+    border-radius: 4px;
+}
+
+.profiles-toggle-button:hover {
+    background-color: var(--vscode-list-hoverBackground) !important;
+    border-radius: 4px;
+}
+
+.defaults-content {
+    margin-top: 8px;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 /* Resizable divider styles */
@@ -283,7 +319,7 @@ div:has(> .vscode-panel) {
     flex-shrink: 0;
     transition: background-color 0.2s ease;
     margin: 0 8px;
-    min-height: 100%;
+    height: 100%;
     align-self: stretch;
 }
 
@@ -327,7 +363,6 @@ div:has(> .vscode-panel) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
     min-width: 16px;
     min-height: 32px;
     gap: 8px;
@@ -361,7 +396,6 @@ div:has(> .vscode-panel) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
     width: 100%;
 }
 
@@ -736,6 +770,8 @@ ul {
     .panel-content {
         flex-direction: column;
         gap: 1rem;
+        min-height: 0;
+        flex: 1 1 auto;
     }
 
     .config-section.profiles-section {
@@ -744,6 +780,15 @@ ul {
         min-width: 100%;
         max-width: 100%;
         max-height: 300px;
+        order: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .config-section.profiles-section [data-testid="profile-list"] {
+        max-height: 250px !important;
+        overflow-y: auto;
     }
 
     .config-section.profile-details-section {
@@ -751,14 +796,29 @@ ul {
         width: 100%;
         min-width: 100%;
         max-width: 100%;
+        order: 2;
     }
 
     .config-section.defaults-section {
-        min-width: 100%;
-        max-width: 100%;
+        display: none;
     }
 
-    /* Hide the resize divider when layout is stacked vertically */
+    .defaults-toggle-button {
+        padding: 8px 0;
+        font-size: 15px;
+    }
+
+    .profiles-toggle-button {
+        padding: 8px 0;
+        font-size: 15px;
+    }
+
+    .defaults-content {
+        margin-top: 12px;
+        max-height: 250px;
+        overflow-y: auto;
+    }
+
     .resize-divider {
         display: none;
     }
@@ -794,6 +854,33 @@ ul {
         font-size: 12px;
     }
 
+    .config-section.profiles-section [data-testid="profile-list"] {
+        max-height: 200px !important;
+        overflow-y: auto;
+    }
+
+    .config-section.defaults-section {
+        display: none;
+    }
+
+    .defaults-toggle-button {
+        padding: 6px 0;
+        font-size: 14px;
+        gap: 6px;
+    }
+
+    .profiles-toggle-button {
+        padding: 6px 0;
+        font-size: 14px;
+        gap: 6px;
+    }
+
+    .defaults-content {
+        margin-top: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
     .config-section h2 {
         font-size: 14px;
     }
@@ -820,6 +907,75 @@ ul {
 
     .config-label {
         font-size: 11px;
+    }
+
+    .config-section.profiles-section [data-testid="profile-list"] {
+        max-height: 150px !important;
+        overflow-y: auto;
+    }
+
+    .config-section.defaults-section {
+        display: none;
+    }
+
+    .defaults-toggle-button {
+        padding: 4px 0;
+        font-size: 13px;
+        gap: 4px;
+    }
+
+    .profiles-toggle-button {
+        padding: 4px 0;
+        font-size: 13px;
+        gap: 4px;
+    }
+
+    .defaults-content {
+        margin-top: 6px;
+        max-height: 150px;
+        overflow-y: auto;
+    }
+}
+
+/* Additional responsive improvements for very narrow screens */
+@media (max-width: 320px) {
+    .defaults-toggle-button {
+        padding: 3px 0;
+        font-size: 12px;
+        gap: 3px;
+    }
+
+    .profiles-toggle-button {
+        padding: 3px 0;
+        font-size: 12px;
+        gap: 3px;
+    }
+
+    .config-section.profiles-section [data-testid="profile-list"] {
+        max-height: 120px !important;
+        overflow-y: auto;
+    }
+
+    .config-section.defaults-section {
+        display: none;
+    }
+
+    .defaults-content {
+        margin-top: 4px;
+        max-height: 120px;
+        overflow-y: auto;
+    }
+}
+
+/* Touch device improvements */
+@media (hover: none) and (pointer: coarse) {
+    .defaults-toggle-button {
+        padding: 12px 0;
+        min-height: 44px;
+    }
+
+    .defaults-toggle-button:hover {
+        background-color: transparent;
     }
 }
 
@@ -1206,6 +1362,136 @@ ul {
     padding: 0.375rem 0.75rem;
     min-width: 60px;
     font-size: 12px;
+}
+
+/* Profile Wizard Responsive Styles */
+@media (max-width: 900px) {
+    .wizard-modal {
+        max-width: 95vw;
+        width: 95vw;
+        max-height: 90vh;
+    }
+
+    .wizard-content {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .wizard-left-column {
+        flex: none;
+        width: 100%;
+    }
+
+    .wizard-right-column {
+        flex: none;
+        width: 100%;
+    }
+
+    .wizard-property-key {
+        flex: 0 0 120px;
+        font-size: 0.9em;
+    }
+
+    .wizard-properties-container {
+        min-height: 150px;
+        max-height: 300px;
+        overflow-x: auto;
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .wizard-modal {
+        max-width: 98vw;
+        width: 98vw;
+        max-height: 95vh;
+    }
+
+    .wizard-title {
+        font-size: 1.1em;
+        margin-bottom: 0.75rem;
+    }
+
+    .wizard-content {
+        gap: 1rem;
+    }
+
+    .wizard-property-key {
+        flex: 0 0 100px;
+        font-size: 0.85em;
+    }
+
+    .wizard-property-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 8px;
+        min-width: 300px;
+    }
+
+    .wizard-property-value-container {
+        width: 100%;
+    }
+
+    .wizard-property-actions {
+        justify-content: flex-end;
+        margin-top: 0.25rem;
+    }
+
+    .wizard-properties-container {
+        min-height: 120px;
+        max-height: 250px;
+        overflow-x: auto;
+        overflow-y: auto;
+    }
+
+    .wizard-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .wizard-button {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 400px) {
+    .wizard-modal {
+        max-width: 100vw;
+        width: 100vw;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .wizard-title {
+        font-size: 1em;
+        margin-bottom: 0.5rem;
+    }
+
+    .wizard-property-key {
+        flex: 0 0 80px;
+        font-size: 0.8em;
+    }
+
+    .wizard-property-item {
+        padding: 6px;
+        min-width: 280px;
+    }
+
+    .wizard-properties-container {
+        min-height: 100px;
+        max-height: 200px;
+        overflow-x: auto;
+        overflow-y: auto;
+    }
+
+    .wizard-button {
+        padding: 0.5rem;
+        font-size: 13px;
+    }
 }
 
 /* Auth Order Button Styles */
@@ -1627,11 +1913,6 @@ ul {
     width: 20px;
     height: 20px;
     font-size: 12px;
-}
-
-.sort-dropdown-trigger:hover {
-    background-color: var(--vscode-button-secondaryHoverBackground);
-    color: var(--vscode-button-foreground);
 }
 
 .sort-dropdown-trigger:focus {

@@ -397,15 +397,8 @@ export const RenderProfiles = ({
       let sortedProfileKeys: string[];
 
       if (profileSortOrder === "natural") {
-        // For natural sort order, we need to ensure the order is stable and doesn't change during property modifications
-        // The issue is that the order can change when properties are modified, causing visual glitches
-        // We'll use a deterministic approach to ensure consistent ordering
-        sortedProfileKeys = [...finalProfileKeys].sort((a, b) => {
-          // Sort by the profile name (last part of the key) to ensure consistent ordering
-          const aName = a.split(".").pop() || a;
-          const bName = b.split(".").pop() || b;
-          return aName.localeCompare(bName);
-        });
+        // For natural sort order, preserve the original order as it appears in the configuration
+        sortedProfileKeys = [...finalProfileKeys];
       } else {
         // For other sort orders, use the existing logic
         sortedProfileKeys = sortProfilesAtLevel(finalProfileKeys);
