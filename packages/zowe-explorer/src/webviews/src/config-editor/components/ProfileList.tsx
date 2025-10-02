@@ -1,34 +1,97 @@
 import { useState, useEffect } from "react";
 import { ProfileSearchFilter } from "./ProfileSearchFilter";
 import { ProfileTree } from "./ProfileTree";
-import { getContrastTextColor } from "../utils/colorUtils";
 
 // Color map for profile types
-const PROFILE_TYPE_COLORS: { [key: string]: string } = {
+const profileTypeColorMap = new Map<string, string>();
+const availableColors = new Set<string>();
+
+export const PROFILE_TYPE_COLORS: string[] = [
+  "#810D49",
+  "#00735C",
+  "#AB0D61",
+  "#009175",
+  "#D80D7B",
+  "#00CBA7",
+  "#FF78AD",
+  "#00EBC1",
+  "#00489E",
+  "#8E06CD",
+  "#0079FA",
+  "#ED0DFD",
+  "#00C2F9",
+  "#86081C",
+  "#B20725",
+  "#DE0D2E",
+  "#FF4235",
+  "#FF8735",
+  "#00F407",
+  "#FFB935",
+  "#AFFF2A",
+];
+
+export const coreTypeColors: { [key: string]: string } = {
   zosmf: "#DE0D2E",
   tso: "#00F407",
   ssh: "#FF8735",
-  ca7: "#810D49",
-  caspool: "#00735C",
-  caview: "#AB0D61",
-  cics: "#009175",
-  db2: "#D80D7B",
-  ebg: "#00AF8E",
-  endevor: "#FF2E95",
-  "endevor-location": "#00CBA7",
-  fmp: "#FF78AD",
-  idms: "#00EBC1",
-  ims: "#FFACC6",
-  jclcheck: "#86FFDE",
-  mat: "#FFD7E1",
-  pma: "#00306F",
-  mq: "#460B70",
-  ops: "#00489E",
-  sysview: "#B40AFC",
-  "sysview-format": "#005FCC",
-  zftp: "#8E06CD",
   base: "#0079FA",
 };
+
+export const coreColors = new Set(Object.values(coreTypeColors));
+PROFILE_TYPE_COLORS.forEach((color) => {
+  if (!coreColors.has(color)) {
+    availableColors.add(color);
+  }
+});
+
+PROFILE_TYPE_COLORS.forEach((color) => availableColors.add(color));
+
+export const getColorForProfileType = (profileType: string): string => {
+  // Check if it's a core type first
+  if (coreTypeColors[profileType]) {
+    return coreTypeColors[profileType];
+  }
+
+  if (!profileTypeColorMap.has(profileType)) {
+    // If we've run out of colors, reset the available pool
+    if (availableColors.size === 0) {
+      PROFILE_TYPE_COLORS.forEach((color) => {
+        if (!coreColors.has(color)) {
+          availableColors.add(color);
+        }
+      });
+    }
+
+    // Pick a random color from available colors
+    const availableArray = Array.from(availableColors);
+    const randomIndex = Math.floor(Math.random() * availableArray.length);
+    const color = availableArray[randomIndex];
+
+    profileTypeColorMap.set(profileType, color);
+    availableColors.delete(color);
+  }
+  return profileTypeColorMap.get(profileType)!;
+};
+
+export function useIsLightTheme(): boolean {
+  const [isLight, setIsLight] = useState("vscode-light" === document.body.getAttribute("data-vscode-theme-kind"));
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const newIsLight = "vscode-light" === document.body.getAttribute("data-vscode-theme-kind");
+      setIsLight(newIsLight);
+    });
+
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["data-vscode-theme-kind"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return isLight;
+}
 
 interface ProfileListProps {
   sortedProfileKeys: string[];
@@ -336,25 +399,103 @@ export function ProfileList({
                         }
                       }
                     }}
-                    style={{
-                      fontSize: "11px",
-                      color: getContrastTextColor(PROFILE_TYPE_COLORS[getProfileType(profileKey)!] || "#000000"),
-                      backgroundColor: PROFILE_TYPE_COLORS[getProfileType(profileKey)!]
-                        ? `${PROFILE_TYPE_COLORS[getProfileType(profileKey)!]}`
-                        : "var(--vscode-badge-background)",
-                      border: `1px solid ${PROFILE_TYPE_COLORS[getProfileType(profileKey)!] || "var(--vscode-button-secondaryForeground)"}`,
-                      padding: "2px 6px",
-                      borderRadius: "10px",
-                      fontWeight: "500",
-                      whiteSpace: "nowrap",
-                      flexShrink: 0,
-                      cursor: "pointer",
-                      transition: "opacity 0.2s ease",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      lineHeight: "1",
-                    }}
+                    style={
+                      useIsLightTheme()
+                        ? (() => {
+                            const profileType = getProfileType(profileKey);
+                            const bgColor = getColorForProfileType(profileType!);
+
+                            // Determine text color based on background luminance
+                            const getTextColor = (hex: string): string => {
+                              const cleanHex = hex.replace("#", "");
+                              const r = parseInt(cleanHex.substring(0, 2), 16);
+                              const g = parseInt(cleanHex.substring(2, 4), 16);
+                              const b = parseInt(cleanHex.substring(4, 6), 16);
+
+                              // Convert to 0-1 range and apply gamma correction
+                              const rsRGB = r / 255;
+                              const gsRGB = g / 255;
+                              const bsRGB = b / 255;
+
+                              const rLinear = rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
+                              const gLinear = gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
+                              const bLinear = bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
+
+                              // Calculate relative luminance
+                              const luminance = 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
+
+                              return luminance <= 0.22 ? "white" : "black";
+                            };
+
+                            return {
+                              fontSize: "11px",
+                              color: getTextColor(bgColor),
+                              backgroundColor: bgColor,
+                              border: `1px solid ${bgColor}`,
+                              padding: "2px 6px",
+                              borderRadius: "10px",
+                              fontWeight: "600",
+                              whiteSpace: "nowrap",
+                              flexShrink: 0,
+                              cursor: "pointer",
+                              transition: "opacity 0.2s ease",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              lineHeight: "1",
+                            };
+                          })()
+                        : (() => {
+                            const profileType = getProfileType(profileKey);
+                            const bgColor = getColorForProfileType(profileType!);
+
+                            // For dark theme, lighten or darken the text color based on the original color's brightness
+                            const adjustColorForDarkTheme = (color: string) => {
+                              const hex = color.replace("#", "");
+                              const r = parseInt(hex.substr(0, 2), 16);
+                              const g = parseInt(hex.substr(2, 2), 16);
+                              const b = parseInt(hex.substr(4, 2), 16);
+
+                              // Calculate relative luminance
+                              const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+                              // If color is too bright, darken it; if too dark, lighten it
+                              if (luminance > 0.7) {
+                                // Darken bright colors by 30%
+                                return `rgb(${Math.round(r * 0.7)}, ${Math.round(g * 0.7)}, ${Math.round(b * 0.7)})`;
+                              } else if (luminance < 0.3) {
+                                // Lighten dark colors by adding 40%
+                                return `rgb(${Math.min(255, Math.round(r + (255 - r) * 0.4))}, ${Math.min(
+                                  255,
+                                  Math.round(g + (255 - g) * 0.4)
+                                )}, ${Math.min(255, Math.round(b + (255 - b) * 0.4))})`;
+                              }
+                              // Medium colors are fine as-is
+                              return color;
+                            };
+
+                            const textColor = adjustColorForDarkTheme(bgColor);
+
+                            return {
+                              fontSize: "12px",
+                              color: textColor,
+                              backgroundColor: `${bgColor}22`,
+                              border: `1px solid ${bgColor}66`,
+                              padding: "0 7px",
+                              borderRadius: "2em",
+                              fontWeight: "500",
+                              whiteSpace: "nowrap",
+                              flexShrink: 0,
+                              cursor: "pointer",
+                              transition: "background-color 0.2s ease, border-color 0.2s ease",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              lineHeight: "20px",
+                              height: "22px",
+                            };
+                          })()
+                    }
                     onMouseEnter={(e) => {
                       e.currentTarget.style.opacity = "0.8";
                     }}
