@@ -896,6 +896,11 @@ ul {
     height: 32px;
 }
 
+.wizard-parent-profile-container {
+    position: relative;
+    width: 100%;
+}
+
 .wizard-input.error {
     border-color: #ff6b6b;
 }

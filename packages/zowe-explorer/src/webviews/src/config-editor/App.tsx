@@ -946,6 +946,30 @@ export function App() {
   const handleTabChange = (index: number) => {
     setSelectedTab(index);
 
+    setTimeout(() => {
+      const panelContent = document.querySelector(`.panel:nth-child(${index + 1}) .panel-content`) as HTMLElement;
+      if (panelContent) {
+        const profilesSection = panelContent.querySelector(".profiles-section") as HTMLElement;
+        const profileDetailsSection = panelContent.querySelector(".profile-details-section") as HTMLElement;
+
+        if (profilesSection && profileDetailsSection) {
+          const panelWidth = panelContent.getBoundingClientRect().width;
+          const profilesWidth = (panelWidth * profilesWidthPercent) / 100;
+          const minProfilesWidth = 200;
+          const maxProfilesWidth = panelWidth * 0.7;
+          const constrainedWidth = Math.max(minProfilesWidth, Math.min(maxProfilesWidth, profilesWidth));
+
+          profilesSection.style.width = `${constrainedWidth}px`;
+          profilesSection.style.flex = `0 0 auto`;
+          profilesSection.style.maxWidth = `${maxProfilesWidth}px`;
+
+          profileDetailsSection.style.width = "";
+          profileDetailsSection.style.flex = "1";
+          profileDetailsSection.style.maxWidth = "";
+        }
+      }
+    }, 0);
+
     const configPath = configurations[index]?.configPath;
     if (configPath) {
       const previouslySelectedProfile = selectedProfilesByConfig[configPath];
@@ -966,9 +990,6 @@ export function App() {
         setMergedProperties(null);
       }
     }
-
-    // Apply cached width when switching tabs
-    setTimeout(applyStoredWidth, 200);
   };
 
   const mergePendingChangesForProfileWrapper = useCallback(

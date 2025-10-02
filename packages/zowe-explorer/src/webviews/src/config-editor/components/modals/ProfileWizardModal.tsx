@@ -1,6 +1,7 @@
 import * as l10n from "@vscode/l10n";
 import { useModalClickOutside, useModalFocus } from "../../hooks";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
+import { useState, useRef, useEffect } from "react";
 
 interface ProfileWizardModalProps {
   isOpen: boolean;
@@ -77,6 +78,56 @@ export function ProfileWizardModal({
   stringifyValueByType,
   vscodeApi,
 }: ProfileWizardModalProps) {
+  // State for searchable parent profile dropdown
+  const [parentProfileSearch, setParentProfileSearch] = useState("");
+  const [showParentProfileDropdown, setShowParentProfileDropdown] = useState(false);
+  const parentProfileDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Update search text when wizardRootProfile changes
+  useEffect(() => {
+    if (wizardRootProfile) {
+      setParentProfileSearch(wizardRootProfile === "root" ? "/" : wizardRootProfile);
+    } else {
+      setParentProfileSearch("");
+    }
+  }, [wizardRootProfile]);
+
+  // Handle clicking outside the parent profile dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (parentProfileDropdownRef.current && !parentProfileDropdownRef.current.contains(event.target as Node)) {
+        setShowParentProfileDropdown(false);
+      }
+    };
+
+    if (showParentProfileDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showParentProfileDropdown]);
+
+  // Helper functions for searchable parent profile dropdown
+  const handleParentProfileSelect = (profile: string) => {
+    onRootProfileChange(profile);
+    setParentProfileSearch(profile === "root" ? "/" : profile);
+    setShowParentProfileDropdown(false);
+  };
+
+  const handleParentProfileSearchChange = (value: string) => {
+    setParentProfileSearch(value);
+    setShowParentProfileDropdown(true);
+  };
+
+  const handleParentProfileFocus = () => {
+    setShowParentProfileDropdown(true);
+    setParentProfileSearch("");
+  };
+
+  const filteredParentProfiles = availableProfiles.filter((profile) => {
+    const displayName = profile === "root" ? "/" : profile;
+    return parentProfileSearch === "" || displayName.toLowerCase().includes(parentProfileSearch.toLowerCase());
+  });
+
   const isAuthOrderProperty = (key: string): boolean => {
     if (!key || typeof key !== "string") {
       return false;
@@ -174,19 +225,43 @@ export function ProfileWizardModal({
               <label className="wizard-label" id="parent-profile-label">
                 {l10n.t("Parent Profile")}:
               </label>
-              <select
-                id="parent-profile-select"
-                value={wizardRootProfile}
-                onChange={(e) => onRootProfileChange((e.target as HTMLSelectElement).value)}
-                onKeyDown={handleKeyDown}
-                className="modal-input wizard-select"
-              >
-                {availableProfiles.map((profile) => (
-                  <option key={profile} value={profile}>
-                    {profile === "root" ? "/" : profile}
-                  </option>
-                ))}
-              </select>
+              <div className="wizard-parent-profile-container" ref={parentProfileDropdownRef}>
+                <input
+                  id="parent-profile-search"
+                  type="text"
+                  value={parentProfileSearch}
+                  onChange={(e) => handleParentProfileSearchChange((e.target as HTMLInputElement).value)}
+                  onFocus={handleParentProfileFocus}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (filteredParentProfiles.length > 0) {
+                        handleParentProfileSelect(filteredParentProfiles[0]);
+                      }
+                    } else if (e.key === "Escape") {
+                      setShowParentProfileDropdown(false);
+                    } else if (e.key === "ArrowDown") {
+                      setShowParentProfileDropdown(true);
+                    }
+                  }}
+                  className="modal-input wizard-input"
+                  placeholder={l10n.t("Select parent profile...")}
+                />
+                {showParentProfileDropdown && (
+                  <ul className="dropdown-list" id="parent-profile-dropdown">
+                    {filteredParentProfiles.map((profile, index) => (
+                      <li
+                        key={profile}
+                        id={`parent-profile-option-${index}`}
+                        className="dropdown-item"
+                        onMouseDown={() => handleParentProfileSelect(profile)}
+                      >
+                        {profile === "root" ? "/" : profile}
+                      </li>
+                    ))}
+                    {filteredParentProfiles.length === 0 && <li className="dropdown-item disabled">{l10n.t("No profiles found")}</li>}
+                  </ul>
+                )}
+              </div>
             </div>
 
             {/* Profile Name */}
