@@ -1888,9 +1888,12 @@ ul {
     border-radius: 4px;
 }
 
-/* Star icon styling for default profile indicator */
 .profile-action-button .codicon-star-full .profile-action-button .codicon-star-empty {
     color: var(--vscode-descriptionForeground);
+}
+
+.profile-star-button:hover .codicon-star-full {
+    color: var(--vscode-disabledForeground) !important;
 }
 
 .profile-star-button:hover .codicon-star-empty {
