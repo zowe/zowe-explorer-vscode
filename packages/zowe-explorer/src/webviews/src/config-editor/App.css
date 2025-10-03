@@ -257,7 +257,7 @@ div:has(> .vscode-panel) {
 
 .profile-details-content {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: visible;
     min-height: 0;
 }
 
@@ -1961,6 +1961,11 @@ ul {
     overflow-y: auto;
     min-width: 150px;
     white-space: nowrap;
+}
+
+.sort-dropdown-list.align-left {
+    left: auto;
+    right: 0;
 }
 
 .sort-dropdown-item {

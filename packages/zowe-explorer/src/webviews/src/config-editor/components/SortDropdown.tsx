@@ -16,7 +16,9 @@ export function SortDropdown<T extends string = string>({
   className = "",
 }: SortDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
+  const [alignLeft, setAlignLeft] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -30,6 +32,19 @@ export function SortDropdown<T extends string = string>({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (isOpen && listRef.current && dropdownRef.current) {
+      const listRect = listRef.current.getBoundingClientRect();
+      const triggerRect = dropdownRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+
+      // Check if dropdown would overflow on the right
+      const wouldOverflow = triggerRect.left + listRect.width > viewportWidth;
+
+      setAlignLeft(wouldOverflow);
+    }
+  }, [isOpen]);
 
   const handleOptionClick = (option: T) => {
     onOptionChange(option);
@@ -54,7 +69,7 @@ export function SortDropdown<T extends string = string>({
         <span className="codicon codicon-sort-precedence"></span>
       </button>
       {isOpen && (
-        <div className="sort-dropdown-list" role="listbox">
+        <div className={`sort-dropdown-list ${alignLeft ? "align-left" : ""}`} role="listbox" ref={listRef}>
           {options.map((option) => (
             <div
               key={option}
