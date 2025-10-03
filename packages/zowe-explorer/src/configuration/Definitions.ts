@@ -149,15 +149,6 @@ export namespace Definitions {
         None,
         JustMigrated,
     }
-    export interface ConfigEditorSettings {
-        showMergedProperties: boolean;
-        viewMode: "flat" | "tree";
-        propertySortOrder: "alphabetical" | "merged-first" | "non-merged-first";
-        profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
-        profilesWidthPercent: number;
-        defaultsCollapsed: boolean;
-        profilesCollapsed: boolean;
-    }
 
     export enum LocalStorageKey {
         CLI_LOGGER_SETTING_PRESENTED = "zowe.cliLoggerSetting.presented",

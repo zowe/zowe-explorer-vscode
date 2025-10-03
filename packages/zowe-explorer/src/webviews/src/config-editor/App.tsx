@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { isSecureOrigin } from "../utils";
 import { schemaValidation } from "../../../utils/ConfigSchemaHelpers";
-import { Definitions } from "../../../configuration/Definitions";
 import "./App.css";
 
 import {
@@ -86,7 +85,16 @@ type PendingDefault = {
   path: string[];
 };
 
-const CONFIG_EDITOR_SETTINGS_KEY = Definitions.LocalStorageKey.CONFIG_EDITOR_SETTINGS;
+const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
+export interface ConfigEditorSettings {
+  showMergedProperties: boolean;
+  viewMode: "flat" | "tree";
+  propertySortOrder: "alphabetical" | "merged-first" | "non-merged-first";
+  profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
+  profilesWidthPercent: number;
+  defaultsCollapsed: boolean;
+  profilesCollapsed: boolean;
+}
 
 const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
 
@@ -108,7 +116,7 @@ export function App() {
   const [selectedProfilesByConfig, setSelectedProfilesByConfig] = useState<{ [configPath: string]: string | null }>({});
   const [mergedProperties, setMergedProperties] = useState<any>(null);
   // Consolidated config editor settings
-  const [configEditorSettings, setConfigEditorSettings] = useState<Definitions.ConfigEditorSettings>({
+  const [configEditorSettings, setConfigEditorSettings] = useState<ConfigEditorSettings>({
     showMergedProperties: true,
     viewMode: "tree",
     propertySortOrder: "alphabetical",
