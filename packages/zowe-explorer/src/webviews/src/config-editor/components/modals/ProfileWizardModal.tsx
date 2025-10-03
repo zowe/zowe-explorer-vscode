@@ -83,6 +83,8 @@ export function ProfileWizardModal({
   const [showParentProfileDropdown, setShowParentProfileDropdown] = useState(false);
   const parentProfileDropdownRef = useRef<HTMLDivElement>(null);
 
+  const [isParentProfileInvalid, setIsParentProfileInvalid] = useState(false);
+
   // Update search text when wizardRootProfile changes
   useEffect(() => {
     if (wizardRootProfile) {
@@ -92,11 +94,24 @@ export function ProfileWizardModal({
     }
   }, [wizardRootProfile]);
 
-  // Handle clicking outside the parent profile dropdown
+  useEffect(() => {
+    if (wizardProfileName.trim() && wizardRootProfile && wizardRootProfile !== "root") {
+      const isInvalid = isInvalidParentProfile(wizardRootProfile, wizardProfileName);
+      setIsParentProfileInvalid(isInvalid);
+    } else {
+      setIsParentProfileInvalid(false);
+    }
+  }, [wizardProfileName, wizardRootProfile]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (parentProfileDropdownRef.current && !parentProfileDropdownRef.current.contains(event.target as Node)) {
         setShowParentProfileDropdown(false);
+        if (wizardRootProfile) {
+          setParentProfileSearch(wizardRootProfile === "root" ? "/" : wizardRootProfile);
+        } else {
+          setParentProfileSearch("");
+        }
       }
     };
 
@@ -104,9 +119,8 @@ export function ProfileWizardModal({
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
-  }, [showParentProfileDropdown]);
+  }, [showParentProfileDropdown, wizardRootProfile]);
 
-  // Helper functions for searchable parent profile dropdown
   const handleParentProfileSelect = (profile: string) => {
     onRootProfileChange(profile);
     setParentProfileSearch(profile === "root" ? "/" : profile);
@@ -123,9 +137,29 @@ export function ProfileWizardModal({
     setParentProfileSearch("");
   };
 
+  const isInvalidParentProfile = (parentProfile: string, profileName: string): boolean => {
+    if (!profileName.trim()) return false;
+
+    if (parentProfile === profileName.trim()) {
+      return true;
+    }
+
+    if (profileName.trim().startsWith(parentProfile + ".")) {
+      return true;
+    }
+
+    if (parentProfile.startsWith(profileName.trim() + ".")) {
+      return true;
+    }
+
+    return false;
+  };
+
   const filteredParentProfiles = availableProfiles.filter((profile) => {
     const displayName = profile === "root" ? "/" : profile;
-    return parentProfileSearch === "" || displayName.toLowerCase().includes(parentProfileSearch.toLowerCase());
+    const matchesSearch = parentProfileSearch === "" || displayName.toLowerCase().includes(parentProfileSearch.toLowerCase());
+    const isValidParent = !isInvalidParentProfile(profile, wizardProfileName);
+    return matchesSearch && isValidParent;
   });
 
   const isAuthOrderProperty = (key: string): boolean => {
@@ -239,11 +273,16 @@ export function ProfileWizardModal({
                       }
                     } else if (e.key === "Escape") {
                       setShowParentProfileDropdown(false);
+                      if (wizardRootProfile) {
+                        setParentProfileSearch(wizardRootProfile === "root" ? "/" : wizardRootProfile);
+                      } else {
+                        setParentProfileSearch("");
+                      }
                     } else if (e.key === "ArrowDown") {
                       setShowParentProfileDropdown(true);
                     }
                   }}
-                  className="modal-input wizard-input"
+                  className={`modal-input wizard-input ${isParentProfileInvalid ? "error" : ""}`}
                   placeholder={l10n.t("Select parent profile...")}
                 />
                 {showParentProfileDropdown && (
@@ -260,6 +299,11 @@ export function ProfileWizardModal({
                     ))}
                     {filteredParentProfiles.length === 0 && <li className="dropdown-item disabled">{l10n.t("No profiles found")}</li>}
                   </ul>
+                )}
+                {isParentProfileInvalid && (
+                  <div className="wizard-error" id="parent-profile-error">
+                    {l10n.t("Invalid parent profile selection. This would create a circular reference or invalid hierarchy.")}
+                  </div>
                 )}
               </div>
             </div>
@@ -803,7 +847,7 @@ export function ProfileWizardModal({
           <button
             id="create-profile-button"
             onClick={onCreateProfile}
-            disabled={!wizardProfileName.trim() || isProfileNameTaken}
+            disabled={!wizardProfileName.trim() || isProfileNameTaken || isParentProfileInvalid}
             className="wizard-button primary"
           >
             {l10n.t("Create Profile")}

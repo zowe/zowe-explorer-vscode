@@ -5,7 +5,6 @@ import { Definitions } from "../../../configuration/Definitions";
 import "./App.css";
 
 import {
-  Footer,
   Tabs,
   Panels,
   AddProfileModal,
@@ -1796,8 +1795,6 @@ export function App() {
         onDefaultsCollapsedChange={setDefaultsCollapsedWithStorage}
         profilesCollapsed={profilesCollapsed}
         onProfilesCollapsedChange={setProfilesCollapsedWithStorage}
-      />
-      <Footer
         onClearChanges={handleRefresh}
         onSaveAll={() => {
           handleSave();

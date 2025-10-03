@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ProfileSearchFilter } from "./ProfileSearchFilter";
 import { ProfileTree } from "./ProfileTree";
 
@@ -154,6 +154,7 @@ export function ProfileList({
   const [filteredProfileKeys, setFilteredProfileKeys] = useState<string[]>(sortedProfileKeys);
   const [isFilteringActive, setIsFilteringActive] = useState<boolean>(false);
   const [lastSelectedProfileKey, setLastSelectedProfileKey] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Handle profile sort order change with auto-switch to flat view for type sorting
   const handleProfileSortOrderChange = (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults") => {
@@ -263,6 +264,41 @@ export function ProfileList({
     }
   }, [selectedProfileKey, viewMode, sortedProfileKeys, setExpandedNodes, lastSelectedProfileKey]);
 
+  useEffect(() => {
+    if (selectedProfileKey && scrollContainerRef.current) {
+      const scrollToSelected = () => {
+        const selectedElement = scrollContainerRef.current?.querySelector(`[data-profile-key="${selectedProfileKey}"]`);
+        if (selectedElement && scrollContainerRef.current) {
+          const container = scrollContainerRef.current;
+          const containerRect = container.getBoundingClientRect();
+          const elementRect = selectedElement.getBoundingClientRect();
+
+          const isElementVisible = elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
+
+          if (!isElementVisible || elementRect.top < containerRect.top + 50 || elementRect.bottom > containerRect.bottom - 50) {
+            selectedElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+              inline: "nearest",
+            });
+            return true;
+          }
+        }
+        return false;
+      };
+
+      if (!scrollToSelected()) {
+        const timeouts = [
+          setTimeout(() => scrollToSelected(), 100),
+          setTimeout(() => scrollToSelected(), 300),
+          setTimeout(() => scrollToSelected(), 500),
+        ];
+
+        return () => timeouts.forEach(clearTimeout);
+      }
+    }
+  }, [selectedProfileKey]);
+
   // Helper function to expand filtered results for tree view
   const expandFilteredResultsForTree = (filteredKeys: string[], allKeys: string[]): string[] => {
     const expandedKeys = new Set(filteredKeys);
@@ -316,7 +352,7 @@ export function ProfileList({
           onProfileSortOrderChange={handleProfileSortOrderChange}
         />
       </div>
-      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+      <div ref={scrollContainerRef} style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
         {viewMode === "tree" ? (
           <ProfileTree
             profileKeys={filteredProfileKeys}

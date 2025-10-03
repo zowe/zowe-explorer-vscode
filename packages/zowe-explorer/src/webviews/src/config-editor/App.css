@@ -211,14 +211,15 @@ div:has(> .vscode-panel) {
     display: flex;
     gap: 0;
     align-items: stretch;
-    overflow: auto;
+    overflow: visible;
+    flex: 1;
 }
 
 .config-section {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    overflow: auto;
+    overflow: visible;
     align-self: stretch;
 }
 
@@ -240,8 +241,11 @@ div:has(> .vscode-panel) {
 .config-section.profile-details-section {
     flex: 1;
     min-width: 200px;
-    overflow: auto;
+    min-height: 400px;
+    overflow: hidden;
     transition: flex 0.1s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .config-section.profile-details-section > div {
@@ -249,6 +253,12 @@ div:has(> .vscode-panel) {
     width: 100%;
     margin: 0;
     padding: 0 16px;
+}
+
+.profile-details-content {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .config-section.profile-details-section .sort-dropdown-container {
@@ -801,6 +811,21 @@ ul {
 
     .config-section.defaults-section {
         display: none;
+    }
+
+    .config-section.profile-details-section > div {
+        max-width: none;
+        width: 100%;
+        padding: 0;
+    }
+
+    .footer {
+        justify-content: center;
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        left: 0;
+        right: 0;
     }
 
     .defaults-toggle-button {

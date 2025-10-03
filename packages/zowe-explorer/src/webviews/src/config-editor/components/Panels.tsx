@@ -1,5 +1,6 @@
 import React from "react";
 import { SortDropdown } from "./SortDropdown";
+import { Footer } from "./Footer";
 
 const PROFILE_SORT_ORDER_OPTIONS: ("natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults")[] = [
   "natural",
@@ -41,6 +42,8 @@ interface PanelsProps {
   onDefaultsCollapsedChange: (collapsed: boolean) => void;
   profilesCollapsed: boolean;
   onProfilesCollapsedChange: (collapsed: boolean) => void;
+  onClearChanges: () => void;
+  onSaveAll: () => void;
 }
 
 export function Panels({
@@ -58,6 +61,8 @@ export function Panels({
   onDefaultsCollapsedChange,
   profilesCollapsed,
   onProfilesCollapsedChange,
+  onClearChanges,
+  onSaveAll,
 }: PanelsProps) {
   const toggleDefaultsCollapse = () => {
     onDefaultsCollapsedChange(!defaultsCollapsed);
@@ -191,7 +196,10 @@ export function Panels({
               )}
             </div>
             <div className="resize-divider" id={`resize-divider-${index}`}></div>
-            <div className="config-section profile-details-section">{selectedTab === index && renderProfileDetails()}</div>
+            <div className="config-section profile-details-section">
+              {selectedTab === index && <div className="profile-details-content">{renderProfileDetails()}</div>}
+              {selectedTab === index && <Footer onClearChanges={onClearChanges} onSaveAll={onSaveAll} />}
+            </div>
           </div>
         </div>
       ))}

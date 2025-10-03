@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { getOriginalProfileKeyWithNested } from "../utils/profileUtils";
 import { getColorForProfileType, useIsLightTheme } from "./ProfileList";
 
@@ -60,6 +60,7 @@ export function ProfileTree({
   // Drag and drop state
   const [draggedProfile, setDraggedProfile] = useState<string | null>(null);
   const [dragOverProfile, setDragOverProfile] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Memoized helper function to find the original key from a current profile key
   const findOriginalKey = useMemo(() => {
@@ -97,6 +98,41 @@ export function ProfileTree({
 
     return autoExpanded;
   };
+
+  useEffect(() => {
+    if (selectedProfileKey && scrollContainerRef.current) {
+      const scrollToSelected = () => {
+        const selectedElement = scrollContainerRef.current?.querySelector(`[data-profile-key="${selectedProfileKey}"]`);
+        if (selectedElement && scrollContainerRef.current) {
+          const container = scrollContainerRef.current;
+          const containerRect = container.getBoundingClientRect();
+          const elementRect = selectedElement.getBoundingClientRect();
+
+          const isElementVisible = elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
+
+          if (!isElementVisible || elementRect.top < containerRect.top + 50 || elementRect.bottom > containerRect.bottom - 50) {
+            selectedElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+              inline: "nearest",
+            });
+            return true;
+          }
+        }
+        return false;
+      };
+
+      if (!scrollToSelected()) {
+        const timeouts = [
+          setTimeout(() => scrollToSelected(), 100),
+          setTimeout(() => scrollToSelected(), 300),
+          setTimeout(() => scrollToSelected(), 500),
+        ];
+
+        return () => timeouts.forEach(clearTimeout);
+      }
+    }
+  }, [selectedProfileKey]);
 
   const buildTree = (keys: string[]): ProfileNode[] => {
     const nodes: ProfileNode[] = [];
@@ -786,7 +822,13 @@ export function ProfileTree({
   };
 
   return (
-    <div style={{ width: "100%" }} className="profile-tree" data-testid="profile-tree" data-profile-count={profileKeys.length}>
+    <div
+      ref={scrollContainerRef}
+      style={{ width: "100%" }}
+      className="profile-tree"
+      data-testid="profile-tree"
+      data-profile-count={profileKeys.length}
+    >
       {draggedProfile && !isDraggingRootProfile && renderRootDropZone()}
       {treeNodes.map((node) => renderNode(node))}
     </div>
