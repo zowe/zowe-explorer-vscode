@@ -65,10 +65,11 @@ When("the user clicks on the {string} property input field", async (propertyName
 });
 
 When("the user clears the current value", async () => {
-    await browser.keys(["Control", "a"]);
+    await browser.pause(25);
+    const modifier = process.platform === "darwin" ? "Meta" : "Control";
+    await browser.keys([modifier, "a"]);
     await browser.pause(25);
     await browser.keys(["Delete"]);
-    await browser.pause(25);
 });
 
 When("the user types {string} into the input field", async (value: string) => {
