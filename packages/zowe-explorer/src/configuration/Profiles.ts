@@ -134,7 +134,6 @@ export class Profiles extends ProfilesCache {
                 }
             }
         }
-
         const defaultBase = Constants.PROFILES_CACHE.getDefaultProfile?.("base");
         const profilePath = defaultBase && teamConfig.api.profiles.getProfilePathFromName(defaultBase.name);
         if (profilePath && !allPaths.includes(profilePath)) {
@@ -186,6 +185,10 @@ export class Profiles extends ProfilesCache {
                 ZoweLogger.debug(`Profile ${theProfile.name} is using token auth, prompting for missing credentials`);
                 try {
                     const loggedIn = await Profiles.getInstance().ssoLogin(null, theProfile.name);
+                    if (node && loggedIn) {
+                        node.collapsibleState = vscode.TreeItemCollapsibleState.None;
+                        SharedTreeProviders.getProviderForNode(node).nodeDataChanged(node);
+                    }
                     theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
 
                     if (!loggedIn) {
@@ -891,8 +894,8 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
-                AuthHandler.unlockProfile(serviceProfile, true);
                 ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
+                AuthHandler.unlockProfile(serviceProfile, true);
             }
             return loginOk;
         } catch (err) {

@@ -27,6 +27,7 @@ import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { SharedContext } from "../trees/shared/SharedContext";
+import { ImperativeError } from "@zowe/imperative";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -45,17 +46,13 @@ export class AuthUtils {
      */
     public static async reauthenticateIfCancelled(profile: imperative.IProfileLoaded): Promise<void> {
         if (AuthHandler.isProfileLocked(profile) && AuthHandler.wasAuthCancelled(profile)) {
-            try {
-                // The original error doesn't matter here, we just need to trigger the flow.
-                await this.handleProfileAuthOnError(
-                    new Error("User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate."),
-                    profile
-                );
-            } catch (err) {
-                // If handleProfileAuthOnError fails (e.g., user cancels again),
-                // we should propagate that failure.
-                throw err;
-            }
+            // The original error doesn't matter here, we just need to trigger the flow.
+            await this.handleProfileAuthOnError(
+                new ImperativeError({
+                    msg: "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate. (All configured authentication methods failed)",
+                }),
+                profile
+            );
         }
     }
 
@@ -67,7 +64,7 @@ export class AuthUtils {
      * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
      * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
-    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
+    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<boolean> {
         if (
             (err instanceof imperative.ImperativeError &&
                 (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
@@ -76,7 +73,7 @@ export class AuthUtils {
         ) {
             if (!(await AuthHandler.shouldHandleAuthError(profile.name))) {
                 ZoweLogger.debug(`[AuthUtils] Skipping authentication prompt for profile ${profile.name} due to debouncing`);
-                return;
+                return false;
             }
 
             // In the case of an authentication error, find a more user-friendly error message if available.
@@ -101,11 +98,71 @@ export class AuthUtils {
             } else {
                 // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
                 // This may throw AuthCancelledError if the user cancels the authentication prompt
-                await AuthHandler.lockProfile(profile, authOpts);
+                return await AuthHandler.lockProfile(profile, authOpts);
             }
         } else if (AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
             AuthHandler.unlockProfile(profile);
+        }
+    }
+
+    public static promptCountForProfile: Record<string, number> = {};
+
+    public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
+        const maxAttempts = SettingsConfig.getDirectValue("zowe.settings.maxExtenderRetry", 0);
+        const profileName = profile?.name;
+        const shouldTrackPrompts = profileName != null;
+
+        if (shouldTrackPrompts && !this.promptCountForProfile[profileName]) {
+            this.promptCountForProfile[profileName] = 0;
+        }
+
+        for (let i = 0; i <= maxAttempts; i++) {
+            try {
+                const callbackValue = await callback();
+                if (shouldTrackPrompts) {
+                    delete this.promptCountForProfile[profileName];
+                }
+                return callbackValue;
+            } catch (err) {
+                if (err instanceof Error) {
+                    ZoweLogger.error(err.message);
+                }
+                if (maxAttempts <= 0) {
+                    if (profile) {
+                        await this.handleProfileAuthOnError(err, profile);
+                    }
+                    throw vscode.FileSystemError.Unavailable();
+                }
+                const currentPromptCount = shouldTrackPrompts ? this.promptCountForProfile[profileName] || 0 : 0;
+                if (maxAttempts <= 0 || i >= maxAttempts || currentPromptCount >= maxAttempts) {
+                    if (shouldTrackPrompts) {
+                        delete this.promptCountForProfile[profileName];
+                    }
+                    throw vscode.FileSystemError.Unavailable();
+                }
+                if (
+                    (err instanceof imperative.ImperativeError &&
+                        (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                            err.message.includes("All configured authentication methods failed"))) ||
+                    err.message.includes("HTTP(S) status 401")
+                ) {
+                    if (shouldTrackPrompts) {
+                        this.promptCountForProfile[profileName]++;
+                    }
+                    if (profile) {
+                        const result = await this.handleProfileAuthOnError(err, profile);
+                        if (!result) {
+                            AuthHandler.authPromptLocks.get(profile.name)?.release();
+                        }
+                    }
+                } else {
+                    if (shouldTrackPrompts) {
+                        delete this.promptCountForProfile[profileName];
+                    }
+                    throw err;
+                }
+            }
         }
     }
 

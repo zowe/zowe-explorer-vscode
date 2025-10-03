@@ -22,10 +22,12 @@ import {
     FsAbstractUtils,
     FsDatasetsUtils,
     Gui,
+    imperative,
     PdsEntry,
     Types,
     ZoweExplorerApiType,
     ZoweScheme,
+    ZoweVsCodeExtension,
 } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
@@ -36,6 +38,7 @@ import * as path from "path";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { DeferredPromise } from "@zowe/imperative";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 const dayjs = require("dayjs");
 
@@ -103,6 +106,11 @@ describe("DatasetFSProvider", () => {
             } as any),
         });
         jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.settings.maxExtenderRetry") {
+                return 1;
+            }
+        });
     });
 
     afterAll(() => {
@@ -269,6 +277,40 @@ describe("DatasetFSProvider", () => {
             expect(await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { isConflict: true })).toBe(null);
         });
 
+        it("should fetchUri info and lookup returns undefined", async () => {
+            const contents = "dataset contents";
+            const mockMvsApi = {
+                getContents: jest.fn((dsn, opts) => {
+                    opts.stream.write(contents);
+
+                    return {
+                        apiResponse: {
+                            etag: "123ANETAG",
+                        },
+                    };
+                }),
+                set: jest.fn(),
+            };
+            const fakePo = {
+                ...testEntries.ps,
+                entries: {
+                    set: jest.fn(),
+                    get: jest.fn().mockReturnValue([]),
+                },
+            };
+            jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(undefined);
+            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakePo);
+            jest.spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor").mockImplementationOnce(() => {});
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+            expect(
+                (
+                    (await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { editor: {} as TextEditor, isConflict: false })) as any
+                ).data.toString()
+            ).toBe(contents);
+            expect(fakePo.etag).toBe("OLDETAG");
+        });
+
         it("calls _updateResourceInEditor if 'editor' is specified", async () => {
             const contents = "dataset contents";
             const mockMvsApi = {
@@ -407,6 +449,13 @@ describe("DatasetFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - existing promise", async () => {
+            jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                profile: testProfile,
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+            });
+
             const mockAllProfiles = [
                 { name: "sestest", type: "ssh" },
                 { name: "profile1", type: "zosmf" },
@@ -445,6 +494,12 @@ describe("DatasetFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - no existing promise", async () => {
+            jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                profile: testProfile,
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+            });
             jest.spyOn(ProfilesUtils.extenderProfileReady, "get").mockReturnValue(undefined);
             const mockAllProfiles = [
                 { name: "sestest", type: "ssh" },
@@ -937,8 +992,30 @@ describe("DatasetFSProvider", () => {
             expect(res).toStrictEqual({ ...fakePs });
             expect(fakePs.wasAccessed).toBe(false);
         });
-
+        it("should throw an Unavailable error if the type is token and token value is undefined", async () => {
+            let errorMessage;
+            jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+                getCommonApi: () => ({
+                    getSession: () => {
+                        return { ...createIProfile(), ISession: { type: imperative.SessConstants.AUTH_TYPE_TOKEN } };
+                    },
+                }),
+            } as any);
+            try {
+                await DatasetFSProvider.instance.stat(testUris.ps);
+            } catch (err) {
+                errorMessage = `${err}`;
+            }
+            expect(errorMessage).toBe("Error: Profile is using token type but missing a token");
+        });
         it("calls allMembers for a PDS member and invalidates its data if mtime is newer", async () => {
+            jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
+                profile: testProfile,
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+            });
+
             const fakePdsMember = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pdsMember)), testEntries.pdsMember);
             const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePdsMember);
             const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(testEntries.pds);
@@ -966,7 +1043,7 @@ describe("DatasetFSProvider", () => {
                 throw new Error("invalid profile");
             });
             await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toThrow("invalid profile");
-            expect(lookupMock).toHaveBeenCalledWith(testUris.ps, false);
+            expect(lookupMock).not.toHaveBeenCalled();
         });
 
         describe("error handling", () => {
@@ -1010,7 +1087,11 @@ describe("DatasetFSProvider", () => {
             expect(allMembersMock).toHaveBeenCalled();
         });
         it("calls handleProfileAuthOnError in the case of an API error", async () => {
-            const allMembersMock = jest.fn().mockRejectedValue(new Error("API error"));
+            const allMembersMock = jest.fn().mockRejectedValue(
+                new imperative.ImperativeError({
+                    msg: "All configured authentication methods failed",
+                })
+            );
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 allMembers: allMembersMock,
             } as any);
