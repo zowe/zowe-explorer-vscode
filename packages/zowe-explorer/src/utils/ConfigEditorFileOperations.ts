@@ -285,9 +285,10 @@ export class ConfigEditorFileOperations {
      */
     async handleAutostoreChange(configPath: string, value: boolean): Promise<void> {
         try {
-            const profInfo = new ProfileInfo("zowe", {             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+            const profInfo = new ProfileInfo("zowe", {
+                overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
                 credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-                 });
+            });
             await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
             const teamConfig = profInfo.getTeamConfig();
 

@@ -265,7 +265,6 @@ export function ProfileWizardModal({
                   type="text"
                   value={parentProfileSearch}
                   onChange={(e) => handleParentProfileSearchChange((e.target as HTMLInputElement).value)}
-                  onFocus={handleParentProfileFocus}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       if (filteredParentProfiles.length > 0) {
@@ -282,6 +281,7 @@ export function ProfileWizardModal({
                       setShowParentProfileDropdown(true);
                     }
                   }}
+                  onClick={handleParentProfileFocus}
                   className={`modal-input wizard-input ${isParentProfileInvalid ? "error" : ""}`}
                   placeholder={l10n.t("Select parent profile...")}
                 />
@@ -589,7 +589,6 @@ export function ProfileWizardModal({
                       <button
                         id="file-picker-button"
                         onClick={() => {
-                          // Use VS Code's showOpenDialog API to get the full file path
                           if (vscodeApi) {
                             vscodeApi.postMessage({
                               command: "SELECT_FILE",
@@ -598,7 +597,6 @@ export function ProfileWizardModal({
                               source: "wizard",
                             });
                           } else {
-                            // Fallback to HTML file input if VS Code API is not available
                             const input = document.createElement("input");
                             input.type = "file";
                             input.accept = "*";
