@@ -389,8 +389,23 @@ export const RenderConfig = ({
         // Check if this is a merged property that was added for sorting
         const isMergedPropertyForSorting = typeof value === "object" && value !== null && value._isMergedProperty === true;
 
+        // Check if this is a sub-object or array within properties that should be rendered as a simple property
+        const isSubObjectOrArray = (typeof value === "object" && value !== null) || Array.isArray(value);
+
+        const isWithinProperties = path.length > 0 && path[path.length - 1] === "properties";
+        // Additional check: make sure we're not dealing with array items or other nested structures
+        const isDirectProperty = !Array.isArray(value) || (Array.isArray(value) && path.length > 0 && path[path.length - 1] === "properties");
+        // Exclude secure properties from simple property rendering
+        const isSecureProperty = typeof value === "object" && value !== null && value._isSecureProperty === true;
+        const shouldRenderAsSimpleProperty = isSubObjectOrArray && isWithinProperties && isDirectProperty && !isSecureProperty;
+
         const isParent =
-          typeof value === "object" && value !== null && !Array.isArray(value) && !isSecurePropertyForSorting && !isMergedPropertyForSorting;
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value) &&
+          !isSecurePropertyForSorting &&
+          !isMergedPropertyForSorting &&
+          !shouldRenderAsSimpleProperty;
         const isArray = Array.isArray(value);
         // Check if this property is from merged properties and should use the merged value
         const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath);
@@ -410,6 +425,63 @@ export const RenderConfig = ({
         let renderValue: any[] = Array.isArray(value) ? value : [];
         if (isArray && key === "secure") {
           renderValue = mergePendingSecureProperties(value, path, configPath, pendingChanges, renames);
+        }
+
+        // Handle sub-objects and arrays within properties early to prevent recursive rendering
+        if (shouldRenderAsSimpleProperty) {
+          const renderComplexValue = (value: any) => {
+            if (Array.isArray(value)) {
+              return value.map((item, index) => (
+                <div key={index} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em" }}>
+                  <span style={{ color: "var(--vscode-descriptionForeground)" }}>{index}:</span>
+                  <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(item)}</span>
+                </div>
+              ));
+            } else if (typeof value === "object" && value !== null) {
+              return Object.entries(value).map(([key, val]) => (
+                <div key={key} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em" }}>
+                  <span style={{ color: "var(--vscode-descriptionForeground)" }}>{key}:</span>
+                  <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(val)}</span>
+                </div>
+              ));
+            }
+            return null;
+          };
+
+          return (
+            <div key={fullKey} className="config-item">
+              <div className="config-item-container" style={{ gridTemplateColumns: "150px 1fr" }}>
+                <span className="config-label" title={displayKey ? propertyDescriptions[displayKey] || "" : ""} style={{ fontWeight: "bold" }}>
+                  {displayKey}
+                </span>
+                <div
+                  onClick={() => {
+                    const configPath = configurations[selectedTab!]?.configPath;
+                    if (configPath) {
+                      vscodeApi.postMessage({
+                        command: "OPEN_CONFIG_FILE_WITH_PROFILE",
+                        filePath: configPath,
+                        profileKey: selectedProfileKey,
+                        propertyKey: displayKey,
+                      });
+                    }
+                  }}
+                  title="Click to navigate to profile"
+                  style={{
+                    backgroundColor: "var(--vscode-input-disabledBackground)",
+                    border: "1px solid var(--vscode-input-border)",
+                    borderRadius: "3px",
+                    padding: "8px",
+                    fontSize: "0.9em",
+                    color: "var(--vscode-disabledForeground)",
+                    cursor: "pointer",
+                  }}
+                >
+                  {renderComplexValue(pendingValue)}
+                </div>
+              </div>
+            </div>
+          );
         }
 
         if (isParent) {
@@ -461,6 +533,53 @@ export const RenderConfig = ({
             </div>
           );
         } else if (isArray) {
+          // Check if this is an array within properties that should be rendered as a simple property
+          if (shouldRenderAsSimpleProperty) {
+            const renderComplexValue = (value: any) => {
+              if (Array.isArray(value)) {
+                return value.map((item, index) => (
+                  <div key={index} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em" }}>
+                    <span style={{ color: "var(--vscode-descriptionForeground)" }}>{index}:</span>
+                    <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(item)}</span>
+                  </div>
+                ));
+              } else if (typeof value === "object" && value !== null) {
+                return Object.entries(value).map(([key, val]) => (
+                  <div key={key} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em" }}>
+                    <span style={{ color: "var(--vscode-descriptionForeground)" }}>{key}:</span>
+                    <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(val)}</span>
+                  </div>
+                ));
+              }
+              return null;
+            };
+
+            return (
+              <div key={fullKey} className="config-item">
+                <div className="config-item-container" style={{ flexDirection: "column", alignItems: "flex-start" }}>
+                  <div style={{ marginBottom: "8px" }}>
+                    <span className="config-label" title={displayKey ? propertyDescriptions[displayKey] || "" : ""} style={{ fontWeight: "bold" }}>
+                      {displayKey}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      width: "100%",
+                      backgroundColor: "var(--vscode-input-disabledBackground)",
+                      border: "1px solid var(--vscode-input-border)",
+                      borderRadius: "3px",
+                      padding: "8px",
+                      fontSize: "0.9em",
+                      color: "var(--vscode-disabledForeground)",
+                    }}
+                  >
+                    {renderComplexValue(pendingValue)}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
           const tabsHiddenItems = hiddenItems[configurations[selectedTab!]!.configPath];
           if (displayKey?.toLocaleLowerCase() === "secure") {
             // Hide the secure array section since secure properties are now handled in the properties section

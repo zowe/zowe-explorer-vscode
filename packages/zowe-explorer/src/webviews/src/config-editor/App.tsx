@@ -839,10 +839,19 @@ export function App() {
     const effectiveValue = pendingValue !== undefined ? pendingValue : currentValue;
     const newValue = effectiveValue === undefined || effectiveValue === null ? true : !effectiveValue;
 
-    setAutostoreChanges((prev) => ({
-      ...prev,
-      [configPath]: newValue,
-    }));
+    // Check if the new value would be the same as the original value
+    if (newValue === currentValue) {
+      setAutostoreChanges((prev) => {
+        const newChanges = { ...prev };
+        delete newChanges[configPath];
+        return newChanges;
+      });
+    } else {
+      setAutostoreChanges((prev) => ({
+        ...prev,
+        [configPath]: newValue,
+      }));
+    }
   };
 
   const handleAddNewProfileKey = () => {

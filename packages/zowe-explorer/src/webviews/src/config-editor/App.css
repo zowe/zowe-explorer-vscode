@@ -47,9 +47,6 @@ body {
     padding: 12px 16px;
     background: var(--vscode-editor-background);
     flex-shrink: 0;
-    position: sticky;
-    bottom: 0;
-    z-index: 10;
 }
 
 /* Ensure the main content area takes remaining space */
@@ -194,7 +191,8 @@ div:has(> .vscode-panel) {
     overflow: auto;
     display: flex;
     flex-direction: column;
-    flex: 0 0 auto;
+    flex: 1;
+    min-height: 0;
 }
 
 .panel {
@@ -211,7 +209,7 @@ div:has(> .vscode-panel) {
     display: flex;
     gap: 0;
     align-items: stretch;
-    overflow: visible;
+    overflow: auto;
     flex: 1;
 }
 
@@ -219,7 +217,7 @@ div:has(> .vscode-panel) {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    overflow: visible;
+    overflow: auto;
     align-self: stretch;
 }
 
@@ -228,7 +226,7 @@ div:has(> .vscode-panel) {
     width: 280px;
     min-width: 200px;
     max-width: 70%;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     flex-direction: column;
     transition: flex 0.1s ease;
@@ -241,24 +239,28 @@ div:has(> .vscode-panel) {
 .config-section.profile-details-section {
     flex: 1;
     min-width: 200px;
-    min-height: 400px;
-    overflow: hidden;
+    overflow: visible;
     transition: flex 0.1s ease;
     display: flex;
     flex-direction: column;
+    min-height: 0;
+    height: 100%;
 }
 
 .config-section.profile-details-section > div {
     max-width: 400px;
     width: 100%;
     margin: 0;
-    padding: 0 16px;
+    padding: 8px 16px;
 }
 
 .profile-details-content {
     flex: 1;
-    overflow-y: visible;
+    overflow: visible;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .config-section.profile-details-section .sort-dropdown-container {
@@ -279,7 +281,7 @@ div:has(> .vscode-panel) {
 .config-section.defaults-section {
     flex: 1;
     min-width: 0;
-    overflow: auto;
+    overflow: visible;
     margin-top: 16px;
 }
 
@@ -316,8 +318,9 @@ div:has(> .vscode-panel) {
 
 .defaults-content {
     margin-top: 8px;
-    max-height: 300px;
-    overflow-y: auto;
+    overflow: visible;
+    flex: 1;
+    min-height: 0;
 }
 
 /* Resizable divider styles */
@@ -422,6 +425,10 @@ div:has(> .vscode-panel) {
     display: inline-block;
     margin-right: 8px;
     color: var(--vscode-editor-foreground);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 .config-input {
@@ -789,11 +796,10 @@ ul {
         width: 100%;
         min-width: 100%;
         max-width: 100%;
-        max-height: 300px;
         order: 1;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        overflow: visible;
     }
 
     .config-section.profiles-section [data-testid="profile-list"] {
@@ -810,7 +816,10 @@ ul {
     }
 
     .config-section.defaults-section {
-        display: none;
+        flex: 1;
+        min-width: 0;
+        overflow: visible;
+        margin-top: 16px;
     }
 
     .config-section.profile-details-section > div {
@@ -840,8 +849,9 @@ ul {
 
     .defaults-content {
         margin-top: 12px;
-        max-height: 250px;
-        overflow-y: auto;
+        overflow: visible;
+        flex: 1;
+        min-height: 0;
     }
 
     .resize-divider {
@@ -885,7 +895,10 @@ ul {
     }
 
     .config-section.defaults-section {
-        display: none;
+        flex: 1;
+        min-width: 0;
+        overflow: visible;
+        margin-top: 16px;
     }
 
     .defaults-toggle-button {
@@ -902,8 +915,9 @@ ul {
 
     .defaults-content {
         margin-top: 8px;
-        max-height: 200px;
-        overflow-y: auto;
+        overflow: visible;
+        flex: 1;
+        min-height: 0;
     }
 
     .config-section h2 {
@@ -940,7 +954,10 @@ ul {
     }
 
     .config-section.defaults-section {
-        display: none;
+        flex: 1;
+        min-width: 0;
+        overflow: visible;
+        margin-top: 16px;
     }
 
     .defaults-toggle-button {
@@ -957,8 +974,9 @@ ul {
 
     .defaults-content {
         margin-top: 6px;
-        max-height: 150px;
-        overflow-y: auto;
+        overflow: visible;
+        flex: 1;
+        min-height: 0;
     }
 }
 
@@ -982,13 +1000,17 @@ ul {
     }
 
     .config-section.defaults-section {
-        display: none;
+        flex: 1;
+        min-width: 0;
+        overflow: visible;
+        margin-top: 16px;
     }
 
     .defaults-content {
         margin-top: 4px;
-        max-height: 120px;
-        overflow-y: auto;
+        overflow: visible;
+        flex: 1;
+        min-height: 0;
     }
 }
 
@@ -1212,6 +1234,11 @@ ul {
     background-color: var(--vscode-input-background);
     border-radius: 4px;
     border: 1px solid var(--vscode-input-border);
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    min-width: 0;
 }
 
 .wizard-property-item.inherited {
@@ -1225,6 +1252,8 @@ ul {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    min-width: 0;
+    max-width: 180px;
 }
 
 .wizard-property-value-container {
@@ -1246,6 +1275,11 @@ ul {
     color: var(--vscode-descriptionForeground);
     cursor: not-allowed;
     opacity: 0.8;
+}
+
+.wizard-property-actions .wizard-property-value-display {
+    width: calc(216px + 0.5rem);
+    flex: none;
 }
 
 .wizard-property-value-input-small {
@@ -1415,6 +1449,11 @@ ul {
     .wizard-property-key {
         flex: 0 0 120px;
         font-size: 0.9em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+        max-width: 120px;
     }
 
     .wizard-properties-container {
@@ -1444,23 +1483,33 @@ ul {
     .wizard-property-key {
         flex: 0 0 100px;
         font-size: 0.85em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+        max-width: 100px;
     }
 
     .wizard-property-item {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
         gap: 0.5rem;
-        padding: 8px;
-        min-width: 300px;
+        padding: 6px 8px;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
     }
 
     .wizard-property-value-container {
-        width: 100%;
+        flex: 1;
+        min-width: 0;
     }
 
     .wizard-property-actions {
         justify-content: flex-end;
-        margin-top: 0.25rem;
+        flex-shrink: 0;
     }
 
     .wizard-properties-container {
@@ -1481,6 +1530,37 @@ ul {
         padding: 0.75rem;
         font-size: 14px;
     }
+
+    /* Make populate defaults button smaller in narrow views */
+    #populate-defaults-button {
+        min-width: 24px !important;
+        width: 24px !important;
+        height: 28px !important;
+        padding: 2px !important;
+        font-size: 10px !important;
+    }
+
+    /* Make remove property buttons smaller in narrow views */
+    [id^="remove-property-button-"] {
+        min-width: 20px !important;
+        width: 20px !important;
+        height: 24px !important;
+        padding: 2px !important;
+        font-size: 10px !important;
+    }
+
+    /* Adjust the type selection container for narrow views */
+    .wizard-left-column > div:has(#profile-type-select) {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .wizard-left-column > div:has(#profile-type-select) > div {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+    }
 }
 
 @media (max-width: 400px) {
@@ -1499,11 +1579,40 @@ ul {
     .wizard-property-key {
         flex: 0 0 80px;
         font-size: 0.8em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+        max-width: 80px;
     }
 
     .wizard-property-item {
         padding: 6px;
-        min-width: 280px;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    /* Make populate defaults button even smaller for very narrow views */
+    #populate-defaults-button {
+        min-width: 20px !important;
+        width: 20px !important;
+        height: 24px !important;
+        padding: 1px !important;
+        font-size: 8px !important;
+    }
+
+    /* Make remove property buttons even smaller for very narrow views */
+    [id^="remove-property-button-"] {
+        min-width: 18px !important;
+        width: 18px !important;
+        height: 20px !important;
+        padding: 1px !important;
+        font-size: 8px !important;
     }
 
     .wizard-properties-container {

@@ -737,6 +737,7 @@ export function ProfileWizardModal({
                                       onChange={(e) => onPropertyValueChange(index, (e.target as HTMLInputElement).value)}
                                       className="modal-input wizard-property-value-input-small"
                                       placeholder="••••••••"
+                                      style={{ width: "200px" }}
                                     />
                                   ) : propertyType === "boolean" ? (
                                     <select
@@ -744,6 +745,7 @@ export function ProfileWizardModal({
                                       value={stringifyValueByType(prop.value)}
                                       onChange={(e) => onPropertyValueChange(index, (e.target as HTMLSelectElement).value)}
                                       className="modal-input wizard-property-value-input-small"
+                                      style={{ width: "200px" }}
                                     >
                                       <option value="true">true</option>
                                       <option value="false">false</option>
@@ -755,12 +757,14 @@ export function ProfileWizardModal({
                                       value={stringifyValueByType(prop.value)}
                                       onChange={(e) => onPropertyValueChange(index, (e.target as HTMLInputElement).value)}
                                       className="modal-input wizard-property-value-input-small"
+                                      style={{ width: "200px" }}
                                     />
                                   ) : (
                                     <EnvVarAutocomplete
                                       value={stringifyValueByType(prop.value)}
                                       onChange={(value) => onPropertyValueChange(index, value)}
                                       className="modal-input wizard-property-value-input-small"
+                                      style={{ width: "200px" }}
                                       vscodeApi={vscodeApi}
                                     />
                                   )}

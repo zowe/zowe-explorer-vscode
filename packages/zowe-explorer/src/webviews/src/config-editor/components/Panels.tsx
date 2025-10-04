@@ -197,8 +197,12 @@ export function Panels({
             </div>
             <div className="resize-divider" id={`resize-divider-${index}`}></div>
             <div className="config-section profile-details-section">
-              {selectedTab === index && <div className="profile-details-content">{renderProfileDetails()}</div>}
-              {selectedTab === index && <Footer onClearChanges={onClearChanges} onSaveAll={onSaveAll} />}
+              {selectedTab === index && (
+                <div className="profile-details-content">
+                  {renderProfileDetails()}
+                  <Footer onClearChanges={onClearChanges} onSaveAll={onSaveAll} />
+                </div>
+              )}
             </div>
           </div>
         </div>
