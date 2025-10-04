@@ -102,13 +102,49 @@ export class Profiles extends ProfilesCache {
      * Checks if the profile has a secure token.
      * Note: This is a workaround to maintain backward compatibility.
      * @param theProfile - The profile to check.
-     * @returns True if the profile has a secure token, false otherwise.
+     * @returns True if the profile, a parent on the profile, or the default base profile has a secure token, false otherwise.
      */
     private async profileHasSecureToken(theProfile: imperative.IProfileLoaded): Promise<boolean> {
         const teamConfig = (await this.getProfileInfo()).getTeamConfig();
         const profName = teamConfig.api.profiles.getProfilePathFromName(theProfile.name);
-        const tokenValue = profName + ".properties.tokenValue";
-        return teamConfig.api.secure.secureFields().includes(tokenValue);
+
+        const getCumulativePaths = (profName: string): string[] => {
+            const parts = profName.split(".profiles.");
+            return parts.slice(1).reduce(
+                (acc, part) => {
+                    const previousPath = acc.length > 0 ? acc[acc.length - 1] : parts[0];
+                    const currentPath = `${previousPath}.profiles.${part}`;
+                    acc.push(currentPath);
+                    return acc;
+                },
+                [parts[0]]
+            );
+        };
+
+        const paths = getCumulativePaths(profName);
+
+        // Add all intermediate paths by working backwards
+        const allPaths: string[] = [];
+        for (const path of paths) {
+            const segments = path.split(".profiles.");
+            for (let j = 1; j <= segments.length; j++) {
+                const subPath = segments.slice(0, j).join(".profiles.");
+                if (!allPaths.includes(subPath)) {
+                    allPaths.push(subPath);
+                }
+            }
+        }
+
+        const defaultBase = Constants.PROFILES_CACHE.getDefaultProfile?.("base");
+        const profilePath = defaultBase && teamConfig.api.profiles.getProfilePathFromName(defaultBase.name);
+        if (profilePath && !allPaths.includes(profilePath)) {
+            allPaths.push(profilePath);
+        }
+        if (!allPaths.includes(profName)) {
+            allPaths.push(profName);
+        }
+
+        return allPaths.some((path) => teamConfig.api.secure.secureFields().includes(path + ".properties.tokenValue"));
     }
 
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
@@ -608,7 +644,7 @@ export class Profiles extends ProfilesCache {
         const isProfileString = typeof profile === "string";
         const profilename = isProfileString ? profile : profile.name;
         const userInputBoxOptions: vscode.InputBoxOptions = {
-            placeHolder: isProfileString ? vscode.l10n.t(`User Name`) : profile.profile.user,
+            placeHolder: vscode.l10n.t(`User Name`),
             prompt: vscode.l10n.t({
                 message: "Enter the user name for the {0} connection. Leave blank to not store.",
                 args: [profilename],
@@ -616,7 +652,7 @@ export class Profiles extends ProfilesCache {
             }),
         };
         const passwordInputBoxOptions: vscode.InputBoxOptions = {
-            placeHolder: isProfileString ? vscode.l10n.t(`Password`) : profile.profile.password,
+            placeHolder: vscode.l10n.t(`Password`),
             prompt: vscode.l10n.t({
                 message: "Enter the password for the {0} connection. Leave blank to not store.",
                 args: [profilename],

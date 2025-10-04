@@ -359,10 +359,17 @@ export namespace ZoweExplorerZosmf {
         }
 
         public deleteDataSet(dataSetName: string, options?: zosfiles.IDeleteDatasetOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Delete.dataSet(this.getSession(), dataSetName, {
-                responseTimeout: this.profile?.profile?.responseTimeout,
-                ...options,
-            });
+            if (options.volume == "*VSAM*") {
+                return zosfiles.Delete.vsam(this.getSession(), dataSetName, {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...options,
+                });
+            } else {
+                return zosfiles.Delete.dataSet(this.getSession(), dataSetName, {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...options,
+                });
+            }
         }
 
         public dataSetsMatchingPattern(filter: string[], options?: zosfiles.IDsmListOptions): Promise<zosfiles.IZosFilesResponse> {
@@ -442,11 +449,18 @@ export namespace ZoweExplorerZosmf {
         }
 
         public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zosjobs.IJob> {
-            return zosjobs.SubmitJobs.submitJcl(this.getSession(), jcl, internalReaderRecfm, internalReaderLrecl);
+            const jesEncoding = this.profile?.profile?.jobEncoding;
+            return zosjobs.SubmitJobs.submitJcl(this.getSession(), jcl, internalReaderRecfm, internalReaderLrecl, jesEncoding);
         }
 
-        public submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
-            return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
+        public async submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
+            const jesEncoding = this.profile?.profile?.jobEncoding;
+            if (jesEncoding == null) {
+                return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
+            } else {
+                const rawJcl = await zosfiles.Get.dataSet(this.getSession(), jobDataSet, { encoding: jesEncoding });
+                return this.submitJcl(rawJcl.toString());
+            }
         }
 
         public async deleteJob(jobname: string, jobid: string): Promise<void> {

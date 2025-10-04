@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "3.3.0-SNAPSHOT",
+  "version": "3.4.0-SNAPSHOT",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -1300,6 +1300,11 @@
           "group": "099_zowe_dsModification@5"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^vsam.*/",
+          "command": "zowe.ds.deleteDataset",
+          "group": "099_zowe_dsModification@5"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
           "command": "zowe.profileManagement",
           "group": "100_zowe_dsProfileAuthentication@99"
@@ -2250,10 +2255,10 @@
     "fresh-clone": "pnpm clean:bundle && pnpm clean:dependencies",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
-    "generateLocalization": "pnpm dlx @vscode/l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
+    "generateLocalization": "pnpm exec vscode-l10n-dev export --o ./l10n ./src && node ./scripts/generatePoeditorJson.js",
     "fetchLocalizations": "node ./scripts/downloadLocalizations.js",
     "copy-secrets": "node ./scripts/getSecretsPrebuilds.js",
-    "build:nlsPseudo": "pnpm dlx @vscode/l10n-dev generate-pseudo -o ./l10n/ ./l10n/bundle.l10n.json ./package.nls.json",
+    "build:nlsPseudo": "pnpm exec vscode-l10n-dev generate-pseudo -o ./l10n/ ./l10n/bundle.l10n.json ./package.nls.json",
     "build:nls": "pnpm run build:nlsPseudo"
   },
   "engines": {
@@ -2274,7 +2279,7 @@
     "@wdio/types": "^8.41.0",
     "adm-zip": "^0.5.16",
     "chalk": "^2.4.1",
-    "eslint-plugin-zowe-explorer": "3.3.0-SNAPSHOT",
+    "eslint-plugin-zowe-explorer": "3.4.0-SNAPSHOT",
     "expect-webdriverio": "^4.15.4",
     "fs-extra": "8.0.1",
     "glob": "^7.1.6",
@@ -2289,12 +2294,12 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.26.0",
-    "@zowe/secrets-for-zowe-sdk": "^8.24.2",
-    "@zowe/zos-files-for-zowe-sdk": "^8.26.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.26.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.26.0",
-    "@zowe/zowe-explorer-api": "3.3.0-SNAPSHOT",
+    "@zowe/core-for-zowe-sdk": "^8.27.0",
+    "@zowe/secrets-for-zowe-sdk": "^8.27.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.27.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.27.0",
+    "@zowe/zosmf-for-zowe-sdk": "^8.27.0",
+    "@zowe/zowe-explorer-api": "3.4.0-SNAPSHOT",
     "dayjs": "^1.11.10",
     "isbinaryfile": "4.0.4",
     "promise-queue": "2.2.5"
