@@ -1031,7 +1031,7 @@ ul {
     max-width: 900px;
     width: 900px;
     max-height: 85vh;
-    overflow: visible;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -1047,7 +1047,9 @@ ul {
     flex: 1;
     display: flex;
     gap: 1rem;
-    overflow: visible;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
 }
 
 .wizard-left-column {
@@ -1257,7 +1259,6 @@ ul {
 }
 
 .wizard-property-value-container {
-    flex: 1;
     display: flex;
     align-items: center;
 }
@@ -1277,7 +1278,8 @@ ul {
     opacity: 0.8;
 }
 
-.wizard-property-actions .wizard-property-value-display {
+.wizard-property-actions .wizard-property-value-display,
+.wizard-property-value-container .wizard-property-value-display {
     width: calc(216px + 0.5rem);
     flex: none;
 }
@@ -1348,6 +1350,7 @@ ul {
     gap: 0.5rem;
     margin-left: auto;
     width: fit-content;
+    flex-shrink: 0;
 }
 
 .wizard-button {
@@ -1434,6 +1437,9 @@ ul {
     .wizard-content {
         flex-direction: column;
         gap: 1.5rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
     }
 
     .wizard-left-column {
@@ -1478,6 +1484,9 @@ ul {
 
     .wizard-content {
         gap: 1rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
     }
 
     .wizard-property-key {
