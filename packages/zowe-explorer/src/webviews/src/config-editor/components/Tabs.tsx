@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import * as l10n from "@vscode/l10n";
 
 interface TabsProps {
   configurations: { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[];
@@ -32,11 +33,11 @@ export function Tabs({
   const getRevealText = () => {
     const platform = navigator.platform.toLowerCase();
     if (platform.includes("mac")) {
-      return "Reveal in Finder";
+      return l10n.t("Reveal in Finder");
     } else if (platform.includes("win")) {
-      return "Reveal in File Explorer";
+      return l10n.t("Reveal in File Explorer");
     } else {
-      return "Reveal in File Manager";
+      return l10n.t("Reveal in File Manager");
     }
   };
 
@@ -139,7 +140,7 @@ export function Tabs({
                         display: "flex",
                         alignItems: "center",
                       }}
-                      title="Unsaved changes"
+                      title={l10n.t("Unsaved changes")}
                     />
                   )}
                 </span>
@@ -164,7 +165,7 @@ export function Tabs({
                 backgroundColor: "var(--vscode-tab-inactiveBackground)",
                 color: "var(--vscode-tab-inactiveForeground)",
               }}
-              title="Add new configuration"
+              title={l10n.t("Add new configuration")}
             >
               <span className="codicon codicon-add" style={{ fontSize: "14px" }}></span>
             </div>
@@ -188,7 +189,7 @@ export function Tabs({
               textDecoration: "none",
               borderRadius: "4px",
             }}
-            title="Team Configuration Documentation"
+            title={l10n.t("Team Configuration Documentation")}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "var(--vscode-toolbar-hoverBackground)";
             }}
@@ -213,7 +214,7 @@ export function Tabs({
               textDecoration: "none",
               borderRadius: "4px",
             }}
-            title="Report Issues"
+            title={l10n.t("Report Issues")}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "var(--vscode-toolbar-hoverBackground)";
             }}
@@ -266,7 +267,7 @@ export function Tabs({
             id="tab-open-file"
           >
             <span id="open-file" className="codicon codicon-go-to-file" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
-            Open File
+            {l10n.t("Open File")}
           </div>
           <div
             style={{
@@ -318,7 +319,7 @@ export function Tabs({
               id="tab-open-schema"
             >
               <span id="open-schema" className="codicon codicon-file-code" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
-              Open Schema
+              {l10n.t("Open Schema")}
             </div>
           )}
           <div
@@ -353,12 +354,12 @@ export function Tabs({
                 const displayValue = pendingValue !== undefined ? pendingValue : currentValue;
 
                 if (displayValue === undefined || displayValue === null) {
-                  return "AutoStore: Unset";
+                  return l10n.t("AutoStore: Unset");
                 }
 
                 return (
                   <>
-                    AutoStore:{" "}
+                    {l10n.t("AutoStore:")}{" "}
                     <span
                       style={{
                         color: displayValue ? "var(--vscode-testing-iconPassed)" : "var(--vscode-testing-iconFailed)",
@@ -369,7 +370,7 @@ export function Tabs({
                   </>
                 );
               }
-              return "AutoStore: Unset";
+              return l10n.t("AutoStore: Unset");
             })()}
           </div>
         </div>

@@ -466,7 +466,7 @@ export const RenderConfig = ({
                       });
                     }
                   }}
-                  title="Click to navigate to profile"
+                  title={l10n.t("Click to navigate to profile")}
                   style={{
                     backgroundColor: "var(--vscode-input-background)",
                     border: "1px solid var(--vscode-input-border)",
@@ -506,7 +506,7 @@ export const RenderConfig = ({
                 />
                 <button
                   className="header-button"
-                  title={`Create new property for \"${extractProfileKeyFromPath(currentPath)}\"`}
+                  title={l10n.t('Create new property for "{0}"', extractProfileKeyFromPath(currentPath))}
                   onClick={() => openAddProfileModalAtPath(currentPath)}
                   id="add-profile-property-button"
                   style={{
@@ -700,7 +700,7 @@ export const RenderConfig = ({
                       e.stopPropagation();
                       handleUnlinkMergedProperty(displayKey, fullKey);
                     }}
-                    title="Overwrite merged property"
+                    title={l10n.t("Overwrite merged property")}
                   >
                     <span className="codicon codicon-add"></span>
                   </button>
@@ -916,7 +916,7 @@ export const RenderConfig = ({
                             <button
                               className="action-button"
                               onClick={() => handleToggleSecure(fullKey, displayKey, path)}
-                              title="Make property secure"
+                              title={l10n.t("Make property secure")}
                             >
                               <span className="codicon codicon-unlock"></span>
                             </button>
@@ -929,7 +929,7 @@ export const RenderConfig = ({
                                   searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
                                 });
                               }}
-                              title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
+                              title={l10n.t("A credential manager is not available. Click to open VS Code settings to enable secure credentials.")}
                             >
                               <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
                             </button>
@@ -946,7 +946,7 @@ export const RenderConfig = ({
                               e.stopPropagation();
                               handleUnlinkMergedProperty(displayKey, fullKey);
                             }}
-                            title="Overwrite merged property"
+                            title={l10n.t("Overwrite merged property")}
                           >
                             <span className="codicon codicon-add"></span>
                           </button>
@@ -1004,7 +1004,7 @@ export const RenderConfig = ({
                         profilePath = sourceProfileRenamed[1]; // Use the new name
                       }
 
-                      const title = `Inherited from: ${profilePath} (${fullConfigPath})`;
+                      const title = l10n.t("Inherited from: {0} ({1})", profilePath, fullConfigPath);
                       return title;
                     })()
                   : undefined

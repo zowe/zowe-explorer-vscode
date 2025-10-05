@@ -9,17 +9,18 @@
  *
  */
 
+import * as l10n from "@vscode/l10n";
 export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-first";
 export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
 
 export function getSortOrderDisplayName(sortOrder: PropertySortOrder): string {
     switch (sortOrder) {
         case "alphabetical":
-            return "Alphabetical";
+            return l10n.t("Alphabetical");
         case "merged-first":
-            return "Merged First";
+            return l10n.t("Merged First");
         case "non-merged-first":
-            return "Merged Last";
+            return l10n.t("Merged Last");
         default:
             return sortOrder;
     }
@@ -28,15 +29,15 @@ export function getSortOrderDisplayName(sortOrder: PropertySortOrder): string {
 export function getProfileSortOrderDisplayName(sortOrder: ProfileSortOrder): string {
     switch (sortOrder) {
         case "natural":
-            return "Natural";
+            return l10n.t("Natural");
         case "alphabetical":
-            return "Alphabetical";
+            return l10n.t("Alphabetical");
         case "reverse-alphabetical":
-            return "Reverse Alphabetical";
+            return l10n.t("Reverse Alphabetical");
         case "type":
-            return "By Type";
+            return l10n.t("By Type");
         case "defaults":
-            return "By Defaults";
+            return l10n.t("By Defaults");
         default:
             return sortOrder;
     }

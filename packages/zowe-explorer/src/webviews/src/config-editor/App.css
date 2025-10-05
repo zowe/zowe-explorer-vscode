@@ -281,7 +281,7 @@ div:has(> .vscode-panel) {
 .config-section.defaults-section {
     flex: 1;
     min-width: 0;
-    overflow: visible;
+    overflow: hidden;
     margin-top: 16px;
 }
 
@@ -318,7 +318,7 @@ div:has(> .vscode-panel) {
 
 .defaults-content {
     margin-top: 8px;
-    overflow: visible;
+    overflow: hidden;
     flex: 1;
     min-height: 0;
 }
@@ -379,18 +379,15 @@ div:has(> .vscode-panel) {
     min-width: 16px;
     min-height: 32px;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .profile-heading-container h2 {
     margin: 0;
     font-size: 16px;
     margin-bottom: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    flex-shrink: 0;
     white-space: nowrap;
-    flex: 1;
-    min-width: 0;
-    max-width: calc(100% - 100px);
 }
 
 .profile-actions {
@@ -469,7 +466,24 @@ select:focus {
 }
 
 .config-item-container.defaults-container {
-    grid-template-columns: 150px minmax(150px, 250px);
+    grid-template-columns: minmax(100px, 150px) minmax(150px, 250px);
+    overflow: hidden;
+}
+
+.config-section.defaults-section select {
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.config-section.defaults-section .config-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 1;
 }
 
 .action-button {

@@ -66,7 +66,9 @@
         "host": "dev.localhost",
         "rejectUnauthorized": false,
         "user": "devuser",
-        "password": "devpass"
+        "password": "devpass",
+        "arrayProperty": ["testPropertyElement1", "testPropertyElement2"],
+        "objectProperty": { "objectSubProperty1": "objectSubValue1", "objectSubProperty2": 22, "objectSubProperty3": false }
       }
     },
     "zosmf-prod": {

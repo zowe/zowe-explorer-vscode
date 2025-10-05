@@ -1,3 +1,5 @@
+import * as l10n from "@vscode/l10n";
+
 interface ProfileSearchFilterProps {
   onSearchChange: (searchTerm: string) => void;
   onFilterChange: (filterType: string | null) => void;
@@ -44,7 +46,7 @@ export function ProfileSearchFilter({ onSearchChange, onFilterChange, availableT
       >
         <input
           type="text"
-          placeholder="Search..."
+          placeholder={l10n.t("Search...")}
           value={searchTerm}
           onChange={handleSearchChange}
           style={{
@@ -80,7 +82,7 @@ export function ProfileSearchFilter({ onSearchChange, onFilterChange, availableT
               alignItems: "center",
               justifyContent: "center",
             }}
-            title="Clear search"
+            title={l10n.t("Clear search")}
           >
             <span className="codicon codicon-close" style={{ fontSize: "12px" }}></span>
           </button>
@@ -109,7 +111,7 @@ export function ProfileSearchFilter({ onSearchChange, onFilterChange, availableT
           (e.target as HTMLSelectElement).style.borderColor = "var(--vscode-input-border)";
         }}
       >
-        <option value="all">All Types</option>
+        <option value="all">{l10n.t("All Types")}</option>
         {availableTypes.map((type) => (
           <option key={type} value={type}>
             {type}

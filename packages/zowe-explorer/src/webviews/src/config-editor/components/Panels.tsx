@@ -1,6 +1,8 @@
 import React from "react";
 import { SortDropdown } from "./SortDropdown";
 import { Footer } from "./Footer";
+import * as l10n from "@vscode/l10n";
+import { getProfileSortOrderDisplayName } from "../utils";
 
 const PROFILE_SORT_ORDER_OPTIONS: ("natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults")[] = [
   "natural",
@@ -9,23 +11,6 @@ const PROFILE_SORT_ORDER_OPTIONS: ("natural" | "alphabetical" | "reverse-alphabe
   "type",
   "defaults",
 ];
-
-const getProfileSortOrderDisplayName = (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults"): string => {
-  switch (sortOrder) {
-    case "natural":
-      return "Natural";
-    case "alphabetical":
-      return "Alphabetical";
-    case "reverse-alphabetical":
-      return "Reverse Alphabetical";
-    case "type":
-      return "By Type";
-    case "defaults":
-      return "By Defaults";
-    default:
-      return sortOrder;
-  }
-};
 
 interface PanelsProps {
   configurations: { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[];
@@ -99,7 +84,7 @@ export function Panels({
                   }}
                 >
                   <span className={`codicon ${profilesCollapsed ? "codicon-chevron-right" : "codicon-chevron-down"}`}></span>
-                  <h2 style={{ margin: 0, fontSize: "16px" }}>Profiles</h2>
+                  <h2 style={{ margin: 0, fontSize: "16px" }}>{l10n.t("Profiles")}</h2>
                 </button>
                 {!profilesCollapsed && (
                   <>
@@ -114,7 +99,7 @@ export function Panels({
                     <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
                       <button
                         className="header-button"
-                        title={viewMode === "tree" ? "Switch to flat view" : "Switch to tree view"}
+                        title={viewMode === "tree" ? l10n.t("Switch to flat view") : l10n.t("Switch to tree view")}
                         onClick={onViewModeToggle}
                         data-testid="view-mode-toggle"
                         data-current-view={viewMode}
@@ -138,7 +123,7 @@ export function Panels({
                       </button>
                       <button
                         className="header-button"
-                        title="Profile Wizard"
+                        title={l10n.t("Profile Wizard")}
                         onClick={onProfileWizard}
                         style={{
                           padding: "2px",
@@ -188,7 +173,7 @@ export function Panels({
                       }}
                     >
                       <span className={`codicon ${defaultsCollapsed ? "codicon-chevron-right" : "codicon-chevron-down"}`}></span>
-                      <h2 style={{ margin: 0, fontSize: "16px" }}>Defaults</h2>
+                      <h2 style={{ margin: 0, fontSize: "16px" }}>{l10n.t("Defaults")}</h2>
                     </button>
                   </div>
                   {!defaultsCollapsed && <div className="defaults-content">{renderDefaults(config.properties.defaults)}</div>}

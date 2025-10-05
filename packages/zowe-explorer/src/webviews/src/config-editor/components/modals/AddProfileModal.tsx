@@ -1,6 +1,7 @@
 import * as l10n from "@vscode/l10n";
 import { useModalClickOutside, useModalFocus } from "../../hooks";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
+import { isFileProperty } from "../../utils/propertyUtils";
 
 interface AddProfileModalProps {
   isOpen: boolean;
@@ -49,20 +50,6 @@ export function AddProfileModal({
 
   const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, focusValueInput ? ".add-profile-input" : "#profile-type-input");
-
-  const isFileProperty = (key: string): boolean => {
-    if (!key || typeof key !== "string") {
-      return false;
-    }
-
-    const filePaths = ["privateKey", "certFile", "certKeyFile"];
-    for (const path of filePaths) {
-      if (key.toLowerCase() === path.toLowerCase()) {
-        return true;
-      }
-    }
-    return false;
-  };
 
   const isAuthOrderProperty = (key: string): boolean => {
     if (!key || typeof key !== "string") {

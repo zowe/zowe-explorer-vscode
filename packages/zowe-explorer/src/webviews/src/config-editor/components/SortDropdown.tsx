@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import * as l10n from "@vscode/l10n";
 
 interface SortDropdownProps<T extends string = string> {
   options: T[];
@@ -64,7 +65,7 @@ export function SortDropdown<T extends string = string>({
         }}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        title={`Change sort order. Current: ${getDisplayName(selectedOption)}`}
+        title={l10n.t("Change sort order. Current: {0}", getDisplayName(selectedOption))}
       >
         <span className="codicon codicon-sort-precedence"></span>
       </button>

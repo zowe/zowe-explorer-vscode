@@ -197,3 +197,22 @@ function flattenProfiles(profiles: any, parentKey = "", result: Record<string, a
 
     return result;
 }
+
+/**
+ * Determines if a property key represents a file path property
+ * @param key - The property key to check
+ * @returns true if the key represents a file path property, false otherwise
+ */
+export function isFileProperty(key: string): boolean {
+    if (!key || typeof key !== "string") {
+        return false;
+    }
+
+    const filePaths = ["privateKey", "certFile", "certKeyFile"];
+    for (const path of filePaths) {
+        if (key.toLowerCase() === path.toLowerCase()) {
+            return true;
+        }
+    }
+    return false;
+}

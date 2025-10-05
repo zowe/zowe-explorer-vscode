@@ -16,6 +16,7 @@ import { RenderConfig } from "./renderConfig";
 
 // Utils
 import { flattenProfiles, PropertySortOrder, schemaValidation } from "../utils";
+import * as l10n from "@vscode/l10n";
 
 // Types
 type Configuration = {
@@ -166,10 +167,11 @@ export const RenderProfileDetails = ({
   isProfileAffectedByDragDrop,
 }: RenderProfileDetailsProps) => {
   const renderProfileDetails = useCallback(() => {
+    const profileDetailsHeader = l10n.t("Profile Details");
     return (
       <div>
         <div className="profile-heading-container">
-          <h2 title={selectedProfileKey || "Profile Details"}>{selectedProfileKey || "Profile Details"}</h2>
+          <h2 title={selectedProfileKey || profileDetailsHeader}>{selectedProfileKey || profileDetailsHeader}</h2>
           {selectedProfileKey && (
             <div className="profile-actions">
               <button
@@ -185,7 +187,7 @@ export const RenderProfileDetails = ({
                     });
                   }
                 }}
-                title="Open config file with profile highlighted"
+                title={l10n.t("Open config file with profile highlighted")}
               >
                 <span className="codicon codicon-go-to-file"></span>
               </button>
@@ -211,7 +213,7 @@ export const RenderProfileDetails = ({
                     handleSetAsDefault(selectedProfileKey);
                   }
                 }}
-                title={isProfileDefault(selectedProfileKey) ? "Click to remove default" : "Set as default"}
+                title={isProfileDefault(selectedProfileKey) ? l10n.t("Click to remove default") : l10n.t("Set as default")}
               >
                 <span className={`codicon codicon-${isProfileDefault(selectedProfileKey) ? "star-full" : "star-empty"}`}></span>
               </button>
@@ -219,7 +221,7 @@ export const RenderProfileDetails = ({
                 className="profile-action-button"
                 id="merge-property-toggle"
                 onClick={() => setShowMergedPropertiesWithStorage(!showMergedProperties)}
-                title={showMergedProperties ? "Hide merged properties" : "Show merged properties"}
+                title={showMergedProperties ? l10n.t("Hide merged properties") : l10n.t("Show merged properties")}
               >
                 <span className={`codicon codicon-${showMergedProperties ? "eye-closed" : "eye"}`}></span>
               </button>
@@ -229,8 +231,10 @@ export const RenderProfileDetails = ({
                 onClick={() => setRenameProfileModalOpen(true)}
                 title={
                   selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey)
-                    ? "Cannot rename: This profile or a related profile has been moved via drag-and-drop. Save and refresh to enable renaming."
-                    : "Rename profile"
+                    ? l10n.t(
+                        "Cannot rename: This profile or a related profile has been moved via drag-and-drop. Save and refresh to enable renaming."
+                      )
+                    : l10n.t("Rename profile")
                 }
                 disabled={selectedProfileKey ? isProfileAffectedByDragDrop(selectedProfileKey) : false}
                 style={{
@@ -244,7 +248,7 @@ export const RenderProfileDetails = ({
                 className="profile-action-button"
                 id="delete-profile"
                 onClick={() => handleDeleteProfile(selectedProfileKey)}
-                title="Delete profile"
+                title={l10n.t("Delete profile")}
               >
                 <span className="codicon codicon-trash"></span>
               </button>

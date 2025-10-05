@@ -2,6 +2,7 @@ import * as l10n from "@vscode/l10n";
 import { useModalClickOutside, useModalFocus } from "../../hooks";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import { useState, useRef, useEffect } from "react";
+import { isFileProperty } from "../../utils/propertyUtils";
 
 interface ProfileWizardModalProps {
   isOpen: boolean;
@@ -217,20 +218,6 @@ export function ProfileWizardModal({
     return authMethods.every((method) => validAuthTypes.includes(method));
   };
   if (!isOpen) return null;
-
-  const isFileProperty = (key: string): boolean => {
-    if (!key || typeof key !== "string") {
-      return false;
-    }
-
-    const filePaths = ["privateKey", "certFile", "certKeyFile"];
-    for (const path of filePaths) {
-      if (key.toLowerCase() === path.toLowerCase()) {
-        return true;
-      }
-    }
-    return false;
-  };
 
   const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, "input[type='text']");

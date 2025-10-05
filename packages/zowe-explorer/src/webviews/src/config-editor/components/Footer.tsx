@@ -1,3 +1,5 @@
+import * as l10n from "@vscode/l10n";
+
 interface FooterProps {
   onClearChanges: () => void;
   onSaveAll: () => void;
@@ -8,7 +10,7 @@ export function Footer({ onClearChanges, onSaveAll }: FooterProps) {
     <div className="footer">
       <button
         onClick={onClearChanges}
-        title="Refresh changes"
+        title={l10n.t("Refresh changes")}
         style={{
           padding: "8px 16px",
           fontSize: "13px",
@@ -26,11 +28,11 @@ export function Footer({ onClearChanges, onSaveAll }: FooterProps) {
           justifyContent: "center",
         }}
       >
-        Refresh
+        {l10n.t("Refresh")}
       </button>
       <button
         onClick={onSaveAll}
-        title="Save all changes"
+        title={l10n.t("Save all changes")}
         style={{
           padding: "8px 16px",
           fontSize: "13px",
@@ -48,7 +50,7 @@ export function Footer({ onClearChanges, onSaveAll }: FooterProps) {
           justifyContent: "center",
         }}
       >
-        Save
+        {l10n.t("Save")}
       </button>
     </div>
   );
