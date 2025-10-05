@@ -390,8 +390,8 @@ export namespace MainframeInteraction {
         ): Promise<zosfiles.IZosFilesResponse>;
 
         /**
-         * Get count for all the datasets accordingly to dataSetPatterns
-         * @param {string[]} dataSetPatterns
+         * Returns the total count for all data sets that match the list of data set patterns.
+         * @param dataSetPatterns the list of data set patterns to obtain the total item count for.
          */
         getCount?(dataSetPatterns: string[]): Promise<IDataSetCount>;
     }
