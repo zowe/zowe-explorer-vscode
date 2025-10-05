@@ -468,12 +468,12 @@ export const RenderConfig = ({
                   }}
                   title="Click to navigate to profile"
                   style={{
-                    backgroundColor: "var(--vscode-input-disabledBackground)",
+                    backgroundColor: "var(--vscode-input-background)",
                     border: "1px solid var(--vscode-input-border)",
                     borderRadius: "3px",
                     padding: "8px",
                     fontSize: "0.9em",
-                    color: "var(--vscode-disabledForeground)",
+                    color: "var(--vscode-input-foreground)",
                     cursor: "pointer",
                   }}
                 >
@@ -565,12 +565,12 @@ export const RenderConfig = ({
                   <div
                     style={{
                       width: "100%",
-                      backgroundColor: "var(--vscode-input-disabledBackground)",
+                      backgroundColor: "var(--vscode-input-background)",
                       border: "1px solid var(--vscode-input-border)",
                       borderRadius: "3px",
                       padding: "8px",
                       fontSize: "0.9em",
-                      color: "var(--vscode-disabledForeground)",
+                      color: "var(--vscode-input-foreground)",
                     }}
                   >
                     {renderComplexValue(pendingValue)}

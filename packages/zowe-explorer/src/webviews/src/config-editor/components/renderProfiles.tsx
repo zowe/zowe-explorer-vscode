@@ -342,15 +342,9 @@ export const RenderProfiles = ({
         return shouldKeep;
       });
 
-      // For natural sort order, we need to preserve the original order
-      // This means we should merge the profiles in their original positions, not append pending ones at the end
       let finalProfileKeys: string[];
 
       if (profileSortOrder === "natural") {
-        // For natural sort order, maintain the original order by merging profiles in their original positions
-        // Use filteredOriginalKeys which already has the correct filtering applied
-        const originalProfileKeys = filteredOriginalKeys;
-
         // Create a map to track which profiles have pending versions
         const pendingMap = new Map<string, string>();
         renamedPendingProfileKeys.forEach((pendingKey) => {
@@ -360,6 +354,7 @@ export const RenderProfiles = ({
             return renamedKey === pendingKey;
           });
           if (originalKey) {
+            // Map from the original key to the pending (possibly renamed) key
             pendingMap.set(originalKey, pendingKey);
           }
         });
@@ -369,15 +364,42 @@ export const RenderProfiles = ({
         const processedPendingKeys = new Set<string>();
 
         // Preserve the exact order from the original configuration
-        originalProfileKeys.forEach((originalKey) => {
-          const pendingVersion = pendingMap.get(originalKey);
-          if (pendingVersion) {
-            // Use the pending version instead of the original
-            finalProfileKeys.push(pendingVersion);
-            processedPendingKeys.add(pendingVersion);
+        uniqueRenamedProfileKeys.forEach((profileKey) => {
+          // Check if this profile is deleted
+          if (isProfileOrParentDeleted(profileKey, deletedProfiles)) {
+            return;
+          }
+
+          // Check if this profile has a pending version
+          const hasPendingVersion = pendingProfileKeysSet.has(profileKey) || originalPendingProfileKeysSet.has(profileKey);
+
+          if (hasPendingVersion) {
+            // Find the pending version key by looking up in pendingMap
+            // Check if this profile key itself has a pending version
+            let pendingKey = pendingMap.get(profileKey);
+
+            // Check if this profile key is the result of a rename that has a pending version
+            if (!pendingKey) {
+              const originalKeyForThis = Object.keys(renames[configPath] || {}).find((origKey) => {
+                const renamed = getRenamedProfileKeyWithNested(origKey, configPath, renames);
+                return renamed === profileKey;
+              });
+              if (originalKeyForThis) {
+                pendingKey = pendingMap.get(originalKeyForThis);
+              }
+            }
+
+            if (pendingKey) {
+              // Use the pending version instead of the original
+              finalProfileKeys.push(pendingKey);
+              processedPendingKeys.add(pendingKey);
+            } else {
+              // Couldn't find a pending version, keep the original
+              finalProfileKeys.push(profileKey);
+            }
           } else {
-            // Use the original profile
-            finalProfileKeys.push(originalKey);
+            // No pending version, use the original profile
+            finalProfileKeys.push(profileKey);
           }
         });
 

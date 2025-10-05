@@ -409,21 +409,24 @@ export function updateDefaultsAfterRename(
 
         // Check each default entry
         Object.entries(updatedDefaults).forEach(([profileType, profileName]) => {
-            // Check if this profile was a default
-            if (profileName === originalKey) {
-                // Update the default to reference the new profile
-                updatedDefaults[profileType] = newKey;
-                hasChanges = true;
-            }
+            // Only process if profileName is a string
+            if (typeof profileName === "string") {
+                // Check if this profile was a default
+                if (profileName === originalKey) {
+                    // Update the default to reference the new profile
+                    updatedDefaults[profileType] = newKey;
+                    hasChanges = true;
+                }
 
-            // Check if any child profiles of the renamed profile were defaults
-            // This handles cases like: tso.zosmf is default, tso is renamed to tso1, so tso1.zosmf should remain default
-            if (profileName.startsWith(originalKey + ".")) {
-                // This is a child profile that was a default
-                const childPath = profileName.substring(originalKey.length + 1);
-                const newChildDefault = newKey + "." + childPath;
-                updatedDefaults[profileType] = newChildDefault;
-                hasChanges = true;
+                // Check if any child profiles of the renamed profile were defaults
+                // This handles cases like: tso.zosmf is default, tso is renamed to tso1, so tso1.zosmf should remain default
+                if (profileName.startsWith(originalKey + ".")) {
+                    // This is a child profile that was a default
+                    const childPath = profileName.substring(originalKey.length + 1);
+                    const newChildDefault = newKey + "." + childPath;
+                    updatedDefaults[profileType] = newChildDefault;
+                    hasChanges = true;
+                }
             }
         });
 
@@ -456,19 +459,22 @@ export function simulateDefaultsUpdateAfterRename(layerActive: () => IConfigLaye
 
         // Check each default entry and simulate the update
         Object.entries(simulatedDefaults).forEach(([profileType, profileName]) => {
-            // Check if this profile was a default
-            if (profileName === originalKey) {
-                // Simulate updating the default to reference the new profile
-                simulatedDefaults[profileType] = newKey;
-            }
+            // Only process if profileName is a string
+            if (typeof profileName === "string") {
+                // Check if this profile was a default
+                if (profileName === originalKey) {
+                    // Simulate updating the default to reference the new profile
+                    simulatedDefaults[profileType] = newKey;
+                }
 
-            // Check if any child profiles of the renamed profile were defaults
-            // This handles cases like: tso.zosmf is default, tso is renamed to tso1, so tso1.zosmf should remain default
-            if (profileName.startsWith(originalKey + ".")) {
-                // This is a child profile that was a default
-                const childPath = profileName.substring(originalKey.length + 1);
-                const newChildDefault = newKey + "." + childPath;
-                simulatedDefaults[profileType] = newChildDefault;
+                // Check if any child profiles of the renamed profile were defaults
+                // This handles cases like: tso.zosmf is default, tso is renamed to tso1, so tso1.zosmf should remain default
+                if (profileName.startsWith(originalKey + ".")) {
+                    // This is a child profile that was a default
+                    const childPath = profileName.substring(originalKey.length + 1);
+                    const newChildDefault = newKey + "." + childPath;
+                    simulatedDefaults[profileType] = newChildDefault;
+                }
             }
         });
 

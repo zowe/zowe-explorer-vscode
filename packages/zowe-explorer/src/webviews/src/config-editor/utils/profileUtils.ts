@@ -1088,25 +1088,7 @@ export function mergeMergedProperties(
         }
     }
 
-    // Always log rename detection for debugging
-
-    // Check if current profile should be renamed
-    // We should only skip if this profile is the ORIGINAL profile that was renamed
-    // (not an intermediate profile in a rename chain)
-    const shouldBeRenamed = configRenames[currentProfileKey];
-
-    // A profile should be skipped if:
-    // 1. It has a rename mapping (shouldBeRenamed is truthy)
-    // 2. It's not the final result of any rename chain (not in the values of configRenames)
-    // 3. It's not an intermediate step in a rename chain
-    const isOriginalProfile = shouldBeRenamed && !Object.values(configRenames).includes(currentProfileKey);
-
-    // Additional check: if this profile is the final result of a rename chain, don't skip it
-    const isFinalResult = Object.values(configRenames).includes(currentProfileKey);
-
-    if (shouldBeRenamed && isOriginalProfile && !isFinalResult) {
-        return combinedConfig;
-    }
+    // Note: Removed early return for renamed profiles to ensure merged properties are always displayed
 
     if (currentProfileKey !== originalProfileKey) {
     }

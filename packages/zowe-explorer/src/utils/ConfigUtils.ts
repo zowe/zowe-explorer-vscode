@@ -10,6 +10,7 @@
  */
 
 import { ChangeEntry } from "./ConfigChangeHandlers";
+import { schemaValidation } from "./ConfigSchemaHelpers";
 
 export type LayerModifications = {
     configPath: string;
@@ -57,14 +58,30 @@ export class ConfigUtils {
     /**
      * Processes profiles recursively to handle nested profiles and secure properties
      * @param profiles - The profiles object to process
+     * @param schemaValidation - Optional schema validation to filter out invalid profile types
      */
-    public static processProfilesRecursively(profiles: any): void {
+    public static processProfilesRecursively(profiles: any, schemaValidation?: schemaValidation): void {
         if (!profiles || typeof profiles !== "object") {
             return;
         }
 
-        for (const profileName in profiles) {
+        // Get valid profile types from schema if available
+        const validProfileTypes = schemaValidation?.propertySchema ? Object.keys(schemaValidation.propertySchema) : null;
+
+        // Process profiles and filter out invalid ones
+        const profileNames = Object.keys(profiles);
+        for (const profileName of profileNames) {
             const profile = profiles[profileName];
+
+            // Set type to undefined for profiles with invalid types if schema validation is available
+            if (validProfileTypes && profile.type && !validProfileTypes.includes(profile.type)) {
+                console.warn(
+                    `Setting type to undefined for profile "${profileName}" with invalid type "${
+                        profile.type
+                    }". Valid types are: ${validProfileTypes.join(", ")}`
+                );
+                profile.type = undefined;
+            }
 
             // Handle secure properties for current profile
             if (profile.secure && profile.properties) {
@@ -74,7 +91,7 @@ export class ConfigUtils {
 
             // Recursively process nested profiles
             if (profile.profiles) {
-                this.processProfilesRecursively(profile.profiles);
+                this.processProfilesRecursively(profile.profiles, schemaValidation);
             }
         }
     }

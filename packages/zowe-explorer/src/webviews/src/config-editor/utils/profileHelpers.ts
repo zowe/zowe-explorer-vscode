@@ -61,17 +61,20 @@ export function isProfileDefault(
         return true;
     }
 
-    const configRenames = renames[configPath] || {};
-    for (const [originalKey, newKey] of Object.entries(configRenames)) {
-        if (defaultValue === originalKey && newKey === profileKey) {
-            return true;
-        }
-
-        if (defaultValue.startsWith(originalKey + ".") && profileKey.startsWith(newKey + ".")) {
-            const originalChildPath = defaultValue.substring(originalKey.length + 1);
-            const currentChildPath = profileKey.substring(newKey.length + 1);
-            if (originalChildPath === currentChildPath) {
+    // Only proceed with rename checks if defaultValue exists and is a string
+    if (defaultValue && typeof defaultValue === "string") {
+        const configRenames = renames[configPath] || {};
+        for (const [originalKey, newKey] of Object.entries(configRenames)) {
+            if (defaultValue === originalKey && newKey === profileKey) {
                 return true;
+            }
+
+            if (defaultValue.startsWith(originalKey + ".") && profileKey.startsWith(newKey + ".")) {
+                const originalChildPath = defaultValue.substring(originalKey.length + 1);
+                const currentChildPath = profileKey.substring(newKey.length + 1);
+                if (originalChildPath === currentChildPath) {
+                    return true;
+                }
             }
         }
     }

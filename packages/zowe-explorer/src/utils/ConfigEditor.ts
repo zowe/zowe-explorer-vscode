@@ -153,7 +153,7 @@ export class ConfigEditor extends WebView {
                         const schema = JSON.parse(schemaContent);
                         const schemaValidation = this.generateSchemaValidation(schema);
 
-                        this.processProfilesRecursively(layer.properties.profiles);
+                        this.processProfilesRecursively(layer.properties.profiles, schemaValidation);
 
                         allConfigs.push({
                             configPath,
@@ -165,6 +165,22 @@ export class ConfigEditor extends WebView {
                             user: layer.user,
                         });
                     } else {
+                        // Try to find schema in the same directory even if not explicitly referenced
+                        let schemaValidation: schemaValidation | undefined;
+                        try {
+                            const possibleSchemaPath = path.join(path.dirname(configPath), "zowe.schema.json");
+                            if (fs.existsSync(possibleSchemaPath)) {
+                                const schemaContent = fs.readFileSync(possibleSchemaPath, { encoding: "utf8" });
+                                const schema = JSON.parse(schemaContent);
+                                schemaValidation = this.generateSchemaValidation(schema);
+                            }
+                        } catch (err) {
+                            // Schema not found or invalid, continue without filtering
+                        }
+
+                        // Process profiles with schema validation if available
+                        this.processProfilesRecursively(layer.properties.profiles, schemaValidation);
+
                         allConfigs.push({
                             configPath,
                             properties: layer.properties,
@@ -200,8 +216,8 @@ export class ConfigEditor extends WebView {
         return allConfigs;
     }
 
-    private processProfilesRecursively(profiles: any): void {
-        ConfigUtils.processProfilesRecursively(profiles);
+    private processProfilesRecursively(profiles: any, schemaValidation?: schemaValidation): void {
+        ConfigUtils.processProfilesRecursively(profiles, schemaValidation);
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
@@ -787,7 +803,13 @@ export class ConfigEditor extends WebView {
             teamConfig.api.layers.activate(activateLayer.user, activateLayer.global);
         }
 
-        const mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
+        let mergedArgs;
+        try {
+            mergedArgs = profInfo.mergeArgsForProfile(profile, { getSecureVals: true });
+        } catch (error) {
+            console.warn(`Failed to load schema for profile type "${profile.profType}": ${error.message}`);
+            return;
+        }
 
         if (mergedArgs.knownArgs) {
             mergedArgs.knownArgs.forEach((arg) => {
