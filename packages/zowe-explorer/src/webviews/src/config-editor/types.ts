@@ -11,24 +11,24 @@
 
 // Types
 export type Configuration = {
-  configPath: string;
-  properties: any;
-  secure: string[];
-  global?: boolean;
-  user?: boolean;
-  schemaPath?: string;
+    configPath: string;
+    properties: any;
+    secure: string[];
+    global?: boolean;
+    user?: boolean;
+    schemaPath?: string;
 };
 
 export type PendingChange = {
-  value: string | number | boolean | Record<string, any>;
-  path: string[];
-  profile: string;
-  secure?: boolean;
+    value: string | number | boolean | Record<string, any>;
+    path: string[];
+    profile: string;
+    secure?: boolean;
 };
 
 export type PendingDefault = {
-  value: string;
-  path: string[];
+    value: string;
+    path: string[];
 };
 
 // Property sort order options
