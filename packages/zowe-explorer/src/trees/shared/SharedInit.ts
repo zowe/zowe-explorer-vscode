@@ -56,7 +56,6 @@ import { ReleaseNotes } from "../../utils/ReleaseNotes";
 import { JobFSProvider } from "../job/JobFSProvider";
 
 export class SharedInit {
-
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
 
@@ -361,8 +360,7 @@ export class SharedInit {
 
     public static isDocumentASpool(uri: vscode.Uri): Boolean {
         const entry = JobFSProvider.instance.lookup(uri, false);
-        const isSpool = FsJobsUtils.isSpoolEntry(entry);
-        return isSpool;
+        return FsJobsUtils.isSpoolEntry(entry);
     }
 
     public static watchConfigProfile(context: vscode.ExtensionContext): void {
