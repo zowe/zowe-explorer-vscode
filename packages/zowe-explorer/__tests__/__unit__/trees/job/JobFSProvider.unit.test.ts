@@ -141,7 +141,7 @@ describe("readDirectory", () => {
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
         expect(mockJesApi.getJobsByParameters).toHaveBeenCalledWith({
             owner: "USER",
             prefix: "JOB*",
@@ -184,7 +184,7 @@ describe("readDirectory", () => {
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
         expect(mockJesApi.getSpoolFiles).toHaveBeenCalledWith(testEntries.job.job?.jobname, testEntries.job.job?.jobid);
         jesApiMock.mockRestore();
     });
@@ -214,7 +214,7 @@ describe("readDirectory", () => {
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(getInfoForUriMock.mock.calls[0][0]).toBe(testUris.job);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
         jesApiMock.mockRestore();
         _handleErrorMock.mockRestore();
     });
@@ -765,7 +765,7 @@ describe("delete", () => {
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
         expect(getInfoForUriMock.mock.calls[0][0]).toBe(testUris.job);
         ussApiMock.mockRestore();
         lookupMock.mockRestore();

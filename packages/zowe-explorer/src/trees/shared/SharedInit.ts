@@ -460,7 +460,10 @@ export class SharedInit {
             const uriInfo = uriMap[folder.uri.path];
             const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
             try {
-                if (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
+                if (
+                    session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE ||
+                    (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+                ) {
                     continue;
                 }
                 await vscode.workspace.fs.readDirectory(folder.uri.with({ query: "fetch=true" }));

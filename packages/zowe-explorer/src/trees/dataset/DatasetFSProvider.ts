@@ -74,6 +74,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         ZoweLogger.trace(`[DatasetFSProvider] stat called with ${uri.toString()}`);
         let isFetching = false;
+        let shouldAwaitTimeout = false;
 
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
@@ -83,12 +84,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 return this.lookup(uri, false);
             }
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
+            shouldAwaitTimeout = queryParams.has("awaitTimeout") && queryParams.get("awaitTimeout") === "true";
         }
 
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
 
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
-        if (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
+        if (
+            session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE ||
+            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+        ) {
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
@@ -108,7 +113,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         // Wait for any ongoing authentication process to complete
         await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile);
+        await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -148,10 +153,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     private async fetchEntriesForProfile(uri: vscode.Uri, uriInfo: UriFsInfo, pattern: string): Promise<FilterEntry> {
         const profileEntry = this._lookupAsDirectory(uri, false) as FilterEntry;
+        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
 
         // Wait for any ongoing authentication process to complete
         await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile);
+        await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -227,7 +233,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
         // Wait for any ongoing authentication process to complete
         await AuthUtils.reauthenticateIfCancelled(profile);
-        await AuthHandler.waitForUnlock(entry.metadata.profile);
+
+        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
+        await AuthHandler.waitForUnlock(entry.metadata.profile, shouldAwaitTimeout);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -264,7 +272,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
 
-        if (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
+        if (
+            session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE ||
+            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+        ) {
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
@@ -285,7 +296,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             // Wait for any ongoing authentication process to complete
             await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
-            await AuthHandler.waitForUnlock(uriInfo.profile);
+
+            const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
+            await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
 
             // Check if the profile is locked (indicating an auth error is being handled)
             // If it's locked, we should wait and not make additional requests
@@ -454,7 +467,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             // Wait for any ongoing authentication process to complete
             await AuthUtils.reauthenticateIfCancelled(profile);
-            await AuthHandler.waitForUnlock(metadata.profile);
+
+            const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
+            await AuthHandler.waitForUnlock(metadata.profile, shouldAwaitTimeout);
 
             // Check if the profile is locked (indicating an auth error is being handled)
             // If it's locked, we should wait and not make additional requests
@@ -533,7 +548,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
-        if (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
+        if (
+            session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE ||
+            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+        ) {
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
@@ -646,7 +664,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
 
         await AuthUtils.reauthenticateIfCancelled(profile);
-        await AuthHandler.waitForUnlock(entry.metadata.profile);
+
+        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
+        await AuthHandler.waitForUnlock(entry.metadata.profile, shouldAwaitTimeout);
 
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
@@ -831,7 +851,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
             await AuthUtils.reauthenticateIfCancelled(profile);
-            await AuthHandler.waitForUnlock(entry.metadata.profile);
+            const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
+            await AuthHandler.waitForUnlock(entry.metadata.profile, shouldAwaitTimeout);
             await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).deleteDataSet(fullName, {
                 volume: entry.stats?.["vol"],
                 responseTimeout: entry.metadata.profile.profile?.responseTimeout,

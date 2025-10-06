@@ -100,6 +100,7 @@ describe("AuthUtils", () => {
                 value: {
                     ssoLogin: jest.fn().mockImplementation(),
                     promptCredentials: jest.fn().mockImplementation(),
+                    profileHasSecureToken: jest.fn().mockResolvedValue(false),
                 } as any,
                 configurable: true,
             });
@@ -139,6 +140,7 @@ describe("AuthUtils", () => {
                 value: {
                     ssoLogin: jest.fn().mockImplementation(),
                     promptCredentials: jest.fn().mockImplementation(),
+                    profileHasSecureToken: jest.fn().mockResolvedValue(false),
                 } as any,
                 configurable: true,
             });
@@ -174,6 +176,12 @@ describe("AuthUtils", () => {
             isUsingTokenAuthMock.mockRestore();
         });
         it("should call wait for unlock and not re-attempt locking profile if the profile is already locked", async () => {
+            new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    profileHasSecureToken: jest.fn().mockResolvedValue(true),
+                } as any,
+                configurable: true,
+            });
             const profile = createIProfile();
             const imperativeError = new imperative.ImperativeError({
                 errorCode: Number(401).toString(),

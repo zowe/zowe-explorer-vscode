@@ -67,6 +67,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         ZoweLogger.trace(`[UssFSProvider] stat called with ${uri.toString()}`);
         let isFetching = false;
+        let shouldAwaitTimeout = false;
+
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
             if (queryParams.has("conflict")) {
@@ -75,11 +77,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 return this.lookup(uri, false);
             }
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
+            shouldAwaitTimeout = queryParams.has("awaitTimeout") && queryParams.get("awaitTimeout") === "true";
         }
+
         const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
-        if (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
+        if (
+            session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE ||
+            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+        ) {
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
@@ -94,7 +101,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // Wait for any ongoing authentication process to complete
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
             await AuthUtils.reauthenticateIfCancelled(profile);
-            await AuthHandler.waitForUnlock(entry.metadata.profile);
+            await AuthHandler.waitForUnlock(entry.metadata.profile, shouldAwaitTimeout);
 
             // Check if the profile is locked (indicating an auth error is being handled)
             // If it's locked, we should wait and not make additional requests
@@ -171,7 +178,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         await AuthUtils.reauthenticateIfCancelled(profile);
-        await AuthHandler.waitForUnlock(profile);
+        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
+        await AuthHandler.waitForUnlock(profile, shouldAwaitTimeout);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -213,7 +221,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const entryExists = this.exists(uri);
 
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
-        if (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue) {
+        if (
+            session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE ||
+            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+        ) {
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
@@ -349,7 +360,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         await AuthUtils.reauthenticateIfCancelled(profile);
-        await AuthHandler.waitForUnlock(file.metadata.profile);
+        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
+        await AuthHandler.waitForUnlock(file.metadata.profile, shouldAwaitTimeout);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -728,7 +740,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(parent.metadata.profile.name);
         await AuthUtils.reauthenticateIfCancelled(profile);
-        await AuthHandler.waitForUnlock(parent.metadata.profile);
+        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
+        await AuthHandler.waitForUnlock(parent.metadata.profile, shouldAwaitTimeout);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests

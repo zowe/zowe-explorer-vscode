@@ -317,7 +317,7 @@ export class AuthHandler {
      * Waits for the profile to be unlocked (ONLY if the profile was locked after an authentication error)
      * @param profile The profile name or object that may be locked
      */
-    public static async waitForUnlock(profile: ProfileLike): Promise<void> {
+    public static async waitForUnlock(profile: ProfileLike, shouldAwaitTimeout?: boolean): Promise<void> {
         const profileName = AuthHandler.getProfileName(profile);
         if (!this.profileLocks.has(profileName)) {
             return;
@@ -325,12 +325,12 @@ export class AuthHandler {
 
         const mutex = this.profileLocks.get(profileName);
         // If the mutex isn't locked, no need to wait
-        if (!mutex.isLocked()) {
+        if (!mutex.isLocked() || !shouldAwaitTimeout) {
             return;
         }
 
         // Wait for the mutex to be unlocked with a timeout to prevent indefinite waiting
-        const timeoutMs = 30000; // 30 seconds timeout
+        const timeoutMs = 30000;
         const timeoutPromise = new Promise<void>((_, reject) => {
             setTimeout(() => {
                 reject(new Error(`Timeout waiting for profile ${profileName} to be unlocked`));

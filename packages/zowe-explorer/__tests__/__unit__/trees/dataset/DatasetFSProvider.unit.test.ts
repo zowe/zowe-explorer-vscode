@@ -1545,7 +1545,7 @@ describe("DatasetFSProvider", () => {
                 const result = await DatasetFSProvider.instance.stat(testUris.ps);
 
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(datasetMock).not.toHaveBeenCalled();
@@ -1569,7 +1569,7 @@ describe("DatasetFSProvider", () => {
                 const result = await (DatasetFSProvider.instance as any).fetchEntriesForProfile(testUris.session, uriInfo, "USER.*");
 
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(datasetMock).not.toHaveBeenCalled();
@@ -1595,7 +1595,7 @@ describe("DatasetFSProvider", () => {
                 const result = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
 
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(getContentsMock).not.toHaveBeenCalled();
