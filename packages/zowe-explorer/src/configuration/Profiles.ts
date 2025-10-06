@@ -104,7 +104,7 @@ export class Profiles extends ProfilesCache {
      * @param theProfile - The profile to check.
      * @returns True if the profile, a parent on the profile, or the default base profile has a secure token, false otherwise.
      */
-    private async profileHasSecureToken(theProfile: imperative.IProfileLoaded): Promise<boolean> {
+    public async profileHasSecureToken(theProfile: imperative.IProfileLoaded): Promise<boolean> {
         const teamConfig = (await this.getProfileInfo()).getTeamConfig();
         const profName = teamConfig.api.profiles.getProfilePathFromName(theProfile.name);
 

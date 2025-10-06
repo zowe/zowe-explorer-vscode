@@ -88,7 +88,9 @@ export class AuthUtils {
                 authMethods: Constants.PROFILES_CACHE,
                 imperativeError: err as unknown as imperative.ImperativeError,
                 isUsingTokenAuth:
-                    sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
+                    sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
+                    (await Constants.PROFILES_CACHE.profileHasSecureToken(profile)) ||
+                    sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                 errorCorrelation,
                 throwErrorOnCancel: true,
             };
