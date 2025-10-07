@@ -987,11 +987,13 @@ export class DatasetActions {
                 })
             );
             let attributes: any;
+            let parentDsName: string | undefined;
+            const isMemberNode = SharedContext.isDsMember(node);
             try {
                 const nodeProfile = node.getProfile();
-                if (SharedContext.isDsMember(node)) {
-                    const dsName = node.getParent().getLabel() as string;
-                    attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).allMembers(dsName.toUpperCase(), {
+                if (isMemberNode) {
+                    parentDsName = node.getParent().getLabel() as string;
+                    attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).allMembers(parentDsName.toUpperCase(), {
                         attributes: true,
                         pattern: label.toUpperCase(),
                         responseTimeout: nodeProfile?.profile?.responseTimeout,
@@ -1028,39 +1030,68 @@ export class DatasetActions {
                 throw err;
             }
 
+            const attributeRecord: Record<string, unknown> = attributes[0];
+            const datasetAttributeDefinitions: Array<[string, string, string]> = [
+                ["dsname", "Data Set Name", "The name of the dataset"],
+                ["member", "Member Name", "The name of the member"],
+                ["blksz", "Block Size", "The block size of the dataset"],
+                ["catnm", "Catalog Name", "The catalog in which the dataset entry is stored"],
+                ["cdate", "Create Date", "The dataset creation date"],
+                ["dev", "Device Type", "The type of the device the dataset is stored on"],
+                ["dsntp", "Data Set Type", "LIBRARY, (LIBRARY,1), (LIBRARY,2), PDS, HFS, EXTREQ, EXTPREF, BASIC or LARGE"],
+                ["dsorg", "Data Set Organization", "The organization of the data set as PS, PO, or DA"],
+                ["edate", "Expiration Date", "The dataset expiration date"],
+                ["extx", "Extensions", "The number of extensions the dataset has"],
+                ["lrecl", "Logical Record Length", "The length in bytes of each record"],
+                ["migr", "Migration", "Indicates if automatic migration is active"],
+                ["mvol", "Multivolume", "Whether the dataset is on multiple volumes"],
+                ["ovf", "Open virtualization format", ""],
+                ["rdate", "Reference Date", "Last referenced date"],
+                ["recfm", "Record Format", "Valid values: A, B, D, F, M, S, T, U, V (combinable)"],
+                ["sizex", "Size", "Size of the first extent in tracks"],
+                ["spacu", "Space Unit", "Type of space units measurement"],
+                ["used", "Used Space", "Used space percentage"],
+                ["vol", "Volume", "Volume serial numbers for data set"],
+                ["vols", "Volumes", "Multiple volume serial numbers"],
+            ];
+            const memberAttributeDefinitions: Array<[string, string, string]> = [
+                ["vers", "Version", "Member version number"],
+                ["mod", "Modification Level", "Member modification level"],
+                ["c4date", "Created Date", "Creation date (4-character year format)"],
+                ["m4date", "Modified Date", "Last change date (4-character year format)"],
+                ["mtime", "Modified Time", "Last change time (in format hh:mm)"],
+                ["msec", "Modified Seconds", "Seconds value of the last change time"],
+                ["cnorc", "Current Records", "Current number of records"],
+                ["inorc", "Initial Records", "Initial number of records"],
+                ["mnorc", "Maximum Records", "Maximum number of records"],
+                ["user", "User", "User ID of last user to change the given member"],
+                ["sclm", "Modified by ISPF/SCLM", "Indicates whether the member was last modified by SCLM or ISPF"],
+            ];
+            const attributeDefinitions = isMemberNode ? [...datasetAttributeDefinitions, ...memberAttributeDefinitions] : datasetAttributeDefinitions;
+
+            const getAttributeValue = (key: string): string | number | boolean | undefined => {
+                if (isMemberNode) {
+                    if (key === "dsname") {
+                        return (attributeRecord[key] as string | number | boolean | undefined) ?? parentDsName;
+                    }
+                    if (key === "member") {
+                        return (attributeRecord[key] as string | number | boolean | undefined) ?? label;
+                    }
+                }
+                return attributeRecord[key] as string | number | boolean | undefined;
+            };
+
             DatasetActions.attributeInfo = [
                 {
                     title: "Zowe Explorer",
                     reference: "https://docs.zowe.org/stable/typedoc/interfaces/_zowe_zos_files_for_zowe_sdk.izosmflistresponse",
                     keys: new Map(
-                        [
-                            ["dsname", "Data Set Name", "The name of the dataset"],
-                            ["member", "Member Name", "The name of the member"],
-                            ["blksz", "Block Size", "The block size of the dataset"],
-                            ["catnm", "Catalog Name", "The catalog in which the dataset entry is stored"],
-                            ["cdate", "Create Date", "The dataset creation date"],
-                            ["dev", "Device Type", "The type of the device the dataset is stored on"],
-                            ["dsntp", "Data Set Type", "LIBRARY, (LIBRARY,1), (LIBRARY,2), PDS, HFS, EXTREQ, EXTPREF, BASIC or LARGE"],
-                            ["dsorg", "Data Set Organization", "The organization of the data set as PS, PO, or DA"],
-                            ["edate", "Expiration Date", "The dataset expiration date"],
-                            ["extx", "Extensions", "The number of extensions the dataset has"],
-                            ["lrecl", "Logical Record Length", "The length in bytes of each record"],
-                            ["migr", "Migration", "Indicates if automatic migration is active"],
-                            ["mvol", "Multivolume", "Whether the dataset is on multiple volumes"],
-                            ["ovf", "Open virtualization format", ""],
-                            ["rdate", "Reference Date", "Last referenced date"],
-                            ["recfm", "Record Format", "Valid values: A, B, D, F, M, S, T, U, V (combinable)"],
-                            ["sizex", "Size", "Size of the first extent in tracks"],
-                            ["spacu", "Space Unit", "Type of space units measurement"],
-                            ["used", "Used Space", "Used space percentage"],
-                            ["vol", "Volume", "Volume serial numbers for data set"],
-                            ["vols", "Volumes", "Multiple volume serial numbers"],
-                        ].map(([key, displayName, description]) => [
+                        attributeDefinitions.map(([key, displayName, description]) => [
                             key,
                             {
                                 displayName: vscode.l10n.t(displayName),
-                                description: vscode.l10n.t(description),
-                                value: attributes[0][key as keyof (typeof attributes)[0]],
+                                description: description ? vscode.l10n.t(description) : undefined,
+                                value: getAttributeValue(key) as string | number | boolean,
                             },
                         ])
                     ),
@@ -1069,10 +1100,13 @@ export class DatasetActions {
 
             const extenderAttributes = DataSetAttributesProvider.getInstance();
             const sessionNode = node.getSessionNode();
+            const dsNameForExtenders = (attributeRecord["dsname"] as string | undefined) ?? parentDsName;
 
-            DatasetActions.attributeInfo.push(
-                ...(await extenderAttributes.fetchAll({ dsName: attributes[0].dsname, profile: sessionNode.getProfile() }))
-            );
+            if (dsNameForExtenders) {
+                DatasetActions.attributeInfo.push(
+                    ...(await extenderAttributes.fetchAll({ dsName: dsNameForExtenders, profile: sessionNode.getProfile() }))
+                );
+            }
 
             // Check registered DataSetAttributesProvider, send dsname and profile. get results and append to `attributeInfo`
             const attributesMessage = vscode.l10n.t("Attributes");

@@ -1017,11 +1017,12 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
         const nodeMember = new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: node });
         nodeMember.contextValue = Constants.DS_MEMBER_CONTEXT;
 
-        mocked(vscode.window.createWebviewPanel).mockReturnValueOnce({
+        const panelMock = {
             webview: {
                 html: "",
             },
-        } as any);
+        } as any;
+        mocked(vscode.window.createWebviewPanel).mockReturnValueOnce(panelMock);
         const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers");
         allMembersSpy.mockResolvedValueOnce({
             success: true,
@@ -1037,6 +1038,9 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
             attributes: true,
             pattern: nodeMember.label.toString().toUpperCase(),
         });
+        expect(panelMock.webview.html).toContain("Version");
+        expect(panelMock.webview.html).toContain("Current Records");
+        expect(panelMock.webview.html).toContain(nodeMember.label.toString());
         expect(mocked(vscode.window.createWebviewPanel)).toHaveBeenCalled();
     });
 
