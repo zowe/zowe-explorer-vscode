@@ -32,6 +32,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "./SharedContext";
 import { Definitions } from "../../configuration/Definitions";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
+import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 
 export class SharedUtils {
     public static async copyExternalLink(this: void, context: vscode.ExtensionContext, node: IZoweTreeNode): Promise<void> {
@@ -380,11 +381,11 @@ export class SharedUtils {
                 comment: ["Node label"],
             }),
             currentEncoding &&
-                vscode.l10n.t({
-                    message: "Current encoding is {0}",
-                    args: [currentEncoding],
-                    comment: ["Encoding name"],
-                })
+            vscode.l10n.t({
+                message: "Current encoding is {0}",
+                args: [currentEncoding],
+                comment: ["Encoding name"],
+            })
         );
 
         return SharedUtils.processEncodingResponse(response, node.label as string);
@@ -579,5 +580,78 @@ export class SharedUtils {
                 return;
             }
         }
+    }
+
+
+    /**
+     * Checks if two datasets (DSNs) refer to the same physical object by comparing
+     * their names (case-insensitive) and DASD volumes across two profiles.
+     *
+     * @param srcProfile - The source profile representing the dataset origin.
+     * @param dstProfile - The target profile representing the dataset destination.
+     * @param srcDsn - The fully qualified dataset name (DSN) from the source profile.
+     * @param dstDsn - The fully qualified dataset name (DSN) from the target profile.
+     * @returns Promise resolving to true if both DSNs are equal and reside on the same DASD volume; false otherwise.
+     */
+    public static async sameDatasetSameDasd(
+        srcProfile: imperative.IProfileLoaded,
+        dstProfile: imperative.IProfileLoaded,
+        srcDsn: string,
+        dstDsn: string
+    ): Promise<boolean> {
+        if (!srcDsn || !dstDsn) return false;
+        if (srcDsn.toUpperCase() !== dstDsn.toUpperCase()) return false;
+
+        try {
+            const mvsSrc = ZoweExplorerApiRegister.getMvsApi(srcProfile);
+            const mvsDst = ZoweExplorerApiRegister.getMvsApi(dstProfile);
+
+            const [srcAttr, dstAttr] = await Promise.all([
+                mvsSrc.dataSet(srcDsn, { attributes: true }),
+                mvsDst.dataSet(dstDsn, { attributes: true }),
+            ]);
+
+            const s = srcAttr?.apiResponse?.items?.[0];
+            const d = dstAttr?.apiResponse?.items?.[0];
+            if (!s?.vols || !d?.vols) return false;
+
+            // Compare arrays of volumes
+            const sVols = Array.isArray(s.vols) ? s.vols : [s.vols];
+            const dVols = Array.isArray(d.vols) ? d.vols : [d.vols];
+            return (
+                sVols.length === dVols.length &&
+                sVols.every((vol, i) => vol === dVols[i])
+            );
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * Checks if a USS file or directory is likely the same underlying object as another
+     * by comparing the normalized paths (ignoring profile segment) and verifying existence
+     * under the target profile.
+     *
+     * @param sourceNode - The source USS tree node being moved.
+     * @param targetParent - The target USS tree node parent receiving the drop.
+     * @param droppedLabel - The label (name) of the dropped item.
+     * @returns Promise resolving to true if the normalized paths match and the target path exists; false otherwise.
+     */
+    public static async isLikelySameUssObjectByUris(
+        sourceNode: IZoweUSSTreeNode,
+        targetParent: IZoweUSSTreeNode,
+        droppedLabel: string
+    ): Promise<boolean> {
+        const stripProfile = (p: string) => "/" + p.split("/").slice(2).join("/"); // assumes /profile/path...
+        const srcPathFull = stripProfile(sourceNode.resourceUri.path);
+        const dstUri = targetParent.resourceUri.with({
+            path: path.posix.join(targetParent.resourceUri.path, droppedLabel),
+        });
+        const dstPathFull = stripProfile(dstUri.path);
+
+        if (path.posix.normalize(srcPathFull) !== path.posix.normalize(dstPathFull)) {
+            return false;
+        }
+        return await UssFSProvider.instance.exists(dstUri);
     }
 }
