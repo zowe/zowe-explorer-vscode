@@ -16,7 +16,6 @@ import {
     Gui,
     imperative,
     IZoweDatasetTreeNode,
-    NavigationTreeItem,
     Validation,
     Types,
     FsAbstractUtils,
