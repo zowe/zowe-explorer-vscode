@@ -195,6 +195,18 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 continue;
             }
 
+            // skip drop if source and target are possibly same-object
+            if (await SharedUtils.isLikelySameUssObjectByUris(node, target, typeof item.label === "string" ? item.label : item.label.label)) {
+                Gui.errorMessage(
+                    vscode.l10n.t(
+                        "Cannot move: The source and target are possibly the same. You are using a different profile to view the target. Refresh to view changes."
+                    )
+                );
+                movingMsg.dispose();
+                this.draggedNodes = {};
+                return;
+            }
+
             const newUriForNode = vscode.Uri.from({
                 scheme: ZoweScheme.USS,
                 path: path.posix.join("/", target.getProfile().name, target.fullPath, item.label as string),

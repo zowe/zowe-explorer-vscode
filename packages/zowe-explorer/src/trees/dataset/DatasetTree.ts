@@ -230,6 +230,26 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         if (target) {
             for (const item of droppedItems.value) {
                 const node = this.draggedNodes[item.uri.path];
+                const srcDsn = typeof node.label === "string" ? node.label : node.label.label;
+                const tgtDsn = typeof target.label === "string" ? target.label : target.label.label;
+
+                // skip drop if source and target are the same dataset on the same DASD
+                if (
+                    node.getProfile && target.getProfile &&
+                    await SharedUtils.sameDatasetSameDasd(
+                        node.getProfile(),
+                        target.getProfile(),
+                        srcDsn,
+                        tgtDsn
+                    )
+                ) {
+                    Gui.errorMessage(
+                        vscode.l10n.t(
+                            "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes."
+                        )
+                    );
+                    return;
+                }
 
                 if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
                     if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
@@ -251,20 +271,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         : "Cannot drop a sequential dataset into a partitioned dataset.";
                     Gui.errorMessage(vscode.l10n.t(message));
                     return;
-                }
-
-                // If moving to the same system/lpar but different profile, stop the drag entirely
-                const targetSys = target?.getProfile?.().profile.host;
-                const srcNode = this.draggedNodes[item.uri.path];
-                const sourceSys = srcNode?.getProfile?.().profile.host;
-
-                if (targetSys == sourceSys) {
-                    await Gui.errorMessage(
-                        vscode.l10n.t(
-                            "Cannot move: the source and target are the same dataset on the same system. You're viewing it under a different profile. Any changes you need to view with target profile can be seen via a refresh."
-                        )
-                    );
-                    return; // stop the drop entirely
                 }
             }
         }

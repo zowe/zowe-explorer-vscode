@@ -582,16 +582,15 @@ export class SharedUtils {
         }
     }
 
-
     /**
-     * Checks if two datasets (DSNs) refer to the same physical object by comparing
-     * their names (case-insensitive) and DASD volumes across two profiles.
+     * Checks if two datasets refer to the same physical object by comparing
+     * their names and DASD volumes across both profiles
      *
-     * @param srcProfile - The source profile representing the dataset origin.
-     * @param dstProfile - The target profile representing the dataset destination.
-     * @param srcDsn - The fully qualified dataset name (DSN) from the source profile.
-     * @param dstDsn - The fully qualified dataset name (DSN) from the target profile.
-     * @returns Promise resolving to true if both DSNs are equal and reside on the same DASD volume; false otherwise.
+     * @param srcProfile - source profile representing the dataset origin
+     * @param dstProfile - target profile representing the dataset destination
+     * @param srcDsn - source profile dataset name
+     * @param dstDsn - target profile dataset name
+     * @returns Promise resolves to true if both dataset names are equal and on the same DASD volume. false otherwise
      */
     public static async sameDatasetSameDasd(
         srcProfile: imperative.IProfileLoaded,
@@ -615,34 +614,37 @@ export class SharedUtils {
             const d = dstAttr?.apiResponse?.items?.[0];
             if (!s?.vols || !d?.vols) return false;
 
-            // Compare arrays of volumes
-            const sVols = Array.isArray(s.vols) ? s.vols : [s.vols];
-            const dVols = Array.isArray(d.vols) ? d.vols : [d.vols];
+            // normalize
+            const sVols = (Array.isArray(s.vols) ? s.vols : [s.vols]) as string[];
+            const dVols = (Array.isArray(d.vols) ? d.vols : [d.vols]) as string[];
+
+            // check they match exactly (same count, same order)
             return (
                 sVols.length === dVols.length &&
                 sVols.every((vol, i) => vol === dVols[i])
             );
-        } catch (e) {
+        } catch {
             return false;
         }
     }
 
     /**
-     * Checks if a USS file or directory is likely the same underlying object as another
-     * by comparing the normalized paths (ignoring profile segment) and verifying existence
-     * under the target profile.
+     * Checks if a USS file or directory is likely the same actual object as another
+     * by comparing the normalized paths (ignoring profile) and verifying existence
      *
-     * @param sourceNode - The source USS tree node being moved.
-     * @param targetParent - The target USS tree node parent receiving the drop.
-     * @param droppedLabel - The label (name) of the dropped item.
-     * @returns Promise resolving to true if the normalized paths match and the target path exists; false otherwise.
+     * @param sourceNode - source USS tree node being moved
+     * @param targetParent - target USS tree node parent receiving the drop
+     * @param droppedLabel - name of the dropped item
+     * @returns Promise resolves to true if the normalized paths match and the target path exists. false otherwise
      */
     public static async isLikelySameUssObjectByUris(
         sourceNode: IZoweUSSTreeNode,
         targetParent: IZoweUSSTreeNode,
         droppedLabel: string
     ): Promise<boolean> {
-        const stripProfile = (p: string) => "/" + p.split("/").slice(2).join("/"); // assumes /profile/path...
+        // drop the profile prefix so just comparing real paths
+        const stripProfile = (p: string) => "/" + p.split("/").slice(2).join("/");
+
         const srcPathFull = stripProfile(sourceNode.resourceUri.path);
         const dstUri = targetParent.resourceUri.with({
             path: path.posix.join(targetParent.resourceUri.path, droppedLabel),
@@ -652,6 +654,8 @@ export class SharedUtils {
         if (path.posix.normalize(srcPathFull) !== path.posix.normalize(dstPathFull)) {
             return false;
         }
-        return await UssFSProvider.instance.exists(dstUri);
+
+        // if same path, double check target actually exists
+        return UssFSProvider.instance.exists(dstUri);
     }
 }
