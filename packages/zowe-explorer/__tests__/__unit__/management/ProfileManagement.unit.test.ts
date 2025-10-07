@@ -13,7 +13,7 @@ import * as sharedMock from "../../__mocks__/mockCreators/shared";
 import * as dsMock from "../../__mocks__/mockCreators/datasets";
 import * as unixMock from "../../__mocks__/mockCreators/uss";
 import * as vscode from "vscode";
-import { Gui, imperative } from "@zowe/zowe-explorer-api";
+import { AuthHandler, Gui, imperative } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../../src/configuration/Constants";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
@@ -24,7 +24,6 @@ import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProvide
 import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
 import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
 import { ProfileManagement } from "../../../src/management/ProfileManagement";
-import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { Definitions } from "../../../src/configuration/Definitions";
 
@@ -34,8 +33,7 @@ jest.mock("../../../src/tools/ZoweLocalStorage");
 
 describe("ProfileManagement unit tests", () => {
     afterEach(() => {
-        jest.clearAllMocks();
-        jest.resetAllMocks();
+        jest.restoreAllMocks();
     });
     function createGlobalMocks(): any {
         const newMocks = {
@@ -129,6 +127,7 @@ describe("ProfileManagement unit tests", () => {
 
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockBasicAuthProfile.name as string} is using basic authentication.`;
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockBasicAuthProfile);
             return globalMocks;
         }
@@ -183,7 +182,7 @@ describe("ProfileManagement unit tests", () => {
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockTokenAuthProfile.name as string} is using token authentication.`;
             globalMocks.mockUnixSessionNode = unixMock.createUSSSessionNode(globalMocks.mockSession, globalMocks.mockBasicAuthProfile) as any;
-            Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(true), configurable: true });
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
             globalMocks.mockUnixSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
             return globalMocks;
@@ -235,7 +234,7 @@ describe("ProfileManagement unit tests", () => {
         });
         it("profile using token authentication should see handleSwitchAuthentication called when Change the Authentication method chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
-            jest.spyOn(AuthUtils, "isUsingTokenAuth").mockResolvedValue(true);
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockSwitchAuthChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
@@ -243,8 +242,8 @@ describe("ProfileManagement unit tests", () => {
     });
     describe("unit tests around no auth declared selections", () => {
         function createBlockMocks(globalMocks): any {
-            globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name as string} authentication method is unkown.`;
-            Object.defineProperty(AuthUtils, "isUsingTokenAuth", { value: jest.fn().mockResolvedValueOnce(false), configurable: true });
+            globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name as string} authentication method is unknown.`;
+            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "none" } } as any);
             globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockNoAuthProfile);
             return globalMocks;
         }
@@ -370,7 +369,7 @@ describe("ProfileManagement unit tests", () => {
             blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zftp");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
         });
-        it("should return empty array when unkown tree is forcefully passed", () => {
+        it("should return empty array when unknown tree is forcefully passed", () => {
             createBlockMocks(createGlobalMocks());
             expect(ProfileManagement.getRegisteredProfileNameList("fake" as any)).toEqual([]);
         });
@@ -447,7 +446,7 @@ describe("ProfileManagement unit tests", () => {
             blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zftp");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
         });
-        it("should return empty array when unkown tree is forcefully passed", () => {
+        it("should return empty array when unknown tree is forcefully passed", () => {
             createBlockMocks(createGlobalMocks());
             expect(ProfileManagement.getRegisteredProfileNameList("fake" as any)).toEqual([]);
         });

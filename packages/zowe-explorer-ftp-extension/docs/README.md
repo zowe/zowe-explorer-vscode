@@ -31,6 +31,6 @@ This repo uses [PNPM](https://pnpm.io/) for building.
 
 As you will see, the implementation of this extension is very small and minimal. The main file to explore is `packages/zowe-explorer-ftp-extension/src/ZoweExplorerFtpApi.ts`, which is the FTP implementation of all the Zowe Explorer API methods required for USS. You can find the interface defining these operations in the Zowe Explorer API package under `packages/zowe-explorer-api/src/extend/interfaces.ts`.
 
-These FTP operations are not directly implemented in that file, but rather reuse and call the code provided by the z/OS FTP Plug-in for Zowe™ CLI, and are linked via the `@zowe/zos-ftp-for-zowe-cli` NPM dependency.
+These FTP operations are not directly implemented in that file, but rather reuse and call the code provided by the z/OS FTP Plug-in for Zowe CLI, and are linked via the `@zowe/zos-ftp-for-zowe-cli` NPM dependency.
 
 The other source file `packages/zowe-explorer-ftp-extension/src/extension.ts` defines the actual VS Code extension as well as implements the registration API required to link this VS Code extension to Zowe Explorer itself. You can see that `registerFtpApi()` in `extension.ts` queries the Zowe Explorer API and calls a registration method. This registration will make Zowe Explorer find this extension after activation and add its API implementation to the USS explorer view.

@@ -137,6 +137,8 @@ describe("ZoweVsCodeExtension", () => {
                 layerActive: jest.fn().mockReturnValue(configLayer),
                 layerMerge: jest.fn().mockReturnValue(configLayer.properties),
                 mLayers: [configLayer],
+                mActive: { user: configLayer.user, global: configLayer.global },
+                save: jest.fn(),
             });
             Object.assign(testProfInfo, {
                 getTeamConfig: jest.fn().mockReturnValue(testConfig),
@@ -147,7 +149,14 @@ describe("ZoweVsCodeExtension", () => {
             });
             testCache.allProfiles = [serviceProfile, baseProfile];
             jest.spyOn(testCache, "getProfileInfo").mockResolvedValue(testProfInfo);
-
+            const expectedSession = new imperative.Session({
+                hostname: "dummy",
+                password: "Password",
+                port: 1234,
+                tokenType: "apimlAuthenticationToken",
+                type: "token",
+                user: "Username",
+            });
             return {
                 testProfile,
                 baseProfile,
@@ -155,15 +164,9 @@ describe("ZoweVsCodeExtension", () => {
                 testNode: {
                     setProfileToChoice: jest.fn(),
                     getProfile: jest.fn().mockReturnValue(serviceProfile),
+                    getSession: jest.fn().mockReturnValue(expectedSession),
                 },
-                expectedSession: new imperative.Session({
-                    hostname: "dummy",
-                    password: "Password",
-                    port: 1234,
-                    tokenType: "apimlAuthenticationToken",
-                    type: "token",
-                    user: "Username",
-                }),
+                expectedSession,
                 updProfile: { tokenType: "apimlAuthenticationToken", tokenValue: "tokenValue" },
                 testRegister: {
                     getCommonApi: () => ({
@@ -213,13 +216,7 @@ describe("ZoweVsCodeExtension", () => {
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
 
-                const testSession = new imperative.Session(JSON.parse(JSON.stringify(blockMocks.expectedSession.ISession)));
-                delete testSession.ISession.user;
-                delete testSession.ISession.password;
-                testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
-                testSession.ISession.storeCookie = false;
-
-                expect(loginSpy).toHaveBeenCalledWith(testSession);
+                expect(loginSpy.mock.calls[0][0].ISession.type).toEqual(imperative.SessConstants.AUTH_TYPE_TOKEN);
                 expect(testSpy).toHaveBeenCalledWith(blockMocks.testCache, "service");
                 expect(quickPickMock).toHaveBeenCalled();
                 expect(updateBaseProfileFileLoginSpy).toHaveBeenCalledWith(blockMocks.baseProfile, blockMocks.updProfile, false);
@@ -234,13 +231,7 @@ describe("ZoweVsCodeExtension", () => {
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.ssoLogout({ serviceProfile: "service" });
 
-                const testSession = new imperative.Session(JSON.parse(JSON.stringify(blockMocks.expectedSession.ISession)));
-                testSession.ISession.tokenValue = "tokenValue";
-                delete testSession.ISession.base64EncodedAuth;
-                delete testSession.ISession.user;
-                delete testSession.ISession.password;
-
-                expect(logoutSpy).toHaveBeenCalledWith(testSession);
+                expect(logoutSpy.mock.calls[0][0].ISession.type).toEqual(imperative.SessConstants.AUTH_TYPE_NONE);
                 expect(testSpy).toHaveBeenCalledWith(blockMocks.testCache, "service");
                 expect(updateBaseProfileFileLogoutSpy).toHaveBeenCalledWith(blockMocks.baseProfile);
                 quickPickMock.mockRestore();
@@ -262,14 +253,7 @@ describe("ZoweVsCodeExtension", () => {
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
 
-                const testSession = new imperative.Session(JSON.parse(JSON.stringify(blockMocks.expectedSession.ISession)));
-                delete testSession.ISession.user;
-                delete testSession.ISession.password;
-                testSession.ISession.hostname = "service";
-                testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
-                testSession.ISession.storeCookie = false;
-
-                expect(loginSpy).toHaveBeenCalledWith(testSession);
+                expect(loginSpy.mock.calls[0][0].ISession.type).toEqual(imperative.SessConstants.AUTH_TYPE_TOKEN);
                 expect(testSpy).toHaveBeenCalledWith(blockMocks.testCache, "service");
                 expect(updateBaseProfileFileLoginSpy).toHaveBeenCalledWith(tempBaseProfile, blockMocks.updProfile, false);
                 quickPickMock.mockRestore();
@@ -291,15 +275,8 @@ describe("ZoweVsCodeExtension", () => {
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
 
-                const testSession = new imperative.Session(JSON.parse(JSON.stringify(blockMocks.expectedSession.ISession)));
-                delete testSession.ISession.user;
-                delete testSession.ISession.password;
-                testSession.ISession.hostname = "service";
-                testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
-                testSession.ISession.tokenType = tempBaseProfile.profile.tokenType;
-                testSession.ISession.storeCookie = false;
+                expect(loginSpy.mock.calls[0][0].ISession.type).toEqual(imperative.SessConstants.AUTH_TYPE_TOKEN);
 
-                expect(loginSpy).toHaveBeenCalledWith(testSession);
                 expect(testSpy).toHaveBeenCalledWith(blockMocks.testCache, "service");
                 expect(updateBaseProfileFileLoginSpy).toHaveBeenCalledWith(
                     newServiceProfile,
@@ -344,15 +321,7 @@ describe("ZoweVsCodeExtension", () => {
                 } as unknown as Types.IApiRegisterClient);
                 await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "lpar.service" });
 
-                const testSession = new imperative.Session(JSON.parse(JSON.stringify(blockMocks.expectedSession.ISession)));
-                delete testSession.ISession.user;
-                delete testSession.ISession.password;
-                testSession.ISession.hostname = "dummy";
-                testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
-                testSession.ISession.tokenType = tempBaseProfile.profile.tokenType;
-                testSession.ISession.storeCookie = false;
-
-                expect(loginSpy).toHaveBeenCalledWith(testSession);
+                expect(loginSpy.mock.calls[0][0].ISession.type).toEqual(imperative.SessConstants.AUTH_TYPE_TOKEN);
                 expect(testSpy).toHaveBeenCalledWith(blockMocks.testCache, "lpar.service");
                 expect(updateBaseProfileFileLoginSpy).toHaveBeenCalledWith(
                     {
@@ -385,14 +354,7 @@ describe("ZoweVsCodeExtension", () => {
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.ssoLogout({ serviceProfile: "service" });
 
-                const testSession = new imperative.Session(JSON.parse(JSON.stringify(blockMocks.expectedSession.ISession)));
-                testSession.ISession.hostname = "service";
-                testSession.ISession.tokenValue = "tokenValue";
-                delete testSession.ISession.base64EncodedAuth;
-                delete testSession.ISession.user;
-                delete testSession.ISession.password;
-
-                expect(logoutSpy).toHaveBeenCalledWith(testSession);
+                expect(logoutSpy.mock.calls[0][0].ISession.type).toEqual(imperative.SessConstants.AUTH_TYPE_NONE);
                 expect(testSpy).toHaveBeenCalledWith(blockMocks.testCache, "service");
                 expect(updateBaseProfileFileLogoutSpy).toHaveBeenCalledWith(newServiceProfile);
                 quickPickMock.mockRestore();
@@ -412,9 +374,6 @@ describe("ZoweVsCodeExtension", () => {
                     zeRegister: blockMocks.testRegister,
                     zeProfiles: blockMocks.testCache,
                 });
-
-                const testSession = new imperative.Session(JSON.parse(JSON.stringify(blockMocks.expectedSession.ISession)));
-                testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
 
                 expect(loginSpy).not.toHaveBeenCalled();
                 expect(testSpy).not.toHaveBeenCalled();
@@ -437,12 +396,6 @@ describe("ZoweVsCodeExtension", () => {
                 zeProfiles: blockMocks.testCache,
             });
 
-            const testSession = new imperative.Session(JSON.parse(JSON.stringify(blockMocks.expectedSession.ISession)));
-            testSession.ISession.tokenValue = "tokenValue";
-            delete testSession.ISession.base64EncodedAuth;
-            delete testSession.ISession.user;
-            delete testSession.ISession.password;
-
             expect(logoutSpy).not.toHaveBeenCalled();
             expect(testSpy).not.toHaveBeenCalled();
             expect(updateBaseProfileFileLogoutSpy).toHaveBeenCalledWith(blockMocks.baseProfile);
@@ -459,16 +412,13 @@ describe("ZoweVsCodeExtension", () => {
                 return Promise.resolve("tokenValue");
             });
 
-            // case 1: User selects "user/password" for login quick pick
-            const promptCertMock = jest.spyOn(ZoweVsCodeExtension as any, "promptCertificate").mockImplementation();
+            // Assume user provides proper certificate and keyfile
+            const promptCertMock = jest.spyOn(ZoweVsCodeExtension as any, "promptCertificate").mockImplementation((opts: any) => {
+                opts.session.cert = "cert";
+                opts.session.certKey = "certKey";
+            });
             const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
             await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
-
-            const testSession = new imperative.Session(JSON.parse(JSON.stringify(blockMocks.expectedSession.ISession)));
-            delete testSession.ISession.user;
-            delete testSession.ISession.password;
-            delete testSession.ISession.base64EncodedAuth;
-            testSession.ISession.storeCookie = false;
 
             expect(sessionCopy.ISession.type).toBe(imperative.SessConstants.AUTH_TYPE_CERT_PEM);
             expect(testSpy).toHaveBeenCalledWith(blockMocks.testCache, "service");
@@ -525,14 +475,7 @@ describe("ZoweVsCodeExtension", () => {
                 preferBaseToken: true, // force to use base profile to login
             });
 
-            const testSession = new imperative.Session(JSON.parse(JSON.stringify(blockMocks.expectedSession.ISession)));
-            testSession.ISession.base64EncodedAuth = "VXNlcm5hbWU6UGFzc3dvcmQ=";
-            delete testSession.ISession.user;
-            delete testSession.ISession.password;
-            expect(testSpy).toHaveBeenCalledWith({
-                rePrompt: true,
-                session: { ...testSession.ISession, tokenType: "BASE" },
-            });
+            expect((testSpy.mock.calls[0][0] as any).session.type).toEqual(imperative.SessConstants.AUTH_TYPE_NONE);
             expect(didLogin).toBeFalsy();
             quickPickMock.mockRestore();
         });
@@ -701,6 +644,35 @@ describe("ZoweVsCodeExtension", () => {
             sessionName: "test",
         };
         const onProfileUpdatedEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
+
+        it("should not leak the password value in the input box placeholder", async () => {
+            const mockUpdateProperty = jest.fn();
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+                onProfileUpdated: onProfileUpdatedEmitter.event,
+                onProfileUpdatedEmitter,
+            } as any);
+            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: jest.fn().mockReturnValue({
+                    profile: {},
+                }),
+                getProfileInfo: jest.fn().mockReturnValue({
+                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
+                    isSecured: jest.fn().mockReturnValue(true),
+                    updateProperty: mockUpdateProperty,
+                }),
+                refresh: jest.fn(),
+                updateCachedProfile: jest.fn(),
+            });
+            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
+            const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
+                promptCredsOptions,
+                undefined as unknown as Types.IApiRegisterClient
+            );
+            expect(profileLoaded.profile?.password).toBe("fakePassword");
+            expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
+            // The placeholder should not contain the raw password value
+            expect(showInputBoxSpy.mock.calls[1][0].placeHolder).not.toBe("fakePassword");
+        });
 
         it("should update user and password as secure fields", async () => {
             const mockUpdateProperty = jest.fn();

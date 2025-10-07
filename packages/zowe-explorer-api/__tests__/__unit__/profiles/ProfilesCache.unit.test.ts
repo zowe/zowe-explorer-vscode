@@ -17,6 +17,9 @@ import { FileManagement, Types } from "../../../src";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
 import * as crypto from "crypto";
+import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
+import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
+import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 
 jest.mock("crypto", () => ({
     ...jest.requireActual("crypto"),
@@ -103,9 +106,13 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
             secure: {
                 secureFields: jest.fn().mockReturnValue([]),
                 securePropsForProfile: jest.fn().mockReturnValue([]),
+                findSecure: jest.fn().mockReturnValue([]),
             },
         } as any,
         exists: true,
+        mProperties: {
+            profiles: {},
+        },
     };
     return {
         getAllProfiles: (profType?: string) =>
@@ -399,6 +406,34 @@ describe("ProfilesCache", () => {
             expect(oldZosmfProfile.profile).toEqual(newZosmfProfile.profile);
         });
 
+        it("should refresh profile data and add secure values to Censor utility", async () => {
+            const setCensoredOptionsSpy = jest.spyOn(imperative.Censor, "setCensoredOptions");
+            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+            const profInfoMock1 = createProfInfoMock([lpar1Profile, zftpProfile]);
+            const profInfoSpy = jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock1);
+            await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
+            expect(profCache.allProfiles.length).toEqual(2);
+            expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
+            expect(setCensoredOptionsSpy).toHaveBeenCalledTimes(1);
+            expect(setCensoredOptionsSpy).toHaveBeenCalledWith({
+                config: profInfoMock1.getTeamConfig(),
+                profiles: expect.arrayContaining([ZosmfProfile, ZosTsoProfile, ZosUssProfile, ...profileMetadata]),
+            });
+            const oldZosmfProfile = profCache.allProfiles[0];
+            const newZosmfProfile = { ...lpar1Profile, profile: lpar2Profile.profile };
+            const profInfoMock2 = createProfInfoMock([newZosmfProfile, zftpProfile]);
+            profInfoSpy.mockResolvedValue(profInfoMock2);
+            await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
+            expect(profCache.allProfiles.length).toEqual(2);
+            expect(profCache.allProfiles[0]).toMatchObject(newZosmfProfile);
+            expect(oldZosmfProfile.profile).toEqual(newZosmfProfile.profile);
+            expect(setCensoredOptionsSpy).toHaveBeenCalledTimes(2);
+            expect(setCensoredOptionsSpy).toHaveBeenCalledWith({
+                config: profInfoMock2.getTeamConfig(),
+                profiles: expect.arrayContaining([ZosmfProfile, ZosTsoProfile, ZosUssProfile, ...profileMetadata]),
+            });
+        });
+
         it("should refresh profile data for and merge tokens with base profile", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(
@@ -520,7 +555,7 @@ describe("ProfilesCache", () => {
             expect(profiles[1]).toMatchObject(lpar2Profile);
         });
 
-        it("should remove token from service profile if base profile overrides it", async () => {
+        it("should not remove token from service profile if base profile overrides it", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             (profCache as any).defaultProfileByType = new Map([["base", baseProfileWithToken]]);
             jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1ProfileWithToken, lpar2ProfileWithToken]));
@@ -528,8 +563,8 @@ describe("ProfilesCache", () => {
             expect(profiles.length).toBe(2);
             expect(profiles[0].profile?.tokenType).toBe(lpar1ProfileWithToken.profile.tokenType);
             expect(profiles[0].profile?.tokenValue).toBe(lpar1ProfileWithToken.profile.tokenValue);
-            expect(profiles[1].profile?.tokenType).toBeUndefined();
-            expect(profiles[1].profile?.tokenValue).toBeUndefined();
+            expect(profiles[1].profile?.tokenType).toBe(lpar2ProfileWithToken.profile.tokenType);
+            expect(profiles[1].profile?.tokenValue).toBe(lpar2ProfileWithToken.profile.tokenValue);
         });
 
         it("should return empty array for unknown profile type", async () => {

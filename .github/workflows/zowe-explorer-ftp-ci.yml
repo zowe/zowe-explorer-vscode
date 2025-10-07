@@ -42,7 +42,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       # install pnpm
-      - run: npm install -g pnpm@8
+      - run: npm install -g pnpm
 
       - run: pnpm config set network-timeout 60000 && pnpm install && pnpm build
 

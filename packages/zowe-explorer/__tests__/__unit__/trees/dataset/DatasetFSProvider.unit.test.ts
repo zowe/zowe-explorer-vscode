@@ -23,6 +23,7 @@ import {
     FsDatasetsUtils,
     Gui,
     PdsEntry,
+    Types,
     ZoweExplorerApiType,
     ZoweScheme,
 } from "@zowe/zowe-explorer-api";
@@ -63,6 +64,15 @@ const testEntries = {
             path: "/USER.DATA.PDS/MEMBER1",
         }),
         isMember: true,
+    } as DsEntry,
+    vsam: {
+        ...new DsEntry("USER.DATA.PS", false),
+        metadata: new DsEntryMetadata({
+            profile: testProfile,
+            path: "/USER.DATA.PS",
+        }),
+        isMember: false,
+        stats: { vol: "*VSAM*" } as unknown as Types.DatasetStats,
     } as DsEntry,
     session: {
         ...new FilterEntry("sestest"),
@@ -414,7 +424,7 @@ describe("DatasetFSProvider", () => {
             const profilePromise = new DeferredPromise<void>();
 
             if (testProfile.name) {
-                ProfilesUtils.extenderTypeReady.set(testProfile.name, profilePromise);
+                ProfilesUtils.extenderProfileReady.set(testProfile.name, profilePromise);
             }
 
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue({
@@ -435,7 +445,7 @@ describe("DatasetFSProvider", () => {
         });
 
         it("should properly await the profile deferred promise - no existing promise", async () => {
-            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValue(undefined);
+            jest.spyOn(ProfilesUtils.extenderProfileReady, "get").mockReturnValue(undefined);
             const mockAllProfiles = [
                 { name: "sestest", type: "ssh" },
                 { name: "profile1", type: "zosmf" },
@@ -451,7 +461,7 @@ describe("DatasetFSProvider", () => {
             jest.spyOn(Profiles, "getInstance").mockReturnValue(mockProfilesInstance as any);
 
             const profilePromise = new DeferredPromise<void>();
-            jest.spyOn(ProfilesUtils.extenderTypeReady, "get").mockReturnValue(profilePromise);
+            jest.spyOn(ProfilesUtils.extenderProfileReady, "get").mockReturnValue(profilePromise);
 
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue({
                 ...testEntries.ps,
@@ -1289,6 +1299,23 @@ describe("DatasetFSProvider", () => {
             await DatasetFSProvider.instance.delete(testUris.pds, { recursive: false });
             expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(fakePds.name, { responseTimeout: undefined });
             expect(_lookupMock).toHaveBeenCalledWith(testUris.pds, false);
+            expect(_fireSoonMock).toHaveBeenCalled();
+        });
+
+        it("successfully deletes a VSAM", async () => {
+            const fakeVsam = { ...testEntries.vsam };
+            const mockMvsApi = {
+                deleteDataSet: jest.fn(),
+            };
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            const _lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakeVsam);
+            const _fireSoonMock = jest.spyOn(DatasetFSProvider.instance as any, "_fireSoon").mockImplementation();
+            jest.spyOn(FsDatasetsUtils, "isPdsEntry").mockReturnValue(true);
+            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue({ ...testEntries.session });
+
+            await DatasetFSProvider.instance.delete(testUris.vsam, { recursive: false });
+            expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(fakeVsam.name, { responseTimeout: undefined, volume: fakeVsam.stats.vol });
+            expect(_lookupMock).toHaveBeenCalledWith(testUris.vsam, false);
             expect(_fireSoonMock).toHaveBeenCalled();
         });
 

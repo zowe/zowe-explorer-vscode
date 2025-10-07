@@ -70,6 +70,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
     public persistence = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
+    public inFilterPrompt = false;
 
     private paginator?: Paginator<IZosFilesResponse>;
     private paginatorData?: {
@@ -132,7 +133,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 this.contextValue === Constants.DS_DS_CONTEXT ||
                 this.contextValue === Constants.DS_FAV_CONTEXT ||
                 this.contextValue === Constants.DS_PDS_CONTEXT ||
-                this.contextValue === Constants.PDS_FAV_CONTEXT
+                this.contextValue === Constants.PDS_FAV_CONTEXT ||
+                this.contextValue === Constants.VSAM_CONTEXT
             ) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
@@ -295,6 +297,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return this.children;
         }
 
+        if (SharedContext.isSession(this) && this.inFilterPrompt) {
+            return this.children;
+        }
+
         if (!this.label) {
             Gui.errorMessage(vscode.l10n.t("Invalid node"));
             throw Error(vscode.l10n.t("Invalid node"));
@@ -388,6 +394,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             profile: cachedProfile,
                         });
                     }
+                    dsNode = elementChildren[altLabel];
                 } else if (SharedContext.isSession(this)) {
                     // Creates a ZoweDatasetNode for a PS
                     const cachedEncoding = this.getEncodingInMap(item.dsname);
@@ -932,37 +939,28 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 this.paginator = this.paginatorData = undefined;
             }
 
-            if ((!this.paginator || this.paginator.getMaxItemsPerPage() !== this.itemsPerPage) && this.itemsPerPage > 0) {
-                // Force paginator and data to be re-initialized if fetch function or page size changes, or if pattern changes
-                this.paginator = new Paginator(this.itemsPerPage, fetchFunction);
-            }
-
-            // If node is dirty and pagination is enabled, refetch the current page's data
+            // If pagination is enabled, refetch the current page's data
             // to reflect potential changes without changing the page itself.
-
-            // If the page fetch fails, reset the paginator data to take the user back to the first page.
-            if (this.dirty && paginate) {
-                try {
-                    await this.paginator.refetchCurrentPage();
-                } catch (error) {
-                    if (error instanceof Error) {
-                        ZoweLogger.error(`[ZoweDatasetNode.getDatasets]: Error refetching current page: ${error.message}`);
-                    }
-                    if (
-                        (error instanceof imperative.ImperativeError &&
-                            Number(error.mDetails.errorCode) === imperative.RestConstants.HTTP_STATUS_401) ||
-                        error.message.includes("All configured authentication methods failed")
-                    ) {
-                        throw error;
-                    }
-                    this.paginatorData = undefined;
+            if (paginate) {
+                if ((!this.paginator || this.paginator.getMaxItemsPerPage() !== this.itemsPerPage) && this.itemsPerPage > 0) {
+                    // Force paginator and data to be re-initialized if fetch function or page size changes, or if pattern changes
+                    this.paginator = new Paginator(this.itemsPerPage, fetchFunction);
                 }
-            }
 
-            if (paginate && this.paginator) {
-                // Ensure paginator is initialized if it hasn't been (first load or invalidated cache)
                 if (!this.paginator.isInitialized() || this.paginatorData == null) {
                     await this.paginator.initialize();
+                } else {
+                    try {
+                        await this.paginator.refetchCurrentPage();
+                    } catch (error) {
+                        // If the page fetch fails, reset the paginator data to take the user back to the first page.
+                        if (error instanceof Error) {
+                            ZoweLogger.error(`[ZoweDatasetNode.getDatasets]: Error refetching current page: ${error.message}`);
+                        }
+                        this.paginatorData = undefined;
+                        // Propagate error to outer try/catch block for error handling
+                        throw error;
+                    }
                 }
                 responses.push(...this.paginator.getCurrentPageItems());
             } else {

@@ -518,7 +518,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const isConflict = urlQuery.has("conflict");
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
-        // If the extenderTypeReady map does not contain the profile, create a deferred promise for the profile.
+        // If the extenderProfileReady map does not contain the profile, create a deferred promise for the profile.
         const uriInfo = FsAbstractUtils.getInfoForUri(uri);
         await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
@@ -818,6 +818,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             await AuthUtils.reauthenticateIfCancelled(profile);
             await AuthHandler.waitForUnlock(entry.metadata.profile);
             await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).deleteDataSet(fullName, {
+                volume: entry.stats?.["vol"],
                 responseTimeout: entry.metadata.profile.profile?.responseTimeout,
             });
         } catch (err) {

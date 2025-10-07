@@ -6,6 +6,18 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added support for `jobEncoding` profile property when submitting jobs with the `ZosmfJesApi` class. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
+
+### Bug fixes
+
+- Fixed an issue where secure credentials and headers were being logged to the Zowe logger and VSCode output channel. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
+- Updated Zowe SDKs to `8.27.0` for technical currency. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
+- Added support to delete VSAM data sets for z/OSMF type profiles. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
+
+## `3.3.0`
+
+### New features and enhancements
+
 - Deprecated `protected _lookupParentDirectory()` and redefined it as a `public lookupParentDirectory()` method. [#3485] (https://github.com/zowe/zowe-explorer-vscode/issues/3485)
 - Added `DataSetAttributesProvider` class to allow extenders to provide additional attributes for data sets. [#3730](https://github.com/zowe/zowe-explorer-vscode/pull/3730)
 - Added the handling of cause error details in the ErrorCorrelator. [#3611](https://github.com/zowe/zowe-explorer-vscode/pull/3611)
@@ -48,6 +60,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Resolved an issue where secure credentials were inadvertently converted to non-string data types. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)
 - Fixed an issue where the `ZoweVsCodeExtension.profilesCache` getter was creating new ProfilesCache instances instead of using the existing one from the Zowe Explorer API, which could lead to inconsistencies and synchronization issues. [#3735](https://github.com/zowe/zowe-explorer-vscode/pull/3735)
 - Fixed an issue where the `ProfilesCache` class did not cache the `ProfileInfo` class instance it creates, making every call to the `ProfilesCache.getProfileInfo` function result in a new initialization of the `ProfileInfo` class. Now, the `getProfileInfo` function caches the new instance of the `ProfileInfo` class and reuses it for efficiency. [#3735](https://github.com/zowe/zowe-explorer-vscode/pull/3735)
+- Updated Zowe SDKs to `8.26.1` for technical currency. [#3696](https://github.com/zowe/zowe-explorer-vscode/pull/3696)
 
 ## `3.2.1`
 

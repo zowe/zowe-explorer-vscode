@@ -67,22 +67,16 @@ export namespace ZoweExplorerZosmf {
             return this.session ? ProfilesCache.getProfileSessionWithVscProxy(this.session) : undefined;
         }
 
-        private _getSession(serviceProfile: imperative.IProfileLoaded): imperative.Session {
+        public static getCommandArgs(profile: imperative.IProfileLoaded): imperative.ICommandArguments {
             const cmdArgs: imperative.ICommandArguments = {
                 $0: "zowe",
                 _: [""],
-                host: serviceProfile.profile.host as string,
-                port: serviceProfile.profile.port as number,
-                protocol: serviceProfile.profile.protocol as string,
-                basePath: serviceProfile.profile.basePath as string,
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
-                tokenType: serviceProfile.profile.tokenType as string,
-                tokenValue: serviceProfile.profile.tokenValue as string,
-                user: serviceProfile.profile.user as string,
-                password: serviceProfile.profile.password as string,
-                certFile: serviceProfile.profile.certFile as string,
-                certKeyFile: serviceProfile.profile.certKeyFile as string,
+                ...profile.profile,
             };
+            return cmdArgs;
+        }
+        private _getSession(serviceProfile: imperative.IProfileLoaded): imperative.Session {
+            const cmdArgs = CommonApi.getCommandArgs(serviceProfile);
             return this.getSessionFromCommandArgument(cmdArgs);
         }
 
@@ -358,10 +352,17 @@ export namespace ZoweExplorerZosmf {
         }
 
         public deleteDataSet(dataSetName: string, options?: zosfiles.IDeleteDatasetOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Delete.dataSet(this.getSession(), dataSetName, {
-                responseTimeout: this.profile?.profile?.responseTimeout,
-                ...options,
-            });
+            if (options.volume == "*VSAM*") {
+                return zosfiles.Delete.vsam(this.getSession(), dataSetName, {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...options,
+                });
+            } else {
+                return zosfiles.Delete.dataSet(this.getSession(), dataSetName, {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...options,
+                });
+            }
         }
 
         public dataSetsMatchingPattern(filter: string[], options?: zosfiles.IDsmListOptions): Promise<zosfiles.IZosFilesResponse> {
@@ -441,11 +442,18 @@ export namespace ZoweExplorerZosmf {
         }
 
         public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zosjobs.IJob> {
-            return zosjobs.SubmitJobs.submitJcl(this.getSession(), jcl, internalReaderRecfm, internalReaderLrecl);
+            const jesEncoding = this.profile?.profile?.jobEncoding;
+            return zosjobs.SubmitJobs.submitJcl(this.getSession(), jcl, internalReaderRecfm, internalReaderLrecl, jesEncoding);
         }
 
-        public submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
-            return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
+        public async submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
+            const jesEncoding = this.profile?.profile?.jobEncoding;
+            if (jesEncoding == null) {
+                return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
+            } else {
+                const rawJcl = await zosfiles.Get.dataSet(this.getSession(), jobDataSet, { encoding: jesEncoding });
+                return this.submitJcl(rawJcl.toString());
+            }
         }
 
         public async deleteJob(jobname: string, jobid: string): Promise<void> {
