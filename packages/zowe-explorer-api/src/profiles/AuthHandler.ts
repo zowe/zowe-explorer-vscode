@@ -317,7 +317,7 @@ export class AuthHandler {
      * Waits for the profile to be unlocked (ONLY if the profile was locked after an authentication error)
      * @param profile The profile name or object that may be locked
      */
-    public static async waitForUnlock(profile: ProfileLike, shouldAwaitTimeout?: boolean): Promise<void> {
+    public static async waitForUnlock(profile: ProfileLike, shouldAwaitTimeout: boolean = true): Promise<void> {
         const profileName = AuthHandler.getProfileName(profile);
         if (!this.profileLocks.has(profileName)) {
             return;

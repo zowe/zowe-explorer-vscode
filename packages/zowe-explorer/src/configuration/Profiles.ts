@@ -186,6 +186,7 @@ export class Profiles extends ProfilesCache {
                 try {
                     const loggedIn = await Profiles.getInstance().ssoLogin(null, theProfile.name);
                     if (node && loggedIn) {
+                        // To ensure the node is properly refreshed, set the collapsible state to none and then retrigger with the expanded state
                         node.collapsibleState = vscode.TreeItemCollapsibleState.None;
                         SharedTreeProviders.getProviderForNode(node).nodeDataChanged(node);
                     }

@@ -32,6 +32,7 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ReleaseNotes } from "../../../../src/utils/ReleaseNotes";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
+import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -631,7 +632,7 @@ describe("Test src/shared/extension", () => {
                 expect(readDirMock).toHaveBeenCalled();
                 readDirMock.mockRestore();
             });
-            it("calls DatasetFSProvider for ZoweScheme.USS", async () => {
+            it("calls UssFSProvider for ZoweScheme.USS", async () => {
                 const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/lpar.zosmf/u/user/folder" }) }]);
                 const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory").mockImplementation();
                 await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "zosmf");
@@ -686,9 +687,9 @@ describe("Test src/shared/extension", () => {
                 "records-url": "http://example.com/records",
                 lrecl: 80,
                 subsystem: "",
-                procstep: ""
+                procstep: "",
             };
-            
+
             // Mock the JobFSProvider.instance.lookup to return the SpoolEntry
             const spyLookup = jest.spyOn(JobFSProvider.instance, "lookup").mockReturnValue(spoolEntry);
 
@@ -714,7 +715,7 @@ describe("Test src/shared/extension", () => {
                 type: vscode.FileType.File,
                 ctime: 0,
                 mtime: 0,
-                size: 0
+                size: 0,
             } as any);
 
             const spyIsSpoolEntry = jest.spyOn(FsJobsUtils, "isSpoolEntry");

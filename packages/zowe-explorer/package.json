@@ -2145,12 +2145,9 @@
           "maximum": 100
         },
         "zowe.table.hidePinnedRowsWarning": {
-          "type": [
-            "boolean",
-            "integer"
-          ],
+          "type": "boolean",
           "default": false,
-          "description": "%zowe.settings.maxExtenderRetry%",
+          "description": "%zowe.table.hidePinnedRowsWarning%",
           "scope": "window"
         },
         "zowe.commands.tso.defaultProfile": {

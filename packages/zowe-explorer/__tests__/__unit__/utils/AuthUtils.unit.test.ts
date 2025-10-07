@@ -176,7 +176,7 @@ describe("AuthUtils", () => {
             isUsingTokenAuthMock.mockRestore();
         });
         it("should call wait for unlock and not re-attempt locking profile if the profile is already locked", async () => {
-            new MockedProperty(Constants, "PROFILES_CACHE", {
+            const mockedProfCache = new MockedProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     profileHasSecureToken: jest.fn().mockResolvedValue(true),
                 } as any,
@@ -198,6 +198,7 @@ describe("AuthUtils", () => {
             expect(isUsingTokenAuthMock).not.toHaveBeenCalled();
             expect(lockProfileSpy).not.toHaveBeenCalledWith(profile);
             expect(getSessFromProfileMock).toHaveBeenCalledWith(profile);
+            mockedProfCache[Symbol.dispose]();
         });
     });
 
