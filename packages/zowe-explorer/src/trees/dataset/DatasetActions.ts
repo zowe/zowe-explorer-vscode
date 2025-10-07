@@ -625,30 +625,15 @@ export class DatasetActions {
         nodeList?: IZoweDatasetTreeNode[]
     ): Promise<void> {
         ZoweLogger.trace("dataset.actions.deleteDatasetPrompt called.");
-        let nodes: IZoweDatasetTreeNode[];
         let selectedNodes;
         if (node || nodeList) {
             selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
         } else {
             selectedNodes = datasetProvider.getTreeView().selection;
         }
-        let includedSelection = false;
-        if (node) {
-            for (const item of selectedNodes) {
-                if (item instanceof NavigationTreeItem) {
-                    continue;
-                }
-                if (
-                    node.getLabel().toString() === item.getLabel().toString() &&
-                    node.getParent().getLabel().toString() === item.getParent().getLabel().toString()
-                ) {
-                    includedSelection = true;
-                }
-            }
-        }
 
         // Check that child and parent aren't both in array, removing children whose parents are in
-        // array to avoid errors from host when deleting none=existent children.
+        // array to avoid errors from host when deleting non-existent children.
         const childArray: IZoweDatasetTreeNode[] = [];
         for (const item of selectedNodes) {
             if (SharedContext.isDsMember(item)) {
@@ -661,17 +646,10 @@ export class DatasetActions {
         }
         selectedNodes = selectedNodes.filter((val) => !childArray.includes(val as IZoweDatasetTreeNode));
 
-        if (includedSelection || !node) {
-            // Filter out sessions and information messages
-            nodes = selectedNodes.filter(
-                (selectedNode) => selectedNode.getParent() && !SharedContext.isSession(selectedNode) && !SharedContext.isInformation(selectedNode)
-            ) as IZoweDatasetTreeNode[];
-        } else {
-            if (node.getParent() && !SharedContext.isSession(node) && !SharedContext.isInformation(node)) {
-                nodes = [];
-                nodes.push(node);
-            }
-        }
+        // Filter out sessions and information messages
+        let nodes = selectedNodes.filter(
+            (selectedNode) => selectedNode.getParent() && !SharedContext.isSession(selectedNode) && !SharedContext.isInformation(selectedNode)
+        ) as IZoweDatasetTreeNode[];
 
         // Check that there are items to be deleted
         if (!nodes || nodes.length === 0) {

@@ -709,6 +709,25 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
                 `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
         );
     });
+
+    it("test when same dsname exists across two profiles that correct node is deleted", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+        const deleteDatasetSpy = jest.spyOn(DatasetActions, "deleteDataset");
+
+        const otherMemberNode = new ZoweDatasetNode({
+            label: blockMocks.testMemberNode.getLabel().toString(),
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.testDatasetNode,
+        });
+        await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree, otherMemberNode);
+        expect(deleteDatasetSpy).toHaveBeenCalledWith(otherMemberNode, blockMocks.testDatasetTree);
+    });
 });
 
 describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
