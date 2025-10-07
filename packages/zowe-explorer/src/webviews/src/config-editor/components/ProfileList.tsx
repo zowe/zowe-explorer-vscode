@@ -300,6 +300,7 @@ export function ProfileList({
                 alignItems: "center",
                 gap: "6px",
                 fontSize: "0.9em",
+                minHeight: "28px",
               }}
               onClick={() => {
                 if (selectedProfileKey === profileKey) {

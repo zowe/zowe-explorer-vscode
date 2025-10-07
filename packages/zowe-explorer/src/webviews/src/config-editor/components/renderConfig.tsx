@@ -390,7 +390,10 @@ export const RenderConfig = ({
         const isMergedPropertyForSorting = typeof value === "object" && value !== null && value._isMergedProperty === true;
 
         // Check if this is a sub-object or array within properties that should be rendered as a simple property
-        const isSubObjectOrArray = (typeof value === "object" && value !== null) || Array.isArray(value);
+        // For merged properties, check the actual value, not the wrapper object
+        const actualValueForTypeCheck = typeof value === "object" && value !== null && value._mergedValue !== undefined ? value._mergedValue : value;
+        const isSubObjectOrArray =
+          (typeof actualValueForTypeCheck === "object" && actualValueForTypeCheck !== null) || Array.isArray(actualValueForTypeCheck);
 
         const isWithinProperties = path.length > 0 && path[path.length - 1] === "properties";
         // Additional check: make sure we're not dealing with array items or other nested structures
@@ -410,6 +413,7 @@ export const RenderConfig = ({
         // Check if this property is from merged properties and should use the merged value
         const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath);
         const mergedPropData = displayKey ? mergedProps?.[displayKey] : undefined;
+        const isDeletedMergedProperty = isFromMergedProps && isInDeletions;
 
         const pendingValue =
           (pendingChanges[configPath] ?? {})[fullKey]?.value ??
@@ -429,23 +433,40 @@ export const RenderConfig = ({
 
         // Handle sub-objects and arrays within properties early to prevent recursive rendering
         if (shouldRenderAsSimpleProperty) {
-          const renderComplexValue = (value: any) => {
-            if (Array.isArray(value)) {
-              return value.map((item, index) => (
-                <div key={index} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em" }}>
+          const renderComplexValue = (value: any, isMerged: boolean = false) => {
+            // Extract the actual value if this is a merged property object
+            const actualValue = typeof value === "object" && value !== null && value._mergedValue !== undefined ? value._mergedValue : value;
+
+            const disabledStyle = isMerged
+              ? {
+                  backgroundColor: "var(--vscode-input-disabledBackground)",
+                  color: "var(--vscode-disabledForeground)",
+                  opacity: 0.7,
+                }
+              : {};
+
+            if (Array.isArray(actualValue)) {
+              return actualValue.map((item, index) => (
+                <div key={index} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em", ...disabledStyle }}>
                   <span style={{ color: "var(--vscode-descriptionForeground)" }}>{index}:</span>
                   <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(item)}</span>
                 </div>
               ));
-            } else if (typeof value === "object" && value !== null) {
-              return Object.entries(value).map(([key, val]) => (
-                <div key={key} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em" }}>
+            } else if (typeof actualValue === "object" && actualValue !== null) {
+              return Object.entries(actualValue).map(([key, val]) => (
+                <div key={key} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em", ...disabledStyle }}>
                   <span style={{ color: "var(--vscode-descriptionForeground)" }}>{key}:</span>
                   <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(val)}</span>
                 </div>
               ));
+            } else {
+              // For primitive values, display them directly
+              return (
+                <div style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em", ...disabledStyle }}>
+                  <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(actualValue)}</span>
+                </div>
+              );
             }
-            return null;
           };
 
           return (
@@ -456,28 +477,51 @@ export const RenderConfig = ({
                 </span>
                 <div
                   onClick={() => {
-                    const configPath = configurations[selectedTab!]?.configPath;
-                    if (configPath) {
-                      vscodeApi.postMessage({
-                        command: "OPEN_CONFIG_FILE_WITH_PROFILE",
-                        filePath: configPath,
-                        profileKey: selectedProfileKey,
-                        propertyKey: displayKey,
-                      });
+                    if (isFromMergedProps && mergedPropData?.jsonLoc) {
+                      // Navigate to source for merged properties
+                      handleNavigateToSource(mergedPropData.jsonLoc, mergedPropData.osLoc);
+                    } else {
+                      // Navigate to profile for local properties
+                      const configPath = configurations[selectedTab!]?.configPath;
+                      if (configPath) {
+                        vscodeApi.postMessage({
+                          command: "OPEN_CONFIG_FILE_WITH_PROFILE",
+                          filePath: configPath,
+                          profileKey: selectedProfileKey,
+                          propertyKey: displayKey,
+                        });
+                      }
                     }
                   }}
-                  title={l10n.t("Click to navigate to profile")}
+                  title={
+                    isFromMergedProps && !isDeletedMergedProperty && mergedPropData?.jsonLoc
+                      ? (() => {
+                          // Extract logical profile path from jsonLoc
+                          const jsonLocParts = mergedPropData.jsonLoc.split(".");
+                          const profilePathParts = jsonLocParts.slice(1, -2);
+                          const profilePath =
+                            profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".") ||
+                            "unknown profile";
+
+                          // Extract full normalized config path from osLoc
+                          const fullConfigPath = mergedPropData.osLoc?.[0] || "unknown config";
+
+                          return `Inherited from: ${profilePath} (${fullConfigPath})`;
+                        })()
+                      : l10n.t("Click to navigate to profile")
+                  }
                   style={{
-                    backgroundColor: "var(--vscode-input-background)",
+                    backgroundColor: isFromMergedProps ? "var(--vscode-input-disabledBackground)" : "var(--vscode-input-background)",
                     border: "1px solid var(--vscode-input-border)",
                     borderRadius: "3px",
                     padding: "8px",
                     fontSize: "0.9em",
-                    color: "var(--vscode-input-foreground)",
+                    color: isFromMergedProps ? "var(--vscode-disabledForeground)" : "var(--vscode-input-foreground)",
                     cursor: "pointer",
+                    opacity: isFromMergedProps ? 0.7 : 1,
                   }}
                 >
-                  {renderComplexValue(pendingValue)}
+                  {renderComplexValue(isFromMergedProps ? value : pendingValue, isFromMergedProps)}
                 </div>
               </div>
             </div>
@@ -535,23 +579,40 @@ export const RenderConfig = ({
         } else if (isArray) {
           // Check if this is an array within properties that should be rendered as a simple property
           if (shouldRenderAsSimpleProperty) {
-            const renderComplexValue = (value: any) => {
-              if (Array.isArray(value)) {
-                return value.map((item, index) => (
-                  <div key={index} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em" }}>
+            const renderComplexValue = (value: any, isMerged: boolean = false) => {
+              // Extract the actual value if this is a merged property object
+              const actualValue = typeof value === "object" && value !== null && value._mergedValue !== undefined ? value._mergedValue : value;
+
+              const disabledStyle = isMerged
+                ? {
+                    backgroundColor: "var(--vscode-input-disabledBackground)",
+                    color: "var(--vscode-disabledForeground)",
+                    opacity: 0.7,
+                  }
+                : {};
+
+              if (Array.isArray(actualValue)) {
+                return actualValue.map((item, index) => (
+                  <div key={index} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em", ...disabledStyle }}>
                     <span style={{ color: "var(--vscode-descriptionForeground)" }}>{index}:</span>
                     <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(item)}</span>
                   </div>
                 ));
-              } else if (typeof value === "object" && value !== null) {
-                return Object.entries(value).map(([key, val]) => (
-                  <div key={key} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em" }}>
+              } else if (typeof actualValue === "object" && actualValue !== null) {
+                return Object.entries(actualValue).map(([key, val]) => (
+                  <div key={key} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em", ...disabledStyle }}>
                     <span style={{ color: "var(--vscode-descriptionForeground)" }}>{key}:</span>
                     <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(val)}</span>
                   </div>
                 ));
+              } else {
+                // For primitive values, display them directly
+                return (
+                  <div style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em", ...disabledStyle }}>
+                    <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(actualValue)}</span>
+                  </div>
+                );
               }
-              return null;
             };
 
             return (
@@ -563,17 +624,54 @@ export const RenderConfig = ({
                     </span>
                   </div>
                   <div
+                    onClick={() => {
+                      if (isFromMergedProps && mergedPropData?.jsonLoc) {
+                        // Navigate to source for merged properties
+                        handleNavigateToSource(mergedPropData.jsonLoc, mergedPropData.osLoc);
+                      } else {
+                        // Navigate to profile for local properties
+                        const configPath = configurations[selectedTab!]?.configPath;
+                        if (configPath) {
+                          vscodeApi.postMessage({
+                            command: "OPEN_CONFIG_FILE_WITH_PROFILE",
+                            filePath: configPath,
+                            profileKey: selectedProfileKey,
+                            propertyKey: displayKey,
+                          });
+                        }
+                      }
+                    }}
+                    title={
+                      isFromMergedProps && mergedPropData?.jsonLoc
+                        ? (() => {
+                            // Extract logical profile path from jsonLoc
+                            const jsonLocParts = mergedPropData.jsonLoc.split(".");
+                            const profilePathParts = jsonLocParts.slice(1, -2);
+                            const profilePath =
+                              profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".") ||
+                              "unknown profile";
+
+                            // Extract full normalized config path from osLoc
+                            const fullConfigPath = mergedPropData.osLoc?.[0] || "unknown config";
+
+                            return `Inherited from: ${profilePath} (${fullConfigPath})`;
+                          })()
+                        : l10n.t("Click to navigate to profile")
+                    }
                     style={{
                       width: "100%",
-                      backgroundColor: "var(--vscode-input-background)",
+                      backgroundColor:
+                        isFromMergedProps && !isDeletedMergedProperty ? "var(--vscode-input-disabledBackground)" : "var(--vscode-input-background)",
                       border: "1px solid var(--vscode-input-border)",
                       borderRadius: "3px",
                       padding: "8px",
                       fontSize: "0.9em",
-                      color: "var(--vscode-input-foreground)",
+                      color: isFromMergedProps ? "var(--vscode-disabledForeground)" : "var(--vscode-input-foreground)",
+                      cursor: "pointer",
+                      opacity: isFromMergedProps ? 0.7 : 1,
                     }}
                   >
-                    {renderComplexValue(pendingValue)}
+                    {renderComplexValue(isFromMergedProps ? value : pendingValue, isFromMergedProps)}
                   </div>
                 </div>
               </div>
@@ -714,8 +812,6 @@ export const RenderConfig = ({
           const osLoc = mergedPropData?.osLoc;
           const secure = mergedPropData?.secure;
           const isSecureProperty = isFromMergedProps && jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure) : false;
-          // If this is a merged property that was deleted, treat it as deleted (not merged)
-          const isDeletedMergedProperty = isFromMergedProps && isInDeletions;
 
           // Check if this is a local secure property (in the current profile's secure array)
           const isLocalSecureProperty =

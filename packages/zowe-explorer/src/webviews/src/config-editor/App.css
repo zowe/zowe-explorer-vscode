@@ -230,6 +230,7 @@ div:has(> .vscode-panel) {
     display: flex;
     flex-direction: column;
     transition: flex 0.1s ease;
+    align-self: stretch;
 }
 
 .config-section.profiles-section:has(.sort-dropdown-container) {
@@ -279,9 +280,9 @@ div:has(> .vscode-panel) {
 }
 
 .config-section.defaults-section {
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
     margin-top: 16px;
 }
 
@@ -318,7 +319,7 @@ div:has(> .vscode-panel) {
 
 .defaults-content {
     margin-top: 8px;
-    overflow: hidden;
+    overflow: visible;
     flex: 1;
     min-height: 0;
 }
@@ -384,7 +385,7 @@ div:has(> .vscode-panel) {
 
 .profile-heading-container h2 {
     margin: 0;
-    font-size: 16px;
+    font-size: 19px;
     margin-bottom: 0;
     flex-shrink: 0;
     white-space: nowrap;
@@ -392,8 +393,8 @@ div:has(> .vscode-panel) {
 
 .profile-actions {
     display: flex;
-    gap: 8px;
-    min-width: 120px;
+    gap: 10px;
+    min-width: 144px;
     justify-content: flex-end;
     flex-shrink: 0;
 }
@@ -494,6 +495,11 @@ select:focus {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    padding: 4px 8px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .action-button:hover {
@@ -501,8 +507,8 @@ select:focus {
 }
 
 .header-button {
-    padding: 8px 16px;
-    font-size: 14px;
+    padding: 10px 19px;
+    font-size: 17px;
     background-color: var(--vscode-button-background);
     color: var(--vscode-button-foreground);
     border: none;
@@ -700,6 +706,13 @@ ul {
     margin-top: 2px !important;
 }
 
+.tab .codicon {
+    transform: translateY(0px);
+    background-repeat: no-repeat;
+    background-size: contain;
+    margin-top: 4px !important;
+}
+
 .secure-checkbox-label {
     display: flex;
     align-items: center;
@@ -724,7 +737,7 @@ ul {
     border-top: none;
     max-height: 150px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 10000;
     border-radius: 0 0 4px 4px;
     margin-top: -1px;
     list-style: none;
@@ -1045,7 +1058,7 @@ ul {
     max-width: 900px;
     width: 900px;
     max-height: 85vh;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -1064,6 +1077,22 @@ ul {
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
+    position: relative;
+}
+
+.wizard-content .dropdown-list {
+    position: absolute;
+    z-index: 10001;
+    pointer-events: auto;
+}
+
+.wizard-content .dropdown-container {
+    position: relative;
+    overflow: auto;
+}
+
+.wizard-content {
+    overflow: visible !important;
 }
 
 .wizard-left-column {
@@ -1462,8 +1491,11 @@ ul {
     }
 
     .wizard-right-column {
-        flex: none;
+        flex: 1;
         width: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
     }
 
     .wizard-property-key {
@@ -1478,9 +1510,18 @@ ul {
 
     .wizard-properties-container {
         min-height: 150px;
-        max-height: 300px;
+        max-height: 250px;
         overflow-x: auto;
         overflow-y: auto;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .wizard-actions {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--vscode-panel-border);
+        flex-shrink: 0;
     }
 }
 
@@ -1501,6 +1542,16 @@ ul {
         overflow-y: auto;
         overflow-x: hidden;
         min-height: 0;
+        flex: 1;
+        max-height: calc(95vh - 200px);
+    }
+
+    .wizard-right-column {
+        flex: 1;
+        width: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
     }
 
     .wizard-property-key {
@@ -1537,15 +1588,21 @@ ul {
 
     .wizard-properties-container {
         min-height: 120px;
-        max-height: 250px;
+        max-height: 300px;
         overflow-x: auto;
         overflow-y: auto;
+        flex: 1;
+        min-height: 0;
     }
 
     .wizard-actions {
         flex-direction: column;
         gap: 0.5rem;
         width: 100%;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--vscode-panel-border);
+        flex-shrink: 0;
     }
 
     .wizard-button {
@@ -1640,9 +1697,11 @@ ul {
 
     .wizard-properties-container {
         min-height: 100px;
-        max-height: 200px;
+        max-height: 300px;
         overflow-x: auto;
         overflow-y: auto;
+        flex: 1;
+        min-height: 0;
     }
 
     .wizard-button {
@@ -1999,12 +2058,12 @@ ul {
 /* Profile Action Buttons */
 .profile-actions {
     display: flex;
-    gap: 8px;
+    gap: 10px;
 }
 
 .profile-action-button {
-    padding: 4px;
-    font-size: 12px;
+    padding: 5px;
+    font-size: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2101,9 +2160,9 @@ ul {
 }
 
 .sort-dropdown-item {
-    padding: 6px 8px;
+    padding: 7px 10px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--vscode-dropdown-foreground);
     transition: background-color 0.2s ease;
 }

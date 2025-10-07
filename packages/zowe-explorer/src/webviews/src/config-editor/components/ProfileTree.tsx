@@ -545,6 +545,7 @@ export function ProfileTree({
             opacity: isDragging ? 0.5 : 1,
             transition: "all 0.2s ease",
             userSelect: "none",
+            minHeight: "28px",
           }}
           draggable={true}
           onDragStart={(e) => handleDragStart(e, node.key)}
