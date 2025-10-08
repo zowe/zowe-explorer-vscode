@@ -11,3 +11,4 @@
 
 export * from "./DatasetAttributesProvider";
 export * from "./table-types";
+export * from "./IDataSetCount";

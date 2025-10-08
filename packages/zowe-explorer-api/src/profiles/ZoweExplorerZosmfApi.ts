@@ -420,7 +420,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                     return responseItems ? [...arr, ...responseItems] : arr;
                 }, []);
             const datasetCount = allDatasets.length !== 0 ? Number(allDatasets.length) : -1;
-            return { count: datasetCount ? datasetCount : -1, lastItem: allDatasets?.[allDatasets.length - 1]?.dsname };
+            return { count: datasetCount, lastItem: allDatasets?.[allDatasets.length - 1]?.dsname };
         }
     }
 
