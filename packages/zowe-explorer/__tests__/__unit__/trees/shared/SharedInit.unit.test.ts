@@ -32,7 +32,6 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ReleaseNotes } from "../../../../src/utils/ReleaseNotes";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
-import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
