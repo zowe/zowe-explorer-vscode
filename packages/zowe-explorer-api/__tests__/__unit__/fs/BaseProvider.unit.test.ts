@@ -708,6 +708,45 @@ describe("parseUriQuery", () => {
     });
 });
 
+describe("hasNoAuthType", () => {
+    it("should determine if an ssh profile has an auth type", () => {
+        const prov = new (BaseProvider as any)();
+        const session = {
+            hostname: "example.com",
+            port: 22,
+            privateKey: "path/to/id_rsa",
+            type: "none",
+            user: "user123",
+        };
+        const profile = {
+            name: "ssh123",
+            type: "ssh",
+            message: "",
+            failNotFound: false,
+            profile: {},
+        };
+        expect(prov.hasNoAuthType(session, profile)).toBeFalsy();
+    });
+
+    it("should determine if a profile has an auth type", () => {
+        const prov = new (BaseProvider as any)();
+        const session = {
+            hostname: "example.com",
+            port: 443,
+            type: "none",
+            user: "user123",
+        };
+        const profile = {
+            name: "profile123",
+            type: "",
+            message: "",
+            failNotFound: false,
+            profile: {},
+        };
+        expect(prov.hasNoAuthType(session, profile)).toBeTruthy();
+    });
+});
+
 describe("onCloseEvent", () => {
     it("disposes the event if all visible text editors are not in a conflict", () => {
         const fakeProvider = { _lookupAsFile: jest.fn(), onDocClosedEventDisposable: { dispose: jest.fn() } };
