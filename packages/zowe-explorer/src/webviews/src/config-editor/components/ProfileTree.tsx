@@ -796,6 +796,9 @@ export function ProfileTree({
     return (
       <div
         style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
           margin: "2px 0",
           padding: isDragging ? "8px" : "4px",
           borderRadius: "4px",
@@ -809,6 +812,8 @@ export function ProfileTree({
           transition: "all 0.2s ease",
           minHeight: isDragging ? "32px" : "20px",
           opacity: isDragging ? 1 : 0.3,
+          backdropFilter: "blur(4px)",
+          boxShadow: isDragging ? "0 2px 8px rgba(0, 0, 0, 0.1)" : "none",
         }}
         onDragOver={(e) => {
           e.preventDefault();

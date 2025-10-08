@@ -439,6 +439,8 @@ div:has(> .vscode-panel) {
     font-size: 13px;
     font-family: var(--vscode-font-family);
     min-width: 120px;
+    height: 28px;
+    box-sizing: border-box;
 }
 
 .config-input:focus {
