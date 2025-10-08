@@ -99,7 +99,7 @@ describe("UssFSProvider", () => {
         });
         jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
-            if (key === "zowe.settings.maxExtenderRetry") {
+            if (key === "zowe.settings.maxRequestRetry") {
                 return 1;
             }
         });

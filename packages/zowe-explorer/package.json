@@ -2136,10 +2136,10 @@
           "scope": "window",
           "minimum": 1
         },
-        "zowe.settings.maxExtenderRetry": {
+        "zowe.settings.maxRequestRetry": {
           "type": "integer",
           "default": 0,
-          "description": "%zowe.settings.maxExtenderRetry%",
+          "description": "%zowe.settings.maxRequestRetry%",
           "scope": "window",
           "minimum": 0,
           "maximum": 100

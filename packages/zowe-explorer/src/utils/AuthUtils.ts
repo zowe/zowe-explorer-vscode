@@ -111,7 +111,7 @@ export class AuthUtils {
     public static promptCountForProfile: Record<string, number> = {};
 
     public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
-        const maxAttempts = SettingsConfig.getDirectValue("zowe.settings.maxExtenderRetry", 0);
+        const maxAttempts = SettingsConfig.getDirectValue("zowe.settings.maxRequestRetry", 0);
         const profileName = profile?.name;
         const shouldTrackPrompts = profileName != null;
 

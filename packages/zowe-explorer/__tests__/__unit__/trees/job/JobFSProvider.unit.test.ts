@@ -285,7 +285,7 @@ describe("JobFSProvider.supportSpoolPagination", () => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return true;
             }
-            if (key === "zowe.settings.maxExtenderRetry") {
+            if (key === "zowe.settings.maxRequestRetry") {
                 return 1;
             }
         });
@@ -304,7 +304,7 @@ describe("JobFSProvider.supportSpoolPagination", () => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return false;
             }
-            if (key === "zowe.settings.maxExtenderRetry") {
+            if (key === "zowe.settings.maxRequestRetry") {
                 return 1;
             }
         });
@@ -352,7 +352,7 @@ describe("fetchSpoolAtUri", () => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return true;
             }
-            if (key === "zowe.settings.maxExtenderRetry") {
+            if (key === "zowe.settings.maxRequestRetry") {
                 return 1;
             }
             return false;
@@ -393,7 +393,7 @@ describe("fetchSpoolAtUri", () => {
             if (key === "zowe.jobs.paginate.recordsToFetch") {
                 return 20;
             }
-            if (key === "zowe.settings.maxExtenderRetry") {
+            if (key === "zowe.settings.maxRequestRetry") {
                 return 1;
             }
         });
@@ -468,7 +468,7 @@ describe("fetchSpoolAtUri", () => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return true;
             }
-            if (key === "zowe.settings.maxExtenderRetry") {
+            if (key === "zowe.settings.maxRequestRetry") {
                 return 1;
             }
         });
