@@ -18,24 +18,6 @@ export type schemaValidation = {
 
 export class ConfigSchemaHelpers {
     /**
-     * Helper function to extract the type from a schema property
-     * If the type is an array, use the first value in the array
-     * @param typeValue - The type value from the schema (string or string array)
-     * @returns The resolved type as a string
-     */
-    public static resolveSchemaType(typeValue: string | string[] | undefined): string | undefined {
-        if (!typeValue) {
-            return undefined;
-        }
-
-        if (Array.isArray(typeValue)) {
-            return typeValue[0];
-        }
-
-        return typeValue;
-    }
-
-    /**
      * Generates schema validation information from a JSON schema
      * @param schema - The JSON schema object
      * @returns Schema validation object with property schemas and valid defaults
@@ -51,8 +33,11 @@ export class ConfigSchemaHelpers {
 
             if (profileType && properties) {
                 propertySchema[profileType] = Object.keys(properties).reduce((acc, key) => {
+                    const typeValue = properties[key].type;
+                    const resolvedType = !typeValue ? undefined : Array.isArray(typeValue) ? typeValue[0] : typeValue;
+
                     acc[key] = {
-                        type: this.resolveSchemaType(properties[key].type),
+                        type: resolvedType,
                         description: properties[key].description,
                         default: properties[key].default,
                         secure: secureProperties.includes(key),

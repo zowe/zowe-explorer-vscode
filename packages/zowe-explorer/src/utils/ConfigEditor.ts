@@ -15,8 +15,8 @@ import { ProfileInfo, ProfileCredentials } from "@zowe/imperative";
 import * as path from "path";
 import * as fs from "fs";
 import { ConfigSchemaHelpers, schemaValidation } from "./ConfigSchemaHelpers";
-import { ConfigChangeHandlers, ChangeEntry } from "./ConfigChangeHandlers";
-import { ConfigUtils, LayerModifications } from "./ConfigUtils";
+import { ConfigChangeHandlers } from "./ConfigChangeHandlers";
+import { ConfigUtils } from "./ConfigUtils";
 import {
     ConfigMoveAPI,
     moveProfile,
@@ -151,9 +151,9 @@ export class ConfigEditor extends WebView {
                         const schemaPath = path.join(path.dirname(configPath), layer.properties.$schema);
                         const schemaContent = fs.readFileSync(schemaPath, { encoding: "utf8" });
                         const schema = JSON.parse(schemaContent);
-                        const schemaValidation = this.generateSchemaValidation(schema);
+                        const schemaValidation = ConfigSchemaHelpers.generateSchemaValidation(schema);
 
-                        this.processProfilesRecursively(layer.properties.profiles, schemaValidation);
+                        ConfigUtils.processProfilesRecursively(layer.properties.profiles, schemaValidation);
 
                         allConfigs.push({
                             configPath,
@@ -172,14 +172,14 @@ export class ConfigEditor extends WebView {
                             if (fs.existsSync(possibleSchemaPath)) {
                                 const schemaContent = fs.readFileSync(possibleSchemaPath, { encoding: "utf8" });
                                 const schema = JSON.parse(schemaContent);
-                                schemaValidation = this.generateSchemaValidation(schema);
+                                schemaValidation = ConfigSchemaHelpers.generateSchemaValidation(schema);
                             }
                         } catch (err) {
                             // Schema not found or invalid, continue without filtering
                         }
 
                         // Process profiles with schema validation if available
-                        this.processProfilesRecursively(layer.properties.profiles, schemaValidation);
+                        ConfigUtils.processProfilesRecursively(layer.properties.profiles, schemaValidation);
 
                         allConfigs.push({
                             configPath,
@@ -216,10 +216,6 @@ export class ConfigEditor extends WebView {
         return allConfigs;
     }
 
-    private processProfilesRecursively(profiles: any, schemaValidation?: schemaValidation): void {
-        ConfigUtils.processProfilesRecursively(profiles, schemaValidation);
-    }
-
     protected async onDidReceiveMessage(message: any): Promise<void> {
         const profInfo = new ProfileInfo("zowe", {
             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
@@ -244,19 +240,21 @@ export class ConfigEditor extends WebView {
                     }
 
                     // Process changes with updated profile names
-                    const parsedChanges = this.parseConfigChanges(updatedMessage);
+                    const parsedChanges = ConfigUtils.parseConfigChanges(updatedMessage);
                     for (const change of parsedChanges) {
                         if (change.defaultsChanges || change.defaultsDeleteKeys) {
-                            await this.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath);
+                            await ConfigChangeHandlers.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath);
                         }
 
                         if (change.changes || change.deletions) {
-                            await this.handleProfileChanges(change.changes, change.deletions, change.configPath);
+                            await ConfigChangeHandlers.handleProfileChanges(change.changes, change.deletions, change.configPath, () =>
+                                this.areSecureValuesAllowed()
+                            );
                         }
                     }
 
                     if (message.otherChanges) {
-                        await this.handleOtherChanges(message.otherChanges);
+                        await this.handleAutostoreToggle(message.otherChanges);
                     }
 
                     await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
@@ -391,7 +389,7 @@ export class ConfigEditor extends WebView {
                 break;
             }
             case "SHOW_ERROR_MESSAGE": {
-                this.messageHandlers.handleShowErrorMessage(message);
+                vscode.window.showErrorMessage(message.message);
                 break;
             }
 
@@ -400,18 +398,28 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    private async handleDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string): Promise<void> {
-        await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer);
-    }
-
-    private async handleProfileChanges(changes: ChangeEntry[], deletions: ChangeEntry[], configPath: string): Promise<void> {
-        await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, () => this.areSecureValuesAllowed());
-    }
-
-    private async handleOtherChanges(otherChanges: any[]): Promise<void> {
+    private async handleAutostoreToggle(otherChanges: any[]): Promise<void> {
         for (const change of otherChanges) {
             if (change.type === "autostore") {
-                await this.fileOperations.handleAutostoreChange(change.configPath, change.value);
+                try {
+                    const profInfo = new ProfileInfo("zowe", {
+                        overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+                        credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+                    });
+                    await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+                    const teamConfig = profInfo.getTeamConfig();
+
+                    const targetLayer = teamConfig.layers.find((layer: any) => layer.path === change.configPath);
+
+                    if (targetLayer) {
+                        teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
+                        teamConfig.set("autoStore", change.value, { parseString: true });
+                        await teamConfig.save();
+                    }
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    vscode.window.showErrorMessage(`Error updating autostore setting: ${errorMessage}`);
+                }
             }
         }
     }
@@ -638,14 +646,6 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    private parseConfigChanges(data: LayerModifications): LayerModifications[] {
-        return ConfigUtils.parseConfigChanges(data);
-    }
-
-    private generateSchemaValidation(schema: any): schemaValidation {
-        return ConfigSchemaHelpers.generateSchemaValidation(schema);
-    }
-
     /**
      * Updates profile changes to use new profile names before processing
      * This prevents duplicate profiles by ensuring changes target the correct names
@@ -741,14 +741,14 @@ export class ConfigEditor extends WebView {
             this.simulateProfileRenames(renames, teamConfig);
         }
 
-        const parsedChanges = this.parseConfigChanges(changes);
+        const parsedChanges = ConfigUtils.parseConfigChanges(changes);
         for (const change of parsedChanges) {
             if (change.defaultsChanges || change.defaultsDeleteKeys) {
-                this.simulateDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
+                ConfigChangeHandlers.simulateDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
             }
 
             if (change.changes || change.deletions) {
-                this.simulateProfileChanges(change.changes, change.deletions, change.configPath, teamConfig);
+                ConfigChangeHandlers.simulateProfileChanges(change.changes, change.deletions, change.configPath, teamConfig);
             }
         }
 
@@ -814,9 +814,6 @@ export class ConfigEditor extends WebView {
         if (mergedArgs.knownArgs) {
             mergedArgs.knownArgs.forEach((arg) => {
                 if (arg.argLoc && arg.argLoc.osLoc && arg.argLoc.jsonLoc) {
-                    // Check if this specific field path is secure, respecting layer precedence
-                    // Layers are ordered by precedence: project (highest) -> user -> global (lowest)
-                    // We need to find the first layer that has a definition for this field
                     let isSecure = false;
                     let fieldFound = false;
 
@@ -833,7 +830,6 @@ export class ConfigEditor extends WebView {
                         const secFields = teamConfig.api.secure.secureFields({ user: layer.user, global: layer.global });
 
                         // Check if this layer has the field defined (either as secure or insecure)
-                        // We need to check if the field exists in this layer's properties
                         const layerHasField = this.layerHasField(layer, arg.argLoc.jsonLoc);
 
                         if (layerHasField) {
@@ -894,14 +890,6 @@ export class ConfigEditor extends WebView {
         // Check if the field exists in the profile's properties
         const fieldName = pathParts[pathParts.length - 1];
         return fieldName in profile.properties;
-    }
-
-    private simulateDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string, teamConfig: any): void {
-        ConfigChangeHandlers.simulateDefaultChanges(changes, deletions, activeLayer, teamConfig);
-    }
-
-    private simulateProfileChanges(changes: ChangeEntry[], deletions: ChangeEntry[], configPath: string, teamConfig: any): void {
-        ConfigChangeHandlers.simulateProfileChanges(changes, deletions, configPath, teamConfig);
     }
 
     private simulateProfileRenames(renames: Array<{ originalKey: string; newKey: string; configPath: string }>, teamConfig: any): void {
@@ -1101,13 +1089,13 @@ export class ConfigEditor extends WebView {
         }
 
         if (changes) {
-            const parsedChanges = this.parseConfigChanges(changes);
+            const parsedChanges = ConfigUtils.parseConfigChanges(changes);
             for (const change of parsedChanges) {
                 if (change.defaultsChanges || change.defaultsDeleteKeys) {
-                    this.simulateDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
+                    ConfigChangeHandlers.simulateDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
                 }
                 if (change.changes || change.deletions) {
-                    this.simulateProfileChanges(change.changes, change.deletions, change.configPath, teamConfig);
+                    ConfigChangeHandlers.simulateProfileChanges(change.changes, change.deletions, change.configPath, teamConfig);
                 }
             }
         }
@@ -1172,8 +1160,6 @@ export class ConfigEditor extends WebView {
                 mergedArgs.knownArgs.forEach((arg) => {
                     if (arg.argLoc && arg.argLoc.osLoc && arg.argLoc.jsonLoc) {
                         // Check if this specific field path is secure, respecting layer precedence
-                        // Layers are ordered by precedence: project (highest) -> user -> global (lowest)
-                        // We need to find the first layer that has a definition for this field
                         let isSecure = false;
                         let fieldFound = false;
 

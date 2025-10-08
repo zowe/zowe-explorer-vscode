@@ -168,10 +168,6 @@ export class ConfigEditorMessageHandlers {
         }
     }
 
-    handleShowErrorMessage(message: any): void {
-        vscode.window.showErrorMessage(message.message);
-    }
-
     async handleGetEnvVars(message: any): Promise<void> {
         try {
             const query = message.query || "";
@@ -188,7 +184,7 @@ export class ConfigEditorMessageHandlers {
 
             await this.panel.webview.postMessage({
                 command: "ENV_VARS_RESPONSE",
-                envVars: envVarNames.slice(0, 100),
+                envVars: envVarNames.slice(0, 200),
             });
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);

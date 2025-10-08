@@ -262,20 +262,13 @@ export class ConfigEditorProfileOperations {
         configMoveAPI.set(childPath, childProfile);
 
         // Move secure properties if they exist
-        this.moveSecurePropertiesForNestedProfile(configMoveAPI, layerActive, originalPath, childPath, originalKey, newKey);
+        this.moveSecurePropertiesForNestedProfile(configMoveAPI, originalPath, childPath);
     }
 
     /**
      * Moves secure properties for nested profile creation
      */
-    private moveSecurePropertiesForNestedProfile(
-        configMoveAPI: ConfigMoveAPI,
-        layerActive: () => IConfigLayer,
-        parentPath: string,
-        childPath: string,
-        originalKey: string,
-        newKey: string
-    ): void {
+    private moveSecurePropertiesForNestedProfile(configMoveAPI: ConfigMoveAPI, parentPath: string, childPath: string): void {
         try {
             // Get secure properties from the original profile
             const originalProfile = configMoveAPI.get(parentPath);

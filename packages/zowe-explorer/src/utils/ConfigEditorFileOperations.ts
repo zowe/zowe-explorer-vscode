@@ -12,10 +12,9 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import { ProfileInfo, Config, ConfigBuilder, ConfigSchema, ProfileCredentials } from "@zowe/imperative";
-import { ZoweVsCodeExtension, FileManagement, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { Config, ConfigBuilder, ConfigSchema } from "@zowe/imperative";
+import { ZoweVsCodeExtension, FileManagement } from "@zowe/zowe-explorer-api";
 import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
-import { Profiles } from "../configuration/Profiles";
 export class ConfigEditorFileOperations {
     constructor(private getLocalConfigs: () => Promise<any[]>) {}
 
@@ -278,30 +277,5 @@ export class ConfigEditorFileOperations {
             await ZoweVsCodeExtension.openConfigFile(foundLayer.path);
         }
         return false;
-    }
-
-    /**
-     * Handles autostore configuration changes
-     */
-    async handleAutostoreChange(configPath: string, value: boolean): Promise<void> {
-        try {
-            const profInfo = new ProfileInfo("zowe", {
-                overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
-                credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-            });
-            await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
-            const teamConfig = profInfo.getTeamConfig();
-
-            const targetLayer = teamConfig.layers.find((layer: any) => layer.path === configPath);
-
-            if (targetLayer) {
-                teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
-                teamConfig.set("autoStore", value, { parseString: true });
-                await teamConfig.save();
-            }
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            vscode.window.showErrorMessage(`Error updating autostore setting: ${errorMessage}`);
-        }
     }
 }
