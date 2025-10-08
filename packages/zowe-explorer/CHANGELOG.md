@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where ssh type profiles were throwing errors when making file system calls. [#3891](https://github.com/zowe/zowe-explorer-vscode/pull/3891)
 - Fixed issues seen when user is prompted, having v1 profiles and chooses convert or create new config options.[#3757](https://github.com/zowe/zowe-explorer-vscode/issues/3757)
 - Fixed job spool poll command to refresh the job spool open in the editor. [#3867](https://github.com/zowe/zowe-explorer-vscode/issues/3867)
 - Fixed regression where a profile was incorrectly detected as using basic authentication, specifically when `tokenValue` was set in the secure array of a parent profile or a default base profile instead of a service profile. [#3855](https://github.com/zowe/zowe-explorer-vscode/pull/3855)
