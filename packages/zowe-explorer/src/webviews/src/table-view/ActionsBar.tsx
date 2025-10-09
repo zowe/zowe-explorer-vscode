@@ -1,4 +1,5 @@
-import { Dispatch, Ref, useEffect, useState } from "preact/hooks";
+import { RefObject } from "preact";
+import { Dispatch, useEffect, useState } from "preact/hooks";
 import type { Table } from "@zowe/zowe-explorer-api";
 import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import { GridApi } from "ag-grid-community";
@@ -9,7 +10,7 @@ import { evaluateItemsState, sendItemCommand, ActionEvaluationContext, ActionSta
 
 interface ActionsProps {
   actions: Table.Action[];
-  gridRef: Ref<any>;
+  gridRef: RefObject<any>;
   itemCount: number;
   selectionCount: number;
   title: string;
