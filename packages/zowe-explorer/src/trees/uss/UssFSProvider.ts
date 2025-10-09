@@ -328,10 +328,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * Fetches a file from the remote system at the given URI.
      * @param uri The URI pointing to a valid file to fetch from the remote system
      * @param editor (optional) An editor instance to reload if the URI is already open
+     * @returns The file entry if successful, null otherwise
      */
-    public async fetchFileAtUri(uri: vscode.Uri, options?: { editor?: vscode.TextEditor | null; isConflict?: boolean }): Promise<void> {
+    public async fetchFileAtUri(uri: vscode.Uri, options?: { editor?: vscode.TextEditor | null; isConflict?: boolean }): Promise<UssFile | null> {
         ZoweLogger.trace(`[UssFSProvider] fetchFileAtUri called with ${uri.toString()}`);
-        const file = this._lookupAsFile(uri);
+        const file = this._lookupAsFile(uri) as UssFile;
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos);
@@ -339,7 +340,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         let resp: IZosFilesResponse;
         try {
-            await this.autoDetectEncoding(file as UssFile);
+            await this.autoDetectEncoding(file);
             const profileEncoding = file.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
             // Wait for any ongoing authentication process to complete
@@ -362,10 +363,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             });
         } catch (err) {
             if (err instanceof Error) {
-                ZoweLogger.error(err.message);
+                ZoweLogger.error("[UssFSProvider] fetchFileAtUri failed due to an error. Details: \n" + err.message);
             }
             await AuthUtils.handleProfileAuthOnError(err, profile);
-            return;
+            return null;
         }
 
         if (!options?.isConflict) {
@@ -391,6 +392,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (options?.editor) {
             await this._updateResourceInEditor(uri);
         }
+
+        return file;
     }
 
     public async autoDetectEncoding(entry: UssFile): Promise<void> {
@@ -482,7 +485,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // - the file hasn't been accessed yet
         // - fetching a conflict from the remote FS
         if ((!file.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
-            await this.fetchFileAtUri(uri, { isConflict });
+            file = await this.fetchFileAtUri(uri, { isConflict });
+            if (file == null) {
+                throw vscode.FileSystemError.FileNotFound(uri);
+            }
         }
 
         return isConflict ? file.conflictData.contents : file.data;

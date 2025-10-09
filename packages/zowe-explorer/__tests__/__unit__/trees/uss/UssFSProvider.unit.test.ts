@@ -21,6 +21,7 @@ import {
     UssFile,
     ZoweExplorerApiType,
     ZoweScheme,
+    imperative,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
@@ -502,6 +503,27 @@ describe("UssFSProvider", () => {
             expect(_updateResourceInEditorMock).toHaveBeenCalledWith(testUris.file);
             autoDetectEncodingMock.mockRestore();
         });
+        it("returns null when a 401 error is encountered", async () => {
+            const fileEntry = { ...testEntries.file };
+            jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+            const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
+            const error401 = new imperative.ImperativeError({
+                msg: "Username or password are not valid or expired",
+                errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+            });
+            const loggerErrorSpy = jest.spyOn(ZoweLogger, "error");
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+                getContents: jest.fn().mockRejectedValue(error401),
+            } as any);
+
+            const result = await UssFSProvider.instance.fetchFileAtUri(testUris.file);
+
+            expect(result).toBeNull();
+            expect(loggerErrorSpy).toHaveBeenCalledWith(
+                "[UssFSProvider] fetchFileAtUri failed due to an error. Details: \nUsername or password are not valid or expired"
+            );
+            autoDetectEncodingMock.mockRestore();
+        });
     });
 
     describe("fetchEncodingForUri", () => {
@@ -708,7 +730,7 @@ describe("UssFSProvider", () => {
                 profile: testProfile,
                 path: "/aFile.txt",
             });
-            const fetchFileAtUriMock = jest.spyOn(UssFSProvider.instance, "fetchFileAtUri").mockResolvedValueOnce(undefined);
+            const fetchFileAtUriMock = jest.spyOn(UssFSProvider.instance, "fetchFileAtUri").mockResolvedValueOnce(testEntries.file);
 
             expect(
                 (
@@ -757,10 +779,7 @@ describe("UssFSProvider", () => {
                 profile: testProfile,
                 path: "/aFile.txt",
             });
-            jest.spyOn(UssFSProvider.instance as any, "fetchFileAtUri").mockReturnValueOnce({
-                profile: testProfile,
-                path: "/USER.DATA.PS",
-            });
+            jest.spyOn(UssFSProvider.instance as any, "fetchFileAtUri").mockReturnValueOnce(testEntries.file);
 
             const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
 
@@ -808,10 +827,7 @@ describe("UssFSProvider", () => {
                 profile: testProfile,
                 path: "/aFile.txt",
             });
-            jest.spyOn(UssFSProvider.instance as any, "fetchFileAtUri").mockReturnValueOnce({
-                profile: testProfile,
-                path: "/USER.DATA.PS",
-            });
+            jest.spyOn(UssFSProvider.instance as any, "fetchFileAtUri").mockReturnValueOnce(testEntries.file);
 
             const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
 
@@ -822,6 +838,29 @@ describe("UssFSProvider", () => {
             );
 
             await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
+        });
+
+        it("throws FileNotFound error when fetchFileAtUri returns null", async () => {
+            const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile");
+            lookupAsFileMock.mockReturnValue({ ...testEntries.file, wasAccessed: false });
+            getInfoFromUriMock.mockReturnValue({
+                profile: testProfile,
+                path: "/aFile.txt",
+            });
+            const fetchFileAtUriMock = jest.spyOn(UssFSProvider.instance, "fetchFileAtUri").mockResolvedValueOnce(null);
+
+            let err;
+            try {
+                await UssFSProvider.instance.readFile(testUris.file);
+            } catch (error) {
+                err = error;
+                expect(err).toBeInstanceOf(FileSystemError);
+                expect((err as FileSystemError).code).toBe("FileNotFound");
+            }
+            expect(err).toBeDefined();
+            expect(fetchFileAtUriMock).toHaveBeenCalled();
+            fetchFileAtUriMock.mockRestore();
+            lookupAsFileMock.mockRestore();
         });
     });
 
