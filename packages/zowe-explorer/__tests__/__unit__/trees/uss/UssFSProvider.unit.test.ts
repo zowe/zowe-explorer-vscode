@@ -21,9 +21,10 @@ import {
     UssFile,
     ZoweExplorerApiType,
     ZoweScheme,
+    ZoweVsCodeExtension,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
-import { createIProfile } from "../../../__mocks__/mockCreators/shared";
+import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
@@ -32,6 +33,7 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import * as vscode from "vscode";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 const testProfile = createIProfile();
 
@@ -96,6 +98,11 @@ describe("UssFSProvider", () => {
             } as any),
         });
         jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.settings.maxRequestRetry") {
+                return 1;
+            }
+        });
     });
 
     afterAll(() => {
@@ -104,7 +111,13 @@ describe("UssFSProvider", () => {
 
     describe("stat", () => {
         const lookupMock = jest.spyOn((UssFSProvider as any).prototype, "lookup");
-
+        beforeEach(() => {
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                getCommonApi: () => ({
+                    getSession: () => createISession(),
+                }),
+            } as any);
+        });
         it("returns a file entry", async () => {
             lookupMock.mockReturnValueOnce(testEntries.file);
             const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
@@ -412,7 +425,7 @@ describe("UssFSProvider", () => {
             const fileEntry = { ...testEntries.file };
             const _fireSoonSpy = jest.spyOn((UssFSProvider as any).prototype, "_fireSoon");
             const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
-            const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
+            const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValueOnce(undefined);
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
                 getContents: jest.fn().mockRejectedValue(new Error("error retrieving contents")),
             } as any);
@@ -1754,7 +1767,7 @@ describe("UssFSProvider", () => {
                 isProfileLockedMock.mockReturnValueOnce(true);
                 const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
                 const ussApiMock = {
-                    fileList: jest.fn().mockResolvedValueOnce({ success: true, items: [] }),
+                    fileList: jest.fn(),
                 } as any;
 
                 const getUssApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(ussApiMock);
@@ -1765,7 +1778,7 @@ describe("UssFSProvider", () => {
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(result.success).toBe(false);
                 expect(result.commandResponse).toContain("Profile is locked");
@@ -1804,7 +1817,7 @@ describe("UssFSProvider", () => {
                 await UssFSProvider.instance.listFiles(testProfile, testUris.file);
 
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(ussApiMock.fileList).toHaveBeenCalled();
 
@@ -1831,7 +1844,7 @@ describe("UssFSProvider", () => {
                 await UssFSProvider.instance.fetchFileAtUri(testUris.file);
 
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile, false);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(getContentsMock).not.toHaveBeenCalled();
@@ -1928,7 +1941,7 @@ describe("UssFSProvider", () => {
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
                 expect(loadNamedProfileSpy).not.toHaveBeenCalled();
             });
         });
@@ -1949,7 +1962,7 @@ describe("UssFSProvider", () => {
 
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile, false);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");

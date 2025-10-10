@@ -10,7 +10,7 @@
  */
 
 import { Disposable, FilePermission, FileType, Uri, window } from "vscode";
-import { FsJobsUtils, FilterEntry, Gui, JobEntry, SpoolEntry, ZoweScheme, AuthHandler, FsAbstractUtils } from "@zowe/zowe-explorer-api";
+import { FsJobsUtils, FilterEntry, Gui, JobEntry, SpoolEntry, ZoweScheme, AuthHandler, FsAbstractUtils, imperative } from "@zowe/zowe-explorer-api";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { createIJobFile, createIJobObject } from "../../../__mocks__/mockCreators/jobs";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -141,7 +141,7 @@ describe("readDirectory", () => {
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
         expect(mockJesApi.getJobsByParameters).toHaveBeenCalledWith({
             owner: "USER",
             prefix: "JOB*",
@@ -184,7 +184,7 @@ describe("readDirectory", () => {
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
         expect(mockJesApi.getSpoolFiles).toHaveBeenCalledWith(testEntries.job.job?.jobname, testEntries.job.job?.jobid);
         jesApiMock.mockRestore();
     });
@@ -214,7 +214,7 @@ describe("readDirectory", () => {
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(getInfoForUriMock.mock.calls[0][0]).toBe(testUris.job);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
         jesApiMock.mockRestore();
         _handleErrorMock.mockRestore();
     });
@@ -285,6 +285,9 @@ describe("JobFSProvider.supportSpoolPagination", () => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return true;
             }
+            if (key === "zowe.settings.maxRequestRetry") {
+                return 1;
+            }
         });
 
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
@@ -300,6 +303,9 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return false;
+            }
+            if (key === "zowe.settings.maxRequestRetry") {
+                return 1;
             }
         });
 
@@ -346,6 +352,9 @@ describe("fetchSpoolAtUri", () => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return true;
             }
+            if (key === "zowe.settings.maxRequestRetry") {
+                return 1;
+            }
             return false;
         });
         const mockJesApi = {
@@ -383,6 +392,9 @@ describe("fetchSpoolAtUri", () => {
             }
             if (key === "zowe.jobs.paginate.recordsToFetch") {
                 return 20;
+            }
+            if (key === "zowe.settings.maxRequestRetry") {
+                return 1;
             }
         });
         const mockJesApi = {
@@ -455,6 +467,9 @@ describe("fetchSpoolAtUri", () => {
             }
             if (key === "zowe.jobs.paginate.enabled") {
                 return true;
+            }
+            if (key === "zowe.settings.maxRequestRetry") {
+                return 1;
             }
         });
 
@@ -605,7 +620,9 @@ describe("fetchSpoolAtUri", () => {
             .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
         const mockJesApi = {
             downloadSingleSpool: jest.fn((opts) => {
-                throw new Error("Failed to download spool");
+                throw new imperative.ImperativeError({
+                    msg: "All configured authentication methods failed",
+                });
             }),
         };
         const promptForAuthErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation();
@@ -748,7 +765,7 @@ describe("delete", () => {
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
         expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
         expect(getInfoForUriMock.mock.calls[0][0]).toBe(testUris.job);
         ussApiMock.mockRestore();
         lookupMock.mockRestore();

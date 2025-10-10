@@ -58,7 +58,7 @@ export class AuthCancelledError extends vscode.FileSystemError {
 }
 
 export class AuthHandler {
-    private static authPromptLocks = new Map<string, Mutex>();
+    public static authPromptLocks = new Map<string, Mutex>();
     private static profileLocks = new Map<string, Mutex>();
     private static authCancelledProfiles = new Set<string>();
     private static enabledProfileTypes: Set<string> = new Set(["zosmf"]);
@@ -231,10 +231,12 @@ export class AuthHandler {
                     AuthHandler.unlockProfile(profileName, true);
                     return true;
                 }
-                // User cancelled the SSO login prompt
-                AuthHandler.setAuthCancelled(profileName, true);
-                if (params.throwErrorOnCancel) {
-                    throw new AuthCancelledError(profileName, "User cancelled SSO authentication");
+                if (userResp === undefined) {
+                    // User cancelled the SSO login prompt
+                    AuthHandler.setAuthCancelled(profileName, true);
+                    if (params.throwErrorOnCancel) {
+                        throw new AuthCancelledError(profileName, "User cancelled SSO authentication");
+                    }
                 }
                 return false;
             }
@@ -295,8 +297,9 @@ export class AuthHandler {
 
         // Prompt the user to re-authenticate if an error and options were provided
         if (authOpts) {
-            await AuthHandler.promptForAuthentication(profile, authOpts);
+            const result = await AuthHandler.promptForAuthentication(profile, authOpts);
             this.profileLocks.get(profileName)?.release();
+            return result;
         }
 
         return true;
@@ -314,7 +317,7 @@ export class AuthHandler {
      * Waits for the profile to be unlocked (ONLY if the profile was locked after an authentication error)
      * @param profile The profile name or object that may be locked
      */
-    public static async waitForUnlock(profile: ProfileLike): Promise<void> {
+    public static async waitForUnlock(profile: ProfileLike, shouldAwaitTimeout: boolean = true): Promise<void> {
         const profileName = AuthHandler.getProfileName(profile);
         if (!this.profileLocks.has(profileName)) {
             return;
@@ -322,12 +325,12 @@ export class AuthHandler {
 
         const mutex = this.profileLocks.get(profileName);
         // If the mutex isn't locked, no need to wait
-        if (!mutex.isLocked()) {
+        if (!mutex.isLocked() || !shouldAwaitTimeout) {
             return;
         }
 
         // Wait for the mutex to be unlocked with a timeout to prevent indefinite waiting
-        const timeoutMs = 30000; // 30 seconds timeout
+        const timeoutMs = 30000;
         const timeoutPromise = new Promise<void>((_, reject) => {
             setTimeout(() => {
                 reject(new Error(`Timeout waiting for profile ${profileName} to be unlocked`));

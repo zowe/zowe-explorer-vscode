@@ -687,6 +687,27 @@ describe("_reopenEditorForRelocatedUri", () => {
     });
 });
 
+describe("parseUriQuery", () => {
+    it("should properly parse an empty query to the default options", () => {
+        const prov = new (BaseProvider as any)();
+        expect(prov.parseUriQuery()).toStrictEqual({
+            isConflict: false,
+            isFetching: false,
+            isInDiff: false,
+            shouldAwaitTimeout: false,
+        });
+    });
+    it("should properly parse the query to overwrite default options", () => {
+        const prov = new (BaseProvider as any)();
+        expect(prov.parseUriQuery("fetch=true&awaitTimeout=true")).toStrictEqual({
+            isConflict: false,
+            isFetching: true,
+            isInDiff: false,
+            shouldAwaitTimeout: true,
+        });
+    });
+});
+
 describe("onCloseEvent", () => {
     it("disposes the event if all visible text editors are not in a conflict", () => {
         const fakeProvider = { _lookupAsFile: jest.fn(), onDocClosedEventDisposable: { dispose: jest.fn() } };

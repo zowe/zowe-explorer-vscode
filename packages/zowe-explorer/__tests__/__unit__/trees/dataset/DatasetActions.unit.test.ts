@@ -3205,10 +3205,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         await DatasetActions.zoom();
 
         expect(authUtilsSpy).toHaveBeenCalledWith(
-            expect.objectContaining({
-                name: "TypeError",
-                message: expect.stringContaining("Cannot read properties of undefined"),
-            }),
+            expect.objectContaining(testError),
             expect.objectContaining({
                 apiType: ZoweExplorerApiType.Mvs,
                 profile: { name: "prof1" },

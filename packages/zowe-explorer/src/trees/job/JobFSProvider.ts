@@ -107,7 +107,8 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const results: [string, vscode.FileType][] = [];
 
         await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile);
+        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
+        await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
         const jesApi = ZoweExplorerApiRegister.getJesApi(uriInfo.profile);
         try {
             if (FsAbstractUtils.isFilterEntry(fsEntry)) {
@@ -226,7 +227,8 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
         await AuthUtils.reauthenticateIfCancelled(profile);
-        await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
+        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
+        await AuthHandler.waitForUnlock(spoolEntry.metadata.profile, shouldAwaitTimeout);
         const query = new URLSearchParams(uri.query);
         let recordRange = "";
         const recordsToFetch = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
@@ -242,7 +244,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
         }
 
-        try {
+        await AuthUtils.retryRequest(metadata.profile, async () => {
             const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
             if (jesApi.downloadSingleSpool) {
                 const spoolDownloadObject: IDownloadSpoolContentParms = {
@@ -261,10 +263,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 const jobEntry = this.lookupParentDirectory(uri) as JobEntry;
                 bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id, spoolEncoding));
             }
-        } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, spoolEntry.metadata.profile);
-            throw err;
-        }
+        });
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
 
@@ -361,7 +360,8 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         try {
             await AuthUtils.reauthenticateIfCancelled(profInfo.profile);
-            await AuthHandler.waitForUnlock(profInfo.profile);
+            const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
+            await AuthHandler.waitForUnlock(profInfo.profile, shouldAwaitTimeout);
             await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
         } catch (err) {
             this._handleError(err, {

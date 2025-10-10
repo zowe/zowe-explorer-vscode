@@ -479,6 +479,17 @@ export class BaseProvider {
         return entry;
     }
 
+    public parseUriQuery(query: string): { isFetching: boolean; shouldAwaitTimeout: boolean; isConflict: boolean; isInDiff: boolean } {
+        const queryParams = new URLSearchParams(query);
+
+        return {
+            isFetching: queryParams.get("fetch") === "true",
+            shouldAwaitTimeout: queryParams.get("awaitTimeout") === "true",
+            isConflict: queryParams.has("conflict"),
+            isInDiff: queryParams.has("inDiff"),
+        };
+    }
+
     /**
      * @deprecated Please use the public version
      */
