@@ -140,6 +140,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async move(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<boolean> {
         const info = this._getInfoFromUri(newUri);
+        const { shouldAwaitTimeout } = this.parseUriQuery(oldUri.query);
         const ussApi = ZoweExplorerApiRegister.getUssApi(info.profile);
 
         if (!ussApi.move) {
@@ -152,7 +153,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             await AuthUtils.retryRequest(info.profile, async () => {
                 await AuthUtils.reauthenticateIfCancelled(info.profile);
-                await AuthHandler.waitForUnlock(info.profile);
+                await AuthHandler.waitForUnlock(info.profile, shouldAwaitTimeout);
                 await ussApi.move(oldInfo.path, info.path);
             });
         } catch (err) {
@@ -199,7 +200,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         let response: IZosFilesResponse;
 
-        await AuthUtils.retryRequest(uriInfo.profile, async () => {
+        await AuthUtils.retryRequest(profile, async () => {
             response = await ZoweExplorerApiRegister.getUssApi(loadedProfile).fileList(ussPath);
 
             // If request was successful, create directories for the path if it doesn't exist
@@ -219,7 +220,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
         const entryExists = this.exists(uri);
-
+        const { shouldAwaitTimeout } = this.parseUriQuery(uri.query);
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
         if (
             session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE ||
@@ -230,7 +231,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile);
+        await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests

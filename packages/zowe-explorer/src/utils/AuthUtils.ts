@@ -96,7 +96,7 @@ export class AuthUtils {
             };
             // If the profile is already locked, prompt the user to re-authenticate.
             if (AuthHandler.isProfileLocked(profile)) {
-                await AuthHandler.waitForUnlock(profile);
+                await AuthHandler.waitForUnlock(profile, false);
             } else {
                 // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
                 // This may throw AuthCancelledError if the user cancels the authentication prompt
@@ -121,6 +121,7 @@ export class AuthUtils {
 
         for (let i = 0; i <= maxAttempts; i++) {
             try {
+                await AuthHandler.waitForUnlock(profile, true);
                 const callbackValue = await callback();
                 if (shouldTrackPrompts) {
                     delete this.promptCountForProfile[profileName];
@@ -137,10 +138,11 @@ export class AuthUtils {
                     throw vscode.FileSystemError.Unavailable();
                 }
                 const currentPromptCount = shouldTrackPrompts ? this.promptCountForProfile[profileName] || 0 : 0;
-                if (maxAttempts <= 0 || i >= maxAttempts || currentPromptCount >= maxAttempts) {
+                if (i >= maxAttempts || currentPromptCount >= maxAttempts) {
                     if (shouldTrackPrompts) {
                         delete this.promptCountForProfile[profileName];
                     }
+                    // await AuthHandler.lockProfile(profile);
                     throw vscode.FileSystemError.Unavailable();
                 }
                 if (
