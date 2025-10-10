@@ -378,9 +378,10 @@ export class ZoweVsCodeExtension {
      * Prompt users through process of creating a Zowe team configuration file including Zowe Explorer registered types
      * Upon successful completion, editor will open team configuration file.
      *
+     * @param openInEditor - Optional parameter to decide whether to open in config editor (true) or text file (false). Defaults to false (text file).
      * @returns void
      */
-    public static async createTeamConfiguration(): Promise<void> {
+    public static async createTeamConfiguration(openInEditor: boolean = false): Promise<void> {
         let user = false;
         let global = true;
         let rootPath = FileManagement.getZoweDir();
@@ -397,7 +398,7 @@ export class ZoweVsCodeExtension {
             }
         }
         // call check for existing and prompt here
-        const existingFile = await this.checkExistingConfig(rootPath);
+        const existingFile = await this.checkExistingConfig(rootPath, openInEditor);
         if (existingFile === false) {
             // handle prompt cancellation
             return;
@@ -443,7 +444,16 @@ export class ZoweVsCodeExtension {
         } else {
             configName = config.configName;
         }
-        await this.openConfigFile(path.join(rootPath, configName));
+
+        const configPath = path.join(rootPath, configName);
+
+        if (openInEditor) {
+            // Open the ConfigEditor webview with the new config layer selected
+            await vscode.commands.executeCommand("zowe.configEditorWithProfile", "", configPath, "");
+        } else {
+            // Open the config file in text editor (default behavior)
+            await this.openConfigFile(configPath);
+        }
     }
 
     public static async openConfigFile(filePath: string): Promise<void> {
@@ -564,7 +574,7 @@ export class ZoweVsCodeExtension {
         options.session.certKey = response.certKey;
     }
 
-    private static async checkExistingConfig(filePath: string): Promise<string | false> {
+    private static async checkExistingConfig(filePath: string, openInEditor: boolean = false): Promise<string | false> {
         const existingLayers = await this.getConfigLayers();
         const foundLayer = existingLayers.find((layer) => layer.path.includes(filePath));
         if (foundLayer == null) {
@@ -582,7 +592,12 @@ export class ZoweVsCodeExtension {
         if (response) {
             return path.basename(foundLayer.path);
         } else {
-            await this.openConfigFile(foundLayer.path);
+            // Open the existing file (similar to cancel behavior)
+            if (openInEditor) {
+                await vscode.commands.executeCommand("zowe.configEditorWithProfile", "", foundLayer.path, "");
+            } else {
+                await this.openConfigFile(foundLayer.path);
+            }
         }
         return false;
     }

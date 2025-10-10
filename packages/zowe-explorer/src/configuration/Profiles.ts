@@ -511,7 +511,7 @@ export class Profiles extends ProfilesCache {
             return;
         }
         if (choice === configEdit) {
-            await this.editZoweConfigFile();
+            await this.editZoweConfigFile(true);
             return;
         }
         let chosenProfile: string = "";
@@ -587,7 +587,8 @@ export class Profiles extends ProfilesCache {
     public async createZoweSchema(_zoweFileProvider: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("Profiles.createZoweSchema called.");
         try {
-            await ZoweVsCodeExtension.createTeamConfiguration();
+            // Create team configuration and open in config editor
+            await ZoweVsCodeExtension.createTeamConfiguration(true);
         } catch (err) {
             ZoweLogger.error(err);
             ZoweExplorerExtender.showZoweConfigError(err.message);
@@ -608,12 +609,16 @@ export class Profiles extends ProfilesCache {
         return existingLayers;
     }
 
-    public async editZoweConfigFile(): Promise<void> {
+    public async editZoweConfigFile(openInEditor: boolean = false): Promise<void> {
         ZoweLogger.trace("Profiles.editZoweConfigFile called.");
         const existingLayers = await this.uniqueExistingLayers();
         if (existingLayers.length === 1) {
-            await this.openConfigFile(existingLayers[0].path);
-            Gui.showMessage(this.manualEditMsg);
+            if (openInEditor) {
+                await vscode.commands.executeCommand("zowe.configEditorWithProfile", "", existingLayers[0].path, "");
+            } else {
+                await this.openConfigFile(existingLayers[0].path);
+                Gui.showMessage(this.manualEditMsg);
+            }
         }
         if (existingLayers && existingLayers.length > 1) {
             const choice = await this.getConfigLocationPrompt("edit");
@@ -621,18 +626,30 @@ export class Profiles extends ProfilesCache {
                 case "project":
                     for (const file of existingLayers) {
                         if (!file.global) {
-                            await this.openConfigFile(file.path);
+                            if (openInEditor) {
+                                await vscode.commands.executeCommand("zowe.configEditorWithProfile", "", file.path, "");
+                            } else {
+                                await this.openConfigFile(file.path);
+                            }
                         }
                     }
-                    Gui.showMessage(this.manualEditMsg);
+                    if (!openInEditor) {
+                        Gui.showMessage(this.manualEditMsg);
+                    }
                     break;
                 case "global":
                     for (const file of existingLayers) {
                         if (file.global) {
-                            await this.openConfigFile(file.path);
+                            if (openInEditor) {
+                                await vscode.commands.executeCommand("zowe.configEditorWithProfile", "", file.path, "");
+                            } else {
+                                await this.openConfigFile(file.path);
+                            }
                         }
                     }
-                    Gui.showMessage(this.manualEditMsg);
+                    if (!openInEditor) {
+                        Gui.showMessage(this.manualEditMsg);
+                    }
                     break;
                 default:
                     Gui.showMessage(this.profilesOpCancelled);
