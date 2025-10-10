@@ -18,6 +18,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where secure credentials and headers were being logged to the Zowe logger and VSCode output channel. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
 - Fixed an error encountered when deleting members in a PDS. [#3874](https://github.com/zowe/zowe-explorer-vscode/issues/3874)
 - Fixed regression where PDS member attributes were no longer listed when using the "Show Attributes" feature from the data set context menu. [#3856](https://github.com/zowe/zowe-explorer-vscode/issues/3856)
+- Fixed an issue where uploading a file to a data set or USS from a Windows machine caused extra carriage return characters to be included in its contents. Now, carriage returns are filtered out from carriage return/line feed (CRLF) sequences during upload. [#3853](https://github.com/zowe/zowe-explorer-vscode/issues/3853)
 - Fixed an issue where switching to a custom credential manager did not update the `imperative.json` file. [#3705](https://github.com/zowe/zowe-explorer-vscode/issues/3705)
 
 ## `3.3.0`
