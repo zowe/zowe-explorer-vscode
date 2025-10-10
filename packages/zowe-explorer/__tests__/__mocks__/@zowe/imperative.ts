@@ -191,6 +191,11 @@ export interface ICredentialManagerNameMap {
     credMgrZEName?: string;
 }
 
+export interface IDataSetCount {
+    count: number;
+    lastItemName?: string;
+}
+
 export class Session {
     constructor(public ISession: ISessionOptions) {}
 }
