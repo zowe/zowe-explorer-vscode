@@ -22,11 +22,12 @@ import { FileManagement } from "../utils";
 import { Types } from "../Types";
 import { ProfilesCache } from "../profiles/ProfilesCache";
 import { VscSettings } from "../vscode/doc/VscSettings";
+import { IZosmfListResponse, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
+import { IDataSetCount } from "../dataset/IDataSetCount";
 
 /**
  * Implementations of Zowe Explorer API for z/OSMF profiles
- */
-export namespace ZoweExplorerZosmf {
+ */ export namespace ZoweExplorerZosmf {
     /**
      * An implementation of the Zowe Explorer API Common interface for zOSMF.
      */
@@ -406,6 +407,20 @@ export namespace ZoweExplorerZosmf {
                 {},
                 this.getSession()
             );
+        }
+
+        public async getCount(dataSetPatterns: string[]): Promise<IDataSetCount> {
+            let allDatasets: IZosmfListResponse[] = [];
+            const response: IZosFilesResponse[] = [];
+            response.push(await this.dataSetsMatchingPattern(dataSetPatterns, { attributes: false }));
+            allDatasets = response
+                .filter((r) => r.success)
+                .reduce((arr: IZosmfListResponse[], r) => {
+                    const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
+                    return responseItems ? [...arr, ...responseItems] : arr;
+                }, []);
+            const datasetCount = allDatasets.length !== 0 ? Number(allDatasets.length) : -1;
+            return { count: datasetCount, lastItem: allDatasets?.[allDatasets.length - 1]?.dsname };
         }
     }
 

@@ -33,6 +33,7 @@ Changelog:
 - [ ] The pre-publish command has been executed:
   - **v2 and below:** `yarn workspace vscode-extension-for-zowe vscode:prepublish`
   - **v3:** `pnpm --filter vscode-extension-for-zowe vscode:prepublish`
+- [ ] New ZE APIs are tested with extender types that haven't adopted yet to determine breaking changes. Can use Zowe zFTP marketplace extension.
 
 **Code coverage**
 
