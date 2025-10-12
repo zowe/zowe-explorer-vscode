@@ -20,3 +20,4 @@ Scenario: Test profile header buttons
     Then autostore should be "true"
     When a user clicks the add configuration layer button
     Then a new file should be opened
+    Then clean up the file

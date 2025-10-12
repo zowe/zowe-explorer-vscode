@@ -47,6 +47,7 @@ Then("a new file should be opened", async () => {
     const editorTabs = await browser.$$(".tab");
     await expect(editorTabs.length).toBe(2);
 });
+
 Then("close the current tab", async () => {
     await browser.pause(500);
     await browser.keys([Key.Ctrl, "w"]);
@@ -71,4 +72,13 @@ Then("autostore should be {string}", async (value: string) => {
 
     const expectedValue = value === "true";
     await expect(config.autoStore).toEqual(expectedValue);
+});
+
+Then("clean up the file", async () => {
+    const userConfigPath = path.join(process.cwd(), "..", "ci", "zowe.config.user.json");
+
+    // Check if the file exists and delete it
+    if (fs.existsSync(userConfigPath)) {
+        fs.unlinkSync(userConfigPath);
+    }
 });

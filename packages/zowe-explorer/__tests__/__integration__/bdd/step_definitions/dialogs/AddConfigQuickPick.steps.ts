@@ -63,7 +63,7 @@ Then("it will open the config in the editor", async function () {
     const editorTitle = await activeEditor.getTitle();
 
     // ensure that an editor was opened with the new Zowe config
-    await expect(editorTitle.includes("zowe.config.json")).toBe(true);
+    await expect(editorTitle.includes("Config Editor")).toBe(true);
     await editorView.closeEditor(editorTitle);
 });
 

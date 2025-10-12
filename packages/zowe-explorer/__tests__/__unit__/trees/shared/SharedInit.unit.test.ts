@@ -619,9 +619,9 @@ describe("Test src/shared/extension", () => {
                 "records-url": "http://example.com/records",
                 lrecl: 80,
                 subsystem: "",
-                procstep: ""
+                procstep: "",
             };
-            
+
             // Mock the JobFSProvider.instance.lookup to return the SpoolEntry
             const spyLookup = jest.spyOn(JobFSProvider.instance, "lookup").mockReturnValue(spoolEntry);
 
@@ -647,7 +647,7 @@ describe("Test src/shared/extension", () => {
                 type: vscode.FileType.File,
                 ctime: 0,
                 mtime: 0,
-                size: 0
+                size: 0,
             } as any);
 
             const spyIsSpoolEntry = jest.spyOn(FsJobsUtils, "isSpoolEntry");
