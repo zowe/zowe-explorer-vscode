@@ -1811,12 +1811,13 @@ describe("UssFSProvider", () => {
                 } as any;
 
                 const getUssApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(ussApiMock);
-                const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
+                const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
+
                 const loadProfileMock = jest.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(testProfile);
 
                 await UssFSProvider.instance.listFiles(testProfile, testUris.file);
 
-                expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
+                expect(waitForUnlockMock).toHaveBeenCalledTimes(2);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(ussApiMock.fileList).toHaveBeenCalled();
@@ -1878,7 +1879,7 @@ describe("UssFSProvider", () => {
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(lookupMock).toHaveBeenCalledTimes(1);
                 expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
@@ -1911,7 +1912,7 @@ describe("UssFSProvider", () => {
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
                 expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
                 expect(lookupSpy).not.toHaveBeenCalled();
 
                 existsMock.mockRestore();

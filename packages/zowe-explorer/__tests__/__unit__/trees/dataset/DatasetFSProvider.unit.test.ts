@@ -1095,6 +1095,8 @@ describe("DatasetFSProvider", () => {
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 allMembers: allMembersMock,
             } as any);
+            jest.spyOn(AuthHandler, "lockProfile").mockImplementation();
+
             const handleProfileAuthOnErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation();
             const fakePds = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pds)), testEntries.pds);
             await expect(

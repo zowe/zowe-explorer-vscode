@@ -193,7 +193,7 @@ describe("AuthUtils", () => {
             const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
             const lockProfileSpy = jest.spyOn(AuthHandler, "lockProfile");
             await AuthUtils.handleProfileAuthOnError(imperativeError, profile);
-            expect(waitForUnlockMock).toHaveBeenCalledWith(profile);
+            expect(waitForUnlockMock).toHaveBeenCalledWith(profile, false);
             expect(isProfileLockedMock).toHaveBeenCalledWith(profile);
             expect(isUsingTokenAuthMock).not.toHaveBeenCalled();
             expect(lockProfileSpy).not.toHaveBeenCalledWith(profile);
@@ -248,11 +248,10 @@ describe("AuthUtils", () => {
             jest.clearAllMocks();
         });
 
-        describe("JobFSProvider fetchSpoolAtUri auth error handling", () => {
+        describe("RetryRequest setting behavior", () => {
             const testAttempts = [0, 1, 3, 5, 25, 99];
 
             test.each(testAttempts)("calls AuthUtils.handleProfileAuthOnError %i times when maxAttempts is %i", async (maxAttempts) => {
-                // Arrange
                 jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
                     if (key === "zowe.settings.maxRequestRetry") {
                         return maxAttempts;
@@ -261,7 +260,7 @@ describe("AuthUtils", () => {
                 });
 
                 jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
-
+                jest.spyOn(AuthHandler, "lockProfile").mockImplementation();
                 await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toBeDefined();
 
                 if (maxAttempts === 0) {
