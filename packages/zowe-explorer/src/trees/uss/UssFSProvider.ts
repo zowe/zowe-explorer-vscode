@@ -151,11 +151,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const oldInfo = this._getInfoFromUri(oldUri);
 
         try {
-            await AuthUtils.retryRequest(info.profile, async () => {
-                await AuthUtils.reauthenticateIfCancelled(info.profile);
-                await AuthHandler.waitForUnlock(info.profile, shouldAwaitTimeout);
-                await ussApi.move(oldInfo.path, info.path);
-            });
+            await AuthUtils.retryRequest(
+                info.profile,
+                async () => {
+                    await AuthUtils.reauthenticateIfCancelled(info.profile);
+                    await AuthHandler.waitForUnlock(info.profile, shouldAwaitTimeout);
+                    await ussApi.move(oldInfo.path, info.path);
+                },
+                shouldAwaitTimeout
+            );
         } catch (err) {
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({ message: "Failed to move {0}", args: [oldInfo.path], comment: "File path" }),
@@ -200,14 +204,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         let response: IZosFilesResponse;
 
-        await AuthUtils.retryRequest(profile, async () => {
-            response = await ZoweExplorerApiRegister.getUssApi(loadedProfile).fileList(ussPath);
+        await AuthUtils.retryRequest(
+            profile,
+            async () => {
+                response = await ZoweExplorerApiRegister.getUssApi(loadedProfile).fileList(ussPath);
 
-            // If request was successful, create directories for the path if it doesn't exist
-            if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
-                await vscode.workspace.fs.createDirectory(uri.with({ query: "" }));
-            }
-        });
+                // If request was successful, create directories for the path if it doesn't exist
+                if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
+                    await vscode.workspace.fs.createDirectory(uri.with({ query: "" }));
+                }
+            },
+            shouldAwaitTimeout
+        );
 
         return {
             ...response,
@@ -372,15 +380,19 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         try {
-            await AuthUtils.retryRequest(uriInfo.profile, async () => {
-                resp = await ZoweExplorerApiRegister.getUssApi(profile).getContents(filePath, {
-                    binary: file.encoding?.kind === "binary",
-                    encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
-                    responseTimeout: profile.profile?.responseTimeout,
-                    returnEtag: true,
-                    stream: bufBuilder,
-                });
-            });
+            await AuthUtils.retryRequest(
+                uriInfo.profile,
+                async () => {
+                    resp = await ZoweExplorerApiRegister.getUssApi(profile).getContents(filePath, {
+                        binary: file.encoding?.kind === "binary",
+                        encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
+                        responseTimeout: profile.profile?.responseTimeout,
+                        returnEtag: true,
+                        stream: bufBuilder,
+                    });
+                },
+                shouldAwaitTimeout
+            );
         } catch {
             return;
         }

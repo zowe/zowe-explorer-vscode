@@ -244,26 +244,30 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
         }
 
-        await AuthUtils.retryRequest(metadata.profile, async () => {
-            const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
-            if (jesApi.downloadSingleSpool) {
-                const spoolDownloadObject: IDownloadSpoolContentParms = {
-                    jobFile: spoolEntry.spool,
-                    stream: bufBuilder,
-                    binary: spoolEntry.encoding?.kind === "binary",
-                    recordRange:
-                        jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled")
-                            ? recordRange
-                            : undefined,
-                    encoding: spoolEncoding,
-                };
+        await AuthUtils.retryRequest(
+            metadata.profile,
+            async () => {
+                const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
+                if (jesApi.downloadSingleSpool) {
+                    const spoolDownloadObject: IDownloadSpoolContentParms = {
+                        jobFile: spoolEntry.spool,
+                        stream: bufBuilder,
+                        binary: spoolEntry.encoding?.kind === "binary",
+                        recordRange:
+                            jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled")
+                                ? recordRange
+                                : undefined,
+                        encoding: spoolEncoding,
+                    };
 
-                await jesApi.downloadSingleSpool(spoolDownloadObject);
-            } else {
-                const jobEntry = this.lookupParentDirectory(uri) as JobEntry;
-                bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id, spoolEncoding));
-            }
-        });
+                    await jesApi.downloadSingleSpool(spoolDownloadObject);
+                } else {
+                    const jobEntry = this.lookupParentDirectory(uri) as JobEntry;
+                    bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id, spoolEncoding));
+                }
+            },
+            shouldAwaitTimeout
+        );
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
 

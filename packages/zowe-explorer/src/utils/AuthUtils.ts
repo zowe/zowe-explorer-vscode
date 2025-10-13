@@ -108,41 +108,30 @@ export class AuthUtils {
         }
     }
 
-    public static promptCountForProfile: Record<string, number> = {};
-
-    public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
+    public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>, shouldAwaitTimeout = true): Promise<void> {
         const maxAttempts = SettingsConfig.getDirectValue("zowe.settings.maxRequestRetry", 0);
         const profileName = profile?.name;
         const shouldTrackPrompts = profileName != null;
 
-        if (shouldTrackPrompts && !this.promptCountForProfile[profileName]) {
-            this.promptCountForProfile[profileName] = 0;
-        }
+        let promptCount = 0;
 
         for (let i = 0; i <= maxAttempts; i++) {
             try {
-                await AuthHandler.waitForUnlock(profile, true);
+                await AuthHandler.waitForUnlock(profile, shouldAwaitTimeout);
                 const callbackValue = await callback();
-                if (shouldTrackPrompts) {
-                    delete this.promptCountForProfile[profileName];
-                }
                 return callbackValue;
             } catch (err) {
                 if (err instanceof Error) {
                     ZoweLogger.error(err.message);
                 }
-                if (maxAttempts <= 0) {
+                if (maxAttempts === 0) {
                     if (profile) {
                         await this.handleProfileAuthOnError(err, profile);
                     }
                     throw vscode.FileSystemError.Unavailable();
                 }
-                const currentPromptCount = shouldTrackPrompts ? this.promptCountForProfile[profileName] || 0 : 0;
-                if (i >= maxAttempts || currentPromptCount >= maxAttempts) {
-                    if (shouldTrackPrompts) {
-                        delete this.promptCountForProfile[profileName];
-                    }
-                    // await AuthHandler.lockProfile(profile);
+                if (i >= maxAttempts || promptCount >= maxAttempts) {
+                    await AuthHandler.lockProfile(profile);
                     throw vscode.FileSystemError.Unavailable();
                 }
                 if (
@@ -152,18 +141,23 @@ export class AuthUtils {
                     err.message.includes("HTTP(S) status 401")
                 ) {
                     if (shouldTrackPrompts) {
-                        this.promptCountForProfile[profileName]++;
+                        promptCount++;
                     }
                     if (profile) {
+                        const authPromptLock = AuthHandler.authPromptLocks.get(profile.name);
+                        if (authPromptLock?.isLocked()) {
+                            await authPromptLock.waitForUnlock();
+                            if (AuthHandler.isProfileLocked(profile) && promptCount >= maxAttempts) {
+                                throw vscode.FileSystemError.Unavailable();
+                            }
+                            continue;
+                        }
                         const result = await this.handleProfileAuthOnError(err, profile);
                         if (!result) {
                             AuthHandler.authPromptLocks.get(profile.name)?.release();
                         }
                     }
                 } else {
-                    if (shouldTrackPrompts) {
-                        delete this.promptCountForProfile[profileName];
-                    }
                     throw err;
                 }
             }

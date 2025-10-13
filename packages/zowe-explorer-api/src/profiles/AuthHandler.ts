@@ -298,7 +298,9 @@ export class AuthHandler {
         // Prompt the user to re-authenticate if an error and options were provided
         if (authOpts) {
             const result = await AuthHandler.promptForAuthentication(profile, authOpts);
-            this.profileLocks.get(profileName)?.release();
+            if (result) {
+                this.profileLocks.get(profileName)?.release();
+            }
             return result;
         }
 
@@ -325,12 +327,16 @@ export class AuthHandler {
 
         const mutex = this.profileLocks.get(profileName);
         // If the mutex isn't locked, no need to wait
-        if (!mutex.isLocked() || !shouldAwaitTimeout) {
+        if (!mutex.isLocked()) {
             return;
         }
 
+        if (mutex.isLocked() && !shouldAwaitTimeout) {
+            throw new Error(`Profile ${profileName} is locked`);
+        }
+
         // Wait for the mutex to be unlocked with a timeout to prevent indefinite waiting
-        const timeoutMs = 30000;
+        const timeoutMs = 10000;
         const timeoutPromise = new Promise<void>((_, reject) => {
             setTimeout(() => {
                 reject(new Error(`Timeout waiting for profile ${profileName} to be unlocked`));
@@ -344,6 +350,7 @@ export class AuthHandler {
             // This is acceptable as this is just a fallback for an edge case where the user did not respond to a credential prompt in time
             // eslint-disable-next-line no-console
             console.log(`Timeout waiting for profile ${profileName} to be unlocked`);
+            throw error;
         }
     }
 
