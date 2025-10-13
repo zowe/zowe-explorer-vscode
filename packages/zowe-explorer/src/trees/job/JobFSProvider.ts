@@ -348,9 +348,9 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     /**
-     * Deletes a spool file or job at the given URI.
+     * Deletes a spool job at the given URI.
      * @param uri The URI that points to the file/folder to delete
-     * @param options Options for deleting the spool file or job
+     * @param options Options for deleting the spool job
      * - `deleteRemote` - Deletes the job from the remote system if set to true.
      */
     public async delete(uri: vscode.Uri, options: { readonly recursive: boolean }): Promise<void> {

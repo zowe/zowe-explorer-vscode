@@ -45,7 +45,7 @@ export class AuthUtils {
      * @throws {AuthCancelledError} If the user cancels the re-authentication prompt.
      */
     public static async reauthenticateIfCancelled(profile: imperative.IProfileLoaded): Promise<void> {
-        if (AuthHandler.isProfileLocked(profile) && AuthHandler.wasAuthCancelled(profile)) {
+        if (AuthHandler.wasAuthCancelled(profile)) {
             // The original error doesn't matter here, we just need to trigger the flow.
             await this.handleProfileAuthOnError(
                 new ImperativeError({
@@ -64,18 +64,13 @@ export class AuthUtils {
      * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
      * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
-    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<boolean> {
+    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
         if (
             (err instanceof imperative.ImperativeError &&
                 (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                     err.message.includes("All configured authentication methods failed"))) ||
             err.message.includes("HTTP(S) status 401")
         ) {
-            if (!(await AuthHandler.shouldHandleAuthError(profile.name))) {
-                ZoweLogger.debug(`[AuthUtils] Skipping authentication prompt for profile ${profile.name} due to debouncing`);
-                return false;
-            }
-
             // In the case of an authentication error, find a more user-friendly error message if available.
             const errorCorrelation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err, {
                 templateArgs: {
@@ -94,14 +89,7 @@ export class AuthUtils {
                 errorCorrelation,
                 throwErrorOnCancel: true,
             };
-            // If the profile is already locked, prompt the user to re-authenticate.
-            if (AuthHandler.isProfileLocked(profile)) {
-                await AuthHandler.waitForUnlock(profile, false);
-            } else {
-                // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
-                // This may throw AuthCancelledError if the user cancels the authentication prompt
-                return await AuthHandler.lockProfile(profile, authOpts);
-            }
+            await AuthHandler.getOrCreateAuthFlow(profile, authOpts);
         } else if (AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
             AuthHandler.unlockProfile(profile);
@@ -152,10 +140,7 @@ export class AuthUtils {
                             }
                             continue;
                         }
-                        const result = await this.handleProfileAuthOnError(err, profile);
-                        if (!result) {
-                            AuthHandler.authPromptLocks.get(profile.name)?.release();
-                        }
+                        await this.handleProfileAuthOnError(err, profile);
                     }
                 } else {
                     throw err;

@@ -61,6 +61,7 @@ export class AuthHandler {
     public static authPromptLocks = new Map<string, Mutex>();
     private static profileLocks = new Map<string, Mutex>();
     private static authCancelledProfiles = new Set<string>();
+    private static authFlows = new Map<string, Promise<void>>();
     private static enabledProfileTypes: Set<string> = new Set(["zosmf"]);
 
     /**
@@ -165,6 +166,7 @@ export class AuthHandler {
     public static unlockProfile(profile: ProfileLike, refreshResources?: boolean): void {
         const profileName = AuthHandler.getProfileName(profile);
         this.authCancelledProfiles.delete(profileName);
+        this.authFlows.delete(profileName);
         this.authPromptLocks.get(profileName)?.release();
         const mutex = this.profileLocks.get(profileName);
         // If a mutex doesn't exist for this profile or the mutex is no longer locked, return
@@ -185,26 +187,6 @@ export class AuthHandler {
                 // eslint-disable-next-line no-console
                 .catch((err) => err instanceof Error && console.error(err.message));
         }
-    }
-
-    /**
-     * Determines whether to handle an authentication error for a given profile.
-     * This uses a mutex to prevent additional authentication prompts until the first prompt is resolved.
-     * @param profileName The name of the profile to check
-     * @returns {boolean} Whether to handle the authentication error
-     */
-    public static async shouldHandleAuthError(profileName: string): Promise<boolean> {
-        if (!this.authPromptLocks.has(profileName)) {
-            this.authPromptLocks.set(profileName, new Mutex());
-        }
-
-        const mutex = this.authPromptLocks.get(profileName);
-        if (mutex.isLocked()) {
-            return false;
-        }
-
-        await mutex.acquire();
-        return true;
     }
 
     /**
@@ -282,8 +264,18 @@ export class AuthHandler {
      */
     public static async lockProfile(profile: ProfileLike, authOpts?: AuthPromptParams): Promise<boolean> {
         const profileName = AuthHandler.getProfileName(profile);
+        let promptMutex: Mutex | undefined;
+
+        if (authOpts) {
+            if (!this.authPromptLocks.has(profileName)) {
+                this.authPromptLocks.set(profileName, new Mutex());
+            }
+            promptMutex = this.authPromptLocks.get(profileName);
+            await promptMutex.acquire();
+        }
 
         // Only create a lock for the profile when we can determine the profile type and the profile type has locks enabled
+        let profileMutex: Mutex | undefined;
         if (!AuthHandler.isProfileLoaded(profile) || this.enabledProfileTypes.has(profile.type)) {
             // If the mutex does not exist, make one for the profile and acquire the lock
             if (!this.profileLocks.has(profileName)) {
@@ -291,17 +283,22 @@ export class AuthHandler {
             }
 
             // Attempt to acquire the lock - only lock the mutex if the profile type has locks enabled
-            const mutex = this.profileLocks.get(profileName);
-            await mutex.acquire();
+            profileMutex = this.profileLocks.get(profileName);
+            await profileMutex.acquire();
         }
 
         // Prompt the user to re-authenticate if an error and options were provided
         if (authOpts) {
-            const result = await AuthHandler.promptForAuthentication(profile, authOpts);
-            if (result) {
-                this.profileLocks.get(profileName)?.release();
+            try {
+                const result = await AuthHandler.promptForAuthentication(profile, authOpts);
+                if (!result) {
+                    throw new AuthCancelledError(profileName, "Authentication was not completed");
+                }
+                return true;
+            } finally {
+                this.releaseMutexIfLocked(profileMutex);
+                this.releaseMutexIfLocked(promptMutex);
             }
-            return result;
         }
 
         return true;
@@ -321,13 +318,9 @@ export class AuthHandler {
      */
     public static async waitForUnlock(profile: ProfileLike, shouldAwaitTimeout: boolean = true): Promise<void> {
         const profileName = AuthHandler.getProfileName(profile);
-        if (!this.profileLocks.has(profileName)) {
-            return;
-        }
-
         const mutex = this.profileLocks.get(profileName);
-        // If the mutex isn't locked, no need to wait
-        if (!mutex.isLocked()) {
+        // If the mutex doesn't exist or isn't locked, no need to wait
+        if (!mutex || !mutex.isLocked()) {
             return;
         }
 
@@ -368,6 +361,7 @@ export class AuthHandler {
             mutex.release();
         }
         this.authCancelledProfiles.clear();
+        this.authFlows.clear();
     }
 
     /**
@@ -382,5 +376,37 @@ export class AuthHandler {
         }
 
         return mutex.isLocked();
+    }
+
+    public static getActiveAuthFlow(profile: ProfileLike): Promise<void> | undefined {
+        return this.authFlows.get(AuthHandler.getProfileName(profile));
+    }
+
+    public static async getOrCreateAuthFlow(profile: ProfileLike, authOpts: AuthPromptParams): Promise<void> {
+        const profileName = AuthHandler.getProfileName(profile);
+        const existingFlow = this.authFlows.get(profileName);
+        if (existingFlow != null) {
+            return existingFlow;
+        }
+
+        const flow = (async (): Promise<void> => {
+            try {
+                const result = await AuthHandler.lockProfile(profile, authOpts);
+                if (!result) {
+                    throw new AuthCancelledError(profileName, "Authentication was not completed");
+                }
+            } finally {
+                this.authFlows.delete(profileName);
+            }
+        })();
+
+        this.authFlows.set(profileName, flow);
+        return flow;
+    }
+
+    private static releaseMutexIfLocked(mutex?: Mutex): void {
+        if (mutex?.isLocked()) {
+            mutex.release();
+        }
     }
 }
