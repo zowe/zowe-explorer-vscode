@@ -21,6 +21,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed regression where PDS member attributes were no longer listed when using the "Show Attributes" feature from the data set context menu. [#3856](https://github.com/zowe/zowe-explorer-vscode/issues/3856)
 - Fixed an issue where uploading a file to a data set or USS from a Windows machine caused extra carriage return characters to be included in its contents. Now, carriage returns are filtered out from carriage return/line feed (CRLF) sequences during upload. [#3853](https://github.com/zowe/zowe-explorer-vscode/issues/3853)
 - Fixed an issue where opening a USS file would show empty contents when an error occurred while fetching the file from the mainframe, instead of displaying an error message. [#3894](https://github.com/zowe/zowe-explorer-vscode/issues/3894)
+- Fixed an issue where the Delete action in the Data Sets tree could delete a PDS member previously selected in the tree rather than the one that was right-clicked. [#3883](https://github.com/zowe/zowe-explorer-vscode/issues/3883)
 
 ## `3.3.0`
 
