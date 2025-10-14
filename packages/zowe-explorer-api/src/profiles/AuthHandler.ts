@@ -62,6 +62,8 @@ export class AuthHandler {
     private static profileLocks = new Map<string, Mutex>();
     private static authCancelledProfiles = new Set<string>();
     private static authFlows = new Map<string, Promise<void>>();
+    private static sequentialLocks = new Map<string, Mutex>();
+    private static parallelEnabledProfiles = new Set<string>();
     private static enabledProfileTypes: Set<string> = new Set(["zosmf"]);
 
     /**
@@ -304,6 +306,42 @@ export class AuthHandler {
         return true;
     }
 
+    public static enableSequentialRequests(profile: ProfileLike): void {
+        const profileName = AuthHandler.getProfileName(profile);
+        this.parallelEnabledProfiles.delete(profileName);
+        if (!this.sequentialLocks.has(profileName)) {
+            this.sequentialLocks.set(profileName, new Mutex());
+        }
+    }
+
+    public static disableSequentialRequests(profile: ProfileLike): void {
+        const profileName = AuthHandler.getProfileName(profile);
+        this.parallelEnabledProfiles.add(profileName);
+        const mutex = this.sequentialLocks.get(profileName);
+        if (mutex != null && !mutex.isLocked()) {
+            this.sequentialLocks.delete(profileName);
+        }
+    }
+
+    public static areSequentialRequestsEnabled(profile: ProfileLike): boolean {
+        return !this.parallelEnabledProfiles.has(AuthHandler.getProfileName(profile));
+    }
+
+    public static async runSequentialIfEnabled<T>(profile: ProfileLike, action: () => Promise<T>): Promise<T> {
+        if (!this.areSequentialRequestsEnabled(profile)) {
+            return action();
+        }
+
+        const profileName = AuthHandler.getProfileName(profile);
+        let mutex = this.sequentialLocks.get(profileName);
+        if (mutex == null) {
+            mutex = new Mutex();
+            this.sequentialLocks.set(profileName, mutex);
+        }
+
+        return mutex.runExclusive(action);
+    }
+
     private static isProfileLoaded(profile: ProfileLike): profile is imperative.IProfileLoaded {
         return typeof profile !== "string";
     }
@@ -362,6 +400,8 @@ export class AuthHandler {
         }
         this.authCancelledProfiles.clear();
         this.authFlows.clear();
+        this.parallelEnabledProfiles.clear();
+        this.sequentialLocks.clear();
     }
 
     /**

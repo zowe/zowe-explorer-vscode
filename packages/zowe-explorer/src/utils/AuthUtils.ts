@@ -82,6 +82,7 @@ export class AuthUtils {
                 errorCorrelation,
                 throwErrorOnCancel: true,
             };
+            AuthHandler.enableSequentialRequests(profile);
             await AuthHandler.getOrCreateAuthFlow(profile, authOpts);
         } else if (AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
@@ -90,59 +91,64 @@ export class AuthUtils {
     }
 
     public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>, shouldAwaitTimeout = true): Promise<void> {
-        const maxAttempts = SettingsConfig.getDirectValue("zowe.settings.maxRequestRetry", 0);
-        const profileName = profile?.name;
-        const shouldTrackPrompts = profileName != null;
+        const executeWithRetries = async (): Promise<void> => {
+            const maxAttempts = SettingsConfig.getDirectValue("zowe.settings.maxRequestRetry", 0);
+            const profileName = profile.name;
+            const shouldTrackPrompts = profileName != null;
 
-        let promptCount = 0;
+            let promptCount = 0;
 
-        for (let i = 0; i <= maxAttempts; i++) {
-            try {
-                await AuthHandler.waitForUnlock(profile, shouldAwaitTimeout);
-                const callbackValue = await callback();
-                return callbackValue;
-            } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(err.message);
-                }
-                if (maxAttempts === 0) {
-                    if (profile) {
-                        await this.handleProfileAuthOnError(err, profile);
+            for (let i = 0; i <= maxAttempts; i++) {
+                try {
+                    await AuthHandler.waitForUnlock(profile, shouldAwaitTimeout);
+                    const callbackValue = await callback();
+                    AuthHandler.disableSequentialRequests(profile);
+                    return callbackValue;
+                } catch (err) {
+                    if (err instanceof Error) {
+                        ZoweLogger.error(err.message);
                     }
-                    throw vscode.FileSystemError.Unavailable();
-                }
-                if (i >= maxAttempts || promptCount >= maxAttempts) {
-                    throw vscode.FileSystemError.Unavailable();
-                }
-                if (
-                    (err instanceof imperative.ImperativeError &&
-                        (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
-                            err.message.includes("All configured authentication methods failed"))) ||
-                    err.message.includes("HTTP(S) status 401")
-                ) {
-                    if (shouldTrackPrompts) {
-                        promptCount++;
-                    }
-                    if (profile) {
-                        const authPromptLock = AuthHandler.authPromptLocks.get(profile.name);
-                        if (authPromptLock?.isLocked()) {
-                            await authPromptLock.waitForUnlock();
-                            if (AuthHandler.isProfileLocked(profile) && promptCount >= maxAttempts) {
-                                throw vscode.FileSystemError.Unavailable();
-                            }
-                            continue;
-                        }
-                        try {
+                    if (maxAttempts === 0) {
+                        if (profile) {
                             await this.handleProfileAuthOnError(err, profile);
-                        } catch (err) {
-                            ZoweLogger.warn(err);
                         }
+                        throw vscode.FileSystemError.Unavailable();
                     }
-                } else {
-                    throw err;
+                    if (i >= maxAttempts || promptCount >= maxAttempts) {
+                        throw vscode.FileSystemError.Unavailable();
+                    }
+                    if (
+                        (err instanceof imperative.ImperativeError &&
+                            (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                                err.message.includes("All configured authentication methods failed"))) ||
+                        err.message.includes("HTTP(S) status 401")
+                    ) {
+                        if (shouldTrackPrompts) {
+                            promptCount++;
+                        }
+                        if (profile) {
+                            const authPromptLock = AuthHandler.authPromptLocks.get(profile.name);
+                            if (authPromptLock?.isLocked()) {
+                                await authPromptLock.waitForUnlock();
+                                if (AuthHandler.isProfileLocked(profile) && promptCount >= maxAttempts) {
+                                    throw vscode.FileSystemError.Unavailable();
+                                }
+                                continue;
+                            }
+                            try {
+                                await this.handleProfileAuthOnError(err, profile);
+                            } catch (err) {
+                                ZoweLogger.warn(err);
+                            }
+                        }
+                    } else {
+                        throw err;
+                    }
                 }
             }
-        }
+        };
+
+        return AuthHandler.runSequentialIfEnabled(profile, executeWithRetries);
     }
 
     public static async openConfigForMissingHostname(profile: imperative.IProfileLoaded): Promise<void> {
