@@ -57,6 +57,9 @@ import { ReleaseNotes } from "../../utils/ReleaseNotes";
 import { JobFSProvider } from "../job/JobFSProvider";
 
 export class SharedInit {
+    public static onDidActivateExtensionEmitter = new vscode.EventEmitter<void>();
+    public static onDidActivateExtension = SharedInit.onDidActivateExtensionEmitter.event;
+
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
 
@@ -345,6 +348,8 @@ export class SharedInit {
             LocalFileManagement.resetCompareSelection();
         }
 
+        SharedInit.onDidActivateExtension((_e) => vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", "zosmf"));
+
         // Prevent VS Code from restoring selected the webview panels after restart
         // This is a workaround for issue where the webview panels are not restored properly when VS Code is closed & reopened
         context.subscriptions.push(
@@ -463,6 +468,7 @@ export class SharedInit {
             });
         }
 
+        const readDirRequests = [];
         for (const folder of newWorkspaces) {
             const uriInfo = uriMap[folder.uri.path];
             const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
@@ -473,13 +479,22 @@ export class SharedInit {
                 ) {
                     continue;
                 }
-                await vscode.workspace.fs.readDirectory(folder.uri.with({ query: "fetch=true" }));
+                readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri.with({ query: "fetch=true" })));
             } catch (err) {
                 if (err instanceof Error) {
                     ZoweLogger.error(err.message);
                 }
             }
         }
+
+        try {
+            await Promise.all(readDirRequests);
+        } catch (err) {
+            if (err instanceof Error) {
+                ZoweLogger.error(err.message);
+            }
+        }
+
         if (profileType !== "zosmf" && newWorkspaces.length > 0) {
             await vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer");
         }
