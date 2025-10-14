@@ -457,6 +457,71 @@ describe("AuthHandler", () => {
         });
     });
 
+    describe("sequential request management", () => {
+        beforeEach(() => {
+            (AuthHandler as any).parallelEnabledProfiles.clear();
+            (AuthHandler as any).sequentialLocks.clear();
+        });
+
+        it("runs sequentially by default until a request completes successfully", async () => {
+            const order: number[] = [];
+            let resolveFirst: (() => void) | undefined;
+
+            const first = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
+                order.push(1);
+                await new Promise<void>((resolve) => {
+                    resolveFirst = resolve;
+                });
+                order.push(2);
+            });
+
+            const second = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
+                order.push(3);
+            });
+
+            await Promise.resolve();
+            expect(order).toEqual([1]);
+
+            resolveFirst?.();
+            await Promise.all([first, second]);
+            expect(order).toEqual([1, 2, 3]);
+        });
+
+        it("enables and disables sequential handling for a profile", () => {
+            AuthHandler.enableSequentialRequests(TEST_PROFILE_NAME);
+            expect(AuthHandler.areSequentialRequestsEnabled(TEST_PROFILE_NAME)).toBe(true);
+
+            AuthHandler.disableSequentialRequests(TEST_PROFILE_NAME);
+            expect(AuthHandler.areSequentialRequestsEnabled(TEST_PROFILE_NAME)).toBe(false);
+        });
+
+        it("does not enforce sequential order when disabled", async () => {
+            AuthHandler.disableSequentialRequests(TEST_PROFILE_NAME);
+
+            const order: number[] = [];
+            let resolveFirst: (() => void) | undefined;
+
+            const first = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
+                order.push(1);
+                await new Promise<void>((resolve) => {
+                    resolveFirst = resolve;
+                });
+                order.push(2);
+            });
+
+            const second = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
+                order.push(3);
+            });
+
+            await Promise.resolve();
+            expect(order).toEqual([1, 3]);
+
+            resolveFirst?.();
+            await Promise.all([first, second]);
+            expect(order).toEqual([1, 3, 2]);
+        });
+    });
+
     describe("getSessFromProfile", () => {
         it("should return a session from a profile", () => {
             const mockSession = {} as Session;

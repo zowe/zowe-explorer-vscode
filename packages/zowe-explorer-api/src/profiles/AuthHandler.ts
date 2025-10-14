@@ -306,6 +306,11 @@ export class AuthHandler {
         return true;
     }
 
+    /**
+     * Ensures follow-up requests for a profile execute sequentially by removing any parallel override.
+     * Creates a mutex for the profile if one does not yet exist.
+     * @param profile Profile name or object that should run requests sequentially
+     */
     public static enableSequentialRequests(profile: ProfileLike): void {
         const profileName = AuthHandler.getProfileName(profile);
         this.parallelEnabledProfiles.delete(profileName);
@@ -314,6 +319,10 @@ export class AuthHandler {
         }
     }
 
+    /**
+     * Allows a profile's requests to execute in parallel and discards its sequential mutex when idle.
+     * @param profile Profile name or object that should run requests concurrently
+     */
     public static disableSequentialRequests(profile: ProfileLike): void {
         const profileName = AuthHandler.getProfileName(profile);
         this.parallelEnabledProfiles.add(profileName);
@@ -323,10 +332,22 @@ export class AuthHandler {
         }
     }
 
+    /**
+     * Checks whether sequential request execution is currently enforced for a profile.
+     * @param profile Profile name or object to check
+     * @returns `true` when the profile is locked to sequential requests, `false` if parallel requests are allowed
+     */
     public static areSequentialRequestsEnabled(profile: ProfileLike): boolean {
         return !this.parallelEnabledProfiles.has(AuthHandler.getProfileName(profile));
     }
 
+    /**
+     * Runs the given action under the profile's sequential mutex when sequential mode is enabled.
+     * Falls back to invoking the action immediately if parallel mode is active.
+     * @param profile Profile name or object that dictates whether sequential mode applies
+     * @param action Async function to run sequentially
+     * @returns Resolves with the action's result
+     */
     public static async runSequentialIfEnabled<T>(profile: ProfileLike, action: () => Promise<T>): Promise<T> {
         if (!this.areSequentialRequestsEnabled(profile)) {
             return action();

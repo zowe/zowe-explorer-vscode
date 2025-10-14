@@ -89,6 +89,7 @@ describe("AuthUtils", () => {
                 getSession: () => createISession(),
             }),
         } as any);
+        AuthHandler.enableSequentialRequests(testProfile);
     });
 
     describe("handleProfileAuthOnError", () => {
@@ -110,6 +111,7 @@ describe("AuthUtils", () => {
                 configurable: true,
             });
             const correlateErrorMock = jest.spyOn(ErrorCorrelator.getInstance(), "correlateError");
+            const enableSequentialRequestsMock = jest.spyOn(AuthHandler, "enableSequentialRequests");
             const getOrCreateAuthFlowMock = jest.spyOn(AuthHandler, "getOrCreateAuthFlow").mockResolvedValueOnce(undefined);
             jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValueOnce(imperative.SessConstants.AUTH_TYPE_BASIC);
 
@@ -126,6 +128,7 @@ describe("AuthUtils", () => {
                     isUsingTokenAuth: false,
                 })
             );
+            expect(enableSequentialRequestsMock).toHaveBeenCalledWith(profile);
 
             profilesCacheMock[Symbol.dispose]();
         });
@@ -200,10 +203,45 @@ describe("AuthUtils", () => {
                 profileName: "sestest",
                 profile: testEntries.ps.metadata.profile,
             });
+            AuthHandler.enableSequentialRequests(testEntries.ps.metadata.profile);
         });
 
         afterEach(() => {
             jest.clearAllMocks();
+        });
+
+        it("processes requests sequentially when sequential mode is enabled", async () => {
+            const profile = createIProfile();
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(0);
+            const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
+            AuthHandler.enableSequentialRequests(profile);
+
+            const order: string[] = [];
+            let resolveFirst: (() => void) | undefined;
+
+            const first = AuthUtils.retryRequest(profile, async () => {
+                order.push("first-start");
+                await new Promise<void>((resolve) => {
+                    resolveFirst = resolve;
+                });
+                order.push("first-end");
+            });
+
+            const second = AuthUtils.retryRequest(profile, async () => {
+                order.push("second");
+            });
+
+            await new Promise((resolve) => setImmediate(resolve));
+            expect(order).toEqual(["first-start"]);
+
+            resolveFirst?.();
+            await Promise.all([first, second]);
+
+            expect(order).toEqual(["first-start", "first-end", "second"]);
+            expect(AuthHandler.areSequentialRequestsEnabled(profile)).toBe(false);
+            AuthHandler.disableSequentialRequests(profile);
+
+            waitForUnlockMock.mockRestore();
         });
 
         describe("RetryRequest setting behavior", () => {
@@ -217,9 +255,14 @@ describe("AuthUtils", () => {
                     return undefined;
                 });
 
-                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
-                jest.spyOn(AuthHandler, "lockProfile").mockImplementation();
-                await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toBeDefined();
+                const runSequentialMock = jest.spyOn(AuthHandler, "runSequentialIfEnabled").mockImplementation((_profile, action) => action());
+                try {
+                    jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+                    jest.spyOn(AuthHandler, "lockProfile").mockImplementation();
+                    await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toBeDefined();
+                } finally {
+                    runSequentialMock.mockRestore();
+                }
 
                 if (maxAttempts === 0) {
                     expect(promptForAuthErrorMock).toHaveBeenCalledTimes(maxAttempts + 1);
@@ -251,13 +294,18 @@ describe("AuthUtils", () => {
                     .mockReturnValue(successfulMvsApi as any);
 
                 // Act
-                const statResult = await DatasetFSProvider.instance.stat(testUris.ps);
-                const fetchResult = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
+                const runSequentialMock = jest.spyOn(AuthHandler, "runSequentialIfEnabled").mockImplementation((_profile, action) => action());
+                try {
+                    const statResult = await DatasetFSProvider.instance.stat(testUris.ps);
+                    const fetchResult = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
 
-                // Assert
-                expect(statResult).toBeDefined();
-                expect(fetchResult).toBeDefined();
-                expect(promptForAuthErrorMock).toHaveBeenCalledTimes(2);
+                    // Assert
+                    expect(statResult).toBeDefined();
+                    expect(fetchResult).toBeDefined();
+                    expect(promptForAuthErrorMock).toHaveBeenCalledTimes(2);
+                } finally {
+                    runSequentialMock.mockRestore();
+                }
             });
         });
     });
