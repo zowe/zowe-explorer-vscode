@@ -1002,7 +1002,7 @@ describe("DatasetFSProvider", () => {
                 }),
             } as any);
             try {
-                await DatasetFSProvider.instance.stat(testUris.ps);
+                await DatasetFSProvider.instance.stat(testUris.ps.with({ query: "fetch=true" }));
             } catch (err) {
                 errorMessage = `${err}`;
             }
