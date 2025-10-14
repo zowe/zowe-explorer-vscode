@@ -16,6 +16,7 @@ import { FsAbstractUtils } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZosEncoding } from "../tree";
 import { ErrorCorrelator, ZoweExplorerApiType } from "../utils/ErrorCorrelator";
+import { IProfileLoaded, ISession, SessConstants } from "@zowe/imperative";
 
 export class BaseProvider {
     // eslint-disable-next-line no-magic-numbers
@@ -488,6 +489,10 @@ export class BaseProvider {
             isConflict: queryParams.has("conflict"),
             isInDiff: queryParams.has("inDiff"),
         };
+    }
+
+    public hasNoAuthType(session: ISession, profile: IProfileLoaded): boolean {
+        return session.type === SessConstants.AUTH_TYPE_NONE && profile.type !== "ssh";
     }
 
     /**
