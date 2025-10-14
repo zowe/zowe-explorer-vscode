@@ -329,7 +329,7 @@ export class AuthHandler {
         }
 
         // Wait for the mutex to be unlocked with a timeout to prevent indefinite waiting
-        const timeoutMs = 10000;
+        const timeoutMs = 30000;
         const timeoutPromise = new Promise<void>((_, reject) => {
             setTimeout(() => {
                 reject(new Error(`Timeout waiting for profile ${profileName} to be unlocked`));
