@@ -15,6 +15,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Updated Zowe SDKs to `8.27.0` for technical currency. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
 - Added support to delete VSAM data sets for z/OSMF type profiles. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
 - Fixed an issue where the `IMvs.putContents` function did not properly strip carriage returns from chunks during upload operations on Windows. Now, the function correctly converts CRLF sequences to LF, even if the sequence lands on a chunk boundary. [#3853](https://github.com/zowe/zowe-explorer-vscode/issues/3853)
+- Fixed an issue where the `vscode.workspace.fs.readFile` function would return empty contents for a USS file when an error occurred while fetching the file from the mainframe, instead of displaying an error message. [#3894](https://github.com/zowe/zowe-explorer-vscode/issues/3894)
 
 ## `3.3.0`
 
