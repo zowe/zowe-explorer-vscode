@@ -410,17 +410,16 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         }
 
         public async getCount(dataSetPatterns: string[]): Promise<IDataSetCount> {
-            let allDatasets: IZosmfListResponse[] = [];
             const response: IZosFilesResponse[] = [];
             response.push(await this.dataSetsMatchingPattern(dataSetPatterns, { attributes: false }));
-            allDatasets = response
+            const allDatasets = response
                 .filter((r) => r.success)
-                .reduce((arr: IZosmfListResponse[], r) => {
+                .reduce((arr: Set<string>, r) => {
                     const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
-                    return responseItems ? [...arr, ...responseItems] : arr;
-                }, []);
-            const datasetCount = allDatasets.length !== 0 ? Number(allDatasets.length) : -1;
-            return { count: datasetCount, lastItem: allDatasets?.[allDatasets.length - 1]?.dsname };
+                    responseItems?.forEach((item) => arr.add(item.dsname));
+                    return arr;
+                }, new Set<string>());
+            return { count: allDatasets.size, lastItem: Array.from(allDatasets).pop() };
         }
     }
 
