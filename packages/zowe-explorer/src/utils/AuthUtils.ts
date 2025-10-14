@@ -132,7 +132,11 @@ export class AuthUtils {
                             }
                             continue;
                         }
-                        await this.handleProfileAuthOnError(err, profile);
+                        try {
+                            await this.handleProfileAuthOnError(err, profile);
+                        } catch (err) {
+                            ZoweLogger.warn(err);
+                        }
                     }
                 } else {
                     throw err;
