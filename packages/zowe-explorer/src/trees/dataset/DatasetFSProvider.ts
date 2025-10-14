@@ -112,7 +112,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
+        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -160,7 +160,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
+        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -240,7 +240,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let members: IZosFilesResponse;
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.reauthenticateIfCancelled(profile);
+        await AuthUtils.ensureAuthNotCancelled(profile);
 
         const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
         await AuthHandler.waitForUnlock(entry.metadata.profile, shouldAwaitTimeout);
@@ -310,7 +310,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 pdsMember = uriPath.length === 2;
 
                 // Wait for any ongoing authentication process to complete
-                await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
+                await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
 
                 await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
 
@@ -482,7 +482,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             // Wait for any ongoing authentication process to complete
-            await AuthUtils.reauthenticateIfCancelled(profile);
+            await AuthUtils.ensureAuthNotCancelled(profile);
 
             const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
             await AuthHandler.waitForUnlock(metadata.profile, shouldAwaitTimeout);
@@ -683,7 +683,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let resp: IZosFilesResponse;
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
 
-        await AuthUtils.reauthenticateIfCancelled(profile);
+        await AuthUtils.ensureAuthNotCancelled(profile);
 
         const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
         await AuthHandler.waitForUnlock(entry.metadata.profile, shouldAwaitTimeout);
@@ -870,7 +870,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            await AuthUtils.reauthenticateIfCancelled(profile);
+            await AuthUtils.ensureAuthNotCancelled(profile);
             const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
             await AuthHandler.waitForUnlock(entry.metadata.profile, shouldAwaitTimeout);
             await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).deleteDataSet(fullName, {
@@ -915,7 +915,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            await AuthUtils.reauthenticateIfCancelled(profile);
+            await AuthUtils.ensureAuthNotCancelled(profile);
             await AuthHandler.waitForUnlock(entry.metadata.profile);
             if (FsDatasetsUtils.isPdsEntry(entry) || !entry.isMember) {
                 await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(oldName, newName);

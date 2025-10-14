@@ -129,7 +129,7 @@ describe("readDirectory", () => {
         const mockJesApi = {
             getJobsByParameters: jest.fn().mockResolvedValueOnce([createIJobObject(), fakeJob2]),
         };
-        const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
+        const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValueOnce(undefined);
         const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
         const getInfoForUriMock = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
             profile: testProfile,
@@ -149,8 +149,8 @@ describe("readDirectory", () => {
         ]);
         expect(lookupAsDirMock).toHaveBeenCalledWith(testUris.session, false);
         expect(getInfoForUriMock.mock.calls[0][0]).toBe(testUris.session);
-        expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
-        expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+        expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
+        expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
         expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
         expect(mockJesApi.getJobsByParameters).toHaveBeenCalledWith({
@@ -167,7 +167,7 @@ describe("readDirectory", () => {
         const mockJesApi = {
             getSpoolFiles: jest.fn().mockResolvedValueOnce([fakeSpool, fakeSpool2]),
         };
-        const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
+        const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
         const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
         const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
         const fakeJob = new JobEntry(testEntries.job.name);
@@ -192,8 +192,8 @@ describe("readDirectory", () => {
         ]);
         expect(getInfoForUriMock.mock.calls[0][0]).toBe(testUris.job);
         expect(lookupAsDirMock).toHaveBeenCalledWith(testUris.job, false);
-        expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
-        expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+        expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
+        expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
         expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
         expect(mockJesApi.getSpoolFiles).toHaveBeenCalledWith(testEntries.job.job?.jobname, testEntries.job.job?.jobid);
@@ -215,14 +215,14 @@ describe("readDirectory", () => {
             profileName: "sestest",
         });
         const lookupAsDirMock = jest.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValueOnce(fakeJob);
-        const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
+        const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
         const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
         await expect(JobFSProvider.instance.readDirectory(testUris.job)).rejects.toThrow();
         expect(lookupAsDirMock).toHaveBeenCalledWith(testUris.job, false);
         expect(mockJesApi.getSpoolFiles).toHaveBeenCalledWith(testEntries.job.job?.jobname, testEntries.job.job?.jobid);
         expect(_handleErrorMock).toHaveBeenCalled();
-        expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
-        expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+        expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
+        expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(getInfoForUriMock.mock.calls[0][0]).toBe(testUris.job);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
         expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
@@ -752,7 +752,7 @@ describe("delete", () => {
             deleteJob: jest.fn(),
         };
         const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
-        const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
+        const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
         const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
         const fakeJob = new JobEntry(testEntries.job.name);
         fakeJob.job = testEntries.job.job;
@@ -777,8 +777,8 @@ describe("delete", () => {
         const jobInfo = testEntries.job.job;
         expect(jobInfo).not.toBeUndefined();
         expect(mockJesApi.deleteJob).toHaveBeenCalledWith(jobInfo?.jobname || "TESTJOB", jobInfo?.jobid || "JOB12345");
-        expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
-        expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+        expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
+        expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
         expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
         expect(getInfoForUriMock.mock.calls[0][0]).toBe(testUris.job);

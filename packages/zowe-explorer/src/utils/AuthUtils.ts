@@ -21,13 +21,13 @@ import {
     AuthHandler,
     ZoweExplorerZosmf,
     AuthPromptParams,
+    AuthCancelledError,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { SharedContext } from "../trees/shared/SharedContext";
-import { ImperativeError } from "@zowe/imperative";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -38,21 +38,14 @@ interface ErrorContext {
 
 export class AuthUtils {
     /**
-     * Checks if a profile's authentication was previously cancelled and, if so,
-     * re-prompts the user to authenticate. This should be called before any
-     * remote operation that requires authentication.
+     * Ensures that a profile is in a usable state by throwing if authentication was previously cancelled.
+     * Callers should handle the error and trigger a fresh authentication prompt through {@link handleProfileAuthOnError}.
      * @param profile The profile to check.
-     * @throws {AuthCancelledError} If the user cancels the re-authentication prompt.
+     * @throws {AuthCancelledError} If the user has an unresolved authentication cancellation.
      */
-    public static async reauthenticateIfCancelled(profile: imperative.IProfileLoaded): Promise<void> {
+    public static async ensureAuthNotCancelled(profile: imperative.IProfileLoaded): Promise<void> {
         if (AuthHandler.wasAuthCancelled(profile)) {
-            // The original error doesn't matter here, we just need to trigger the flow.
-            await this.handleProfileAuthOnError(
-                new ImperativeError({
-                    msg: "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate. (All configured authentication methods failed)",
-                }),
-                profile
-            );
+            throw new AuthCancelledError(profile.name, "User cancelled previous authentication");
         }
     }
 

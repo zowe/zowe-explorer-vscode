@@ -106,7 +106,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const results: [string, vscode.FileType][] = [];
 
-        await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
+        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
         const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
         await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
         const jesApi = ZoweExplorerApiRegister.getJesApi(uriInfo.profile);
@@ -226,7 +226,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profileEncoding = spoolEntry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
-        await AuthUtils.reauthenticateIfCancelled(profile);
+        await AuthUtils.ensureAuthNotCancelled(profile);
         const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
         await AuthHandler.waitForUnlock(spoolEntry.metadata.profile, shouldAwaitTimeout);
         const query = new URLSearchParams(uri.query);
@@ -363,7 +363,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const parent = this.lookupParentDirectory(uri, false);
         const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         try {
-            await AuthUtils.reauthenticateIfCancelled(profInfo.profile);
+            await AuthUtils.ensureAuthNotCancelled(profInfo.profile);
             const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
             await AuthHandler.waitForUnlock(profInfo.profile, shouldAwaitTimeout);
             await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);

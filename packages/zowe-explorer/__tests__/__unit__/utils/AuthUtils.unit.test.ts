@@ -1124,7 +1124,7 @@ describe("AuthUtils", () => {
         });
     });
 
-    describe("reauthenticateIfCancelled", () => {
+    describe("ensureAuthNotCancelled", () => {
         const profile = { name: "test-profile", type: "zosmf" } as any;
         let isProfileLockedMock: jest.SpyInstance;
         let wasAuthCancelledMock: jest.SpyInstance;
@@ -1144,7 +1144,7 @@ describe("AuthUtils", () => {
             isProfileLockedMock.mockReturnValue(false);
             wasAuthCancelledMock.mockReturnValue(false);
 
-            await AuthUtils.reauthenticateIfCancelled(profile);
+            await AuthUtils.ensureAuthNotCancelled(profile);
 
             expect(handleProfileAuthOnErrorMock).not.toHaveBeenCalled();
         });
@@ -1153,42 +1153,14 @@ describe("AuthUtils", () => {
             isProfileLockedMock.mockReturnValue(true);
             wasAuthCancelledMock.mockReturnValue(false);
 
-            await AuthUtils.reauthenticateIfCancelled(profile);
+            await AuthUtils.ensureAuthNotCancelled(profile);
 
             expect(handleProfileAuthOnErrorMock).not.toHaveBeenCalled();
         });
 
-        it("should trigger re-authentication if auth was cancelled", async () => {
+        it("should throw auth cancelled error if user just cancelled auth prompt", async () => {
             wasAuthCancelledMock.mockReturnValue(true);
-
-            await AuthUtils.reauthenticateIfCancelled(profile);
-
-            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledTimes(1);
-            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    message:
-                        "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate. (All configured authentication methods failed)",
-                }),
-                profile
-            );
-        });
-
-        it("should propagate error if re-authentication fails", async () => {
-            isProfileLockedMock.mockReturnValue(true);
-            wasAuthCancelledMock.mockReturnValue(true);
-            const authError = new Error("Authentication failed again");
-            handleProfileAuthOnErrorMock.mockRejectedValue(authError);
-
-            await expect(AuthUtils.reauthenticateIfCancelled(profile)).rejects.toThrow(authError);
-
-            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledTimes(1);
-            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    message:
-                        "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate. (All configured authentication methods failed)",
-                }),
-                profile
-            );
+            await expect(AuthUtils.ensureAuthNotCancelled(profile)).rejects.toThrow("User cancelled previous authentication");
         });
     });
 
