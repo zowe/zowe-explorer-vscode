@@ -112,7 +112,6 @@ export class AuthUtils {
                     throw vscode.FileSystemError.Unavailable();
                 }
                 if (i >= maxAttempts || promptCount >= maxAttempts) {
-                    await AuthHandler.lockProfile(profile);
                     throw vscode.FileSystemError.Unavailable();
                 }
                 if (
