@@ -292,11 +292,7 @@ export class AuthHandler {
         // Prompt the user to re-authenticate if an error and options were provided
         if (authOpts) {
             try {
-                const result = await AuthHandler.promptForAuthentication(profile, authOpts);
-                if (!result) {
-                    throw new AuthCancelledError(profileName, "Authentication was not completed");
-                }
-                return true;
+                return !(await AuthHandler.promptForAuthentication(profile, authOpts));
             } finally {
                 this.releaseMutexIfLocked(profileMutex);
                 this.releaseMutexIfLocked(promptMutex);
@@ -462,10 +458,7 @@ export class AuthHandler {
 
         const flow = (async (): Promise<void> => {
             try {
-                const result = await AuthHandler.lockProfile(profile, authOpts);
-                if (!result) {
-                    throw new AuthCancelledError(profileName, "Authentication was not completed");
-                }
+                await AuthHandler.lockProfile(profile, authOpts);
             } finally {
                 this.authFlows.delete(profileName);
             }
