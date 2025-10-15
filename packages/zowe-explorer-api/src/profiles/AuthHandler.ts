@@ -13,7 +13,7 @@ import { Gui } from "../globals";
 import { CorrelatedError, FileManagement } from "../utils";
 import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "../tree";
-import { Mutex } from "async-mutex";
+import { E_CANCELED, Mutex } from "async-mutex";
 import * as vscode from "vscode";
 import { ZoweVsCodeExtension } from "../vscode/ZoweVsCodeExtension";
 
@@ -327,7 +327,21 @@ export class AuthHandler {
         const profileName = AuthHandler.getProfileName(profile);
         this.parallelEnabledProfiles.add(profileName);
         const mutex = this.sequentialLocks.get(profileName);
-        if (mutex != null && !mutex.isLocked()) {
+        if (mutex == null) {
+            return;
+        }
+
+        if (mutex.isLocked()) {
+            // Cancel queued waiters so they can rerun without the sequential lock
+            mutex.cancel();
+            void mutex.waitForUnlock().then(() => {
+                if (!this.areSequentialRequestsEnabled(profileName) &&
+                    this.sequentialLocks.get(profileName) === mutex &&
+                    !mutex.isLocked()) {
+                    this.sequentialLocks.delete(profileName);
+                }
+            });
+        } else {
             this.sequentialLocks.delete(profileName);
         }
     }
@@ -360,7 +374,17 @@ export class AuthHandler {
             this.sequentialLocks.set(profileName, mutex);
         }
 
-        return mutex.runExclusive(action);
+        try {
+            return await mutex.runExclusive(action);
+        } catch (error) {
+            if (error === E_CANCELED) {
+                if (this.areSequentialRequestsEnabled(profile)) {
+                    return this.runSequentialIfEnabled(profile, action);
+                }
+                return action();
+            }
+            throw error;
+        }
     }
 
     private static isProfileLoaded(profile: ProfileLike): profile is imperative.IProfileLoaded {

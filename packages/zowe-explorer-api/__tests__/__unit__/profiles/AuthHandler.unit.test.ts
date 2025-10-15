@@ -520,6 +520,39 @@ describe("AuthHandler", () => {
             await Promise.all([first, second]);
             expect(order).toEqual([1, 3, 2]);
         });
+
+        it("releases queued actions once parallel mode is re-enabled", async () => {
+            const order: string[] = [];
+            let resolveFirst: (() => void) | undefined;
+
+            const first = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
+                order.push("first-start");
+                await new Promise<void>((resolve) => {
+                    resolveFirst = resolve;
+                });
+                order.push("first-end");
+            });
+
+            await Promise.resolve();
+
+            const second = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
+                order.push("second-run");
+            });
+
+            await Promise.resolve();
+            expect(order).toEqual(["first-start"]);
+
+            AuthHandler.disableSequentialRequests(TEST_PROFILE_NAME);
+
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(order).toEqual(["first-start", "second-run"]);
+
+            resolveFirst?.();
+            await Promise.all([first, second]);
+            expect(order).toEqual(["first-start", "second-run", "first-end"]);
+        });
     });
 
     describe("getSessFromProfile", () => {
