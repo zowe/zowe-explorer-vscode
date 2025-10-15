@@ -684,7 +684,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     private async listDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
         let totalItems = this.paginatorData?.totalItems;
         let lastDatasetName = this.paginatorData?.lastItemName;
-        let allDatasets: IZosmfListResponse[] = [];
         const responses: IZosFilesResponse[] = [];
         const profile = Profiles.getInstance()?.loadNamedProfile(this.getProfile().name);
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
@@ -712,16 +711,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     const basicResponses: IZosFilesResponse[] = [];
                     await this.listDatasets(basicResponses, { attributes: false });
 
-                    allDatasets = basicResponses
+                    const allDatasets = basicResponses
                         .filter((r) => r.success)
-                        .reduce((arr: IZosmfListResponse[], r) => {
+                        .reduce((arr: Set<string>, r) => {
                             const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
-                            return responseItems ? [...arr, ...responseItems] : arr;
-                        }, []);
+                            responseItems?.forEach((item) => arr.add(item.dsname));
+                            return arr;
+                        }, new Set<string>());
 
                     this.paginatorData = {
-                        totalItems: allDatasets.length,
-                        lastItemName: allDatasets.at(-1)?.dsname,
+                        totalItems: allDatasets.size,
+                        lastItemName: Array.from(allDatasets).pop(),
                     };
                 }
 
