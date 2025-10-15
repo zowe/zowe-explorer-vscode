@@ -244,45 +244,8 @@ describe("AuthUtils", () => {
             waitForUnlockMock.mockRestore();
         });
 
-        describe("RetryRequest setting behavior", () => {
-            const testAttempts = [0, 1, 3, 5, 25, 99];
-
-            test.each(testAttempts)("calls AuthUtils.handleProfileAuthOnError %i times when maxAttempts is %i", async (maxAttempts) => {
-                jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
-                    if (key === "zowe.settings.maxRequestRetry") {
-                        return maxAttempts;
-                    }
-                    return undefined;
-                });
-
-                const runSequentialMock = jest.spyOn(AuthHandler, "runSequentialIfEnabled").mockImplementation((_profile, action) => action());
-                try {
-                    jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
-                    jest.spyOn(AuthHandler, "lockProfile").mockImplementation();
-                    await expect(DatasetFSProvider.instance.stat(testUris.ps)).rejects.toBeDefined();
-                } finally {
-                    runSequentialMock.mockRestore();
-                }
-
-                if (maxAttempts === 0) {
-                    expect(promptForAuthErrorMock).toHaveBeenCalledTimes(maxAttempts + 1);
-                } else {
-                    expect(promptForAuthErrorMock).toHaveBeenCalledTimes(maxAttempts);
-                }
-            });
-        });
-
         describe("successful authentication retry", () => {
             it("should return stat value when handleProfileAuthOnError receives correct credentials", async () => {
-                // Arrange
-                const maxRetries = 3;
-                jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
-                    if (key === "zowe.settings.maxRequestRetry") {
-                        return maxRetries;
-                    }
-                    return undefined;
-                });
-
                 const successfulMvsApi = {
                     dataSet: jest.fn(() => ({ success: true })),
                 };

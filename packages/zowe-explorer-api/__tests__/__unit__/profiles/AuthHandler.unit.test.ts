@@ -73,7 +73,7 @@ describe("AuthHandler", () => {
             const isLockedMock = jest.spyOn(mutex, "isLocked").mockReturnValueOnce(true);
             const waitForUnlockMock = jest.spyOn(mutex, "waitForUnlock").mockResolvedValueOnce(undefined);
             (AuthHandler as any).profileLocks.set(TEST_PROFILE_NAME, mutex);
-            await AuthHandler.waitForUnlock(TEST_PROFILE_NAME, true);
+            await AuthHandler.waitForUnlock(TEST_PROFILE_NAME);
             expect(isLockedMock).toHaveBeenCalled();
             expect(waitForUnlockMock).toHaveBeenCalled();
             (AuthHandler as any).profileLocks.clear();

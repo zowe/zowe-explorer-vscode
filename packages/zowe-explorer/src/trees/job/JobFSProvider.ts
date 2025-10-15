@@ -107,8 +107,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const results: [string, vscode.FileType][] = [];
 
         await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
-        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-        await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
+        await AuthHandler.waitForUnlock(uriInfo.profile);
         const jesApi = ZoweExplorerApiRegister.getJesApi(uriInfo.profile);
         try {
             if (FsAbstractUtils.isFilterEntry(fsEntry)) {
@@ -227,8 +226,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
         await AuthUtils.ensureAuthNotCancelled(profile);
-        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-        await AuthHandler.waitForUnlock(spoolEntry.metadata.profile, shouldAwaitTimeout);
+        await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
         const query = new URLSearchParams(uri.query);
         let recordRange = "";
         const recordsToFetch = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
@@ -244,30 +242,26 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
         }
 
-        await AuthUtils.retryRequest(
-            metadata.profile,
-            async () => {
-                const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
-                if (jesApi.downloadSingleSpool) {
-                    const spoolDownloadObject: IDownloadSpoolContentParms = {
-                        jobFile: spoolEntry.spool,
-                        stream: bufBuilder,
-                        binary: spoolEntry.encoding?.kind === "binary",
-                        recordRange:
-                            jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled")
-                                ? recordRange
-                                : undefined,
-                        encoding: spoolEncoding,
-                    };
+        await AuthUtils.retryRequest(metadata.profile, async () => {
+            const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
+            if (jesApi.downloadSingleSpool) {
+                const spoolDownloadObject: IDownloadSpoolContentParms = {
+                    jobFile: spoolEntry.spool,
+                    stream: bufBuilder,
+                    binary: spoolEntry.encoding?.kind === "binary",
+                    recordRange:
+                        jesApi.supportSpoolPagination?.() && SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled")
+                            ? recordRange
+                            : undefined,
+                    encoding: spoolEncoding,
+                };
 
-                    await jesApi.downloadSingleSpool(spoolDownloadObject);
-                } else {
-                    const jobEntry = this.lookupParentDirectory(uri) as JobEntry;
-                    bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id, spoolEncoding));
-                }
-            },
-            shouldAwaitTimeout
-        );
+                await jesApi.downloadSingleSpool(spoolDownloadObject);
+            } else {
+                const jobEntry = this.lookupParentDirectory(uri) as JobEntry;
+                bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id, spoolEncoding));
+            }
+        });
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
 
@@ -364,8 +358,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         try {
             await AuthUtils.ensureAuthNotCancelled(profInfo.profile);
-            const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-            await AuthHandler.waitForUnlock(profInfo.profile, shouldAwaitTimeout);
+            await AuthHandler.waitForUnlock(profInfo.profile);
             await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
         } catch (err) {
             this._handleError(err, {

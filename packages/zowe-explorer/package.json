@@ -2136,14 +2136,6 @@
           "scope": "window",
           "minimum": 1
         },
-        "zowe.settings.maxRequestRetry": {
-          "type": "integer",
-          "default": 0,
-          "description": "%zowe.settings.maxRequestRetry%",
-          "scope": "window",
-          "minimum": 0,
-          "maximum": 100
-        },
         "zowe.table.hidePinnedRowsWarning": {
           "type": "boolean",
           "default": false,

@@ -152,7 +152,7 @@ describe("readDirectory", () => {
         expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
         expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
         expect(mockJesApi.getJobsByParameters).toHaveBeenCalledWith({
             owner: "USER",
             prefix: "JOB*",
@@ -195,7 +195,7 @@ describe("readDirectory", () => {
         expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
         expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
         expect(mockJesApi.getSpoolFiles).toHaveBeenCalledWith(testEntries.job.job?.jobname, testEntries.job.job?.jobid);
         jesApiMock.mockRestore();
     });
@@ -225,7 +225,7 @@ describe("readDirectory", () => {
         expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(getInfoForUriMock.mock.calls[0][0]).toBe(testUris.job);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
         jesApiMock.mockRestore();
         _handleErrorMock.mockRestore();
     });
@@ -296,9 +296,6 @@ describe("JobFSProvider.supportSpoolPagination", () => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return true;
             }
-            if (key === "zowe.settings.maxRequestRetry") {
-                return 1;
-            }
         });
 
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
@@ -314,9 +311,6 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return false;
-            }
-            if (key === "zowe.settings.maxRequestRetry") {
-                return 1;
             }
         });
 
@@ -363,9 +357,6 @@ describe("fetchSpoolAtUri", () => {
             if (key === "zowe.jobs.paginate.enabled") {
                 return true;
             }
-            if (key === "zowe.settings.maxRequestRetry") {
-                return 1;
-            }
             return false;
         });
         const mockJesApi = {
@@ -403,9 +394,6 @@ describe("fetchSpoolAtUri", () => {
             }
             if (key === "zowe.jobs.paginate.recordsToFetch") {
                 return 20;
-            }
-            if (key === "zowe.settings.maxRequestRetry") {
-                return 1;
             }
         });
         const mockJesApi = {
@@ -478,9 +466,6 @@ describe("fetchSpoolAtUri", () => {
             }
             if (key === "zowe.jobs.paginate.enabled") {
                 return true;
-            }
-            if (key === "zowe.settings.maxRequestRetry") {
-                return 1;
             }
         });
 
@@ -630,11 +615,18 @@ describe("fetchSpoolAtUri", () => {
             .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
             .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
         const mockJesApi = {
-            downloadSingleSpool: jest.fn((opts) => {
-                throw new imperative.ImperativeError({
-                    msg: "All configured authentication methods failed",
-                });
-            }),
+            downloadSingleSpool: jest
+                .fn()
+                .mockRejectedValueOnce(
+                    new imperative.ImperativeError({
+                        msg: "All configured authentication methods failed",
+                    })
+                )
+                .mockRejectedValueOnce(
+                    new imperative.ImperativeError({
+                        msg: "Auth Cancelled",
+                    })
+                ),
         };
         const promptForAuthErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation();
         const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
@@ -780,7 +772,7 @@ describe("delete", () => {
         expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
         expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
         expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
         expect(getInfoForUriMock.mock.calls[0][0]).toBe(testUris.job);
         ussApiMock.mockRestore();
         lookupMock.mockRestore();

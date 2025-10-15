@@ -1778,7 +1778,7 @@ describe("UssFSProvider", () => {
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(result.success).toBe(false);
                 expect(result.commandResponse).toContain("Profile is locked");
@@ -1818,7 +1818,7 @@ describe("UssFSProvider", () => {
                 await UssFSProvider.instance.listFiles(testProfile, testUris.file);
 
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(2);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(ussApiMock.fileList).toHaveBeenCalled();
 
@@ -1845,7 +1845,7 @@ describe("UssFSProvider", () => {
                 await UssFSProvider.instance.fetchFileAtUri(testUris.file);
 
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile, false);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(getContentsMock).not.toHaveBeenCalled();
@@ -1879,7 +1879,7 @@ describe("UssFSProvider", () => {
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(lookupMock).toHaveBeenCalledTimes(1);
                 expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
@@ -1912,7 +1912,7 @@ describe("UssFSProvider", () => {
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(lookupSpy).not.toHaveBeenCalled();
 
                 existsMock.mockRestore();
@@ -1942,7 +1942,7 @@ describe("UssFSProvider", () => {
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(loadNamedProfileSpy).not.toHaveBeenCalled();
             });
         });
@@ -1963,7 +1963,7 @@ describe("UssFSProvider", () => {
 
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile, false);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");

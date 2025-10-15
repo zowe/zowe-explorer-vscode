@@ -90,17 +90,11 @@ export class AuthUtils {
         }
     }
 
-    public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>, shouldAwaitTimeout = true): Promise<void> {
+    public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
         const executeWithRetries = async (): Promise<void> => {
-            const maxAttempts = SettingsConfig.getDirectValue("zowe.settings.maxRequestRetry", 0);
-            const profileName = profile.name;
-            const shouldTrackPrompts = profileName != null;
-
-            let promptCount = 0;
-
-            for (let i = 0; i <= maxAttempts; i++) {
+            while (true) {
                 try {
-                    await AuthHandler.waitForUnlock(profile, shouldAwaitTimeout);
+                    await AuthHandler.waitForUnlock(profile);
                     const callbackValue = await callback();
                     AuthHandler.disableSequentialRequests(profile);
                     return callbackValue;
@@ -108,29 +102,17 @@ export class AuthUtils {
                     if (err instanceof Error) {
                         ZoweLogger.error(err.message);
                     }
-                    if (maxAttempts === 0) {
-                        if (profile) {
-                            await this.handleProfileAuthOnError(err, profile);
-                        }
-                        throw vscode.FileSystemError.Unavailable();
-                    }
-                    if (i >= maxAttempts || promptCount >= maxAttempts) {
-                        throw vscode.FileSystemError.Unavailable();
-                    }
                     if (
                         (err instanceof imperative.ImperativeError &&
                             (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                                 err.message.includes("All configured authentication methods failed"))) ||
                         err.message.includes("HTTP(S) status 401")
                     ) {
-                        if (shouldTrackPrompts) {
-                            promptCount++;
-                        }
                         if (profile) {
                             const authPromptLock = AuthHandler.authPromptLocks.get(profile.name);
                             if (authPromptLock?.isLocked()) {
                                 await authPromptLock.waitForUnlock();
-                                if (AuthHandler.isProfileLocked(profile) && promptCount >= maxAttempts) {
+                                if (AuthHandler.isProfileLocked(profile)) {
                                     throw vscode.FileSystemError.Unavailable();
                                 }
                                 continue;

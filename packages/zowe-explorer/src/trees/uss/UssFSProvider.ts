@@ -67,7 +67,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         ZoweLogger.trace(`[UssFSProvider] stat called with ${uri.toString()}`);
         let isFetching = false;
-        let shouldAwaitTimeout = false;
 
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
@@ -77,7 +76,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 return this.lookup(uri, false);
             }
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
-            shouldAwaitTimeout = queryParams.has("awaitTimeout") && queryParams.get("awaitTimeout") === "true";
         }
 
         const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
@@ -101,7 +99,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // Wait for any ongoing authentication process to complete
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
             await AuthUtils.ensureAuthNotCancelled(profile);
-            await AuthHandler.waitForUnlock(entry.metadata.profile, shouldAwaitTimeout);
+            await AuthHandler.waitForUnlock(entry.metadata.profile);
 
             // Check if the profile is locked (indicating an auth error is being handled)
             // If it's locked, we should wait and not make additional requests
@@ -140,7 +138,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async move(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<boolean> {
         const info = this._getInfoFromUri(newUri);
-        const { shouldAwaitTimeout } = this.parseUriQuery(oldUri.query);
         const ussApi = ZoweExplorerApiRegister.getUssApi(info.profile);
 
         if (!ussApi.move) {
@@ -151,15 +148,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const oldInfo = this._getInfoFromUri(oldUri);
 
         try {
-            await AuthUtils.retryRequest(
-                info.profile,
-                async () => {
-                    await AuthUtils.ensureAuthNotCancelled(info.profile);
-                    await AuthHandler.waitForUnlock(info.profile, shouldAwaitTimeout);
-                    await ussApi.move(oldInfo.path, info.path);
-                },
-                shouldAwaitTimeout
-            );
+            await AuthUtils.retryRequest(info.profile, async () => {
+                await AuthUtils.ensureAuthNotCancelled(info.profile);
+                await AuthHandler.waitForUnlock(info.profile);
+                await ussApi.move(oldInfo.path, info.path);
+            });
         } catch (err) {
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({ message: "Failed to move {0}", args: [oldInfo.path], comment: "File path" }),
@@ -183,8 +176,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         await AuthUtils.ensureAuthNotCancelled(profile);
-        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-        await AuthHandler.waitForUnlock(profile, shouldAwaitTimeout);
+        await AuthHandler.waitForUnlock(profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -204,18 +196,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         let response: IZosFilesResponse;
 
-        await AuthUtils.retryRequest(
-            profile,
-            async () => {
-                response = await ZoweExplorerApiRegister.getUssApi(loadedProfile).fileList(ussPath);
+        await AuthUtils.retryRequest(profile, async () => {
+            response = await ZoweExplorerApiRegister.getUssApi(loadedProfile).fileList(ussPath);
 
-                // If request was successful, create directories for the path if it doesn't exist
-                if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
-                    await vscode.workspace.fs.createDirectory(uri.with({ query: "" }));
-                }
-            },
-            shouldAwaitTimeout
-        );
+            // If request was successful, create directories for the path if it doesn't exist
+            if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
+                await vscode.workspace.fs.createDirectory(uri.with({ query: "" }));
+            }
+        });
 
         return {
             ...response,
@@ -228,7 +216,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
         const entryExists = this.exists(uri);
-        const { shouldAwaitTimeout } = this.parseUriQuery(uri.query);
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
         if (
             session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE ||
@@ -239,7 +226,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
+        await AuthHandler.waitForUnlock(uriInfo.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -369,8 +356,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         await AuthUtils.ensureAuthNotCancelled(profile);
-        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-        await AuthHandler.waitForUnlock(file.metadata.profile, shouldAwaitTimeout);
+        await AuthHandler.waitForUnlock(file.metadata.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -380,19 +366,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         try {
-            await AuthUtils.retryRequest(
-                uriInfo.profile,
-                async () => {
-                    resp = await ZoweExplorerApiRegister.getUssApi(profile).getContents(filePath, {
-                        binary: file.encoding?.kind === "binary",
-                        encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
-                        responseTimeout: profile.profile?.responseTimeout,
-                        returnEtag: true,
-                        stream: bufBuilder,
-                    });
-                },
-                shouldAwaitTimeout
-            );
+            await AuthUtils.retryRequest(uriInfo.profile, async () => {
+                resp = await ZoweExplorerApiRegister.getUssApi(profile).getContents(filePath, {
+                    binary: file.encoding?.kind === "binary",
+                    encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
+                    responseTimeout: profile.profile?.responseTimeout,
+                    returnEtag: true,
+                    stream: bufBuilder,
+                });
+            });
         } catch {
             return;
         }
@@ -753,8 +735,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(parent.metadata.profile.name);
         await AuthUtils.ensureAuthNotCancelled(profile);
-        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-        await AuthHandler.waitForUnlock(parent.metadata.profile, shouldAwaitTimeout);
+        await AuthHandler.waitForUnlock(parent.metadata.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
