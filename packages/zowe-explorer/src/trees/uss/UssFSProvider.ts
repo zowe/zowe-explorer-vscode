@@ -340,10 +340,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * Fetches a file from the remote system at the given URI.
      * @param uri The URI pointing to a valid file to fetch from the remote system
      * @param editor (optional) An editor instance to reload if the URI is already open
+     * @returns The file entry if successful, null otherwise
      */
-    public async fetchFileAtUri(uri: vscode.Uri, options?: { editor?: vscode.TextEditor | null; isConflict?: boolean }): Promise<void> {
+    public async fetchFileAtUri(uri: vscode.Uri, options?: { editor?: vscode.TextEditor | null; isConflict?: boolean }): Promise<UssFile | null> {
         ZoweLogger.trace(`[UssFSProvider] fetchFileAtUri called with ${uri.toString()}`);
-        const file = this._lookupAsFile(uri);
+        const file = this._lookupAsFile(uri) as UssFile;
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos);
@@ -351,7 +352,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         let resp: IZosFilesResponse;
 
-        await this.autoDetectEncoding(file as UssFile);
+        await this.autoDetectEncoding(file);
         const profileEncoding = file.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
         // Wait for any ongoing authentication process to complete
@@ -364,9 +365,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             ZoweLogger.warn(`[UssFSProvider] Profile ${file.metadata.profile.name} is locked, waiting for authentication`);
             return;
         }
-
-        try {
-            await AuthUtils.retryRequest(uriInfo.profile, async () => {
+        await AuthUtils.retryRequest(uriInfo.profile, async () => {
+            try {
                 resp = await ZoweExplorerApiRegister.getUssApi(profile).getContents(filePath, {
                     binary: file.encoding?.kind === "binary",
                     encoding: file.encoding?.kind === "other" ? file.encoding.codepage : profileEncoding,
@@ -374,9 +374,25 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     returnEtag: true,
                     stream: bufBuilder,
                 });
-            });
-        } catch {
-            return;
+            } catch (err) {
+                if (err instanceof Error) {
+                    ZoweLogger.error(err.message);
+                }
+                if (
+                    !(
+                        (err instanceof imperative.ImperativeError &&
+                            (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                                err.message.includes("All configured authentication methods failed"))) ||
+                        err.message.includes("HTTP(S) status 401")
+                    )
+                ) {
+                    return null;
+                }
+                throw err;
+            }
+        });
+        if (resp == null) {
+            return null;
         }
         if (!options?.isConflict) {
             file.wasAccessed = true;
@@ -401,6 +417,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (options?.editor) {
             await this._updateResourceInEditor(uri);
         }
+
+        return file;
     }
 
     public async autoDetectEncoding(entry: UssFile): Promise<void> {
@@ -489,7 +507,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // - the file hasn't been accessed yet
         // - fetching a conflict from the remote FS
         if ((!file.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
-            await this.fetchFileAtUri(uri, { isConflict });
+            file = await this.fetchFileAtUri(uri, { isConflict });
+            if (file == null) {
+                throw vscode.FileSystemError.FileNotFound(uri);
+            }
         }
 
         return isConflict ? file.conflictData.contents : file.data;
