@@ -475,6 +475,7 @@ describe("AuthHandler", () => {
                 order.push(2);
             });
 
+            // eslint-disable-next-line @typescript-eslint/require-await
             const second = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
                 order.push(3);
             });
@@ -501,6 +502,7 @@ describe("AuthHandler", () => {
             const order: number[] = [];
             let resolveFirst: (() => void) | undefined;
 
+            // eslint-disable-next-line @typescript-eslint/require-await
             const first = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
                 order.push(1);
                 await new Promise<void>((resolve) => {
@@ -509,6 +511,7 @@ describe("AuthHandler", () => {
                 order.push(2);
             });
 
+            // eslint-disable-next-line @typescript-eslint/require-await
             const second = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
                 order.push(3);
             });
@@ -535,6 +538,7 @@ describe("AuthHandler", () => {
 
             await Promise.resolve();
 
+            // eslint-disable-next-line @typescript-eslint/require-await
             const second = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
                 order.push("second-run");
             });

@@ -335,9 +335,7 @@ export class AuthHandler {
             // Cancel queued waiters so they can rerun without the sequential lock
             mutex.cancel();
             void mutex.waitForUnlock().then(() => {
-                if (!this.areSequentialRequestsEnabled(profileName) &&
-                    this.sequentialLocks.get(profileName) === mutex &&
-                    !mutex.isLocked()) {
+                if (!this.areSequentialRequestsEnabled(profileName) && this.sequentialLocks.get(profileName) === mutex && !mutex.isLocked()) {
                     this.sequentialLocks.delete(profileName);
                 }
             });
