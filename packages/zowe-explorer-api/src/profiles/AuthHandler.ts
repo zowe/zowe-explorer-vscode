@@ -397,7 +397,7 @@ export class AuthHandler {
      * Waits for the profile to be unlocked (ONLY if the profile was locked after an authentication error)
      * @param profile The profile name or object that may be locked
      */
-    public static async waitForUnlock(profile: ProfileLike, shouldAwaitTimeout: boolean = true): Promise<void> {
+    public static async waitForUnlock(profile: ProfileLike): Promise<void> {
         const profileName = AuthHandler.getProfileName(profile);
         const mutex = this.profileLocks.get(profileName);
         // If the mutex doesn't exist or isn't locked, no need to wait
@@ -405,25 +405,13 @@ export class AuthHandler {
             return;
         }
 
-        if (mutex.isLocked() && !shouldAwaitTimeout) {
-            throw new Error(`Profile ${profileName} is locked`);
-        }
-
-        // Wait for the mutex to be unlocked with a timeout to prevent indefinite waiting
-        const timeoutMs = 30000;
-        const timeoutPromise = new Promise<void>((_, reject) => {
-            setTimeout(() => {
-                reject(new Error(`Timeout waiting for profile ${profileName} to be unlocked`));
-            }, timeoutMs);
-        });
-
         try {
-            await Promise.race([mutex.waitForUnlock(), timeoutPromise]);
+            await mutex.waitForUnlock();
         } catch (error) {
-            // Log the timeout to console since we don't have access to the logger in the API
-            // This is acceptable as this is just a fallback for an edge case where the user did not respond to a credential prompt in time
-            // eslint-disable-next-line no-console
-            console.log(`Timeout waiting for profile ${profileName} to be unlocked`);
+            if (error === E_CANCELED) {
+                return this.waitForUnlock(profile);
+            }
+            imperative.Logger.getAppLogger().warn(`Error occurred in waitForUnlock while waiting for profile ${profileName} to be unlocked`);
             throw error;
         }
     }
