@@ -76,7 +76,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let isFetching = false;
         let shouldAwaitTimeout = false;
 
-        if (uri.path.includes(".vscode/")) {
+        if (uri.path.includes("/.vscode/")) {
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
@@ -423,7 +423,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         }
 
-        if (uri.path.includes(".vscode/")) {
+        if (uri.path.includes("/.vscode/")) {
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
@@ -571,7 +571,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const urlQuery = new URLSearchParams(uri.query);
         const isConflict = urlQuery.has("conflict");
 
-        if (uri.path.includes(".vscode/")) {
+        if (uri.path.includes("/.vscode/")) {
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
