@@ -376,7 +376,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 });
             } catch (err) {
                 if (err instanceof Error) {
-                    ZoweLogger.error(err.message);
+                    ZoweLogger.error(`[UssFSProvider] fetchFileAtUri failed due to an error. Details: \n${err.message}`);
                 }
                 if (
                     !(

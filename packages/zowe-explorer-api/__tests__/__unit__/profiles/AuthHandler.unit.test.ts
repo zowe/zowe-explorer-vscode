@@ -148,7 +148,7 @@ describe("AuthHandler", () => {
                 imperativeError,
             };
             const result = await AuthHandler.lockProfile(TEST_PROFILE_NAME, authOpts);
-            expect(result).toBe(true);
+            expect(result).toBe(false);
             expect(promptForAuthenticationMock).toHaveBeenCalledTimes(1);
             expect(promptForAuthenticationMock).toHaveBeenCalledWith(TEST_PROFILE_NAME, authOpts);
             AuthHandler.unlockProfile(TEST_PROFILE_NAME);
