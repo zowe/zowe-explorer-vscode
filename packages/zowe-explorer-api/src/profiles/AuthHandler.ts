@@ -372,10 +372,7 @@ export class AuthHandler {
             return await mutex.runExclusive(action);
         } catch (error) {
             if (error === E_CANCELED) {
-                if (this.areSequentialRequestsEnabled(profile)) {
-                    return this.runSequentialIfEnabled(profile, action);
-                }
-                return action();
+                return this.runSequentialIfEnabled(profile, action);
             }
             throw error;
         }
