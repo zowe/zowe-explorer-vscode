@@ -772,6 +772,27 @@ describe("ProfilesUtils unit tests", () => {
             expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
             expect(recordCredMgrInConfigSpy).toHaveBeenCalledWith(Constants.ZOWE_CLI_SCM);
         });
+
+        it("should update the credential manager setting if specific credential manager is passed", () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
+            const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
+            const recordCredMgrInConfigSpy = jest.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig");
+            ProfilesUtils.updateCredentialManagerSetting("customCredentialManager");
+            expect(ProfilesUtils.PROFILE_SECURITY).toBe("customCredentialManager");
+            expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
+            expect(recordCredMgrInConfigSpy).toHaveBeenCalledWith("customCredentialManager");
+        });
+
+        it("if setting is not enabled and default credential manager not found", () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
+            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(false);
+            const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
+            ProfilesUtils.updateCredentialManagerSetting();
+            expect(ProfilesUtils.PROFILE_SECURITY).toBe(false);
+            expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
+            expect(loggerInfoSpy.mock.calls[0][0]).toEqual("Zowe Explorer profiles are being set as unsecured.");
+        });
     });
 
     describe("isUsingTokenAuth", () => {
