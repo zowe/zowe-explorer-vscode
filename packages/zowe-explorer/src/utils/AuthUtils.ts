@@ -95,6 +95,7 @@ export class AuthUtils {
             while (true) {
                 try {
                     await AuthHandler.waitForUnlock(profile);
+                    await AuthUtils.ensureAuthNotCancelled(profile);
                     const callbackValue = await callback();
                     AuthHandler.disableSequentialRequests(profile);
                     return callbackValue;
