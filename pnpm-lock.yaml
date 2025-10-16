@@ -150,8 +150,8 @@ importers:
         specifier: ^8.27.0
         version: 8.27.0
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.27.2
-        version: 8.27.2(@zowe/core-for-zowe-sdk@8.27.2(@zowe/imperative@8.27.2))(@zowe/imperative@8.27.2)
+        specifier: ^8.27.3
+        version: 8.27.3(@zowe/core-for-zowe-sdk@8.27.2(@zowe/imperative@8.27.2))(@zowe/imperative@8.27.2)
       '@zowe/zos-jobs-for-zowe-sdk':
         specifier: ^8.27.2
         version: 8.27.2(@zowe/core-for-zowe-sdk@8.27.2(@zowe/imperative@8.27.2))(@zowe/imperative@8.27.2)
@@ -268,8 +268,8 @@ importers:
         specifier: ^8.27.2
         version: 8.27.2(@zowe/core-for-zowe-sdk@8.27.2(@zowe/imperative@8.27.2))(@zowe/imperative@8.27.2)
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.27.2
-        version: 8.27.2(@zowe/core-for-zowe-sdk@8.27.2(@zowe/imperative@8.27.2))(@zowe/imperative@8.27.2)
+        specifier: ^8.27.3
+        version: 8.27.3(@zowe/core-for-zowe-sdk@8.27.2(@zowe/imperative@8.27.2))(@zowe/imperative@8.27.2)
       '@zowe/zos-jobs-for-zowe-sdk':
         specifier: ^8.27.2
         version: 8.27.2(@zowe/core-for-zowe-sdk@8.27.2(@zowe/imperative@8.27.2))(@zowe/imperative@8.27.2)
@@ -308,8 +308,8 @@ importers:
   packages/zowe-explorer-ftp-extension:
     dependencies:
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.27.2
-        version: 8.27.2(@zowe/core-for-zowe-sdk@8.27.2(@zowe/imperative@8.27.2))(@zowe/imperative@8.27.2)
+        specifier: ^8.27.3
+        version: 8.27.3(@zowe/core-for-zowe-sdk@8.27.2(@zowe/imperative@8.27.2))(@zowe/imperative@8.27.2)
       '@zowe/zos-ftp-for-zowe-cli':
         specifier: ^3.0.0
         version: 3.0.0(@zowe/imperative@8.27.2)
@@ -2040,6 +2040,13 @@ packages:
 
   '@zowe/zos-files-for-zowe-sdk@8.27.2':
     resolution: {integrity: sha512-Q7459anw0wPkLPvZN6H8cinc/HvgeZTKKFxJReyiqTdk6U7SygRF2F5vEosYJYBHnPuwUb5nIe602ohJmEY16Q==}
+    engines: {node: '>=18.12.0'}
+    peerDependencies:
+      '@zowe/core-for-zowe-sdk': ^8.0.0
+      '@zowe/imperative': ^8.0.0
+
+  '@zowe/zos-files-for-zowe-sdk@8.27.3':
+    resolution: {integrity: sha512-tpLDuQ+faaUATjyYMNF14IJBjwbeimtWm4ypORA3ghsfGpsOu9y6d6Sor2Vja9CceeT2eNLCgLU5dFN55Swudg==}
     engines: {node: '>=18.12.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
@@ -9446,6 +9453,13 @@ snapshots:
       '@zowe/imperative': 8.27.2
 
   '@zowe/zos-files-for-zowe-sdk@8.27.2(@zowe/core-for-zowe-sdk@8.27.2(@zowe/imperative@8.27.2))(@zowe/imperative@8.27.2)':
+    dependencies:
+      '@zowe/core-for-zowe-sdk': 8.27.2(@zowe/imperative@8.27.2)
+      '@zowe/imperative': 8.27.2
+      lodash: 4.17.21
+      minimatch: 9.0.5
+
+  '@zowe/zos-files-for-zowe-sdk@8.27.3(@zowe/core-for-zowe-sdk@8.27.2(@zowe/imperative@8.27.2))(@zowe/imperative@8.27.2)':
     dependencies:
       '@zowe/core-for-zowe-sdk': 8.27.2(@zowe/imperative@8.27.2)
       '@zowe/imperative': 8.27.2
