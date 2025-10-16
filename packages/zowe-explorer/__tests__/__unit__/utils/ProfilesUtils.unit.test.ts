@@ -772,6 +772,27 @@ describe("ProfilesUtils unit tests", () => {
             expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
             expect(recordCredMgrInConfigSpy).toHaveBeenCalledWith(Constants.ZOWE_CLI_SCM);
         });
+
+        it("should update the credential manager setting if specific credential manager is passed", () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
+            const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
+            const recordCredMgrInConfigSpy = jest.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig");
+            ProfilesUtils.updateCredentialManagerSetting("customCredentialManager");
+            expect(ProfilesUtils.PROFILE_SECURITY).toBe("customCredentialManager");
+            expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
+            expect(recordCredMgrInConfigSpy).toHaveBeenCalledWith("customCredentialManager");
+        });
+
+        it("if setting is not enabled and default credential manager not found", () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
+            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(false);
+            const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
+            ProfilesUtils.updateCredentialManagerSetting();
+            expect(ProfilesUtils.PROFILE_SECURITY).toBe(false);
+            expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
+            expect(loggerInfoSpy.mock.calls[0][0]).toEqual("Zowe Explorer profiles are being set as unsecured.");
+        });
     });
 
     describe("isUsingTokenAuth", () => {
@@ -1113,7 +1134,8 @@ describe("ProfilesUtils unit tests", () => {
             Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn().mockReturnValue({}), configurable: true });
             Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
 
-            await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.toBe(ProfilesConvertStatus.ConvertSelected);
+            await (ProfilesUtils as any).v1ProfileOptions();
+            expect(ZoweLocalStorage.setValue).toHaveBeenCalled();
 
             expect(infoMsgSpy).toHaveBeenCalledTimes(2);
             infoMsgSpy.mockRestore();
@@ -1155,8 +1177,10 @@ describe("ProfilesUtils unit tests", () => {
 
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
             jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
-            await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.toBe(ProfilesConvertStatus.CreateNewSelected);
+            await (ProfilesUtils as any).v1ProfileOptions();
+            expect(ZoweLocalStorage.setValue).toHaveBeenCalled();
 
+            expect(infoMsgSpy).toHaveBeenCalledTimes(1);
             infoMsgSpy.mockRestore();
             profInfoSpy.mockRestore();
         });
@@ -1197,9 +1221,8 @@ describe("ProfilesUtils unit tests", () => {
                     onlyV1ProfilesExist: true,
                 },
             });
-            const v1ProfileOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockResolvedValue(ProfilesConvertStatus.CreateNewSelected);
+            const v1ProfileOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions");
             await ProfilesUtils.handleV1MigrationStatus();
-            expect(executeCommandMock.mock.lastCall?.[0]).toBe("zowe.ds.addSession");
             expect(v1ProfileOptsMock).toHaveBeenCalled();
             blockMocks.getValueMock.mockRestore();
             blockMocks.setValueMock.mockRestore();

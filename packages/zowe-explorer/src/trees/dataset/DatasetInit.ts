@@ -87,7 +87,9 @@ export class DatasetInit {
             vscode.commands.registerCommand("zowe.ds.createMember", async (node) => DatasetActions.createMember(node, datasetProvider))
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.deleteDataset", async (node?) => DatasetActions.deleteDatasetPrompt(datasetProvider, node))
+            vscode.commands.registerCommand("zowe.ds.deleteDataset", async (node, nodeList) =>
+                DatasetActions.deleteDatasetPrompt(datasetProvider, node, nodeList)
+            )
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.allocateLike", async (node) => DatasetActions.allocateLike(datasetProvider, node))
@@ -101,7 +103,9 @@ export class DatasetInit {
             )
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.deleteMember", async (node?) => DatasetActions.deleteDatasetPrompt(datasetProvider, node))
+            vscode.commands.registerCommand("zowe.ds.deleteMember", async (node, nodeList) =>
+                DatasetActions.deleteDatasetPrompt(datasetProvider, node, nodeList)
+            )
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.editDataSet", async (node, nodeList) => {

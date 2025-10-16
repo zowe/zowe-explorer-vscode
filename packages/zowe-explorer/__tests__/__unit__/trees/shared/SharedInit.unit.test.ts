@@ -26,13 +26,14 @@ import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler"
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import * as certWizard from "../../../../src/utils/CertificateWizard";
-import { FsAbstractUtils, Gui, imperative, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FsAbstractUtils, FsJobsUtils, Gui, imperative, SpoolEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ReleaseNotes } from "../../../../src/utils/ReleaseNotes";
+import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -586,6 +587,100 @@ describe("Test src/shared/extension", () => {
             expect(errorMock).toHaveBeenCalledWith(sampleError.message);
             expect(remoteLookupMock).toHaveBeenCalled();
             remoteLookupMock.mockRestore();
+        });
+    });
+
+    describe("isDocumentASpool", () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        afterAll(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("should return true when document is a spool file", () => {
+            const spoolEntry = new SpoolEntry("JESMSGLG.2");
+            spoolEntry.type = vscode.FileType.File;
+            spoolEntry.ctime = 0;
+            spoolEntry.mtime = 0;
+            spoolEntry.size = 0;
+            spoolEntry.spool = {
+                id: 2,
+                ddname: "JESMSGLG",
+                jobid: "JOB13965",
+                jobname: "IYK2ZOD2",
+                stepname: "JES2",
+                recfm: "FB",
+                "byte-count": 1024,
+                "record-count": 100,
+                "job-correlator": "correlator123",
+                class: "A",
+                "records-url": "http://example.com/records",
+                lrecl: 80,
+                subsystem: "",
+                procstep: ""
+            };
+            
+            // Mock the JobFSProvider.instance.lookup to return the SpoolEntry
+            const spyLookup = jest.spyOn(JobFSProvider.instance, "lookup").mockReturnValue(spoolEntry);
+
+            // isSpoolEntry should return true if it's given a SpoolEntry instance
+            const spyIsSpoolEntry = jest.spyOn(FsJobsUtils, "isSpoolEntry");
+
+            // Create a test URI
+            const testUri = vscode.Uri.parse("zowe-jobs:/host.zosmf/JOB13965/IYK2ZOD2.JOB13965.JES2.JESMSGLG.2");
+
+            // Call the method
+            const result = SharedInit.isDocumentASpool(testUri);
+
+            // Verify the result
+            expect(result).toBe(true);
+            expect(spyLookup).toHaveBeenCalledWith(testUri, false);
+            expect(spyIsSpoolEntry).toHaveBeenCalledWith(expect.objectContaining({ name: "JESMSGLG.2" }));
+        });
+
+        it("should return false when document is not a spool file", () => {
+            // Mock the JobFSProvider.instance.lookup to return a non-spool entry
+            const spyLookup = jest.spyOn(JobFSProvider.instance, "lookup").mockReturnValue({
+                name: "regular-file.txt",
+                type: vscode.FileType.File,
+                ctime: 0,
+                mtime: 0,
+                size: 0
+            } as any);
+
+            const spyIsSpoolEntry = jest.spyOn(FsJobsUtils, "isSpoolEntry");
+
+            // Create a test URI
+            const testUri = vscode.Uri.parse("file:/path/to/regular-file.txt");
+
+            // Call the method
+            const result = SharedInit.isDocumentASpool(testUri);
+
+            // Verify the result
+            expect(result).toBe(false);
+            expect(spyLookup).toHaveBeenCalledWith(testUri, false);
+            expect(spyIsSpoolEntry).toHaveBeenCalledWith(expect.objectContaining({ name: "regular-file.txt" }));
+        });
+
+        it("should return false when lookup returns undefined", () => {
+            // Mock the JobFSProvider.instance.lookup to return undefined
+            const spyLookup = jest.spyOn(JobFSProvider.instance, "lookup").mockReturnValue(undefined);
+
+            // Mock the FsJobsUtils.isSpoolEntry to return false
+            const spyIsSpoolEntry = jest.spyOn(FsJobsUtils, "isSpoolEntry");
+
+            // Create a test URI
+            const testUri = vscode.Uri.parse("file:/path/to/nonexistent-file.txt");
+
+            // Call the method
+            const result = SharedInit.isDocumentASpool(testUri);
+
+            // Verify the result
+            expect(result).toBe(false);
+            expect(spyLookup).toHaveBeenCalledWith(testUri, false);
+            expect(spyIsSpoolEntry).toHaveBeenCalledWith(undefined);
         });
     });
 });
