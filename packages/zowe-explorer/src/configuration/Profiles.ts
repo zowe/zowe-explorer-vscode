@@ -104,7 +104,7 @@ export class Profiles extends ProfilesCache {
      * @param theProfile - The profile to check.
      * @returns True if the profile, a parent on the profile, or the default base profile has a secure token, false otherwise.
      */
-    private async profileHasSecureToken(theProfile: imperative.IProfileLoaded): Promise<boolean> {
+    public async profileHasSecureToken(theProfile: imperative.IProfileLoaded): Promise<boolean> {
         const teamConfig = (await this.getProfileInfo()).getTeamConfig();
         const profName = teamConfig.api.profiles.getProfilePathFromName(theProfile.name);
 
@@ -134,7 +134,6 @@ export class Profiles extends ProfilesCache {
                 }
             }
         }
-
         const defaultBase = Constants.PROFILES_CACHE.getDefaultProfile?.("base");
         const profilePath = defaultBase && teamConfig.api.profiles.getProfilePathFromName(defaultBase.name);
         if (profilePath && !allPaths.includes(profilePath)) {
@@ -186,6 +185,11 @@ export class Profiles extends ProfilesCache {
                 ZoweLogger.debug(`Profile ${theProfile.name} is using token auth, prompting for missing credentials`);
                 try {
                     const loggedIn = await Profiles.getInstance().ssoLogin(null, theProfile.name);
+                    if (node && loggedIn) {
+                        // To ensure the node is properly refreshed, set the collapsible state to none and then retrigger with the expanded state
+                        node.collapsibleState = vscode.TreeItemCollapsibleState.None;
+                        SharedTreeProviders.getProviderForNode(node).nodeDataChanged(node);
+                    }
                     theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
 
                     if (!loggedIn) {
@@ -891,8 +895,8 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
-                AuthHandler.unlockProfile(serviceProfile, true);
                 ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
+                AuthHandler.unlockProfile(serviceProfile, true);
             }
             return loginOk;
         } catch (err) {

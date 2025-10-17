@@ -13,7 +13,7 @@ import { Gui } from "../globals";
 import { CorrelatedError, FileManagement } from "../utils";
 import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "../tree";
-import { Mutex } from "async-mutex";
+import { E_CANCELED, Mutex } from "async-mutex";
 import * as vscode from "vscode";
 import { ZoweVsCodeExtension } from "../vscode/ZoweVsCodeExtension";
 
@@ -58,9 +58,12 @@ export class AuthCancelledError extends vscode.FileSystemError {
 }
 
 export class AuthHandler {
-    private static authPromptLocks = new Map<string, Mutex>();
+    public static authPromptLocks = new Map<string, Mutex>();
     private static profileLocks = new Map<string, Mutex>();
     private static authCancelledProfiles = new Set<string>();
+    private static authFlows = new Map<string, Promise<void>>();
+    private static sequentialLocks = new Map<string, Mutex>();
+    private static parallelEnabledProfiles = new Set<string>();
     private static enabledProfileTypes: Set<string> = new Set(["zosmf"]);
 
     /**
@@ -165,6 +168,7 @@ export class AuthHandler {
     public static unlockProfile(profile: ProfileLike, refreshResources?: boolean): void {
         const profileName = AuthHandler.getProfileName(profile);
         this.authCancelledProfiles.delete(profileName);
+        this.authFlows.delete(profileName);
         this.authPromptLocks.get(profileName)?.release();
         const mutex = this.profileLocks.get(profileName);
         // If a mutex doesn't exist for this profile or the mutex is no longer locked, return
@@ -185,26 +189,6 @@ export class AuthHandler {
                 // eslint-disable-next-line no-console
                 .catch((err) => err instanceof Error && console.error(err.message));
         }
-    }
-
-    /**
-     * Determines whether to handle an authentication error for a given profile.
-     * This uses a mutex to prevent additional authentication prompts until the first prompt is resolved.
-     * @param profileName The name of the profile to check
-     * @returns {boolean} Whether to handle the authentication error
-     */
-    public static async shouldHandleAuthError(profileName: string): Promise<boolean> {
-        if (!this.authPromptLocks.has(profileName)) {
-            this.authPromptLocks.set(profileName, new Mutex());
-        }
-
-        const mutex = this.authPromptLocks.get(profileName);
-        if (mutex.isLocked()) {
-            return false;
-        }
-
-        await mutex.acquire();
-        return true;
     }
 
     /**
@@ -231,10 +215,12 @@ export class AuthHandler {
                     AuthHandler.unlockProfile(profileName, true);
                     return true;
                 }
-                // User cancelled the SSO login prompt
-                AuthHandler.setAuthCancelled(profileName, true);
-                if (params.throwErrorOnCancel) {
-                    throw new AuthCancelledError(profileName, "User cancelled SSO authentication");
+                if (userResp === undefined) {
+                    // User cancelled the SSO login prompt
+                    AuthHandler.setAuthCancelled(profileName, true);
+                    if (params.throwErrorOnCancel) {
+                        throw new AuthCancelledError(profileName, "User cancelled SSO authentication");
+                    }
                 }
                 return false;
             }
@@ -280,8 +266,18 @@ export class AuthHandler {
      */
     public static async lockProfile(profile: ProfileLike, authOpts?: AuthPromptParams): Promise<boolean> {
         const profileName = AuthHandler.getProfileName(profile);
+        let promptMutex: Mutex | undefined;
+
+        if (authOpts) {
+            if (!this.authPromptLocks.has(profileName)) {
+                this.authPromptLocks.set(profileName, new Mutex());
+            }
+            promptMutex = this.authPromptLocks.get(profileName);
+            await promptMutex.acquire();
+        }
 
         // Only create a lock for the profile when we can determine the profile type and the profile type has locks enabled
+        let profileMutex: Mutex | undefined;
         if (!AuthHandler.isProfileLoaded(profile) || this.enabledProfileTypes.has(profile.type)) {
             // If the mutex does not exist, make one for the profile and acquire the lock
             if (!this.profileLocks.has(profileName)) {
@@ -289,17 +285,97 @@ export class AuthHandler {
             }
 
             // Attempt to acquire the lock - only lock the mutex if the profile type has locks enabled
-            const mutex = this.profileLocks.get(profileName);
-            await mutex.acquire();
+            profileMutex = this.profileLocks.get(profileName);
+            await profileMutex.acquire();
         }
 
         // Prompt the user to re-authenticate if an error and options were provided
         if (authOpts) {
-            await AuthHandler.promptForAuthentication(profile, authOpts);
-            this.profileLocks.get(profileName)?.release();
+            try {
+                return !(await AuthHandler.promptForAuthentication(profile, authOpts));
+            } finally {
+                this.releaseMutexIfLocked(profileMutex);
+                this.releaseMutexIfLocked(promptMutex);
+            }
         }
 
         return true;
+    }
+
+    /**
+     * Ensures follow-up requests for a profile execute sequentially by removing any parallel override.
+     * Creates a mutex for the profile if one does not yet exist.
+     * @param profile Profile name or object that should run requests sequentially
+     */
+    public static enableSequentialRequests(profile: ProfileLike): void {
+        const profileName = AuthHandler.getProfileName(profile);
+        this.parallelEnabledProfiles.delete(profileName);
+        if (!this.sequentialLocks.has(profileName)) {
+            this.sequentialLocks.set(profileName, new Mutex());
+        }
+    }
+
+    /**
+     * Allows a profile's requests to execute in parallel and discards its sequential mutex when idle.
+     * @param profile Profile name or object that should run requests concurrently
+     */
+    public static disableSequentialRequests(profile: ProfileLike): void {
+        const profileName = AuthHandler.getProfileName(profile);
+        this.parallelEnabledProfiles.add(profileName);
+        const mutex = this.sequentialLocks.get(profileName);
+        if (mutex == null) {
+            return;
+        }
+
+        if (mutex.isLocked()) {
+            // Cancel queued waiters so they can rerun without the sequential lock
+            mutex.cancel();
+            void mutex.waitForUnlock().then(() => {
+                if (!this.areSequentialRequestsEnabled(profileName) && this.sequentialLocks.get(profileName) === mutex && !mutex.isLocked()) {
+                    this.sequentialLocks.delete(profileName);
+                }
+            });
+        } else {
+            this.sequentialLocks.delete(profileName);
+        }
+    }
+
+    /**
+     * Checks whether sequential request execution is currently enforced for a profile.
+     * @param profile Profile name or object to check
+     * @returns `true` when the profile is locked to sequential requests, `false` if parallel requests are allowed
+     */
+    public static areSequentialRequestsEnabled(profile: ProfileLike): boolean {
+        return !this.parallelEnabledProfiles.has(AuthHandler.getProfileName(profile));
+    }
+
+    /**
+     * Runs the given action under the profile's sequential mutex when sequential mode is enabled.
+     * Falls back to invoking the action immediately if parallel mode is active.
+     * @param profile Profile name or object that dictates whether sequential mode applies
+     * @param action Async function to run sequentially
+     * @returns Resolves with the action's result
+     */
+    public static async runSequentialIfEnabled<T>(profile: ProfileLike, action: () => Promise<T>): Promise<T> {
+        if (!this.areSequentialRequestsEnabled(profile)) {
+            return action();
+        }
+
+        const profileName = AuthHandler.getProfileName(profile);
+        let mutex = this.sequentialLocks.get(profileName);
+        if (mutex == null) {
+            mutex = new Mutex();
+            this.sequentialLocks.set(profileName, mutex);
+        }
+
+        try {
+            return await mutex.runExclusive(action);
+        } catch (error) {
+            if (error === E_CANCELED) {
+                return this.runSequentialIfEnabled(profile, action);
+            }
+            throw error;
+        }
     }
 
     private static isProfileLoaded(profile: ProfileLike): profile is imperative.IProfileLoaded {
@@ -316,31 +392,20 @@ export class AuthHandler {
      */
     public static async waitForUnlock(profile: ProfileLike): Promise<void> {
         const profileName = AuthHandler.getProfileName(profile);
-        if (!this.profileLocks.has(profileName)) {
-            return;
-        }
-
         const mutex = this.profileLocks.get(profileName);
-        // If the mutex isn't locked, no need to wait
-        if (!mutex.isLocked()) {
+        // If the mutex doesn't exist or isn't locked, no need to wait
+        if (!mutex || !mutex.isLocked()) {
             return;
         }
-
-        // Wait for the mutex to be unlocked with a timeout to prevent indefinite waiting
-        const timeoutMs = 30000; // 30 seconds timeout
-        const timeoutPromise = new Promise<void>((_, reject) => {
-            setTimeout(() => {
-                reject(new Error(`Timeout waiting for profile ${profileName} to be unlocked`));
-            }, timeoutMs);
-        });
 
         try {
-            await Promise.race([mutex.waitForUnlock(), timeoutPromise]);
+            await mutex.waitForUnlock();
         } catch (error) {
-            // Log the timeout to console since we don't have access to the logger in the API
-            // This is acceptable as this is just a fallback for an edge case where the user did not respond to a credential prompt in time
-            // eslint-disable-next-line no-console
-            console.log(`Timeout waiting for profile ${profileName} to be unlocked`);
+            if (error === E_CANCELED) {
+                return this.waitForUnlock(profile);
+            }
+            imperative.Logger.getAppLogger().warn(`Error occurred in waitForUnlock while waiting for profile ${profileName} to be unlocked`);
+            throw error;
         }
     }
 
@@ -358,6 +423,9 @@ export class AuthHandler {
             mutex.release();
         }
         this.authCancelledProfiles.clear();
+        this.authFlows.clear();
+        this.parallelEnabledProfiles.clear();
+        this.sequentialLocks.clear();
     }
 
     /**
@@ -372,5 +440,34 @@ export class AuthHandler {
         }
 
         return mutex.isLocked();
+    }
+
+    public static getActiveAuthFlow(profile: ProfileLike): Promise<void> | undefined {
+        return this.authFlows.get(AuthHandler.getProfileName(profile));
+    }
+
+    public static async getOrCreateAuthFlow(profile: ProfileLike, authOpts: AuthPromptParams): Promise<void> {
+        const profileName = AuthHandler.getProfileName(profile);
+        const existingFlow = this.authFlows.get(profileName);
+        if (existingFlow != null) {
+            return existingFlow;
+        }
+
+        const flow = (async (): Promise<void> => {
+            try {
+                await AuthHandler.lockProfile(profile, authOpts);
+            } finally {
+                this.authFlows.delete(profileName);
+            }
+        })();
+
+        this.authFlows.set(profileName, flow);
+        return flow;
+    }
+
+    private static releaseMutexIfLocked(mutex?: Mutex): void {
+        if (mutex?.isLocked()) {
+            mutex.release();
+        }
     }
 }

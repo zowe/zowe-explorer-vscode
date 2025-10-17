@@ -47,6 +47,7 @@ import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 function createGlobalMocks() {
     const globalMocks = {
@@ -249,6 +250,13 @@ function createGlobalMocks() {
 }
 
 describe("USSTree Unit Tests - Function initializeFavorites", () => {
+    beforeEach(() => {
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.settings.maxRequestRetry") {
+                return 1;
+            }
+        });
+    });
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
