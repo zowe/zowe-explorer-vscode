@@ -625,12 +625,11 @@ export class DatasetActions {
         dataSetDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
 
         const optionItems: vscode.QuickPickItem[] = [
-            // TODO: Re-add overwrite option when enhancement is added to API to support it
-            // {
-            //     label: vscode.l10n.t("Overwrite"),
-            //     description: vscode.l10n.t("Overwrite existing files"),
-            //     picked: dataSetDownloadOptions.overwrite,
-            // },
+            {
+                label: vscode.l10n.t("Overwrite"),
+                description: vscode.l10n.t("Overwrite existing files"),
+                picked: dataSetDownloadOptions.overwrite,
+            },
             {
                 label: vscode.l10n.t("Generate Directory Structure"),
                 description: vscode.l10n.t("Generates sub-folders based on the data set name"),
