@@ -16,7 +16,6 @@ import {
     Gui,
     imperative,
     IZoweDatasetTreeNode,
-    NavigationTreeItem,
     Validation,
     Types,
     FsAbstractUtils,
@@ -949,28 +948,21 @@ export class DatasetActions {
      * @param {IZoweDatasetTreeNode} node - The node selected for deletion
      * @param datasetProvider - the tree which contains the nodes
      */
-    public static async deleteDatasetPrompt(datasetProvider: Types.IZoweDatasetTreeType, node?: IZoweDatasetTreeNode): Promise<void> {
+    public static async deleteDatasetPrompt(
+        datasetProvider: Types.IZoweDatasetTreeType,
+        node?: IZoweDatasetTreeNode,
+        nodeList?: IZoweDatasetTreeNode[]
+    ): Promise<void> {
         ZoweLogger.trace("dataset.actions.deleteDatasetPrompt called.");
-        let nodes: IZoweDatasetTreeNode[];
-        const treeView = datasetProvider.getTreeView();
-        let selectedNodes = treeView.selection;
-        let includedSelection = false;
-        if (node) {
-            for (const item of selectedNodes) {
-                if (item instanceof NavigationTreeItem) {
-                    continue;
-                }
-                if (
-                    node.getLabel().toString() === item.getLabel().toString() &&
-                    node.getParent().getLabel().toString() === item.getParent().getLabel().toString()
-                ) {
-                    includedSelection = true;
-                }
-            }
+        let selectedNodes;
+        if (node || nodeList) {
+            selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweDatasetTreeNode[];
+        } else {
+            selectedNodes = datasetProvider.getTreeView().selection;
         }
 
         // Check that child and parent aren't both in array, removing children whose parents are in
-        // array to avoid errors from host when deleting none=existent children.
+        // array to avoid errors from host when deleting non-existent children.
         const childArray: IZoweDatasetTreeNode[] = [];
         for (const item of selectedNodes) {
             if (SharedContext.isDsMember(item)) {
@@ -983,17 +975,10 @@ export class DatasetActions {
         }
         selectedNodes = selectedNodes.filter((val) => !childArray.includes(val as IZoweDatasetTreeNode));
 
-        if (includedSelection || !node) {
-            // Filter out sessions and information messages
-            nodes = selectedNodes.filter(
-                (selectedNode) => selectedNode.getParent() && !SharedContext.isSession(selectedNode) && !SharedContext.isInformation(selectedNode)
-            ) as IZoweDatasetTreeNode[];
-        } else {
-            if (node.getParent() && !SharedContext.isSession(node) && !SharedContext.isInformation(node)) {
-                nodes = [];
-                nodes.push(node);
-            }
-        }
+        // Filter out sessions and information messages
+        const nodes = selectedNodes.filter(
+            (selectedNode) => selectedNode.getParent() && !SharedContext.isSession(selectedNode) && !SharedContext.isInformation(selectedNode)
+        ) as IZoweDatasetTreeNode[];
 
         // Check that there are items to be deleted
         if (!nodes || nodes.length === 0) {
@@ -1002,14 +987,11 @@ export class DatasetActions {
         }
 
         // The names of the nodes that should be deleted
-        const nodesToDelete: string[] = nodes.map((deletedNode) => {
-            return SharedContext.isDsMember(deletedNode)
-                ? ` ${deletedNode.getParent().getLabel().toString()}(${deletedNode.getLabel().toString()})`
-                : ` ${deletedNode.getLabel().toString()}`;
-        });
-        nodesToDelete.sort((a, b) => a.localeCompare(b));
-
-        const nodesDeleted: string[] = [];
+        const deleteItemName = (node: IZoweDatasetTreeNode) =>
+            SharedContext.isDsMember(node)
+                ? ` ${node.getParent().getLabel().toString()}(${node.getLabel().toString()})`
+                : ` ${node.getLabel().toString()}`;
+        const namesToDelete: string[] = nodes.map(deleteItemName).sort((a, b) => a.localeCompare(b));
 
         // The member parent nodes that should be refreshed individually
         const memberParents: IZoweDatasetTreeNode[] = [];
@@ -1022,18 +1004,14 @@ export class DatasetActions {
             }
         }
 
-        nodes.map((deletedNode) => {
-            return SharedContext.isDsMember(deletedNode) ? deletedNode.getParent() : ` ${deletedNode.getLabel().toString()}`;
-        });
-
-        const displayedDatasetNames = nodesToDelete.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
-        const additionalDatasetsCount = nodesToDelete.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
+        const displayedDatasetNames = namesToDelete.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
+        const additionalDatasetsCount = namesToDelete.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
 
         // Confirm that the user really wants to delete
         ZoweLogger.debug(
             vscode.l10n.t({
                 message: "Deleting data set(s): {0}",
-                args: [nodesToDelete.join(",")],
+                args: [namesToDelete.join(",")],
                 comment: ["Data Sets to delete"],
             })
         );
@@ -1042,30 +1020,23 @@ export class DatasetActions {
             message:
                 `Are you sure you want to delete the following {0} item(s)?\n` +
                 `This will permanently remove these data sets and/or members from your system.\n\n{1}{2}`,
-            args: [nodesToDelete.length, displayedDatasetNames, additionalDatasetsCount > 0 ? `\n...and ${additionalDatasetsCount} more` : ""],
+            args: [namesToDelete.length, displayedDatasetNames, additionalDatasetsCount > 0 ? `\n...and ${additionalDatasetsCount} more` : ""],
             comment: ["Data Sets to delete length", "Data Sets to delete", "Additional datasets count"],
         });
-        await Gui.warningMessage(message, {
+        const selection = await Gui.warningMessage(message, {
             items: [deleteButton],
             vsCodeOpts: { modal: true },
-        }).then((selection) => {
-            if (!selection || selection === "Cancel") {
-                ZoweLogger.debug(DatasetActions.localizedStrings.opCancelled);
-                nodes = [];
-            }
         });
-
-        if (nodes.length === 0) {
+        if (!selection || selection === "Cancel") {
+            ZoweLogger.debug(DatasetActions.localizedStrings.opCancelled);
             return;
         }
+
+        const deletedNames: string[] = [];
         if (nodes.length === 1) {
             await DatasetActions.deleteDataset(nodes[0], datasetProvider);
-            const deleteItemName = SharedContext.isDsMember(nodes[0])
-                ? ` ${nodes[0].getParent().getLabel().toString()}(${nodes[0].getLabel().toString()})`
-                : ` ${nodes[0].getLabel().toString()}`;
-            nodesDeleted.push(deleteItemName);
-        }
-        if (nodes.length > 1) {
+            deletedNames.push(deleteItemName(nodes[0]));
+        } else {
             // Delete multiple selected nodes
             await Gui.withProgress(
                 {
@@ -1082,10 +1053,7 @@ export class DatasetActions {
                         Gui.reportProgress(progress, nodes.length, index, "Deleting");
                         try {
                             await DatasetActions.deleteDataset(currNode, datasetProvider);
-                            const deleteItemName = SharedContext.isDsMember(currNode)
-                                ? ` ${currNode.getParent().getLabel().toString()}(${currNode.getLabel().toString()})`
-                                : ` ${currNode.getLabel().toString()}`;
-                            nodesDeleted.push(deleteItemName);
+                            deletedNames.push(deleteItemName(currNode));
                         } catch (err) {
                             ZoweLogger.error(err);
                         }
@@ -1093,14 +1061,14 @@ export class DatasetActions {
                 }
             );
         }
-        if (nodesDeleted.length > 0) {
-            nodesDeleted.sort((a, b) => a.localeCompare(b));
-            const displayedDeletedNames = nodesDeleted.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
-            const additionalDeletedCount = nodesDeleted.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
+        if (deletedNames.length > 0) {
+            deletedNames.sort((a, b) => a.localeCompare(b));
+            const displayedDeletedNames = deletedNames.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
+            const additionalDeletedCount = deletedNames.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
             Gui.showMessage(
                 vscode.l10n.t({
                     message: "The following {0} item(s) were deleted:\n{1}{2}",
-                    args: [nodesDeleted.length, displayedDeletedNames, additionalDeletedCount > 0 ? `\n...and ${additionalDeletedCount} more` : ""],
+                    args: [deletedNames.length, displayedDeletedNames, additionalDeletedCount > 0 ? `\n...and ${additionalDeletedCount} more` : ""],
                     comment: ["Data Sets deleted length", "Data Sets deleted", "Additional datasets count"],
                 })
             );
@@ -1158,22 +1126,12 @@ export class DatasetActions {
                 }
                 throw err;
             }
-            if (replace === "notFound") {
-                const newNode = new ZoweDatasetNode({
-                    label: name,
-                    collapsibleState: vscode.TreeItemCollapsibleState.None,
-                    contextOverride: Constants.DS_MEMBER_CONTEXT,
-                    parentNode: parent,
-                    profile: parent.getProfile(),
-                });
-                parent.children.push(newNode);
-                await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
-            }
 
             parent.dirty = true;
             datasetProvider.refreshElement(parent);
 
-            const memberUri = parent.children.find((ds) => ds.label === name)?.resourceUri;
+            const newNode = await parent.getChildren().then((children) => children.find((ds) => ds.label === name));
+            datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
 
             // Refresh corresponding tree parent to reflect addition
             const otherTreeParent = datasetProvider.findEquivalentNode(parent, SharedContext.isFavorite(parent));
@@ -1181,8 +1139,12 @@ export class DatasetActions {
                 datasetProvider.refreshElement(otherTreeParent);
             }
 
-            if (memberUri != null) {
-                await vscode.commands.executeCommand("vscode.open", memberUri);
+            if (newNode != null) {
+                if (replace === "notFound") {
+                    await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
+                }
+
+                await vscode.commands.executeCommand("vscode.open", newNode.resourceUri);
             }
             datasetProvider.refresh();
         }

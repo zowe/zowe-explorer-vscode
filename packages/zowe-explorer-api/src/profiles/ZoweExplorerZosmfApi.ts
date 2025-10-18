@@ -22,11 +22,12 @@ import { FileManagement } from "../utils";
 import { Types } from "../Types";
 import { ProfilesCache } from "../profiles/ProfilesCache";
 import { VscSettings } from "../vscode/doc/VscSettings";
+import { IZosmfListResponse, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
+import { IDataSetCount } from "../dataset/IDataSetCount";
 
 /**
  * Implementations of Zowe Explorer API for z/OSMF profiles
- */
-export namespace ZoweExplorerZosmf {
+ */ export namespace ZoweExplorerZosmf {
     /**
      * An implementation of the Zowe Explorer API Common interface for zOSMF.
      */
@@ -413,6 +414,19 @@ export namespace ZoweExplorerZosmf {
                 {},
                 this.getSession()
             );
+        }
+
+        public async getCount(dataSetPatterns: string[]): Promise<IDataSetCount> {
+            const response: IZosFilesResponse[] = [];
+            response.push(await this.dataSetsMatchingPattern(dataSetPatterns, { attributes: false }));
+            const allDatasets = response
+                .filter((r) => r.success)
+                .reduce((arr: Set<string>, r) => {
+                    const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
+                    responseItems?.forEach((item) => arr.add(item.dsname));
+                    return arr;
+                }, new Set<string>());
+            return { count: allDatasets.size, lastItem: Array.from(allDatasets).pop() };
         }
     }
 

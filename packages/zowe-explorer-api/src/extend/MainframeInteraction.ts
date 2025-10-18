@@ -16,6 +16,7 @@ import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { Types } from "../Types";
+import { IDataSetCount } from "../dataset/IDataSetCount";
 
 export namespace MainframeInteraction {
     export interface ICommon {
@@ -397,6 +398,12 @@ export namespace MainframeInteraction {
             options: zosfiles.ICrossLparCopyDatasetOptions,
             sourceprofile: imperative.IProfileLoaded
         ): Promise<zosfiles.IZosFilesResponse>;
+
+        /**
+         * Returns the total count for all data sets that match the list of data set patterns.
+         * @param dataSetPatterns the list of data set patterns to obtain the total item count for.
+         */
+        getCount?(dataSetPatterns: string[]): Promise<IDataSetCount>;
     }
 
     /**
