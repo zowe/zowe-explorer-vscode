@@ -452,6 +452,8 @@ export class USSActions {
     public static async downloadUssFile(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("uss.actions.downloadUssFile called.");
 
+        const profile = node.getProfile();
+
         const downloadOptions = await USSActions.getUssDownloadOptions(node);
         if (!downloadOptions) {
             Gui.showMessage(vscode.l10n.t("Operation cancelled"));
@@ -470,14 +472,14 @@ export class USSActions {
                         ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
                         : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath)),
                     binary: downloadOptions.encoding?.kind === "binary",
-                    encoding: downloadOptions.encoding?.kind === "other" ? downloadOptions.encoding.codepage : undefined,
+                    encoding: downloadOptions.encoding?.kind === "other" ? downloadOptions.encoding.codepage : profile.profile?.encoding,
                 };
 
                 try {
                     await zosfiles.Download.ussFile(node.getSession(), node.fullPath, options);
                     Gui.showMessage(vscode.l10n.t("File downloaded successfully"));
                 } catch (e) {
-                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile: node.getProfile() });
+                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
                 }
             }
         );
@@ -485,6 +487,8 @@ export class USSActions {
 
     public static async downloadUssDirectory(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("uss.actions.downloadUssDirectory called.");
+
+        const profile = node.getProfile();
 
         const downloadOptions = await USSActions.getUssDownloadOptions(node, true);
         if (!downloadOptions) {
@@ -539,11 +543,11 @@ export class USSActions {
                         : downloadOptions.selectedPath.fsPath,
                     overwrite: downloadOptions.overwrite,
                     binary: downloadOptions.encoding?.kind === "binary",
-                    encoding: downloadOptions.encoding?.kind === "other" ? downloadOptions.encoding.codepage : undefined,
+                    encoding: downloadOptions.encoding?.kind === "other" ? downloadOptions.encoding.codepage : profile.profile?.encoding,
                     includeHidden: downloadOptions.includeHidden,
-                    maxConcurrentRequests: node.getProfile()?.profile?.maxConcurrentRequests || 1,
+                    maxConcurrentRequests: profile?.profile?.maxConcurrentRequests || 1,
                     task,
-                    responseTimeout: node.getProfile()?.profile?.responseTimeout,
+                    responseTimeout: profile?.profile?.responseTimeout,
                 };
 
                 try {
@@ -556,7 +560,7 @@ export class USSActions {
 
                     Gui.showMessage(vscode.l10n.t("Directory downloaded successfully"));
                 } catch (e) {
-                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile: node.getProfile() });
+                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
                 }
             }
         );
