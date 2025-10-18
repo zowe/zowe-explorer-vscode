@@ -357,6 +357,21 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.downloadDataSet",
+        "title": "%downloadDataSet%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.ds.downloadMember",
+        "title": "%downloadMember%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.ds.downloadAllMembers",
+        "title": "%downloadAllMembers%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.editDataSet",
         "title": "%editDataSet%",
         "category": "Zowe Explorer",
@@ -527,6 +542,16 @@
       {
         "command": "zowe.uss.uploadDialogWithEncoding",
         "title": "%uss.uploadDialogWithEncoding%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.downloadFile",
+        "title": "%uss.downloadFile%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.downloadDirectory",
+        "title": "%uss.downloadDirectory%",
         "category": "Zowe Explorer"
       },
       {
@@ -995,9 +1020,19 @@
           "group": "099_zowe_ussModification:@3"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^textFile|binaryFile/ && !listMultiSelection",
+          "command": "zowe.uss.downloadFile",
+          "group": "099_zowe_ussModification:@5"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "command": "zowe.uss.downloadDirectory",
+          "group": "099_zowe_ussModification:@5"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|.*_fav))/",
           "command": "zowe.uss.deleteNode",
-          "group": "099_zowe_ussModification:@4"
+          "group": "099_zowe_ussModification:@7"
         },
         {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
@@ -1228,6 +1263,21 @@
           "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
           "command": "zowe.ds.renameDataSet",
           "group": "099_zowe_dsModification@2"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/ && !listMultiSelection",
+          "command": "zowe.ds.downloadDataSet",
+          "group": "099_zowe_dsModification@3"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
+          "command": "zowe.ds.downloadAllMembers",
+          "group": "099_zowe_dsModification@3"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^member.*/ && !listMultiSelection",
+          "command": "zowe.ds.downloadMember",
+          "group": "099_zowe_dsModification@3"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/",
@@ -1603,6 +1653,14 @@
           "when": "never"
         },
         {
+          "command": "zowe.uss.downloadFile",
+          "when": "never"
+        },
+        {
+          "command": "zowe.uss.downloadDirectory",
+          "when": "never"
+        },
+        {
           "command": "zowe.uss.copyUssFile",
           "when": "never"
         },
@@ -1712,6 +1770,18 @@
         },
         {
           "command": "zowe.ds.sortBy",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.downloadDataSet",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.downloadAllMembers",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.downloadMember",
           "when": "never"
         },
         {
