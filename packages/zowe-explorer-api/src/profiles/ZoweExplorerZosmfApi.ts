@@ -129,6 +129,18 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             });
         }
 
+        public downloadDirectory(
+            ussDirectoryPath: string,
+            fileOptions?: zosfiles.IDownloadOptions,
+            listOptions?: zosfiles.IUSSListOptions
+        ): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.Download.ussDir(this.getSession(), ussDirectoryPath, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...fileOptions,
+                ...listOptions,
+            });
+        }
+
         public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
             return zosfiles.Utilities.putUSSPayload(this.getSession(), outputPath, { ...options, request: "copy" });
         }

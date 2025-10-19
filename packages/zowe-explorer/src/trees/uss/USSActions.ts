@@ -476,7 +476,7 @@ export class USSActions {
                 };
 
                 try {
-                    await zosfiles.Download.ussFile(node.getSession(), node.fullPath, options);
+                    await ZoweExplorerApiRegister.getUssApi(profile).getContents(node.fullPath, options);
                     Gui.showMessage(vscode.l10n.t("File downloaded successfully"));
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
@@ -556,8 +556,7 @@ export class USSActions {
                         return;
                     }
 
-                    await zosfiles.Download.ussDir(node.getSession(), node.fullPath, options);
-
+                    await ZoweExplorerApiRegister.getUssApi(profile).downloadDirectory(node.fullPath, options);
                     Gui.showMessage(vscode.l10n.t("Directory downloaded successfully"));
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });

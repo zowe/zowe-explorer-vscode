@@ -119,8 +119,23 @@ export namespace MainframeInteraction {
          *
          * @param {string} ussFilePath
          * @param {zosfiles.IDownloadOptions} options
+         * @returns {Promise<zosfiles.IZosFilesResponse>}
          */
         getContents(ussFilePath: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse>;
+
+        /**
+         * Download a USS directory to the local file system.
+         *
+         * @param {string} ussDirectoryPath The path of the USS directory to download
+         * @param {zosfiles.IDownloadOptions} fileOptions Download options including local directory path
+         * @param {zosfiles.IUSSListOptions} listOptions Options for listing files in USS
+         * @returns {Promise<zosfiles.IZosFilesResponse>}
+         */
+        downloadDirectory(
+            ussDirectoryPath: string,
+            fileOptions?: zosfiles.IDownloadOptions,
+            listOptions?: zosfiles.IUSSListOptions
+        ): Promise<zosfiles.IZosFilesResponse>;
 
         /**
          * Uploads a given buffer as the contents of a file on USS.

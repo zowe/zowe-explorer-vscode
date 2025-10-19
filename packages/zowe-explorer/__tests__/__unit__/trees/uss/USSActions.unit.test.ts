@@ -1107,7 +1107,14 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
         jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" });
-        jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({ getTag: jest.fn().mockResolvedValue("untagged") } as any);
+
+        globalMocks.ussApi = {
+            getTag: jest.fn().mockResolvedValue("untagged"),
+            getContents: jest.fn().mockResolvedValue({ success: true, commandResponse: "", apiResponse: {} }),
+            downloadDirectory: jest.fn().mockResolvedValue({ success: true, commandResponse: "", apiResponse: {} }),
+        };
+        jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(globalMocks.ussApi);
+
         jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
 
         jest.clearAllMocks();
@@ -1336,8 +1343,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             await USSActions.downloadUssFile(mockNode);
 
             expect(ZoweLogger.trace).toHaveBeenCalledWith("uss.actions.downloadUssFile called.");
-            expect(globalMocks.ussFile).toHaveBeenCalledWith(
-                mockNode.getSession(),
+            expect(globalMocks.ussApi.getContents).toHaveBeenCalledWith(
                 "/u/test/file.txt",
                 expect.objectContaining({
                     file: expect.stringContaining("file.txt"),
@@ -1364,8 +1370,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             await USSActions.downloadUssFile(mockNode);
 
-            expect(globalMocks.ussFile).toHaveBeenCalledWith(
-                mockNode.getSession(),
+            expect(globalMocks.ussApi.getContents).toHaveBeenCalledWith(
                 "/u/test/file.txt",
                 expect.objectContaining({
                     binary: true,
@@ -1389,8 +1394,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             await USSActions.downloadUssFile(mockNode);
 
-            expect(globalMocks.ussFile).toHaveBeenCalledWith(
-                mockNode.getSession(),
+            expect(globalMocks.ussApi.getContents).toHaveBeenCalledWith(
                 "/u/test/file.txt",
                 expect.objectContaining({
                     binary: false,
@@ -1415,8 +1419,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             await USSActions.downloadUssFile(mockNode);
 
-            expect(globalMocks.ussFile).toHaveBeenCalledWith(
-                mockNode.getSession(),
+            expect(globalMocks.ussApi.getContents).toHaveBeenCalledWith(
                 "/u/test/file.txt",
                 expect.objectContaining({
                     file: expect.stringMatching(/u.test.file\.txt$/),
@@ -1431,7 +1434,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             await USSActions.downloadUssFile(mockNode);
 
             expect(globalMocks.showMessage).toHaveBeenCalledWith("Operation cancelled");
-            expect(globalMocks.ussFile).not.toHaveBeenCalled();
+            expect(globalMocks.ussApi.getContents).not.toHaveBeenCalled();
         });
 
         it("should handle download errors properly", async () => {
@@ -1445,7 +1448,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
 
             const error = new Error("Download failed");
-            globalMocks.ussFile.mockRejectedValue(error);
+            globalMocks.ussApi.getContents.mockRejectedValue(error);
 
             globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
                 return await callback();
@@ -1483,8 +1486,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             expect(ZoweLogger.trace).toHaveBeenCalledWith("uss.actions.downloadUssDirectory called.");
             expect(USSUtils.countAllFilesRecursively).toHaveBeenCalledWith(mockNode);
-            expect(globalMocks.Download.ussDir).toHaveBeenCalledWith(
-                mockNode.getSession(),
+            expect(ZoweExplorerApiRegister.getUssApi).toHaveBeenCalledWith(mockNode.getProfile());
+            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
                 "/u/test/directory",
                 expect.objectContaining({
                     directory: "/test/download/path",
@@ -1518,8 +1521,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             await USSActions.downloadUssDirectory(mockNode);
 
-            expect(globalMocks.Download.ussDir).toHaveBeenCalledWith(
-                mockNode.getSession(),
+            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
                 "/u/test/directory",
                 expect.objectContaining({
                     directory: expect.stringMatching(/u.test.directory$/),
@@ -1546,7 +1548,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             await USSActions.downloadUssDirectory(mockNode);
 
             expect(globalMocks.infoMessage).toHaveBeenCalledWith("The selected directory contains no files to download.");
-            expect(globalMocks.Download.ussDir).not.toHaveBeenCalled();
+            expect(globalMocks.ussApi.downloadDirectory).not.toHaveBeenCalled();
         });
 
         it("should show warning and prompt for large directory downloads", async () => {
@@ -1578,7 +1580,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     vsCodeOpts: { modal: true },
                 })
             );
-            expect(globalMocks.Download.ussDir).toHaveBeenCalled();
+            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalled();
         });
 
         it("should cancel download when user chooses No for large directory", async () => {
@@ -1598,7 +1600,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             await USSActions.downloadUssDirectory(mockNode);
 
-            expect(globalMocks.Download.ussDir).not.toHaveBeenCalled();
+            expect(globalMocks.ussApi.downloadDirectory).not.toHaveBeenCalled();
         });
 
         it("should handle cancellation during download", async () => {
@@ -1621,7 +1623,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             await USSActions.downloadUssDirectory(mockNode);
 
             expect(globalMocks.showMessage).toHaveBeenCalledWith("Download cancelled");
-            expect(globalMocks.Download.ussDir).not.toHaveBeenCalled();
+            expect(globalMocks.ussApi.downloadDirectory).not.toHaveBeenCalled();
         });
 
         it("should show cancellation message when download options are cancelled", async () => {
@@ -1631,7 +1633,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             await USSActions.downloadUssDirectory(mockNode);
 
             expect(globalMocks.showMessage).toHaveBeenCalledWith("Operation cancelled");
-            expect(globalMocks.Download.ussDir).not.toHaveBeenCalled();
+            expect(globalMocks.ussApi.downloadDirectory).not.toHaveBeenCalled();
         });
 
         it("should handle download errors properly", async () => {
@@ -1648,7 +1650,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
 
             const error = new Error("Download failed");
-            globalMocks.Download.ussDir.mockRejectedValue(error);
+            globalMocks.ussApi.downloadDirectory.mockRejectedValue(error);
 
             globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
                 return await callback({ report: jest.fn() }, { isCancellationRequested: false });
@@ -1689,8 +1691,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             await USSActions.downloadUssDirectory(mockNode);
 
-            expect(globalMocks.Download.ussDir).toHaveBeenCalledWith(
-                mockNode.getSession(),
+            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
                 expect.any(String),
                 expect.objectContaining({
                     encoding: "utf-8",
