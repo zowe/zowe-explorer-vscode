@@ -163,6 +163,30 @@ export class SharedUtils {
         return cachedEncoding?.kind === "other" ? cachedEncoding.codepage : cachedEncoding?.kind;
     }
 
+    /**
+     * Gets the cached directory encoding preference for a profile.
+     * @param profileName The profile name to get encoding for
+     * @returns The cached directory encoding preference or undefined
+     */
+    public static getCachedDirectoryEncoding(profileName: string): "auto-detect" | ZosEncoding | undefined {
+        const encodingMap = ZoweLocalStorage.getValue<Record<string, "auto-detect" | ZosEncoding>>(
+            Definitions.LocalStorageKey.USS_DIRECTORY_ENCODING
+        );
+        return encodingMap?.[profileName];
+    }
+
+    /**
+     * Saves the directory encoding preference for a profile.
+     * @param profileName The profile name to save encoding for
+     * @param encoding The encoding preference to save
+     */
+    public static setCachedDirectoryEncoding(profileName: string, encoding: "auto-detect" | ZosEncoding): void {
+        const encodingMap =
+            ZoweLocalStorage.getValue<Record<string, "auto-detect" | ZosEncoding>>(Definitions.LocalStorageKey.USS_DIRECTORY_ENCODING) ?? {};
+        encodingMap[profileName] = encoding;
+        ZoweLocalStorage.setValue(Definitions.LocalStorageKey.USS_DIRECTORY_ENCODING, encodingMap);
+    }
+
     public static parseFavorites(lines: string[]): Definitions.FavoriteData[] {
         const invalidFavoriteWarning = (line: string): void =>
             ZoweLogger.warn(
@@ -375,12 +399,10 @@ export class SharedUtils {
         taggedEncoding?: string
     ): Promise<ZosEncoding | null | undefined> {
         const profile = node.getProfile();
-        const isDirectory = SharedUtils.isZoweUSSTreeNode(node) && SharedContext.isUssDirectory(node);
-        const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding, isDirectory);
+        const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding, false);
 
         let zosEncoding = await node.getEncoding();
-        if (zosEncoding === undefined && SharedUtils.isZoweUSSTreeNode(node) && !isDirectory) {
-            // Only fetch encoding for USS files, not directories
+        if (zosEncoding === undefined && SharedUtils.isZoweUSSTreeNode(node)) {
             zosEncoding = await UssFSProvider.instance.fetchEncodingForUri(node.resourceUri);
         }
         let currentEncoding = zosEncoding ? USSUtils.zosEncodingToString(zosEncoding) : await SharedUtils.getCachedEncoding(node);
@@ -408,6 +430,56 @@ export class SharedUtils {
         );
 
         return SharedUtils.processEncodingResponse(response, node.label as string);
+    }
+
+    /**
+     * Prompts user for encoding selection for USS directory downloads.
+     *
+     * @param {imperative.IProfileLoaded} profile - The profile loaded
+     * @param {string} contextLabel - The context label of the directory (e.g. USS directory path)
+     * @param {"auto-detect" | ZosEncoding} currentDirectoryEncoding - Current directory encoding preference
+     * @returns {Promise<"auto-detect" | ZosEncoding | undefined>} "auto-detect" string, ZosEncoding object, or undefined if dismissed
+     */
+    public static async promptForDirectoryEncoding(
+        profile: imperative.IProfileLoaded,
+        contextLabel: string,
+        currentDirectoryEncoding?: "auto-detect" | ZosEncoding
+    ): Promise<"auto-detect" | ZosEncoding | undefined> {
+        const items = SharedUtils.buildEncodingOptions(profile, undefined, true);
+
+        let currentEncoding: string | undefined;
+        if (currentDirectoryEncoding === "auto-detect") {
+            currentEncoding = vscode.l10n.t("Auto-detect from file tags");
+        } else if (currentDirectoryEncoding) {
+            currentEncoding =
+                currentDirectoryEncoding.kind === "binary"
+                    ? vscode.l10n.t("Binary")
+                    : currentDirectoryEncoding.kind === "text"
+                    ? vscode.l10n.t("EBCDIC")
+                    : `${currentDirectoryEncoding.kind.toUpperCase()}-${currentDirectoryEncoding.codepage}`;
+        } else {
+            currentEncoding = vscode.l10n.t("Auto-detect from file tags"); // Default for directories
+        }
+
+        const response = await SharedUtils.promptForEncodingSelection(
+            items,
+            vscode.l10n.t({
+                message: "Choose encoding for files in {0}",
+                args: [contextLabel],
+                comment: ["Directory path"],
+            }),
+            vscode.l10n.t({
+                message: "Current encoding is {0}",
+                args: [currentEncoding],
+                comment: ["Encoding name"],
+            })
+        );
+
+        const result = await SharedUtils.processEncodingResponse(response, contextLabel);
+        if (result === null) {
+            return "auto-detect";
+        }
+        return result;
     }
 
     public static getSessionLabel(node: IZoweTreeNode): string {
