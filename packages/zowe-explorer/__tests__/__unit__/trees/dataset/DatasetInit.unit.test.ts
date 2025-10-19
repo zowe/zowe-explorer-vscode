@@ -125,6 +125,14 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(DatasetActions, "downloadAllMembers"), arg: [test.value] }],
             },
             {
+                name: "zowe.ds.downloadMember",
+                mock: [{ spy: jest.spyOn(DatasetActions, "downloadMember"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.ds.downloadDataSet",
+                mock: [{ spy: jest.spyOn(DatasetActions, "downloadDataSet"), arg: [test.value] }],
+            },
+            {
                 name: "zowe.ds.deleteMember",
                 mock: [{ spy: jest.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value, undefined] }],
             },
