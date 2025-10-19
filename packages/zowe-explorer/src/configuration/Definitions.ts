@@ -52,8 +52,20 @@ export namespace Definitions {
         generateDirectory?: boolean;
         includeHidden?: boolean;
         chooseEncoding?: boolean;
-        encoding?: ZosEncoding;
+        encoding?: ZosEncoding | null;
         selectedPath?: vscode.Uri;
+        dirFilterOptions?: UssDirFilterOptions;
+    };
+    export type UssDirFilterOptions = {
+        group?: number | string;
+        user?: number | string;
+        mtime?: number | string;
+        size?: number | string;
+        perm?: string;
+        type?: string;
+        depth?: number;
+        filesys?: boolean;
+        symlinks?: boolean;
     };
     export type FavoriteData = {
         profileName: string;

@@ -113,9 +113,11 @@ export class USSUtils {
     /**
      * Recursively counts all files in a directory tree
      * @param node The directory node to count files in
+     * @param maxDepth Optional maximum depth to search (1 = only immediate children)
+     * @param currentDepth Current depth in the recursion (for internal use)
      * @returns The total number of files (not directories) in the tree
      */
-    public static async countAllFilesRecursively(node: IZoweUSSTreeNode): Promise<number> {
+    public static async countAllFilesRecursively(node: IZoweUSSTreeNode, maxDepth?: number, currentDepth: number = 1): Promise<number> {
         ZoweLogger.trace("uss.actions.countAllFilesRecursively called.");
         let totalCount = 0;
 
@@ -127,7 +129,9 @@ export class USSUtils {
 
             for (const child of children) {
                 if (SharedContext.isUssDirectory(child)) {
-                    totalCount += await this.countAllFilesRecursively(child);
+                    if (maxDepth === undefined || currentDepth < maxDepth) {
+                        totalCount += await this.countAllFilesRecursively(child, maxDepth, currentDepth + 1);
+                    }
                 } else {
                     totalCount += 1;
                 }

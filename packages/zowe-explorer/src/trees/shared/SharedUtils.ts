@@ -206,9 +206,10 @@ export class SharedUtils {
      *
      * @param {imperative.IProfileLoaded} profile - The profile loaded
      * @param {string} taggedEncoding - The tagged encoding
+     * @param {boolean} isDirectory - Whether the target is a directory
      * @returns {vscode.QuickPickItem[]} The encoding options for the prompt
      */
-    private static buildEncodingOptions(profile: imperative.IProfileLoaded, taggedEncoding?: string): vscode.QuickPickItem[] {
+    private static buildEncodingOptions(profile: imperative.IProfileLoaded, taggedEncoding?: string, isDirectory?: boolean): vscode.QuickPickItem[] {
         const ebcdicItem: vscode.QuickPickItem = {
             label: vscode.l10n.t("EBCDIC"),
             description: vscode.l10n.t("z/OS default codepage"),
@@ -221,7 +222,16 @@ export class SharedUtils {
             label: vscode.l10n.t("Other"),
             description: vscode.l10n.t("Specify another codepage"),
         };
-        const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, Constants.SEPARATORS.RECENT];
+        const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem];
+
+        if (isDirectory) {
+            items.splice(0, 0, {
+                label: vscode.l10n.t("Auto-detect from file tags"),
+                description: vscode.l10n.t("Let the API infer encoding from individual USS file tags"),
+            });
+        }
+
+        items.push(Constants.SEPARATORS.RECENT);
 
         if (profile.profile?.encoding != null) {
             items.splice(0, 0, {
@@ -258,9 +268,10 @@ export class SharedUtils {
      *
      * @param {string} response - The response from the user
      * @param {string} contextLabel - The context label of the node
-     * @returns {Promise<ZosEncoding | undefined>} The {@link ZosEncoding} object or `undefined` if the user dismisses the prompt
+     * @returns {Promise<ZosEncoding | null | undefined>} The {@link ZosEncoding} object, `null` for auto-detect,
+     *   or `undefined` if the user dismisses the prompt
      */
-    private static async processEncodingResponse(response: string | undefined, contextLabel: string): Promise<ZosEncoding | undefined> {
+    private static async processEncodingResponse(response: string | undefined, contextLabel: string): Promise<ZosEncoding | null | undefined> {
         if (!response) {
             return undefined;
         }
@@ -280,7 +291,7 @@ export class SharedUtils {
             case binaryLabel:
                 encoding = { kind: "binary" };
                 break;
-            case otherLabel:
+            case otherLabel: {
                 const customResponse = await Gui.showInputBox({
                     title: vscode.l10n.t({
                         message: "Choose encoding for {0}",
@@ -298,9 +309,16 @@ export class SharedUtils {
                     return undefined;
                 }
                 break;
-            default:
-                encoding = response === "binary" ? { kind: "binary" } : { kind: "other", codepage: response };
+            }
+            default: {
+                const autoDetectLabel = vscode.l10n.t("Auto-detect from file tags");
+                if (response === autoDetectLabel) {
+                    return null;
+                } else {
+                    encoding = response === "binary" ? { kind: "binary" } : { kind: "other", codepage: response };
+                }
                 break;
+            }
         }
         return encoding;
     }
@@ -355,12 +373,14 @@ export class SharedUtils {
     public static async promptForEncoding(
         node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode,
         taggedEncoding?: string
-    ): Promise<ZosEncoding | undefined> {
+    ): Promise<ZosEncoding | null | undefined> {
         const profile = node.getProfile();
-        const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding);
+        const isDirectory = SharedUtils.isZoweUSSTreeNode(node) && SharedContext.isUssDirectory(node);
+        const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding, isDirectory);
 
         let zosEncoding = await node.getEncoding();
-        if (zosEncoding === undefined && SharedUtils.isZoweUSSTreeNode(node)) {
+        if (zosEncoding === undefined && SharedUtils.isZoweUSSTreeNode(node) && !isDirectory) {
+            // Only fetch encoding for USS files, not directories
             zosEncoding = await UssFSProvider.instance.fetchEncodingForUri(node.resourceUri);
         }
         let currentEncoding = zosEncoding ? USSUtils.zosEncodingToString(zosEncoding) : await SharedUtils.getCachedEncoding(node);

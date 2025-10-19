@@ -433,10 +433,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     public async fetchEncodingForUri(uri: vscode.Uri): Promise<ZosEncoding> {
-        const file = this._lookupAsFile(uri) as UssFile;
-        await this.autoDetectEncoding(file);
+        try {
+            const file = this._lookupAsFile(uri) as UssFile;
+            await this.autoDetectEncoding(file);
 
-        return file.encoding;
+            return file.encoding;
+        } catch (error) {
+            if (error instanceof vscode.FileSystemError && error.code === "FileIsADirectory") {
+                throw new Error(vscode.l10n.t("Cannot fetch encoding for directories. Encoding options are only available for files."));
+            }
+            throw error;
+        }
     }
 
     /**
@@ -681,13 +688,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         Gui.errorMessage(err.message);
                         return;
                     }
-                } catch (err) {
-                    if (err.name === "Error" && Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
+                } catch (listError) {
+                    if (listError.name === "Error" && Number(listError.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
                         const parent = this.lookupParentDirectory(newUri);
                         parent.entries.delete(path.posix.basename(newUri.path));
                         await ZoweExplorerApiRegister.getUssApi(profile).rename(entry.metadata.path, newPath);
                     } else {
-                        throw err;
+                        throw listError;
                     }
                 }
             } else {
