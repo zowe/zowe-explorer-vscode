@@ -12,14 +12,11 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { imperative, IZoweUSSTreeNode, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { imperative, IZoweUSSTreeNode } from "@zowe/zowe-explorer-api";
 import { USSUtils } from "../../../../src/trees/uss/USSUtils";
-import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
-import { createISession, createIProfile } from "../../../__mocks__/mockCreators/shared";
-import { createUSSNode } from "../../../__mocks__/mockCreators/uss";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 
 jest.mock("../../../../src/tools/ZoweLogger");
