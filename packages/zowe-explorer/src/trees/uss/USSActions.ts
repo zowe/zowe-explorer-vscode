@@ -430,7 +430,7 @@ export class USSActions {
                     break;
                 case "user":
                     prompt = vscode.l10n.t("Enter user name or UID");
-                    placeholder = vscode.l10n.t("e.g., john or 1001");
+                    placeholder = vscode.l10n.t("e.g., IBMUSER or 1001");
                     break;
                 case "mtime":
                     prompt = vscode.l10n.t("Enter modification time filter");
@@ -610,19 +610,29 @@ export class USSActions {
             return;
         }
 
-        const getOption = (label: string): boolean => selectedOptions.some((opt) => opt.label === vscode.l10n.t(label));
-        downloadOpts.overwrite = getOption("Overwrite");
-        downloadOpts.generateDirectory = getOption("Generate Directory Structure");
-        downloadOpts.chooseEncoding = getOption("Choose Encoding");
+        const localizedLabels = {
+            overwrite: vscode.l10n.t("Overwrite"),
+            generateDirectory: vscode.l10n.t("Generate Directory Structure"),
+            chooseEncoding: vscode.l10n.t("Choose Encoding"),
+            includeHidden: vscode.l10n.t("Include Hidden Files"),
+            searchAllFilesystems: vscode.l10n.t("Search All Filesystems"),
+            returnSymlinks: vscode.l10n.t("Return Symlinks"),
+            setFilterOptions: vscode.l10n.t("Set Filter Options"),
+        };
+
+        const getOption = (localizedLabel: string): boolean => selectedOptions.some((opt) => opt.label === localizedLabel);
+        downloadOpts.overwrite = getOption(localizedLabels.overwrite);
+        downloadOpts.generateDirectory = getOption(localizedLabels.generateDirectory);
+        downloadOpts.chooseEncoding = getOption(localizedLabels.chooseEncoding);
 
         // Only set directory-specific options when downloading directories
         if (isDirectory) {
-            downloadOpts.dirOptions.includeHidden = getOption("Include Hidden Files");
-            downloadOpts.dirOptions.filesys = getOption("Search All Filesystems");
-            downloadOpts.dirOptions.symlinks = getOption("Return Symlinks");
-            downloadOpts.dirOptions.chooseFilterOptions = getOption("Set Filter Options");
+            downloadOpts.dirOptions.includeHidden = getOption(localizedLabels.includeHidden);
+            downloadOpts.dirOptions.filesys = getOption(localizedLabels.searchAllFilesystems);
+            downloadOpts.dirOptions.symlinks = getOption(localizedLabels.returnSymlinks);
+            downloadOpts.dirOptions.chooseFilterOptions = getOption(localizedLabels.setFilterOptions);
 
-            if (getOption("Set Filter Options")) {
+            if (getOption(localizedLabels.setFilterOptions)) {
                 const filterOptions = await USSActions.getUssDirFilterOptions(downloadOpts.dirFilterOptions);
                 if (filterOptions === null) {
                     return;

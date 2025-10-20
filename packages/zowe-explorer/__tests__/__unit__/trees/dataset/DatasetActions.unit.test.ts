@@ -3857,8 +3857,9 @@ describe("DatasetActions - downloading functions", () => {
                 DatasetActions,
                 "executeDownloadWithProgress" as any,
                 undefined,
-                jest.fn().mockImplementation(async (_title, downloadFn, _successMessage, _node) => {
-                    await downloadFn();
+                jest.fn().mockImplementation(async (_title, downloadFn, _downloadType, _node) => {
+                    const response = await downloadFn();
+                    return response;
                 })
             );
 
@@ -3868,6 +3869,7 @@ describe("DatasetActions - downloading functions", () => {
             new MockedProperty(Gui, "errorMessage", undefined, jest.fn());
             new MockedProperty(ZoweLogger, "trace", undefined, jest.fn());
             new MockedProperty(ZoweLocalStorage, "getValue", undefined, jest.fn());
+            new MockedProperty(SharedUtils, "handleDownloadResponse", undefined, jest.fn().mockResolvedValue(undefined));
         });
 
         it("should successfully download all members of a PDS", async () => {
@@ -3898,7 +3900,7 @@ describe("DatasetActions - downloading functions", () => {
             expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalledWith(
                 "Downloading all members",
                 expect.any(Function),
-                "Dataset downloaded successfully",
+                "Data set members",
                 pdsNode
             );
         });
@@ -4094,7 +4096,7 @@ describe("DatasetActions - downloading functions", () => {
             expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalledWith(
                 "Downloading member",
                 expect.any(Function),
-                "Member downloaded successfully",
+                "Data set member",
                 memberNode
             );
         });
@@ -4233,12 +4235,7 @@ describe("DatasetActions - downloading functions", () => {
             await DatasetActions.downloadDataSet(dsNode);
 
             expect(mockGetDataSetDownloadOptions.mock).toHaveBeenCalled();
-            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalledWith(
-                "Downloading data set",
-                expect.any(Function),
-                "Data set downloaded successfully",
-                dsNode
-            );
+            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalledWith("Downloading data set", expect.any(Function), "Data set", dsNode);
 
             const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
             await downloadFn();

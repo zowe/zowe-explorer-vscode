@@ -122,15 +122,10 @@ export class USSUtils {
         ZoweLogger.trace("uss.actions.countAllFilesRecursively called.");
         let totalCount = 0;
 
-        // Return early to avoid unnecessary recursion
-        if (totalCount > Constants.MIN_WARN_DOWNLOAD_FILES) {
-            return totalCount;
-        }
-
         try {
             // Force the node to refresh its children, because after downloading a node,
             // the tree seems to uncollapse at that node and is not marked as dirty
-            (node as any).dirty = true;
+            node.dirty = true;
 
             const children = await node.getChildren();
             if (!children || children.length === 0) {
@@ -144,6 +139,11 @@ export class USSUtils {
                     }
                 } else {
                     totalCount += 1;
+                }
+
+                // Return early to avoid unnecessary recursion
+                if (totalCount > Constants.MIN_WARN_DOWNLOAD_FILES) {
+                    return totalCount;
                 }
             }
         } catch (error) {

@@ -1107,6 +1107,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
         jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" });
+        jest.spyOn(SharedUtils, "handleDownloadResponse").mockResolvedValue();
 
         globalMocks.ussApi = {
             getTag: jest.fn().mockResolvedValue("untagged"),
@@ -1120,11 +1121,387 @@ describe("USS Action Unit Tests - downloading functions", () => {
         jest.clearAllMocks();
     });
 
+    afterEach(() => {
+        jest.resetAllMocks();
+        jest.restoreAllMocks();
+        jest.clearAllMocks();
+    });
+
     const createMockNode = (): IZoweUSSTreeNode => {
         const mockNode = createUSSNode(createISession(), createIProfile()) as IZoweUSSTreeNode;
         mockNode.fullPath = "/u/test/file.txt";
         return mockNode;
     };
+    describe("getUssDirFilterOptions", () => {
+        let filterQuickPick: any;
+        let filterShowInputBox: jest.SpyInstance;
+
+        beforeEach(() => {
+            filterQuickPick = {
+                title: "",
+                placeholder: "",
+                ignoreFocusOut: false,
+                canSelectMany: false,
+                items: [],
+                selectedItems: [],
+                onDidAccept: jest.fn(),
+                onDidHide: jest.fn(),
+                show: jest.fn(),
+                hide: jest.fn(),
+                dispose: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValue(filterQuickPick);
+            filterShowInputBox = jest.spyOn(Gui, "showInputBox");
+            jest.clearAllMocks();
+        });
+
+        it("should return empty object when no filters are selected", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [];
+                callback();
+            });
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({});
+            expect(filterQuickPick.show).toHaveBeenCalled();
+            expect(filterQuickPick.dispose).toHaveBeenCalled();
+        });
+
+        it("should return null when user cancels selection", async () => {
+            filterQuickPick.onDidHide.mockImplementation((callback: () => void) => {
+                callback();
+            });
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toBeNull();
+            expect(filterQuickPick.dispose).toHaveBeenCalled();
+        });
+
+        it("should handle group filter input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "group", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("admin");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ group: "admin" });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("group"),
+                placeHolder: expect.stringContaining("admin"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle user filter input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "user", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("1001");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ user: "1001" });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("user"),
+                placeHolder: expect.stringContaining("IBMUSER"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle mtime filter input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "mtime", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("+7");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ mtime: "+7" });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("modification time"),
+                placeHolder: expect.stringContaining("+7"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle size filter input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "size", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("+1M");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ size: "+1M" });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("size"),
+                placeHolder: expect.stringContaining("+1M"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle permission filter input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "perm", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("755");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ perm: "755" });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("permission"),
+                placeHolder: expect.stringContaining("755"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle type filter input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "type", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("d");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ type: "d" });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("file type"),
+                placeHolder: expect.stringContaining("c, d, f, l, p, or s"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle depth filter input as number", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "depth", inputType: "number" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("3");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ depth: 3 });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("depth"),
+                placeHolder: expect.stringContaining("2 levels"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle multiple filters", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [
+                    { key: "user", inputType: "string" },
+                    { key: "depth", inputType: "number" },
+                    { key: "size", inputType: "string" },
+                ];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValueOnce("IBMUSER").mockResolvedValueOnce("2").mockResolvedValueOnce("+100K");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ user: "IBMUSER", depth: 2, size: "+100K" });
+            expect(filterShowInputBox).toHaveBeenCalledTimes(3);
+        });
+
+        it("should use current filter values as initial values", async () => {
+            const currentOptions = {
+                group: "ibmgroup",
+                mtime: "+30",
+                depth: 1,
+            };
+
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "group", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("admin");
+
+            const result = await (USSActions as any).getUssDirFilterOptions(currentOptions);
+
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("group"),
+                placeHolder: expect.stringContaining("admin"),
+                value: "ibmgroup",
+                validateInput: expect.any(Function),
+            });
+            expect(result).toEqual({ group: "admin" });
+        });
+
+        it("should validate empty input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "user", inputType: "string" }];
+                callback();
+            });
+
+            filterShowInputBox.mockImplementation(({ validateInput: validator }: any) => {
+                const result = validator("");
+                return result === null ? Promise.resolve("test") : Promise.resolve(null);
+            });
+
+            await (USSActions as any).getUssDirFilterOptions();
+
+            expect(filterShowInputBox).toHaveBeenCalled();
+        });
+
+        it("should validate numeric input for depth", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "depth", inputType: "number" }];
+                callback();
+            });
+
+            filterShowInputBox.mockImplementation(({ validateInput: validator }: any) => {
+                const result = validator("abc");
+                return result === null ? Promise.resolve("3") : Promise.resolve(null);
+            });
+
+            await (USSActions as any).getUssDirFilterOptions();
+
+            expect(filterShowInputBox).toHaveBeenCalled();
+        });
+
+        it("should skip filter when input is cancelled", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [
+                    { key: "user", inputType: "string" },
+                    { key: "group", inputType: "string" },
+                ];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValueOnce("IBMUSER").mockResolvedValueOnce(null); // cancelled
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ user: "IBMUSER" });
+        });
+
+        it("should skip filter when input is empty after trim", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [
+                    { key: "user", inputType: "string" },
+                    { key: "group", inputType: "string" },
+                ];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValueOnce("IBMUSER").mockResolvedValueOnce("   "); // empty after trim
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ user: "IBMUSER" });
+        });
+    });
+
+    it("should handle directory filter options for USS directories", async () => {
+        const mockNode = createMockNode();
+        const filterOptions = { user: "IBMUSER", depth: 2 };
+        const getUssDirFilterOptionsSpy = jest.spyOn(USSActions as any, "getUssDirFilterOptions").mockResolvedValue(filterOptions);
+        mockZoweLocalStorage.mockReturnValue({});
+
+        const l10nSpy = jest.spyOn(vscode.l10n, "t").mockImplementation((options: any) => {
+            if (typeof options === "string") return options;
+            return options.message || options;
+        });
+
+        mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+            mockQuickPick.selectedItems = [{ label: "Set Filter Options" }];
+            callback();
+        });
+
+        mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+        const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
+
+        expect(getUssDirFilterOptionsSpy).toHaveBeenCalledWith({});
+        expect(result.dirFilterOptions).toEqual(filterOptions);
+
+        l10nSpy.mockRestore();
+        getUssDirFilterOptionsSpy.mockRestore();
+    });
+
+    it("should handle directory encoding selection for USS directories", async () => {
+        const mockNode = createMockNode();
+        mockZoweLocalStorage.mockReturnValue({});
+
+        const promptForDirectoryEncodingSpy = jest
+            .spyOn(SharedUtils, "promptForDirectoryEncoding")
+            .mockResolvedValue({ kind: "other", codepage: "UTF-8" });
+
+        const l10nSpy = jest.spyOn(vscode.l10n, "t").mockImplementation((options: any) => {
+            if (typeof options === "string") return options;
+            return options.message || options;
+        });
+
+        mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+            mockQuickPick.selectedItems = [{ label: "Choose Encoding" }];
+            callback();
+        });
+
+        mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+        const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
+
+        expect(promptForDirectoryEncodingSpy).toHaveBeenCalledWith(mockNode.getProfile(), mockNode.fullPath, undefined);
+        expect(result.dirOptions.directoryEncoding).toEqual({ kind: "other", codepage: "UTF-8" });
+
+        l10nSpy.mockRestore();
+        promptForDirectoryEncodingSpy.mockRestore();
+    });
+
+    it("should handle complex directory options combination for USS", async () => {
+        const mockNode = createMockNode();
+        const storedOptions = {
+            dirFilterOptions: { user: "existing" },
+        };
+        mockZoweLocalStorage.mockReturnValue(storedOptions);
+        const filterOptions = { user: "IBMUSER", group: "ibmgroup" };
+        const getUssDirFilterOptionsSpy = jest.spyOn(USSActions as any, "getUssDirFilterOptions").mockResolvedValue(filterOptions);
+
+        const l10nSpy = jest.spyOn(vscode.l10n, "t").mockImplementation((options: any) => {
+            if (typeof options === "string") return options;
+            return options.message || options;
+        });
+
+        mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+            mockQuickPick.selectedItems = [
+                { label: "Include Hidden Files" },
+                { label: "Search All Filesystems" },
+                { label: "Return Symlinks" },
+                { label: "Set Filter Options" },
+            ];
+            callback();
+        });
+
+        mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+        const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
+
+        expect(result.dirOptions.includeHidden).toBe(true);
+        expect(result.dirOptions.filesys).toBe(true);
+        expect(result.dirOptions.symlinks).toBe(true);
+        expect(result.dirFilterOptions).toEqual(filterOptions);
+
+        l10nSpy.mockRestore();
+        getUssDirFilterOptionsSpy.mockRestore();
+    });
 
     describe("getUssDownloadOptions", () => {
         it("should return default options when no stored values exist for file download", async () => {
@@ -1143,9 +1520,15 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(result).toEqual({
                 overwrite: false,
                 generateDirectory: true,
-                includeHidden: false,
                 chooseEncoding: false,
                 selectedPath: vscode.Uri.file("/user/selected/path"),
+                dirOptions: {
+                    includeHidden: false,
+                    filesys: false,
+                    symlinks: false,
+                    chooseFilterOptions: false,
+                },
+                dirFilterOptions: {},
             });
             expect(mockQuickPick.show).toHaveBeenCalled();
             expect(mockShowOpenDialog).toHaveBeenCalledWith({
@@ -1175,7 +1558,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
 
             expect(result.overwrite).toBe(true);
-            expect(result.includeHidden).toBe(true);
+            expect(result.dirOptions.includeHidden).toBe(true);
             expect(result.generateDirectory).toBe(true);
         });
 
@@ -1184,9 +1567,9 @@ describe("USS Action Unit Tests - downloading functions", () => {
             const storedOptions = {
                 overwrite: true,
                 generateDirectory: false,
-                includeHidden: true,
                 chooseEncoding: false,
                 selectedPath: vscode.Uri.file("/stored/path"),
+                dirOptions: { includeHidden: true },
             };
             mockZoweLocalStorage.mockReturnValue(storedOptions);
 
@@ -1196,6 +1579,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             });
 
             mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/new/path")]);
+            jest.spyOn(SharedUtils, "promptForDirectoryEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" });
 
             const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
 
@@ -1280,9 +1664,15 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(result).toEqual({
                 overwrite: false,
                 generateDirectory: false,
-                includeHidden: false,
                 chooseEncoding: false,
                 selectedPath: vscode.Uri.file("/test/path"),
+                dirOptions: {
+                    includeHidden: false,
+                    filesys: false,
+                    symlinks: false,
+                    chooseFilterOptions: false,
+                },
+                dirFilterOptions: {},
             });
         });
 
@@ -1310,6 +1700,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             mockZoweLocalStorage.mockReturnValue({});
             const mockUssApi = { getTag: jest.fn().mockResolvedValue("utf-8") } as any;
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi);
+            jest.spyOn(SharedUtils, "promptForDirectoryEncoding").mockResolvedValue(undefined);
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
                 mockQuickPick.selectedItems = [{ label: "Choose Encoding", picked: true }];
@@ -1321,7 +1712,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             await (USSActions as any).getUssDownloadOptions(mockNode, true);
 
             expect(mockUssApi.getTag).not.toHaveBeenCalled();
-            expect(SharedUtils.promptForEncoding).toHaveBeenCalledWith(mockNode, undefined);
+            expect(SharedUtils.promptForDirectoryEncoding).toHaveBeenCalledWith(mockNode.getProfile(), mockNode.fullPath, undefined);
         });
     });
 
@@ -1351,7 +1742,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     encoding: undefined,
                 })
             );
-            expect(globalMocks.showMessage).toHaveBeenCalledWith("File downloaded successfully");
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS file");
         });
 
         it("should download a USS file with binary encoding", async () => {
@@ -1376,6 +1767,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     binary: true,
                 })
             );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS file");
         });
 
         it("should download a USS file with custom codepage encoding", async () => {
@@ -1401,6 +1793,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     encoding: "IBM-1047",
                 })
             );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS file");
         });
 
         it("should download a USS file with directory structure generation", async () => {
@@ -1425,6 +1818,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     file: expect.stringMatching(/u.test.file\.txt$/),
                 })
             );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS file");
         });
 
         it("should show cancellation message when download options are cancelled", async () => {
@@ -1471,7 +1865,10 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: true,
-                includeHidden: false,
+                dirOptions: {
+                    includeHidden: false,
+                    directoryEncoding: { kind: "other", codepage: "IBM-1047" },
+                },
                 encoding: { kind: "other", codepage: "IBM-1047" },
             };
 
@@ -1485,7 +1882,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             await USSActions.downloadUssDirectory(mockNode);
 
             expect(ZoweLogger.trace).toHaveBeenCalledWith("uss.actions.downloadUssDirectory called.");
-            expect(USSUtils.countAllFilesRecursively).toHaveBeenCalledWith(mockNode);
+            expect(USSUtils.countAllFilesRecursively).toHaveBeenCalledWith(mockNode, undefined);
             expect(ZoweExplorerApiRegister.getUssApi).toHaveBeenCalledWith(mockNode.getProfile());
             expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
                 "/u/test/directory",
@@ -1498,7 +1895,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     maxConcurrentRequests: 1,
                 })
             );
-            expect(globalMocks.showMessage).toHaveBeenCalledWith("Directory downloaded successfully");
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS directory");
         });
 
         it("should download a USS directory with directory structure generation", async () => {
@@ -1508,7 +1905,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: true,
                 overwrite: false,
-                includeHidden: true,
+                dirOptions: { includeHidden: true },
                 encoding: { kind: "binary" },
             };
 
@@ -1526,10 +1923,10 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 expect.objectContaining({
                     directory: expect.stringMatching(/u.test.directory$/),
                     overwrite: false,
-                    binary: true,
                     includeHidden: true,
                 })
             );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS directory");
         });
 
         it("should show info message when directory contains no files", async () => {
@@ -1557,7 +1954,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: false,
-                includeHidden: false,
+                dirOptions: { includeHidden: false },
                 encoding: undefined,
             };
 
@@ -1581,6 +1978,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 })
             );
             expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalled();
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS directory");
         });
 
         it("should cancel download when user chooses No for large directory", async () => {
@@ -1589,7 +1987,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: false,
-                includeHidden: false,
+                dirOptions: { includeHidden: false },
                 encoding: undefined,
             };
 
@@ -1609,7 +2007,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: false,
-                includeHidden: false,
+                dirOptions: { includeHidden: false },
                 encoding: undefined,
             };
 
@@ -1642,7 +2040,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: false,
-                includeHidden: false,
+                dirOptions: { includeHidden: false },
                 encoding: undefined,
             };
 
@@ -1678,7 +2076,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: false,
-                includeHidden: false,
+                dirOptions: { includeHidden: false },
                 encoding: undefined,
             };
 
@@ -1694,11 +2092,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
                 expect.any(String),
                 expect.objectContaining({
-                    encoding: "utf-8",
                     maxConcurrentRequests: 5,
                     responseTimeout: 30000,
                 })
             );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS directory");
         });
     });
 });

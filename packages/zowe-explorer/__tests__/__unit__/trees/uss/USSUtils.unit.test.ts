@@ -18,6 +18,7 @@ import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerA
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
+import { Constants } from "../../../../src/configuration/Constants";
 
 jest.mock("../../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -434,5 +435,63 @@ describe("USSUtils Unit Tests - countAllFilesRecursively", () => {
 
         expect(result).toBe(2);
         expect(ZoweLogger.warn).toHaveBeenCalled();
+    });
+
+    it("should return early when file count exceeds MIN_WARN_DOWNLOAD_FILES constant", async () => {
+        const mockConstant = 3;
+        const constantMock = new MockedProperty(Constants, "MIN_WARN_DOWNLOAD_FILES", undefined, mockConstant);
+
+        const mockFile1 = { fullPath: "/test/file1.txt" } as IZoweUSSTreeNode;
+        const mockFile2 = { fullPath: "/test/file2.txt" } as IZoweUSSTreeNode;
+        const mockFile3 = { fullPath: "/test/file3.txt" } as IZoweUSSTreeNode;
+        const mockFile4 = { fullPath: "/test/file4.txt" } as IZoweUSSTreeNode;
+        const mockFile5 = { fullPath: "/test/file5.txt" } as IZoweUSSTreeNode;
+
+        const mockSubDir = {
+            getChildren: jest.fn().mockResolvedValue([mockFile4, mockFile5]),
+            fullPath: "/test/subdir",
+        } as unknown as IZoweUSSTreeNode;
+
+        const mockNode = {
+            getChildren: jest.fn().mockResolvedValue([mockFile1, mockFile2, mockFile3, mockSubDir]),
+            fullPath: "/test",
+        } as unknown as IZoweUSSTreeNode;
+
+        globalMocks.isUssDirectory.mockImplementation((node: any) => node.fullPath === "/test/subdir");
+
+        const result = await USSUtils.countAllFilesRecursively(mockNode);
+
+        expect(result).toBeGreaterThan(mockConstant);
+        expect(mockSubDir.getChildren).not.toHaveBeenCalled();
+
+        constantMock[Symbol.dispose]();
+    });
+
+    it("should stop recursion at specified depth", async () => {
+        const mockFile1 = { fullPath: "/test/file1.txt" } as IZoweUSSTreeNode;
+        const mockDeepFile = { fullPath: "/test/sub1/sub2/deepfile.txt" } as IZoweUSSTreeNode;
+
+        const mockSub2 = {
+            getChildren: jest.fn().mockResolvedValue([mockDeepFile]),
+            fullPath: "/test/sub1/sub2",
+        } as unknown as IZoweUSSTreeNode;
+
+        const mockSub1 = {
+            getChildren: jest.fn().mockResolvedValue([mockSub2]),
+            fullPath: "/test/sub1",
+        } as unknown as IZoweUSSTreeNode;
+
+        const mockNode = {
+            getChildren: jest.fn().mockResolvedValue([mockFile1, mockSub1]),
+            fullPath: "/test",
+        } as unknown as IZoweUSSTreeNode;
+
+        globalMocks.isUssDirectory.mockImplementation((node: any) => node.fullPath === "/test/sub1" || node.fullPath === "/test/sub1/sub2");
+
+        const result = await USSUtils.countAllFilesRecursively(mockNode, 2);
+
+        expect(result).toBe(1);
+        expect(mockSub1.getChildren).toHaveBeenCalled();
+        expect(mockSub2.getChildren).not.toHaveBeenCalled();
     });
 });
