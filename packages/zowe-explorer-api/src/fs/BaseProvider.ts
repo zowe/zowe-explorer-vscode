@@ -491,10 +491,6 @@ export class BaseProvider {
         };
     }
 
-    public hasNoAuthType(session: ISession, profile: IProfileLoaded): boolean {
-        return session.type === SessConstants.AUTH_TYPE_NONE && profile.type !== "ssh";
-    }
-
     /**
      * @deprecated Please use the public version
      */
