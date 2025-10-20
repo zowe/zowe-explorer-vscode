@@ -16,7 +16,6 @@ import { FsAbstractUtils } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZosEncoding } from "../tree";
 import { ErrorCorrelator, ZoweExplorerApiType } from "../utils/ErrorCorrelator";
-import { IProfileLoaded, ISession, SessConstants } from "@zowe/imperative";
 
 export class BaseProvider {
     // eslint-disable-next-line no-magic-numbers

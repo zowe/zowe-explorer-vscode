@@ -92,9 +92,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
 
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
-        if (isFetching &&
-             ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-                (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue))
+        if (
+            (isFetching && ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile)) ||
+            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
         ) {
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
