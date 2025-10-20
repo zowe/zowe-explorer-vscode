@@ -12,7 +12,7 @@
 import { Mutex } from "async-mutex";
 import { AuthHandler, AuthCancelledError, Gui, ZoweVsCodeExtension } from "../../../src";
 import { FileManagement } from "../../../src/utils/FileManagement";
-import { ImperativeError, IProfileLoaded, Session, SessConstants } from "@zowe/imperative";
+import { ImperativeError, IProfileLoaded, Session, SessConstants, RestConstants } from "@zowe/imperative";
 import { AuthPromptParams } from "../../../src/profiles/AuthHandler";
 import * as vscode from "vscode";
 
@@ -40,6 +40,7 @@ describe("AuthHandler", () => {
         beforeEach(() => {
             // Since wasAuthCancelled relies on internal state, we clear it.
             (AuthHandler as any).authCancelledProfiles.clear();
+            (AuthHandler as any).authFlows.clear();
         });
 
         it("should return true when auth has been cancelled for a profile name", () => {
@@ -72,7 +73,7 @@ describe("AuthHandler", () => {
             const isLockedMock = jest.spyOn(mutex, "isLocked").mockReturnValueOnce(true);
             const waitForUnlockMock = jest.spyOn(mutex, "waitForUnlock").mockResolvedValueOnce(undefined);
             (AuthHandler as any).profileLocks.set(TEST_PROFILE_NAME, mutex);
-            await AuthHandler.waitForUnlock(TEST_PROFILE_NAME, true);
+            await AuthHandler.waitForUnlock(TEST_PROFILE_NAME);
             expect(isLockedMock).toHaveBeenCalled();
             expect(waitForUnlockMock).toHaveBeenCalled();
             (AuthHandler as any).profileLocks.clear();
@@ -146,12 +147,10 @@ describe("AuthHandler", () => {
                 },
                 imperativeError,
             };
-            const releaseSpy = jest.spyOn(Mutex.prototype, "release");
             const result = await AuthHandler.lockProfile(TEST_PROFILE_NAME, authOpts);
-            expect(result).toBe(true);
+            expect(result).toBe(false);
             expect(promptForAuthenticationMock).toHaveBeenCalledTimes(1);
             expect(promptForAuthenticationMock).toHaveBeenCalledWith(TEST_PROFILE_NAME, authOpts);
-            expect(releaseSpy).toHaveBeenCalledTimes(1);
             AuthHandler.unlockProfile(TEST_PROFILE_NAME);
         });
 
@@ -362,13 +361,16 @@ describe("AuthHandler", () => {
             expect(releaseSpy).not.toHaveBeenCalled();
         });
 
-        it("does nothing if the mutex in the map is not locked", async () => {
+        it("deletes auth flow and releases auth prompt lock when unlocking", async () => {
+            // Setup mutexes for the profile
             await AuthHandler.lockProfile(TEST_PROFILE_NAME);
             AuthHandler.unlockProfile(TEST_PROFILE_NAME);
 
-            const releaseSpy = jest.spyOn(Mutex.prototype, "release").mockClear();
             AuthHandler.unlockProfile(TEST_PROFILE_NAME);
-            expect(releaseSpy).not.toHaveBeenCalled();
+            const authPromptLock = AuthHandler.authPromptLocks.get(TEST_PROFILE_NAME);
+            expect(authPromptLock).not.toBeUndefined();
+            expect(authPromptLock.isLocked()).toBe(false);
+            expect(AuthHandler.getActiveAuthFlow(TEST_PROFILE_NAME)).toBe(undefined);
         });
 
         it("reuses the same Mutex for the profile if it already exists", async () => {
@@ -394,12 +396,166 @@ describe("AuthHandler", () => {
         });
     });
 
-    describe("shouldHandleAuthError", () => {
-        it("returns true if a credential prompt was not yet shown to the user", async () => {
-            await expect(AuthHandler.shouldHandleAuthError(TEST_PROFILE_NAME)).resolves.toBe(true);
+    describe("getOrCreateAuthFlow", () => {
+        const authOpts: AuthPromptParams = {
+            authMethods: {
+                promptCredentials: jest.fn(),
+                ssoLogin: jest.fn(),
+            },
+            imperativeError: new ImperativeError({
+                msg: "Username or password is invalid or expired",
+                errorCode: RestConstants.HTTP_STATUS_401.toString(),
+            }),
+        };
+
+        beforeEach(() => {
+            (AuthHandler as any).authFlows.clear();
+            (AuthHandler as any).authPromptLocks.clear();
+            (AuthHandler as any).profileLocks.clear();
         });
-        it("returns false if the user is currently responding to a credential prompt", async () => {
-            await expect(AuthHandler.shouldHandleAuthError(TEST_PROFILE_NAME)).resolves.toBe(false);
+
+        it("reuses the same promise for concurrent requests", async () => {
+            let resolveFlow: ((value: boolean | PromiseLike<boolean>) => void) | undefined;
+            const lockProfileMock = jest.spyOn(AuthHandler, "lockProfile").mockImplementation(
+                () =>
+                    new Promise<boolean>((resolve) => {
+                        resolveFlow = resolve;
+                    })
+            );
+
+            const flowOne = AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts);
+            const flowTwo = AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts);
+
+            expect(flowOne).toStrictEqual(flowTwo);
+            expect(lockProfileMock).toHaveBeenCalledTimes(1);
+
+            resolveFlow?.(true);
+            await expect(flowOne).resolves.toBeUndefined();
+            expect(AuthHandler.getActiveAuthFlow(TEST_PROFILE_NAME)).toBeUndefined();
+            lockProfileMock.mockRestore();
+        });
+
+        it("clears the cached promise when authentication fails with AuthCancelledError", async () => {
+            const cancellationError = new AuthCancelledError(TEST_PROFILE_NAME, "cancelled");
+            const lockProfileMock = jest.spyOn(AuthHandler, "lockProfile").mockRejectedValueOnce(cancellationError);
+
+            await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).rejects.toBe(cancellationError);
+            expect(lockProfileMock).toHaveBeenCalledTimes(1);
+            expect(AuthHandler.getActiveAuthFlow(TEST_PROFILE_NAME)).toBeUndefined();
+            lockProfileMock.mockRestore();
+        });
+
+        it("starts a new flow after the previous one resolves", async () => {
+            const lockProfileMock = jest.spyOn(AuthHandler, "lockProfile").mockClear().mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+
+            await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).resolves.toBeUndefined();
+            expect(AuthHandler.getActiveAuthFlow(TEST_PROFILE_NAME)).toBeUndefined();
+
+            await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).resolves.toBeUndefined();
+            expect(lockProfileMock).toHaveBeenCalledTimes(2);
+            lockProfileMock.mockRestore();
+        });
+    });
+
+    describe("sequential request management", () => {
+        beforeEach(() => {
+            (AuthHandler as any).parallelEnabledProfiles.clear();
+            (AuthHandler as any).sequentialLocks.clear();
+        });
+
+        it("runs sequentially by default until a request completes successfully", async () => {
+            const order: number[] = [];
+            let resolveFirst: (() => void) | undefined;
+
+            const first = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
+                order.push(1);
+                await new Promise<void>((resolve) => {
+                    resolveFirst = resolve;
+                });
+                order.push(2);
+            });
+
+            // eslint-disable-next-line @typescript-eslint/require-await
+            const second = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
+                order.push(3);
+            });
+
+            await Promise.resolve();
+            expect(order).toEqual([1]);
+
+            resolveFirst?.();
+            await Promise.all([first, second]);
+            expect(order).toEqual([1, 2, 3]);
+        });
+
+        it("enables and disables sequential handling for a profile", () => {
+            AuthHandler.enableSequentialRequests(TEST_PROFILE_NAME);
+            expect(AuthHandler.areSequentialRequestsEnabled(TEST_PROFILE_NAME)).toBe(true);
+
+            AuthHandler.disableSequentialRequests(TEST_PROFILE_NAME);
+            expect(AuthHandler.areSequentialRequestsEnabled(TEST_PROFILE_NAME)).toBe(false);
+        });
+
+        it("does not enforce sequential order when disabled", async () => {
+            AuthHandler.disableSequentialRequests(TEST_PROFILE_NAME);
+
+            const order: number[] = [];
+            let resolveFirst: (() => void) | undefined;
+
+            // eslint-disable-next-line @typescript-eslint/require-await
+            const first = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
+                order.push(1);
+                await new Promise<void>((resolve) => {
+                    resolveFirst = resolve;
+                });
+                order.push(2);
+            });
+
+            // eslint-disable-next-line @typescript-eslint/require-await
+            const second = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
+                order.push(3);
+            });
+
+            await Promise.resolve();
+            expect(order).toEqual([1, 3]);
+
+            resolveFirst?.();
+            await Promise.all([first, second]);
+            expect(order).toEqual([1, 3, 2]);
+        });
+
+        it("releases queued actions once parallel mode is re-enabled", async () => {
+            const order: string[] = [];
+            let resolveFirst: (() => void) | undefined;
+
+            const first = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
+                order.push("first-start");
+                await new Promise<void>((resolve) => {
+                    resolveFirst = resolve;
+                });
+                order.push("first-end");
+            });
+
+            await Promise.resolve();
+
+            // eslint-disable-next-line @typescript-eslint/require-await
+            const second = AuthHandler.runSequentialIfEnabled(TEST_PROFILE_NAME, async () => {
+                order.push("second-run");
+            });
+
+            await Promise.resolve();
+            expect(order).toEqual(["first-start"]);
+
+            AuthHandler.disableSequentialRequests(TEST_PROFILE_NAME);
+
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(order).toEqual(["first-start", "second-run"]);
+
+            resolveFirst?.();
+            await Promise.all([first, second]);
+            expect(order).toEqual(["first-start", "second-run", "first-end"]);
         });
     });
 

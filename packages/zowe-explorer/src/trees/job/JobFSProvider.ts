@@ -106,9 +106,8 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const results: [string, vscode.FileType][] = [];
 
-        await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
-        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-        await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
+        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+        await AuthHandler.waitForUnlock(uriInfo.profile);
         const jesApi = ZoweExplorerApiRegister.getJesApi(uriInfo.profile);
         try {
             if (FsAbstractUtils.isFilterEntry(fsEntry)) {
@@ -226,9 +225,8 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profileEncoding = spoolEntry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
-        await AuthUtils.reauthenticateIfCancelled(profile);
-        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-        await AuthHandler.waitForUnlock(spoolEntry.metadata.profile, shouldAwaitTimeout);
+        await AuthUtils.ensureAuthNotCancelled(profile);
+        await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
         const query = new URLSearchParams(uri.query);
         let recordRange = "";
         const recordsToFetch = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
@@ -344,9 +342,9 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     /**
-     * Deletes a spool file or job at the given URI.
+     * Deletes a spool job at the given URI.
      * @param uri The URI that points to the file/folder to delete
-     * @param options Options for deleting the spool file or job
+     * @param options Options for deleting the spool job
      * - `deleteRemote` - Deletes the job from the remote system if set to true.
      */
     public async delete(uri: vscode.Uri, options: { readonly recursive: boolean }): Promise<void> {
@@ -359,9 +357,8 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const parent = this.lookupParentDirectory(uri, false);
         const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         try {
-            await AuthUtils.reauthenticateIfCancelled(profInfo.profile);
-            const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-            await AuthHandler.waitForUnlock(profInfo.profile, shouldAwaitTimeout);
+            await AuthUtils.ensureAuthNotCancelled(profInfo.profile);
+            await AuthHandler.waitForUnlock(profInfo.profile);
             await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
         } catch (err) {
             this._handleError(err, {

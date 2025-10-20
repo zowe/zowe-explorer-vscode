@@ -38,7 +38,6 @@ import * as path from "path";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { DeferredPromise } from "@zowe/imperative";
-import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 const dayjs = require("dayjs");
 
@@ -106,11 +105,6 @@ describe("DatasetFSProvider", () => {
             } as any),
         });
         jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
-        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
-            if (key === "zowe.settings.maxRequestRetry") {
-                return 1;
-            }
-        });
     });
 
     afterAll(() => {
@@ -1002,7 +996,7 @@ describe("DatasetFSProvider", () => {
                 }),
             } as any);
             try {
-                await DatasetFSProvider.instance.stat(testUris.ps);
+                await DatasetFSProvider.instance.stat(testUris.ps.with({ query: "fetch=true" }));
             } catch (err) {
                 errorMessage = `${err}`;
             }
@@ -1057,6 +1051,9 @@ describe("DatasetFSProvider", () => {
                 });
                 const exampleError = new Error("Response unsuccessful");
                 const dataSetMock = jest.fn().mockRejectedValue(exampleError);
+                // jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation(() => {
+                //     throw vscode.FileSystemError.Unavailable("Auth Cancelled");
+                // });
                 jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                     dataSet: dataSetMock,
                 } as any);
@@ -1087,15 +1084,26 @@ describe("DatasetFSProvider", () => {
             expect(allMembersMock).toHaveBeenCalled();
         });
         it("calls handleProfileAuthOnError in the case of an API error", async () => {
-            const allMembersMock = jest.fn().mockRejectedValue(
-                new imperative.ImperativeError({
-                    msg: "All configured authentication methods failed",
-                })
-            );
+            const allMembersMock = jest
+                .fn()
+                .mockRejectedValueOnce(
+                    new imperative.ImperativeError({
+                        msg: "All configured authentication methods failed",
+                    })
+                )
+                .mockRejectedValueOnce(
+                    new imperative.ImperativeError({
+                        msg: "Auth Cancelled",
+                    })
+                );
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 allMembers: allMembersMock,
             } as any);
-            const handleProfileAuthOnErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation();
+            jest.spyOn(AuthHandler, "lockProfile").mockImplementation();
+
+            const handleProfileAuthOnErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation(async () => {
+                throw vscode.FileSystemError.Unavailable("User cancelled SSO authentication");
+            });
             const fakePds = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pds)), testEntries.pds);
             await expect(
                 (DatasetFSProvider.instance as any).fetchEntriesForDataset(fakePds, testUris.pds, {
@@ -1536,7 +1544,7 @@ describe("DatasetFSProvider", () => {
                 });
 
                 isProfileLockedMock.mockReturnValue(true);
-                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValue(undefined);
+                const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValue(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
 
                 const datasetMock = jest.fn().mockResolvedValue({});
@@ -1544,8 +1552,8 @@ describe("DatasetFSProvider", () => {
 
                 const result = await DatasetFSProvider.instance.stat(testUris.ps);
 
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(datasetMock).not.toHaveBeenCalled();
@@ -1560,7 +1568,7 @@ describe("DatasetFSProvider", () => {
                 const uriInfo = { profile: testProfile };
 
                 isProfileLockedMock.mockReturnValue(true);
-                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValue(undefined);
+                const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValue(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
 
                 const datasetMock = jest.fn().mockResolvedValue({});
@@ -1568,8 +1576,8 @@ describe("DatasetFSProvider", () => {
 
                 const result = await (DatasetFSProvider.instance as any).fetchEntriesForProfile(testUris.session, uriInfo, "USER.*");
 
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(datasetMock).not.toHaveBeenCalled();
@@ -1586,7 +1594,7 @@ describe("DatasetFSProvider", () => {
                 jest.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(file.metadata);
 
                 isProfileLockedMock.mockReturnValue(true);
-                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValue(undefined);
+                const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValue(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
 
                 const getContentsMock = jest.fn().mockResolvedValue({});
@@ -1594,8 +1602,8 @@ describe("DatasetFSProvider", () => {
 
                 const result = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
 
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile, false);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(getContentsMock).not.toHaveBeenCalled();

@@ -21,13 +21,13 @@ import {
     AuthHandler,
     ZoweExplorerZosmf,
     AuthPromptParams,
+    AuthCancelledError,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { SharedContext } from "../trees/shared/SharedContext";
-import { ImperativeError } from "@zowe/imperative";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -38,21 +38,14 @@ interface ErrorContext {
 
 export class AuthUtils {
     /**
-     * Checks if a profile's authentication was previously cancelled and, if so,
-     * re-prompts the user to authenticate. This should be called before any
-     * remote operation that requires authentication.
+     * Ensures that a profile is in a usable state by throwing if authentication was previously cancelled.
+     * Callers should handle the error and trigger a fresh authentication prompt through {@link handleProfileAuthOnError}.
      * @param profile The profile to check.
-     * @throws {AuthCancelledError} If the user cancels the re-authentication prompt.
+     * @throws {AuthCancelledError} If the user has an unresolved authentication cancellation.
      */
-    public static async reauthenticateIfCancelled(profile: imperative.IProfileLoaded): Promise<void> {
-        if (AuthHandler.isProfileLocked(profile) && AuthHandler.wasAuthCancelled(profile)) {
-            // The original error doesn't matter here, we just need to trigger the flow.
-            await this.handleProfileAuthOnError(
-                new ImperativeError({
-                    msg: "User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate. (All configured authentication methods failed)",
-                }),
-                profile
-            );
+    public static async ensureAuthNotCancelled(profile: imperative.IProfileLoaded): Promise<void> {
+        if (AuthHandler.wasAuthCancelled(profile)) {
+            throw new AuthCancelledError(profile.name, "User cancelled previous authentication");
         }
     }
 
@@ -64,18 +57,13 @@ export class AuthUtils {
      * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
      * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
-    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<boolean> {
+    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
         if (
             (err instanceof imperative.ImperativeError &&
                 (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                     err.message.includes("All configured authentication methods failed"))) ||
             err.message.includes("HTTP(S) status 401")
         ) {
-            if (!(await AuthHandler.shouldHandleAuthError(profile.name))) {
-                ZoweLogger.debug(`[AuthUtils] Skipping authentication prompt for profile ${profile.name} due to debouncing`);
-                return false;
-            }
-
             // In the case of an authentication error, find a more user-friendly error message if available.
             const errorCorrelation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err, {
                 templateArgs: {
@@ -94,78 +82,52 @@ export class AuthUtils {
                 errorCorrelation,
                 throwErrorOnCancel: true,
             };
-            // If the profile is already locked, prompt the user to re-authenticate.
-            if (AuthHandler.isProfileLocked(profile)) {
-                await AuthHandler.waitForUnlock(profile);
-            } else {
-                // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
-                // This may throw AuthCancelledError if the user cancels the authentication prompt
-                return await AuthHandler.lockProfile(profile, authOpts);
-            }
+            AuthHandler.enableSequentialRequests(profile);
+            await AuthHandler.getOrCreateAuthFlow(profile, authOpts);
         } else if (AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
             AuthHandler.unlockProfile(profile);
         }
     }
 
-    public static promptCountForProfile: Record<string, number> = {};
-
     public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
-        const maxAttempts = SettingsConfig.getDirectValue("zowe.settings.maxRequestRetry", 0);
-        const profileName = profile?.name;
-        const shouldTrackPrompts = profileName != null;
-
-        if (shouldTrackPrompts && !this.promptCountForProfile[profileName]) {
-            this.promptCountForProfile[profileName] = 0;
-        }
-
-        for (let i = 0; i <= maxAttempts; i++) {
-            try {
-                const callbackValue = await callback();
-                if (shouldTrackPrompts) {
-                    delete this.promptCountForProfile[profileName];
-                }
-                return callbackValue;
-            } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(err.message);
-                }
-                if (maxAttempts <= 0) {
-                    if (profile) {
-                        await this.handleProfileAuthOnError(err, profile);
+        const executeWithRetries = async (): Promise<void> => {
+            while (true) {
+                try {
+                    await AuthHandler.waitForUnlock(profile);
+                    await AuthUtils.ensureAuthNotCancelled(profile);
+                    const callbackValue = await callback();
+                    AuthHandler.disableSequentialRequests(profile);
+                    return callbackValue;
+                } catch (err) {
+                    if (err instanceof Error) {
+                        ZoweLogger.error(err.message);
                     }
-                    throw vscode.FileSystemError.Unavailable();
-                }
-                const currentPromptCount = shouldTrackPrompts ? this.promptCountForProfile[profileName] || 0 : 0;
-                if (maxAttempts <= 0 || i >= maxAttempts || currentPromptCount >= maxAttempts) {
-                    if (shouldTrackPrompts) {
-                        delete this.promptCountForProfile[profileName];
-                    }
-                    throw vscode.FileSystemError.Unavailable();
-                }
-                if (
-                    (err instanceof imperative.ImperativeError &&
-                        (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
-                            err.message.includes("All configured authentication methods failed"))) ||
-                    err.message.includes("HTTP(S) status 401")
-                ) {
-                    if (shouldTrackPrompts) {
-                        this.promptCountForProfile[profileName]++;
-                    }
-                    if (profile) {
-                        const result = await this.handleProfileAuthOnError(err, profile);
-                        if (!result) {
-                            AuthHandler.authPromptLocks.get(profile.name)?.release();
+                    if (
+                        (err instanceof imperative.ImperativeError &&
+                            (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                                err.message.includes("All configured authentication methods failed"))) ||
+                        err.message.includes("HTTP(S) status 401")
+                    ) {
+                        if (profile) {
+                            const authPromptLock = AuthHandler.authPromptLocks.get(profile.name);
+                            if (authPromptLock?.isLocked()) {
+                                await authPromptLock.waitForUnlock();
+                                if (AuthHandler.isProfileLocked(profile)) {
+                                    throw vscode.FileSystemError.Unavailable();
+                                }
+                                continue;
+                            }
+                            await this.handleProfileAuthOnError(err, profile);
                         }
+                    } else {
+                        throw err;
                     }
-                } else {
-                    if (shouldTrackPrompts) {
-                        delete this.promptCountForProfile[profileName];
-                    }
-                    throw err;
                 }
             }
-        }
+        };
+
+        return AuthHandler.runSequentialIfEnabled(profile, executeWithRetries);
     }
 
     public static async openConfigForMissingHostname(profile: imperative.IProfileLoaded): Promise<void> {

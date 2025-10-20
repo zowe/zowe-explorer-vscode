@@ -560,9 +560,6 @@
   "zowe.table.maxPinnedRows": {
     "Maximum number of rows that can be pinned to the top of table views.": ""
   },
-  "zowe.settings.maxRequestRetry": {
-    "Maximum number of authentication retries per file system call.": ""
-  },
   "zowe.table.hidePinnedRowsWarning": {
     "Hide the warning message when pinning many rows to table views.": ""
   },

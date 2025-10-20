@@ -687,66 +687,6 @@ describe("_reopenEditorForRelocatedUri", () => {
     });
 });
 
-describe("parseUriQuery", () => {
-    it("should properly parse an empty query to the default options", () => {
-        const prov = new (BaseProvider as any)();
-        expect(prov.parseUriQuery()).toStrictEqual({
-            isConflict: false,
-            isFetching: false,
-            isInDiff: false,
-            shouldAwaitTimeout: false,
-        });
-    });
-    it("should properly parse the query to overwrite default options", () => {
-        const prov = new (BaseProvider as any)();
-        expect(prov.parseUriQuery("fetch=true&awaitTimeout=true")).toStrictEqual({
-            isConflict: false,
-            isFetching: true,
-            isInDiff: false,
-            shouldAwaitTimeout: true,
-        });
-    });
-});
-
-describe("hasNoAuthType", () => {
-    it("should determine if an ssh profile has an auth type", () => {
-        const prov = new (BaseProvider as any)();
-        const session = {
-            hostname: "example.com",
-            port: 22,
-            privateKey: "path/to/id_rsa",
-            type: "none",
-            user: "user123",
-        };
-        const profile = {
-            name: "ssh123",
-            type: "ssh",
-            message: "",
-            failNotFound: false,
-            profile: {},
-        };
-        expect(prov.hasNoAuthType(session, profile)).toBeFalsy();
-    });
-
-    it("should determine if a profile has an auth type", () => {
-        const prov = new (BaseProvider as any)();
-        const session = {
-            hostname: "example.com",
-            port: 443,
-            type: "none",
-            user: "user123",
-        };
-        const profile = {
-            name: "profile123",
-            type: "",
-            message: "",
-            failNotFound: false,
-            profile: {},
-        };
-        expect(prov.hasNoAuthType(session, profile)).toBeTruthy();
-    });
-});
-
 describe("onCloseEvent", () => {
     it("disposes the event if all visible text editors are not in a conflict", () => {
         const fakeProvider = { _lookupAsFile: jest.fn(), onDocClosedEventDisposable: { dispose: jest.fn() } };

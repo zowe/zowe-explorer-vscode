@@ -182,6 +182,11 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             parentNode: blockMocks.datasetSessionNode,
             session: blockMocks.session,
         });
+        const newMember = new ZoweDatasetNode({
+            label: "TESTMEMBER",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: parent,
+        });
 
         const mySpy = mocked(vscode.window.showInputBox).mockImplementation((options) => {
             options.validateInput("testMember");
@@ -199,6 +204,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             },
         });
         jest.spyOn(blockMocks.mvsApi, "allMembers").mockImplementation(jest.fn());
+        jest.spyOn(parent as any, "getChildren").mockImplementationOnce(async () => (parent.children = [newMember]));
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
@@ -265,6 +271,11 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         });
         const nonFavoriteLabel = parent.label?.toString();
         parent.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
+        const newMember = new ZoweDatasetNode({
+            label: "TESTMEMBER",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: parent,
+        });
 
         const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
@@ -277,6 +288,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
                 etag: "123",
             },
         });
+        jest.spyOn(parent as any, "getChildren").mockImplementationOnce(async () => (parent.children = [newMember]));
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
@@ -308,6 +320,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         parent.children = [pdsMember];
 
         blockMocks.testDatasetTree.getChildren = jest.fn().mockResolvedValueOnce([parent]);
+        jest.spyOn(parent as any, "getChildren").mockResolvedValueOnce(parent.children);
 
         jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("cancel" as any);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce("EX1");
@@ -708,6 +721,25 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
             `The following 1 item(s) were deleted:\n ` +
                 `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
         );
+    });
+
+    it("test when same dsname exists across two profiles that correct node is deleted", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+        const deleteDatasetSpy = jest.spyOn(DatasetActions, "deleteDataset");
+
+        const otherMemberNode = new ZoweDatasetNode({
+            label: blockMocks.testMemberNode.getLabel().toString(),
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.testDatasetNode,
+        });
+        await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree, otherMemberNode);
+        expect(deleteDatasetSpy).toHaveBeenCalledWith(otherMemberNode, blockMocks.testDatasetTree);
     });
 });
 

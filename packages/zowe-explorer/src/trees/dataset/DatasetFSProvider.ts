@@ -74,7 +74,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         ZoweLogger.trace(`[DatasetFSProvider] stat called with ${uri.toString()}`);
         let isFetching = false;
-        let shouldAwaitTimeout = false;
+
+        if (uri.path.includes("/.vscode/")) {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
 
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
@@ -84,15 +87,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 return this.lookup(uri, false);
             }
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
-            shouldAwaitTimeout = queryParams.has("awaitTimeout") && queryParams.get("awaitTimeout") === "true";
         }
 
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
 
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
-        if (
-            ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+        if (isFetching &&
+             ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
+                (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue))
         ) {
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
@@ -112,8 +114,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
+        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+        await AuthHandler.waitForUnlock(uriInfo.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -153,11 +155,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     private async fetchEntriesForProfile(uri: vscode.Uri, uriInfo: UriFsInfo, pattern: string): Promise<FilterEntry> {
         const profileEntry = this._lookupAsDirectory(uri, false) as FilterEntry;
-        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
+        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+        await AuthHandler.waitForUnlock(uriInfo.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -232,10 +233,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let members: IZosFilesResponse;
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.reauthenticateIfCancelled(profile);
+        await AuthUtils.ensureAuthNotCancelled(profile);
 
-        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-        await AuthHandler.waitForUnlock(entry.metadata.profile, shouldAwaitTimeout);
+        await AuthHandler.waitForUnlock(entry.metadata.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -295,10 +295,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             pdsMember = uriPath.length === 2;
 
             // Wait for any ongoing authentication process to complete
-            await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
+            await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
 
-            const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-            await AuthHandler.waitForUnlock(uriInfo.profile, shouldAwaitTimeout);
+            await AuthHandler.waitForUnlock(uriInfo.profile);
 
             // Check if the profile is locked (indicating an auth error is being handled)
             // If it's locked, we should wait and not make additional requests
@@ -402,6 +401,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         }
 
+        if (uri.path.includes("/.vscode/")) {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
+
         if (dsEntry == null || FsDatasetsUtils.isDsEntry(dsEntry)) {
             throw vscode.FileSystemError.FileNotFound(uri);
         }
@@ -466,10 +469,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             // Wait for any ongoing authentication process to complete
-            await AuthUtils.reauthenticateIfCancelled(profile);
+            await AuthUtils.ensureAuthNotCancelled(profile);
 
-            const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-            await AuthHandler.waitForUnlock(metadata.profile, shouldAwaitTimeout);
+            await AuthHandler.waitForUnlock(metadata.profile);
 
             // Check if the profile is locked (indicating an auth error is being handled)
             // If it's locked, we should wait and not make additional requests
@@ -541,6 +543,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let ds: DsEntry | DirEntry;
         const urlQuery = new URLSearchParams(uri.query);
         const isConflict = urlQuery.has("conflict");
+
+        if (uri.path.includes("/.vscode/")) {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
         // If the extenderProfileReady map does not contain the profile, create a deferred promise for the profile.
@@ -663,10 +669,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let resp: IZosFilesResponse;
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
 
-        await AuthUtils.reauthenticateIfCancelled(profile);
+        await AuthUtils.ensureAuthNotCancelled(profile);
 
-        const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-        await AuthHandler.waitForUnlock(entry.metadata.profile, shouldAwaitTimeout);
+        await AuthHandler.waitForUnlock(entry.metadata.profile);
 
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
@@ -850,9 +855,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            await AuthUtils.reauthenticateIfCancelled(profile);
-            const { shouldAwaitTimeout } = this.parseUriQuery(uri?.query);
-            await AuthHandler.waitForUnlock(entry.metadata.profile, shouldAwaitTimeout);
+            await AuthUtils.ensureAuthNotCancelled(profile);
+            await AuthHandler.waitForUnlock(entry.metadata.profile);
             await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).deleteDataSet(fullName, {
                 volume: entry.stats?.["vol"],
                 responseTimeout: entry.metadata.profile.profile?.responseTimeout,
@@ -895,7 +899,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            await AuthUtils.reauthenticateIfCancelled(profile);
+            await AuthUtils.ensureAuthNotCancelled(profile);
             await AuthHandler.waitForUnlock(entry.metadata.profile);
             if (FsDatasetsUtils.isPdsEntry(entry) || !entry.isMember) {
                 await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(oldName, newName);

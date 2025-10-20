@@ -98,7 +98,7 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.deleteDataset",
-                mock: [{ spy: jest.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value] }],
+                mock: [{ spy: jest.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value, undefined] }],
             },
             {
                 name: "zowe.ds.allocateLike",
@@ -122,7 +122,7 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.deleteMember",
-                mock: [{ spy: jest.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value] }],
+                mock: [{ spy: jest.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value, undefined] }],
             },
             {
                 name: "zowe.ds.editDataSet",

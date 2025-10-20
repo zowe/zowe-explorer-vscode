@@ -9,6 +9,7 @@
  *
  */
 
-export * from "./DatasetAttributesProvider";
-export * from "./table-types";
-export * from "./IDataSetCount";
+export interface IDataSetCount {
+    count: number;
+    lastItem?: string;
+}
