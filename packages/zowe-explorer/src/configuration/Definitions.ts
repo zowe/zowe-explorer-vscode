@@ -50,10 +50,27 @@ export namespace Definitions {
     export type UssDownloadOptions = {
         overwrite?: boolean;
         generateDirectory?: boolean;
-        includeHidden?: boolean;
         chooseEncoding?: boolean;
-        encoding?: ZosEncoding;
+        encoding?: ZosEncoding | null;
         selectedPath?: vscode.Uri;
+        dirOptions?: UssDirOptions;
+        dirFilterOptions?: UssDirFilterOptions;
+    };
+    export type UssDirOptions = {
+        filesys?: boolean;
+        symlinks?: boolean;
+        includeHidden?: boolean;
+        chooseFilterOptions?: boolean;
+        directoryEncoding?: "auto-detect" | ZosEncoding;
+    };
+    export type UssDirFilterOptions = {
+        group?: number | string;
+        user?: number | string;
+        mtime?: number | string;
+        size?: number | string;
+        perm?: string;
+        type?: string;
+        depth?: number;
     };
     export type FavoriteData = {
         profileName: string;
@@ -175,5 +192,6 @@ export namespace Definitions {
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
         DS_DOWNLOAD_OPTIONS = "zowe.dsDownloadOptions",
         USS_DOWNLOAD_OPTIONS = "zowe.ussDownloadOptions",
+        USS_DIRECTORY_ENCODING = "zowe.ussDirectoryEncoding",
     }
 }

@@ -724,7 +724,7 @@ export class DatasetActions {
     private static async executeDownloadWithProgress(
         title: string,
         downloadFn: (progress?: vscode.Progress<{ message?: string; increment?: number }>) => Promise<void>,
-        successMessage: string,
+        downloadType: string,
         node: IZoweDatasetTreeNode
     ): Promise<void> {
         await Gui.withProgress(
@@ -735,8 +735,8 @@ export class DatasetActions {
             },
             async (progress) => {
                 try {
-                    await downloadFn(progress);
-                    Gui.showMessage(successMessage);
+                    const response = await downloadFn(progress);
+                    void SharedUtils.handleDownloadResponse(response, downloadType);
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
                 }
@@ -825,7 +825,7 @@ export class DatasetActions {
 
                 await ZoweExplorerApiRegister.getMvsApi(profile).downloadAllMembers(datasetName, downloadOptions);
             },
-            vscode.l10n.t("Dataset downloaded successfully"),
+            vscode.l10n.t("Data set members"),
             node
         );
     }
@@ -877,7 +877,7 @@ export class DatasetActions {
 
                 await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
             },
-            vscode.l10n.t("Member downloaded successfully"),
+            vscode.l10n.t("Data set member"),
             node
         );
     }
@@ -935,7 +935,7 @@ export class DatasetActions {
 
                 await ZoweExplorerApiRegister.getMvsApi(profile).getContents(datasetName, downloadOptions);
             },
-            vscode.l10n.t("Data set downloaded successfully"),
+            vscode.l10n.t("Data set"),
             node
         );
     }

@@ -17,6 +17,7 @@ import type { ZoweUSSNode } from "./ZoweUSSNode";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
+import { Constants } from "../../configuration/Constants";
 
 export class USSUtils {
     /**
@@ -113,13 +114,24 @@ export class USSUtils {
     /**
      * Recursively counts all files in a directory tree
      * @param node The directory node to count files in
+     * @param maxDepth Optional maximum depth to search (1 = only immediate children)
+     * @param currentDepth Current depth in the recursion (for internal use)
      * @returns The total number of files (not directories) in the tree
      */
-    public static async countAllFilesRecursively(node: IZoweUSSTreeNode): Promise<number> {
+    public static async countAllFilesRecursively(node: IZoweUSSTreeNode, maxDepth?: number, currentDepth: number = 1): Promise<number> {
         ZoweLogger.trace("uss.actions.countAllFilesRecursively called.");
         let totalCount = 0;
 
+        // Return early to avoid unnecessary recursion
+        if (totalCount > Constants.MIN_WARN_DOWNLOAD_FILES) {
+            return totalCount;
+        }
+
         try {
+            // Force the node to refresh its children, because after downloading a node,
+            // the tree seems to uncollapse at that node and is not marked as dirty
+            (node as any).dirty = true;
+
             const children = await node.getChildren();
             if (!children || children.length === 0) {
                 return 0;
@@ -127,7 +139,9 @@ export class USSUtils {
 
             for (const child of children) {
                 if (SharedContext.isUssDirectory(child)) {
-                    totalCount += await this.countAllFilesRecursively(child);
+                    if (maxDepth === undefined || currentDepth < maxDepth) {
+                        totalCount += await this.countAllFilesRecursively(child, maxDepth, currentDepth + 1);
+                    }
                 } else {
                     totalCount += 1;
                 }
