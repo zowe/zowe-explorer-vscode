@@ -23,6 +23,7 @@ import {
     ZosEncoding,
     Sorting,
     imperative,
+    CorrelatedError,
 } from "@zowe/zowe-explorer-api";
 import { UssFSProvider } from "../uss/UssFSProvider";
 import { USSUtils } from "../uss/USSUtils";
@@ -670,6 +671,99 @@ export class SharedUtils {
                 }
                 return;
             }
+        }
+    }
+
+    /**
+     * Handles download response and provides detailed feedback to user about successes, warnings, and failures
+     *
+     * @param response The response from the download API
+     * @param downloadType The type of download (File, Directory, Data set, etc.)
+     */
+    public static async handleDownloadResponse(response: any, downloadType: string): Promise<void> {
+        ZoweLogger.trace("SharedUtils.handleDownloadResponse called.");
+
+        if (!response) {
+            Gui.showMessage(vscode.l10n.t("{0} download completed.", downloadType));
+            return;
+        }
+
+        let message = "";
+        let hasWarnings = false;
+        let hasErrors = false;
+        const detailedInfo: string[] = [];
+
+        if (response.success === false) {
+            hasErrors = true;
+            message = vscode.l10n.t("{0} download completed with errors.", downloadType);
+        } else {
+            message = vscode.l10n.t("{0} downloaded successfully.", downloadType);
+        }
+
+        if (response.commandResponse) {
+            const commandResponse = response.commandResponse.toString();
+
+            if (commandResponse.includes("already exists") || commandResponse.includes("skipped")) {
+                hasWarnings = true;
+                detailedInfo.push("Some files were skipped because they already exist.");
+            }
+
+            if (commandResponse.includes("failed") || commandResponse.includes("error")) {
+                hasErrors = true;
+                detailedInfo.push("Some files failed to download due to errors.");
+            }
+
+            ZoweLogger.info(`Download response details: ${String(commandResponse)}`);
+            detailedInfo.push(`Full response: ${String(commandResponse)}`);
+        }
+
+        if (response.apiResponse && Array.isArray(response.apiResponse)) {
+            const failedItems = response.apiResponse.filter((item: any) => item.error || item.status === "failed");
+            if (failedItems.length > 0) {
+                hasErrors = true;
+                const failedCount = String(failedItems.length);
+                ZoweLogger.warn(`${failedCount} items failed to download: ${JSON.stringify(failedItems)}`);
+                detailedInfo.push(`${failedCount} items failed to download`);
+                detailedInfo.push(`Failed items: ${JSON.stringify(failedItems, null, 2)}`);
+            }
+        }
+
+        if (hasErrors) {
+            const errorMessage = vscode.l10n.t("{0}\n\nSome files may not have been downloaded.", message);
+            const correlatedError = new CorrelatedError({
+                initialError: new Error(errorMessage),
+                correlation: {
+                    summary: `${downloadType} download completed with errors`,
+                },
+            });
+
+            await Gui.errorMessage(errorMessage, {
+                items: [vscode.l10n.t("View Details")],
+                vsCodeOpts: { modal: false },
+            }).then((selection) => {
+                if (selection === vscode.l10n.t("View Details")) {
+                    vscode.commands.executeCommand("zowe.troubleshootError", correlatedError, detailedInfo.join("\n\n"));
+                }
+            });
+        } else if (hasWarnings) {
+            const warningMessage = vscode.l10n.t("{0}\n\nSome files may have been skipped.", message);
+            const correlatedWarning = new CorrelatedError({
+                initialError: new Error(warningMessage),
+                correlation: {
+                    summary: `${downloadType} download completed with warnings`,
+                },
+            });
+
+            await Gui.warningMessage(warningMessage, {
+                items: [vscode.l10n.t("View Details")],
+                vsCodeOpts: { modal: false },
+            }).then((selection) => {
+                if (selection === vscode.l10n.t("View Details")) {
+                    vscode.commands.executeCommand("zowe.troubleshootError", correlatedWarning, detailedInfo.join("\n\n"));
+                }
+            });
+        } else {
+            Gui.showMessage(message);
         }
     }
 }

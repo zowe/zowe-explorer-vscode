@@ -707,8 +707,8 @@ export class USSActions {
                 };
 
                 try {
-                    await ZoweExplorerApiRegister.getUssApi(profile).getContents(node.fullPath, options);
-                    Gui.showMessage(vscode.l10n.t("File downloaded successfully"));
+                    const response = await ZoweExplorerApiRegister.getUssApi(profile).getContents(node.fullPath, options);
+                    void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS file"));
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
                 }
@@ -795,11 +795,8 @@ export class USSActions {
                         return;
                     }
 
-                    // TODO: If the commandResponse contains warnings about files that could not be downloaded,
-                    // such as files already exists (when overwrite is false), user should see
-                    // also this for file downloads and in data set downloads
-                    await ZoweExplorerApiRegister.getUssApi(profile).downloadDirectory(node.fullPath, options);
-                    Gui.showMessage(vscode.l10n.t("Directory downloaded successfully"));
+                    const response = await ZoweExplorerApiRegister.getUssApi(profile).downloadDirectory(node.fullPath, options);
+                    void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"));
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
                 }

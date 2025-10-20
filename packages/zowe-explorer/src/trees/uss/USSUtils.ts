@@ -17,7 +17,6 @@ import type { ZoweUSSNode } from "./ZoweUSSNode";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
-import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { Constants } from "../../configuration/Constants";
 
 export class USSUtils {
