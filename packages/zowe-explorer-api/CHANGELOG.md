@@ -8,6 +8,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed an issue where the `promptForAuthentication` function would throw an `AuthCanceledError` on invalid authentication for SSO login. [#3830](https://github.com/zowe/zowe-explorer-vscode/pull/3830)
 - Fixed an issue where the `IMvs.putContents` function did not properly strip carriage returns from chunks during upload operations on Windows. Now, the function correctly converts CRLF sequences to LF, even if the sequence lands on a chunk boundary. [#3853](https://github.com/zowe/zowe-explorer-vscode/issues/3853)
 - Fixed an issue where the `vscode.workspace.fs.readFile` function would return empty contents for a USS file when an error occurred while fetching the file from the mainframe, instead of displaying an error message. [#3894](https://github.com/zowe/zowe-explorer-vscode/issues/3894)
 - Updated Zowe SDKs to version `8.27.3` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)

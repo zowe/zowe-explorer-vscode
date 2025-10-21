@@ -10,6 +10,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Added support for fetching virtual workspaces in parallel after Zowe Explorer activation. [#3880](https://github.com/zowe/zowe-explorer-vscode/issues/3880)
+- Added retry support for file system calls so operations can continue after credentials are updated. [#3726](https://github.com/zowe/zowe-explorer-vscode/issues/3726)
 - Fixed issues seen when user is prompted, having v1 profiles and chooses convert or create new config options.[#3757](https://github.com/zowe/zowe-explorer-vscode/issues/3757)
 - Fixed an error encountered when deleting members in a PDS. [#3874](https://github.com/zowe/zowe-explorer-vscode/issues/3874)
 - Fixed regression where PDS member attributes were no longer listed when using the "Show Attributes" feature from the data set context menu. [#3856](https://github.com/zowe/zowe-explorer-vscode/issues/3856)

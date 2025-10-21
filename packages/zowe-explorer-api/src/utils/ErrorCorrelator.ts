@@ -218,7 +218,7 @@ export class ErrorCorrelator {
                 any: [
                     {
                         errorCode: "401",
-                        matches: ["Token is not valid or expired"],
+                        matches: ["Token is not valid or expired", "token is invalid, or token is expired."],
                         summary:
                             "Your connection is no longer active for profile {{profileName}}. " +
                             "Please log in to an authentication service to restore the connection.\n\n" +
