@@ -474,7 +474,7 @@ export class SharedInit {
             const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
             try {
                 if (
-                    session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE ||
+                    ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
                     (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
                 ) {
                     continue;
