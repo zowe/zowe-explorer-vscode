@@ -180,6 +180,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             target = target.getParent() as IZoweUSSTreeNode;
         }
 
+        // Overwrite/collision check before proceeding
         const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
         if (overwrite === false) {
             return;
@@ -190,18 +191,27 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
+            if (!node) continue;
+
+            // Skip nodes that are direct children of the target node
             if (node.getParent() === target) {
-                // skip nodes that are direct children of the target node
                 continue;
             }
 
-            // skip drop if source and target are possibly same-object
+            // Explicit folder collision check (if full folder move)
+            if (SharedContext.isUssDirectory(node)) {
+                const targetChildren = await target.getChildren();
+                if (targetChildren.some(child => child.label === node.label)) {
+                    Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
+                    movingMsg.dispose();
+                    this.draggedNodes = {};
+                    return;
+                }
+            }
+
+            // Same-object check
             if (await SharedUtils.isLikelySameUssObjectByUris(node, target, typeof item.label === "string" ? item.label : item.label.label)) {
-                Gui.errorMessage(
-                    vscode.l10n.t(
-                        "Cannot move: The source and target are possibly the same. You are using a different profile to view the target. Refresh to view changes."
-                    )
-                );
+                Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
                 movingMsg.dispose();
                 this.draggedNodes = {};
                 return;

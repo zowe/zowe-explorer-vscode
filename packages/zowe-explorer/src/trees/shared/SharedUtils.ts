@@ -35,6 +35,9 @@ import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 
 export class SharedUtils {
+    public static ERROR_SAME_OBJECT_DROP =
+        "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
+
     public static async copyExternalLink(this: void, context: vscode.ExtensionContext, node: IZoweTreeNode): Promise<void> {
         if (node?.resourceUri != null) {
             await vscode.env.clipboard.writeText(`vscode://${context.extension.id}?${node.resourceUri.toString()}`);
@@ -583,49 +586,54 @@ export class SharedUtils {
     }
 
     /**
-     * Checks if two datasets refer to the same physical object by comparing
-     * their names and DASD volumes across both profiles
-     *
-     * @param srcProfile - source profile representing the dataset origin
-     * @param dstProfile - target profile representing the dataset destination
-     * @param srcDsn - source profile dataset name
-     * @param dstDsn - target profile dataset name
-     * @returns Promise resolves to true if both dataset names are equal and on the same DASD volume. false otherwise
+     * Determines if a dataset is the same physical object on two profiles.
+     * Returns true if both profiles have a dataset with the same name and volumes.
+     * Blocks ambiguous cases by default.
      */
-    public static async sameDatasetSameDasd(
+    public static async isSamePhysicalDataset(
         srcProfile: imperative.IProfileLoaded,
         dstProfile: imperative.IProfileLoaded,
-        srcDsn: string,
-        dstDsn: string
+        srcDsn: string
     ): Promise<boolean> {
-        if (!srcDsn || !dstDsn) return false;
-        if (srcDsn.toUpperCase() !== dstDsn.toUpperCase()) return false;
+        // 1. Get src & dst dataset metadata (name, vols)
+        const mvsSrc = ZoweExplorerApiRegister.getMvsApi(srcProfile);
+        const mvsDst = ZoweExplorerApiRegister.getMvsApi(dstProfile);
 
-        try {
-            const mvsSrc = ZoweExplorerApiRegister.getMvsApi(srcProfile);
-            const mvsDst = ZoweExplorerApiRegister.getMvsApi(dstProfile);
+        const [srcAttr, dstAttr] = await Promise.all([
+            mvsSrc.dataSet(srcDsn, { attributes: true }),
+            mvsDst.dataSet(srcDsn, { attributes: true }),
+        ]);
 
-            const [srcAttr, dstAttr] = await Promise.all([
-                mvsSrc.dataSet(srcDsn, { attributes: true }),
-                mvsDst.dataSet(dstDsn, { attributes: true }),
-            ]);
+        const srcDataset = srcAttr?.apiResponse?.items?.[0];
+        const dstDataset = dstAttr?.apiResponse?.items?.[0];
 
-            const s = srcAttr?.apiResponse?.items?.[0];
-            const d = dstAttr?.apiResponse?.items?.[0];
-            if (!s?.vols || !d?.vols) return false;
+        // If either dataset is missing, treat as NOT same object (safe to move)
+        if (!srcDataset || !dstDataset) return false;
 
-            // normalize
-            const sVols = (Array.isArray(s.vols) ? s.vols : [s.vols]) as string[];
-            const dVols = (Array.isArray(d.vols) ? d.vols : [d.vols]) as string[];
+        // Compare dataset names (case-insensitive, trimmed)
+        const namesAreEqual =
+            srcDataset.name.trim().toUpperCase() === dstDataset.name.trim().toUpperCase();
 
-            // check they match exactly (same count, same order)
-            return (
-                sVols.length === dVols.length &&
-                sVols.every((vol, i) => vol === dVols[i])
-            );
-        } catch {
-            return false;
+        // Compare volumes (order-insensitive, case-insensitive)
+        const srcVols = Array.isArray(srcDataset.vols)
+            ? srcDataset.vols.map(v => v.trim().toUpperCase())
+            : [srcDataset.vols.trim().toUpperCase()];
+        const dstVols = Array.isArray(dstDataset.vols)
+            ? dstDataset.vols.map(v => v.trim().toUpperCase())
+            : [dstDataset.vols.trim().toUpperCase()];
+        srcVols.sort();
+        dstVols.sort();
+        const volsAreEqual =
+            srcVols.length === dstVols.length &&
+            srcVols.every((vol, idx) => vol === dstVols[idx]);
+
+        // BLOCK if both DSN and vols match (ambiguous case: block by default)
+        if (namesAreEqual && volsAreEqual) {
+            return true; // Block move/copy
         }
+
+        // Otherwise, allow move/copy
+        return false;
     }
 
     /**
@@ -642,16 +650,19 @@ export class SharedUtils {
         targetParent: IZoweUSSTreeNode,
         droppedLabel: string
     ): Promise<boolean> {
-        // drop the profile prefix so just comparing real paths
-        const stripProfile = (p: string) => "/" + p.split("/").slice(2).join("/");
+        // Find the profile prefix dynamically (first two segments are likely profile)
+        const stripProfile = (p: string) => {
+            const segments = p.split("/");
+            return "/" + segments.slice(2).join("/");
+        };
 
-        const srcPathFull = stripProfile(sourceNode.resourceUri.path);
+        const srcPathFull = path.posix.normalize(stripProfile(sourceNode.resourceUri.path));
         const dstUri = targetParent.resourceUri.with({
             path: path.posix.join(targetParent.resourceUri.path, droppedLabel),
         });
-        const dstPathFull = stripProfile(dstUri.path);
+        const dstPathFull = path.posix.normalize(stripProfile(dstUri.path));
 
-        if (path.posix.normalize(srcPathFull) !== path.posix.normalize(dstPathFull)) {
+        if (srcPathFull !== dstPathFull) {
             return false;
         }
 

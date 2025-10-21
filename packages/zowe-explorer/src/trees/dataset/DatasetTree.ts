@@ -231,22 +231,36 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             for (const item of droppedItems.value) {
                 const node = this.draggedNodes[item.uri.path];
                 const srcDsn = typeof node.label === "string" ? node.label : node.label.label;
-                const tgtDsn = typeof target.label === "string" ? target.label : target.label.label;
 
-                // skip drop if source and target are the same dataset on the same DASD
+                // If PDS, compare target and source contents
+                if (SharedContext.isPds(node)) {
+                    // search target for same pds members
+                    const srcMembers = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(srcDsn, { attributes: true });
+                    const tgtMembers = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(srcDsn, { attributes: true });
+
+                    // Compare member names for collision
+                    const srcNames = srcMembers.apiResponse?.items?.map(m => m.name?.toUpperCase().trim()) ?? [];
+                    const tgtNames = tgtMembers.apiResponse?.items?.map(m => m.name?.toUpperCase().trim()) ?? [];
+                    const collisions = srcNames.filter(name => tgtNames.includes(name));
+
+                    if (collisions.length > 0) {
+                        Gui.errorMessage(
+                            vscode.l10n.t("Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.")
+                        );
+                        return;
+                    }
+                }
+                // skip drop if source and target are the same data set on the same DASD
                 if (
                     node.getProfile && target.getProfile &&
-                    await SharedUtils.sameDatasetSameDasd(
+                    await SharedUtils.isSamePhysicalDataset(
                         node.getProfile(),
                         target.getProfile(),
-                        srcDsn,
-                        tgtDsn
+                        srcDsn
                     )
                 ) {
                     Gui.errorMessage(
-                        vscode.l10n.t(
-                            "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes."
-                        )
+                        vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP)
                     );
                     return;
                 }
