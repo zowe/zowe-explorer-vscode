@@ -175,7 +175,12 @@ export class Profiles extends ProfilesCache {
                 break;
         }
 
-        if (usingTokenAuth || (await this.profileHasSecureToken(theProfile))) {
+        let tokenType: string;
+        try {
+            tokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile).getTokenTypeName();
+        } catch {}
+
+        if (usingTokenAuth || ((await this.profileHasSecureToken(theProfile)) && tokenType)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")

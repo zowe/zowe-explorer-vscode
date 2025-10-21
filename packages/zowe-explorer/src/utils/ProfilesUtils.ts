@@ -29,6 +29,7 @@ import { AuthUtils } from "./AuthUtils";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { Definitions } from "../configuration/Definitions";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
+import { IProfileLoaded, ISession, SessConstants } from "@zowe/imperative";
 
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
@@ -751,5 +752,9 @@ export class ProfilesUtils {
             }
         }
         await vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", extenderType);
+    }
+
+    public static hasNoAuthType(session: ISession, profile: IProfileLoaded): boolean {
+        return session.type === SessConstants.AUTH_TYPE_NONE && profile.type !== "ssh";
     }
 }

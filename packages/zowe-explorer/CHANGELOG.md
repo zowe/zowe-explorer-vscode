@@ -14,6 +14,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where `ssh` type profiles were throwing errors when making file system calls. [#3891](https://github.com/zowe/zowe-explorer-vscode/pull/3891)
 - Fixed duplicate credential prompts that occurred when logging out of SSO with multiple virtual workspaces open. [#3858](https://github.com/zowe/zowe-explorer-vscode/issues/3858)
 - Fixed race conditions in parallel file system calls made with invalid credentials. [#3830](https://github.com/zowe/zowe-explorer-vscode/pull/3830)
 - Fixed issues seen when user is prompted, having v1 profiles and chooses convert or create new config options.[#3757](https://github.com/zowe/zowe-explorer-vscode/issues/3757)

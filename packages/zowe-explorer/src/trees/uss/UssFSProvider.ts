@@ -82,7 +82,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
         if (
-            session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE ||
+            ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
             (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
         ) {
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
@@ -218,7 +218,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const entryExists = this.exists(uri);
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
         if (
-            session.ISession.type === imperative.SessConstants.AUTH_TYPE_NONE ||
+            ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
             (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
         ) {
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
