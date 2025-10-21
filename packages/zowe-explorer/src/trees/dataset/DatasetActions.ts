@@ -1531,9 +1531,16 @@ export class DatasetActions {
                 if (node?.children) {
                     node.children = node.children.filter((child) => child !== node);
                 }
+
                 const dataSetNode = node.getSessionNode() as ZoweDatasetNode;
+                const isSession = SharedContext.isSession(dataSetNode) || SharedContext.isFavoriteSearch(dataSetNode);
+                const fetchFunction = isSession
+                    ? dataSetNode["listDatasetsInRange"].bind(dataSetNode)
+                    : dataSetNode["listMembersInRange"].bind(dataSetNode);
+
                 const itemsPerPage = SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE) ?? Constants.DEFAULT_ITEMS_PER_PAGE;
-                dataSetNode.paginator = new Paginator(itemsPerPage, dataSetNode["listDatasetsInRange"].bind(dataSetNode));
+
+                dataSetNode.paginator = new Paginator(itemsPerPage, fetchFunction);
                 dataSetNode.paginatorData = undefined;
             } else {
                 return;

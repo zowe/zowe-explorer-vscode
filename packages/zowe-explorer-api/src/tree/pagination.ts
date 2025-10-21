@@ -91,7 +91,7 @@ export class Paginator<T, Cursor = string> {
         return this.wasInitialized;
     }
 
-    private reset(): void {
+    public reset(): void {
         this.currentPageCursor = this.nextPageCursor = undefined;
         this.previousPageCursors = [];
         this.currentPage = this.pageCount = 0;
