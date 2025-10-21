@@ -39,16 +39,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await ProfilesUtils.handleV1MigrationStatus();
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
 
-    const providers = await SharedTreeProviders.initializeProviders(
-        {
-            ds: () => DatasetInit.initDatasetProvider(context),
-            uss: () => USSInit.initUSSProvider(context),
-            job: () => JobInit.initJobsProvider(context),
-        },
-        async () => {
-            await SharedInit.setupRemoteWorkspaceFolders(undefined, "zosmf");
-        }
-    );
+    const providers = await SharedTreeProviders.initializeProviders({
+        ds: () => DatasetInit.initDatasetProvider(context),
+        uss: () => USSInit.initUSSProvider(context),
+        job: () => JobInit.initJobsProvider(context),
+    });
     SharedInit.registerCommonCommands(context, providers);
     SharedInit.registerZosConsoleView(context);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
@@ -56,6 +51,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     SharedInit.watchConfigProfile(context);
     await SharedInit.watchForZoweButtonClick();
 
+    SharedInit.onDidActivateExtensionEmitter.fire();
     return ZoweExplorerApiRegister.getInstance();
 }
 /**

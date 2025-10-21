@@ -6,12 +6,16 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added support for fetching virtual workspaces in parallel after Zowe Explorer activation. [#3880](https://github.com/zowe/zowe-explorer-vscode/issues/3880)
+- Added retry support for file system calls so operations can continue after credentials are updated. [#3726](https://github.com/zowe/zowe-explorer-vscode/issues/3726)
 - Added support to delete VSAM data sets. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
 - Refactored data set pagination to use the new `getCount` API (if available) to optimize access to the total item count.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 - Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
 
 ### Bug fixes
 
+- Fixed duplicate credential prompts that occurred when logging out of SSO with multiple virtual workspaces open. [#3858](https://github.com/zowe/zowe-explorer-vscode/issues/3858)
+- Fixed race conditions in parallel file system calls made with invalid credentials. [#3830](https://github.com/zowe/zowe-explorer-vscode/pull/3830)
 - Fixed issues seen when user is prompted, having v1 profiles and chooses convert or create new config options.[#3757](https://github.com/zowe/zowe-explorer-vscode/issues/3757)
 - Fixed job spool poll command to refresh the job spool open in the editor. [#3867](https://github.com/zowe/zowe-explorer-vscode/issues/3867)
 - Fixed regression where a profile was incorrectly detected as using basic authentication, specifically when `tokenValue` was set in the secure array of a parent profile or a default base profile instead of a service profile. [#3855](https://github.com/zowe/zowe-explorer-vscode/pull/3855)
