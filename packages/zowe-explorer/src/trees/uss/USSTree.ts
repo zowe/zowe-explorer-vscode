@@ -170,71 +170,78 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         _token: vscode.CancellationToken
     ): Promise<void> {
         const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.uss.explorer");
-        if (!droppedItems) {
-            return;
-        }
+        if (!droppedItems) return;
 
-        // get the closest parent folder if the target is a file node
         let target = targetNode;
         if (!SharedContext.isUssDirectory(target)) {
             target = target.getParent() as IZoweUSSTreeNode;
         }
 
-        // Overwrite/collision check before proceeding
-        const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
-        if (overwrite === false) {
-            return;
-        }
-
-        const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving USS files...")}`);
-        const parentsToUpdate = new Set<IZoweUSSTreeNode>();
-
+        // Check for errors before moving
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             if (!node) continue;
 
-            // Skip nodes that are direct children of the target node
-            if (node.getParent() === target) {
-                continue;
-            }
+            // 1. Skip nodes that are direct children of the target node
+            if (node.getParent() === target) continue;
 
-            // Explicit folder collision check (if full folder move)
+            const nodeLabel = SharedUtils.getNodeProperty(node, "label");
+
+            // 2. Explicit folder collision check
             if (SharedContext.isUssDirectory(node)) {
                 const targetChildren = await target.getChildren();
-                if (targetChildren.some(child => child.label === node.label)) {
+                const tgtNames = targetChildren.map(c => SharedUtils.getNodeProperty(c, "label")).filter(Boolean);
+                if (SharedUtils.hasNameCollision([nodeLabel], tgtNames)) {
                     Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
-                    movingMsg.dispose();
                     this.draggedNodes = {};
                     return;
                 }
             }
 
-            // Same-object check
-            if (await SharedUtils.isLikelySameUssObjectByUris(node, target, typeof item.label === "string" ? item.label : item.label.label)) {
+            // 3. Same-object check
+            if (await SharedUtils.isLikelySameUssObjectByUris(
+                node,
+                target,
+                nodeLabel
+            )) {
                 Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
-                movingMsg.dispose();
                 this.draggedNodes = {};
                 return;
             }
+        }
 
+        // 4. Overwrite prompt (name collision only)
+        const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
+        if (!overwrite) return;
+
+        // 5. Move logic
+        const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving USS files...")}`);
+        const parentsToUpdate = new Set<IZoweUSSTreeNode>();
+
+        // Actually perform the move for each item
+        for (const item of droppedItems.value) {
+            const node = this.draggedNodes[item.uri.path];
+            if (!node || node.getParent() === target) continue;
+
+            const nodeLabel = SharedUtils.getNodeProperty(node, "label");
             const newUriForNode = vscode.Uri.from({
                 scheme: ZoweScheme.USS,
-                path: path.posix.join("/", target.getProfile().name, target.fullPath, item.label as string),
+                path: path.posix.join("/", target.getProfile().name, target.fullPath, nodeLabel),
             });
             const prof = node.getProfile();
             const hasMoveApi = ZoweExplorerApiRegister.getUssApi(prof).move != null;
 
             if (target.getProfile() !== prof || !hasMoveApi) {
-                // Cross-LPAR, or the "move" API does not exist: write the folders/files on the destination LPAR and delete from source LPAR
                 await this.crossLparMove(node, node.resourceUri, newUriForNode);
-            } else if (await UssFSProvider.instance.move(item.uri, newUriForNode)) {
-                // remove node from old parent and relocate to new parent
+            } else if (await UssFSProvider.instance.move(node.resourceUri, newUriForNode)) {
                 const oldParent = node.getParent() as IZoweUSSTreeNode;
                 oldParent.children = oldParent.children.filter((c) => c !== node);
                 node.resourceUri = newUriForNode;
             }
             parentsToUpdate.add(node.getParent() as IZoweUSSTreeNode);
         }
+
+        // Refresh UI
         for (const parent of parentsToUpdate) {
             this.refreshElement(parent);
         }

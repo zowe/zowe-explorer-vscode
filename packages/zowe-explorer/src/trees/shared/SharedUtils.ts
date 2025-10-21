@@ -595,26 +595,24 @@ export class SharedUtils {
         dstProfile: imperative.IProfileLoaded,
         srcDsn: string
     ): Promise<boolean> {
-        // 1. Get src & dst dataset metadata (name, vols)
+        // Get API for each profile
         const mvsSrc = ZoweExplorerApiRegister.getMvsApi(srcProfile);
         const mvsDst = ZoweExplorerApiRegister.getMvsApi(dstProfile);
 
-        const [srcAttr, dstAttr] = await Promise.all([
-            mvsSrc.dataSet(srcDsn, { attributes: true }),
-            mvsDst.dataSet(srcDsn, { attributes: true }),
-        ]);
-
+        // Look up the same dataset name on BOTH profiles
+        const srcAttr = await mvsSrc.dataSet(srcDsn, { attributes: true });
+        const dstAttr = await mvsDst.dataSet(srcDsn, { attributes: true });
         const srcDataset = srcAttr?.apiResponse?.items?.[0];
         const dstDataset = dstAttr?.apiResponse?.items?.[0];
 
-        // If either dataset is missing, treat as NOT same object (safe to move)
-        if (!srcDataset || !dstDataset) return false;
+        // If dstDataset dataset doesn't exist, it's not the same.
+        if (!dstDataset) return false;
 
-        // Compare dataset names (case-insensitive, trimmed)
+        // Compare names
         const namesAreEqual =
-            srcDataset.name.trim().toUpperCase() === dstDataset.name.trim().toUpperCase();
+            srcDataset.dsname === dstDataset.dsname
 
-        // Compare volumes (order-insensitive, case-insensitive)
+        // Compare vols (could be stored across multiple vols!)
         const srcVols = Array.isArray(srcDataset.vols)
             ? srcDataset.vols.map(v => v.trim().toUpperCase())
             : [srcDataset.vols.trim().toUpperCase()];
@@ -623,18 +621,18 @@ export class SharedUtils {
             : [dstDataset.vols.trim().toUpperCase()];
         srcVols.sort();
         dstVols.sort();
+
         const volsAreEqual =
             srcVols.length === dstVols.length &&
-            srcVols.every((vol, idx) => vol === dstVols[idx]);
+            srcVols.every((vol: any, idx: string | number) => vol === dstVols[idx]);
 
-        // BLOCK if both DSN and vols match (ambiguous case: block by default)
+        // If both name and vols match, they're the same dataset
         if (namesAreEqual && volsAreEqual) {
-            return true; // Block move/copy
+            return true;
         }
-
-        // Otherwise, allow move/copy
         return false;
     }
+
 
     /**
      * Checks if a USS file or directory is likely the same actual object as another
@@ -650,7 +648,7 @@ export class SharedUtils {
         targetParent: IZoweUSSTreeNode,
         droppedLabel: string
     ): Promise<boolean> {
-        // Find the profile prefix dynamically (first two segments are likely profile)
+        // Remove the profile part of the path (usually first two segments)
         const stripProfile = (p: string) => {
             const segments = p.split("/");
             return "/" + segments.slice(2).join("/");
@@ -662,11 +660,35 @@ export class SharedUtils {
         });
         const dstPathFull = path.posix.normalize(stripProfile(dstUri.path));
 
+        // If the normalized paths match, check if the target really exists
         if (srcPathFull !== dstPathFull) {
             return false;
         }
 
-        // if same path, double check target actually exists
+        // Check if the path exists on the target
         return UssFSProvider.instance.exists(dstUri);
+    }
+
+    /**
+     * Gets a string property from a node, whether it's a string or an object with that property.
+     * ie node.label could be "example" or { label: "example" }
+     */
+    public static getNodeProperty(node: any, prop: string): string | null {
+        if (!node || node[prop] == null) return null;
+        const value = node[prop];
+        if (typeof value === "string") return value;
+        if (typeof value === "object" && value !== null && typeof value[prop] === "string") {
+            return value[prop];
+        }
+        return null;
+    }
+
+    /**
+     * Checks if there are any case-insensitive, trimmed name collisions between two lists.
+     * Used for PDS member collisions and USS folder/file name collisions.
+     */
+    public static hasNameCollision(srcNames: string[], tgtNames: string[]): boolean {
+        const tgtSet = new Set(tgtNames.map(n => n.toUpperCase().trim()));
+        return srcNames.some(name => tgtSet.has(name.toUpperCase().trim()));
     }
 }
