@@ -25,6 +25,7 @@ import {
     type AttributeInfo,
     DataSetAttributesProvider,
     ZosEncoding,
+    Paginator,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
@@ -44,6 +45,7 @@ import { Definitions } from "../../configuration/Definitions";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class DatasetActions {
     public static typeEnum: zosfiles.CreateDataSetTypeEnum;
@@ -1526,6 +1528,13 @@ export class DatasetActions {
             await datasetProvider.checkCurrentProfile(node);
             if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
                 await vscode.workspace.fs.delete(node.resourceUri, { recursive: false });
+                if (node?.children) {
+                    node.children = node.children.filter((child) => child !== node);
+                }
+                const dataSetNode = node.getSessionNode() as ZoweDatasetNode;
+                const itemsPerPage = SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE) ?? Constants.DEFAULT_ITEMS_PER_PAGE;
+                dataSetNode.paginator = new Paginator(itemsPerPage, dataSetNode["listDatasetsInRange"].bind(dataSetNode));
+                dataSetNode.paginatorData = undefined;
             } else {
                 return;
             }
@@ -1551,7 +1560,6 @@ export class DatasetActions {
             throw err;
         }
 
-        // remove node from tree
         if (fav) {
             datasetProvider.mSessionNodes.forEach((ses) => {
                 if (node.getProfileName() === ses.label.toString()) {
@@ -1574,7 +1582,6 @@ export class DatasetActions {
             // Refresh the correct node (parent of node to delete) to reflect changes
             datasetProvider.refreshElement(isMember ? parentNode : parentNode.getParent());
         }
-
         datasetProvider.refreshElement(node.getSessionNode());
     }
 

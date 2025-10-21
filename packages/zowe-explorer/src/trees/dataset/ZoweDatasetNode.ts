@@ -72,8 +72,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public persistence = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
     public inFilterPrompt = false;
 
-    private paginator?: Paginator<IZosFilesResponse>;
-    private paginatorData?: {
+    public paginator?: Paginator<IZosFilesResponse>;
+    public paginatorData?: {
         totalItems?: number;
         lastItemName?: string;
     };
@@ -954,7 +954,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // Lazy initialization or re-initialization of paginator if needed
             const fetchFunction = isSession ? this.listDatasetsInRange.bind(this) : this.listMembersInRange.bind(this);
             this.itemsPerPage = SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE) ?? Constants.DEFAULT_ITEMS_PER_PAGE;
-
+            // this.paginator.initialize();
             if (isSession && patternChanged) {
                 // Check if pattern changed for session
                 this.paginator = this.paginatorData = undefined;
@@ -968,7 +968,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     this.paginator = new Paginator(this.itemsPerPage, fetchFunction);
                 }
 
-                if (!this.paginator.isInitialized() || this.paginatorData == null) {
+                if (!this.paginator.isInitialized() || this.paginatorData == null || this.paginator == undefined) {
                     await this.paginator.initialize();
                 } else {
                     try {
