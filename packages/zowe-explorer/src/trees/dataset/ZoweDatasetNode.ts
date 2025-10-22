@@ -954,7 +954,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // Lazy initialization or re-initialization of paginator if needed
             const fetchFunction = isSession ? this.listDatasetsInRange.bind(this) : this.listMembersInRange.bind(this);
             this.itemsPerPage = SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE) ?? Constants.DEFAULT_ITEMS_PER_PAGE;
-            // this.paginator.initialize();
             if (isSession && patternChanged) {
                 // Check if pattern changed for session
                 this.paginator = this.paginatorData = undefined;
@@ -968,7 +967,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     this.paginator = new Paginator(this.itemsPerPage, fetchFunction);
                 }
 
-                if (!this.paginator.isInitialized() || this.paginatorData == null || this.paginator == undefined) {
+                if (!this.paginator.isInitialized() || this.paginatorData == null) {
                     await this.paginator.initialize();
                 } else {
                     try {
