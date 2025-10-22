@@ -462,8 +462,10 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
 
         public async submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
             if (this.profile?.profile?.jobEncoding == null) {
+                // Make single API call to submit if job encoding is not specified
                 return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
             } else {
+                // Download JCL with encoding (not jobEncoding) and submit as text
                 const rawJcl = await zosfiles.Get.dataSet(this.getSession(), jobDataSet, { encoding: this.profile?.profile?.encoding });
                 return this.submitJcl(rawJcl.toString());
             }
