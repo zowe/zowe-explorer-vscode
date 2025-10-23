@@ -633,7 +633,6 @@ export class SharedUtils {
         return false;
     }
 
-
     /**
      * Checks if a USS file or directory is likely the same actual object as another
      * by comparing the normalized paths (ignoring profile) and verifying existence
@@ -648,30 +647,14 @@ export class SharedUtils {
         targetParent: IZoweUSSTreeNode,
         droppedLabel: string
     ): Promise<boolean> {
-        // Remove the profile part of the path (usually first two segments)
-        const stripProfile = (p: string) => {
-            const segments = p.split("/");
-            return "/" + segments.slice(2).join("/");
-        };
-
-        const srcPathFull = path.posix.normalize(stripProfile(sourceNode.resourceUri.path));
-        const dstUri = targetParent.resourceUri.with({
-            path: path.posix.join(targetParent.resourceUri.path, droppedLabel),
-        });
-        const dstPathFull = path.posix.normalize(stripProfile(dstUri.path));
-
-        // If the normalized paths match, check if the target really exists
-        if (srcPathFull !== dstPathFull) {
-            return false;
-        }
-
-        // Check if the path exists on the target
-        return UssFSProvider.instance.exists(dstUri);
+        //normalize paths
+        const equal = path.posix.normalize(sourceNode.fullPath.replace(/\\/g, '/')) ===
+            path.posix.normalize(path.posix.join(targetParent.fullPath.replace(/\\/g, '/'), (droppedLabel || '').replace(/^[/\\]+/, '')));
+        return equal;
     }
 
     /**
-     * Gets a string property from a node, whether it's a string or an object with that property.
-     * ie node.label could be "example" or { label: "example" }
+     * Gets a string property from a node, whether it's a string or an object with that property
      */
     public static getNodeProperty(node: any, prop: string): string | null {
         if (!node || node[prop] == null) return null;
