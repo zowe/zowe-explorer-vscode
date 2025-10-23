@@ -40,13 +40,18 @@ Then("the user can right-click on the child node and add it as a favorite", asyn
 When("the user finds the child node in Favorites", async function () {
     const favoritesNode = await this.treePane.findItem("Favorites");
     await favoritesNode.expand();
-    await browser.waitUntil((): Promise<boolean> => favoritesNode.isExpanded());
+    await browser.waitUntil(() => favoritesNode.isExpanded());
     this.profileNode = await favoritesNode.findChildItem(process.env.ZE_TEST_PROFILE_NAME);
     await this.profileNode.expand();
+    await browser.waitUntil(() => this.profileNode.isExpanded());
     if (this.tree.toLowerCase() === "data sets") {
         // PDS member
-        const pds: TreeItem = await this.profileNode.findChildItem(process.env.ZE_TEST_PDS);
-        await browser.waitUntil(async (): Promise<boolean> => pds.hasChildren());
+        let pds: TreeItem;
+        async function getPds() {
+            pds = await this.profileNode.findChildItem(process.env.ZE_TEST_PDS);
+            return pds?.hasChildren() ?? false;
+        }
+        await browser.waitUntil(getPds.bind(this), { timeout: 5000, interval: 1000, timeoutMsg: `Unable to find PDS: ${process.env.ZE_TEST_PDS}` });
         this.pdsMember = await pds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
     } else {
         // USS file
