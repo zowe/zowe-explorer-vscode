@@ -2240,6 +2240,153 @@ describe("USSTree Unit Tests - Function handleDrop", () => {
     });
 });
 
+describe("USSTree.handleDrop - blocking behavior", () => {
+    let ussTree: USSTree;
+
+    beforeEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+        createGlobalMocks();
+        ussTree = new USSTree();
+    });
+
+    it("blocks drop and shows error when SharedUtils.isLikelySameUssObjectByUris returns true", async () => {
+        const session = createISession();
+        const srcProfile = createIProfile();
+        (srcProfile as any).name = "SRC";
+        const dstProfile = createIProfile();
+        (dstProfile as any).name = "DST";
+
+        // create source node representing /u/foo/bar
+        const srcSessionNode = createUSSSessionNode(session, srcProfile);
+        const srcNode = new ZoweUSSNode({
+            label: "bar",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session,
+            profile: srcProfile,
+            parentNode: srcSessionNode,
+        });
+        srcNode.fullPath = "/u/foo/bar";
+
+        // create target directory node (parent) representing /u/foo on another profile
+        const targetSessionNode = createUSSSessionNode(session, dstProfile);
+        const targetNode = new ZoweUSSNode({
+            label: "foo",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: dstProfile,
+            parentNode: targetSessionNode,
+        });
+        targetNode.fullPath = "/u/foo";
+
+        const draggedNodeMock = new MockedProperty(ussTree, "draggedNodes", undefined, {
+            [srcNode.resourceUri!.path]: srcNode,
+        });
+
+        // prep DataTransfer mock
+        const dataTransfer = new vscode.DataTransfer();
+        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+            value: [
+                {
+                    label: srcNode.label as string,
+                    uri: srcNode.resourceUri,
+                },
+            ],
+        } as any);
+
+        // mock SharedUtils.same-path detection to return true
+        (SharedUtils as any).isLikelySameUssObjectByUris = jest.fn().mockResolvedValue(true);
+        (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
+            "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
+
+        const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
+
+        // @ts-ignore intentionally pass undefined
+        await ussTree.handleDrop(dataTransfer as any, targetNode, undefined);
+
+        expect((SharedUtils as any).isLikelySameUssObjectByUris).toHaveBeenCalled();
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Cannot move:"));
+
+        draggedNodeMock[Symbol.dispose]();
+    });
+
+    it("blocks drop when a directory name collision is detected and shows error", async () => {
+        const session = createISession();
+        const srcProfile = createIProfile();
+        const dstProfile = createIProfile();
+        (srcProfile as any).name = "SRC";
+        (dstProfile as any).name = "DST";
+
+        // src folder node being dragged
+        const srcSessionNode = createUSSSessionNode(session, srcProfile);
+        const srcFolder = new ZoweUSSNode({
+            label: "folderA",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: srcProfile,
+            parentNode: srcSessionNode,
+            contextOverride: Constants.USS_DIR_CONTEXT,
+        });
+        srcFolder.fullPath = "/u/foo/folderA";
+
+        // use folder that already contains an entry named 'folderA'
+        const targetSessionNode = createUSSSessionNode(session, dstProfile);
+        const targetFolder = new ZoweUSSNode({
+            label: "foo",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: dstProfile,
+            parentNode: targetSessionNode,
+            contextOverride: Constants.USS_DIR_CONTEXT,
+        });
+        targetFolder.fullPath = "/u/foo";
+
+        // use colliding child
+        const existingChild = new ZoweUSSNode({
+            label: "folderA",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: dstProfile,
+            parentNode: targetFolder,
+            contextOverride: Constants.USS_DIR_CONTEXT,
+        });
+        existingChild.fullPath = "/u/foo/folderA";
+
+        // force target.getChildren to return existing child
+        jest.spyOn(targetFolder as any, "getChildren").mockResolvedValue([existingChild]);
+
+        jest.spyOn(SharedContext, "isUssDirectory").mockImplementation((node: any) => node === srcFolder);
+
+        const draggedNodeMock = new MockedProperty(ussTree, "draggedNodes", undefined, {
+            [srcFolder.resourceUri!.path]: srcFolder,
+        });
+
+        const dataTransfer = new vscode.DataTransfer();
+        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+            value: [
+                {
+                    label: srcFolder.label as string,
+                    uri: srcFolder.resourceUri,
+                },
+            ],
+        } as any);
+
+        (SharedUtils as any).hasNameCollision = jest.fn().mockReturnValue(true);
+        (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
+            "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
+
+        const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
+
+        // @ts-ignore pass undefined
+        await ussTree.handleDrop(dataTransfer as any, targetFolder, undefined);
+
+        expect((SharedUtils as any).hasNameCollision).toHaveBeenCalled();
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Cannot move:"));
+
+        draggedNodeMock[Symbol.dispose]();
+    });
+});
+
 describe("USSTree Unit Tests - Function crossLparMove", () => {
     it("calls the function recursively for directories, and calls appropriate APIs for files", async () => {
         const globalMocks = createGlobalMocks();
@@ -2289,3 +2436,4 @@ describe("USSTree Unit Tests - Function crossLparMove", () => {
         ussApiMock.mockRestore();
     });
 });
+

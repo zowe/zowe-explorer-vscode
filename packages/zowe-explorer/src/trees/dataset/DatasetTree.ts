@@ -226,7 +226,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         let target = targetNode;
         if (!target) return;
 
-        // Check each dropped node for same-object, member collision, and structure issues
+        // check each dropped node for same-object, member collision, and structure issues
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             if (!node) continue;
@@ -251,7 +251,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 const srcMembersResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile())
                     .allMembers(srcDsn, { attributes: true });
                 const tgtMembersResp = await ZoweExplorerApiRegister.getMvsApi(target.getProfile())
-                    .allMembers(srcDsn, { attributes: true });
+                    .allMembers(srcDsn, { attributes: true }); //using the same dsn, but checking against target
 
                 const srcNames = (srcMembersResp.apiResponse?.items ?? []).map(m => m.name).filter(Boolean);
                 const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map(m => m.name).filter(Boolean);
