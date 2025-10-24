@@ -24,6 +24,8 @@ import {
     imperative,
     AuthHandler,
     FsAbstractUtils,
+    UriFsInfo,
+    FsJobsUtils,
 } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
@@ -52,8 +54,12 @@ import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 import { ZoweUriHandler } from "../../utils/UriHandler";
 import { TroubleshootError } from "../../utils/TroubleshootError";
 import { ReleaseNotes } from "../../utils/ReleaseNotes";
+import { JobFSProvider } from "../job/JobFSProvider";
 
 export class SharedInit {
+    public static onDidActivateExtensionEmitter = new vscode.EventEmitter<void>();
+    public static onDidActivateExtension = SharedInit.onDidActivateExtensionEmitter.event;
+
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
 
@@ -70,7 +76,7 @@ export class SharedInit {
                 if (vscode.window.activeTextEditor) {
                     // Notify spool provider for "manual poll" key event in open spool files
                     const doc = vscode.window.activeTextEditor.document;
-                    if (doc.uri.scheme === "zosspool") {
+                    if (SharedInit.isDocumentASpool(doc.uri)) {
                         await JobActions.spoolFilePollEvent(doc);
                     }
                 }
@@ -342,6 +348,8 @@ export class SharedInit {
             LocalFileManagement.resetCompareSelection();
         }
 
+        SharedInit.onDidActivateExtension((_e) => vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", "zosmf"));
+
         // Prevent VS Code from restoring selected the webview panels after restart
         // This is a workaround for issue where the webview panels are not restored properly when VS Code is closed & reopened
         context.subscriptions.push(
@@ -354,6 +362,11 @@ export class SharedInit {
                 },
             })
         );
+    }
+
+    public static isDocumentASpool(uri: vscode.Uri): Boolean {
+        const entry = JobFSProvider.instance.lookup(uri, false);
+        return FsJobsUtils.isSpoolEntry(entry);
     }
 
     public static watchConfigProfile(context: vscode.ExtensionContext): void {
@@ -445,23 +458,43 @@ export class SharedInit {
         const profInfo = Profiles.getInstance();
         const profileNames = new Set<string>();
 
+        let uriMap = new Map<string, UriFsInfo>();
         if (profileType) {
             profInfo.getProfiles(profileType).forEach((prof) => profileNames.add(prof.name));
             newWorkspaces = newWorkspaces.filter((f) => {
-                const uriInfo = FsAbstractUtils.getInfoForUri(f.uri);
+                const uriInfo = FsAbstractUtils.getInfoForUri(f.uri, profInfo);
+                uriMap[f.uri.path] = uriInfo;
                 return profileNames.has(uriInfo.profileName);
             });
         }
 
+        const readDirRequests = [];
         for (const folder of newWorkspaces) {
+            const uriInfo = uriMap[folder.uri.path];
+            const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
             try {
-                await (folder.uri.scheme === ZoweScheme.DS ? DatasetFSProvider.instance : UssFSProvider.instance).remoteLookupForResource(folder.uri);
+                if (
+                    ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
+                    (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+                ) {
+                    continue;
+                }
+                readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri.with({ query: "fetch=true" })));
             } catch (err) {
                 if (err instanceof Error) {
                     ZoweLogger.error(err.message);
                 }
             }
         }
+
+        try {
+            await Promise.all(readDirRequests);
+        } catch (err) {
+            if (err instanceof Error) {
+                ZoweLogger.error(err.message);
+            }
+        }
+
         if (profileType !== "zosmf" && newWorkspaces.length > 0) {
             await vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer");
         }

@@ -102,13 +102,48 @@ export class Profiles extends ProfilesCache {
      * Checks if the profile has a secure token.
      * Note: This is a workaround to maintain backward compatibility.
      * @param theProfile - The profile to check.
-     * @returns True if the profile has a secure token, false otherwise.
+     * @returns True if the profile, a parent on the profile, or the default base profile has a secure token, false otherwise.
      */
-    private async profileHasSecureToken(theProfile: imperative.IProfileLoaded): Promise<boolean> {
+    public async profileHasSecureToken(theProfile: imperative.IProfileLoaded): Promise<boolean> {
         const teamConfig = (await this.getProfileInfo()).getTeamConfig();
         const profName = teamConfig.api.profiles.getProfilePathFromName(theProfile.name);
-        const tokenValue = profName + ".properties.tokenValue";
-        return teamConfig.api.secure.secureFields().includes(tokenValue);
+
+        const getCumulativePaths = (profName: string): string[] => {
+            const parts = profName.split(".profiles.");
+            return parts.slice(1).reduce(
+                (acc, part) => {
+                    const previousPath = acc.length > 0 ? acc[acc.length - 1] : parts[0];
+                    const currentPath = `${previousPath}.profiles.${part}`;
+                    acc.push(currentPath);
+                    return acc;
+                },
+                [parts[0]]
+            );
+        };
+
+        const paths = getCumulativePaths(profName);
+
+        // Add all intermediate paths by working backwards
+        const allPaths: string[] = [];
+        for (const path of paths) {
+            const segments = path.split(".profiles.");
+            for (let j = 1; j <= segments.length; j++) {
+                const subPath = segments.slice(0, j).join(".profiles.");
+                if (!allPaths.includes(subPath)) {
+                    allPaths.push(subPath);
+                }
+            }
+        }
+        const defaultBase = Constants.PROFILES_CACHE.getDefaultProfile?.("base");
+        const profilePath = defaultBase && teamConfig.api.profiles.getProfilePathFromName(defaultBase.name);
+        if (profilePath && !allPaths.includes(profilePath)) {
+            allPaths.push(profilePath);
+        }
+        if (!allPaths.includes(profName)) {
+            allPaths.push(profName);
+        }
+
+        return allPaths.some((path) => teamConfig.api.secure.secureFields().includes(path + ".properties.tokenValue"));
     }
 
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
@@ -140,7 +175,12 @@ export class Profiles extends ProfilesCache {
                 break;
         }
 
-        if (usingTokenAuth || (await this.profileHasSecureToken(theProfile))) {
+        let tokenType: string;
+        try {
+            tokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile).getTokenTypeName();
+        } catch {}
+
+        if (usingTokenAuth || ((await this.profileHasSecureToken(theProfile)) && tokenType)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
@@ -150,6 +190,11 @@ export class Profiles extends ProfilesCache {
                 ZoweLogger.debug(`Profile ${theProfile.name} is using token auth, prompting for missing credentials`);
                 try {
                     const loggedIn = await Profiles.getInstance().ssoLogin(null, theProfile.name);
+                    if (node && loggedIn) {
+                        // To ensure the node is properly refreshed, set the collapsible state to none and then retrigger with the expanded state
+                        node.collapsibleState = vscode.TreeItemCollapsibleState.None;
+                        SharedTreeProviders.getProviderForNode(node).nodeDataChanged(node);
+                    }
                     theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
 
                     if (!loggedIn) {
@@ -855,8 +900,8 @@ export class Profiles extends ProfilesCache {
                         comment: ["Service profile name"],
                     })
                 );
-                AuthHandler.unlockProfile(serviceProfile, true);
                 ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
+                AuthHandler.unlockProfile(serviceProfile, true);
             }
             return loginOk;
         } catch (err) {

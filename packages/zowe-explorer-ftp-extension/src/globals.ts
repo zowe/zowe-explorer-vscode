@@ -13,5 +13,5 @@ import { imperative, IZoweLogger, ZoweVsCodeExtension } from "@zowe/zowe-explore
 import { join as joinPath } from "path";
 import { FtpSession } from "./ftpSession";
 
-export const LOGGER = new IZoweLogger("Zowe Explorer FTP Extension", ZoweVsCodeExtension.customLoggingPath ?? joinPath(__dirname, "..", ".."));
+export const LOGGER = new IZoweLogger("Zowe® Explorer for IBM® z/OS® FTP", ZoweVsCodeExtension.customLoggingPath ?? joinPath(__dirname, "..", ".."));
 export const SESSION_MAP = new Map<imperative.IProfileLoaded, FtpSession>();
