@@ -27,11 +27,28 @@ const testInfo = {
 When('the user right-clicks on the dataset profile and selects "Show as Table"', async function () {
     this.workbench = await browser.getWorkbench();
 
-    const ctxMenu: ContextMenu = await this.profileNode.openContextMenu();
-    await ctxMenu.wait();
+    if (process.platform === "darwin") {
+        // console.log(this.profileNode.elem);
+        const elem = await $(this.profileNode.elem.selector);
+        console.log(elem);
 
-    const showAsTableItem = await ctxMenu.getItem("Show as Table");
-    await (await showAsTableItem.elem).click();
+        // await browser.keys(Key.Control);
+        // await elem.click();
+        // await browser.keys(Key.Control);
+
+        // await elem.moveTo();
+        // await browser.keys(["fn", Key.Control, "I"]);
+
+        await browser.pause(10); // Wait for table to load
+
+        await browser.keys(Key.ArrowUp);
+        await browser.keys(Key.Enter);
+    } else {
+        const ctxMenu: ContextMenu = await this.profileNode.openContextMenu();
+        await ctxMenu.wait();
+        const showAsTableItem = await ctxMenu.getItem("Show as Table");
+        await (await showAsTableItem.elem).click();
+    }
     await browser.pause(1000); // Wait for table to load
 });
 

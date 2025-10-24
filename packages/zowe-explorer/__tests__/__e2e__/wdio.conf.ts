@@ -168,11 +168,11 @@ export const config: Options.Testrunner = {
         // <boolean> invoke formatters without executing steps
         dryRun: false,
         // <boolean> abort the run on first failure
-        failFast: false,
+        failFast: true,
         format: ["pretty"],
         colors: true,
         // <string[]> Only execute the scenarios with name matching the expression (repeatable).
-        name: [],
+        name: ["User wants to list datasets from a session in the table view"],
         // <boolean> hide step definition snippets for pending steps
         snippets: true,
         // <boolean> hide source uris
