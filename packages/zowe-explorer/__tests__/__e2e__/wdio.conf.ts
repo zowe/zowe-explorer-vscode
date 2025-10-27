@@ -172,7 +172,7 @@ export const config: Options.Testrunner = {
         format: ["pretty"],
         colors: true,
         // <string[]> Only execute the scenarios with name matching the expression (repeatable).
-        name: ["User wants to edit a favorited PDS member"],
+        name: ["User opens the Edit History view from the command palette"],
         // <boolean> hide step definition snippets for pending steps
         snippets: true,
         // <boolean> hide source uris
