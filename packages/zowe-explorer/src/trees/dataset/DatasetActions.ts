@@ -1550,7 +1550,7 @@ export class DatasetActions {
             }
             throw err;
         }
-
+        // remove node from tree
         if (fav) {
             datasetProvider.mSessionNodes.forEach((ses) => {
                 if (node.getProfileName() === ses.label.toString()) {
@@ -1573,6 +1573,7 @@ export class DatasetActions {
             // Refresh the correct node (parent of node to delete) to reflect changes
             datasetProvider.refreshElement(isMember ? parentNode : parentNode.getParent());
         }
+
         datasetProvider.refreshElement(node.getSessionNode());
     }
 
