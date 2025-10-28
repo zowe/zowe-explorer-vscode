@@ -1550,6 +1550,7 @@ export class DatasetActions {
             }
             throw err;
         }
+
         // remove node from tree
         if (fav) {
             datasetProvider.mSessionNodes.forEach((ses) => {

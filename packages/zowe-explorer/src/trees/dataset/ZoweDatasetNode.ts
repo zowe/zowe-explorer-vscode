@@ -72,8 +72,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public persistence = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
     public inFilterPrompt = false;
 
-    public paginator?: Paginator<IZosFilesResponse>;
-    public paginatorData?: {
+    private paginator?: Paginator<IZosFilesResponse>;
+    private paginatorData?: {
         totalItems?: number;
         lastItemName?: string;
     };
@@ -681,7 +681,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         return fileEntry?.etag;
     }
 
-    public async listDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
+    private async listDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
         let totalItems = this.paginatorData?.totalItems;
         let lastDatasetName = this.paginatorData?.lastItemName;
         const responses: IZosFilesResponse[] = [];
@@ -803,7 +803,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
     }
 
-    public async listMembersInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
+    private async listMembersInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
         let totalItems = this.paginatorData?.totalItems;
         let lastMemberName = this.paginatorData?.lastItemName;
         let allMembers: IZosmfListResponse[] = [];
