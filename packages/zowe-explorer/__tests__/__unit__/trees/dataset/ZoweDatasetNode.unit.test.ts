@@ -46,6 +46,7 @@ import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerA
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
+import { ImperativeError } from "@zowe/imperative";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -1908,5 +1909,24 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         expect(getCountMock).toHaveBeenCalledWith(["PDS.*"]);
         expect(result.totalItems).toBe(42);
         expect(listDatasetsMock).toHaveBeenCalledTimes(1);
+    });
+    it("returns an empty list, if listMembersInRange throws a 404 error", async () => {
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.NOT_FOUND",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        const notFoundError = new ImperativeError({
+            msg: "Dataset not cataloged",
+            errorCode: "404",
+        });
+
+        jest.spyOn(pdsNode, "listMembers").mockImplementationOnce(async () => {
+            throw notFoundError;
+        });
+
+        const result = await (pdsNode as any).listMembersInRange(undefined, 2);
+        expect(result).toEqual({ items: [] });
     });
 });

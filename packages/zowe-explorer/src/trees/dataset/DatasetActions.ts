@@ -25,7 +25,6 @@ import {
     type AttributeInfo,
     DataSetAttributesProvider,
     ZosEncoding,
-    Paginator,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
@@ -45,7 +44,6 @@ import { Definitions } from "../../configuration/Definitions";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
-import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class DatasetActions {
     public static typeEnum: zosfiles.CreateDataSetTypeEnum;
@@ -1528,20 +1526,6 @@ export class DatasetActions {
             await datasetProvider.checkCurrentProfile(node);
             if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
                 await vscode.workspace.fs.delete(node.resourceUri, { recursive: false });
-                if (node?.children) {
-                    node.children = node.children.filter((child) => child !== node);
-                }
-
-                const dataSetNode = node.getSessionNode() as ZoweDatasetNode;
-                const isSession = SharedContext.isSession(dataSetNode) || SharedContext.isFavoriteSearch(dataSetNode);
-                const fetchFunction = isSession
-                    ? dataSetNode.listDatasetsInRange.bind(dataSetNode)
-                    : dataSetNode.listMembersInRange.bind(dataSetNode);
-
-                const itemsPerPage = SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE) ?? Constants.DEFAULT_ITEMS_PER_PAGE;
-
-                dataSetNode.paginator = new Paginator(itemsPerPage, fetchFunction);
-                dataSetNode.paginatorData = undefined;
             } else {
                 return;
             }
