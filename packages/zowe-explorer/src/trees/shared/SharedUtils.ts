@@ -595,42 +595,46 @@ export class SharedUtils {
         dstProfile: imperative.IProfileLoaded,
         srcDsn: string
     ): Promise<boolean> {
-        // Get API for each profile
-        const mvsSrc = ZoweExplorerApiRegister.getMvsApi(srcProfile);
-        const mvsDst = ZoweExplorerApiRegister.getMvsApi(dstProfile);
+        try {
+            // get API for each profile
+            const mvsSrc = ZoweExplorerApiRegister.getMvsApi(srcProfile);
+            const mvsDst = ZoweExplorerApiRegister.getMvsApi(dstProfile);
 
-        // Look up the same dataset name on BOTH profiles
-        const srcAttr = await mvsSrc.dataSet(srcDsn, { attributes: true });
-        const dstAttr = await mvsDst.dataSet(srcDsn, { attributes: true });
-        const srcDataset = srcAttr?.apiResponse?.items?.[0];
-        const dstDataset = dstAttr?.apiResponse?.items?.[0];
+            // look up the same dataset name on BOTH profiles
+            const srcAttr = await mvsSrc.dataSet(srcDsn, { attributes: true });
+            const dstAttr = await mvsDst.dataSet(srcDsn, { attributes: true });
+            const srcDataset = srcAttr?.apiResponse?.items?.[0];
+            const dstDataset = dstAttr?.apiResponse?.items?.[0];
 
-        // If dstDataset dataset doesn't exist, it's not the same.
-        if (!dstDataset) return false;
+            // if dstDataset dataset doesn't exist, it's not the same.
+            if (!dstDataset || !srcDataset) return false;
 
-        // Compare names
-        const namesAreEqual =
-            srcDataset.dsname === dstDataset.dsname
+            // compare names
+            const namesAreEqual = srcDataset.dsname === dstDataset.dsname;
 
-        // Compare vols (could be stored across multiple vols!)
-        const srcVols = Array.isArray(srcDataset.vols)
-            ? srcDataset.vols.map(v => v.trim().toUpperCase())
-            : [srcDataset.vols.trim().toUpperCase()];
-        const dstVols = Array.isArray(dstDataset.vols)
-            ? dstDataset.vols.map(v => v.trim().toUpperCase())
-            : [dstDataset.vols.trim().toUpperCase()];
-        srcVols.sort();
-        dstVols.sort();
+            // compare vols (could be stored across multiple vols!)
+            const srcVols = srcDataset.vols
+                ? (Array.isArray(srcDataset.vols) ? srcDataset.vols : [srcDataset.vols]).map((v: any) =>
+                    String(v).trim().toUpperCase()
+                )
+                : [];
+            const dstVols = dstDataset.vols
+                ? (Array.isArray(dstDataset.vols) ? dstDataset.vols : [dstDataset.vols]).map((v: any) =>
+                    String(v).trim().toUpperCase()
+                )
+                : [];
 
-        const volsAreEqual =
-            srcVols.length === dstVols.length &&
-            srcVols.every((vol: any, idx: string | number) => vol === dstVols[idx]);
+            srcVols.sort();
+            dstVols.sort();
 
-        // If both name and vols match, they're the same dataset
-        if (namesAreEqual && volsAreEqual) {
-            return true;
+            const volsAreEqual = srcVols.length === dstVols.length && srcVols.every((vol: any, idx: number) => vol === dstVols[idx]);
+
+            // if both name and vols match, they're the same dataset
+            return !!(namesAreEqual && volsAreEqual);
+        } catch (err) {
+            // fallback to not being same data set
+            return false;
         }
-        return false;
     }
 
     /**
