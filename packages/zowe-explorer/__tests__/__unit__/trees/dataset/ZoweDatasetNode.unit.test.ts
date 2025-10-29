@@ -1912,13 +1912,13 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
     });
     it("returns an empty list, if listMembersInRange throws a 404 error", async () => {
         const pdsNode = new ZoweDatasetNode({
-            label: "PDS.NOT_FOUND",
+            label: "PDS.ERROR",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
             contextOverride: Constants.DS_PDS_CONTEXT,
         });
 
-        const notFoundError = new ImperativeError({
-            msg: "Dataset not cataloged",
+        const notFoundError = new imperative.ImperativeError({
+            msg: "Datasets not cataloged",
             errorCode: "404",
         });
 
@@ -1927,6 +1927,7 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         });
 
         const result = await (pdsNode as any).listMembersInRange(undefined, 2);
-        expect(result).toEqual({ items: [] });
+        console.log("HELLO" + result.items);
+        expect(result).toStrictEqual({ items: [] });
     });
 });
