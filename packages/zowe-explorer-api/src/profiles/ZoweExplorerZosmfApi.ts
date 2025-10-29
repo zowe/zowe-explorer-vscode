@@ -465,7 +465,8 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                 // Make single API call to submit if job encoding is not specified
                 return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
             } else {
-                // Download JCL with encoding (not jobEncoding) and submit as text
+                // Download JCL with `encoding` to perform codepage conversion with z/OSMF.
+                // Then submit as text with `jobEncoding` which is passed to JES reader.
                 const rawJcl = await zosfiles.Get.dataSet(this.getSession(), jobDataSet, { encoding: this.profile?.profile?.encoding });
                 return this.submitJcl(rawJcl.toString());
             }
