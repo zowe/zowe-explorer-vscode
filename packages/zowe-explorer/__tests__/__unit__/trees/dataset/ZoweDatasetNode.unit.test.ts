@@ -47,6 +47,7 @@ import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { ImperativeError } from "@zowe/imperative";
+import { error } from "console";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
@@ -1912,22 +1913,19 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
     });
     it("returns an empty list, if listMembersInRange throws a 404 error", async () => {
         const pdsNode = new ZoweDatasetNode({
-            label: "PDS.ERROR",
+            label: "PDS.404",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
             contextOverride: Constants.DS_PDS_CONTEXT,
         });
 
-        const notFoundError = new imperative.ImperativeError({
-            msg: "Datasets not cataloged",
-            errorCode: "404",
-        });
-
-        jest.spyOn(pdsNode, "listMembers").mockImplementationOnce(async () => {
-            throw notFoundError;
-        });
+        jest.spyOn(pdsNode, "listMembers").mockRejectedValue(
+            new imperative.ImperativeError({
+                msg: "Dataset not cataloged",
+                errorCode: `${imperative.RestConstants.HTTP_STATUS_404}`,
+            })
+        );
 
         const result = await (pdsNode as any).listMembersInRange(undefined, 2);
-        console.log("HELLO" + result.items);
         expect(result).toStrictEqual({ items: [] });
     });
 });

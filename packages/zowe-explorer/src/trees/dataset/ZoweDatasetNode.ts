@@ -834,7 +834,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             await this.listMembers(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
         } catch (err) {
-            if (err.errorCode === "404") {
+            if (err instanceof imperative.ImperativeError && err.errorCode === `${imperative.RestConstants.HTTP_STATUS_404}`) {
                 return {
                     items: [],
                 };
