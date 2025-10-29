@@ -1570,15 +1570,18 @@ describe("SharedUtils helpers", () => {
             },
         };
 
-        mockGetMvsApi.mockImplementationOnce(() => ({ dataSet: jest.fn().mockResolvedValue(srcResp) }));
-        mockGetMvsApi.mockImplementationOnce(() => ({ dataSet: jest.fn().mockResolvedValue(dstResp) }));
+        const srcApi = { dataSet: jest.fn().mockResolvedValue(srcResp) };
+        const dstApi = { dataSet: jest.fn().mockResolvedValue(dstResp) };
+
+        mockGetMvsApi.mockImplementationOnce(() => srcApi);
+        mockGetMvsApi.mockImplementationOnce(() => dstApi);
 
         const same = await SharedUtils.isSamePhysicalDataset(srcProfile, dstProfile, dsn);
         expect(same).toBe(true);
 
-        // assert dataSet was called twice
-        expect((ZoweExplorerApiRegister.getMvsApi(srcProfile) as any).dataSet).toHaveBeenCalled();
-        expect((ZoweExplorerApiRegister.getMvsApi(dstProfile) as any).dataSet).toHaveBeenCalled();
+        expect(srcApi.dataSet).toHaveBeenCalled();
+        expect(dstApi.dataSet).toHaveBeenCalled();
+        expect(mockGetMvsApi).toHaveBeenCalledTimes(2);
     });
 
     test("isSamePhysicalDataset returns false when dst dataset missing", async () => {
@@ -1586,15 +1589,17 @@ describe("SharedUtils helpers", () => {
         const dstProfile = { name: "DST" } as any;
         const dsn = "NON.EXISTENT";
 
-        mockGetMvsApi.mockImplementationOnce(() => ({
-            dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [{ dsname: dsn, vols: "VOL01" }] } }),
-        }));
-        mockGetMvsApi.mockImplementationOnce(() => ({
-            dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
-        }));
+        const srcApi = { dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [{ dsname: dsn, vols: "VOL01" }] } }) };
+        const dstApi = { dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
+
+        mockGetMvsApi.mockImplementationOnce(() => srcApi);
+        mockGetMvsApi.mockImplementationOnce(() => dstApi);
 
         const same = await SharedUtils.isSamePhysicalDataset(srcProfile, dstProfile, dsn);
         expect(same).toBe(false);
+
+        expect(srcApi.dataSet).toHaveBeenCalled();
+        expect(dstApi.dataSet).toHaveBeenCalled();
     });
 
     test("getNodeProperty works for string and nested object", () => {
