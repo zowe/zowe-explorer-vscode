@@ -179,6 +179,15 @@ function createGlobalMocks() {
     return globalMocks;
 }
 
+function makeDefaultMvsApi() {
+    return {
+        dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
+        allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
+        createDataSet: jest.fn().mockResolvedValue({ apiResponse: {} }),
+        createDataSetMember: jest.fn().mockResolvedValue({ apiResponse: {} }),
+    };
+}
+
 describe("Dataset Tree Unit Tests - Initialisation", () => {
     function createBlockMocks() {
         const session = createISession();
@@ -5143,12 +5152,22 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
 
 describe("DatasetTree.handleDrop - blocking behavior", () => {
     let dsTree: DatasetTree;
+    let originalGetMvsApiInDatasetTests: any;
 
     beforeEach(() => {
         jest.resetAllMocks();
         jest.clearAllMocks();
         dsTree = new DatasetTree();
+        jest.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockImplementation(() => makeDefaultMvsApi());
+        originalGetMvsApiInDatasetTests = (ZoweExplorerApiRegister as any).getMvsApi;
+        (ZoweExplorerApiRegister as any).getMvsApi = jest.fn();
     });
+
+    afterEach(() => {
+        (ZoweExplorerApiRegister as any).getMvsApi = originalGetMvsApiInDatasetTests;
+        jest.restoreAllMocks();
+    });
+
 
     function makeDraggedPdsNode(dsn: string, session: any, profile: any) {
         const sessionNode = createDatasetSessionNode(session, profile);

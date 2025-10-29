@@ -248,6 +248,19 @@ function createGlobalMocks() {
     return globalMocks;
 }
 
+function makeDataTransferWithPayload(payload: any) {
+    try {
+        const dt = new vscode.DataTransfer();
+        jest.spyOn(dt, "get").mockReturnValueOnce(payload);
+        return dt;
+    } catch {
+        // Fallback for environments where vscode.DataTransfer cannot be constructed
+        return {
+            get: jest.fn().mockReturnValueOnce(payload),
+        } as any;
+    }
+}
+
 describe("USSTree Unit Tests - Function initializeFavorites", () => {
     function createBlockMocks() {
         const session = createISession();
@@ -2283,16 +2296,17 @@ describe("USSTree.handleDrop - blocking behavior", () => {
             [srcNode.resourceUri!.path]: srcNode,
         });
 
-        // prep DataTransfer mock
-        const dataTransfer = new vscode.DataTransfer();
-        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
-            value: [
-                {
-                    label: srcNode.label as string,
-                    uri: srcNode.resourceUri,
-                },
-            ],
-        } as any);
+        // Use a plain object with a get() mock instead of new vscode.DataTransfer()
+        const dataTransfer = {
+            get: jest.fn().mockReturnValueOnce({
+                value: [
+                    {
+                        label: srcNode.label as string,
+                        uri: srcNode.resourceUri,
+                    },
+                ],
+            })
+        } as any;
 
         // mock SharedUtils.same-path detection to return true
         (SharedUtils as any).isLikelySameUssObjectByUris = jest.fn().mockResolvedValue(true);
@@ -2361,15 +2375,17 @@ describe("USSTree.handleDrop - blocking behavior", () => {
             [srcFolder.resourceUri!.path]: srcFolder,
         });
 
-        const dataTransfer = new vscode.DataTransfer();
-        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
-            value: [
-                {
-                    label: srcFolder.label as string,
-                    uri: srcFolder.resourceUri,
-                },
-            ],
-        } as any);
+        // replace DataTransfer creation with plain object
+        const dataTransfer = {
+            get: jest.fn().mockReturnValueOnce({
+                value: [
+                    {
+                        label: srcFolder.label as string,
+                        uri: srcFolder.resourceUri,
+                    },
+                ],
+            })
+        } as any;
 
         (SharedUtils as any).hasNameCollision = jest.fn().mockReturnValue(true);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =

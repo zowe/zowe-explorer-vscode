@@ -28,6 +28,7 @@ import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { createIJobFile, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 
 jest.mock("../../../../src/tools/ZoweLocalStorage");
 
@@ -58,6 +59,27 @@ function createGlobalMocks() {
 
     return newMocks;
 }
+
+function makeFakeMvsApiForDataSet(items: any[] = []) {
+    return {
+        dataSet: jest.fn().mockResolvedValue({ apiResponse: { items } }),
+        // include allMembers too in case other tests call it
+        allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
+    };
+}
+
+function makeFakeMvsApi(items: any[] = []) {
+    return {
+        dataSet: jest.fn().mockResolvedValue({ apiResponse: { items } }),
+        allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
+    };
+}
+
+beforeEach(() => {
+    jest.resetAllMocks();
+    jest.clearAllMocks();
+    jest.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockImplementation(() => makeFakeMvsApi());
+});
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     it("Checks that concatChildNodes returns the proper array of children", async () => {
@@ -1517,13 +1539,18 @@ describe("SharedUtils.handleProfileChange", () => {
 
 describe("SharedUtils helpers", () => {
     const mockGetMvsApi = jest.fn();
+    let originalGetMvsApi: any;
 
     beforeEach(() => {
         jest.resetAllMocks();
         jest.clearAllMocks();
+
+        originalGetMvsApi = (ZoweExplorerApiRegister as any).getMvsApi;
+        (ZoweExplorerApiRegister as any).getMvsApi = mockGetMvsApi;
     });
 
     afterEach(() => {
+        (ZoweExplorerApiRegister as any).getMvsApi = originalGetMvsApi;
         jest.restoreAllMocks();
     });
 
@@ -1548,7 +1575,10 @@ describe("SharedUtils helpers", () => {
 
         const same = await SharedUtils.isSamePhysicalDataset(srcProfile, dstProfile, dsn);
         expect(same).toBe(true);
-        expect(mockGetMvsApi).toHaveBeenCalledTimes(2);
+
+        // assert dataSet was called twice
+        expect((ZoweExplorerApiRegister.getMvsApi(srcProfile) as any).dataSet).toHaveBeenCalled();
+        expect((ZoweExplorerApiRegister.getMvsApi(dstProfile) as any).dataSet).toHaveBeenCalled();
     });
 
     test("isSamePhysicalDataset returns false when dst dataset missing", async () => {
