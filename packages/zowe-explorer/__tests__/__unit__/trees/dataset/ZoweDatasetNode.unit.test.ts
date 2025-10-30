@@ -46,8 +46,6 @@ import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerA
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
-import { ImperativeError } from "@zowe/imperative";
-import { error } from "console";
 
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
