@@ -1921,7 +1921,7 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         jest.spyOn(pdsNode, "listMembers").mockRejectedValue(
             new imperative.ImperativeError({
                 msg: "Dataset not cataloged",
-                errorCode: "404",
+                errorCode: `${imperative.RestConstants.HTTP_STATUS_404}`,
             })
         );
 
