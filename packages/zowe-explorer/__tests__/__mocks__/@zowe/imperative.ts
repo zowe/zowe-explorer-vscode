@@ -264,9 +264,9 @@ export class ImperativeError extends Error {
     public get details() {
         return this.mDetails;
     }
-    public get errorCode() {
-        return this.mDetails.errorCode;
-    }
+    // public get errorCode() {
+    //     return this.mDetails.errorCode;
+    // }
 }
 
 export class ProfInfoErr extends ImperativeError {
