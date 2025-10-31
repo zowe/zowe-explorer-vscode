@@ -834,10 +834,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             await this.listMembers(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
         } catch (err) {
-            if (err instanceof imperative.ImperativeError) {
-                if (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
+            if (err instanceof imperative.ImperativeError && Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
                     return { items: [] };
-                }
             }
             const updated = await AuthUtils.errorHandling(err, {
                 apiType: ZoweExplorerApiType.Mvs,
