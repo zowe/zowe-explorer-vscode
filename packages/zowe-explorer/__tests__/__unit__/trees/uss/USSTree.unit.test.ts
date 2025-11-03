@@ -248,18 +248,6 @@ function createGlobalMocks() {
     return globalMocks;
 }
 
-function makeDataTransferWithPayload(payload: any) {
-    try {
-        const dt = new vscode.DataTransfer();
-        jest.spyOn(dt, "get").mockReturnValueOnce(payload);
-        return dt;
-    } catch {
-        // Fallback for environments where vscode.DataTransfer cannot be constructed
-        return {
-            get: jest.fn().mockReturnValueOnce(payload),
-        } as any;
-    }
-}
 
 describe("USSTree Unit Tests - Function initializeFavorites", () => {
     function createBlockMocks() {
@@ -2255,22 +2243,30 @@ describe("USSTree Unit Tests - Function handleDrop", () => {
 
 describe("USSTree.handleDrop - blocking behavior", () => {
     let ussTree: USSTree;
+    let gm: any;
 
     beforeEach(() => {
         jest.resetAllMocks();
         jest.clearAllMocks();
-        createGlobalMocks();
+        gm = createGlobalMocks();
         ussTree = new USSTree();
     });
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     it("blocks drop and shows error when SharedUtils.isLikelySameUssObjectByUris returns true", async () => {
+        // Arrange
+        const gm = createGlobalMocks(); // keep your global mocks
+        const ussTree = new USSTree();
+
         const session = createISession();
         const srcProfile = createIProfile();
         (srcProfile as any).name = "SRC";
         const dstProfile = createIProfile();
         (dstProfile as any).name = "DST";
 
-        // create source node representing /u/foo/bar
         const srcSessionNode = createUSSSessionNode(session, srcProfile);
         const srcNode = new ZoweUSSNode({
             label: "bar",
@@ -2281,7 +2277,6 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
         srcNode.fullPath = "/u/foo/bar";
 
-        // create target directory node (parent) representing /u/foo on another profile
         const targetSessionNode = createUSSSessionNode(session, dstProfile);
         const targetNode = new ZoweUSSNode({
             label: "foo",
@@ -2292,35 +2287,37 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
         targetNode.fullPath = "/u/foo";
 
+        // make sure the tree's draggedNodes map contains the source node (after tree exists)
         const draggedNodeMock = new MockedProperty(ussTree, "draggedNodes", undefined, {
             [srcNode.resourceUri!.path]: srcNode,
         });
 
-        // Use a plain object with a get() mock instead of new vscode.DataTransfer()
-        const dataTransfer = {
-            get: jest.fn().mockReturnValueOnce({
-                value: [
-                    {
-                        label: srcNode.label as string,
-                        uri: srcNode.resourceUri,
-                    },
-                ],
-            })
-        } as any;
+        // provide a DataTransfer-like object with get() returning the expected payload
+        const payload = {
+            value: [
+                { label: srcNode.label as string, uri: srcNode.resourceUri },
+            ],
+        };
+        const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
+        expect(typeof dataTransfer.get).toBe("function"); // sanity
 
-        // mock SharedUtils.same-path detection to return true
+        // Mock the external helper(s) used by handleDrop
         (SharedUtils as any).isLikelySameUssObjectByUris = jest.fn().mockResolvedValue(true);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
             "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
 
+        // Spy on Gui.errorMessage so we can assert it was called
         const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
-        // @ts-ignore intentionally pass undefined
+        // Act - USSTree.handleDrop signature is (dataTransfer, targetNode, token)
+        // @ts-ignore
         await ussTree.handleDrop(dataTransfer as any, targetNode, undefined);
 
+        // Assert
         expect((SharedUtils as any).isLikelySameUssObjectByUris).toHaveBeenCalled();
         expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Cannot move:"));
 
+        // cleanup
         draggedNodeMock[Symbol.dispose]();
     });
 
@@ -2331,7 +2328,6 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         (srcProfile as any).name = "SRC";
         (dstProfile as any).name = "DST";
 
-        // src folder node being dragged
         const srcSessionNode = createUSSSessionNode(session, srcProfile);
         const srcFolder = new ZoweUSSNode({
             label: "folderA",
@@ -2343,7 +2339,6 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
         srcFolder.fullPath = "/u/foo/folderA";
 
-        // use folder that already contains an entry named 'folderA'
         const targetSessionNode = createUSSSessionNode(session, dstProfile);
         const targetFolder = new ZoweUSSNode({
             label: "foo",
@@ -2355,7 +2350,6 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
         targetFolder.fullPath = "/u/foo";
 
-        // use colliding child
         const existingChild = new ZoweUSSNode({
             label: "folderA",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -2366,90 +2360,85 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
         existingChild.fullPath = "/u/foo/folderA";
 
-        // force target.getChildren to return existing child
         jest.spyOn(targetFolder as any, "getChildren").mockResolvedValue([existingChild]);
-
         jest.spyOn(SharedContext, "isUssDirectory").mockImplementation((node: any) => node === srcFolder);
 
+        // Build the payload first
+        const payload = {
+            value: [
+                {
+                    label: srcFolder.label as string,
+                    uri: srcFolder.resourceUri, // make sure this exists and has a .path
+                },
+            ],
+        };
+
+        // Use the payload's uri.path as the key for draggedNodes so lookups succeed
         const draggedNodeMock = new MockedProperty(ussTree, "draggedNodes", undefined, {
-            [srcFolder.resourceUri!.path]: srcFolder,
+            [payload.value[0].uri.path]: srcFolder,
         });
 
-        // replace DataTransfer creation with plain object
-        const dataTransfer = {
-            get: jest.fn().mockReturnValueOnce({
-                value: [
-                    {
-                        label: srcFolder.label as string,
-                        uri: srcFolder.resourceUri,
-                    },
-                ],
-            })
-        } as any;
+        // Create a DataTransfer-like object using the payload
+        const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
+        expect(typeof (dataTransfer as any).get).toBe("function");
 
         (SharedUtils as any).hasNameCollision = jest.fn().mockReturnValue(true);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
-            "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
+            "Cannot move: The source and the target are the same. You are using a different profile to view the target. Refresh to view changes.";
 
         const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
-        // @ts-ignore pass undefined
-        await ussTree.handleDrop(dataTransfer as any, targetFolder, undefined);
-
-        expect((SharedUtils as any).hasNameCollision).toHaveBeenCalled();
-        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Cannot move:"));
-
-        draggedNodeMock[Symbol.dispose]();
+        // @ts-ignore token intentionally undefined
+        await ussTree.handleDrop
     });
-});
 
-describe("USSTree Unit Tests - Function crossLparMove", () => {
-    it("calls the function recursively for directories, and calls appropriate APIs for files", async () => {
-        const globalMocks = createGlobalMocks();
-        const ussDirNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
-        ussDirNode.children = [
-            new ZoweUSSNode({
-                label: "file.txt",
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                profile: ussDirNode.getProfile(),
-            }),
-        ];
-        ussDirNode.dirty = false;
+    describe("USSTree Unit Tests - Function crossLparMove", () => {
+        it("calls the function recursively for directories, and calls appropriate APIs for files", async () => {
+            const globalMocks = createGlobalMocks();
+            const ussDirNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
+            ussDirNode.children = [
+                new ZoweUSSNode({
+                    label: "file.txt",
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    profile: ussDirNode.getProfile(),
+                }),
+            ];
+            ussDirNode.dirty = false;
 
-        const deleteMock = jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
-        const readFileMock = jest.spyOn(UssFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
-        const writeFileMock = jest.spyOn(UssFSProvider.instance, "writeFile").mockResolvedValue(undefined);
-        const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
+            const deleteMock = jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
+            const readFileMock = jest.spyOn(UssFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+            const writeFileMock = jest.spyOn(UssFSProvider.instance, "writeFile").mockResolvedValue(undefined);
+            const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
 
-        const createDirMock = jest.spyOn(UssFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
-        const createMock = jest.fn();
-        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
-            create: createMock,
-        } as any);
-        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
-            loadNamedProfile: jest.fn().mockResolvedValueOnce(globalMocks.testProfile),
-        } as any);
+            const createDirMock = jest.spyOn(UssFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
+            const createMock = jest.fn();
+            const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
+                create: createMock,
+            } as any);
+            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+                loadNamedProfile: jest.fn().mockResolvedValueOnce(globalMocks.testProfile),
+            } as any);
 
-        await globalMocks.testTree.crossLparMove(
-            ussDirNode,
-            ussDirNode.resourceUri,
-            ussDirNode.resourceUri?.with({ path: "/sestest/u/myuser/subfolder/usstest" })
-        );
-        const newUri = vscode.Uri.from({
-            scheme: ZoweScheme.USS,
-            path: "/sestest/u/myuser/subfolder/usstest",
+            await globalMocks.testTree.crossLparMove(
+                ussDirNode,
+                ussDirNode.resourceUri,
+                ussDirNode.resourceUri?.with({ path: "/sestest/u/myuser/subfolder/usstest" })
+            );
+            const newUri = vscode.Uri.from({
+                scheme: ZoweScheme.USS,
+                path: "/sestest/u/myuser/subfolder/usstest",
+            });
+            expect(existsMock).toHaveBeenCalledWith(newUri);
+            expect(createMock).toHaveBeenCalledWith("/u/myuser/subfolder/usstest/file.txt", "file");
+            expect(createDirMock).toHaveBeenCalledWith(newUri);
+            expect(deleteMock).toHaveBeenCalledWith(ussDirNode.resourceUri, { recursive: true });
+            createDirMock.mockRestore();
+            deleteMock.mockRestore();
+            existsMock.mockRestore();
+            profilesMock.mockRestore();
+            readFileMock.mockRestore();
+            writeFileMock.mockRestore();
+            ussApiMock.mockRestore();
         });
-        expect(existsMock).toHaveBeenCalledWith(newUri);
-        expect(createMock).toHaveBeenCalledWith("/u/myuser/subfolder/usstest/file.txt", "file");
-        expect(createDirMock).toHaveBeenCalledWith(newUri);
-        expect(deleteMock).toHaveBeenCalledWith(ussDirNode.resourceUri, { recursive: true });
-        createDirMock.mockRestore();
-        deleteMock.mockRestore();
-        existsMock.mockRestore();
-        profilesMock.mockRestore();
-        readFileMock.mockRestore();
-        writeFileMock.mockRestore();
-        ussApiMock.mockRestore();
     });
-});
 

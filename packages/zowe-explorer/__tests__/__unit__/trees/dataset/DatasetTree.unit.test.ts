@@ -5013,21 +5013,38 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
         const blockMocks = createBlockMocks();
-        const dataTransfer = new vscode.DataTransfer();
-        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
-            value: [
-                {
-                    label: blockMocks.datasetPdsNode.label as string,
-                    uri: blockMocks.datasetPdsNode.resourceUri,
-                },
-            ],
-        } as any);
+
+        const apiStub = {
+            allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
+            dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
+        };
+        const getMvsApiSpy = jest
+            .spyOn(ZoweExplorerApiRegister as any, "getMvsApi")
+            .mockImplementation(() => apiStub);
+
+        const dataTransfer = {
+            get: jest.fn().mockReturnValueOnce({
+                value: [
+                    {
+                        label: blockMocks.datasetPdsNode.label as string,
+                        uri: blockMocks.datasetPdsNode.resourceUri,
+                    },
+                ],
+            }),
+        } as any;
+
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
             [blockMocks.datasetPdsNode.resourceUri.path]: blockMocks.datasetPdsNode,
         });
-        await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
-        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.");
+
+        await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer as any, undefined);
+
+        expect(Gui.errorMessage).toHaveBeenCalledWith(
+            "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset."
+        );
+
         draggedNodeMock[Symbol.dispose]();
+        getMvsApiSpy.mockRestore();
     });
 
     it("If a member is dropped on a sequential ds, should throw error", async () => {
@@ -5152,22 +5169,16 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
 
 describe("DatasetTree.handleDrop - blocking behavior", () => {
     let dsTree: DatasetTree;
-    let originalGetMvsApiInDatasetTests: any;
 
     beforeEach(() => {
         jest.resetAllMocks();
         jest.clearAllMocks();
         dsTree = new DatasetTree();
-        jest.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockImplementation(() => makeDefaultMvsApi());
-        originalGetMvsApiInDatasetTests = (ZoweExplorerApiRegister as any).getMvsApi;
-        (ZoweExplorerApiRegister as any).getMvsApi = jest.fn();
     });
 
     afterEach(() => {
-        (ZoweExplorerApiRegister as any).getMvsApi = originalGetMvsApiInDatasetTests;
         jest.restoreAllMocks();
     });
-
 
     function makeDraggedPdsNode(dsn: string, session: any, profile: any) {
         const sessionNode = createDatasetSessionNode(session, profile);
@@ -5182,6 +5193,15 @@ describe("DatasetTree.handleDrop - blocking behavior", () => {
         return { sessionNode, pdsNode };
     }
 
+    // helper returning { value: [...] })
+    function makeDataTransfer(items: Array<{ label: string; uri: vscode.Uri }>) {
+        return {
+            get: jest.fn().mockReturnValueOnce({
+                value: items,
+            }),
+        } as unknown as vscode.DataTransfer;
+    }
+
     it("blocks drop and shows error when SharedUtils.isSamePhysicalDataset returns true", async () => {
         const session = createISession();
         const srcProfile = createIProfile();
@@ -5192,28 +5212,32 @@ describe("DatasetTree.handleDrop - blocking behavior", () => {
         const { pdsNode } = makeDraggedPdsNode("USER.TEST", session, srcProfile);
         const targetSession = createDatasetSessionNode(session, dstProfile);
 
+        // create draggedNodes AFTER dsTree created
         const draggedNodeMock = new MockedProperty(dsTree, "draggedNodes", undefined, {
             [pdsNode.resourceUri!.path]: pdsNode,
         });
 
-        const dataTransfer = new vscode.DataTransfer();
-        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
-            value: [
-                {
-                    label: pdsNode.label as string,
-                    uri: pdsNode.resourceUri,
-                },
-            ],
-        } as any);
+        // local dataTransfer that returns the exact resourceUri used as key
+        const dataTransfer = makeDataTransfer([{ label: pdsNode.label as string, uri: pdsNode.resourceUri }]);
 
+        // ensure getMvsApi returns an object with allMembers (so .allMembers won't be undefined
+        // even if production code calls it before our same-object guard)
+        const srcApi = { allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
+        const dstApi = { allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
+        (ZoweExplorerApiRegister as any).getMvsApi = jest.fn()
+            .mockImplementationOnce(() => srcApi)
+            .mockImplementationOnce(() => dstApi);
+
+        // Force same-physical-dataset detection -> block
         (SharedUtils as any).isSamePhysicalDataset = jest.fn().mockResolvedValue(true);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
             "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
 
         const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
-        // @ts-ignore - intentionally pass undefined
-        await dsTree.handleDrop(targetSession, dataTransfer, undefined);
+        // DatasetTree.handleDrop signature: handleDrop(targetNode, dataTransfer, token)
+        // @ts-ignore token intentionally undefined
+        await dsTree.handleDrop(targetSession, dataTransfer as any, undefined);
 
         expect((SharedUtils as any).isSamePhysicalDataset).toHaveBeenCalled();
         expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Cannot move:"));
@@ -5231,42 +5255,34 @@ describe("DatasetTree.handleDrop - blocking behavior", () => {
         const { pdsNode: srcPds } = makeDraggedPdsNode("USER.PDS", session, srcProfile);
         const { pdsNode: dstPds } = makeDraggedPdsNode("USER.PDS", session, dstProfile);
 
-        // force SharedContext to be PDS
-        jest.spyOn(SharedContext, "isPds").mockImplementation((node: any) => {
-            if (node === srcPds || node === dstPds) return true;
-            return false;
-        });
+        // per-test API responses (there is a name collision)
+        const srcMembersResp = { apiResponse: { items: [{ name: "MEM1" }, { name: "MEM2" }] } };
+        const dstMembersResp = { apiResponse: { items: [{ name: "MEM2" }, { name: "MEM3" }] } };
+        const srcApi = { allMembers: jest.fn().mockResolvedValue(srcMembersResp) };
+        const dstApi = { allMembers: jest.fn().mockResolvedValue(dstMembersResp) };
 
+        // override the factory for only this test (first call -> srcApi, second -> dstApi)
+        (ZoweExplorerApiRegister as any).getMvsApi = jest.fn()
+            .mockImplementationOnce(() => srcApi)
+            .mockImplementationOnce(() => dstApi);
+
+        // Make SharedContext identify these nodes as PDS in this test
+        jest.spyOn(SharedContext, "isPds").mockImplementation((node: any) => node === srcPds || node === dstPds);
+
+        // create draggedNodes after dsTree exists
         const draggedNodeMock = new MockedProperty(dsTree, "draggedNodes", undefined, {
             [srcPds.resourceUri!.path]: srcPds,
         });
 
-        const dataTransfer = new vscode.DataTransfer();
-        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
-            value: [
-                {
-                    label: srcPds.label as string,
-                    uri: srcPds.resourceUri,
-                },
-            ],
-        } as any);
-
-        // mock returned member lists with a collision
-        const mockGetMvsApi = jest.fn();
-        (ZoweExplorerApiRegister as any).getMvsApi = mockGetMvsApi;
-
-        const srcMembersResp = { apiResponse: { items: [{ name: "MEM1" }, { name: "MEM2" }] } };
-        const dstMembersResp = { apiResponse: { items: [{ name: "MEM2" }, { name: "MEM3" }] } };
-
-        mockGetMvsApi.mockImplementationOnce(() => ({ allMembers: jest.fn().mockResolvedValue(srcMembersResp) }));
-        mockGetMvsApi.mockImplementationOnce(() => ({ allMembers: jest.fn().mockResolvedValue(dstMembersResp) }));
+        const dataTransfer = makeDataTransfer([{ label: srcPds.label as string, uri: srcPds.resourceUri }]);
 
         const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
-        // @ts-ignore - intentionally pass undefined
-        await dsTree.handleDrop(dstPds, dataTransfer, undefined);
+        // @ts-ignore token intentionally undefined
+        await dsTree.handleDrop(dstPds, dataTransfer as any, undefined);
 
-        expect(mockGetMvsApi).toHaveBeenCalledTimes(2);
+        expect(srcApi.allMembers).toHaveBeenCalled();
+        expect(dstApi.allMembers).toHaveBeenCalled();
         expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("One or more members already exist in the target PDS"));
 
         draggedNodeMock[Symbol.dispose]();

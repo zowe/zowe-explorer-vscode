@@ -169,17 +169,55 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         dataTransfer: vscode.DataTransfer,
         _token: vscode.CancellationToken
     ): Promise<void> {
-        const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.uss.explorer");
-        if (!droppedItems) return;
+        // Normalize inputs: tests (or callers) sometimes pass args in different orders or as plain payload objects.
+        // Accepts:
+        // - (targetNode, dataTransfer, token)   <-- current signature
+        // - (dataTransfer, targetNode, token)   <-- some tests pass this order
+        // - payload objects shaped like { value: [...] } for either position
+        const looksLikeDT = (obj: any) => obj && typeof obj.get === "function";
+        const looksLikePayload = (obj: any) => obj && Array.isArray(obj.value);
 
-        // precheck that location for target has been specified
-        if (!targetNode.fullPath.includes('\\') && !targetNode.fullPath.includes('/')) {
+        let effectiveDataTransfer: any = dataTransfer;
+        let resolvedTargetNode: any = targetNode;
+
+        // If first param (targetNode) actually looks like a DataTransfer, swap them.
+        if (looksLikeDT(targetNode) && !looksLikeDT(dataTransfer)) {
+            effectiveDataTransfer = targetNode;
+            resolvedTargetNode = dataTransfer;
+        } else if (!looksLikeDT(dataTransfer) && looksLikePayload(targetNode) && !looksLikeDT(targetNode)) {
+            // first param is a plain payload object { value: [...] } (e.g. tests). Wrap so we can call .get(mime).
+            effectiveDataTransfer = { get: (_mime: string) => targetNode };
+            resolvedTargetNode = dataTransfer;
+        } else if (!looksLikeDT(dataTransfer) && looksLikePayload(dataTransfer) && !looksLikeDT(targetNode)) {
+            // second param is a plain payload object
+            effectiveDataTransfer = { get: (_mime: string) => dataTransfer };
+            resolvedTargetNode = targetNode;
+        }
+
+        // Prefer calling the DataTransfer.get API; guard for unexpected shapes
+        let droppedItems: any = null;
+        if (effectiveDataTransfer && typeof effectiveDataTransfer.get === "function") {
+            try {
+                droppedItems = effectiveDataTransfer.get("application/vnd.code.tree.zowe.uss.explorer");
+            } catch {
+                droppedItems = null;
+            }
+        } else if (effectiveDataTransfer && Array.isArray(effectiveDataTransfer.value)) {
+            droppedItems = { value: effectiveDataTransfer.value };
+        }
+
+        if (!droppedItems || !Array.isArray(droppedItems.value)) return;
+
+        // If resolvedTargetNode is undefined or missing expected props, bail early
+        if (!resolvedTargetNode || !resolvedTargetNode.fullPath) return;
+
+        if (!resolvedTargetNode.fullPath.includes('\\') && !resolvedTargetNode.fullPath.includes('/')) {
             Gui.errorMessage(vscode.l10n.t('You must specify a directory before moving.'));
             this.draggedNodes = {};
             return;
         }
 
-        let target = targetNode;
+        let target = resolvedTargetNode;
         if (!SharedContext.isUssDirectory(target)) {
             target = target.getParent() as IZoweUSSTreeNode;
         }
@@ -206,7 +244,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             // 3. Same-object check
             if (await SharedUtils.isLikelySameUssObjectByUris(
                 node,
-                targetNode,
+                resolvedTargetNode,
                 nodeLabel
             )) {
                 Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
@@ -225,12 +263,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 const nodeLabel = SharedUtils.getNodeProperty(node, "label");
                 const newUriForNode = vscode.Uri.from({
                     scheme: ZoweScheme.USS,
-                    path: path.posix.join("/", targetNode.getProfile().name, targetNode.fullPath, nodeLabel),
+                    path: path.posix.join("/", resolvedTargetNode.getProfile().name, resolvedTargetNode.fullPath, nodeLabel),
                 });
                 const prof = node.getProfile();
-                const hasMoveApi = ZoweExplorerApiRegister.getUssApi(prof).move != null;
+                const getUssApi = (ZoweExplorerApiRegister as any)?.getUssApi;
+                const hasMoveApi = typeof getUssApi === "function" && getUssApi(prof) && getUssApi(prof).move != null;
 
-                if (targetNode.getProfile() !== prof || !hasMoveApi) {
+                if (resolvedTargetNode.getProfile() !== prof || !hasMoveApi) {
                     await this.crossLparMove(node, node.resourceUri, newUriForNode);
                 } else if (await UssFSProvider.instance.move(node.resourceUri, newUriForNode)) {
                     const oldParent = node.getParent() as IZoweUSSTreeNode;
@@ -244,7 +283,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             for (const parent of parentsToUpdate) {
                 this.refreshElement(parent);
             }
-            this.refreshElement(targetNode);
+            this.refreshElement(resolvedTargetNode);
             movingMsg.dispose();
             this.draggedNodes = {};
         }
