@@ -66,7 +66,10 @@ function createGlobalMocks() {
 
     newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
     newMocks.mvsApi = createMvsApi(newMocks.imperativeProfile);
-    newMocks.getContentsSpy = jest.spyOn(newMocks.mvsApi, "getContents");
+    // Only spy on getContents if it's actually defined on the mock
+    if ("getContents" in newMocks.mvsApi) {
+        newMocks.getContentsSpy = jest.spyOn(newMocks.mvsApi, "getContents");
+    }
     bindMvsApi(newMocks.mvsApi);
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
@@ -1659,6 +1662,7 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
 
 describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
     it("calls listDatasets to fetch basic list when cached data is null", async () => {
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({} as any);
         const sessionNode = new ZoweDatasetNode({
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
@@ -1691,7 +1695,6 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
                     commandResponse: "2 data set(s) were listed successfully",
                 });
             });
-
         await (sessionNode as any).listDatasetsInRange(undefined, 2);
         expect(listDatasetsMock).toHaveBeenCalledTimes(2);
         expect(listDatasetsMock.mock.calls[0][1]).toStrictEqual({ attributes: false });
@@ -1752,6 +1755,42 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
         expect(listDatasetsMock).toHaveBeenCalledTimes(1);
         // maxLength: given limit parameter in listDatasets + 1 to account for filtering the start DS
         expect(listDatasetsMock.mock.calls[0][1]).toStrictEqual({ attributes: true, start: "PDS.EXAMPLE2", maxLength: 3 });
+    });
+
+    it("filters out duplicate dsnames when list is not cached", async () => {
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile: createIProfile(),
+            session: createISession(),
+        });
+        sessionNode.dirty = true;
+        const actualResponses: zosfiles.IZosFilesResponse[] = [];
+        const listDatasetsMock = jest.spyOn(sessionNode, "listDatasets").mockImplementation(async (responses) => {
+            const resp = {
+                success: true,
+                apiResponse: {
+                    items: [
+                        { dsname: "PDS.EXAMPLE3", dsorg: "PO" },
+                        { dsname: "PDS.EXAMPLE4", dsorg: "PO" },
+                    ],
+                    returnedRows: 2,
+                },
+                commandResponse: "2 data set(s) were listed successfully",
+            };
+            responses.push(resp, resp);
+            actualResponses.push(resp);
+        });
+
+        expect(await (sessionNode as any).listDatasetsInRange("PDS.EXAMPLE2", 2)).toStrictEqual({
+            items: actualResponses,
+            nextPageCursor: undefined,
+            totalItems: 2, // 4 deduped becomes 2
+        });
+        expect(listDatasetsMock).toHaveBeenCalledTimes(2);
+        expect(listDatasetsMock.mock.calls[0][1]).toStrictEqual({ attributes: false });
+        expect(listDatasetsMock.mock.calls[1][1]).toStrictEqual({ attributes: true, start: "PDS.EXAMPLE2", maxLength: 3 });
     });
 });
 
@@ -1850,5 +1889,24 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         expect(listMembersMock).toHaveBeenCalledTimes(1);
         // maxLength: given limit parameter in listMembersInRange + 1 to account for filtering the start member
         expect(listMembersMock.mock.calls[0][1]).toStrictEqual({ attributes: true, start: "EX2", maxLength: 3 });
+    });
+    it("uses getCount from mvsApi when available to set totalItems", async () => {
+        const mocks = createGlobalMocks(); // Get existing mocks
+        const getCountMock = jest.fn().mockResolvedValue({ count: 42, lastItem: "SOME.DATASET" });
+        mocks.mvsApi.getCount = getCountMock;
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile: mocks.imperativeProfile,
+            session: createISession(),
+        });
+        sessionNode.pattern = "PDS.*"; // getCount to run
+        sessionNode.dirty = true;
+        const listDatasetsMock = jest.spyOn(sessionNode, "listDatasets").mockImplementationOnce(async () => {});
+        const result = await (sessionNode as any).listDatasetsInRange(undefined, 5);
+        expect(getCountMock).toHaveBeenCalledWith(["PDS.*"]);
+        expect(result.totalItems).toBe(42);
+        expect(listDatasetsMock).toHaveBeenCalledTimes(1);
     });
 });

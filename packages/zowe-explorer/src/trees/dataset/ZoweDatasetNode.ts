@@ -31,6 +31,7 @@ import {
     IFetchResult,
     NavigationTreeItem,
     PersistenceSchemaEnum,
+    IDataSetCount,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -47,7 +48,6 @@ import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
-
 /**
  * A type of TreeItem used to represent sessions and data sets
  *
@@ -684,26 +684,47 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     private async listDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
         let totalItems = this.paginatorData?.totalItems;
         let lastDatasetName = this.paginatorData?.lastItemName;
-        let allDatasets: IZosmfListResponse[] = [];
         const responses: IZosFilesResponse[] = [];
+        const profile = Profiles.getInstance()?.loadNamedProfile(this.getProfile().name);
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
 
         try {
             if (this.dirty || totalItems == null || lastDatasetName == null) {
                 // Rebuild cache to handle future page changes
-                const basicResponses: IZosFilesResponse[] = [];
-                await this.listDatasets(basicResponses, { attributes: false });
+                // If getCount() is present
+                if (mvsApi.getCount) {
+                    const dsPatterns = [
+                        ...new Set(
+                            this.pattern
+                                .toUpperCase()
+                                .split(",")
+                                .map((p) => p.trim())
+                        ),
+                    ];
+                    const getCountResponse: IDataSetCount = await mvsApi.getCount(dsPatterns);
+                    this.paginatorData = {
+                        totalItems: getCountResponse.count,
+                        lastItemName: getCountResponse.lastItem,
+                    };
+                } else {
+                    //if getCount() not present for zosmf and extender profiles
+                    const basicResponses: IZosFilesResponse[] = [];
+                    await this.listDatasets(basicResponses, { attributes: false });
 
-                allDatasets = basicResponses
-                    .filter((r) => r.success)
-                    .reduce((arr: IZosmfListResponse[], r) => {
-                        const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
-                        return responseItems ? [...arr, ...responseItems] : arr;
-                    }, []);
+                    const allDatasets = basicResponses
+                        .filter((r) => r.success)
+                        .reduce((arr: Set<string>, r) => {
+                            const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
+                            responseItems?.forEach((item) => arr.add(item.dsname));
+                            return arr;
+                        }, new Set<string>());
 
-                this.paginatorData = {
-                    totalItems: allDatasets.length,
-                    lastItemName: allDatasets.at(-1)?.dsname,
-                };
+                    this.paginatorData = {
+                        totalItems: allDatasets.size,
+                        lastItemName: Array.from(allDatasets).pop(),
+                    };
+                }
+
                 totalItems = this.paginatorData.totalItems;
                 lastDatasetName = this.paginatorData.lastItemName;
             }
