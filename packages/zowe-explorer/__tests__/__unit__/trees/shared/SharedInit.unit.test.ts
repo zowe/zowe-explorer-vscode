@@ -28,8 +28,6 @@ import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import * as certWizard from "../../../../src/utils/CertificateWizard";
 import { FsAbstractUtils, FsJobsUtils, Gui, imperative, SpoolEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
-import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
-import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ReleaseNotes } from "../../../../src/utils/ReleaseNotes";
@@ -492,101 +490,170 @@ describe("Test src/shared/extension", () => {
             added,
             removed: [],
         });
-        it("should iterate over vscode.workspaces.workspaceFolders when no event is given", async () => {
-            const fakeWorkspaceFolders = jest.fn().mockReturnValue([]);
-            const workspaceFoldersPropertyMock = new MockedProperty(vscode.workspace, "workspaceFolders", {
-                get: fakeWorkspaceFolders,
-                configurable: true,
+        describe("extender types", () => {
+            let mockGetSession: jest.Mock;
+            let mockGetCommonApi: jest.Mock;
+
+            beforeEach(() => {
+                mockGetSession = jest.fn().mockReturnValue({
+                    ISession: {
+                        type: "ssh",
+                    },
+                });
+
+                mockGetCommonApi = jest.fn().mockReturnValue({
+                    getSession: mockGetSession,
+                });
+
+                jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+                    getCommonApi: mockGetCommonApi,
+                } as any);
             });
-            await SharedInit.setupRemoteWorkspaceFolders();
-            expect(fakeWorkspaceFolders).toHaveBeenCalled();
-            workspaceFoldersPropertyMock[Symbol.dispose]();
-        });
-        it("should iterate over the added folders when an event is given", async () => {
-            const fakeEventInfo = getFakeEventInfo();
-            const addedArr = jest.fn();
-            Object.defineProperty(fakeEventInfo, "added", {
-                get: addedArr,
+            it("should setup a remote workspace for an extender type", async () => {
+                const folderUri = {
+                    $mid: 1,
+                    fsPath: "/ssh_profile/u/users/user/member",
+                    external: "zowe-uss:/ssh_profile/u/users/user/member",
+                    path: "/ssh_profile/u/users/user/member",
+                    scheme: "zowe-uss",
+                    with: jest.fn().mockReturnValue({
+                        $mid: 1,
+                        fsPath: "/ssh_profile/u/users/user/member",
+                        external: "zowe-uss:/ssh_profile/u/users/user/member",
+                        path: "/ssh_profile/u/users/user/member",
+                        scheme: "zowe-uss",
+                        query: "fetch=true",
+                    }),
+                };
+                jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
+                    isRoot: false,
+                    slashAfterProfilePos: 11,
+                    profileName: "ssh_profile",
+                    profile: { profile: {}, message: ".", type: "ssh", failNotFound: false },
+                });
+
+                const fakeWorkspaceFolders = jest.fn().mockReturnValue([folderUri]);
+                new MockedProperty(vscode.workspace, "workspaceFolders", {
+                    get: fakeWorkspaceFolders,
+                    configurable: true,
+                });
+
+                // Replace real workspace with controlled data
+                jest.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue([
+                    {
+                        uri: folderUri as any,
+                        name: "[ssh_profile] /u/users/user/member",
+                        index: 0,
+                    },
+                ]);
+
+                // Fake event fallback triggers workspaceFolders
+                const fakeEventInfo = getFakeEventInfo();
+                const addedArr = jest.fn(() => undefined);
+                Object.defineProperty(fakeEventInfo, "added", {
+                    get: addedArr,
+                });
+
+                // Mock getInfoForUri to return a profile name
+                const getInfoSpy = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({ profileName: "ssh_profile" } as any);
+
+                // Match profile name
+                await Profiles.createInstance(undefined as any);
+                const getProfileSpy = jest
+                    .spyOn(Profiles.getInstance(), "getProfiles")
+                    .mockReturnValue([{ name: "ssh_profile", type: "ssh", message: ".", failNotFound: false }]);
+
+                // Avoid real FS lookup
+                const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory").mockResolvedValue(undefined!);
+
+                await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "ssh");
+
+                expect(addedArr).toHaveBeenCalled();
+                expect(getProfileSpy).toHaveBeenCalled();
+                expect(getInfoSpy).toHaveBeenCalledWith(folderUri, expect.anything());
+                expect(readDirMock).toHaveBeenCalled();
             });
-            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
-            expect(addedArr).toHaveBeenCalled();
         });
-        it("should setup a remote workspace for an extender type", async () => {
-            const folderUri = {
-                $mid: 1,
-                fsPath: "/ssh_profile/u/users/user/member",
-                external: "zowe-uss:/ssh_profile/u/users/user/member",
-                path: "/ssh_profile/u/users/user/member",
-                scheme: "zowe-uss",
-            };
-
-            // Replace real workspace with controlled data
-            jest.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue([
-                {
-                    uri: folderUri as any,
-                    name: "[ssh_profile] /u/users/user/member",
-                    index: 0,
-                },
-            ]);
-
-            // Fake event fallback triggers workspaceFolders
-            const fakeEventInfo = getFakeEventInfo();
-            const addedArr = jest.fn(() => undefined);
-            Object.defineProperty(fakeEventInfo, "added", {
-                get: addedArr,
+        describe("core types", () => {
+            beforeEach(() => {
+                const mockGetCommonApi = jest.fn();
+                const mockGetSession = jest.fn().mockReturnValueOnce({
+                    ISession: {
+                        type: imperative.SessConstants.AUTH_TYPE_TOKEN,
+                    },
+                });
+                jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+                    getCommonApi: mockGetCommonApi.mockReturnValueOnce({
+                        getSession: mockGetSession,
+                    }),
+                } as any);
+                const mockProfile = {
+                    name: "lpar.zosmf",
+                    profile: {
+                        tokenValue: "mock-token",
+                    },
+                };
+                const mockGetProfiles = jest.fn().mockReturnValueOnce([mockProfile]);
+                jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+                    getProfiles: mockGetProfiles,
+                } as any);
+                jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
+                    isRoot: false,
+                    slashAfterProfilePos: 11,
+                    profileName: "lpar.zosmf",
+                    profile: { profile: { tokenValue: "123-asdf-4567" }, message: ".", type: "zosmf", failNotFound: false },
+                });
             });
 
-            // Mock getInfoForUri to return a profile name
-            const getInfoSpy = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({ profileName: "ssh_profile" } as any);
-
-            // Match profile name
-            await Profiles.createInstance(undefined as any);
-            const getProfileSpy = jest
-                .spyOn(Profiles.getInstance(), "getProfiles")
-                .mockReturnValue([{ name: "ssh_profile", type: "ssh", message: ".", failNotFound: false }]);
-
-            // Avoid real FS lookup
-            const remoteSpy = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockResolvedValue(undefined!);
-
-            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "ssh");
-
-            expect(addedArr).toHaveBeenCalled();
-            expect(getProfileSpy).toHaveBeenCalled();
-            expect(getInfoSpy).toHaveBeenCalledWith(folderUri);
-            expect(remoteSpy).toHaveBeenCalledWith(folderUri);
-        });
-
-        it("calls DatasetFSProvider for ZoweScheme.DS", async () => {
-            const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/lpar.zosmf/TEST.PDS" }) }]);
-            const remoteLookupMock = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockImplementation();
-            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
-            expect(remoteLookupMock).toHaveBeenCalled();
-            remoteLookupMock.mockRestore();
-        });
-        it("calls DatasetFSProvider for ZoweScheme.USS", async () => {
-            const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/lpar.zosmf/u/user/folder" }) }]);
-            const remoteLookupMock = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockImplementation();
-            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
-            expect(remoteLookupMock).toHaveBeenCalled();
-            remoteLookupMock.mockRestore();
-        });
-        it("does nothing for file URIs", async () => {
-            const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: "file", path: "/a/b/c" }) }]);
-            const remoteLookupDsSpy = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource");
-            const remoteLookupUssSpy = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource");
-            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
-            expect(remoteLookupDsSpy).not.toHaveBeenCalled();
-            expect(remoteLookupUssSpy).not.toHaveBeenCalled();
-        });
-        it("logs an error if one occurs", async () => {
-            const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/lpar.zosmf/TEST.PDS" }) }]);
-            const sampleError = new Error("issue fetching data set");
-            const remoteLookupMock = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockRejectedValueOnce(sampleError);
-            const errorMock = jest.spyOn(ZoweLogger, "error").mockImplementation();
-            await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
-            expect(errorMock).toHaveBeenCalledWith(sampleError.message);
-            expect(remoteLookupMock).toHaveBeenCalled();
-            remoteLookupMock.mockRestore();
+            it("should iterate over vscode.workspaces.workspaceFolders when no event is given", async () => {
+                const fakeWorkspaceFolders = jest.fn().mockReturnValue([]);
+                const workspaceFoldersPropertyMock = new MockedProperty(vscode.workspace, "workspaceFolders", {
+                    get: fakeWorkspaceFolders,
+                    configurable: true,
+                });
+                await SharedInit.setupRemoteWorkspaceFolders();
+                expect(fakeWorkspaceFolders).toHaveBeenCalled();
+                workspaceFoldersPropertyMock[Symbol.dispose]();
+            });
+            it("should iterate over the added folders when an event is given", async () => {
+                const fakeEventInfo = getFakeEventInfo();
+                const addedArr = jest.fn();
+                Object.defineProperty(fakeEventInfo, "added", {
+                    get: addedArr,
+                });
+                await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
+                expect(addedArr).toHaveBeenCalled();
+            });
+            it("calls DatasetFSProvider for ZoweScheme.DS", async () => {
+                const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/lpar.zosmf/TEST.PDS" }) }]);
+                const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory").mockImplementation();
+                await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "zosmf");
+                expect(readDirMock).toHaveBeenCalled();
+                readDirMock.mockRestore();
+            });
+            it("calls UssFSProvider for ZoweScheme.USS", async () => {
+                const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/lpar.zosmf/u/user/folder" }) }]);
+                const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory").mockImplementation();
+                await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "zosmf");
+                expect(readDirMock).toHaveBeenCalled();
+                readDirMock.mockRestore();
+            });
+            it("does nothing for file URIs", async () => {
+                const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: "file", path: "/a/b/c" }) }]);
+                const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory");
+                await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
+                expect(readDirMock).not.toHaveBeenCalled();
+            });
+            it("logs an error if one occurs", async () => {
+                const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/lpar.zosmf/TEST.PDS" }) }]);
+                const sampleError = new Error("issue fetching data set");
+                const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory").mockRejectedValueOnce(sampleError);
+                const errorMock = jest.spyOn(ZoweLogger, "error").mockImplementation();
+                await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "zosmf");
+                expect(errorMock).toHaveBeenCalledWith(sampleError.message);
+                expect(readDirMock).toHaveBeenCalled();
+                readDirMock.mockRestore();
+            });
         });
     });
 

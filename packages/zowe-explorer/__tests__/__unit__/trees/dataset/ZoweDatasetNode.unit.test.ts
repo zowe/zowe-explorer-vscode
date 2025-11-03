@@ -1756,6 +1756,42 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
         // maxLength: given limit parameter in listDatasets + 1 to account for filtering the start DS
         expect(listDatasetsMock.mock.calls[0][1]).toStrictEqual({ attributes: true, start: "PDS.EXAMPLE2", maxLength: 3 });
     });
+
+    it("filters out duplicate dsnames when list is not cached", async () => {
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile: createIProfile(),
+            session: createISession(),
+        });
+        sessionNode.dirty = true;
+        const actualResponses: zosfiles.IZosFilesResponse[] = [];
+        const listDatasetsMock = jest.spyOn(sessionNode, "listDatasets").mockImplementation(async (responses) => {
+            const resp = {
+                success: true,
+                apiResponse: {
+                    items: [
+                        { dsname: "PDS.EXAMPLE3", dsorg: "PO" },
+                        { dsname: "PDS.EXAMPLE4", dsorg: "PO" },
+                    ],
+                    returnedRows: 2,
+                },
+                commandResponse: "2 data set(s) were listed successfully",
+            };
+            responses.push(resp, resp);
+            actualResponses.push(resp);
+        });
+
+        expect(await (sessionNode as any).listDatasetsInRange("PDS.EXAMPLE2", 2)).toStrictEqual({
+            items: actualResponses,
+            nextPageCursor: undefined,
+            totalItems: 2, // 4 deduped becomes 2
+        });
+        expect(listDatasetsMock).toHaveBeenCalledTimes(2);
+        expect(listDatasetsMock.mock.calls[0][1]).toStrictEqual({ attributes: false });
+        expect(listDatasetsMock.mock.calls[1][1]).toStrictEqual({ attributes: true, start: "PDS.EXAMPLE2", maxLength: 3 });
+    });
 });
 
 describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
