@@ -5287,6 +5287,57 @@ describe("DatasetTree.handleDrop - blocking behavior", () => {
 
         draggedNodeMock[Symbol.dispose]();
     });
+
+    it("does not proceed with moving when handleDragAndDropOverwrite returns false", async () => {
+        const srcProfile = { name: "SRC" } as any;
+        const dstProfile = { name: "DST" } as any;
+        const fakePath = "/mvs/src/USER.PDS";
+        const fakeNode: any = {
+            getProfile: () => srcProfile,
+            resourceUri: { path: fakePath },
+            label: "USER.PDS",
+            getParent: () => null,
+        };
+        dsTree["draggedNodes"] = {
+            [fakePath]: fakeNode,
+        };
+
+        // Make sure SharedUtils.isSamePhysicalDataset returns false so we reach the overwrite prompt
+        jest.spyOn(SharedUtils as any, "isSamePhysicalDataset").mockResolvedValue(false);
+        jest.spyOn(SharedContext as any, "isPds").mockReturnValue(false);
+        jest.spyOn(SharedContext as any, "isDsMember").mockReturnValue(false);
+
+        const dataTransfer: any = {
+            get: jest.fn().mockReturnValue({
+                value: [
+                    {
+                        label: fakeNode.label,
+                        uri: { path: fakePath },
+                    },
+                ],
+            }),
+        };
+
+        // Force overwrite helper to abort
+        const overwriteSpy = jest
+            .spyOn(SharedUtils as any, "handleDragAndDropOverwrite")
+            .mockResolvedValue(false);
+        const statusSpy = jest.spyOn(Gui, "setStatusBarMessage").mockReturnValue({
+            dispose: jest.fn(),
+        } as any);
+        // Provide a minimal target node that looks like a profile node (not a PDS)
+        const targetNode: any = {
+            resourceUri: { path: "/mvs/dst" },
+            getProfile: () => dstProfile,
+            getParent: () => null,
+        };
+
+        // @ts-ignore token intentionally undefined
+        await dsTree.handleDrop(targetNode, dataTransfer, undefined);
+        expect(overwriteSpy).toHaveBeenCalledWith(targetNode, dsTree["draggedNodes"]);
+        // Because overwrite returned false, we should NOT begin a move
+        expect(statusSpy).not.toHaveBeenCalled();
+    });
 });
 
 describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
