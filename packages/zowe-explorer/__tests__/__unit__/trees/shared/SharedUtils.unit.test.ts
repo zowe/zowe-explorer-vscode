@@ -60,14 +60,6 @@ function createGlobalMocks() {
     return newMocks;
 }
 
-function makeFakeMvsApiForDataSet(items: any[] = []) {
-    return {
-        dataSet: jest.fn().mockResolvedValue({ apiResponse: { items } }),
-        // include allMembers too in case other tests call it
-        allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
-    };
-}
-
 function makeFakeMvsApi(items: any[] = []) {
     return {
         dataSet: jest.fn().mockResolvedValue({ apiResponse: { items } }),
