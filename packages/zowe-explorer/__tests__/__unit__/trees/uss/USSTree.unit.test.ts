@@ -2265,8 +2265,6 @@ describe("USSTree.handleDrop - blocking behavior", () => {
     });
 
     it("blocks drop and shows error when SharedUtils.isLikelySameUssObjectByUris returns true", async () => {
-        // Arrange
-        const gm = createGlobalMocks(); // keep your global mocks
         const ussTree = new USSTree();
 
         const session = createISession();
@@ -2295,12 +2293,10 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
         targetNode.fullPath = "/u/foo";
 
-        // make sure the tree's draggedNodes map contains the source node (after tree exists)
         const draggedNodeMock = new MockedProperty(ussTree, "draggedNodes", undefined, {
             [srcNode.resourceUri!.path]: srcNode,
         });
 
-        // provide a DataTransfer-like object with get() returning the expected payload
         const payload = {
             value: [
                 { label: srcNode.label as string, uri: srcNode.resourceUri },
@@ -2309,23 +2305,17 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
         expect(typeof dataTransfer.get).toBe("function"); // sanity
 
-        // Mock the external helper(s) used by handleDrop
         (SharedUtils as any).isLikelySameUssObjectByUris = jest.fn().mockResolvedValue(true);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
             "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
 
-        // Spy on Gui.errorMessage so we can assert it was called
         const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
-        // Act - USSTree.handleDrop signature is (dataTransfer, targetNode, token)
         // @ts-ignore
         await ussTree.handleDrop(dataTransfer as any, targetNode, undefined);
 
-        // Assert
         expect((SharedUtils as any).isLikelySameUssObjectByUris).toHaveBeenCalled();
         expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Cannot move:"));
-
-        // cleanup
         draggedNodeMock[Symbol.dispose]();
     });
 
@@ -2380,13 +2370,10 @@ describe("USSTree.handleDrop - blocking behavior", () => {
                 },
             ],
         };
-
-        // Use the payload's uri.path as the key for draggedNodes so lookups succeed
-        const draggedNodeMock = new MockedProperty(ussTree, "draggedNodes", undefined, {
+        new MockedProperty(ussTree, "draggedNodes", undefined, {
             [payload.value[0].uri.path]: srcFolder,
         });
-
-        // Create a DataTransfer-like object using the payload
+        // Create a DataTransfer-like object using the fake payload
         const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
         expect(typeof (dataTransfer as any).get).toBe("function");
 
@@ -2394,10 +2381,8 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
             "Cannot move: The source and the target are the same. You are using a different profile to view the target. Refresh to view changes.";
 
-        const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
-
         // @ts-ignore token intentionally undefined
-        await ussTree.handleDrop
+        await ussTree.handleDrop(dataTransfer as any, targetFolder, undefined);
     });
 
     describe("USSTree Unit Tests - Function crossLparMove", () => {
