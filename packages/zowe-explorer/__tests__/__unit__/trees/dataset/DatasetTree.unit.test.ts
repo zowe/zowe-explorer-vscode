@@ -179,15 +179,6 @@ function createGlobalMocks() {
     return globalMocks;
 }
 
-function makeDefaultMvsApi() {
-    return {
-        dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
-        allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
-        createDataSet: jest.fn().mockResolvedValue({ apiResponse: {} }),
-        createDataSetMember: jest.fn().mockResolvedValue({ apiResponse: {} }),
-    };
-}
-
 describe("Dataset Tree Unit Tests - Initialisation", () => {
     function createBlockMocks() {
         const session = createISession();
