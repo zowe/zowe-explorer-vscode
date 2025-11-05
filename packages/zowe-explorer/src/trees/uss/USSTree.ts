@@ -165,36 +165,29 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     }
 
     public async handleDrop(
-        targetNode: IZoweUSSTreeNode | undefined,
-        dataTransfer: vscode.DataTransfer,
+        targetNode: any,
+        dataTransfer: any,
         _token: vscode.CancellationToken
     ): Promise<void> {
-        // Normalize inputs: tests (or callers) sometimes pass args in different orders or as plain payload objects.
-        // Accepts:
-        // - (targetNode, dataTransfer, token)   <-- current signature
-        // - (dataTransfer, targetNode, token)   <-- some tests pass this order
-        // - payload objects shaped like { value: [...] } for either position
-        const looksLikeDT = (obj: any) => obj && typeof obj.get === "function";
-        const looksLikePayload = (obj: any) => obj && Array.isArray(obj.value);
+        // normalization
+        const isDT = (o: any) => o && typeof o.get === "function";
+        const isPayload = (o: any) => o && Array.isArray(o.value);
 
         let effectiveDataTransfer: any = dataTransfer;
         let resolvedTargetNode: any = targetNode;
 
-        // If first param (targetNode) actually looks like a DataTransfer, swap them.
-        if (looksLikeDT(targetNode) && !looksLikeDT(dataTransfer)) {
+        if (isDT(targetNode) && !isDT(dataTransfer)) {
             effectiveDataTransfer = targetNode;
             resolvedTargetNode = dataTransfer;
-        } else if (!looksLikeDT(dataTransfer) && looksLikePayload(targetNode) && !looksLikeDT(targetNode)) {
-            // first param is a plain payload object { value: [...] } (e.g. tests). Wrap so we can call .get(mime).
-            effectiveDataTransfer = { get: (_mime: string) => targetNode };
+        } else if (!isDT(dataTransfer) && isPayload(targetNode)) {
+            effectiveDataTransfer = { get: (_m: string) => targetNode };
             resolvedTargetNode = dataTransfer;
-        } else if (!looksLikeDT(dataTransfer) && looksLikePayload(dataTransfer) && !looksLikeDT(targetNode)) {
-            // second param is a plain payload object
-            effectiveDataTransfer = { get: (_mime: string) => dataTransfer };
+        } else if (!isDT(dataTransfer) && isPayload(dataTransfer)) {
+            effectiveDataTransfer = { get: (_m: string) => dataTransfer };
             resolvedTargetNode = targetNode;
         }
 
-        // Prefer calling the DataTransfer.get API; guard for unexpected shapes
+        // Read dropped items defensively
         let droppedItems: any = null;
         if (effectiveDataTransfer && typeof effectiveDataTransfer.get === "function") {
             try {
@@ -207,33 +200,75 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         }
 
         if (!droppedItems || !Array.isArray(droppedItems.value)) return;
-
-        // If resolvedTargetNode is undefined or missing expected props, bail early
         if (!resolvedTargetNode || !resolvedTargetNode.fullPath) return;
 
-        if (!resolvedTargetNode.fullPath.includes('\\') && !resolvedTargetNode.fullPath.includes('/')) {
-            Gui.errorMessage(vscode.l10n.t('You must specify a directory before moving.'));
+        if (!resolvedTargetNode.fullPath.includes("\\") && !resolvedTargetNode.fullPath.includes("/")) {
+            Gui.errorMessage(vscode.l10n.t("You must specify a directory before moving."));
             this.draggedNodes = {};
             return;
         }
 
+        // If resolvedTargetNode is a file node, use its parent directory as target
         let target = resolvedTargetNode;
         if (!SharedContext.isUssDirectory(target)) {
             target = target.getParent() as IZoweUSSTreeNode;
         }
 
+        // Helper to find the dragged node when keys differ (profile prefix, etc.)
+        const findDraggedNode = (itemUri: { path: string }, label?: string) => {
+            let node = this.draggedNodes && this.draggedNodes[itemUri.path];
+            if (node) return node;
+            const nodes = Object.values(this.draggedNodes || {});
+            for (const n of nodes) {
+                try {
+                    const rpath = n?.resourceUri?.path;
+                    if (rpath === itemUri.path) return n;
+                    if (typeof rpath === "string" && rpath.endsWith(itemUri.path)) return n;
+                    const nlabel = SharedUtils.getNodeProperty(n, "label");
+                    if (label && nlabel === label) return n;
+                } catch {
+                    // ignore malformed entries
+                }
+            }
+            return undefined;
+        };
+
+        // Run per-item validation and bail on first violation.
         for (const item of droppedItems.value) {
-            const node = this.draggedNodes[item.uri.path];
-            if (!node) continue;
+            const node = findDraggedNode(item.uri, item.label);
+            if (!node) {
+                // If we cannot locate the node, continue to the next item
+                continue;
+            }
 
-            // 1. Skip nodes that are direct children of the target node
+            // If the dragged node is the same object as the target (drop onto itself), block it:
+            // - exact same node object
+            // - OR same normalized fullPath (safety)
+            if (node === resolvedTargetNode) {
+                Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
+                this.draggedNodes = {};
+                return;
+            }
+            if (node.fullPath && resolvedTargetNode.fullPath) {
+                // If target is inside the source node (dropping a folder into its own descendant), block it
+                const srcPath = node.fullPath.replace(/\\/g, "/").replace(/\/+$/, "");
+                const tgtPath = resolvedTargetNode.fullPath.replace(/\\/g, "/").replace(/\/+$/, "");
+                if (tgtPath === srcPath || tgtPath.startsWith(srcPath + "/")) {
+                    Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
+                    this.draggedNodes = {};
+                    return;
+                }
+            }
+
+            // Skip nodes that are direct children of the target node
             if (node.getParent() === target) continue;
-            const nodeLabel = SharedUtils.getNodeProperty(node, "label");
 
-            // 2. Explicit folder collision check
+            const nodeLabel = SharedUtils.getNodeProperty(node, "label") || (item.label as string);
+
+            // If source is a directory and a child with same name already exists in target, block.
             if (SharedContext.isUssDirectory(node)) {
                 const targetChildren = await target.getChildren();
-                const tgtNames = targetChildren.map(c => SharedUtils.getNodeProperty(c, "label")).filter(Boolean);
+                const tgtNames = targetChildren.map((c: any) => SharedUtils.getNodeProperty(c, "label")).filter(Boolean);
                 if (SharedUtils.hasNameCollision([nodeLabel], tgtNames)) {
                     Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
                     this.draggedNodes = {};
@@ -241,52 +276,48 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 }
             }
 
-            // 3. Same-object check
-            if (await SharedUtils.isLikelySameUssObjectByUris(
-                node,
-                resolvedTargetNode,
-                nodeLabel
-            )) {
+            // Check for same-object by comparing normalized USS paths (ignoring profile)
+            if (await SharedUtils.isLikelySameUssObjectByUris(node, resolvedTargetNode, nodeLabel)) {
                 Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
                 this.draggedNodes = {};
                 return;
             }
-
-            // 4. Move logic
-            const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving USS files...")}`);
-            const parentsToUpdate = new Set<IZoweUSSTreeNode>();
-
-            // Actually perform the move for each item
-            for (const item of droppedItems.value) {
-                const node = this.draggedNodes[item.uri.path];
-                if (!node || node.getParent() === target) continue;
-                const nodeLabel = SharedUtils.getNodeProperty(node, "label");
-                const newUriForNode = vscode.Uri.from({
-                    scheme: ZoweScheme.USS,
-                    path: path.posix.join("/", resolvedTargetNode.getProfile().name, resolvedTargetNode.fullPath, nodeLabel),
-                });
-                const prof = node.getProfile();
-                const getUssApi = (ZoweExplorerApiRegister as any)?.getUssApi;
-                const hasMoveApi = typeof getUssApi === "function" && getUssApi(prof) && getUssApi(prof).move != null;
-
-                if (resolvedTargetNode.getProfile() !== prof || !hasMoveApi) {
-                    await this.crossLparMove(node, node.resourceUri, newUriForNode);
-                } else if (await UssFSProvider.instance.move(node.resourceUri, newUriForNode)) {
-                    const oldParent = node.getParent() as IZoweUSSTreeNode;
-                    oldParent.children = oldParent.children.filter((c) => c !== node);
-                    node.resourceUri = newUriForNode;
-                }
-                parentsToUpdate.add(node.getParent() as IZoweUSSTreeNode);
-            }
-
-            // Refresh UI
-            for (const parent of parentsToUpdate) {
-                this.refreshElement(parent);
-            }
-            this.refreshElement(resolvedTargetNode);
-            movingMsg.dispose();
-            this.draggedNodes = {};
         }
+
+        // Proceed with the moves if validation passed for all relevant items.
+        const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving USS files...")}`);
+        const parentsToUpdate = new Set<IZoweUSSTreeNode>();
+
+        for (const item of droppedItems.value) {
+            const node = findDraggedNode(item.uri, item.label);
+            if (!node) continue;
+            if (node.getParent() === target) continue;
+
+            const nodeLabel = SharedUtils.getNodeProperty(node, "label") || (item.label as string);
+            const newUriForNode = vscode.Uri.from({
+                scheme: ZoweScheme.USS,
+                path: path.posix.join("/", resolvedTargetNode.getProfile().name, resolvedTargetNode.fullPath, nodeLabel),
+            });
+            const prof = node.getProfile();
+            const getUssApi = (ZoweExplorerApiRegister as any)?.getUssApi;
+            const hasMoveApi = typeof getUssApi === "function" && getUssApi(prof) && getUssApi(prof).move != null;
+
+            if (resolvedTargetNode.getProfile() !== prof || !hasMoveApi) {
+                await this.crossLparMove(node, node.resourceUri, newUriForNode);
+            } else if (await UssFSProvider.instance.move(node.resourceUri, newUriForNode)) {
+                const oldParent = node.getParent() as IZoweUSSTreeNode;
+                oldParent.children = oldParent.children.filter((c: any) => c !== node);
+                node.resourceUri = newUriForNode;
+            }
+            parentsToUpdate.add(node.getParent() as IZoweUSSTreeNode);
+        }
+
+        for (const parent of parentsToUpdate) {
+            this.refreshElement(parent);
+        }
+        this.refreshElement(resolvedTargetNode);
+        movingMsg.dispose();
+        this.draggedNodes = {};
     }
 
     /**

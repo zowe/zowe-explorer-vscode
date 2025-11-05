@@ -5211,8 +5211,7 @@ describe("DatasetTree.handleDrop - blocking behavior", () => {
         // local dataTransfer that returns the exact resourceUri used as key
         const dataTransfer = makeDataTransfer([{ label: pdsNode.label as string, uri: pdsNode.resourceUri }]);
 
-        // ensure getMvsApi returns an object with allMembers (so .allMembers won't be undefined
-        // even if production code calls it before our same-object guard)
+        // ensure getMvsApi returns an object with allMembers
         const srcApi = { allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
         const dstApi = { allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
         (ZoweExplorerApiRegister as any).getMvsApi = jest.fn()

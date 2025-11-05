@@ -2361,12 +2361,11 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         jest.spyOn(targetFolder as any, "getChildren").mockResolvedValue([existingChild]);
         jest.spyOn(SharedContext, "isUssDirectory").mockImplementation((node: any) => node === srcFolder);
 
-        // Build the payload first
         const payload = {
             value: [
                 {
                     label: srcFolder.label as string,
-                    uri: srcFolder.resourceUri, // make sure this exists and has a .path
+                    uri: srcFolder.resourceUri,
                 },
             ],
         };
