@@ -2,6 +2,10 @@
 
 All notable changes to the "vscode-extension-for-zowe" extension will be documented in this file.
 
+## Recent Changes
+
+- Fixed an issue where loading of virtual workspaces interfered with activation of some Zowe Explorer extensions. [#3923](https://github.com/zowe/zowe-explorer-vscode/pull/3923)
+
 ## TBD Release
 
 ### New features and enhancements
