@@ -508,6 +508,7 @@ describe("Test src/shared/extension", () => {
                 jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
                     getCommonApi: mockGetCommonApi,
                 } as any);
+                jest.clearAllMocks();
             });
             it("should setup a remote workspace for an extender type", async () => {
                 const folderUri = {
@@ -538,7 +539,6 @@ describe("Test src/shared/extension", () => {
                     configurable: true,
                 });
 
-                // Replace real workspace with controlled data
                 jest.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue([
                     {
                         uri: folderUri as any,
@@ -547,31 +547,66 @@ describe("Test src/shared/extension", () => {
                     },
                 ]);
 
-                // Fake event fallback triggers workspaceFolders
                 const fakeEventInfo = getFakeEventInfo();
                 const addedArr = jest.fn(() => undefined);
                 Object.defineProperty(fakeEventInfo, "added", {
                     get: addedArr,
                 });
 
-                // Mock getInfoForUri to return a profile name
                 const getInfoSpy = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({ profileName: "ssh_profile" } as any);
 
-                // Match profile name
                 await Profiles.createInstance(undefined as any);
                 const getProfileSpy = jest
                     .spyOn(Profiles.getInstance(), "getProfiles")
                     .mockReturnValue([{ name: "ssh_profile", type: "ssh", message: ".", failNotFound: false }]);
 
-                // Avoid real FS lookup
                 const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory").mockResolvedValue(undefined!);
 
                 await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "ssh");
 
                 expect(addedArr).toHaveBeenCalled();
-                expect(getProfileSpy).toHaveBeenCalled();
+                expect(getProfileSpy).toHaveBeenCalledWith("ssh");
                 expect(getInfoSpy).toHaveBeenCalledWith(folderUri, expect.anything());
                 expect(readDirMock).toHaveBeenCalled();
+            });
+
+            it("should filter all workspaces and not read directory if profileType is undefined", async () => {
+                const folderUri = {
+                    $mid: 1,
+                    fsPath: "/ssh_profile/u/users/user/member",
+                    external: "zowe-uss:/ssh_profile/u/users/user/member",
+                    path: "/ssh_profile/u/users/user/member",
+                    scheme: "zowe-uss",
+                };
+
+                jest.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue([
+                    {
+                        uri: folderUri as any,
+                        name: "[ssh_profile] /u/users/user/member",
+                        index: 0,
+                    },
+                ]);
+
+                const fakeEventInfo = getFakeEventInfo();
+                const addedArr = jest.fn(() => undefined);
+                Object.defineProperty(fakeEventInfo, "added", {
+                    get: addedArr,
+                });
+
+                const getInfoSpy = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({ profileName: "ssh_profile" } as any);
+
+                await Profiles.createInstance(undefined as any);
+
+                const getProfileSpy = jest.spyOn(Profiles.getInstance(), "getProfiles").mockReturnValue([]);
+
+                const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory");
+
+                await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, undefined);
+
+                expect(addedArr).toHaveBeenCalled();
+                expect(getProfileSpy).toHaveBeenCalledWith(undefined);
+                expect(getInfoSpy).toHaveBeenCalledWith(folderUri, expect.anything());
+                expect(readDirMock).not.toHaveBeenCalled();
             });
         });
         describe("core types", () => {
