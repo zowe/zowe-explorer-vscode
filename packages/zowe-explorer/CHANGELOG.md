@@ -11,9 +11,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support to delete VSAM data sets. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
 - Refactored data set pagination to use the new `getCount` API (if available) to optimize access to the total item count.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 - Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
+- Added support for `encoding` profile property when retrieving JCL with z/OSMF. [#3877](https://github.com/zowe/zowe-explorer-vscode/pull/3877)
 
 ### Bug fixes
 
+- Fixed an issue where deleting an open PDS that is empty resulted in an error. [#3908](https://github.com/zowe/zowe-explorer-vscode/pull/3908)
 - Fixed an issue where `ssh` type profiles were throwing errors when making file system calls. [#3891](https://github.com/zowe/zowe-explorer-vscode/pull/3891)
 - Fixed duplicate credential prompts that occurred when logging out of SSO with multiple virtual workspaces open. [#3858](https://github.com/zowe/zowe-explorer-vscode/issues/3858)
 - Fixed race conditions in parallel file system calls made with invalid credentials. [#3830](https://github.com/zowe/zowe-explorer-vscode/pull/3830)
@@ -29,6 +31,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where switching to a custom credential manager did not update the `imperative.json` file. [#3705](https://github.com/zowe/zowe-explorer-vscode/issues/3705)
 - Updated Zowe SDKs to version `8.27.3` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
 - Prevent drag-and-drop between profiles pointing to the same DASD/DSN by creating a check in the `DatasetTree.handleDrop` function. The operation is now blocked and an error message is shown instead; users should refresh the target profile to see any changes. [#3827](https://github.com/zowe/zowe-explorer-vscode/pull/3827)
+- Updated Zowe SDKs to version `8.28.0` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
 
 ## `3.3.0`
 

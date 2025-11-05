@@ -101,7 +101,7 @@ function createGlobalMocks() {
     Object.defineProperty(zosconsole.IssueCommand, "issue", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showOpenDialog", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosjobs.CancelJobs, "cancelJobForJob", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zosjobs.GetJobs, "getJclForJob", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosjobs.GetJobs, "getJclCommon", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosjobs.GetJobs, "getStatusForJob", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosjobs.GetJobs, "getSpoolContentById", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn(), configurable: true });
@@ -448,7 +448,7 @@ describe("Jobs Actions Unit Tests - Function downloadJcl", () => {
             job: blockMocks.iJob,
         });
         await JobActions.downloadJcl(node);
-        expect(mocked(zosjobs.GetJobs.getJclForJob)).toHaveBeenCalled();
+        expect(mocked(zosjobs.GetJobs.getJclCommon)).toHaveBeenCalled();
         expect(mocked(vscode.workspace.openTextDocument)).toHaveBeenCalled();
         expect(mocked(Gui.showTextDocument)).toHaveBeenCalled();
     });
