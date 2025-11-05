@@ -1909,4 +1909,21 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         expect(result.totalItems).toBe(42);
         expect(listDatasetsMock).toHaveBeenCalledTimes(1);
     });
+    it("returns an empty list, if listMembersInRange throws a 404 error", async () => {
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.404",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        jest.spyOn(pdsNode, "listMembers").mockRejectedValueOnce(
+            new imperative.ImperativeError({
+                msg: "Dataset not cataloged",
+                errorCode: `${imperative.RestConstants.HTTP_STATUS_404}`,
+            })
+        );
+
+        const result = await (pdsNode as any).listMembersInRange(undefined, 2);
+        expect(result).toStrictEqual({ items: [] });
+    });
 });
