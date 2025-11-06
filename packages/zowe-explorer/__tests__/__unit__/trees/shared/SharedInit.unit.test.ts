@@ -571,13 +571,7 @@ describe("Test src/shared/extension", () => {
             });
 
             it("should filter all workspaces and not read directory if profileType is undefined", async () => {
-                const folderUri = {
-                    $mid: 1,
-                    fsPath: "/ssh_profile/u/users/user/member",
-                    external: "zowe-uss:/ssh_profile/u/users/user/member",
-                    path: "/ssh_profile/u/users/user/member",
-                    scheme: "zowe-uss",
-                };
+                const folderUri = vscode.Uri.parse(`zowe-uss:/ssh_profile/u/users/user/member`);
 
                 jest.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue([
                     {
