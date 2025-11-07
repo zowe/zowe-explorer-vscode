@@ -28,18 +28,18 @@
     "semver": "^7.5.3"
   },
   "scripts": {
-    "build": "yarn check-cli && yarn copy-secrets && yarn clean && tsc -p ./ && yarn license",
-    "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
+    "build": "yarn check-cli && yarn copy-secrets && yarn clean && npx tsc -p ./ && yarn license",
+    "test:unit": "npx jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "test": "yarn test:unit",
-    "lint": "concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
-    "lint:html": "eslint . --format html > results/eslint.html",
-    "pretty": "prettier --write .",
+    "lint": "npx concurrently -n \"_eslint_,prettier\" \"eslint .\" \"prettier --check .\"",
+    "lint:html": "npx eslint . --format html > results/eslint.html",
+    "pretty": "npx prettier --write .",
     "check-cli": "node scripts/check-cli.js",
-    "clean": "rimraf lib tsconfig.tsbuildinfo",
-    "fresh-clone": "yarn clean && rimraf node_modules",
+    "clean": "npx rimraf lib tsconfig.tsbuildinfo",
+    "fresh-clone": "yarn clean && npx rimraf node_modules",
     "license": "node ../../scripts/updateLicenses.js",
     "package": "yarn build && npm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz",
-    "copy-secrets": "copyfiles -f ../../node_modules/@zowe/secrets-for-zowe-sdk/prebuilds/*.node ./prebuilds"
+    "copy-secrets": "npx copyfiles -f ../../node_modules/@zowe/secrets-for-zowe-sdk/prebuilds/*.node ./prebuilds"
   },
   "jest": {
     "moduleFileExtensions": [

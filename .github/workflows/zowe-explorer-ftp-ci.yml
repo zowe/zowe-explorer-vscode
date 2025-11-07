@@ -39,10 +39,9 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      # install yarn
       - run: npm install -g yarn
 
-      - run: yarn config set network-timeout 60000 && yarn install --frozen-lockfile
+      - run: yarn install --immutable
 
       - run: yarn workspace zowe-explorer-ftp-extension test
         env:

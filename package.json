@@ -22,6 +22,7 @@
   "devDependencies": {
     "@babel/core": "^7.24.9",
     "@babel/preset-env": "^7.24.8",
+    "@lerna-lite/run": "^2.7.2",
     "@types/jest": "^29.4.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "^14.18.12",
@@ -54,22 +55,23 @@
     "yarn": "1.22.19"
   },
   "resolutions": {
-    "**/copyfiles/glob": "^9.0.0",
+    "copyfiles/glob": "^9.0.0",
     "glob-parent": "^5.1.2",
     "xml2js": "^0.5.0",
     "tar-fs": "^2.1.4"
   },
   "scripts": {
-    "clean": "yarn workspaces run clean",
-    "fresh-clone": "yarn workspaces run fresh-clone && rimraf node_modules",
-    "prepare": "husky install && yarn build",
-    "lint": "yarn workspaces run lint",
-    "lint:html": "yarn workspaces run lint:html",
-    "pretty": "prettier --write .",
-    "build": "yarn workspaces run build",
-    "test": "yarn workspaces run test",
-    "package": "yarn workspaces run package",
-    "pretest:integration": "ts-node ./scripts/create-env.ts",
-    "posttest:integration": "ts-node ./scripts/clean-env.ts"
-  }
+    "clean": "npx lerna run clean",
+    "fresh-clone": "npx lerna run fresh-clone && npx rimraf node_modules",
+    "prepare": "npx husky install",
+    "lint": "npx lerna run lint",
+    "lint:html": "npx lerna run lint:html",
+    "pretty": "npx prettier --write .",
+    "build": "npx lerna run build",
+    "test": "npx lerna run test",
+    "package": "npx lerna run package",
+    "pretest:integration": "npx ts-node ./scripts/create-env.ts",
+    "posttest:integration": "npx ts-node ./scripts/clean-env.ts"
+  },
+  "packageManager": "yarn@3.8.7"
 }
