@@ -1748,6 +1748,7 @@ export function App() {
         pendingChanges={pendingChanges}
         autostoreChanges={autostoreChanges}
         renames={renames}
+        deletions={deletions}
       />
       <Panels
         configurations={configurations}

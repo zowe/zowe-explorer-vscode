@@ -13,6 +13,7 @@ interface TabsProps {
   pendingChanges: { [configPath: string]: any };
   autostoreChanges: { [configPath: string]: boolean };
   renames: { [configPath: string]: { [originalKey: string]: string } };
+  deletions: { [configPath: string]: string[] };
 }
 
 export function Tabs({
@@ -27,6 +28,7 @@ export function Tabs({
   pendingChanges,
   autostoreChanges,
   renames,
+  deletions,
 }: TabsProps) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabIndex: number } | null>(null);
 
@@ -114,10 +116,16 @@ export function Tabs({
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
           {configurations.map((config, index) => {
+            const configPendingChanges = pendingChanges[config.configPath] || {};
+            const hasRegularChanges = Object.keys(configPendingChanges).length > 0;
+            const hasProfilePropertyChanges = Object.keys(configPendingChanges).some((key) => key.startsWith("profiles."));
+            const hasDeletions = deletions[config.configPath] && deletions[config.configPath].length > 0;
             const hasPendingChanges =
-              (pendingChanges[config.configPath] && Object.keys(pendingChanges[config.configPath]).length > 0) ||
+              hasRegularChanges ||
+              hasProfilePropertyChanges ||
               autostoreChanges[config.configPath] !== undefined ||
-              (renames[config.configPath] && Object.keys(renames[config.configPath]).length > 0);
+              (renames[config.configPath] && Object.keys(renames[config.configPath]).length > 0) ||
+              hasDeletions;
             return (
               <div
                 key={index}
