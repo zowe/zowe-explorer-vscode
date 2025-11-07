@@ -39,6 +39,39 @@ export namespace Definitions {
         caseSensitive?: boolean;
         regex?: boolean;
     };
+    export type DataSetDownloadOptions = {
+        overwrite?: boolean;
+        generateDirectory?: boolean;
+        preserveCase?: boolean;
+        binary?: boolean;
+        record?: boolean;
+        selectedPath?: vscode.Uri;
+    };
+    export type UssDownloadOptions = {
+        overwrite?: boolean;
+        generateDirectory?: boolean;
+        chooseEncoding?: boolean;
+        encoding?: ZosEncoding | null;
+        selectedPath?: vscode.Uri;
+        dirOptions?: UssDirOptions;
+        dirFilterOptions?: UssDirFilterOptions;
+    };
+    export type UssDirOptions = {
+        filesys?: boolean;
+        symlinks?: boolean;
+        includeHidden?: boolean;
+        chooseFilterOptions?: boolean;
+        directoryEncoding?: "auto-detect" | ZosEncoding;
+    };
+    export type UssDirFilterOptions = {
+        group?: number | string;
+        user?: number | string;
+        mtime?: number | string;
+        size?: number | string;
+        perm?: string;
+        type?: string;
+        depth?: number;
+    };
     export type FavoriteData = {
         profileName: string;
         label: string;
@@ -157,5 +190,8 @@ export namespace Definitions {
         V1_MIGRATION_STATUS = "zowe.v1MigrationStatus",
         DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
+        DS_DOWNLOAD_OPTIONS = "zowe.dsDownloadOptions",
+        USS_DOWNLOAD_OPTIONS = "zowe.ussDownloadOptions",
+        USS_DIRECTORY_ENCODING = "zowe.ussDirectoryEncoding",
     }
 }
