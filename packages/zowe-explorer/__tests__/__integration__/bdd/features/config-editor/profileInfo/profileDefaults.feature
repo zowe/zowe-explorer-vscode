@@ -21,7 +21,6 @@ Feature: Profile Defaults
     When the user selects "<option>" in the <type> default dropdown
     And the user saves the changes
     Then the <type> default should be "<option>"
-    And the user saves the changes
 
     Examples:
       | type  | option        |

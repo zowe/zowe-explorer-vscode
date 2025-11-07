@@ -89,6 +89,9 @@ When("the user clicks the {string} button", async function (buttonText: string) 
         case "delete profile":
             button = await browser.$(".profile-action-button .codicon-trash");
             break;
+        case "confirm delete profile":
+            button = await browser.$(".profile-action-button .codicon-check");
+            break;
         case "rename confirm":
             button = await browser.$("#rename-confirm");
             break;
@@ -115,9 +118,16 @@ When("the user saves the changes", async () => {
     await ensureConfigEditorReady();
 
     const saveButton = await browser.$(".footer button[title='Save all changes']");
-    await saveButton.waitForExist({ timeout: 1000 });
-    await saveButton.click();
-    await browser.pause(500);
+    // Only try to save if there are pending changes (save button exists)
+    const saveButtonExists = await saveButton.isExisting().catch(() => false);
+    if (saveButtonExists) {
+        await saveButton.waitForExist({ timeout: 1000 });
+        await saveButton.click();
+        await browser.pause(500);
+    } else {
+        // No pending changes, nothing to save
+        await browser.pause(100);
+    }
 });
 
 When("the user closes the zowe.config.json file", async () => {
@@ -232,6 +242,7 @@ Then("the rename profile button click should be successful", async function () {
 
 Then("the delete profile button click should be successful", async function () {
     await browser.pause(50);
+    // The confirmation is handled by a separate step in the feature file
 });
 
 Then("the profile should be renamed to {string}", async function (expectedName: string) {

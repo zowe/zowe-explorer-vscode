@@ -36,8 +36,10 @@ Feature: Profile Headers Buttons (show merged, rename, delete, set as default)
   # Test 4: Delete a profile
   When the user clicks on the "zosmf-dev_test" profile entry
   When the user clicks the "delete profile" button
+  When the user clicks the "confirm delete profile" button
   When the user clicks on the "nested.child2_test" profile entry
   When the user clicks the "delete profile" button
+  When the user clicks the "confirm delete profile" button
   And the user saves the changes
   Then close the webview workbench
   Then the profile tree should contain expected profiles from zowe.config.json with proper deletions

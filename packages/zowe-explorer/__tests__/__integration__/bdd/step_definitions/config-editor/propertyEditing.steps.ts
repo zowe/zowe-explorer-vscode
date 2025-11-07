@@ -323,6 +323,12 @@ When("the user clicks the delete button for the {string} property", async (prope
 // Verify delete button clicked successfully
 Then("the delete button should be clicked successfully", async () => {
     await browser.pause(100);
+    // Wait for confirmation buttons to appear and click confirm
+    const confirmButton = await browser.$(".action-button .codicon-check");
+    await confirmButton.waitForExist({ timeout: 2000 });
+    await confirmButton.waitForDisplayed({ timeout: 2000 });
+    await confirmButton.click();
+    await browser.pause(100);
 });
 
 // Verify property not in config file
