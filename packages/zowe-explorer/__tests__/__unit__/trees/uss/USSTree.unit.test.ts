@@ -2319,6 +2319,48 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         draggedNodeMock[Symbol.dispose]();
     });
 
+    it("skips move for nodes that are direct children of the target", async () => {
+        const session = createISession();
+        const profile = createIProfile();
+        (profile as any).name = "PROF";
+        const parent = createUSSSessionNode(session, profile);
+        const target = new ZoweUSSNode({
+            label: "parent",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile,
+            parentNode: parent,
+        });
+        target.fullPath = "/u/parent";
+        const child = new ZoweUSSNode({
+            label: "child",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session,
+            profile,
+            parentNode: target,
+        });
+        child.fullPath = "/u/parent/child";
+
+        target.children = [child];
+
+        new MockedProperty(ussTree, "draggedNodes", undefined, {
+            [child.resourceUri!.path]: child,
+        });
+
+        const payload = { value: [{ label: child.label as string, uri: child.resourceUri }] };
+        const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
+
+        const moveSpy = jest.spyOn(UssFSProvider.instance as any, "move").mockResolvedValue(true);
+
+        // child.getParent() === target, so should be skipped and move not called
+        // @ts-ignore
+        await ussTree.handleDrop(target as any, dataTransfer as any, undefined);
+
+        expect(moveSpy).not.toHaveBeenCalled();
+        moveSpy.mockRestore();
+    });
+
+
     it("blocks drop when a directory name collision is detected and shows error", async () => {
         const session = createISession();
         const srcProfile = createIProfile();
