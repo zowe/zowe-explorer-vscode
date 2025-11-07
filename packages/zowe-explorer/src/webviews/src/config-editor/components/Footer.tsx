@@ -3,9 +3,10 @@ import * as l10n from "@vscode/l10n";
 interface FooterProps {
   onClearChanges: () => void;
   onSaveAll: () => void;
+  hasPendingChanges: boolean;
 }
 
-export function Footer({ onClearChanges, onSaveAll }: FooterProps) {
+export function Footer({ onClearChanges, onSaveAll, hasPendingChanges }: FooterProps) {
   return (
     <div className="footer">
       <button
@@ -32,22 +33,24 @@ export function Footer({ onClearChanges, onSaveAll }: FooterProps) {
       </button>
       <button
         onClick={onSaveAll}
-        title={l10n.t("Save all changes")}
+        title={hasPendingChanges ? l10n.t("Save all changes") : l10n.t("No changes to save")}
+        disabled={!hasPendingChanges}
         style={{
           padding: "8px 16px",
           fontSize: "13px",
           height: "32px",
           lineHeight: "16px",
-          backgroundColor: "var(--vscode-button-background)",
-          color: "var(--vscode-button-foreground)",
-          border: "1px solid var(--vscode-button-border)",
+          backgroundColor: hasPendingChanges ? "var(--vscode-button-background)" : "var(--vscode-button-secondaryBackground)",
+          color: hasPendingChanges ? "var(--vscode-button-foreground)" : "var(--vscode-button-secondaryForeground)",
+          border: hasPendingChanges ? "1px solid var(--vscode-button-border)" : "1px solid var(--vscode-button-secondaryBorder)",
           borderRadius: "4px",
-          cursor: "pointer",
+          cursor: hasPendingChanges ? "pointer" : "not-allowed",
           fontWeight: "500",
           boxSizing: "border-box",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          opacity: hasPendingChanges ? 1 : 0.5,
         }}
       >
         {l10n.t("Save")}

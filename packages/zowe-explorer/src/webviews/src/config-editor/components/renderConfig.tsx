@@ -70,6 +70,9 @@ interface RenderConfigProps {
   // Handler functions
   handleChange: (key: string, value: string) => void;
   handleDeleteProperty: (fullKey: string, secure?: boolean) => void;
+  confirmDeleteProperty: (fullKey: string, secure?: boolean) => void;
+  pendingPropertyDeletion: string | null;
+  setPendingPropertyDeletion: (key: string | null) => void;
   handleUnlinkMergedProperty: (propertyKey: string | undefined, fullKey: string) => void;
   handleNavigateToSource: (jsonLoc: string, osLoc?: string[]) => void;
   handleToggleSecure: (fullKey: string, displayKey: string, path: string[]) => void;
@@ -128,6 +131,9 @@ export const RenderConfig = ({
   propertyDescriptions,
   handleChange,
   handleDeleteProperty,
+  confirmDeleteProperty,
+  pendingPropertyDeletion,
+  setPendingPropertyDeletion,
   handleUnlinkMergedProperty,
   handleNavigateToSource,
   handleToggleSecure,
@@ -710,12 +716,28 @@ export const RenderConfig = ({
                           onChange={(e) => handleChange(fullKey + "." + item, (e.target as HTMLInputElement).value)}
                           style={{ fontFamily: "monospace" }}
                         />
-                        <button
-                          className="action-button"
-                          onClick={() => handleDeleteProperty(fullKey.replace("secure", "properties") + "." + item, true)}
-                        >
-                          <span className="codicon codicon-trash"></span>
-                        </button>
+                        {(() => {
+                          const secureFullKey = fullKey.replace("secure", "properties") + "." + item;
+                          return pendingPropertyDeletion === secureFullKey ? (
+                            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                              <button
+                                className="action-button"
+                                onClick={() => confirmDeleteProperty(secureFullKey, true)}
+                                title={l10n.t("Confirm delete")}
+                                style={{ color: "var(--vscode-errorForeground)" }}
+                              >
+                                <span className="codicon codicon-check"></span>
+                              </button>
+                              <button className="action-button" onClick={() => setPendingPropertyDeletion(null)} title={l10n.t("Cancel")}>
+                                <span className="codicon codicon-close"></span>
+                              </button>
+                            </div>
+                          ) : (
+                            <button className="action-button" onClick={() => handleDeleteProperty(secureFullKey, true)}>
+                              <span className="codicon codicon-trash"></span>
+                            </button>
+                          );
+                        })()}
                       </div>
                     </div>
                   );
@@ -998,7 +1020,7 @@ export const RenderConfig = ({
                   const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames);
                   const canBeSecure = canPropertyBeSecure(displayKey, path);
 
-                  const showSecureButton = canBeSecure && !isSecure && !isFromMergedProps;
+                  const showSecureButton = canBeSecure && !isSecure && !isFromMergedProps && pendingPropertyDeletion !== fullKey;
 
                   const showDeleteButton = !isFromMergedProps;
                   const showUnlinkButton = isFromMergedProps && !isDeletedMergedProperty;
@@ -1030,11 +1052,26 @@ export const RenderConfig = ({
                               <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
                             </button>
                           ))}
-                        {showDeleteButton && (
-                          <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
-                            <span className="codicon codicon-trash"></span>
-                          </button>
-                        )}
+                        {showDeleteButton &&
+                          (pendingPropertyDeletion === fullKey ? (
+                            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                              <button
+                                className="action-button"
+                                onClick={() => confirmDeleteProperty(fullKey)}
+                                title={l10n.t("Confirm delete")}
+                                style={{ color: "var(--vscode-errorForeground)" }}
+                              >
+                                <span className="codicon codicon-check"></span>
+                              </button>
+                              <button className="action-button" onClick={() => setPendingPropertyDeletion(null)} title={l10n.t("Cancel")}>
+                                <span className="codicon codicon-close"></span>
+                              </button>
+                            </div>
+                          ) : (
+                            <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
+                              <span className="codicon codicon-trash"></span>
+                            </button>
+                          ))}
                         {showUnlinkButton && (
                           <button
                             className="action-button"

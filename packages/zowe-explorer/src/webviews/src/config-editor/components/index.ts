@@ -22,6 +22,7 @@ export { NewLayerModal } from "./modals/NewLayerModal";
 export { ProfileWizardModal } from "./modals/ProfileWizardModal";
 export { AddConfigModal } from "./modals/AddConfigModal";
 export { RenameProfileModal } from "./modals/RenameProfileModal";
+export { DeleteConfirmationModal } from "./modals/DeleteConfirmationModal";
 export { RenderConfig } from "./renderConfig";
 export { RenderProfiles } from "./renderProfiles";
 export { RenderProfileDetails } from "./RenderProfileDetails";

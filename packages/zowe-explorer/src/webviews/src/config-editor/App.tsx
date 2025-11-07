@@ -201,6 +201,8 @@ export function App() {
   const [addConfigModalOpen, setAddConfigModalOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
   const [renameProfileModalOpen, setRenameProfileModalOpen] = useState(false);
+  const [pendingPropertyDeletion, setPendingPropertyDeletion] = useState<string | null>(null);
+  const [pendingProfileDeletion, setPendingProfileDeletion] = useState<string | null>(null);
 
   const configurationsRef = useRef<Configuration[]>([]);
   const pendingChangesRef = useRef<{ [configPath: string]: { [key: string]: PendingChange } }>({});
@@ -452,6 +454,18 @@ export function App() {
     renames,
   });
 
+  const hasPendingChanges = useCallback(() => {
+    const hasChanges = Object.keys(pendingChanges).length > 0;
+    const hasDeletions = Object.entries(deletions).some(([_, keys]) => keys.length > 0);
+    const hasPendingDefaults = Object.keys(pendingDefaults).length > 0;
+    const hasDefaultsDeletions = Object.entries(defaultsDeletions).some(([_, keys]) => keys.length > 0);
+    const hasAutostoreChanges = Object.keys(autostoreChanges).length > 0;
+    const hasRenames = Object.entries(renames).some(([_, configRenames]) => Object.keys(configRenames).length > 0);
+    const hasDragDroppedProfiles = Object.entries(dragDroppedProfiles).some(([_, profiles]) => profiles.size > 0);
+
+    return hasChanges || hasDeletions || hasPendingDefaults || hasDefaultsDeletions || hasAutostoreChanges || hasRenames || hasDragDroppedProfiles;
+  }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, autostoreChanges, renames, dragDroppedProfiles]);
+
   const handleSave = useCallback(() => {
     setIsSaving(true);
     setPendingSaveSelection({
@@ -514,7 +528,7 @@ export function App() {
     setDragDroppedProfiles({});
 
     vscodeApi.postMessage({ command: "GET_PROFILES" });
-  }, [selectedTab, selectedProfileKey]);
+  }, [selectedTab, selectedProfileKey, hasPendingChanges]);
 
   useEffect(() => {
     getLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, {
@@ -787,6 +801,9 @@ export function App() {
   }, [profileMenuOpen]);
 
   const handleChange = (key: string, value: string) => {
+    // Cancel any pending property deletion when user changes a value
+    setPendingPropertyDeletion(null);
+
     const configPath = configurations[selectedTab!]!.configPath;
     const path = flattenedConfig[key]?.path ?? key.split(".");
 
@@ -815,6 +832,8 @@ export function App() {
   };
 
   const handleDefaultsChange = (key: string, value: string) => {
+    // Cancel any pending property deletion when user changes defaults
+    setPendingPropertyDeletion(null);
     const configPath = configurations[selectedTab!]!.configPath;
     const path = flattenedDefaults[key]?.path ?? key.split(".");
     setPendingDefaults((prev) => ({
@@ -915,37 +934,48 @@ export function App() {
     setFocusValueInput(false);
   };
 
-  const handleDeleteProperty = (fullKey: string, secure?: boolean) => {
-    const configPath = configurations[selectedTab!]!.configPath;
-
-    let index = fullKey.split(".").pop();
-    if (secure) {
-      setHiddenItems((prev) => ({
-        ...prev,
-        [configPath]: {
-          ...prev[configPath],
-          [index!]: { path: fullKey },
-        },
-      }));
-    }
-    setPendingChanges((prev) => {
-      const newPendingChanges = { ...prev };
-      delete newPendingChanges[configPath]?.[fullKey];
-
-      return newPendingChanges;
-    });
-    setDeletions((prev) => {
-      const newDeletions = {
-        ...prev,
-        [configPath]: [...(prev[configPath] ?? []), fullKey],
-      };
-
-      return newDeletions;
-    });
+  const handleDeleteProperty = (fullKey: string) => {
+    // Show inline confirmation by setting the pending deletion key
+    setPendingPropertyDeletion(fullKey);
   };
+
+  const confirmDeleteProperty = useCallback(
+    (fullKey: string, secure?: boolean) => {
+      const configPath = configurations[selectedTab!]!.configPath;
+
+      let index = fullKey.split(".").pop();
+      if (secure) {
+        setHiddenItems((prev) => ({
+          ...prev,
+          [configPath]: {
+            ...prev[configPath],
+            [index!]: { path: fullKey },
+          },
+        }));
+      }
+      setPendingChanges((prev) => {
+        const newPendingChanges = { ...prev };
+        delete newPendingChanges[configPath]?.[fullKey];
+
+        return newPendingChanges;
+      });
+      setDeletions((prev) => {
+        const newDeletions = {
+          ...prev,
+          [configPath]: [...(prev[configPath] ?? []), fullKey],
+        };
+
+        return newDeletions;
+      });
+      setPendingPropertyDeletion(null);
+    },
+    [selectedTab, configurations]
+  );
 
   const handleUnlinkMergedProperty = (propertyKey: string | undefined, fullKey: string) => {
     if (!propertyKey) return;
+    // Cancel any pending property deletion when user unlinks merged property
+    setPendingPropertyDeletion(null);
     setNewProfileKey(propertyKey);
     setNewProfileValue("");
     setNewProfileKeyPath(fullKey.split(".").slice(0, -1));
@@ -954,6 +984,10 @@ export function App() {
   };
 
   const handleSetAsDefault = (profileKey: string) => {
+    // Cancel any pending profile deletion when user sets profile as default
+    setPendingProfileDeletion(null);
+    // Cancel any pending property deletion when user sets profile as default
+    setPendingPropertyDeletion(null);
     const profileType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
     if (!profileType) {
       return;
@@ -1002,6 +1036,9 @@ export function App() {
   };
 
   const handleTabChange = (index: number) => {
+    // Cancel any pending deletions when user switches tabs
+    setPendingProfileDeletion(null);
+    setPendingPropertyDeletion(null);
     setSelectedTab(index);
 
     setTimeout(() => {
@@ -1126,6 +1163,8 @@ export function App() {
 
   const handleToggleSecureWrapper = useCallback(
     (fullKey: string, displayKey: string, path: string[]): void => {
+      // Cancel any pending property deletion when user toggles secure
+      setPendingPropertyDeletion(null);
       return handleToggleSecure(
         fullKey,
         displayKey,
@@ -1445,9 +1484,9 @@ export function App() {
     ]
   );
 
-  const handleDeleteProfile = useCallback(
+  const confirmDeleteProfile = useCallback(
     (profileKey: string): void => {
-      return handleDeleteProfileHandler(profileKey, {
+      handleDeleteProfileHandler(profileKey, {
         setRenames,
         setSelectedProfileKey,
         setPendingMergedPropertiesRequest,
@@ -1473,6 +1512,7 @@ export function App() {
         getAvailableProfilesForConfig,
         vscodeApi,
       });
+      setPendingProfileDeletion(null);
     },
     [
       selectedTab,
@@ -1500,8 +1540,17 @@ export function App() {
     ]
   );
 
+  const handleDeleteProfile = useCallback((profileKey: string): void => {
+    // Show inline confirmation by setting the pending deletion key
+    setPendingProfileDeletion(profileKey);
+  }, []);
+
   const handleProfileSelection = useCallback(
     (profileKey: string): void => {
+      // Cancel any pending profile deletion when user selects a different profile
+      setPendingProfileDeletion(null);
+      // Cancel any pending property deletion when user selects a profile
+      setPendingPropertyDeletion(null);
       return handleProfileSelectionHandler(profileKey, {
         setRenames,
         setSelectedProfileKey,
@@ -1640,6 +1689,8 @@ export function App() {
   }, [selectedTab, configurations, profileFilterType, deletions, pendingChanges]);
 
   const openAddProfileModalAtPath = (path: string[]) => {
+    // Cancel any pending property deletion when user opens add property modal
+    setPendingPropertyDeletion(null);
     setNewProfileKeyPath(path);
     setNewProfileKey("");
     setNewProfileValue("");
@@ -1761,10 +1812,22 @@ export function App() {
             handleSetAsDefault={handleSetAsDefault}
             setPendingDefaults={setPendingDefaults}
             setShowMergedPropertiesWithStorage={setShowMergedPropertiesWithStorage}
-            setRenameProfileModalOpen={setRenameProfileModalOpen}
+            setRenameProfileModalOpen={(open: boolean) => {
+              if (open) {
+                // Cancel any pending profile deletion when user opens rename modal
+                setPendingProfileDeletion(null);
+              }
+              setRenameProfileModalOpen(open);
+            }}
             handleDeleteProfile={handleDeleteProfile}
             handleChange={handleChange}
             handleDeleteProperty={handleDeleteProperty}
+            confirmDeleteProperty={confirmDeleteProperty}
+            pendingPropertyDeletion={pendingPropertyDeletion}
+            setPendingPropertyDeletion={setPendingPropertyDeletion}
+            confirmDeleteProfile={confirmDeleteProfile}
+            pendingProfileDeletion={pendingProfileDeletion}
+            setPendingProfileDeletion={setPendingProfileDeletion}
             handleUnlinkMergedProperty={handleUnlinkMergedProperty}
             handleNavigateToSource={handleNavigateToSource}
             handleToggleSecure={handleToggleSecureWrapper}
@@ -1814,9 +1877,12 @@ export function App() {
         onProfilesCollapsedChange={setProfilesCollapsedWithStorage}
         onClearChanges={handleRefresh}
         onSaveAll={() => {
-          handleSave();
-          setSaveModalOpen(true);
+          if (hasPendingChanges()) {
+            handleSave();
+            setSaveModalOpen(true);
+          }
         }}
+        hasPendingChanges={hasPendingChanges()}
       />
       {/* Modals */}
 

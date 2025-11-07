@@ -62,9 +62,7 @@ export class ConfigEditor extends WebView {
 
         this.panel.onDidDispose(() => {});
 
-        setTimeout(() => {
-            this.initializeWebview();
-        }, 250);
+        this.initializeWebview();
     }
 
     private sortRenamesByDepth(renames: any[]): any[] {

@@ -29,6 +29,7 @@ interface PanelsProps {
   onProfilesCollapsedChange: (collapsed: boolean) => void;
   onClearChanges: () => void;
   onSaveAll: () => void;
+  hasPendingChanges: boolean;
 }
 
 export function Panels({
@@ -48,6 +49,7 @@ export function Panels({
   onProfilesCollapsedChange,
   onClearChanges,
   onSaveAll,
+  hasPendingChanges,
 }: PanelsProps) {
   const toggleDefaultsCollapse = () => {
     onDefaultsCollapsedChange(!defaultsCollapsed);
@@ -185,7 +187,7 @@ export function Panels({
               {selectedTab === index && (
                 <div className="profile-details-content">
                   {renderProfileDetails()}
-                  <Footer onClearChanges={onClearChanges} onSaveAll={onSaveAll} />
+                  <Footer onClearChanges={onClearChanges} onSaveAll={onSaveAll} hasPendingChanges={hasPendingChanges} />
                 </div>
               )}
             </div>

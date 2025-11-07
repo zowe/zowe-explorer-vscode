@@ -76,6 +76,12 @@ interface RenderProfileDetailsProps {
   handleDeleteProfile: (profileKey: string) => void;
   handleChange: (key: string, value: string) => void;
   handleDeleteProperty: (fullKey: string, secure?: boolean) => void;
+  confirmDeleteProperty: (fullKey: string, secure?: boolean) => void;
+  pendingPropertyDeletion: string | null;
+  setPendingPropertyDeletion: (key: string | null) => void;
+  confirmDeleteProfile: (profileKey: string) => void;
+  pendingProfileDeletion: string | null;
+  setPendingProfileDeletion: (key: string | null) => void;
   handleUnlinkMergedProperty: (propertyKey: string | undefined, fullKey: string) => void;
   handleNavigateToSource: (jsonLoc: string, osLoc?: string[]) => void;
   handleToggleSecure: (fullKey: string, displayKey: string, path: string[]) => void;
@@ -145,6 +151,12 @@ export const RenderProfileDetails = ({
   handleDeleteProfile,
   handleChange,
   handleDeleteProperty,
+  confirmDeleteProperty,
+  pendingPropertyDeletion,
+  setPendingPropertyDeletion,
+  confirmDeleteProfile,
+  pendingProfileDeletion,
+  setPendingProfileDeletion,
   handleUnlinkMergedProperty,
   handleNavigateToSource,
   handleToggleSecure,
@@ -244,14 +256,30 @@ export const RenderProfileDetails = ({
               >
                 <span className="codicon codicon-edit"></span>
               </button>
-              <button
-                className="profile-action-button"
-                id="delete-profile"
-                onClick={() => handleDeleteProfile(selectedProfileKey)}
-                title={l10n.t("Delete profile")}
-              >
-                <span className="codicon codicon-trash"></span>
-              </button>
+              {pendingProfileDeletion === selectedProfileKey ? (
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <button
+                    className="profile-action-button"
+                    onClick={() => confirmDeleteProfile(selectedProfileKey)}
+                    title={l10n.t("Confirm delete")}
+                    style={{ color: "var(--vscode-errorForeground)" }}
+                  >
+                    <span className="codicon codicon-check"></span>
+                  </button>
+                  <button className="profile-action-button" onClick={() => setPendingProfileDeletion(null)} title={l10n.t("Cancel")}>
+                    <span className="codicon codicon-close"></span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="profile-action-button"
+                  id="delete-profile"
+                  onClick={() => handleDeleteProfile(selectedProfileKey)}
+                  title={l10n.t("Delete profile")}
+                >
+                  <span className="codicon codicon-trash"></span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -377,6 +405,9 @@ export const RenderProfileDetails = ({
                   propertyDescriptions={propertyDescriptions}
                   handleChange={handleChange}
                   handleDeleteProperty={handleDeleteProperty}
+                  confirmDeleteProperty={confirmDeleteProperty}
+                  pendingPropertyDeletion={pendingPropertyDeletion}
+                  setPendingPropertyDeletion={setPendingPropertyDeletion}
                   handleUnlinkMergedProperty={handleUnlinkMergedProperty}
                   handleNavigateToSource={handleNavigateToSource}
                   handleToggleSecure={handleToggleSecure}
