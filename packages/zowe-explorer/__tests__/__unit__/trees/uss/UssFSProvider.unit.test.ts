@@ -516,17 +516,17 @@ describe("UssFSProvider", () => {
             expect(_updateResourceInEditorMock).toHaveBeenCalledWith(testUris.file);
             autoDetectEncodingMock.mockRestore();
         });
-        it("returns null when a 401 error is encountered", async () => {
+        it("returns null when an error that is not 401 is encountered", async () => {
             const fileEntry = { ...testEntries.file };
             jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
-            const error401 = new imperative.ImperativeError({
+            const error404 = new imperative.ImperativeError({
                 msg: "Username or password are not valid or expired",
-                errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+                errorCode: `${imperative.RestConstants.HTTP_STATUS_404}`,
             });
             const loggerErrorSpy = jest.spyOn(ZoweLogger, "error");
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
-                getContents: jest.fn().mockRejectedValue(error401),
+                getContents: jest.fn().mockRejectedValue(error404),
             } as any);
 
             const result = await UssFSProvider.instance.fetchFileAtUri(testUris.file);
