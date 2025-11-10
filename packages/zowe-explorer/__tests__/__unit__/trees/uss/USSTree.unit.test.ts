@@ -2263,6 +2263,58 @@ describe("USSTree.handleDrop - blocking behavior", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
+    it("handles a DataTransfer-like object whose get() throws (defensive try/catch) and returns early without side effects", async () => {
+        const session = createISession();
+        const profile = createIProfile();
+        (profile as any).name = "PROF";
+
+        const srcSession = createUSSSessionNode(session, profile);
+        const srcNode = new ZoweUSSNode({
+            label: "file2.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session,
+            profile,
+            parentNode: srcSession,
+        });
+        srcNode.fullPath = "/u/source/file2.txt";
+
+        const dragged = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
+            [srcNode.resourceUri!.path]: srcNode,
+        });
+
+        // Create a DataTransfer-like object whose get throws to simulate a malformed DT implementation
+        const throwingDT = {
+            get: jest.fn().mockImplementation(() => {
+                throw new Error("boom");
+            }),
+        } as any;
+
+        // Create a well-formed resolved target node (so the early return is due to droppedItems being null)
+        const resolvedTarget = {
+            fullPath: "/u/target",
+            getProfile: () => ({ name: "DST" }),
+            getChildren: async () => [],
+            getParent: () => null,
+        } as any;
+
+        const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
+
+        // Call handleDrop with a DT whose get throws; the code should catch and set droppedItems = null, then return
+        // @ts-ignore token intentionally undefined
+        await ussTree.handleDrop(throwingDT as any, resolvedTarget as any, undefined);
+
+        // No Gui error and no changes to draggedNodes
+        expect(errorSpy).not.toHaveBeenCalled();
+        expect((ussTree as any).draggedNodes).toEqual({
+            [srcNode.resourceUri!.path]: srcNode,
+        });
+
+        // Ensure the DT.get was invoked (proves the try/catch path executed)
+        expect(throwingDT.get).toHaveBeenCalled();
+
+        dragged[Symbol.dispose]();
+    });
+
     it("blocks drop when target is a descendant of the source (dropping folder into its own child)", async () => {
         const session = createISession();
         const srcProfile = createIProfile();
