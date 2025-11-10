@@ -2264,6 +2264,66 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         jest.restoreAllMocks();
     });
 
+    it("normalizes parameters when DataTransfer is passed in targetNode position and errors when target.fullPath has no separator", async () => {
+        // Arrange: create session/profile/node consistent with other tests
+        const session = createISession();
+        const srcProfile = createIProfile();
+        (srcProfile as any).name = "SRC";
+        const srcSessionNode = createUSSSessionNode(session, srcProfile);
+
+        const srcNode = new ZoweUSSNode({
+            label: "file.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session,
+            profile: srcProfile,
+            parentNode: srcSessionNode,
+        });
+        srcNode.fullPath = "/u/source/file.txt";
+
+        // Put the dragged node into ussTree.draggedNodes using MockedProperty helper pattern
+        const draggedMock = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
+            [srcNode.resourceUri!.path]: srcNode,
+        });
+
+        // Build a DataTransfer-like object that will be passed in the targetNode slot (swapped args)
+        const fakeDataTransfer = {
+            get: jest.fn().mockReturnValueOnce({
+                value: [
+                    { label: srcNode.label as string, uri: srcNode.resourceUri },
+                ],
+            }),
+        } as any;
+
+        // Build a "target node" whose fullPath has no "/" or "\" to trigger the directory guard
+        const fakeTargetNode = {
+            fullPath: "NOT_A_PATH", // intentionally invalid -> triggers "You must specify a directory before moving."
+            getProfile: () => ({ name: "DST_LPAR" }),
+            getChildren: async () => [],
+            getParent: () => null,
+        } as any;
+
+        // Make SharedUtils / SharedContext permissive for the rest of validation
+        // @ts-ignore
+        jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
+        jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
+        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        jest.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
+
+        // Spy on GUI error to assert it was invoked
+        const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
+
+        // Act: call handleDrop with DataTransfer passed as first arg (normalized in implementation)
+        // @ts-ignore token intentionally undefined
+        await ussTree.handleDrop(fakeDataTransfer as any, fakeTargetNode as any, undefined);
+
+        // Assert: error message was shown and draggedNodes cleared
+        expect(errorSpy).toHaveBeenCalled();
+        expect((ussTree as any).draggedNodes).toEqual({});
+
+        // cleanup MockedProperty
+        draggedMock[Symbol.dispose]();
+    });
+
     it("blocks drop and shows error when SharedUtils.isLikelySameUssObjectByUris returns true", async () => {
         const ussTree = new USSTree();
 
