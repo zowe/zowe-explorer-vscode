@@ -2263,7 +2263,50 @@ describe("USSTree.handleDrop - blocking behavior", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
+    it("blocks drop when target is a descendant of the source (dropping folder into its own child)", async () => {
+        const session = createISession();
+        const srcProfile = createIProfile();
+        (srcProfile as any).name = "SRC";
+        const dstProfile = createIProfile();
+        (dstProfile as any).name = "DST";
 
+        const srcSessionNode = createUSSSessionNode(session, srcProfile);
+        const srcNode = new ZoweUSSNode({
+            label: "folderA",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: srcProfile,
+            parentNode: srcSessionNode,
+            contextOverride: "uss.dir",
+        });
+        srcNode.fullPath = "/u/foo";
+
+        const targetSessionNode = createUSSSessionNode(session, dstProfile);
+        const targetNode = new ZoweUSSNode({
+            label: "foo-child",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session,
+            profile: dstProfile,
+            parentNode: targetSessionNode,
+        });
+        // target is inside src (descendant)
+        targetNode.fullPath = "/u/foo/bar";
+
+        new MockedProperty(ussTree as any, "draggedNodes", undefined, {
+            [srcNode.resourceUri!.path]: srcNode,
+        });
+
+        const payload = { value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }] };
+        const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
+
+        const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
+        (SharedUtils as any).ERROR_SAME_OBJECT_DROP = "cannot drop into descendant";
+
+        // @ts-ignore
+        await ussTree.handleDrop(dataTransfer as any, targetNode as any, undefined);
+
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("cannot drop into descendant"));
+    });
     it("normalizes parameters when DataTransfer is passed in targetNode position and errors when target.fullPath has no separator", async () => {
         // Arrange: create session/profile/node consistent with other tests
         const session = createISession();
@@ -2323,7 +2366,61 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         // cleanup MockedProperty
         draggedMock[Symbol.dispose]();
     });
+    it("finds dragged node when draggedNodes key has profile prefix and item.uri.path is suffix, and proceeds to move", async () => {
+        const session = createISession();
+        const profile = createIProfile();
+        (profile as any).name = "PROF";
 
+        const parent = createUSSSessionNode(session, profile);
+        const srcNode = new ZoweUSSNode({
+            label: "file.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session,
+            profile,
+            parentNode: parent,
+        });
+        // simulate resourceUri that includes a profile prefix in the path
+        const profixedPath = "/PROF/u/source/file.txt";
+        srcNode.resourceUri = vscode.Uri.from({ scheme: "zowe-uss", path: profixedPath });
+        srcNode.fullPath = "/u/source/file.txt";
+
+        // draggedNodes keyed by the profixed path (different from item.uri.path)
+        const dragged = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
+            [profixedPath]: srcNode,
+        });
+
+        // item uri contains the suffix path without profile prefix
+        const payload = { value: [{ label: srcNode.label as string, uri: { path: "/u/source/file.txt" } }] };
+        const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
+
+        // Target node in same profile so UssFSProvider.move path is used
+        const target = new ZoweUSSNode({
+            label: "dst",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile,
+            parentNode: createUSSSessionNode(session, profile),
+        });
+        target.fullPath = "/u/target";
+
+        // Ensure helpers are permissive
+        jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
+        jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
+        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        jest.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
+
+        // Mock ZoweExplorerApiRegister to advertise a move API
+        jest.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue({ move: jest.fn() } as any);
+        const moveSpy = jest.spyOn(UssFSProvider.instance as any, "move").mockResolvedValue(true);
+
+        // Call handleDrop - should find the node by endsWith logic and call UssFSProvider.move
+        // @ts-ignore
+        await ussTree.handleDrop(dataTransfer as any, target as any, undefined);
+
+        expect(moveSpy).toHaveBeenCalled();
+        moveSpy.mockRestore();
+        dragged[Symbol.dispose]();
+    });
     it("blocks drop and shows error when SharedUtils.isLikelySameUssObjectByUris returns true", async () => {
         const ussTree = new USSTree();
 
