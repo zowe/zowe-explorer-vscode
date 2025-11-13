@@ -630,7 +630,7 @@ export class SharedUtils {
             const volsAreEqual = srcVols.length === dstVols.length && srcVols.every((vol: any, idx: number) => vol === dstVols[idx]);
 
             // if both name and vols match, they're the same dataset
-            return !!(namesAreEqual && volsAreEqual);
+            return namesAreEqual && volsAreEqual;
         } catch (err) {
             // fallback to not being same data set
             return false;
