@@ -1939,19 +1939,46 @@ export class DatasetActions {
                                         { replace: replace == "replace" ? true : false }
                                     );
                                 } else {
-                                    if (mvsApi?.copyDataSetCrossLpar == null) {
-                                        await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
-                                        return;
+                                    // Cross-LPAR copy operation
+                                    if (mvsApi?.copyDataSetCrossLpar != null) {
+                                        // Use the API if available
+                                        const options: zosfiles.ICrossLparCopyDatasetOptions = {
+                                            "from-dataset": { dsn: content.dataSetName, member: content.memberName },
+                                            responseTimeout: node.getProfile()?.profile?.responseTimeout,
+                                            replace: replace == "replace" ? true : false,
+                                        };
+
+                                        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                                        await mvsApi.copyDataSetCrossLpar(node.getLabel() as string, memberName, options, profile);
+                                    } else {
+                                        // Fallback: Use FileSystemProvider for cross-LPAR copy
+                                        const sourceUri = vscode.Uri.from({
+                                            scheme: ZoweScheme.DS,
+                                            path: path.posix.join("/", profile.name, content.dataSetName, content.memberName),
+                                        });
+
+                                        const destUri = vscode.Uri.from({
+                                            scheme: ZoweScheme.DS,
+                                            path: path.posix.join("/", node.getProfile().name, node.getLabel().toString(), memberName),
+                                        });
+
+                                        // Read contents from source LPAR
+                                        const contents = await DatasetFSProvider.instance.readFile(sourceUri);
+
+                                        // Create destination member if it doesn't exist
+                                        if (replace === "notFound") {
+                                            await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSetMember(
+                                                `${node.getLabel().toString()}(${memberName})`,
+                                                { responseTimeout: node.getProfile()?.profile?.responseTimeout }
+                                            );
+                                        }
+
+                                        // Write contents to destination LPAR with forceUpload to handle overwrites
+                                        await DatasetFSProvider.instance.writeFile(destUri.with({ query: "forceUpload=true" }), contents, {
+                                            create: true,
+                                            overwrite: true,
+                                        });
                                     }
-
-                                    const options: zosfiles.ICrossLparCopyDatasetOptions = {
-                                        "from-dataset": { dsn: content.dataSetName, member: content.memberName },
-                                        responseTimeout: node.getProfile()?.profile?.responseTimeout,
-                                        replace: replace == "replace" ? true : false,
-                                    };
-
-                                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                                    await mvsApi.copyDataSetCrossLpar(node.getLabel() as string, memberName, options, profile);
                                 }
                             } catch (err) {
                                 Gui.errorMessage(err.message);
@@ -2025,10 +2052,7 @@ export class DatasetActions {
                 );
             });
         } else {
-            if (mvsApi?.copyDataSetCrossLpar == null) {
-                await Gui.errorMessage(vscode.l10n.t("Copying data sets cross lpars is not yet supported for this profile."));
-                return;
-            }
+            // Cross-LPAR copy operation
             await Gui.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
@@ -2049,21 +2073,116 @@ export class DatasetActions {
                         }
                         const replace = await DatasetActions.determineReplacement(node.getProfile(), dsname, "po");
                         if (replace !== "cancel") {
-                            for (const child of content.members) {
-                                const options: zosfiles.ICrossLparCopyDatasetOptions = {
-                                    "from-dataset": { dsn: lbl, member: child },
-                                    responseTimeout: node.getProfile()?.profile?.responseTimeout,
-                                    replace: replace == "replace" ? true : false,
-                                };
-                                if (token.isCancellationRequested) {
-                                    Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
-                                    return;
+                            if (mvsApi?.copyDataSetCrossLpar != null) {
+                                for (const child of content.members) {
+                                    const options: zosfiles.ICrossLparCopyDatasetOptions = {
+                                        "from-dataset": { dsn: lbl, member: child },
+                                        responseTimeout: node.getProfile()?.profile?.responseTimeout,
+                                        replace: replace == "replace" ? true : false,
+                                    };
+                                    if (token.isCancellationRequested) {
+                                        Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                                        return;
+                                    }
+                                    try {
+                                        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                                        await mvsApi.copyDataSetCrossLpar(dsname, child, options, profile);
+                                    } catch (err) {
+                                        ZoweLogger.error(err);
+                                    }
                                 }
-                                try {
-                                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                                    await mvsApi.copyDataSetCrossLpar(dsname, child, options, profile);
-                                } catch (err) {
-                                    ZoweLogger.error(err);
+                            } else {
+                                // Fallback: Use FileSystemProvider for cross-LPAR copy
+                                // Check if destination PDS exists, if not create it with same attributes as source
+                                const destPdsUri = vscode.Uri.from({
+                                    scheme: ZoweScheme.DS,
+                                    path: path.posix.join("/", node.getProfile().name, dsname),
+                                });
+
+                                if (replace === "notFound" || !DatasetFSProvider.instance.exists(destPdsUri)) {
+                                    // Fetch source PDS attributes
+                                    try {
+                                        const sourceAttributesResponse = await ZoweExplorerApiRegister.getMvsApi(profile).dataSet(lbl, {
+                                            attributes: true,
+                                            responseTimeout: profile?.profile?.responseTimeout,
+                                        });
+                                        const { dsname: dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
+                                        // Transform labels to match API expectations
+                                        const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
+                                        const dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
+                                        // if alcunit is cyl, divide primary by 15 to get the number of cylinders
+                                        const TRACKS_PER_CYLINDER = 15;
+                                        const primary = Number(transformedAttrs.primary);
+                                        if (!isNaN(primary) && primary > 0) {
+                                            transformedAttrs.primary = Math.ceil(primary / TRACKS_PER_CYLINDER);
+                                        }
+                                        // Create destination PDS with same attributes as source
+                                        await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSet(
+                                            dataSetTypeEnum,
+                                            dsname,
+                                            transformedAttrs
+                                        );
+                                        DatasetFSProvider.instance.createDirectory(destPdsUri);
+                                    } catch (err) {
+                                        if (err.errorCode?.toString() === "404" || err.errorCode?.toString() === "500") {
+                                            Gui.errorMessage(vscode.l10n.t("Failed to create {0}: {1}", dsname, err.message));
+                                            return;
+                                        }
+                                    }
+                                }
+
+                                // Copy each member from source to destination
+                                for (const child of content.members) {
+                                    if (token.isCancellationRequested) {
+                                        Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                                        return;
+                                    }
+
+                                    try {
+                                        const sourceMemberUri = vscode.Uri.from({
+                                            scheme: ZoweScheme.DS,
+                                            path: path.posix.join("/", profile.name, lbl, child),
+                                        });
+
+                                        const destMemberUri = vscode.Uri.from({
+                                            scheme: ZoweScheme.DS,
+                                            path: path.posix.join("/", node.getProfile().name, dsname, child),
+                                        });
+
+                                        // Read member contents from source LPAR
+                                        const contents = await DatasetFSProvider.instance.readFile(sourceMemberUri);
+
+                                        // Create destination member if it doesn't exist
+                                        try {
+                                            const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destMemberUri);
+                                            if (entry == null) {
+                                                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSetMember(
+                                                    `${dsname}(${child})`,
+                                                    { responseTimeout: node.getProfile()?.profile?.responseTimeout }
+                                                );
+                                            }
+                                        } catch (err) {
+                                            // Member might not exist, create it
+                                            const code = err.errorCode?.toString();
+                                            if (code !== "404" && code !== "500") {
+                                                await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSetMember(
+                                                    `${dsname}(${child})`,
+                                                    { responseTimeout: node.getProfile()?.profile?.responseTimeout }
+                                                );
+                                            } else {
+                                                throw err;
+                                            }
+                                        }
+
+                                        // Write member contents to destination LPAR with forceUpload
+                                        await DatasetFSProvider.instance.writeFile(destMemberUri.with({ query: "forceUpload=true" }), contents, {
+                                            create: true,
+                                            overwrite: true,
+                                        });
+                                    } catch (err) {
+                                        ZoweLogger.error(err);
+                                        Gui.errorMessage(vscode.l10n.t("Failed to copy member {0}: {1}", child, err.message));
+                                    }
                                 }
                             }
                         }
