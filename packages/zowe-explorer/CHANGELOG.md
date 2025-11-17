@@ -17,7 +17,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
 - Added support for `encoding` profile property when retrieving JCL with z/OSMF. [#3877](https://github.com/zowe/zowe-explorer-vscode/pull/3877)
 - Added support for loading credential manager options from the imperative.json file. Add a `credentialManagerOptions` object in the JSON object in `imperative.json` to specify options for the current credential manager. [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
-- Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, please refer to the "Troubleshooting Zowe CLI credentials" page on Zowe Docs: https://docs.zowe.org/stable/troubleshoot/cli/troubleshoot-cli-credentials/#secrets-sdk-persistence-level-for-windows. [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
+- Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, please refer to the ["Troubleshooting Zowe CLI credentials"](https://docs.zowe.org/stable/troubleshoot/cli/troubleshoot-cli-credentials/#secrets-sdk-persistence-level-for-windows) page on Zowe Docs. [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
 
 ### Bug fixes
 
