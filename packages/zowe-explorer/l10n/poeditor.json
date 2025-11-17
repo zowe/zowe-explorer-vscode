@@ -625,8 +625,6 @@
   "No release notes found for this version.": "",
   "No changelog entries found for this version.": "",
   "No {0} entries found for this version.": "",
-  "Found credential manager options in imperative.json: {0}": "",
-  "Failed to read credential manager options from imperative.json: {0}": "",
   "Zowe Explorer profiles are being set as unsecured.": "",
   "Zowe Explorer profiles are being set as secured.": "",
   "Custom credential manager failed to activate": "",

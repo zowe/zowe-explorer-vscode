@@ -1475,6 +1475,25 @@ describe("ProfilesUtils unit tests", () => {
             expect(profileManagerWillLoadSpy).toHaveBeenCalled();
             expect(disableCredMgmtSpy).toHaveBeenCalled();
         });
+
+        it("should apply credential manager options if they exist", async () => {
+            const mockOptions = { someOption: "someValue" };
+            jest.spyOn(ProfilesUtils, "getCredentialManagerOptions").mockReturnValue(mockOptions);
+
+            const mockDefaultCredMgr = { options: {} };
+            jest.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar").mockReturnValue(mockDefaultCredMgr as any);
+
+            const loggerDebugSpy = jest.spyOn(ZoweLogger, "debug");
+
+            jest.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad").mockResolvedValueOnce(true);
+
+            await ProfilesUtils.setupDefaultCredentialManager();
+
+            expect(mockDefaultCredMgr.options).toBe(mockOptions);
+            expect(loggerDebugSpy).toHaveBeenCalledWith(
+                "Applied credential manager options from imperative.json to default credential manager"
+            );
+        });
     });
 
     describe("Profiles unit tests - function awaitExtenderType", () => {
