@@ -79,15 +79,23 @@ export class ProfilesCache {
      *
      * @returns {imperative.ICommandProfileTypeConfiguration[]}
      */
-    public getConfigArray(): imperative.ICommandProfileTypeConfiguration[] {
+    public static getConfigArray(): imperative.ICommandProfileTypeConfiguration[] {
         return ProfilesCache.sessionProfileTypeConfigurations;
+    }
+
+    /**
+     * Consider using the static ProfilesCache.getConfigArray() instead as `sessionProfileTypeConfigurations` (return value) is a static property.
+     * @returns {imperative.ICommandProfileTypeConfiguration[]}
+     */
+    public getConfigArray(): imperative.ICommandProfileTypeConfiguration[] {
+        return ProfilesCache.getConfigArray();
     }
 
     /**
      * Get the credential manager options from imperative.json
      * @returns Record<string, any> | undefined the credential manager options, or undefined if not specified
      */
-    private getCredentialManagerOptions(): Record<string, any> | undefined {
+    public static getCredentialManagerOptions(): Record<string, any> | undefined {
         try {
             const settingsFilePath = path.join(FileManagement.getZoweDir(), "settings", "imperative.json");
             if (!fs.existsSync(settingsFilePath)) {
@@ -112,7 +120,7 @@ export class ProfilesCache {
     public async getProfileInfo(_envTheia = false): Promise<imperative.ProfileInfo> {
         if (this.profileInfo == null) {
             // Get credential manager options from imperative.json if available
-            const credMgrOptions = this.getCredentialManagerOptions();
+            const credMgrOptions = ProfilesCache.getCredentialManagerOptions();
             const defaultCredentialManager = imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring);
 
             // Apply options to the credential manager if they exist
@@ -271,7 +279,7 @@ export class ProfilesCache {
 
         imperative.Censor.setCensoredOptions({
             config: mProfileInfo.getTeamConfig(),
-            profiles: [...this.getCoreProfileTypes(), ...this.getConfigArray()],
+            profiles: [...this.getCoreProfileTypes(), ...ProfilesCache.getConfigArray()],
         });
     }
 

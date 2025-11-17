@@ -77,38 +77,7 @@ export class ProfilesUtils {
      * @returns Record<string, any> | undefined the credential manager options, or undefined if not specified
      */
     public static getCredentialManagerOptions(): Record<string, any> | undefined {
-        ZoweLogger.trace("ProfilesUtils.getCredentialManagerOptions called.");
-        try {
-            const settingsFilePath = path.join(FileManagement.getZoweDir(), "settings", "imperative.json");
-            if (!fs.existsSync(settingsFilePath)) {
-                ZoweLogger.debug("imperative.json does not exist, returning undefined for credential manager options");
-                return undefined;
-            }
-            const settingsFile = fs.readFileSync(settingsFilePath);
-            const imperativeConfig = JSON.parse(settingsFile.toString());
-            const credentialManagerOptions = imperativeConfig?.credentialManagerOptions;
-            if (credentialManagerOptions && typeof credentialManagerOptions === "object") {
-                ZoweLogger.debug(
-                    vscode.l10n.t({
-                        message: "Found credential manager options in imperative.json: {0}",
-                        args: [JSON.stringify(credentialManagerOptions)],
-                        comment: ["Credential manager options"],
-                    })
-                );
-                return credentialManagerOptions as Record<string, any>;
-            }
-            ZoweLogger.debug("No credentialManagerOptions found in imperative.json");
-            return undefined;
-        } catch (err) {
-            ZoweLogger.warn(
-                vscode.l10n.t({
-                    message: "Failed to read credential manager options from imperative.json: {0}",
-                    args: [err instanceof Error ? err.message : String(err)],
-                    comment: ["Error message"],
-                })
-            );
-            return undefined;
-        }
+        return ProfilesCache.getCredentialManagerOptions();
     }
 
     /**

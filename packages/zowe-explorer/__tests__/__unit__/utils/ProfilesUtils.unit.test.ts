@@ -50,6 +50,15 @@ describe("ProfilesUtils unit tests", () => {
         jest.clearAllMocks();
     });
 
+    describe("getCredentialManagerOptions", () => {
+        it("should call ProfilesCache.getCredentialManagerOptions", () => {
+            const getCredMgrOptionsSpy = jest.spyOn(ProfilesCache, "getCredentialManagerOptions").mockReturnValue({ key: "value" });
+            const options = ProfilesUtils.getCredentialManagerOptions();
+            expect(getCredMgrOptionsSpy).toHaveBeenCalledTimes(1);
+            expect(options).toEqual({ key: "value" });
+        });
+    });
+
     function createBlockMocks(): { [key: string]: any } {
         const newMocks = {
             mockExistsSync: jest.fn().mockReturnValue(true),
