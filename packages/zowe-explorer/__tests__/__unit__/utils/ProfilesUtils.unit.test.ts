@@ -1490,9 +1490,7 @@ describe("ProfilesUtils unit tests", () => {
             await ProfilesUtils.setupDefaultCredentialManager();
 
             expect(mockDefaultCredMgr.options).toBe(mockOptions);
-            expect(loggerDebugSpy).toHaveBeenCalledWith(
-                "Applied credential manager options from imperative.json to default credential manager"
-            );
+            expect(loggerDebugSpy).toHaveBeenCalledWith("Applied credential manager options from imperative.json to default credential manager");
         });
     });
 
