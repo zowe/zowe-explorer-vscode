@@ -12,6 +12,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed an issue where the job spool pagination code lens was appearing even though the extender did not support pagination. [#3714] (https://github.com/zowe/zowe-explorer-vscode/issues/3714).
 - Fixed an issue where the `promptForAuthentication` function would throw an `AuthCanceledError` on invalid authentication for SSO login. [#3830](https://github.com/zowe/zowe-explorer-vscode/pull/3830)
 - Fixed an issue where secure credentials and headers were being logged to the Zowe logger and VSCode output channel. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
 - Added support to delete VSAM data sets for z/OSMF type profiles. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
