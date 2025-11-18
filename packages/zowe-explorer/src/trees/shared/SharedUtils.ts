@@ -34,6 +34,11 @@ import { Definitions } from "../../configuration/Definitions";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 
+export const isDataTransfer = (o: any): o is { get: (m: string) => any } =>
+    !!o && typeof o.get === "function";
+
+export const isPayload = (o: any): o is { value: any[] } =>
+    !!o && Array.isArray(o.value);
 export class SharedUtils {
     public static ERROR_SAME_OBJECT_DROP =
         "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";

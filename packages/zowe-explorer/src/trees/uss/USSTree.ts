@@ -33,7 +33,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
-import { SharedUtils } from "../shared/SharedUtils";
+import { isDataTransfer, isPayload, SharedUtils } from "../shared/SharedUtils";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { FilterDescriptor, FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
@@ -169,20 +169,16 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         dataTransfer: any,
         _token: vscode.CancellationToken
     ): Promise<void> {
-        // normalization
-        const isDT = (o: any) => o && typeof o.get === "function";
-        const isPayload = (o: any) => o && Array.isArray(o.value);
-
         let effectiveDataTransfer: any = dataTransfer;
         let resolvedTargetNode: any = targetNode;
 
-        if (isDT(targetNode) && !isDT(dataTransfer)) {
+        if (isDataTransfer(targetNode) && !isDataTransfer(dataTransfer)) {
             effectiveDataTransfer = targetNode;
             resolvedTargetNode = dataTransfer;
-        } else if (!isDT(dataTransfer) && isPayload(targetNode)) {
+        } else if (!isDataTransfer(dataTransfer) && isPayload(targetNode)) {
             effectiveDataTransfer = { get: (_m: string) => targetNode };
             resolvedTargetNode = dataTransfer;
-        } else if (!isDT(dataTransfer) && isPayload(dataTransfer)) {
+        } else if (!isDataTransfer(dataTransfer) && isPayload(dataTransfer)) {
             effectiveDataTransfer = { get: (_m: string) => dataTransfer };
             resolvedTargetNode = targetNode;
         }
