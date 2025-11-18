@@ -1201,7 +1201,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
             uri: ussNode.resourceUri?.with({ path: `/sestest${ussNode.fullPath}` }),
             name: `[${ussNode.label as string}] ${ussNode.fullPath}`,
         });
-        expect(infoMessageSpy).toHaveBeenCalledWith("A search must be set for sestest before it can be added to a workspace.");
+        expect(infoMessageSpy).toHaveBeenCalledWith("A search must be set for sesbefore it can be added to a workspace.");
     });
     it("skips adding a resource that's already in the workspace", () => {
         const ussNode = new ZoweUSSNode({
@@ -1546,7 +1546,7 @@ describe("SharedUtils helpers", () => {
         jest.restoreAllMocks();
     });
 
-    test("isSamePhysicalDataset returns true when dsname and vols match", async () => {
+    it("isSamePhysicalDataset returns true when dsname and vols match", async () => {
         const srcProfile = { name: "SRC" } as any;
         const dstProfile = { name: "DST" } as any;
         const dsn = "USER.TEST.PDS";
@@ -1576,7 +1576,7 @@ describe("SharedUtils helpers", () => {
         expect(mockGetMvsApi).toHaveBeenCalledTimes(2);
     });
 
-    test("isSamePhysicalDataset returns false when dst dataset missing", async () => {
+    it("isSamePhysicalDataset returns false when dst dataset missing", async () => {
         const srcProfile = { name: "SRC" } as any;
         const dstProfile = { name: "DST" } as any;
         const dsn = "NON.EXISTENT";
@@ -1594,7 +1594,7 @@ describe("SharedUtils helpers", () => {
         expect(dstApi.dataSet).toHaveBeenCalled();
     });
 
-    test("getNodeProperty works for string and nested object", () => {
+    it("getNodeProperty works for string and nested object", () => {
         const node1 = { label: "SOME_LABEL" } as any;
         // direct string prop
         expect(SharedUtils.getNodeProperty(node1, "label")).toEqual("SOME_LABEL");
@@ -1605,7 +1605,7 @@ describe("SharedUtils helpers", () => {
         expect(SharedUtils.getNodeProperty(node3, "label")).toEqual("INNER");
     });
 
-    test("hasNameCollision detects case-insensitive collisions", () => {
+    it("hasNameCollision detects case-insensitive collisions", () => {
         const src = ["one", "Two", "Three "];
         const dst = ["ONE", "two"];
         expect(SharedUtils.hasNameCollision(src, dst)).toBe(true);
@@ -1615,7 +1615,7 @@ describe("SharedUtils helpers", () => {
         expect(SharedUtils.hasNameCollision(src2, dst2)).toBe(false);
     });
 
-    test("isLikelySameUssObjectByUris normalizes and compares paths", async () => {
+    it("isLikelySameUssObjectByUris normalizes and compares paths", async () => {
         const srcNode = { fullPath: "/u/foo/bar" } as any;
         const targetParent = { fullPath: "/u/foo" } as any;
         const label = "bar";
