@@ -35,7 +35,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where switching to a custom credential manager did not update the `imperative.json` file. [#3705](https://github.com/zowe/zowe-explorer-vscode/issues/3705)
 - Updated Zowe SDKs to version `8.27.3` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
 - Prevent drag-and-drop between profiles pointing to the same DASD/DSN by creating a check in the `DatasetTree.handleDrop` function. The operation is now blocked and an error message is shown instead; users should refresh the target profile to see any changes. [#3827](https://github.com/zowe/zowe-explorer-vscode/pull/3827)
-- Updated Zowe SDKs to version `8.28.0` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
 
 ## `3.3.0`
 
