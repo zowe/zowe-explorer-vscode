@@ -1201,7 +1201,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
             uri: ussNode.resourceUri?.with({ path: `/sestest${ussNode.fullPath}` }),
             name: `[${ussNode.label as string}] ${ussNode.fullPath}`,
         });
-        expect(infoMessageSpy).toHaveBeenCalledWith("A search must be set for sesbefore it can be added to a workspace.");
+        expect(infoMessageSpy).toHaveBeenCalledWith("A search must be set for sestest before it can be added to a workspace.");
     });
     it("skips adding a resource that's already in the workspace", () => {
         const ussNode = new ZoweUSSNode({
