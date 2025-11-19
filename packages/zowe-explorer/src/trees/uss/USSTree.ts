@@ -164,11 +164,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         }
     }
 
-    public async handleDrop(
-        targetNode: any,
-        dataTransfer: any,
-        _token: vscode.CancellationToken
-    ): Promise<void> {
+    public async handleDrop(targetNode: any, dataTransfer: any, _token: vscode.CancellationToken): Promise<void> {
         let effectiveDataTransfer: any = dataTransfer;
         let resolvedTargetNode: any = targetNode;
 

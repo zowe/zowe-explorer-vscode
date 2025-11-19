@@ -5009,9 +5009,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
             dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
         };
-        const getMvsApiSpy = jest
-            .spyOn(ZoweExplorerApiRegister as any, "getMvsApi")
-            .mockImplementation(() => apiStub);
+        const getMvsApiSpy = jest.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockImplementation(() => apiStub);
 
         const dataTransfer = {
             get: jest.fn().mockReturnValueOnce({
@@ -5030,9 +5028,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
 
         await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer as any, undefined);
 
-        expect(Gui.errorMessage).toHaveBeenCalledWith(
-            "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset."
-        );
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.");
 
         draggedNodeMock[Symbol.dispose]();
         getMvsApiSpy.mockRestore();
@@ -5214,7 +5210,8 @@ describe("DatasetTree.handleDrop - blocking behavior", () => {
         // ensure getMvsApi returns an object with allMembers
         const srcApi = { allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
         const dstApi = { allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
-        (ZoweExplorerApiRegister as any).getMvsApi = jest.fn()
+        (ZoweExplorerApiRegister as any).getMvsApi = jest
+            .fn()
             .mockImplementationOnce(() => srcApi)
             .mockImplementationOnce(() => dstApi);
 
@@ -5252,7 +5249,8 @@ describe("DatasetTree.handleDrop - blocking behavior", () => {
         const dstApi = { allMembers: jest.fn().mockResolvedValue(dstMembersResp) };
 
         // override the factory for only this test (first call -> srcApi, second -> dstApi)
-        (ZoweExplorerApiRegister as any).getMvsApi = jest.fn()
+        (ZoweExplorerApiRegister as any).getMvsApi = jest
+            .fn()
             .mockImplementationOnce(() => srcApi)
             .mockImplementationOnce(() => dstApi);
 
@@ -5309,9 +5307,7 @@ describe("DatasetTree.handleDrop - blocking behavior", () => {
         };
 
         // Force overwrite helper to abort
-        const overwriteSpy = jest
-            .spyOn(SharedUtils as any, "handleDragAndDropOverwrite")
-            .mockResolvedValue(false);
+        const overwriteSpy = jest.spyOn(SharedUtils as any, "handleDragAndDropOverwrite").mockResolvedValue(false);
         const statusSpy = jest.spyOn(Gui, "setStatusBarMessage").mockReturnValue({
             dispose: jest.fn(),
         } as any);
@@ -5497,7 +5493,7 @@ describe("DatasetTree.crossLparMove", () => {
         jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue({});
         jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(Buffer.from("hello"));
-        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => { });
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => {});
 
         apiMock = {
             createDataSet: jest.fn().mockResolvedValue({}),

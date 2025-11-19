@@ -249,7 +249,6 @@ function createGlobalMocks() {
     return globalMocks;
 }
 
-
 describe("USSTree Unit Tests - Function initializeFavorites", () => {
     beforeEach(() => {
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
@@ -2383,9 +2382,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         // Build a DataTransfer-like object that will be passed in the targetNode slot (swapped args)
         const fakeDataTransfer = {
             get: jest.fn().mockReturnValueOnce({
-                value: [
-                    { label: srcNode.label as string, uri: srcNode.resourceUri },
-                ],
+                value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }],
             }),
         } as any;
 
@@ -2507,9 +2504,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
 
         const payload = {
-            value: [
-                { label: srcNode.label as string, uri: srcNode.resourceUri },
-            ],
+            value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }],
         };
         const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
         expect(typeof dataTransfer.get).toBe("function"); // sanity
@@ -2568,7 +2563,6 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         expect(moveSpy).not.toHaveBeenCalled();
         moveSpy.mockRestore();
     });
-
 
     it("blocks drop when a directory name collision is detected and shows error", async () => {
         const session = createISession();

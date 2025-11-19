@@ -189,8 +189,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             try {
                 const encodingInfo = await sourceNode.getEncoding();
                 // If the encoding is binary, we need to force upload it as binary
-                const queryString = `forceUpload=true${encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
-                    }`;
+                const queryString = `forceUpload=true${
+                    encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
+                }`;
                 await DatasetFSProvider.instance.writeFile(
                     destUri.with({
                         query: queryString,
@@ -233,32 +234,24 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const srcDsn = SharedUtils.getNodeProperty(node, "label");
 
             // 1. Same-object check
-            if (
-                node.getProfile &&
-                target.getProfile &&
-                await SharedUtils.isSamePhysicalDataset(
-                    node.getProfile(),
-                    target.getProfile(),
-                    srcDsn
-                )
-            ) {
+            if (node.getProfile && target.getProfile && (await SharedUtils.isSamePhysicalDataset(node.getProfile(), target.getProfile(), srcDsn))) {
                 Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
                 return;
             }
 
             // 2. PDS member collision check (only if both are PDS)
             if (SharedContext.isPds(node) && SharedContext.isPds(target)) {
-                const srcMembersResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile())
-                    .allMembers(srcDsn, { attributes: true });
-                const tgtMembersResp = await ZoweExplorerApiRegister.getMvsApi(target.getProfile())
-                    .allMembers(srcDsn, { attributes: true }); //using the same dsn, but checking against target
+                const srcMembersResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(srcDsn, { attributes: true });
+                const tgtMembersResp = await ZoweExplorerApiRegister.getMvsApi(target.getProfile()).allMembers(srcDsn, { attributes: true }); //using the same dsn, but checking against target
 
-                const srcNames = (srcMembersResp.apiResponse?.items ?? []).map(m => m.name).filter(Boolean);
-                const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map(m => m.name).filter(Boolean);
+                const srcNames = (srcMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
+                const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
 
                 if (SharedUtils.hasNameCollision(srcNames, tgtNames)) {
                     Gui.errorMessage(
-                        vscode.l10n.t("Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.")
+                        vscode.l10n.t(
+                            "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving."
+                        )
                     );
                     return;
                 }
@@ -267,9 +260,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // 3. Dataset structure checks
             if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
                 if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
-                    Gui.errorMessage(
-                        vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.")
-                    );
+                    Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset."));
                     return;
                 }
             }
@@ -1782,15 +1773,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                message: "all PDS members in {0}",
-                args: [node.label as string],
-                comment: ["Node label"],
-            })
+                  message: "all PDS members in {0}",
+                  args: [node.label as string],
+                  comment: ["Node label"],
+              })
             : vscode.l10n.t({
-                message: "the PDS members in {0}",
-                args: [node.label as string],
-                comment: ["Node label"],
-            });
+                  message: "the PDS members in {0}",
+                  args: [node.label as string],
+                  comment: ["Node label"],
+              });
         const selection = await Gui.showQuickPick(
             DatasetUtils.DATASET_SORT_OPTS.map((opt, i) => ({
                 label: sortOpts.method === i ? `${opt} $(check)` : opt,
@@ -1855,10 +1846,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         node.filter = newFilter;
         node.description = newFilter
             ? vscode.l10n.t({
-                message: "Filter: {0}",
-                args: [newFilter.value],
-                comment: ["Filter value"],
-            })
+                  message: "Filter: {0}",
+                  args: [newFilter.value],
+                  comment: ["Filter value"],
+              })
             : null;
         this.nodeDataChanged(node);
 
@@ -1919,15 +1910,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                message: "all PDS members in {0}",
-                args: [node.label as string],
-                comment: ["Node label"],
-            })
+                  message: "all PDS members in {0}",
+                  args: [node.label as string],
+                  comment: ["Node label"],
+              })
             : vscode.l10n.t({
-                message: "the PDS members in {0}",
-                args: [node.label as string],
-                comment: ["Node label"],
-            });
+                  message: "the PDS members in {0}",
+                  args: [node.label as string],
+                  comment: ["Node label"],
+              });
         const clearFilter = isSession
             ? `$(clear-all) ${vscode.l10n.t("Clear filter for profile")}`
             : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;

@@ -34,11 +34,9 @@ import { Definitions } from "../../configuration/Definitions";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 
-export const isDataTransfer = (o: any): o is { get: (m: string) => any } =>
-    !!o && typeof o.get === "function";
+export const isDataTransfer = (o: any): o is { get: (m: string) => any } => !!o && typeof o.get === "function";
 
-export const isPayload = (o: any): o is { value: any[] } =>
-    !!o && Array.isArray(o.value);
+export const isPayload = (o: any): o is { value: any[] } => !!o && Array.isArray(o.value);
 export class SharedUtils {
     public static ERROR_SAME_OBJECT_DROP =
         "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
@@ -389,11 +387,11 @@ export class SharedUtils {
                 comment: ["Node label"],
             }),
             currentEncoding &&
-            vscode.l10n.t({
-                message: "Current encoding is {0}",
-                args: [currentEncoding],
-                comment: ["Encoding name"],
-            })
+                vscode.l10n.t({
+                    message: "Current encoding is {0}",
+                    args: [currentEncoding],
+                    comment: ["Encoding name"],
+                })
         );
 
         return SharedUtils.processEncodingResponse(response, node.label as string);
@@ -619,14 +617,10 @@ export class SharedUtils {
 
             // compare vols (could be stored across multiple vols!)
             const srcVols = srcDataset.vols
-                ? (Array.isArray(srcDataset.vols) ? srcDataset.vols : [srcDataset.vols]).map((v: any) =>
-                    String(v).trim().toUpperCase()
-                )
+                ? (Array.isArray(srcDataset.vols) ? srcDataset.vols : [srcDataset.vols]).map((v: any) => String(v).trim().toUpperCase())
                 : [];
             const dstVols = dstDataset.vols
-                ? (Array.isArray(dstDataset.vols) ? dstDataset.vols : [dstDataset.vols]).map((v: any) =>
-                    String(v).trim().toUpperCase()
-                )
+                ? (Array.isArray(dstDataset.vols) ? dstDataset.vols : [dstDataset.vols]).map((v: any) => String(v).trim().toUpperCase())
                 : [];
 
             srcVols.sort();
@@ -657,8 +651,9 @@ export class SharedUtils {
         droppedLabel: string
     ): Promise<boolean> {
         //normalize paths
-        const equal = path.posix.normalize(sourceNode.fullPath.replace(/\\/g, '/')) ===
-            path.posix.normalize(path.posix.join(targetParent.fullPath.replace(/\\/g, '/'), (droppedLabel || '').replace(/^[/\\]+/, '')));
+        const equal =
+            path.posix.normalize(sourceNode.fullPath.replace(/\\/g, "/")) ===
+            path.posix.normalize(path.posix.join(targetParent.fullPath.replace(/\\/g, "/"), (droppedLabel || "").replace(/^[/\\]+/, "")));
         return equal;
     }
 
@@ -680,7 +675,7 @@ export class SharedUtils {
      * Used for PDS member collisions and USS folder/file name collisions.
      */
     public static hasNameCollision(srcNames: string[], tgtNames: string[]): boolean {
-        const tgtSet = new Set(tgtNames.map(n => n.toUpperCase().trim()));
-        return srcNames.some(name => tgtSet.has(name.toUpperCase().trim()));
+        const tgtSet = new Set(tgtNames.map((n) => n.toUpperCase().trim()));
+        return srcNames.some((name) => tgtSet.has(name.toUpperCase().trim()));
     }
 }
