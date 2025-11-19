@@ -135,11 +135,11 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 );
             }
 
-            await this.profileInstance.checkCurrentProfile(this.nodeProfile, node);
-            if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
-                Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                return;
-            }
+            // await this.profileInstance.checkCurrentProfile(this.nodeProfile, node);
+            // if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
+            //     Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
+            //     return;
+            // }
 
             if (this.isSshRequiredForProf) {
                 await this.getSshProfile();
@@ -164,6 +164,12 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     this.nodeProfile = undefined;
                     ZoweLogger.error(this.unixCmdMsgs.sshSessionErrorMsg);
                     Gui.errorMessage(this.unixCmdMsgs.sshSessionErrorMsg);
+                    return;
+                }
+            } else {
+                await this.profileInstance.checkCurrentProfile(this.nodeProfile, node);
+                if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
+                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
                     return;
                 }
             }
