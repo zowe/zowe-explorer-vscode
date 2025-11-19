@@ -386,6 +386,7 @@ export class DatasetSearch {
                 abortSearch: function abort() {
                     return token.isCancellationRequested;
                 },
+                searchExactName: true,
             });
 
             // The user cancelled the search
