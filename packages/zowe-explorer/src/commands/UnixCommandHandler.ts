@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
-import { Gui, IZoweTreeNode, PersistenceSchemaEnum, Validation, ZoweExplorerApiType, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, PersistenceSchemaEnum, Validation, ZoweExplorerApiType, ZoweExplorerZosmf, imperative } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { AuthUtils } from "../utils/AuthUtils";
@@ -141,6 +141,15 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             //     return;
             // }
 
+            const quickProfileCheck = async (profile: imperative.IProfileLoaded, node: IZoweTreeNode): Promise<boolean> => {
+                await this.profileInstance.checkCurrentProfile(profile, node);
+                if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
+                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
+                    return false;
+                }
+                return true;
+            };
+
             if (this.isSshRequiredForProf) {
                 await this.getSshProfile();
                 if (!this.sshProfile) {
@@ -156,6 +165,14 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     this.sshProfile,
                     async (prof: imperative.IProfileLoaded, type: string): Promise<string> => {
                         if (type !== "ssh" || prof.profile.host !== this.sshSession.ISshSession.hostname) return "unverified";
+                        if (this.sshSession.ISshSession.privateKey == null) {
+                            if (await quickProfileCheck(this.sshProfile, node)) {
+                                imperative.AuthOrder.addCredsToSession(
+                                    this.sshSession.ISshSession,
+                                    ZoweExplorerZosmf.CommonApi.getCommandArgs(this.sshProfile)
+                                );
+                            }
+                        }
                         return (await zosuss.Shell.isConnectionValid(this.sshSession)) ? "active" : "inactive";
                     }
                 );
@@ -166,13 +183,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     Gui.errorMessage(this.unixCmdMsgs.sshSessionErrorMsg);
                     return;
                 }
-            } else {
-                await this.profileInstance.checkCurrentProfile(this.nodeProfile, node);
-                if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
-                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                    return;
-                }
-            }
+            } else if (!(await quickProfileCheck(this.nodeProfile, node))) return;
 
             if (!this.sshCwd) {
                 const options: vscode.InputBoxOptions = {
