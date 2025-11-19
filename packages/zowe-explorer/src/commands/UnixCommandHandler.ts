@@ -20,6 +20,7 @@ import { Definitions } from "../configuration/Definitions";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { Constants } from "../configuration/Constants";
+import { Profiles } from "../configuration/Profiles";
 
 /**
  * Provides a class that manages submitting a Unix command on the server
@@ -135,21 +136,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 );
             }
 
-            // await this.profileInstance.checkCurrentProfile(this.nodeProfile, node);
-            // if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
-            //     Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-            //     return;
-            // }
-
-            const quickProfileCheck = async (profile: imperative.IProfileLoaded, node: IZoweTreeNode): Promise<boolean> => {
-                await this.profileInstance.checkCurrentProfile(profile, node);
-                if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
-                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                    return false;
-                }
-                return true;
-            };
-
             if (this.isSshRequiredForProf) {
                 await this.getSshProfile();
                 if (!this.sshProfile) {
@@ -166,12 +152,23 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     async (prof: imperative.IProfileLoaded, type: string): Promise<string> => {
                         if (type !== "ssh" || prof.profile.host !== this.sshSession.ISshSession.hostname) return "unverified";
                         if (this.sshSession.ISshSession.privateKey == null) {
-                            if (await quickProfileCheck(this.sshProfile, node)) {
-                                imperative.AuthOrder.addCredsToSession(
-                                    this.sshSession.ISshSession,
-                                    ZoweExplorerZosmf.CommonApi.getCommandArgs(this.sshProfile)
-                                );
+                            let values: string[];
+                            try {
+                                values = await Profiles.getInstance().promptCredentials(this.sshProfile);
+                            } catch (error) {
+                                await AuthUtils.errorHandling(error, { profile: this.sshProfile });
+                                return "inactive";
                             }
+                            if (values) {
+                                this.sshProfile.profile.user = values[0];
+                                this.sshProfile.profile.password = values[1];
+                            } else {
+                                return "inactive";
+                            }
+                            imperative.AuthOrder.addCredsToSession(
+                                this.sshSession.ISshSession,
+                                ZoweExplorerZosmf.CommonApi.getCommandArgs(this.sshProfile)
+                            );
                         }
                         return (await zosuss.Shell.isConnectionValid(this.sshSession)) ? "active" : "inactive";
                     }
@@ -183,7 +180,13 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     Gui.errorMessage(this.unixCmdMsgs.sshSessionErrorMsg);
                     return;
                 }
-            } else if (!(await quickProfileCheck(this.nodeProfile, node))) return;
+            } else {
+                await this.profileInstance.checkCurrentProfile(this.nodeProfile, node);
+                if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
+                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
+                    return;
+                }
+            }
 
             if (!this.sshCwd) {
                 const options: vscode.InputBoxOptions = {
