@@ -2396,6 +2396,10 @@ export class DatasetActions {
         const { dsname: _omit, ...rest } = sourceItem;
         const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
         DatasetActions.normalizePrimaryForCylinders(transformedAttrs);
+        if (transformedAttrs.dsorg === "PO-E") {
+            transformedAttrs.dsorg = "PO";
+            transformedAttrs.dsntype = "LIBRARY";
+        }
         await ZoweExplorerApiRegister.getMvsApi(destinationProfile).createDataSet(
             zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK,
             destinationDataSet,
