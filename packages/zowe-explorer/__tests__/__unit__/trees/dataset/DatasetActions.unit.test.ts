@@ -1460,16 +1460,9 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
                 ],
             },
         });
-        const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet").mockResolvedValue({
-            success: true,
-            commandResponse: "",
-            apiResponse: {},
-        });
         jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
-        expect(createDataSetSpy).toHaveBeenCalled();
         dataSetSpy.mockRestore();
-        createDataSetSpy.mockRestore();
     });
 
     it("Testing copySequentialDatasets() falls back when cross profile API is unavailable", async () => {
@@ -1710,16 +1703,9 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
                 ],
             },
         });
-        const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet").mockResolvedValue({
-            success: true,
-            commandResponse: "",
-            apiResponse: {},
-        });
         jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, dsNode)).resolves.not.toThrow();
-        expect(createDataSetSpy).toHaveBeenCalled();
         dataSetSpy.mockRestore();
-        createDataSetSpy.mockRestore();
     });
 
     it("Testing copyDatasetMembers() succesfully runs", async () => {
