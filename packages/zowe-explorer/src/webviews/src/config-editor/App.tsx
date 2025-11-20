@@ -1,6 +1,5 @@
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { isSecureOrigin } from "../utils";
-import { schemaValidation } from "../../../utils/ConfigSchemaHelpers";
+import { useEffect, useState, useCallback, useMemo } from "react";
+
 import "./App.css";
 
 import {
@@ -31,7 +30,7 @@ import {
   fetchTypeOptions,
   getPropertyDescriptions,
   PropertySortOrder,
-  ProfileSortOrder,
+
   isPropertyActuallyInherited,
   mergePendingChangesForProfile,
   mergeMergedProperties,
@@ -54,118 +53,80 @@ import {
 
 import { updateChangesForRenames, getProfileNameForMergedProperties, hasPendingRename } from "./utils/renameUtils";
 import { useProfileWizard } from "./hooks";
-import { handleMessage } from "./handlers/messageHandlers";
+import { usePanelResizer } from "./hooks/usePanelResizer";
+import { useMessageHandler } from "./hooks/useMessageHandler";
+import { useConfigState } from "./hooks/useConfigState";
+
 import {
   handleRenameProfile as handleRenameProfileHandler,
   handleDeleteProfile as handleDeleteProfileHandler,
   handleProfileSelection as handleProfileSelectionHandler,
   handleNavigateToSource as handleNavigateToSourceHandler,
 } from "./handlers/profileHandlers";
-import type { Configuration, PendingChange, PendingDefault } from "./types";
+
 
 const vscodeApi = acquireVsCodeApi();
-
-const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
-export interface ConfigEditorSettings {
-  showMergedProperties: boolean;
-  viewMode: "flat" | "tree";
-  propertySortOrder: "alphabetical" | "merged-first" | "non-merged-first";
-  profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
-  profilesWidthPercent: number;
-  defaultsCollapsed: boolean;
-  profilesCollapsed: boolean;
-}
 
 const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
 
 export function App() {
-  const [configurations, setConfigurations] = useState<Configuration[]>([]);
-  const [selectedTab, setSelectedTab] = useState<number | null>(null);
-  const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
-  const [flattenedDefaults, setFlattenedDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
-  const [pendingChanges, setPendingChanges] = useState<{ [configPath: string]: { [key: string]: PendingChange } }>({});
-  const [pendingDefaults, setPendingDefaults] = useState<{ [configPath: string]: { [key: string]: PendingDefault } }>({});
-  const [deletions, setDeletions] = useState<{ [configPath: string]: string[] }>({});
-  const [defaultsDeletions, setDefaultsDeletions] = useState<{ [configPath: string]: string[] }>({});
-  const [renames, setRenames] = useState<{ [configPath: string]: { [originalKey: string]: string } }>({});
-  const [dragDroppedProfiles, setDragDroppedProfiles] = useState<{ [configPath: string]: Set<string> }>({});
-  const [autostoreChanges, setAutostoreChanges] = useState<{ [configPath: string]: boolean }>({});
-  const [hiddenItems, setHiddenItems] = useState<{ [configPath: string]: { [key: string]: { path: string } } }>({});
-  const [schemaValidations, setSchemaValidations] = useState<{ [configPath: string]: schemaValidation | undefined }>({});
-  const [selectedProfileKey, setSelectedProfileKey] = useState<string | null>(null);
-  const [selectedProfilesByConfig, setSelectedProfilesByConfig] = useState<{ [configPath: string]: string | null }>({});
-  const [mergedProperties, setMergedProperties] = useState<any>(null);
-  // Consolidated config editor settings
-  const [configEditorSettings, setConfigEditorSettings] = useState<ConfigEditorSettings>({
-    showMergedProperties: true,
-    viewMode: "tree",
-    propertySortOrder: "alphabetical",
-    profileSortOrder: "natural",
-    profilesWidthPercent: 35,
-    defaultsCollapsed: true,
-    profilesCollapsed: false,
-  });
+  const {
+    configurations, setConfigurations,
+    selectedTab, setSelectedTab,
+    flattenedConfig, setFlattenedConfig,
+    flattenedDefaults, setFlattenedDefaults,
+    pendingChanges, setPendingChanges,
+    pendingDefaults, setPendingDefaults,
+    deletions, setDeletions,
+    defaultsDeletions, setDefaultsDeletions,
+    renames, setRenames,
+    dragDroppedProfiles, setDragDroppedProfiles,
+    autostoreChanges, setAutostoreChanges,
+    hiddenItems, setHiddenItems,
+    schemaValidations, setSchemaValidations,
+    selectedProfileKey, setSelectedProfileKey,
+    selectedProfilesByConfig, setSelectedProfilesByConfig,
+    mergedProperties, setMergedProperties,
+    configEditorSettings, setConfigEditorSettings,
+    pendingMergedPropertiesRequest, setPendingMergedPropertiesRequest,
+    sortOrderVersion, setSortOrderVersion,
+    isSaving, setIsSaving,
+    pendingSaveSelection, setPendingSaveSelection,
+    isNavigating, setIsNavigating,
+    profileSearchTerm, setProfileSearchTerm,
+    profileFilterType, setProfileFilterType,
+    hasWorkspace, setHasWorkspace,
+    secureValuesAllowed, setSecureValuesAllowed,
+    hasPromptedForZeroConfigs, setHasPromptedForZeroConfigs,
+    expandedNodesByConfig, setExpandedNodesByConfig,
+    configurationsRef,
+    pendingChangesRef,
+    deletionsRef,
+    pendingDefaultsRef,
+    defaultsDeletionsRef,
+    autostoreChangesRef,
+    renamesRef,
+    selectedProfileKeyRef,
+    setLocalStorageValue,
+    setShowMergedPropertiesWithStorage,
+    setViewModeWithStorage,
+    setPropertySortOrderWithStorage,
+    setProfileSortOrderWithStorage,
+    setDefaultsCollapsedWithStorage,
+    setProfilesCollapsedWithStorage,
 
-  const [pendingMergedPropertiesRequest, setPendingMergedPropertiesRequest] = useState<string | null>(null);
-  const [sortOrderVersion, setSortOrderVersion] = useState<number>(0);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [pendingSaveSelection, setPendingSaveSelection] = useState<{ tab: number | null; profile: string | null } | null>(null);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [profileSearchTerm, setProfileSearchTerm] = useState("");
-  const [profileFilterType, setProfileFilterType] = useState<string | null>(null);
-  const [hasWorkspace, setHasWorkspace] = useState<boolean>(false);
-  const [secureValuesAllowed, setSecureValuesAllowed] = useState<boolean>(true);
-  const [hasPromptedForZeroConfigs, setHasPromptedForZeroConfigs] = useState(false);
-  const [expandedNodesByConfig, setExpandedNodesByConfig] = useState<{ [configPath: string]: Set<string> }>({});
+  } = useConfigState(vscodeApi);
 
-  // Destructured settings for easier access
   const { showMergedProperties, viewMode, propertySortOrder, profileSortOrder, profilesWidthPercent, defaultsCollapsed, profilesCollapsed } =
     configEditorSettings;
 
-  // Setters for individual settings
-  const setShowMergedProperties = (value: boolean) => {
-    setConfigEditorSettings((prev) => ({ ...prev, showMergedProperties: value }));
-    setSortOrderVersion((prev) => prev + 1);
-  };
-
-  const setViewMode = (value: "flat" | "tree") => {
-    setConfigEditorSettings((prev) => ({ ...prev, viewMode: value }));
-  };
-
-  const setPropertySortOrder = (value: PropertySortOrder) => {
-    setConfigEditorSettings((prev) => ({ ...prev, propertySortOrder: value }));
-    setSortOrderVersion((prev) => prev + 1);
-  };
-
-  const setProfileSortOrder = (value: ProfileSortOrder | null) => {
-    setConfigEditorSettings((prev) => ({ ...prev, profileSortOrder: value || "natural" }));
-  };
-
-  // Function to apply stored width to panels
-  const applyStoredWidth = useCallback(() => {
-    const activePanel = document.querySelector(".panel.active .panel-content") as HTMLElement;
-    if (activePanel) {
-      const profilesSection = activePanel.querySelector(".profiles-section") as HTMLElement;
-      const profileDetailsSection = activePanel.querySelector(".profile-details-section") as HTMLElement;
-
-      if (profilesSection && profileDetailsSection) {
-        const panelWidth = activePanel.getBoundingClientRect().width;
-        const profilesWidth = (panelWidth * profilesWidthPercent) / 100;
-        const minProfilesWidth = 200;
-        const maxProfilesWidth = panelWidth * 0.7;
-
-        const constrainedWidth = Math.max(minProfilesWidth, Math.min(maxProfilesWidth, profilesWidth));
-
-        profilesSection.style.width = `${constrainedWidth}px`;
-        profilesSection.style.flex = `0 0 auto`;
-        profilesSection.style.maxWidth = `${maxProfilesWidth}px`;
-
-        profileDetailsSection.style.width = "";
-        profileDetailsSection.style.flex = "1";
-        profileDetailsSection.style.maxWidth = "";
-      }
-    }
-  }, [profilesWidthPercent]);
+  usePanelResizer({
+    profilesWidthPercent,
+    setConfigEditorSettings,
+    setLocalStorageValue,
+    configEditorSettings,
+    configurations,
+  });
 
   const [newProfileKeyPath, setNewProfileKeyPath] = useState<string[] | null>(null);
   const [newProfileKey, setNewProfileKey] = useState("");
@@ -183,93 +144,6 @@ export function App() {
   const [renameProfileModalOpen, setRenameProfileModalOpen] = useState(false);
   const [pendingPropertyDeletion, setPendingPropertyDeletion] = useState<string | null>(null);
   const [pendingProfileDeletion, setPendingProfileDeletion] = useState<string | null>(null);
-
-  const configurationsRef = useRef<Configuration[]>([]);
-  const pendingChangesRef = useRef<{ [configPath: string]: { [key: string]: PendingChange } }>({});
-  const deletionsRef = useRef<{ [configPath: string]: string[] }>({});
-  const pendingDefaultsRef = useRef<{ [configPath: string]: { [key: string]: PendingDefault } }>({});
-  const defaultsDeletionsRef = useRef<{ [configPath: string]: string[] }>({});
-  const autostoreChangesRef = useRef<{ [configPath: string]: boolean }>({});
-  const renamesRef = useRef<{ [configPath: string]: { [originalKey: string]: string } }>({});
-  const selectedProfileKeyRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    pendingChangesRef.current = pendingChanges;
-  }, [pendingChanges]);
-
-  useEffect(() => {
-    deletionsRef.current = deletions;
-  }, [deletions]);
-
-  useEffect(() => {
-    pendingDefaultsRef.current = pendingDefaults;
-  }, [pendingDefaults]);
-
-  useEffect(() => {
-    defaultsDeletionsRef.current = defaultsDeletions;
-  }, [defaultsDeletions]);
-
-  useEffect(() => {
-    autostoreChangesRef.current = autostoreChanges;
-  }, [autostoreChanges]);
-
-  useEffect(() => {
-    renamesRef.current = renames;
-  }, [renames]);
-
-  useEffect(() => {
-    selectedProfileKeyRef.current = selectedProfileKey;
-  }, [selectedProfileKey]);
-
-  const getLocalStorageValue = useCallback((key: string, defaultValue: any) => {
-    vscodeApi.postMessage({
-      command: "GET_LOCAL_STORAGE_VALUE",
-      key,
-    });
-    return defaultValue;
-  }, []);
-
-  const setLocalStorageValue = useCallback((key: string, value: any) => {
-    vscodeApi.postMessage({
-      command: "SET_LOCAL_STORAGE_VALUE",
-      key,
-      value,
-    });
-  }, []);
-
-  // Generic setter factory for config editor settings with localStorage persistence
-  const createSettingSetterWithStorage = useCallback(
-    <K extends keyof ConfigEditorSettings>(key: K, shouldIncrementSortVersion = false) => {
-      return (value: ConfigEditorSettings[K]) => {
-        setConfigEditorSettings((prev) => {
-          const updated = { ...prev, [key]: value };
-          // Save to localStorage with the updated state
-          setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, updated);
-          return updated;
-        });
-        if (shouldIncrementSortVersion) {
-          setSortOrderVersion((prev) => prev + 1);
-        }
-      };
-    },
-    [setLocalStorageValue]
-  );
-
-  // Create specific setters using the factory with useMemo for stability
-  const setShowMergedPropertiesWithStorage = useMemo(
-    () => createSettingSetterWithStorage("showMergedProperties", true),
-    [createSettingSetterWithStorage]
-  );
-
-  const setViewModeWithStorage = useMemo(() => createSettingSetterWithStorage("viewMode", false), [createSettingSetterWithStorage]);
-
-  const setPropertySortOrderWithStorage = useMemo(() => createSettingSetterWithStorage("propertySortOrder", true), [createSettingSetterWithStorage]);
-
-  const setProfileSortOrderWithStorage = useMemo(() => createSettingSetterWithStorage("profileSortOrder", false), [createSettingSetterWithStorage]);
-
-  const setDefaultsCollapsedWithStorage = useMemo(() => createSettingSetterWithStorage("defaultsCollapsed", false), [createSettingSetterWithStorage]);
-
-  const setProfilesCollapsedWithStorage = useMemo(() => createSettingSetterWithStorage("profilesCollapsed", false), [createSettingSetterWithStorage]);
 
   const formatPendingChanges = useCallback(() => {
     const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
@@ -495,129 +369,7 @@ export function App() {
     vscodeApi.postMessage({ command: "GET_PROFILES" });
   }, [selectedTab, selectedProfileKey, hasPendingChanges]);
 
-  useEffect(() => {
-    getLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, {
-      showMergedProperties: true,
-      viewMode: "tree",
-      propertySortOrder: "alphabetical",
-      profileSortOrder: "natural",
-      profilesWidthPercent: 35,
-      defaultsCollapsed: true,
-      profilesCollapsed: false,
-    });
-  }, [getLocalStorageValue]);
 
-  useEffect(() => {
-    setConfigurations([]);
-    setSelectedTab(null);
-    setSelectedProfileKey(null);
-    setFlattenedConfig({});
-    setFlattenedDefaults({});
-    setMergedProperties(null);
-    setPendingChanges({});
-    setDeletions({});
-    setPendingDefaults({});
-    setDefaultsDeletions({});
-    setProfileSearchTerm("");
-    setProfileFilterType(null);
-    setHasPromptedForZeroConfigs(false);
-
-    window.addEventListener("message", (event) => {
-      if (!isSecureOrigin(event.origin)) {
-        return;
-      }
-
-      const messageHandlerProps = {
-        setConfigurations,
-        setSelectedTab,
-        setSelectedProfileKey,
-        setFlattenedConfig,
-        setFlattenedDefaults,
-        setMergedProperties,
-        setPendingChanges,
-        setDeletions,
-        setPendingDefaults,
-        setDefaultsDeletions,
-        setProfileSearchTerm,
-        setProfileFilterType,
-        setHasPromptedForZeroConfigs,
-        setSaveModalOpen,
-        setPendingMergedPropertiesRequest,
-        setNewProfileValue,
-        setHasWorkspace,
-        setSelectedProfilesByConfig,
-        setShowMergedProperties,
-        setSortOrderVersion,
-        setViewMode,
-        setPropertySortOrder,
-        setProfileSortOrder,
-        setSecureValuesAllowed,
-        setSchemaValidations,
-        setAddConfigModalOpen,
-        setIsSaving,
-        setPendingSaveSelection,
-        setConfigEditorSettings,
-        configurationsRef,
-        pendingSaveSelection,
-        selectedTab,
-        selectedProfilesByConfig,
-        hasPromptedForZeroConfigs,
-        handleRefresh,
-        handleSave,
-        vscodeApi,
-      };
-
-      handleMessage(event, messageHandlerProps);
-    });
-
-    vscodeApi.postMessage({ command: "GET_PROFILES" });
-    vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
-
-    const handleWindowFocus = () => {
-      if (!selectedProfileKeyRef.current) {
-        vscodeApi.postMessage({ command: "GET_PROFILES" });
-        vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
-        vscodeApi.postMessage({ command: "GET_KEYBINDS" });
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        if (!selectedProfileKeyRef.current) {
-          vscodeApi.postMessage({ command: "GET_PROFILES" });
-          vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
-        }
-      }
-    };
-
-    const handleBeforeUnload = () => {};
-
-    const handleLoad = () => {
-      setTimeout(() => {
-        vscodeApi.postMessage({ command: "GET_PROFILES" });
-        vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
-      }, 100);
-    };
-
-    const handleDOMContentLoaded = () => {
-      vscodeApi.postMessage({ command: "GET_PROFILES" });
-      vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
-    };
-
-    window.addEventListener("focus", handleWindowFocus);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("load", handleLoad);
-    document.addEventListener("DOMContentLoaded", handleDOMContentLoaded);
-
-    return () => {
-      window.removeEventListener("focus", handleWindowFocus);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("load", handleLoad);
-      document.removeEventListener("DOMContentLoaded", handleDOMContentLoaded);
-    };
-  }, []);
 
   useEffect(() => {
     if (selectedTab !== null && configurations[selectedTab]) {
@@ -656,98 +408,7 @@ export function App() {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, wizardModalOpen, renameProfileModalOpen]);
 
-  // Apply stored width on initialization and when configurations change
-  useEffect(() => {
-    if (configurations.length > 0) {
-      setTimeout(applyStoredWidth, 100);
-    }
-  }, [profilesWidthPercent, configurations, applyStoredWidth]);
 
-  // Resize divider functionality
-  useEffect(() => {
-    const handleResize = (e: MouseEvent) => {
-      const divider = document.querySelector(".resize-divider.dragging") as HTMLElement;
-      if (!divider) return;
-
-      const panelContent = divider.closest(".panel-content") as HTMLElement;
-      if (!panelContent) return;
-
-      const profilesSection = panelContent.querySelector(".profiles-section") as HTMLElement;
-      const profileDetailsSection = panelContent.querySelector(".profile-details-section") as HTMLElement;
-
-      if (!profilesSection || !profileDetailsSection) return;
-
-      const panelRect = panelContent.getBoundingClientRect();
-      const mouseX = e.clientX - panelRect.left;
-      const panelWidth = panelRect.width;
-
-      // Calculate new widths in pixels
-      const dividerWidth = 22; // 22px for divider width and margins
-      const availableWidth = panelWidth - dividerWidth;
-
-      // Apply minimum and maximum constraints for profiles section only
-      const minProfilesWidth = 200;
-      const maxProfilesWidth = availableWidth * 0.7; // 70% of available width
-
-      // Calculate desired width for profiles section based on mouse position
-      const desiredProfilesWidth = mouseX;
-
-      // Constrain profiles section
-      const constrainedProfilesWidth = Math.max(minProfilesWidth, Math.min(maxProfilesWidth, desiredProfilesWidth));
-
-      // Apply the new width to profiles section only
-      profilesSection.style.width = `${constrainedProfilesWidth}px`;
-      profilesSection.style.flex = `0 0 auto`;
-      profilesSection.style.maxWidth = `${maxProfilesWidth}px`;
-
-      // Let details section use remaining space (flex: 1)
-      profileDetailsSection.style.width = "";
-      profileDetailsSection.style.flex = "1";
-      profileDetailsSection.style.maxWidth = "";
-    };
-
-    const handleMouseUp = () => {
-      const draggingDivider = document.querySelector(".resize-divider.dragging");
-      if (draggingDivider) {
-        draggingDivider.classList.remove("dragging");
-        document.body.style.cursor = "";
-        document.body.style.userSelect = "";
-
-        // Save the current width percentage to localStorage
-        const panelContent = draggingDivider.closest(".panel-content") as HTMLElement;
-        if (panelContent) {
-          const profilesSection = panelContent.querySelector(".profiles-section") as HTMLElement;
-          if (profilesSection) {
-            const panelWidth = panelContent.getBoundingClientRect().width;
-            const profilesWidth = profilesSection.getBoundingClientRect().width;
-            const newPercent = Math.round((profilesWidth / panelWidth) * 100);
-            setConfigEditorSettings((prev) => ({ ...prev, profilesWidthPercent: newPercent }));
-            setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, profilesWidthPercent: newPercent });
-          }
-        }
-      }
-    };
-
-    const handleMouseDown = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.classList.contains("resize-divider")) {
-        e.preventDefault();
-        target.classList.add("dragging");
-        document.body.style.cursor = "col-resize";
-        document.body.style.userSelect = "none";
-      }
-    };
-
-    document.addEventListener("mousemove", handleResize);
-    document.addEventListener("mouseup", handleMouseUp);
-    document.addEventListener("mousedown", handleMouseDown);
-
-    return () => {
-      document.removeEventListener("mousemove", handleResize);
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.removeEventListener("mousedown", handleMouseDown);
-    };
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -1665,6 +1326,43 @@ export function App() {
     setAddConfigModalOpen(false);
     setHasPromptedForZeroConfigs(false);
   };
+
+  useMessageHandler({
+    setConfigurations,
+    setSelectedTab,
+    setSelectedProfileKey,
+    setFlattenedConfig,
+    setFlattenedDefaults,
+    setMergedProperties,
+    setPendingChanges,
+    setDeletions,
+    setPendingDefaults,
+    setDefaultsDeletions,
+    setProfileSearchTerm,
+    setProfileFilterType,
+    setHasPromptedForZeroConfigs,
+    setSaveModalOpen,
+    setPendingMergedPropertiesRequest,
+    setNewProfileValue,
+    setHasWorkspace,
+    setSelectedProfilesByConfig,
+    setConfigEditorSettings,
+    setSortOrderVersion,
+    setSecureValuesAllowed,
+    setSchemaValidations,
+    setAddConfigModalOpen,
+    setIsSaving,
+    setPendingSaveSelection,
+    configurationsRef,
+    pendingSaveSelection,
+    selectedTab,
+    selectedProfilesByConfig,
+    hasPromptedForZeroConfigs,
+    handleRefresh,
+    handleSave,
+    vscodeApi,
+    selectedProfileKeyRef,
+  });
 
   return (
     <div className="app-container" data-testid="config-editor-app" data-config-count={configurations.length} data-selected-tab={selectedTab}>

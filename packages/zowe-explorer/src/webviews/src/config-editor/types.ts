@@ -35,4 +35,15 @@ export type PendingDefault = {
 export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-first";
 
 // Profile sort order options
-export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetical";
+export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
+
+export interface ConfigEditorSettings {
+    showMergedProperties: boolean;
+    viewMode: "flat" | "tree";
+    propertySortOrder: "alphabetical" | "merged-first" | "non-merged-first";
+    profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
+    profilesWidthPercent: number;
+    defaultsCollapsed: boolean;
+    profilesCollapsed: boolean;
+}
+

@@ -19,7 +19,7 @@ import type { Configuration, PendingChange, PendingDefault } from "../types";
 const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
 
 // Message handler props interface
-interface MessageHandlerProps {
+export interface MessageHandlerProps {
     // State setters
     setConfigurations: React.Dispatch<React.SetStateAction<Configuration[]>>;
     setSelectedTab: React.Dispatch<React.SetStateAction<number | null>>;
