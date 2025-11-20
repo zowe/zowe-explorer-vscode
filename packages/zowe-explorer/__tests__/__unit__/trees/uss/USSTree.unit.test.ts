@@ -2679,3 +2679,141 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
     });
 });
+
+describe("USSTree.handleDrop - payload/argument normalization branches", () => {
+    let ussTree: USSTree;
+
+    beforeEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+        // ensure status bar message returns a disposable so handleDrop can call dispose()
+        jest.spyOn(Gui, "setStatusBarMessage").mockReturnValue({ dispose: jest.fn() } as any);
+        ussTree = new USSTree();
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    it("normalizes swapped args and completes move", async () => {
+        const session = createISession();
+        const profile = createIProfile();
+        (profile as any).name = "PROF";
+
+        const parent = createUSSSessionNode(session, profile);
+        const srcNode = new ZoweUSSNode({
+            label: "file.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session,
+            profile,
+            parentNode: parent,
+        });
+        srcNode.fullPath = "/u/source/file.txt";
+
+        const dragged = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
+            [srcNode.resourceUri!.path]: srcNode,
+        });
+
+        const targetNodeArg = new ZoweUSSNode({
+            label: "dst",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile,
+            parentNode: createUSSSessionNode(session, profile),
+        });
+        targetNodeArg.fullPath = "/u/target";
+
+        // Ensure target node exposes getProfile returning the profile
+        if ((targetNodeArg as any).getProfile) {
+            jest.spyOn(targetNodeArg as any, "getProfile").mockReturnValue(profile);
+        } else {
+            (targetNodeArg as any).getProfile = () => profile;
+        }
+
+        const payload = { value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }] };
+        const targetArgAsPayload = payload as any;
+
+        jest.spyOn(ProfilesUtils as any, "awaitExtenderType").mockResolvedValue(undefined);
+        jest.spyOn(Profiles as any, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockResolvedValue(profile),
+        } as any);
+        jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
+        jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
+        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        jest.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
+        jest.spyOn(UssFSProvider.instance as any, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        jest.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue(undefined);
+
+        const statusBarSpy = jest.spyOn(Gui, "setStatusBarMessage");
+
+        // @ts-ignore
+        await ussTree.handleDrop(targetNodeArg as any, targetArgAsPayload as any, undefined);
+
+        // check handleDrop normalized the args and proceeded (observed via status bar call and cleared draggedNodes)
+        expect(statusBarSpy).toHaveBeenCalled();
+        expect((ussTree as any).draggedNodes).toEqual({});
+
+        dragged[Symbol.dispose]();
+    });
+
+    it("normalizes payload-first args and completes move", async () => {
+        const session = createISession();
+        const profile = createIProfile();
+        (profile as any).name = "PROF";
+
+        const parent = createUSSSessionNode(session, profile);
+        const srcNode = new ZoweUSSNode({
+            label: "file2.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session,
+            profile,
+            parentNode: parent,
+        });
+        srcNode.fullPath = "/u/source/file2.txt";
+
+        const dragged = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
+            [srcNode.resourceUri!.path]: srcNode,
+        });
+
+        const payload = { value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }] };
+        const dataTransferAsPayload = payload as any;
+
+        const targetNode = new ZoweUSSNode({
+            label: "dst2",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile,
+            parentNode: createUSSSessionNode(session, profile),
+        });
+        targetNode.fullPath = "/u/target2";
+
+        if ((targetNode as any).getProfile) {
+            jest.spyOn(targetNode as any, "getProfile").mockReturnValue(profile);
+        } else {
+            (targetNode as any).getProfile = () => profile;
+        }
+
+        jest.spyOn(ProfilesUtils as any, "awaitExtenderType").mockResolvedValue(undefined);
+        jest.spyOn(Profiles as any, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockResolvedValue(profile),
+        } as any);
+        jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
+        jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
+        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        jest.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
+
+        jest.spyOn(UssFSProvider.instance as any, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        jest.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue(undefined);
+
+        const statusBarSpy = jest.spyOn(Gui, "setStatusBarMessage");
+
+        // @ts-ignore
+        await ussTree.handleDrop(dataTransferAsPayload as any, targetNode as any, undefined);
+
+        // check status bar was used and draggedNodes cleared
+        expect(statusBarSpy).toHaveBeenCalled();
+        expect((ussTree as any).draggedNodes).toEqual({});
+
+        dragged[Symbol.dispose]();
+    });
+});
