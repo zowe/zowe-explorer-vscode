@@ -111,12 +111,7 @@ function createGlobalMocks() {
     Object.defineProperty(zosfiles, "Upload", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosfiles.Upload, "bufferToDataSet", { value: jest.fn(), configurable: true });
     Object.defineProperty(zosfiles.Upload, "pathToDataSet", { value: jest.fn(), configurable: true });
-    Object.defineProperty(zosfiles, "Copy", {
-        value: {
-            generateDatasetOptions: jest.fn((_defaults, attrs) => attrs),
-        },
-        configurable: true,
-    });
+    jest.spyOn(zosfiles.Copy as any, "generateDatasetOptions").mockImplementation(jest.fn((_defaults, attrs) => attrs));
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.window, "setStatusBarMessage", { value: jest.fn().mockReturnValue({ dispose: jest.fn() }), configurable: true });
