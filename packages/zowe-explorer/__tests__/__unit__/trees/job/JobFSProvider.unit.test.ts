@@ -286,7 +286,7 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         jest.restoreAllMocks();
     });
 
-    it("should return true when supportSpoolPagination is true", () => {
+    it("should return true when supportSpoolPagination is true and paginationEnabled", () => {
         jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce(profInfo);
 
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
@@ -302,7 +302,7 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         expect(result).toBe(true);
     });
 
-    it("should return false when supportSpoolPagination is false", () => {
+    it("should return false when supportSpoolPagination is false and paginationEnabled is false", () => {
         jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce(profInfo);
 
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
@@ -317,13 +317,18 @@ describe("JobFSProvider.supportSpoolPagination", () => {
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
         expect(result).toBe(false);
     });
-    it("should return false when supportSpoolPagination is undefined", () => {
+    it("should return false when supportSpoolPagination is undefined and paginationEnabled is false", () => {
         jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce(profInfo);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.jobs.paginate.enabled") {
+                return false;
+            }
+        });
 
         jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({} as any);
 
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
-        expect(result).toBe(undefined);
+        expect(result).toBe(false);
     });
     it("should return false when getJesApi throws an error", () => {
         jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce(profInfo);
