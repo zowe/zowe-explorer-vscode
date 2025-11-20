@@ -31,21 +31,7 @@ import {
 } from "../utils";
 
 // Types
-type Configuration = {
-  configPath: string;
-  properties: any;
-  secure: string[];
-  global?: boolean;
-  user?: boolean;
-  schemaPath?: string;
-};
-
-type PendingChange = {
-  value: string | number | boolean | Record<string, any>;
-  path: string[];
-  profile: string;
-  secure?: boolean;
-};
+import type { Configuration, PendingChange } from "../types";
 
 // Props interface for the renderConfig component
 interface RenderConfigProps {

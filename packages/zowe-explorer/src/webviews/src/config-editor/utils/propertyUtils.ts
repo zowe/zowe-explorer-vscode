@@ -9,7 +9,7 @@
  *
  */
 
-import { extractProfileKeyFromPath } from "./configUtils";
+import { extractProfileKeyFromPath, flattenProfiles } from "./configUtils";
 import { getProfileType } from "./profileUtils";
 import { PendingChange } from "./configUtils";
 import { schemaValidation, Configuration } from "./profileUtils";
@@ -176,26 +176,6 @@ export function fetchTypeOptions(
     });
 
     return Array.from(allPropertyKeys).filter((key) => !existingProperties.has(key));
-}
-
-function flattenProfiles(profiles: any, parentKey = "", result: Record<string, any> = {}): Record<string, any> {
-    if (!profiles || typeof profiles !== "object") return result;
-
-    for (const key of Object.keys(profiles)) {
-        const profile = profiles[key];
-        const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
-
-        const profileCopy = { ...profile };
-        delete profileCopy.profiles;
-
-        result[qualifiedKey] = profileCopy;
-
-        if (profile.profiles) {
-            flattenProfiles(profile.profiles, qualifiedKey, result);
-        }
-    }
-
-    return result;
 }
 
 /**

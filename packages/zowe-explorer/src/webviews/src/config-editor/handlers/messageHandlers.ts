@@ -13,26 +13,7 @@ import { flattenKeys } from "../utils";
 import { schemaValidation } from "../../../../utils/ConfigSchemaHelpers";
 
 // Types
-type Configuration = {
-    configPath: string;
-    properties: any;
-    secure: string[];
-    global?: boolean;
-    user?: boolean;
-    schemaPath?: string;
-};
-
-type PendingChange = {
-    value: string | number | boolean | Record<string, any>;
-    path: string[];
-    profile: string;
-    secure?: boolean;
-};
-
-type PendingDefault = {
-    value: string;
-    path: string[];
-};
+import type { Configuration, PendingChange, PendingDefault } from "../types";
 
 // LocalStorage key for config editor settings
 const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";

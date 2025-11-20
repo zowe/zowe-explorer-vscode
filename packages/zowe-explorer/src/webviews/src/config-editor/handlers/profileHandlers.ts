@@ -20,26 +20,7 @@ import { getRenamedProfileKeyWithNested } from "../utils/profileUtils";
 import { flattenProfiles } from "../utils";
 
 // Types
-type Configuration = {
-    configPath: string;
-    properties: any;
-    secure: string[];
-    global?: boolean;
-    user?: boolean;
-    schemaPath?: string;
-};
-
-type PendingChange = {
-    value: string | number | boolean | Record<string, any>;
-    path: string[];
-    profile: string;
-    secure?: boolean;
-};
-
-type PendingDefault = {
-    value: string;
-    path: string[];
-};
+import type { Configuration, PendingChange, PendingDefault } from "../types";
 
 // Profile handler props interface
 interface ProfileHandlerProps {

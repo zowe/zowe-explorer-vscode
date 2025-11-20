@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { isSecureOrigin } from "../utils";
 import { schemaValidation } from "../../../utils/ConfigSchemaHelpers";
 import "./App.css";
@@ -61,29 +61,9 @@ import {
   handleProfileSelection as handleProfileSelectionHandler,
   handleNavigateToSource as handleNavigateToSourceHandler,
 } from "./handlers/profileHandlers";
+import type { Configuration, PendingChange, PendingDefault } from "./types";
 
 const vscodeApi = acquireVsCodeApi();
-
-type Configuration = {
-  configPath: string;
-  properties: any;
-  secure: string[];
-  global?: boolean;
-  user?: boolean;
-  schemaPath?: string;
-};
-
-type PendingChange = {
-  value: string | number | boolean | Record<string, any>;
-  path: string[];
-  profile: string;
-  secure?: boolean;
-};
-
-type PendingDefault = {
-  value: string;
-  path: string[];
-};
 
 const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
 export interface ConfigEditorSettings {
@@ -256,55 +236,40 @@ export function App() {
       value,
     });
   }, []);
-  const setShowMergedPropertiesWithStorage = useCallback(
-    (value: boolean) => {
-      setConfigEditorSettings((prev) => ({ ...prev, showMergedProperties: value }));
-      setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, showMergedProperties: value });
-      setSortOrderVersion((prev) => prev + 1);
+
+  // Generic setter factory for config editor settings with localStorage persistence
+  const createSettingSetterWithStorage = useCallback(
+    <K extends keyof ConfigEditorSettings>(key: K, shouldIncrementSortVersion = false) => {
+      return (value: ConfigEditorSettings[K]) => {
+        setConfigEditorSettings((prev) => {
+          const updated = { ...prev, [key]: value };
+          // Save to localStorage with the updated state
+          setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, updated);
+          return updated;
+        });
+        if (shouldIncrementSortVersion) {
+          setSortOrderVersion((prev) => prev + 1);
+        }
+      };
     },
-    [setLocalStorageValue, configEditorSettings]
+    [setLocalStorageValue]
   );
 
-  const setViewModeWithStorage = useCallback(
-    (value: "flat" | "tree") => {
-      setConfigEditorSettings((prev) => ({ ...prev, viewMode: value }));
-      setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, viewMode: value });
-    },
-    [setLocalStorageValue, configEditorSettings]
+  // Create specific setters using the factory with useMemo for stability
+  const setShowMergedPropertiesWithStorage = useMemo(
+    () => createSettingSetterWithStorage("showMergedProperties", true),
+    [createSettingSetterWithStorage]
   );
 
-  const setPropertySortOrderWithStorage = useCallback(
-    (value: PropertySortOrder) => {
-      setConfigEditorSettings((prev) => ({ ...prev, propertySortOrder: value }));
-      setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, propertySortOrder: value });
-      setSortOrderVersion((prev) => prev + 1);
-    },
-    [setLocalStorageValue, configEditorSettings]
-  );
+  const setViewModeWithStorage = useMemo(() => createSettingSetterWithStorage("viewMode", false), [createSettingSetterWithStorage]);
 
-  const setProfileSortOrderWithStorage = useCallback(
-    (value: ProfileSortOrder) => {
-      setConfigEditorSettings((prev) => ({ ...prev, profileSortOrder: value }));
-      setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, profileSortOrder: value });
-    },
-    [setLocalStorageValue, configEditorSettings]
-  );
+  const setPropertySortOrderWithStorage = useMemo(() => createSettingSetterWithStorage("propertySortOrder", true), [createSettingSetterWithStorage]);
 
-  const setDefaultsCollapsedWithStorage = useCallback(
-    (value: boolean) => {
-      setConfigEditorSettings((prev) => ({ ...prev, defaultsCollapsed: value }));
-      setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, defaultsCollapsed: value });
-    },
-    [setLocalStorageValue, configEditorSettings]
-  );
+  const setProfileSortOrderWithStorage = useMemo(() => createSettingSetterWithStorage("profileSortOrder", false), [createSettingSetterWithStorage]);
 
-  const setProfilesCollapsedWithStorage = useCallback(
-    (value: boolean) => {
-      setConfigEditorSettings((prev) => ({ ...prev, profilesCollapsed: value }));
-      setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, { ...configEditorSettings, profilesCollapsed: value });
-    },
-    [setLocalStorageValue, configEditorSettings]
-  );
+  const setDefaultsCollapsedWithStorage = useMemo(() => createSettingSetterWithStorage("defaultsCollapsed", false), [createSettingSetterWithStorage]);
+
+  const setProfilesCollapsedWithStorage = useMemo(() => createSettingSetterWithStorage("profilesCollapsed", false), [createSettingSetterWithStorage]);
 
   const formatPendingChanges = useCallback(() => {
     const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
@@ -1087,152 +1052,117 @@ export function App() {
     }
   };
 
-  const mergePendingChangesForProfileWrapper = useCallback(
-    (baseObj: any, path: string[], configPath: string): any => {
-      return mergePendingChangesForProfile(baseObj, path, configPath, pendingChanges, renames);
-    },
-    [pendingChanges, renames]
-  );
+  // Create a utility helpers object to eliminate wrapper functions
+  // This consolidates all the common state/props that need to be passed to utility functions
+  const utilityHelpers = useMemo(
+    () => ({
+      // State values
+      selectedTab,
+      configurations,
+      pendingChanges,
+      deletions,
+      renames,
+      schemaValidations,
+      selectedProfileKey,
+      showMergedProperties,
+      pendingDefaults,
+      profileSortOrder,
 
-  const mergeMergedPropertiesWrapper = useCallback(
-    (combinedConfig: any, path: string[], mergedProps: any, configPath: string): any => {
-      return mergeMergedProperties(
-        combinedConfig,
-        path,
-        mergedProps,
-        configPath,
-        selectedTab,
-        configurations,
-        pendingChanges,
-        renames,
-        schemaValidations,
-        deletions
-      );
-    },
-    [selectedTab, configurations, pendingChanges, renames, schemaValidations, deletions]
-  );
+      // Utility functions that can be used with partial application
+      mergePendingChangesForProfile: (baseObj: any, path: string[], configPath: string) =>
+        mergePendingChangesForProfile(baseObj, path, configPath, pendingChanges, renames),
 
-  const filterSecurePropertiesWrapper = useCallback(
-    (value: any, combinedConfig: any, configPath?: string, pendingChanges?: any, deletions?: any, mergedProps?: any): any => {
-      return filterSecureProperties(value, combinedConfig, configPath, pendingChanges || {}, deletions || {}, mergedProps);
-    },
-    [pendingChanges, deletions]
-  );
+      mergeMergedProperties: (combinedConfig: any, path: string[], mergedProps: any, configPath: string) =>
+        mergeMergedProperties(
+          combinedConfig,
+          path,
+          mergedProps,
+          configPath,
+          selectedTab,
+          configurations,
+          pendingChanges,
+          renames,
+          schemaValidations,
+          deletions
+        ),
 
-  const mergePendingSecurePropertiesWrapper = useCallback(
-    (value: any[], path: string[], configPath: string): any[] => {
-      return mergePendingSecureProperties(value, path, configPath, pendingChanges, renames);
-    },
-    [pendingChanges, renames]
-  );
+      filterSecureProperties: (value: any, combinedConfig: any, configPath?: string, pc?: any, del?: any, mergedProps?: any) =>
+        filterSecureProperties(value, combinedConfig, configPath, pc || pendingChanges, del || deletions, mergedProps),
 
-  const isPropertyFromMergedPropsWrapper = useCallback(
-    (displayKey: string | undefined, path: string[], mergedProps: any, configPath: string): boolean => {
-      return isPropertyFromMergedProps(
-        displayKey,
-        path,
-        mergedProps,
-        configPath,
-        showMergedProperties,
-        selectedTab,
-        configurations,
-        pendingChanges,
-        renames,
-        selectedProfileKey,
-        isPropertyActuallyInherited
-      );
-    },
-    [showMergedProperties, selectedTab, configurations, pendingChanges, renames, selectedProfileKey, isPropertyActuallyInherited]
-  );
+      mergePendingSecureProperties: (value: any[], path: string[], configPath: string) =>
+        mergePendingSecureProperties(value, path, configPath, pendingChanges, renames),
 
-  const canPropertyBeSecureWrapper = useCallback(
-    (displayKey: string, _path: string[]): boolean => {
-      return canPropertyBeSecure(
-        displayKey,
-        selectedTab,
-        configurations,
-        schemaValidations,
-        getProfileType,
-        pendingChanges,
-        renames,
-        selectedProfileKey
-      );
-    },
-    [selectedTab, configurations, schemaValidations, pendingChanges, renames, selectedProfileKey]
-  );
+      isPropertyFromMergedProps: (displayKey: string | undefined, path: string[], mergedProps: any, configPath: string) =>
+        isPropertyFromMergedProps(
+          displayKey,
+          path,
+          mergedProps,
+          configPath,
+          showMergedProperties,
+          selectedTab,
+          configurations,
+          pendingChanges,
+          renames,
+          selectedProfileKey,
+          isPropertyActuallyInherited
+        ),
 
-  const handleToggleSecureWrapper = useCallback(
-    (fullKey: string, displayKey: string, path: string[]): void => {
-      // Cancel any pending property deletion when user toggles secure
-      setPendingPropertyDeletion(null);
-      return handleToggleSecure(
-        fullKey,
-        displayKey,
-        path,
-        selectedTab,
-        configurations,
-        pendingChanges,
-        setPendingChanges,
-        selectedProfileKey,
-        renames
-      );
-    },
-    [selectedTab, configurations, pendingChanges, setPendingChanges, selectedProfileKey, renames]
-  );
+      canPropertyBeSecure: (displayKey: string, _path: string[]) =>
+        canPropertyBeSecure(displayKey, selectedTab, configurations, schemaValidations, getProfileType, pendingChanges, renames, selectedProfileKey),
 
-  const hasPendingSecureChangesWrapper = useCallback(
-    (configPath: string): boolean => {
-      return hasPendingSecureChanges(configPath, pendingChanges);
-    },
-    [pendingChanges]
-  );
+      handleToggleSecure: (fullKey: string, displayKey: string, path: string[]) => {
+        setPendingPropertyDeletion(null);
+        return handleToggleSecure(
+          fullKey,
+          displayKey,
+          path,
+          selectedTab,
+          configurations,
+          pendingChanges,
+          setPendingChanges,
+          selectedProfileKey,
+          renames
+        );
+      },
 
-  const extractPendingProfilesWrapper = useCallback(
-    (configPath: string): { [key: string]: any } => {
-      const profileNames = extractPendingProfiles(pendingChanges, configPath);
-      const result: { [key: string]: any } = {};
-      profileNames.forEach((profileName) => {
-        result[profileName] = {};
-      });
-      return result;
-    },
-    [pendingChanges]
-  );
+      hasPendingSecureChanges: (configPath: string) => hasPendingSecureChanges(configPath, pendingChanges),
 
-  const isProfileOrParentDeletedWrapper = useCallback(
-    (profileKey: string, configPath: string): boolean => {
-      return isProfileOrParentDeleted(profileKey, deletions, configPath);
-    },
-    [deletions]
-  );
+      extractPendingProfiles: (configPath: string) => {
+        const profileNames = extractPendingProfiles(pendingChanges, configPath);
+        const result: { [key: string]: any } = {};
+        profileNames.forEach((profileName) => {
+          result[profileName] = {};
+        });
+        return result;
+      },
 
-  const isProfileOrParentDeletedForComponent = useCallback((profileKey: string, deletedProfiles: string[]): boolean => {
-    return deletedProfiles.some((deletedProfile) => profileKey === deletedProfile || profileKey.startsWith(deletedProfile + "."));
-  }, []);
+      isProfileOrParentDeleted: (profileKey: string, configPath: string) => isProfileOrParentDeleted(profileKey, deletions, configPath),
 
-  const getAvailableProfilesByTypeWrapper = useCallback(
-    (profileType: string): string[] => {
-      return getAvailableProfilesByType(profileType, selectedTab, configurations, pendingChanges, renames);
-    },
-    [selectedTab, configurations, pendingChanges, renames]
-  );
+      isProfileOrParentDeletedForComponent: (profileKey: string, deletedProfiles: string[]) =>
+        deletedProfiles.some((deletedProfile) => profileKey === deletedProfile || profileKey.startsWith(deletedProfile + ".")),
 
-  const isProfileDefaultWrapper = useCallback(
-    (profileKey: string): boolean => {
-      return isProfileDefault(profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames);
-    },
-    [selectedTab, configurations, pendingChanges, pendingDefaults, renames]
-  );
+      getAvailableProfilesByType: (profileType: string) =>
+        getAvailableProfilesByType(profileType, selectedTab, configurations, pendingChanges, renames),
 
-  const isCurrentProfileUntypedWrapper = useCallback((): boolean => {
-    return isCurrentProfileUntyped(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
-  }, [selectedProfileKey, selectedTab, configurations, pendingChanges, renames]);
+      isProfileDefault: (profileKey: string) => isProfileDefault(profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames),
 
-  const sortProfilesAtLevelWrapper = useCallback(
-    (profileKeys: string[]): string[] => {
-      return sortProfilesAtLevel(profileKeys, profileSortOrder);
-    },
-    [profileSortOrder]
+      isCurrentProfileUntyped: () => isCurrentProfileUntyped(selectedProfileKey, selectedTab, configurations, pendingChanges, renames),
+
+      sortProfilesAtLevel: (profileKeys: string[]) => sortProfilesAtLevel(profileKeys, profileSortOrder),
+    }),
+    [
+      selectedTab,
+      configurations,
+      pendingChanges,
+      deletions,
+      renames,
+      schemaValidations,
+      selectedProfileKey,
+      showMergedProperties,
+      pendingDefaults,
+      profileSortOrder,
+      setPendingChanges,
+    ]
   );
 
   const isProfileAffectedByDragDrop = useCallback(
@@ -1268,7 +1198,7 @@ export function App() {
         return [];
       }
 
-      const pendingProfiles = extractPendingProfilesWrapper(configPath);
+      const pendingProfiles = utilityHelpers.extractPendingProfiles(configPath);
 
       const getAvailableProfiles = (profiles: any, parentKey = ""): string[] => {
         const available: string[] = [];
@@ -1276,7 +1206,7 @@ export function App() {
           const profile = profiles[key];
           const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
 
-          if (!isProfileOrParentDeletedWrapper(qualifiedKey, configPath)) {
+          if (!utilityHelpers.isProfileOrParentDeleted(qualifiedKey, configPath)) {
             available.push(qualifiedKey);
           }
 
@@ -1289,7 +1219,7 @@ export function App() {
 
       const existingProfiles = getAvailableProfiles(profilesObj);
       const pendingProfileKeys = Object.keys(pendingProfiles).filter(
-        (key) => !existingProfiles.includes(key) && !isProfileOrParentDeletedWrapper(key, configPath)
+        (key) => !existingProfiles.includes(key) && !utilityHelpers.isProfileOrParentDeleted(key, configPath)
       );
 
       return [...existingProfiles, ...pendingProfileKeys];
@@ -1452,7 +1382,7 @@ export function App() {
         selectedProfileKey,
         pendingMergedPropertiesRequest,
         formatPendingChanges,
-        extractPendingProfiles: extractPendingProfilesWrapper,
+        extractPendingProfiles: utilityHelpers.extractPendingProfiles,
         findOptimalReplacementProfile,
         getAvailableProfilesForConfig,
         vscodeApi,
@@ -1507,7 +1437,7 @@ export function App() {
         selectedProfileKey,
         pendingMergedPropertiesRequest,
         formatPendingChanges,
-        extractPendingProfiles: extractPendingProfilesWrapper,
+        extractPendingProfiles: utilityHelpers.extractPendingProfiles,
         findOptimalReplacementProfile,
         getAvailableProfilesForConfig,
         vscodeApi,
@@ -1572,7 +1502,7 @@ export function App() {
         selectedProfileKey,
         pendingMergedPropertiesRequest,
         formatPendingChanges,
-        extractPendingProfiles: extractPendingProfilesWrapper,
+        extractPendingProfiles: utilityHelpers.extractPendingProfiles,
         findOptimalReplacementProfile,
         getAvailableProfilesForConfig,
         vscodeApi,
@@ -1627,7 +1557,7 @@ export function App() {
         selectedProfileKey,
         pendingMergedPropertiesRequest,
         formatPendingChanges,
-        extractPendingProfiles: extractPendingProfilesWrapper,
+        extractPendingProfiles: utilityHelpers.extractPendingProfiles,
         findOptimalReplacementProfile,
         getAvailableProfilesForConfig,
         vscodeApi,
@@ -1668,9 +1598,11 @@ export function App() {
         const profilesObj = configurations[selectedTab]?.properties?.profiles;
         if (profilesObj) {
           const flatProfiles = flattenProfiles(profilesObj);
-          const pendingProfiles = extractPendingProfilesWrapper(configPath);
+          const pendingProfiles = utilityHelpers.extractPendingProfiles(configPath);
           const allProfiles = { ...flatProfiles, ...pendingProfiles };
-          const filteredProfileKeys = Object.keys(allProfiles).filter((profileKey) => !isProfileOrParentDeletedWrapper(profileKey, configPath));
+          const filteredProfileKeys = Object.keys(allProfiles).filter(
+            (profileKey) => !utilityHelpers.isProfileOrParentDeleted(profileKey, configPath)
+          );
 
           const availableTypes = Array.from(
             new Set(
@@ -1779,14 +1711,14 @@ export function App() {
             setExpandedNodesForConfig={setExpandedNodesForConfig}
             setPendingDefaults={setPendingDefaults}
             onViewModeToggle={() => setViewModeWithStorage(viewMode === "tree" ? "flat" : "tree")}
-            extractPendingProfiles={extractPendingProfilesWrapper}
-            isProfileOrParentDeleted={isProfileOrParentDeletedForComponent}
+            extractPendingProfiles={utilityHelpers.extractPendingProfiles}
+            isProfileOrParentDeleted={utilityHelpers.isProfileOrParentDeletedForComponent}
             getRenamedProfileKey={getRenamedProfileKey}
             getProfileType={getProfileType}
-            hasPendingSecureChanges={hasPendingSecureChangesWrapper}
+            hasPendingSecureChanges={utilityHelpers.hasPendingSecureChanges}
             hasPendingRename={hasPendingRename}
-            isProfileDefault={isProfileDefaultWrapper}
-            sortProfilesAtLevel={sortProfilesAtLevelWrapper}
+            isProfileDefault={utilityHelpers.isProfileDefault}
+            sortProfilesAtLevel={utilityHelpers.sortProfilesAtLevel}
             getExpandedNodesForConfig={getExpandedNodesForConfig}
           />
         )}
@@ -1808,7 +1740,7 @@ export function App() {
             SORT_ORDER_OPTIONS={SORT_ORDER_OPTIONS}
             mergedProperties={mergedProperties}
             pendingDefaults={pendingDefaults}
-            isProfileDefault={isProfileDefaultWrapper}
+            isProfileDefault={utilityHelpers.isProfileDefault}
             getProfileType={getProfileType}
             handleSetAsDefault={handleSetAsDefault}
             setPendingDefaults={setPendingDefaults}
@@ -1831,24 +1763,24 @@ export function App() {
             setPendingProfileDeletion={setPendingProfileDeletion}
             handleUnlinkMergedProperty={handleUnlinkMergedProperty}
             handleNavigateToSource={handleNavigateToSource}
-            handleToggleSecure={handleToggleSecureWrapper}
+            handleToggleSecure={utilityHelpers.handleToggleSecure}
             openAddProfileModalAtPath={openAddProfileModalAtPath}
             setPropertySortOrderWithStorage={setPropertySortOrderWithStorage}
             getWizardTypeOptions={getWizardTypeOptions}
-            extractPendingProfiles={extractPendingProfilesWrapper}
+            extractPendingProfiles={utilityHelpers.extractPendingProfiles}
             getOriginalProfileKey={getOriginalProfileKey}
             getProfileNameForMergedProperties={getProfileNameForMergedProperties}
-            mergePendingChangesForProfile={mergePendingChangesForProfileWrapper}
-            mergeMergedProperties={mergeMergedPropertiesWrapper}
+            mergePendingChangesForProfile={utilityHelpers.mergePendingChangesForProfile}
+            mergeMergedProperties={utilityHelpers.mergeMergedProperties}
             ensureProfileProperties={ensureProfileProperties}
-            filterSecureProperties={filterSecurePropertiesWrapper}
-            mergePendingSecureProperties={mergePendingSecurePropertiesWrapper}
-            isCurrentProfileUntyped={isCurrentProfileUntypedWrapper}
-            isPropertyFromMergedProps={isPropertyFromMergedPropsWrapper}
+            filterSecureProperties={utilityHelpers.filterSecureProperties}
+            mergePendingSecureProperties={utilityHelpers.mergePendingSecureProperties}
+            isCurrentProfileUntyped={utilityHelpers.isCurrentProfileUntyped}
+            isPropertyFromMergedProps={utilityHelpers.isPropertyFromMergedProps}
             isPropertySecure={(fullKey: string, displayKey: string, path: string[], mergedProps?: any) =>
               isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames)
             }
-            canPropertyBeSecure={canPropertyBeSecureWrapper}
+            canPropertyBeSecure={utilityHelpers.canPropertyBeSecure}
             isMergedPropertySecure={isMergedPropertySecure}
             isProfileAffectedByDragDrop={isProfileAffectedByDragDrop}
             propertyDescriptions={getWizardPropertyDescriptions()}
@@ -1864,7 +1796,7 @@ export function App() {
             renames={renames}
             handleDefaultsChange={handleDefaultsChange}
             getWizardTypeOptions={getWizardTypeOptions}
-            getAvailableProfilesByType={getAvailableProfilesByTypeWrapper}
+            getAvailableProfilesByType={utilityHelpers.getAvailableProfilesByType}
           />
         )}
         onProfileWizard={() => setWizardModalOpen(true)}
@@ -1917,7 +1849,7 @@ export function App() {
             renames
           )
         }
-        canPropertyBeSecure={canPropertyBeSecureWrapper}
+        canPropertyBeSecure={utilityHelpers.canPropertyBeSecure}
         newProfileKeyPath={newProfileKeyPath || []}
         vscodeApi={vscodeApi}
         onNewProfileKeyChange={setNewProfileKey}
@@ -1983,7 +1915,7 @@ export function App() {
         secureValuesAllowed={secureValuesAllowed}
         vscodeApi={vscodeApi}
         getAvailableProfiles={getAvailableProfiles}
-        canPropertyBeSecure={canPropertyBeSecureWrapper}
+        canPropertyBeSecure={utilityHelpers.canPropertyBeSecure}
         canPropertyBeSecureForWizard={(displayKey: string, profileType: string): boolean => {
           if (!displayKey) {
             return false;
@@ -2002,7 +1934,7 @@ export function App() {
 
           // Create a mock path for the function call
           const mockPath = ["profiles", "mockProfile", "properties"];
-          return canPropertyBeSecureWrapper(displayKey, mockPath);
+          return utilityHelpers.canPropertyBeSecure(displayKey, mockPath);
         }}
         stringifyValueByType={stringifyValueByType}
         onWizardMergedProperties={(data) => {
@@ -2096,7 +2028,7 @@ export function App() {
           const config = configurations[selectedTab];
           if (!config) return [];
 
-          const pendingProfiles = extractPendingProfilesWrapper(config.configPath);
+          const pendingProfiles = utilityHelpers.extractPendingProfiles(config.configPath);
           return Object.keys(pendingProfiles);
         })()}
         pendingRenames={(() => {

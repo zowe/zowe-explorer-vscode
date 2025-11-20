@@ -11,20 +11,7 @@
 
 import { useCallback } from "react";
 import * as l10n from "@vscode/l10n";
-
-type Configuration = {
-  configPath: string;
-  properties: any;
-  secure: string[];
-  global?: boolean;
-  user?: boolean;
-  schemaPath?: string;
-};
-
-type PendingDefault = {
-  value: string;
-  path: string[];
-};
+import type { Configuration, PendingDefault } from "../types";
 
 interface RenderDefaultsProps {
   defaults: { [key: string]: any };

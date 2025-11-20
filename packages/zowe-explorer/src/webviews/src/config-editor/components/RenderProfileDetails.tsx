@@ -19,26 +19,7 @@ import { flattenProfiles, PropertySortOrder, schemaValidation } from "../utils";
 import * as l10n from "@vscode/l10n";
 
 // Types
-type Configuration = {
-  configPath: string;
-  properties: any;
-  secure: string[];
-  global?: boolean;
-  user?: boolean;
-  schemaPath?: string;
-};
-
-type PendingChange = {
-  value: string | number | boolean | Record<string, any>;
-  path: string[];
-  profile: string;
-  secure?: boolean;
-};
-
-type PendingDefault = {
-  value: string;
-  path: string[];
-};
+import type { Configuration, PendingChange, PendingDefault } from "../types";
 
 // Props interface for the RenderProfileDetails component
 interface RenderProfileDetailsProps {
