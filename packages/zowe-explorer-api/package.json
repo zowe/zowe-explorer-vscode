@@ -58,7 +58,7 @@
     "check-cli": "node scripts/check-cli.js",
     "clean": "rimraf lib tsconfig.tsbuildinfo",
     "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
-    "license": "node ../../scripts/updateLicenses.js",
+    "license": "node ../../scripts/updateLicenses.mjs",
     "package": "pnpm build && pnpm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz",
     "copy-secrets": "copyfiles -f ../../node_modules/@zowe/secrets-for-zowe-sdk/prebuilds/*.node ./prebuilds"
   },
