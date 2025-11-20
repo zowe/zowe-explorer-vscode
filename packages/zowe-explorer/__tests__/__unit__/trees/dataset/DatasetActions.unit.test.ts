@@ -233,7 +233,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
     });
     it("Checking failed attempt to create dataset member", async () => {
         const blockMocks = createBlockMocksShared();
-        const globalMocks = createGlobalMocks();
+        createGlobalMocks();
         const parent = new ZoweDatasetNode({
             label: "parent",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
