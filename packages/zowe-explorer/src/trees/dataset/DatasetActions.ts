@@ -2149,7 +2149,13 @@ export class DatasetActions {
                                 await DatasetActions.createDataSetFromSourceAttributes(sourceProfile, node.getProfile(), lbl, dsname);
                             } catch (err) {
                                 if (err instanceof Error) {
-                                    Gui.errorMessage(vscode.l10n.t("Failed to create {0}: {1}", dsname, err.message));
+                                    Gui.errorMessage(
+                                        vscode.l10n.t({
+                                            message: "Failed to create {0}: {1}",
+                                            args: [dsname, err.message],
+                                            comment: ["Data set name", "Error message"],
+                                        })
+                                    );
                                 }
                                 return;
                             }
@@ -2186,7 +2192,13 @@ export class DatasetActions {
                                     }
                                 } catch (err) {
                                     ZoweLogger.error(err);
-                                    Gui.errorMessage(vscode.l10n.t("Failed to copy member {0}: {1}", child, err.message));
+                                    Gui.errorMessage(
+                                        vscode.l10n.t({
+                                            message: "Failed to copy member {0}: {1}",
+                                            args: [child, err.message],
+                                            comment: ["Member name", "Error message"],
+                                        })
+                                    );
                                     // TODO: This should break in the event of an auth error.
                                     // Send notification w/ retry option and show auth prompt? Or show auth prompt and retry if successful/fail otherwise?
                                 }
@@ -2198,7 +2210,13 @@ export class DatasetActions {
                             } catch (err) {
                                 ZoweLogger.error(err);
                                 if (err instanceof Error) {
-                                    Gui.errorMessage(vscode.l10n.t("Failed to copy member {0}: {1}", child, err.message));
+                                    Gui.errorMessage(
+                                        vscode.l10n.t({
+                                            message: "Failed to copy member {0}: {1}",
+                                            args: [child, err.message],
+                                            comment: ["Member name", "Error message"],
+                                        })
+                                    );
                                 }
                             }
                         }

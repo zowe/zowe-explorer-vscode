@@ -1465,6 +1465,57 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         dataSetSpy.mockRestore();
     });
 
+    it("Testing copySequentialDatasets() cross profile handles error during copy operation", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const crossProfile = createIProfile();
+        crossProfile.name = "sestest1";
+        ensureProfiles(blockMocks.imperativeProfile, [crossProfile]);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_DS_CONTEXT;
+        clipboard.writeText(
+            JSON.stringify([
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    profileName: "sestest1",
+                    contextValue: Constants.DS_DS_CONTEXT,
+                },
+            ])
+        );
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            const progress = {
+                report: jest.fn(),
+            };
+            const token = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+        globalMocks.showInputBox.mockResolvedValueOnce("CopyNode");
+        jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
+
+        // Mock copyDataSetCrossLpar to throw an error
+        const testError = new Error("Copy operation failed");
+        const copySpy = jest.spyOn(blockMocks.mvsApi, "copyDataSetCrossLpar").mockRejectedValue(testError);
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+        const loggerSpy = jest.spyOn(ZoweLogger, "error");
+
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
+
+        // Verify error was logged and shown to user
+        expect(copySpy).toHaveBeenCalled();
+        expect(loggerSpy).toHaveBeenCalledWith(testError);
+        expect(errorMessageSpy).toHaveBeenCalledWith("Copy operation failed");
+
+        loggerSpy.mockRestore();
+        errorMessageSpy.mockRestore();
+    });
+
     it("Testing copySequentialDatasets() falls back when cross profile API is unavailable", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1858,6 +1909,410 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         readFileSpy.mockRestore();
         writeFileSpy.mockRestore();
         createMemberSpy.mockRestore();
+    });
+
+    it("Testing copyPartitionedDatasets() cross profile handles error during copy operation", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const crossProfile = createIProfile();
+        crossProfile.name = "sestest1";
+        ensureProfiles(blockMocks.imperativeProfile, [crossProfile]);
+        const parentNode = new ZoweDatasetNode({
+            label: "parent",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        const dsNode = new ZoweDatasetNode({
+            label: "dsNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode,
+            session: blockMocks.zosmfSession,
+            profile: blockMocks.imperativeProfile,
+        });
+        dsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        clipboard.writeText(
+            JSON.stringify([
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    memberName: "MEMBER1",
+                    profileName: "sestest1",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                },
+            ])
+        );
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            const progress = {
+                report: jest.fn(),
+            };
+            const token = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+        globalMocks.showInputBox.mockResolvedValueOnce("pdsTest");
+        jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
+
+        // Mock copyDataSetCrossLpar to throw an error
+        const testError = new Error("Cross-LPAR copy failed");
+        const copySpy = jest.spyOn(blockMocks.mvsApi, "copyDataSetCrossLpar").mockRejectedValue(testError);
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+        const loggerSpy = jest.spyOn(ZoweLogger, "error");
+
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, dsNode)).resolves.not.toThrow();
+
+        // Verify error was logged and shown to user
+        expect(copySpy).toHaveBeenCalled();
+        expect(loggerSpy).toHaveBeenCalledWith(testError);
+        expect(errorMessageSpy).toHaveBeenCalledWith("Cross-LPAR copy failed");
+
+        loggerSpy.mockRestore();
+        errorMessageSpy.mockRestore();
+    });
+
+    it("Testing copyPartitionedDatasets() fallback handles error when creating dataset from source attributes", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const crossProfile = createIProfile();
+        crossProfile.name = "sestest1";
+        ensureProfiles(blockMocks.imperativeProfile, [crossProfile]);
+        const parentNode = new ZoweDatasetNode({
+            label: "parent",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        const dsNode = new ZoweDatasetNode({
+            label: "dsNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode,
+            session: blockMocks.zosmfSession,
+            profile: blockMocks.imperativeProfile,
+        });
+        dsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        clipboard.writeText(
+            JSON.stringify([
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    memberName: "MEMBER1",
+                    profileName: "sestest1",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                },
+            ])
+        );
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            const progress = {
+                report: jest.fn(),
+            };
+            const token = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+        globalMocks.showInputBox.mockResolvedValueOnce("pdsTest");
+        jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
+
+        // Simulate API not having copyDataSetCrossLpar method
+        blockMocks.mvsApi.copyDataSetCrossLpar = undefined;
+
+        // Mock dataSet API to throw error
+        const testError = new Error("Failed to retrieve attributes");
+        jest.spyOn(blockMocks.mvsApi, "dataSet").mockRejectedValue(testError);
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, dsNode)).resolves.not.toThrow();
+
+        // Verify error message was shown (using localization format string)
+        expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringMatching(/Failed to create.*pdsTest/));
+
+        errorMessageSpy.mockRestore();
+    });
+
+    it("Testing copyPartitionedDatasets() fallback handles cancellation during member copy", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const crossProfile = createIProfile();
+        crossProfile.name = "sestest1";
+        ensureProfiles(blockMocks.imperativeProfile, [crossProfile]);
+        const parentNode = new ZoweDatasetNode({
+            label: "parent",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        const dsNode = new ZoweDatasetNode({
+            label: "dsNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode,
+            session: blockMocks.zosmfSession,
+            profile: blockMocks.imperativeProfile,
+        });
+        dsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        clipboard.writeText(
+            JSON.stringify([
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    memberName: "MEMBER1",
+                    profileName: "sestest1",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                },
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    memberName: "MEMBER2",
+                    profileName: "sestest1",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                },
+            ])
+        );
+        let callCount = 0;
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            const progress = {
+                report: jest.fn(),
+            };
+            const token = {
+                get isCancellationRequested() {
+                    // Return true after first member to simulate cancellation
+                    return callCount++ > 0;
+                },
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+        globalMocks.showInputBox.mockResolvedValueOnce("pdsTest");
+        jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
+
+        // Simulate API not having copyDataSetCrossLpar method
+        blockMocks.mvsApi.copyDataSetCrossLpar = undefined;
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        const readFileSpy = jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        const writeFileSpy = jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue();
+        const createDirSpy = jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockReturnValue(undefined);
+        const fetchDatasetSpy = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(null);
+        const dataSetSpy = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    {
+                        dsname: "HLQ.TEST.BEFORE.NODE",
+                        dsorg: "PO",
+                        alcunit: "CYL",
+                        primary: 15,
+                    },
+                ],
+            },
+        });
+        const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        const createMemberSpy = jest.spyOn(blockMocks.mvsApi, "createDataSetMember").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, dsNode)).resolves.not.toThrow();
+
+        // Verify cancellation message was shown
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Operation cancelled"));
+
+        existsSpy.mockRestore();
+        readFileSpy.mockRestore();
+        writeFileSpy.mockRestore();
+        createDirSpy.mockRestore();
+        fetchDatasetSpy.mockRestore();
+        dataSetSpy.mockRestore();
+        createDataSetSpy.mockRestore();
+        createMemberSpy.mockRestore();
+        showMessageSpy.mockRestore();
+    });
+
+    it("Testing copyPartitionedDatasets() fallback handles error during fetchDatasetAtUri", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const crossProfile = createIProfile();
+        crossProfile.name = "sestest1";
+        ensureProfiles(blockMocks.imperativeProfile, [crossProfile]);
+        const parentNode = new ZoweDatasetNode({
+            label: "parent",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        const dsNode = new ZoweDatasetNode({
+            label: "dsNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode,
+            session: blockMocks.zosmfSession,
+            profile: blockMocks.imperativeProfile,
+        });
+        dsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        clipboard.writeText(
+            JSON.stringify([
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    memberName: "MEMBER1",
+                    profileName: "sestest1",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                },
+            ])
+        );
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            const progress = {
+                report: jest.fn(),
+            };
+            const token = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+        globalMocks.showInputBox.mockResolvedValueOnce("pdsTest");
+        jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
+
+        // Simulate API not having copyDataSetCrossLpar method
+        blockMocks.mvsApi.copyDataSetCrossLpar = undefined;
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        const readFileSpy = jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        const writeFileSpy = jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue();
+        const createDirSpy = jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockReturnValue(undefined);
+
+        // Mock fetchDatasetAtUri to throw an error
+        const testError = new Error("Failed to fetch member");
+        const fetchDatasetSpy = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockRejectedValue(testError);
+
+        const dataSetSpy = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    {
+                        dsname: "HLQ.TEST.BEFORE.NODE",
+                        dsorg: "PO",
+                        alcunit: "CYL",
+                        primary: 15,
+                    },
+                ],
+            },
+        });
+        const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+        const loggerSpy = jest.spyOn(ZoweLogger, "error");
+
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, dsNode)).resolves.not.toThrow();
+
+        // Verify error was logged and shown to user (using localization format string)
+        expect(loggerSpy).toHaveBeenCalledWith(testError);
+        expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringMatching(/Failed to copy member.*MEMBER1/));
+
+        existsSpy.mockRestore();
+        readFileSpy.mockRestore();
+        writeFileSpy.mockRestore();
+        createDirSpy.mockRestore();
+        fetchDatasetSpy.mockRestore();
+        dataSetSpy.mockRestore();
+        createDataSetSpy.mockRestore();
+        errorMessageSpy.mockRestore();
+        loggerSpy.mockRestore();
+    });
+
+    it("Testing copyPartitionedDatasets() fallback handles error during member readFile", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const crossProfile = createIProfile();
+        crossProfile.name = "sestest1";
+        ensureProfiles(blockMocks.imperativeProfile, [crossProfile]);
+        const parentNode = new ZoweDatasetNode({
+            label: "parent",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        const dsNode = new ZoweDatasetNode({
+            label: "dsNode",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode,
+            session: blockMocks.zosmfSession,
+            profile: blockMocks.imperativeProfile,
+        });
+        dsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        clipboard.writeText(
+            JSON.stringify([
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    memberName: "MEMBER1",
+                    profileName: "sestest1",
+                    contextValue: Constants.DS_PDS_CONTEXT,
+                },
+            ])
+        );
+        mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => {
+            const progress = {
+                report: jest.fn(),
+            };
+            const token = {
+                isCancellationRequested: false,
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+        globalMocks.showInputBox.mockResolvedValueOnce("pdsTest");
+        jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
+
+        // Simulate API not having copyDataSetCrossLpar method
+        blockMocks.mvsApi.copyDataSetCrossLpar = undefined;
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+
+        // Mock readFile to throw an error
+        const testError = new Error("Failed to read member");
+        const readFileSpy = jest.spyOn(DatasetFSProvider.instance, "readFile").mockRejectedValue(testError);
+
+        const createDirSpy = jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockReturnValue(undefined);
+        const fetchDatasetSpy = jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(null);
+
+        const dataSetSpy = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    {
+                        dsname: "HLQ.TEST.BEFORE.NODE",
+                        dsorg: "PO",
+                        alcunit: "CYL",
+                        primary: 15,
+                    },
+                ],
+            },
+        });
+        const createDataSetSpy = jest.spyOn(blockMocks.mvsApi, "createDataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+        const loggerSpy = jest.spyOn(ZoweLogger, "error");
+
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, dsNode)).resolves.not.toThrow();
+
+        // Verify error was logged and shown to user (using localization format string)
+        expect(loggerSpy).toHaveBeenCalledWith(testError);
+        expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringMatching(/Failed to copy member.*MEMBER1/));
+
+        existsSpy.mockRestore();
+        readFileSpy.mockRestore();
+        createDirSpy.mockRestore();
+        fetchDatasetSpy.mockRestore();
+        dataSetSpy.mockRestore();
+        createDataSetSpy.mockRestore();
+        errorMessageSpy.mockRestore();
+        loggerSpy.mockRestore();
     });
 
     it("Testing copyPartitionedDatasets() falls back to FileSystemProvider when copyDataSetCrossLpar API is not available", async () => {
