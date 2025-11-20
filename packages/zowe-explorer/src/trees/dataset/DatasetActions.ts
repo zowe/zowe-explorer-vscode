@@ -62,7 +62,8 @@ export class DatasetActions {
         dsExtended: vscode.l10n.t("Partitioned Data Set: Extended"),
         dsSequential: vscode.l10n.t("Sequential Data Set"),
         opCancelled: vscode.l10n.t("Operation cancelled"),
-        copyingFiles: vscode.l10n.t("Copying File(s)"),
+        copyingMembers: vscode.l10n.t("Copying member(s)"),
+        copyingDatasets: vscode.l10n.t("Copying data set(s)"),
         profileInvalid: vscode.l10n.t("Profile is invalid, check connection details."),
         allocString: vscode.l10n.t("Allocate Data Set"),
         editString: vscode.l10n.t("Edit Attributes"),
@@ -1834,7 +1835,7 @@ export class DatasetActions {
                     await Gui.withProgress(
                         {
                             location: vscode.ProgressLocation.Notification,
-                            title: DatasetActions.localizedStrings.copyingFiles,
+                            title: DatasetActions.localizedStrings.copyingMembers,
                             cancellable: true,
                         },
                         async () => {
@@ -1866,7 +1867,7 @@ export class DatasetActions {
         await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: DatasetActions.localizedStrings.copyingFiles,
+                title: DatasetActions.localizedStrings.copyingMembers,
                 cancellable: true,
             },
             async (_progress, token) => {
@@ -1893,13 +1894,6 @@ export class DatasetActions {
                         }
                         try {
                             if (mvsApi?.copyDataSetCrossLpar != null) {
-                                await DatasetActions.ensureDataSetExistsFromSource(
-                                    group.profile,
-                                    node.getProfile(),
-                                    content.dataSetName,
-                                    dsname,
-                                    replace
-                                );
                                 const options: zosfiles.ICrossLparCopyDatasetOptions = {
                                     "from-dataset": { dsn: content.dataSetName, member: undefined },
                                     responseTimeout: node.getProfile()?.profile?.responseTimeout,
@@ -1943,7 +1937,7 @@ export class DatasetActions {
         await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: DatasetActions.localizedStrings.copyingFiles,
+                title: DatasetActions.localizedStrings.copyingMembers,
                 cancellable: true,
             },
             async (_progress, token) => {
@@ -2075,7 +2069,7 @@ export class DatasetActions {
                 await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
-                        title: DatasetActions.localizedStrings.copyingFiles,
+                        title: DatasetActions.localizedStrings.copyingMembers,
                         cancellable: true,
                     },
                     () => {
@@ -2101,7 +2095,7 @@ export class DatasetActions {
         await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: DatasetActions.localizedStrings.copyingFiles,
+                title: DatasetActions.localizedStrings.copyingMembers,
                 cancellable: true,
             },
             async (_progress, token) => {
@@ -2130,26 +2124,19 @@ export class DatasetActions {
                     }
 
                     if (mvsApi?.copyDataSetCrossLpar != null) {
+                        const options: zosfiles.ICrossLparCopyDatasetOptions = {
+                            "from-dataset": { dsn: lbl },
+                            responseTimeout: node.getProfile()?.profile?.responseTimeout,
+                            replace: replace === "replace",
+                        };
                         try {
-                            await DatasetActions.ensureDataSetExistsFromSource(sourceProfile, node.getProfile(), lbl, dsname, replace);
-                        } catch {
-                            return;
-                        }
-                        for (const child of content.members) {
-                            const options: zosfiles.ICrossLparCopyDatasetOptions = {
-                                "from-dataset": { dsn: lbl, member: child },
-                                responseTimeout: node.getProfile()?.profile?.responseTimeout,
-                                replace: replace === "replace",
-                            };
-                            try {
-                                await mvsApi.copyDataSetCrossLpar(dsname, child, options, sourceProfile);
-                            } catch (err) {
-                                ZoweLogger.error(err);
-                                if (err instanceof Error) {
-                                    Gui.errorMessage(err.message);
-                                }
-                                return;
+                            await mvsApi.copyDataSetCrossLpar(dsname, undefined, options, sourceProfile);
+                        } catch (err) {
+                            ZoweLogger.error(err);
+                            if (err instanceof Error) {
+                                Gui.errorMessage(err.message);
                             }
+                            return;
                         }
                     } else {
                         const destPdsUri = vscode.Uri.from({
@@ -2405,19 +2392,6 @@ export class DatasetActions {
             destinationDataSet,
             transformedAttrs
         );
-    }
-
-    private static async ensureDataSetExistsFromSource(
-        sourceProfile: imperative.IProfileLoaded,
-        destinationProfile: imperative.IProfileLoaded,
-        sourceDataSet: string,
-        destinationDataSet: string,
-        replace: Definitions.ShouldReplace
-    ): Promise<void> {
-        if (replace !== "notFound") {
-            return;
-        }
-        await DatasetActions.createDataSetFromSourceAttributes(sourceProfile, destinationProfile, sourceDataSet, destinationDataSet);
     }
 
     private static async copySequentialDatasetViaFsFallback(params: {
