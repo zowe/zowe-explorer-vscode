@@ -3,6 +3,7 @@ import { SortDropdown } from "./SortDropdown";
 import { Footer } from "./Footer";
 import * as l10n from "@vscode/l10n";
 import { getProfileSortOrderDisplayName } from "../utils";
+import { useConfigContext } from "../context/ConfigContext";
 
 const PROFILE_SORT_ORDER_OPTIONS: ("natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults")[] = [
   "natural",
@@ -13,50 +14,43 @@ const PROFILE_SORT_ORDER_OPTIONS: ("natural" | "alphabetical" | "reverse-alphabe
 ];
 
 interface PanelsProps {
-  configurations: { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[];
-  selectedTab: number | null;
   renderProfiles: (profilesObj: any) => React.ReactNode;
   renderDefaults: (defaultsObj: any) => React.ReactNode;
   renderProfileDetails: () => React.ReactNode;
   onProfileWizard: () => void;
-  viewMode: "flat" | "tree";
   onViewModeToggle: () => void;
-  profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
-  onProfileSortOrderChange: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults") => void;
-  defaultsCollapsed: boolean;
-  onDefaultsCollapsedChange: (collapsed: boolean) => void;
-  profilesCollapsed: boolean;
-  onProfilesCollapsedChange: (collapsed: boolean) => void;
   onClearChanges: () => void;
   onSaveAll: () => void;
   hasPendingChanges: boolean;
 }
 
 export function Panels({
-  configurations,
-  selectedTab,
   renderProfiles,
   renderDefaults,
   renderProfileDetails,
   onProfileWizard,
-  viewMode,
   onViewModeToggle,
-  profileSortOrder,
-  onProfileSortOrderChange,
-  defaultsCollapsed,
-  onDefaultsCollapsedChange,
-  profilesCollapsed,
-  onProfilesCollapsedChange,
   onClearChanges,
   onSaveAll,
   hasPendingChanges,
 }: PanelsProps) {
+  const {
+    configurations,
+    selectedTab,
+    configEditorSettings,
+    setDefaultsCollapsedWithStorage,
+    setProfilesCollapsedWithStorage,
+    setProfileSortOrderWithStorage,
+  } = useConfigContext();
+
+  const { viewMode, profileSortOrder, defaultsCollapsed, profilesCollapsed } = configEditorSettings;
+
   const toggleDefaultsCollapse = () => {
-    onDefaultsCollapsedChange(!defaultsCollapsed);
+    setDefaultsCollapsedWithStorage(!defaultsCollapsed);
   };
 
   const toggleProfilesCollapse = () => {
-    onProfilesCollapsedChange(!profilesCollapsed);
+    setProfilesCollapsedWithStorage(!profilesCollapsed);
   };
 
   return (
@@ -94,7 +88,7 @@ export function Panels({
                       <SortDropdown<"natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults">
                         options={PROFILE_SORT_ORDER_OPTIONS}
                         selectedOption={profileSortOrder}
-                        onOptionChange={onProfileSortOrderChange}
+                        onOptionChange={setProfileSortOrderWithStorage}
                         getDisplayName={getProfileSortOrderDisplayName}
                       />
                     </div>

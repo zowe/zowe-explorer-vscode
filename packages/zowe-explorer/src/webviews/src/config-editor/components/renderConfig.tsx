@@ -32,6 +32,7 @@ import {
 
 // Types
 import type { Configuration, PendingChange } from "../types";
+import { useConfigContext } from "../context/ConfigContext";
 
 // Props interface for the renderConfig component
 interface RenderConfigProps {
@@ -63,7 +64,6 @@ interface RenderConfigProps {
   handleNavigateToSource: (jsonLoc: string, osLoc?: string[]) => void;
   handleToggleSecure: (fullKey: string, displayKey: string, path: string[]) => void;
   openAddProfileModalAtPath: (path: string[]) => void;
-  setPropertySortOrderWithStorage: (order: PropertySortOrder) => void;
   getWizardTypeOptions: () => string[];
 
   // Utility functions
@@ -124,7 +124,6 @@ export const RenderConfig = ({
   handleNavigateToSource,
   handleToggleSecure,
   openAddProfileModalAtPath,
-  setPropertySortOrderWithStorage,
   getWizardTypeOptions,
   mergePendingChangesForProfile,
   mergeMergedProperties,
@@ -138,6 +137,8 @@ export const RenderConfig = ({
   isMergedPropertySecure,
   vscodeApi,
 }: RenderConfigProps) => {
+  const { setPropertySortOrderWithStorage } = useConfigContext();
+
   const renderConfig = useCallback(
     (obj: any, path: string[] = [], mergedProps?: any) => {
       const baseObj = cloneDeep(obj);

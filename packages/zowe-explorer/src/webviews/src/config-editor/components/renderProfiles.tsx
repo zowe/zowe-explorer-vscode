@@ -19,89 +19,62 @@ import { getRenamedProfileKeyWithNested, ProfileSortOrder } from "../utils";
 
 // Types
 import type { Configuration, PendingChange } from "../types";
+import { useConfigContext } from "../context/ConfigContext";
+import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 
 // Props interface for the renderProfiles component
 interface RenderProfilesProps {
   profilesObj: any;
-  configurations: Configuration[];
-  selectedTab: number | null;
-  deletions: { [configPath: string]: string[] };
-  pendingChanges: { [configPath: string]: { [key: string]: PendingChange } };
-  renames: { [configPath: string]: { [oldName: string]: string } };
-  selectedProfileKey: string | null;
-  profileMenuOpen: string | null;
-  vscodeApi: any;
-  viewMode: "flat" | "tree";
-  profileSearchTerm: string;
-  profileFilterType: string | null;
-  profileSortOrder: ProfileSortOrder;
-
+  
   // Handler functions
   handleProfileSelection: (profileKey: string) => void;
-  setProfileMenuOpen: (profileKey: string | null) => void;
   handleDeleteProfile: (profileKey: string) => void;
   handleSetAsDefault: (profileKey: string) => void;
   handleRenameProfile: (originalKey: string, newKey: string, isDragDrop?: boolean) => boolean;
-  setProfileSearchTerm: (term: string) => void;
-  setProfileFilterType: (type: string | null) => void;
-  setProfileSortOrderWithStorage: (order: ProfileSortOrder) => void;
-  setExpandedNodesForConfig: (configPath: string, nodes: Set<string>) => void;
-  setPendingDefaults: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: { value: string; path: string[] } } }>>;
   onViewModeToggle?: () => void;
-
-  // Utility functions
-  extractPendingProfiles: (configPath: string) => { [key: string]: any };
-  isProfileOrParentDeleted: (profileKey: string, deletedProfiles: string[]) => boolean;
-  getRenamedProfileKey: (originalKey: string, configPath: string, renames: { [configPath: string]: { [originalKey: string]: string } }) => string;
-  getProfileType: (
-    profileKey: string,
-    selectedTab: number | null,
-    configurations: Configuration[],
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [oldName: string]: string } }
-  ) => string | null;
-  hasPendingSecureChanges: (profileKey: string) => boolean;
-  hasPendingRename: (profileKey: string, configPath: string, renames: { [configPath: string]: { [oldName: string]: string } }) => boolean;
-  isProfileDefault: (profileKey: string) => boolean;
-  sortProfilesAtLevel: (profileKeys: string[]) => string[];
-  getExpandedNodesForConfig: (configPath: string) => Set<string>;
 }
 
 export const RenderProfiles = ({
   profilesObj,
-  configurations,
-  selectedTab,
-  deletions,
-  pendingChanges,
-  renames,
-  selectedProfileKey,
-  profileMenuOpen,
-  vscodeApi,
-  viewMode,
-  profileSearchTerm,
-  profileFilterType,
-  profileSortOrder,
   handleProfileSelection,
-  setProfileMenuOpen,
   handleDeleteProfile,
   handleSetAsDefault,
   handleRenameProfile,
-  setProfileSearchTerm,
-  setProfileFilterType,
-  setProfileSortOrderWithStorage,
-  setExpandedNodesForConfig,
-  setPendingDefaults,
   onViewModeToggle,
-  extractPendingProfiles,
-  isProfileOrParentDeleted,
-  getRenamedProfileKey,
-  getProfileType,
-  hasPendingSecureChanges,
-  hasPendingRename,
-  isProfileDefault,
-  sortProfilesAtLevel,
-  getExpandedNodesForConfig,
 }: RenderProfilesProps) => {
+  const {
+    configurations,
+    selectedTab,
+    deletions,
+    pendingChanges,
+    renames,
+    selectedProfileKey,
+    profileMenuOpen,
+    setProfileMenuOpen,
+    vscodeApi,
+    configEditorSettings,
+    profileSearchTerm,
+    profileFilterType,
+    setProfileSearchTerm,
+    setProfileFilterType,
+    setProfileSortOrderWithStorage,
+    setPendingDefaults,
+  } = useConfigContext();
+
+  const { viewMode, profileSortOrder } = configEditorSettings;
+
+  const {
+    extractPendingProfiles,
+    getRenamedProfileKeyWithNested: getRenamedProfileKeyWithNestedHelper,
+    getProfileType,
+    hasPendingSecureChanges,
+    hasPendingRename,
+    isProfileDefault,
+    sortProfilesAtLevel,
+    getExpandedNodesForConfig,
+    setExpandedNodesForConfig,
+    isProfileOrParentDeletedForComponent: isProfileOrParentDeleted,
+  } = useUtilityHelpers();
   const renderProfiles = useCallback(
     (profilesObj: any) => {
       if (!profilesObj || typeof profilesObj !== "object") return null;
@@ -479,7 +452,7 @@ export const RenderProfiles = ({
       setProfileFilterType,
       extractPendingProfiles,
       isProfileOrParentDeleted,
-      getRenamedProfileKey,
+      getRenamedProfileKeyWithNestedHelper,
       getRenamedProfileKeyWithNested,
       profileSortOrder || "natural",
       sortProfilesAtLevel,

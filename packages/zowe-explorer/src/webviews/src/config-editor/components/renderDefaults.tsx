@@ -12,30 +12,30 @@
 import { useCallback } from "react";
 import * as l10n from "@vscode/l10n";
 import type { Configuration, PendingDefault } from "../types";
+import { useConfigContext } from "../context/ConfigContext";
+import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 
 interface RenderDefaultsProps {
   defaults: { [key: string]: any };
-  configurations: Configuration[];
-  selectedTab: number | null;
-  pendingDefaults: { [configPath: string]: { [key: string]: PendingDefault } };
-  defaultsDeletions: { [configPath: string]: string[] };
-  renames: { [configPath: string]: { [originalKey: string]: string } };
   handleDefaultsChange: (key: string, value: string) => void;
-  getWizardTypeOptions: () => string[];
-  getAvailableProfilesByType: (profileType: string) => string[];
 }
 
 export const RenderDefaults = ({
   defaults,
-  configurations,
-  selectedTab,
-  pendingDefaults,
-  defaultsDeletions,
-  renames,
   handleDefaultsChange,
-  getWizardTypeOptions,
-  getAvailableProfilesByType,
 }: RenderDefaultsProps) => {
+  const {
+    configurations,
+    selectedTab,
+    pendingDefaults,
+    defaultsDeletions,
+    renames,
+  } = useConfigContext();
+
+  const {
+    getWizardTypeOptions,
+    getAvailableProfilesByType,
+  } = useUtilityHelpers();
   const renderDefaults = useCallback(
     (defaults: { [key: string]: any }) => {
       if (!defaults || typeof defaults !== "object") return null;

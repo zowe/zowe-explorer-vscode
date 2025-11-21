@@ -43,6 +43,7 @@ export function useConfigState(vscodeApi: any) {
   const [secureValuesAllowed, setSecureValuesAllowed] = useState<boolean>(true);
   const [hasPromptedForZeroConfigs, setHasPromptedForZeroConfigs] = useState(false);
   const [expandedNodesByConfig, setExpandedNodesByConfig] = useState<{ [configPath: string]: Set<string> }>({});
+  const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
 
   const configurationsRef = useRef<Configuration[]>([]);
   const pendingChangesRef = useRef<{ [configPath: string]: { [key: string]: PendingChange } }>({});
@@ -169,6 +170,7 @@ export function useConfigState(vscodeApi: any) {
     secureValuesAllowed, setSecureValuesAllowed,
     hasPromptedForZeroConfigs, setHasPromptedForZeroConfigs,
     expandedNodesByConfig, setExpandedNodesByConfig,
+    profileMenuOpen, setProfileMenuOpen,
     configurationsRef,
     pendingChangesRef,
     deletionsRef,
@@ -184,6 +186,7 @@ export function useConfigState(vscodeApi: any) {
     setProfileSortOrderWithStorage,
     setDefaultsCollapsedWithStorage,
     setProfilesCollapsedWithStorage,
-    CONFIG_EDITOR_SETTINGS_KEY
+    CONFIG_EDITOR_SETTINGS_KEY,
+    vscodeApi,
   };
 }

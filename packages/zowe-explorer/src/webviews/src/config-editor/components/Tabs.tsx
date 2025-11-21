@@ -1,35 +1,32 @@
 import { useState, useEffect } from "react";
 import * as l10n from "@vscode/l10n";
+import { useConfigContext } from "../context/ConfigContext";
 
 interface TabsProps {
-  configurations: { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean; schemaPath?: string }[];
-  selectedTab: number | null;
   onTabChange: (index: number) => void;
   onOpenRawFile: (filePath: string) => void;
   onRevealInFinder: (filePath: string) => void;
   onOpenSchemaFile: (filePath: string) => void;
   onAddNewConfig: () => void;
   onToggleAutostore: (configPath: string) => void;
-  pendingChanges: { [configPath: string]: any };
-  autostoreChanges: { [configPath: string]: boolean };
-  renames: { [configPath: string]: { [originalKey: string]: string } };
-  deletions: { [configPath: string]: string[] };
 }
 
 export function Tabs({
-  configurations,
-  selectedTab,
   onTabChange,
   onOpenRawFile,
   onRevealInFinder,
   onOpenSchemaFile,
   onAddNewConfig,
   onToggleAutostore,
-  pendingChanges,
-  autostoreChanges,
-  renames,
-  deletions,
 }: TabsProps) {
+  const {
+    configurations,
+    selectedTab,
+    pendingChanges,
+    autostoreChanges,
+    renames,
+    deletions,
+  } = useConfigContext();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabIndex: number } | null>(null);
 
   const getRevealText = () => {

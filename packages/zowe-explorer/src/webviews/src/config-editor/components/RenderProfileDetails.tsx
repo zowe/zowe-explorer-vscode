@@ -15,44 +15,24 @@ import { useCallback } from "react";
 import { RenderConfig } from "./renderConfig";
 
 // Utils
-import { flattenProfiles, PropertySortOrder, schemaValidation } from "../utils";
+import {
+  flattenProfiles,
+  PropertySortOrder,
+  ensureProfileProperties,
+  isMergedPropertySecure,
+  getOriginalProfileKey,
+} from "../utils";
+import { getProfileNameForMergedProperties } from "../utils/renameUtils";
 import * as l10n from "@vscode/l10n";
 
-// Types
-import type { Configuration, PendingChange, PendingDefault } from "../types";
+import { useConfigContext } from "../context/ConfigContext";
+import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
+
+const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
 
 // Props interface for the RenderProfileDetails component
 interface RenderProfileDetailsProps {
-  selectedProfileKey: string | null;
-  configurations: Configuration[];
-  selectedTab: number | null;
-  vscodeApi: any;
-  showMergedProperties: boolean;
-  propertySortOrder: PropertySortOrder;
-  sortOrderVersion: number;
-  pendingChanges: { [configPath: string]: { [key: string]: PendingChange } };
-  deletions: { [configPath: string]: string[] };
-  renames: { [configPath: string]: { [oldName: string]: string } };
-  schemaValidations: { [configPath: string]: schemaValidation | undefined };
-  hiddenItems: { [configPath: string]: { [key: string]: { path: string } } };
-  secureValuesAllowed: boolean;
-  SORT_ORDER_OPTIONS: PropertySortOrder[];
-  propertyDescriptions: { [key: string]: string };
-  mergedProperties: any;
-  pendingDefaults: { [configPath: string]: { [key: string]: PendingDefault } };
-
-  // Handler functions
-  isProfileDefault: (profileKey: string) => boolean;
-  getProfileType: (
-    profileKey: string,
-    selectedTab: number | null,
-    configurations: Configuration[],
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [oldName: string]: string } }
-  ) => string | null;
   handleSetAsDefault: (profileKey: string) => void;
-  setPendingDefaults: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: PendingDefault } }>>;
-  setShowMergedPropertiesWithStorage: (value: boolean) => void;
   setRenameProfileModalOpen: (open: boolean) => void;
   handleDeleteProfile: (profileKey: string) => void;
   handleChange: (key: string, value: string) => void;
@@ -65,69 +45,12 @@ interface RenderProfileDetailsProps {
   setPendingProfileDeletion: (key: string | null) => void;
   handleUnlinkMergedProperty: (propertyKey: string | undefined, fullKey: string) => void;
   handleNavigateToSource: (jsonLoc: string, osLoc?: string[]) => void;
-  handleToggleSecure: (fullKey: string, displayKey: string, path: string[]) => void;
   openAddProfileModalAtPath: (path: string[]) => void;
-  setPropertySortOrderWithStorage: (order: PropertySortOrder) => void;
-  getWizardTypeOptions: () => string[];
-
-  // Utility functions
-  extractPendingProfiles: (configPath: string) => { [key: string]: any };
-  getOriginalProfileKey: (profileKey: string, configPath: string, renames: { [configPath: string]: { [oldName: string]: string } }) => string;
-  getProfileNameForMergedProperties: (
-    profileKey: string,
-    configPath: string,
-    renames: { [configPath: string]: { [oldName: string]: string } }
-  ) => string;
-  mergePendingChangesForProfile: (baseObj: any, path: string[], configPath: string) => any;
-  mergeMergedProperties: (combinedConfig: any, path: string[], mergedProps: any, configPath: string) => any;
-  ensureProfileProperties: (combinedConfig: any, path: string[]) => any;
-  filterSecureProperties: (value: any, combinedConfig: any, configPath?: string, pendingChanges?: any, deletions?: any, mergedProps?: any) => any;
-  mergePendingSecureProperties: (
-    value: any[],
-    path: string[],
-    configPath: string,
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames?: { [configPath: string]: { [originalKey: string]: string } }
-  ) => any[];
-  isCurrentProfileUntyped: () => boolean;
-  isPropertyFromMergedProps: (displayKey: string | undefined, path: string[], mergedProps: any, configPath: string) => boolean;
-  isPropertySecure: (
-    fullKey: string,
-    displayKey: string,
-    path: string[],
-    mergedProps?: any,
-    selectedTab?: number | null,
-    configurations?: Configuration[],
-    pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } },
-    renames?: { [configPath: string]: { [originalKey: string]: string } }
-  ) => boolean;
-  canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
-  isMergedPropertySecure: (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean) => boolean;
-  isProfileAffectedByDragDrop: (profileKey: string) => boolean;
+  propertyDescriptions: { [key: string]: string };
 }
 
 export const RenderProfileDetails = ({
-  selectedProfileKey,
-  configurations,
-  selectedTab,
-  vscodeApi,
-  showMergedProperties,
-  propertySortOrder,
-  sortOrderVersion,
-  pendingChanges,
-  deletions,
-  renames,
-  schemaValidations,
-  hiddenItems,
-  secureValuesAllowed,
-  SORT_ORDER_OPTIONS,
-  propertyDescriptions,
-  mergedProperties,
-  isProfileDefault,
-  getProfileType,
   handleSetAsDefault,
-  setPendingDefaults,
-  setShowMergedPropertiesWithStorage,
   setRenameProfileModalOpen,
   handleDeleteProfile,
   handleChange,
@@ -140,25 +63,53 @@ export const RenderProfileDetails = ({
   setPendingProfileDeletion,
   handleUnlinkMergedProperty,
   handleNavigateToSource,
-  handleToggleSecure,
   openAddProfileModalAtPath,
-  setPropertySortOrderWithStorage,
-  getWizardTypeOptions,
-  extractPendingProfiles,
-  getOriginalProfileKey,
-  getProfileNameForMergedProperties,
-  mergePendingChangesForProfile,
-  mergeMergedProperties,
-  ensureProfileProperties,
-  filterSecureProperties,
-  mergePendingSecureProperties,
-  isCurrentProfileUntyped,
-  isPropertyFromMergedProps,
-  isPropertySecure,
-  canPropertyBeSecure,
-  isMergedPropertySecure,
-  isProfileAffectedByDragDrop,
+  propertyDescriptions,
 }: RenderProfileDetailsProps) => {
+  const {
+    selectedProfileKey,
+    configurations,
+    selectedTab,
+    vscodeApi,
+    configEditorSettings,
+    sortOrderVersion,
+    pendingChanges,
+    deletions,
+    renames,
+    schemaValidations,
+    hiddenItems,
+    secureValuesAllowed,
+    mergedProperties,
+    setPendingDefaults,
+    setShowMergedPropertiesWithStorage,
+  } = useConfigContext();
+
+  const { showMergedProperties, propertySortOrder } = configEditorSettings;
+
+  const {
+    isProfileDefault,
+    getProfileType,
+    getWizardTypeOptions,
+    extractPendingProfiles,
+    // getRenamedProfileKeyWithNested, // Unused
+    mergePendingChangesForProfile,
+    mergeMergedProperties,
+    filterSecureProperties,
+    mergePendingSecureProperties,
+    isCurrentProfileUntyped,
+    isPropertyFromMergedProps,
+    isPropertySecure,
+    canPropertyBeSecure,
+    isProfileAffectedByDragDrop,
+    handleToggleSecure,
+  } = useUtilityHelpers();
+
+  // Import pure functions needed for RenderConfig if they are not in helpers
+  // ensureProfileProperties, isMergedPropertySecure are pure functions imported from utils in App.tsx
+  // I should import them here too.
+  // Wait, RenderProfileDetails imports them from ../utils?
+  // No, it imports flattenProfiles, PropertySortOrder, schemaValidation.
+  // I need to add imports for ensureProfileProperties, isMergedPropertySecure.
   const renderProfileDetails = useCallback(() => {
     const profileDetailsHeader = l10n.t("Profile Details");
     return (
@@ -393,7 +344,6 @@ export const RenderProfileDetails = ({
                   handleNavigateToSource={handleNavigateToSource}
                   handleToggleSecure={handleToggleSecure}
                   openAddProfileModalAtPath={openAddProfileModalAtPath}
-                  setPropertySortOrderWithStorage={setPropertySortOrderWithStorage}
                   getWizardTypeOptions={getWizardTypeOptions}
                   mergePendingChangesForProfile={mergePendingChangesForProfile}
                   mergeMergedProperties={mergeMergedProperties}
