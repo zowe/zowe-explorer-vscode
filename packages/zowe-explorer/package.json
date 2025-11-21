@@ -2183,7 +2183,7 @@
     "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
     "vscode:prepublish": "pnpm clean:bundle && pnpm generateLocalization && pnpm fetchLocalizations && webpack --mode production --devtool hidden-source-map",
     "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js vscode-extension-for-zowe vsix",
-    "license": "node ../../scripts/updateLicenses.js",
+    "license": "node ../../scripts/updateLicenses.mjs",
     "watch": "concurrently \"pnpm watch:zowe-explorer\" \"pnpm watch:webviews\"",
     "watch:zowe-explorer": "pnpm clean:bundle && webpack --mode development --watch",
     "watch:webviews": "pnpm --filter webviews dev",
