@@ -32,6 +32,8 @@ export class BaseProvider {
 
     protected constructor() {}
 
+    public requestCache = new Map<string, Promise<any>>();
+
     /**
      * Compares the data for 2 Uint8Arrays, byte by byte.
      * @param a The first Uint8Array to compare

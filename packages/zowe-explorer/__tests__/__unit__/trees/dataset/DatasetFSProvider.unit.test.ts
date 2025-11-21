@@ -95,7 +95,7 @@ const testUris: TestUris = {
 
 describe("DatasetFSProvider", () => {
     let mockedProperty: MockedProperty;
-    beforeEach(() => {
+    beforeEach(async () => {
         jest.restoreAllMocks();
         mockedProperty = new MockedProperty(Profiles, "getInstance", {
             value: jest.fn().mockReturnValue({
@@ -105,6 +105,7 @@ describe("DatasetFSProvider", () => {
             } as any),
         });
         jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
+        DatasetFSProvider.instance.requestCache.clear();
     });
 
     afterAll(() => {
