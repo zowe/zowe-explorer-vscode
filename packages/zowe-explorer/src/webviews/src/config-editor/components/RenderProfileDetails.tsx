@@ -11,14 +11,10 @@
 
 import { useCallback } from "react";
 
-// Components
 import { RenderConfig } from "./renderConfig";
-
-// Utils
 import { flattenProfiles, PropertySortOrder, ensureProfileProperties, isMergedPropertySecure, getOriginalProfileKey } from "../utils";
 import { getProfileNameForMergedProperties } from "../utils/renameUtils";
 import * as l10n from "@vscode/l10n";
-
 import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 

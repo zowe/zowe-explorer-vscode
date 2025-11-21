@@ -14,8 +14,6 @@ import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
 import { SortDropdown } from "./SortDropdown";
 import { EnvVarAutocomplete } from "./EnvVarAutocomplete";
-
-// Utils
 import {
   flattenProfiles,
   extractProfileKeyFromPath,
@@ -29,8 +27,6 @@ import {
   PropertySortOrder,
   schemaValidation,
 } from "../utils";
-
-// Types
 import type { Configuration, PendingChange } from "../types";
 import { useConfigContext } from "../context/ConfigContext";
 

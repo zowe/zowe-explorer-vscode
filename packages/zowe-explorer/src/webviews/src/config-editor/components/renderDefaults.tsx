@@ -11,7 +11,6 @@
 
 import { useCallback } from "react";
 import * as l10n from "@vscode/l10n";
-import type { Configuration, PendingDefault } from "../types";
 import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 

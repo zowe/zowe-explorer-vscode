@@ -9,16 +9,9 @@
  *
  */
 
-import React, { useCallback } from "react";
-
-// Components
+import { useCallback } from "react";
 import { ProfileList } from "./ProfileList";
-
-// Utils
-import { getRenamedProfileKeyWithNested, ProfileSortOrder } from "../utils";
-
-// Types
-import type { Configuration, PendingChange } from "../types";
+import { getRenamedProfileKeyWithNested } from "../utils";
 import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 
