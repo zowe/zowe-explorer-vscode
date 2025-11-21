@@ -31,6 +31,13 @@ const stream = require("stream");
 const readableStream = stream.Readable.from([]);
 const fs = require("fs");
 
+const ensureTmpDirExists = (dirPath: string) => {
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+    }
+    return dirPath;
+};
+
 fs.createReadStream = jest.fn().mockReturnValue(readableStream);
 const MvsApi = new FtpMvsApi();
 
@@ -78,7 +85,8 @@ describe("FtpMvsApi", () => {
     });
 
     it("should view dataset content.", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const tmpDir = ensureTmpDirExists("/tmp");
+        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
         const response = TestUtils.getSingleLineStream();
         DataSetUtils.downloadDataSet = jest.fn().mockReturnValue(response);
 
@@ -99,7 +107,8 @@ describe("FtpMvsApi", () => {
     });
 
     it("should upload content to dataset.", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const tmpDir = ensureTmpDirExists("/tmp");
+        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
         const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
         const rmSyncSpy = jest.spyOn(fs, "rmSync");
 
@@ -129,7 +138,8 @@ describe("FtpMvsApi", () => {
     });
 
     it("should upload single space to dataset when secureFtp is true and contents are empty", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const tmpDir = ensureTmpDirExists("/tmp");
+        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
 
         fs.writeFileSync(localFile, "");
         const response = TestUtils.getSingleLineStream();
@@ -331,7 +341,8 @@ describe("FtpMvsApi", () => {
                 throw new Error("Upload dataset failed.");
             })
         );
-        const localFile = tmp.tmpNameSync({ tmpdir: "/tmp" });
+        const tmpDir = ensureTmpDirExists("/tmp");
+        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
         const mockParams = {
             inputFilePath: localFile,
             dataSetName: "IBMUSER.DS2",

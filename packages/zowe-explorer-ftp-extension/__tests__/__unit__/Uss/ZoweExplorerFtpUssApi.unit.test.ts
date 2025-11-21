@@ -31,6 +31,13 @@ const stream = require("stream");
 const readableStream = stream.Readable.from([]);
 const fs = require("fs");
 
+const ensureTmpDirExists = (dirPath: string) => {
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+    }
+    return dirPath;
+};
+
 fs.createReadStream = jest.fn().mockReturnValue(readableStream);
 const UssApi = new FtpUssApi();
 
@@ -64,7 +71,8 @@ describe("FtpUssApi", () => {
     });
 
     it("should view uss files.", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpdir() });
+        const tmpDir = ensureTmpDirExists(tmpdir());
+        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
         const response = TestUtils.getSingleLineStream();
         UssUtils.downloadFile = jest.fn().mockReturnValue(response);
 
@@ -94,7 +102,8 @@ describe("FtpUssApi", () => {
     };
 
     it("should upload uss files.", async () => {
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpdir() });
+        const tmpDir = ensureTmpDirExists(tmpdir());
+        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
         const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
@@ -127,6 +136,7 @@ describe("FtpUssApi", () => {
     });
 
     it("should upload uss directory.", async () => {
+        ensureTmpDirExists(tmpdir());
         const localpath = "/tmp";
         const files = ["file1", "file2"];
         zowe.ZosFilesUtils.getFileListFromPath = jest.fn().mockReturnValue(files);
@@ -230,7 +240,8 @@ describe("FtpUssApi", () => {
         jest.spyOn(UssUtils, "downloadFile").mockImplementationOnce(() => {
             throw new Error("Download file failed.");
         });
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpdir() });
+        const tmpDir = ensureTmpDirExists(tmpdir());
+        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
         const mockParams = {
             ussFilePath: "/a/b/d.txt",
             options: {
