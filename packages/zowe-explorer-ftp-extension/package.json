@@ -45,7 +45,7 @@
     "clean": "rimraf out",
     "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
     "vscode:prepublish": "webpack --mode production",
-    "license": "node ../../scripts/updateLicenses.js",
+    "license": "node ../../scripts/updateLicenses.mjs",
     "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix"
   },
   "engines": {
