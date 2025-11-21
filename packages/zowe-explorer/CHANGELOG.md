@@ -10,7 +10,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Refactored data set pagination to use the new `getCount` API (if available) to optimize access to the total item count.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 - Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
 - Added support for `encoding` profile property when retrieving JCL with z/OSMF. [#3877](https://github.com/zowe/zowe-explorer-vscode/pull/3877)
-- Updated Zowe SDKs to version `8.28.0` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3896](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
+- Updated `js-yaml` dependency for technical currency. [#3937](https://github.com/zowe/zowe-explorer-vscode/pull/3937)
+- Updated Zowe SDKs to version `8.28.0` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
 
 ### Bug fixes
 
@@ -22,7 +23,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed regression where PDS member attributes were no longer listed when using the "Show Attributes" feature from the data set context menu. [#3856](https://github.com/zowe/zowe-explorer-vscode/issues/3856)
 - Fixed an issue where user attempts to perform a search on an individual PDS from the Zowe-Explorer extension using the "Search PDS members" action and query a search string, it brings out additional dataset as a part of the result.[#3682](https://github.com/zowe/zowe-explorer-vscode/issues/3682)
 - Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. [#3923](https://github.com/zowe/zowe-explorer-vscode/pull/3923)
-- Updated `js-yaml` dependency for technical currency. [#3937](https://github.com/zowe/zowe-explorer-vscode/pull/3937)
+- Fixed issue seen by extender profile types where a type error was returned with 401 instead of notification with update option. [#3943](https://github.com/zowe/zowe-explorer-vscode/issues/3943)
 
 ## `3.3.1`
 
