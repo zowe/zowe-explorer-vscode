@@ -129,6 +129,18 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             });
         }
 
+        public downloadDirectory(
+            ussDirectoryPath: string,
+            fileOptions?: zosfiles.IDownloadOptions,
+            listOptions?: zosfiles.IUSSListOptions
+        ): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.Download.ussDir(this.getSession(), ussDirectoryPath, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...fileOptions,
+                ...listOptions,
+            });
+        }
+
         public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
             return zosfiles.Utilities.putUSSPayload(this.getSession(), outputPath, { ...options, request: "copy" });
         }
@@ -255,6 +267,13 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
 
         public getContents(dataSetName: string, options?: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Download.dataSet(this.getSession(), dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
+        }
+
+        public downloadAllMembers(dataSetName: string, options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.Download.allMembers(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 ...options,
             });

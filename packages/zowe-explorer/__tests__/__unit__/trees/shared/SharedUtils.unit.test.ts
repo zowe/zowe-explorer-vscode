@@ -14,7 +14,7 @@ import { createIProfile, createISession, createInstanceOfProfile } from "../../.
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { createUSSNode, createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
-import { imperative, ProfilesCache, Gui, ZosEncoding, BaseProvider, Sorting } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, Gui, ZosEncoding, BaseProvider, Sorting, CorrelatedError } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../../../src/configuration/Constants";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { FilterItem } from "../../../../src/management/FilterManagement";
@@ -1512,5 +1512,409 @@ describe("SharedUtils.handleProfileChange", () => {
         expect(dsSession.getProfile().profile?.password).toBe(profile.profile?.password);
         expect(errorSpy).toHaveBeenCalledTimes(1);
         expect(errorSpy).toHaveBeenCalledWith("error while updating profile on node");
+    });
+});
+
+describe("Shared utils unit tests - function promptForDirectoryEncoding", () => {
+    const binaryEncoding: ZosEncoding = { kind: "binary" };
+    const textEncoding: ZosEncoding = { kind: "text" };
+    const otherEncoding: ZosEncoding = { kind: "other", codepage: "IBM-1047" };
+
+    function createBlockMocks() {
+        const showInputBox = jest.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
+        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+        const localStorageGet = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const localStorageSet = jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
+        const infoMessage = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+
+        return {
+            profile: createIProfile(),
+            showInputBox,
+            showQuickPick,
+            localStorageGet,
+            localStorageSet,
+            infoMessage,
+        };
+    }
+
+    beforeEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    it("returns auto-detect when Auto-detect option is selected", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Auto-detect from file tags") });
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(result).toBe("auto-detect");
+    });
+
+    it("returns text encoding when EBCDIC is selected", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(result).toEqual(textEncoding);
+    });
+
+    it("returns binary encoding when Binary is selected", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Binary") });
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(result).toEqual(binaryEncoding);
+    });
+
+    it("returns other encoding when Other is selected and codepage is provided", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Other") });
+        blockMocks.showInputBox.mockResolvedValueOnce("IBM-1047");
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(blockMocks.showInputBox).toHaveBeenCalled();
+        expect(result).toEqual(otherEncoding);
+    });
+
+    it("returns undefined when Other is selected but no codepage is provided", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Other") });
+        blockMocks.showInputBox.mockResolvedValueOnce(undefined);
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(blockMocks.showInputBox).toHaveBeenCalled();
+        expect(blockMocks.infoMessage).toHaveBeenCalledWith(vscode.l10n.t("Operation cancelled"));
+        expect(result).toBeUndefined();
+    });
+
+    it("returns undefined when quick pick is cancelled", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce(undefined);
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(result).toBeUndefined();
+    });
+
+    it("handles current directory encoding as auto-detect", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Binary") });
+
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", "auto-detect");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
+        expect(callArgs?.placeHolder).toContain(vscode.l10n.t("Auto-detect from file tags"));
+    });
+
+    it("handles current directory encoding as binary", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
+
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", binaryEncoding);
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
+        expect(callArgs?.placeHolder).toContain(vscode.l10n.t("Binary"));
+    });
+
+    it("handles current directory encoding as text", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
+
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", textEncoding);
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
+        expect(callArgs?.placeHolder).toContain(vscode.l10n.t("EBCDIC"));
+    });
+
+    it("handles current directory encoding as other codepage", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
+
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", otherEncoding);
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
+        expect(callArgs?.placeHolder).toContain("OTHER-IBM-1047");
+    });
+
+    it("handles profile encoding in options", async () => {
+        const blockMocks = createBlockMocks();
+        (blockMocks.profile.profile as any).encoding = "IBM-1047";
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
+
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        const items = await blockMocks.showQuickPick.mock.calls[0][0];
+        expect(Array.isArray(items) && items.some((item: any) => item.label === "IBM-1047" && item.description.includes("From profile"))).toBe(true);
+    });
+
+    it("includes encoding history in options", async () => {
+        const blockMocks = createBlockMocks();
+        const encodingHistory = ["IBM-1147", "UTF-8"];
+        blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: encodingHistory[0] });
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        const items = await blockMocks.showQuickPick.mock.calls[0][0];
+        expect(Array.isArray(items) && items.some((item: any) => item.label === "IBM-1147")).toBe(true);
+        expect(result).toEqual({ kind: "other", codepage: "IBM-1147" });
+    });
+
+    it("saves custom encoding to history", async () => {
+        const blockMocks = createBlockMocks();
+        const existingHistory = ["IBM-1147"];
+        blockMocks.localStorageGet.mockReturnValueOnce(existingHistory);
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Other") });
+        blockMocks.showInputBox.mockResolvedValueOnce("UTF-8");
+
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.localStorageSet).toHaveBeenCalledWith(expect.anything(), expect.arrayContaining(["UTF-8"]));
+    });
+});
+
+describe("Shared utils unit tests - function handleDownloadResponse", () => {
+    function createBlockMocks() {
+        const showMessage = jest.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
+        const errorMessage = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+        const warningMessage = jest.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+        const loggerTrace = jest.spyOn(ZoweLogger, "trace").mockReturnValue(undefined);
+        const loggerInfo = jest.spyOn(ZoweLogger, "info").mockReturnValue(undefined);
+        const loggerWarn = jest.spyOn(ZoweLogger, "warn").mockReturnValue(undefined);
+        const executeCommand = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+
+        return {
+            showMessage,
+            errorMessage,
+            warningMessage,
+            loggerTrace,
+            loggerInfo,
+            loggerWarn,
+            executeCommand,
+        };
+    }
+
+    beforeEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    it("shows simple success message when response is falsy", async () => {
+        const blockMocks = createBlockMocks();
+
+        await SharedUtils.handleDownloadResponse(null, "File");
+
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(vscode.l10n.t("{0} download completed.", "File"));
+    });
+
+    it("shows simple success message when response is undefined", async () => {
+        const blockMocks = createBlockMocks();
+
+        await SharedUtils.handleDownloadResponse(undefined, "Directory");
+
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(vscode.l10n.t("{0} download completed.", "Directory"));
+    });
+
+    it("shows simple success message for successful response without warnings", async () => {
+        const blockMocks = createBlockMocks();
+        const response = { success: true };
+
+        await SharedUtils.handleDownloadResponse(response, "Data set");
+
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(vscode.l10n.t("{0} downloaded successfully.", "Data set"));
+    });
+
+    it("shows error message when success is false", async () => {
+        const blockMocks = createBlockMocks();
+        const response = { success: false };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        const errorMsg = vscode.l10n.t("{0} download completed with errors.", "File");
+        const fullErrorMsg = vscode.l10n.t("{0}\n\nSome files may not have been downloaded.", errorMsg);
+        expect(blockMocks.errorMessage).toHaveBeenCalledWith(
+            fullErrorMsg,
+            expect.objectContaining({
+                items: [vscode.l10n.t("View Details")],
+                vsCodeOpts: { modal: false },
+            })
+        );
+    });
+
+    it("shows warning message when commandResponse contains 'already exists'", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: true,
+            commandResponse: "file already exists and was skipped",
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.loggerInfo).toHaveBeenCalledWith("Download response details: file already exists and was skipped");
+        const successMsg = vscode.l10n.t("{0} downloaded successfully.", "File");
+        const warningMsg = vscode.l10n.t("{0}\n\nSome files may have been skipped.", successMsg);
+        expect(blockMocks.warningMessage).toHaveBeenCalledWith(
+            warningMsg,
+            expect.objectContaining({
+                items: [vscode.l10n.t("View Details")],
+                vsCodeOpts: { modal: false },
+            })
+        );
+    });
+
+    it("shows warning message when commandResponse contains 'skipped'", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: true,
+            commandResponse: "some files were skipped",
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "Directory");
+
+        expect(blockMocks.warningMessage).toHaveBeenCalled();
+    });
+
+    it("shows error message when commandResponse contains 'failed'", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: true,
+            commandResponse: "download failed for some items",
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.loggerInfo).toHaveBeenCalledWith("Download response details: download failed for some items");
+        expect(blockMocks.errorMessage).toHaveBeenCalled();
+    });
+
+    it("shows error message when commandResponse contains 'error'", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: true,
+            commandResponse: "an error occurred during download",
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.errorMessage).toHaveBeenCalled();
+    });
+
+    it("handles apiResponse with failed items", async () => {
+        const blockMocks = createBlockMocks();
+        const failedItems = [
+            { name: "file1.txt", error: "Permission denied" },
+            { name: "file2.txt", status: "failed" },
+        ];
+        const response = {
+            success: true,
+            apiResponse: [{ name: "file3.txt", status: "success" }, ...failedItems],
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "Directory");
+
+        expect(blockMocks.loggerWarn).toHaveBeenCalledWith(`2 items failed to download: ${JSON.stringify(failedItems)}`);
+        expect(blockMocks.errorMessage).toHaveBeenCalled();
+    });
+
+    it("handles both commandResponse warnings and apiResponse errors", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: true,
+            commandResponse: "some files were skipped",
+            apiResponse: [
+                { name: "file1.txt", error: "Failed" },
+                { name: "file2.txt", status: "success" },
+            ],
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.errorMessage).toHaveBeenCalled();
+    });
+
+    it("executes troubleshoot command when View Details is selected for errors", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.errorMessage.mockResolvedValueOnce(vscode.l10n.t("View Details"));
+        const response = { success: false };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.executeCommand).toHaveBeenCalledWith("zowe.troubleshootError", expect.any(CorrelatedError), expect.any(String));
+    });
+
+    it("executes troubleshoot command when View Details is selected for warnings", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.warningMessage.mockImplementation((_msg, _options) => {
+            return Promise.resolve(vscode.l10n.t("View Details"));
+        });
+        const response = {
+            success: true,
+            commandResponse: "file already exists",
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "Directory");
+
+        expect(blockMocks.executeCommand).toHaveBeenCalledWith("zowe.troubleshootError", expect.any(CorrelatedError), expect.any(String));
+    });
+
+    it("does not execute troubleshoot command when View Details is not selected", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.errorMessage.mockResolvedValueOnce(undefined);
+        const response = { success: false };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.executeCommand).not.toHaveBeenCalled();
+    });
+
+    it("handles complex response with all types of information", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: false,
+            commandResponse: "Some files failed to download and others were skipped because they already exist",
+            apiResponse: [
+                { name: "file1.txt", status: "success" },
+                { name: "file2.txt", error: "Permission denied" },
+                { name: "file3.txt", status: "failed" },
+            ],
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "Directory");
+
+        expect(blockMocks.loggerInfo).toHaveBeenCalled();
+        expect(blockMocks.loggerWarn).toHaveBeenCalled();
+        expect(blockMocks.errorMessage).toHaveBeenCalled();
+    });
+
+    it("handles numeric commandResponse correctly", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: true,
+            commandResponse: 12345,
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.loggerInfo).toHaveBeenCalledWith("Download response details: 12345");
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(vscode.l10n.t("{0} downloaded successfully.", "File"));
     });
 });

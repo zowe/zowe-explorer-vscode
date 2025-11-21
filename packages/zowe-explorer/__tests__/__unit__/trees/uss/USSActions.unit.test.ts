@@ -26,7 +26,7 @@ import {
 import { createUssApi, bindUssApi } from "../../../__mocks__/mockCreators/api";
 import { Constants } from "../../../../src/configuration/Constants";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
-import { Gui, Validation, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, Validation, imperative, ZoweExplorerApiType, MessageSeverity } from "@zowe/zowe-explorer-api";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
@@ -40,8 +40,10 @@ import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { IZoweTree } from "../../../../../zowe-explorer-api/src/tree/IZoweTree";
 import { IZoweUSSTreeNode } from "../../../../../zowe-explorer-api/src/tree";
 import { USSAttributeView } from "../../../../src/trees/uss/USSAttributeView";
+import { USSUtils } from "../../../../src/trees/uss/USSUtils";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { USSTree } from "../../../../src/trees/uss/USSTree";
+import { LocalFileManagement } from "../../../../src/management/LocalFileManagement";
 
 jest.mock("../../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -62,6 +64,8 @@ function createGlobalMocks() {
         withProgress: jest.fn(),
         writeText: jest.fn(),
         showInformationMessage: jest.fn(),
+        showMessage: jest.fn(),
+        infoMessage: jest.fn(),
         fileList: jest.fn(),
         setStatusBarMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
         showWarningMessage: jest.fn(),
@@ -143,6 +147,9 @@ function createGlobalMocks() {
         value: globalMocks.isBinaryFileSync,
         configurable: true,
     });
+    Object.defineProperty(Gui, "showMessage", { value: globalMocks.showMessage, configurable: true });
+    Object.defineProperty(Gui, "infoMessage", { value: globalMocks.infoMessage, configurable: true });
+    Object.defineProperty(globalMocks.Download, "ussDir", { value: jest.fn(), configurable: true });
     Object.defineProperty(vscode.env.clipboard, "writeText", { value: globalMocks.writeText, configurable: true });
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.workspace, "applyEdit", { value: jest.fn(), configurable: true });
@@ -531,7 +538,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
         globalMocks.showOpenDialog.mockReturnValue(undefined);
         await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, true);
         expect(globalMocks.showOpenDialog).toHaveBeenCalled();
-        expect(globalMocks.showInformationMessage.mock.calls.map((call) => call[0])).toEqual(["Operation cancelled"]);
+        expect(globalMocks.showMessage.mock.calls.map((call) => call[0])).toEqual(["Operation cancelled"]);
     });
 
     it("Tests that uploadDialog() throws an error successfully", async () => {
@@ -1054,5 +1061,1042 @@ describe("USS Action Unit Tests - function copyRelativePath", () => {
         const testNode = createUSSNode(createISession(), createIProfile());
         await USSActions.copyRelativePath(testNode);
         expect(mocked(vscode.env.clipboard.writeText)).toHaveBeenCalledWith("usstest");
+    });
+});
+
+describe("USS Action Unit Tests - downloading functions", () => {
+    let globalMocks: any;
+    let mockQuickPick: any;
+    let mockZoweLocalStorage: any;
+    let mockShowOpenDialog: any;
+
+    beforeEach(() => {
+        globalMocks = createGlobalMocks();
+
+        mockQuickPick = {
+            title: "",
+            placeholder: "",
+            ignoreFocusOut: false,
+            canSelectMany: false,
+            items: [],
+            selectedItems: [],
+            onDidAccept: jest.fn(),
+            onDidHide: jest.fn(),
+            show: jest.fn(),
+            hide: jest.fn(),
+            dispose: jest.fn(),
+        };
+
+        jest.spyOn(Gui, "createQuickPick").mockReturnValue(mockQuickPick);
+        mockShowOpenDialog = jest.spyOn(Gui, "showOpenDialog");
+        mockZoweLocalStorage = jest.spyOn(ZoweLocalStorage, "getValue");
+        jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue();
+        jest.spyOn(LocalFileManagement, "getDefaultUri").mockReturnValue(vscode.Uri.file("/default/path"));
+
+        jest.spyOn(USSUtils, "zosEncodingToString").mockImplementation((encoding) => {
+            if (!encoding) return "text";
+            switch (encoding.kind) {
+                case "binary":
+                    return "binary";
+                case "other":
+                    return encoding.codepage;
+                default:
+                    return "text";
+            }
+        });
+
+        jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
+        jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" });
+        jest.spyOn(SharedUtils, "handleDownloadResponse").mockResolvedValue();
+
+        globalMocks.ussApi = {
+            getTag: jest.fn().mockResolvedValue("untagged"),
+            getContents: jest.fn().mockResolvedValue({ success: true, commandResponse: "", apiResponse: {} }),
+            downloadDirectory: jest.fn().mockResolvedValue({ success: true, commandResponse: "", apiResponse: {} }),
+        };
+        jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(globalMocks.ussApi);
+
+        jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
+
+        jest.clearAllMocks();
+    });
+
+    afterEach(() => {
+        jest.resetAllMocks();
+        jest.restoreAllMocks();
+        jest.clearAllMocks();
+    });
+
+    const createMockNode = (): IZoweUSSTreeNode => {
+        const mockNode = createUSSNode(createISession(), createIProfile()) as IZoweUSSTreeNode;
+        mockNode.fullPath = "/u/test/file.txt";
+        return mockNode;
+    };
+    describe("getUssDirFilterOptions", () => {
+        let filterQuickPick: any;
+        let filterShowInputBox: jest.SpyInstance;
+
+        beforeEach(() => {
+            filterQuickPick = {
+                title: "",
+                placeholder: "",
+                ignoreFocusOut: false,
+                canSelectMany: false,
+                items: [],
+                selectedItems: [],
+                onDidAccept: jest.fn(),
+                onDidHide: jest.fn(),
+                show: jest.fn(),
+                hide: jest.fn(),
+                dispose: jest.fn(),
+            };
+
+            jest.spyOn(Gui, "createQuickPick").mockReturnValue(filterQuickPick);
+            filterShowInputBox = jest.spyOn(Gui, "showInputBox");
+            jest.clearAllMocks();
+        });
+
+        it("should return empty object when no filters are selected", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [];
+                callback();
+            });
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({});
+            expect(filterQuickPick.show).toHaveBeenCalled();
+            expect(filterQuickPick.dispose).toHaveBeenCalled();
+        });
+
+        it("should return null when user cancels selection", async () => {
+            filterQuickPick.onDidHide.mockImplementation((callback: () => void) => {
+                callback();
+            });
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toBeNull();
+            expect(filterQuickPick.dispose).toHaveBeenCalled();
+        });
+
+        it("should handle group filter input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "group", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("admin");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ group: "admin" });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("group"),
+                placeHolder: expect.stringContaining("admin"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle user filter input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "user", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("1001");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ user: "1001" });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("user"),
+                placeHolder: expect.stringContaining("IBMUSER"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle mtime filter input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "mtime", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("+7");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ mtime: "+7" });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("modification time"),
+                placeHolder: expect.stringContaining("+7"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle size filter input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "size", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("+1M");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ size: "+1M" });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("size"),
+                placeHolder: expect.stringContaining("+1M"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle permission filter input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "perm", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("755");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ perm: "755" });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("permission"),
+                placeHolder: expect.stringContaining("755"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle type filter input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "type", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("d");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ type: "d" });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("file type"),
+                placeHolder: expect.stringContaining("c, d, f, l, p, or s"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle depth filter input as number", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "depth", inputType: "number" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("3");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ depth: 3 });
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("depth"),
+                placeHolder: expect.stringContaining("2 levels"),
+                value: "",
+                validateInput: expect.any(Function),
+            });
+        });
+
+        it("should handle multiple filters", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [
+                    { key: "user", inputType: "string" },
+                    { key: "depth", inputType: "number" },
+                    { key: "size", inputType: "string" },
+                ];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValueOnce("IBMUSER").mockResolvedValueOnce("2").mockResolvedValueOnce("+100K");
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ user: "IBMUSER", depth: 2, size: "+100K" });
+            expect(filterShowInputBox).toHaveBeenCalledTimes(3);
+        });
+
+        it("should use current filter values as initial values", async () => {
+            const currentOptions = {
+                group: "ibmgroup",
+                mtime: "+30",
+                depth: 1,
+            };
+
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "group", inputType: "string" }];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValue("admin");
+
+            const result = await (USSActions as any).getUssDirFilterOptions(currentOptions);
+
+            expect(filterShowInputBox).toHaveBeenCalledWith({
+                prompt: expect.stringContaining("group"),
+                placeHolder: expect.stringContaining("admin"),
+                value: "ibmgroup",
+                validateInput: expect.any(Function),
+            });
+            expect(result).toEqual({ group: "admin" });
+        });
+
+        it("should validate empty input", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "user", inputType: "string" }];
+                callback();
+            });
+
+            filterShowInputBox.mockImplementation(({ validateInput: validator }: any) => {
+                const result = validator("");
+                return result === null ? Promise.resolve("test") : Promise.resolve(null);
+            });
+
+            await (USSActions as any).getUssDirFilterOptions();
+
+            expect(filterShowInputBox).toHaveBeenCalled();
+        });
+
+        it("should validate numeric input for depth", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [{ key: "depth", inputType: "number" }];
+                callback();
+            });
+
+            filterShowInputBox.mockImplementation(({ validateInput: validator }: any) => {
+                const result = validator("abc");
+                return result === null ? Promise.resolve("3") : Promise.resolve(null);
+            });
+
+            await (USSActions as any).getUssDirFilterOptions();
+
+            expect(filterShowInputBox).toHaveBeenCalled();
+        });
+
+        it("should skip filter when input is cancelled", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [
+                    { key: "user", inputType: "string" },
+                    { key: "group", inputType: "string" },
+                ];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValueOnce("IBMUSER").mockResolvedValueOnce(null); // cancelled
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ user: "IBMUSER" });
+        });
+
+        it("should skip filter when input is empty after trim", async () => {
+            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                filterQuickPick.selectedItems = [
+                    { key: "user", inputType: "string" },
+                    { key: "group", inputType: "string" },
+                ];
+                callback();
+            });
+            filterShowInputBox.mockResolvedValueOnce("IBMUSER").mockResolvedValueOnce("   "); // empty after trim
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ user: "IBMUSER" });
+        });
+    });
+
+    it("should handle directory filter options for USS directories", async () => {
+        const mockNode = createMockNode();
+        const filterOptions = { user: "IBMUSER", depth: 2 };
+        const getUssDirFilterOptionsSpy = jest.spyOn(USSActions as any, "getUssDirFilterOptions").mockResolvedValue(filterOptions);
+        mockZoweLocalStorage.mockReturnValue({});
+
+        const l10nSpy = jest.spyOn(vscode.l10n, "t").mockImplementation((options: any) => {
+            if (typeof options === "string") return options;
+            return options.message || options;
+        });
+
+        mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+            mockQuickPick.selectedItems = [{ label: "Set Filter Options" }];
+            callback();
+        });
+
+        mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+        const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
+
+        expect(getUssDirFilterOptionsSpy).toHaveBeenCalledWith({});
+        expect(result.dirFilterOptions).toEqual(filterOptions);
+
+        l10nSpy.mockRestore();
+        getUssDirFilterOptionsSpy.mockRestore();
+    });
+
+    it("should handle directory encoding selection for USS directories", async () => {
+        const mockNode = createMockNode();
+        mockZoweLocalStorage.mockReturnValue({});
+
+        const promptForDirectoryEncodingSpy = jest
+            .spyOn(SharedUtils, "promptForDirectoryEncoding")
+            .mockResolvedValue({ kind: "other", codepage: "UTF-8" });
+
+        const l10nSpy = jest.spyOn(vscode.l10n, "t").mockImplementation((options: any) => {
+            if (typeof options === "string") return options;
+            return options.message || options;
+        });
+
+        mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+            mockQuickPick.selectedItems = [{ label: "Choose Encoding" }];
+            callback();
+        });
+
+        mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+        const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
+
+        expect(promptForDirectoryEncodingSpy).toHaveBeenCalledWith(mockNode.getProfile(), mockNode.fullPath, undefined);
+        expect(result.dirOptions.directoryEncoding).toEqual({ kind: "other", codepage: "UTF-8" });
+
+        l10nSpy.mockRestore();
+        promptForDirectoryEncodingSpy.mockRestore();
+    });
+
+    it("should handle complex directory options combination for USS", async () => {
+        const mockNode = createMockNode();
+        const storedOptions = {
+            dirFilterOptions: { user: "existing" },
+        };
+        mockZoweLocalStorage.mockReturnValue(storedOptions);
+        const filterOptions = { user: "IBMUSER", group: "ibmgroup" };
+        const getUssDirFilterOptionsSpy = jest.spyOn(USSActions as any, "getUssDirFilterOptions").mockResolvedValue(filterOptions);
+
+        const l10nSpy = jest.spyOn(vscode.l10n, "t").mockImplementation((options: any) => {
+            if (typeof options === "string") return options;
+            return options.message || options;
+        });
+
+        mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+            mockQuickPick.selectedItems = [
+                { label: "Include Hidden Files" },
+                { label: "Search All Filesystems" },
+                { label: "Return Symlinks" },
+                { label: "Set Filter Options" },
+            ];
+            callback();
+        });
+
+        mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+        const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
+
+        expect(result.dirOptions.includeHidden).toBe(true);
+        expect(result.dirOptions.filesys).toBe(true);
+        expect(result.dirOptions.symlinks).toBe(true);
+        expect(result.dirFilterOptions).toEqual(filterOptions);
+
+        l10nSpy.mockRestore();
+        getUssDirFilterOptionsSpy.mockRestore();
+    });
+
+    describe("getUssDownloadOptions", () => {
+        it("should return default options when no stored values exist for file download", async () => {
+            const mockNode = createMockNode();
+            mockZoweLocalStorage.mockReturnValue(undefined);
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [{ label: "Generate Directory Structure", picked: true }];
+                callback();
+            });
+
+            mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/user/selected/path")]);
+
+            const result = await (USSActions as any).getUssDownloadOptions(mockNode, false);
+
+            expect(result).toEqual({
+                overwrite: false,
+                generateDirectory: true,
+                chooseEncoding: false,
+                selectedPath: vscode.Uri.file("/user/selected/path"),
+                dirOptions: {
+                    includeHidden: false,
+                    filesys: false,
+                    symlinks: false,
+                    chooseFilterOptions: false,
+                },
+                dirFilterOptions: {},
+            });
+            expect(mockQuickPick.show).toHaveBeenCalled();
+            expect(mockShowOpenDialog).toHaveBeenCalledWith({
+                canSelectFiles: false,
+                canSelectFolders: true,
+                canSelectMany: false,
+                openLabel: "Select Download Location",
+                defaultUri: expect.any(Object),
+            });
+        });
+
+        it("should return directory-specific options when downloading directories", async () => {
+            const mockNode = createMockNode();
+            mockZoweLocalStorage.mockReturnValue(undefined);
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [
+                    { label: "Overwrite", picked: true },
+                    { label: "Include Hidden Files", picked: true },
+                    { label: "Generate Directory Structure", picked: true },
+                ];
+                callback();
+            });
+
+            mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/user/selected/path")]);
+
+            const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
+
+            expect(result.overwrite).toBe(true);
+            expect(result.dirOptions.includeHidden).toBe(true);
+            expect(result.generateDirectory).toBe(true);
+        });
+
+        it("should use stored values as initial selection", async () => {
+            const mockNode = createMockNode();
+            const storedOptions = {
+                overwrite: true,
+                generateDirectory: false,
+                chooseEncoding: false,
+                selectedPath: vscode.Uri.file("/stored/path"),
+                dirOptions: { includeHidden: true },
+            };
+            mockZoweLocalStorage.mockReturnValue(storedOptions);
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [{ label: "Choose Encoding", picked: true }];
+                callback();
+            });
+
+            mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/new/path")]);
+            jest.spyOn(SharedUtils, "promptForDirectoryEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" });
+
+            const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
+
+            expect(result.chooseEncoding).toBe(true);
+            expect(result.selectedPath.fsPath).toBe("/new/path");
+        });
+
+        it("should return undefined when user cancels quick pick selection", async () => {
+            const mockNode = createMockNode();
+            mockZoweLocalStorage.mockReturnValue({});
+
+            mockQuickPick.onDidHide.mockImplementation((callback: () => void) => {
+                callback();
+            });
+
+            const result = await (USSActions as any).getUssDownloadOptions(mockNode, false);
+
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined when user cancels folder selection", async () => {
+            const mockNode = createMockNode();
+            mockZoweLocalStorage.mockReturnValue({});
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [];
+                callback();
+            });
+
+            mockShowOpenDialog.mockResolvedValue(undefined);
+
+            const result = await (USSActions as any).getUssDownloadOptions(mockNode, false);
+
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined when user cancels encoding selection", async () => {
+            const mockNode = createMockNode();
+            mockZoweLocalStorage.mockReturnValue({});
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [{ label: "Choose Encoding", picked: true }];
+                callback();
+            });
+
+            jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(undefined);
+
+            const result = await (USSActions as any).getUssDownloadOptions(mockNode, false);
+
+            expect(result).toBeUndefined();
+        });
+
+        it("should handle empty folder selection", async () => {
+            const mockNode = createMockNode();
+            mockZoweLocalStorage.mockReturnValue({});
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [];
+                callback();
+            });
+
+            mockShowOpenDialog.mockResolvedValue([]);
+
+            const result = await (USSActions as any).getUssDownloadOptions(mockNode, false);
+
+            expect(result).toBeUndefined();
+        });
+
+        it("should allow selecting no options (all unchecked)", async () => {
+            const mockNode = createMockNode();
+            mockZoweLocalStorage.mockReturnValue({});
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [];
+                callback();
+            });
+
+            mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            const result = await (USSActions as any).getUssDownloadOptions(mockNode, false);
+
+            expect(result).toEqual({
+                overwrite: false,
+                generateDirectory: false,
+                chooseEncoding: false,
+                selectedPath: vscode.Uri.file("/test/path"),
+                dirOptions: {
+                    includeHidden: false,
+                    filesys: false,
+                    symlinks: false,
+                    chooseFilterOptions: false,
+                },
+                dirFilterOptions: {},
+            });
+        });
+
+        it("should get tagged encoding for files when choosing encoding", async () => {
+            const mockNode = createMockNode();
+            mockZoweLocalStorage.mockReturnValue({});
+            const mockUssApi = { getTag: jest.fn().mockResolvedValue("utf-8") } as any;
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi);
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [{ label: "Choose Encoding", picked: true }];
+                callback();
+            });
+
+            mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            await (USSActions as any).getUssDownloadOptions(mockNode, false);
+
+            expect(mockUssApi.getTag).toHaveBeenCalledWith("/u/test/file.txt");
+            expect(SharedUtils.promptForEncoding).toHaveBeenCalledWith(mockNode, "utf-8");
+        });
+
+        it("should not get tagged encoding for directories when choosing encoding", async () => {
+            const mockNode = createMockNode();
+            mockZoweLocalStorage.mockReturnValue({});
+            const mockUssApi = { getTag: jest.fn().mockResolvedValue("utf-8") } as any;
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi);
+            jest.spyOn(SharedUtils, "promptForDirectoryEncoding").mockResolvedValue(undefined);
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [{ label: "Choose Encoding", picked: true }];
+                callback();
+            });
+
+            mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            await (USSActions as any).getUssDownloadOptions(mockNode, true);
+
+            expect(mockUssApi.getTag).not.toHaveBeenCalled();
+            expect(SharedUtils.promptForDirectoryEncoding).toHaveBeenCalledWith(mockNode.getProfile(), mockNode.fullPath, undefined);
+        });
+    });
+
+    describe("downloadUssFile", () => {
+        it("should download a USS file successfully with default encoding", async () => {
+            const mockNode = createMockNode();
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                encoding: undefined,
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback();
+            });
+
+            await USSActions.downloadUssFile(mockNode);
+
+            expect(ZoweLogger.trace).toHaveBeenCalledWith("uss.actions.downloadUssFile called.");
+            expect(globalMocks.ussApi.getContents).toHaveBeenCalledWith(
+                "/u/test/file.txt",
+                expect.objectContaining({
+                    file: expect.stringContaining("file.txt"),
+                    binary: false,
+                    encoding: undefined,
+                })
+            );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS file");
+        });
+
+        it("should download a USS file with binary encoding", async () => {
+            const mockNode = createMockNode();
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                encoding: { kind: "binary" },
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback();
+            });
+
+            await USSActions.downloadUssFile(mockNode);
+
+            expect(globalMocks.ussApi.getContents).toHaveBeenCalledWith(
+                "/u/test/file.txt",
+                expect.objectContaining({
+                    binary: true,
+                })
+            );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS file");
+        });
+
+        it("should download a USS file with custom codepage encoding", async () => {
+            const mockNode = createMockNode();
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                encoding: { kind: "other", codepage: "IBM-1047" },
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback();
+            });
+
+            await USSActions.downloadUssFile(mockNode);
+
+            expect(globalMocks.ussApi.getContents).toHaveBeenCalledWith(
+                "/u/test/file.txt",
+                expect.objectContaining({
+                    binary: false,
+                    encoding: "IBM-1047",
+                })
+            );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS file");
+        });
+
+        it("should download a USS file with directory structure generation", async () => {
+            const mockNode = createMockNode();
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: true,
+                encoding: undefined,
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback();
+            });
+
+            await USSActions.downloadUssFile(mockNode);
+
+            expect(globalMocks.ussApi.getContents).toHaveBeenCalledWith(
+                "/u/test/file.txt",
+                expect.objectContaining({
+                    file: expect.stringMatching(/u.test.file\.txt$/),
+                })
+            );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS file");
+        });
+
+        it("should show cancellation message when download options are cancelled", async () => {
+            const mockNode = createMockNode();
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(undefined);
+
+            await USSActions.downloadUssFile(mockNode);
+
+            expect(globalMocks.showMessage).toHaveBeenCalledWith("Operation cancelled");
+            expect(globalMocks.ussApi.getContents).not.toHaveBeenCalled();
+        });
+
+        it("should handle download errors properly", async () => {
+            const mockNode = createMockNode();
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                encoding: undefined,
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+
+            const error = new Error("Download failed");
+            globalMocks.ussApi.getContents.mockRejectedValue(error);
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback();
+            });
+
+            await USSActions.downloadUssFile(mockNode);
+
+            expect(AuthUtils.errorHandling).toHaveBeenCalledWith(error, {
+                apiType: ZoweExplorerApiType.Uss,
+                profile: mockNode.getProfile(),
+            });
+        });
+    });
+
+    describe("downloadUssDirectory", () => {
+        it("should download a USS directory successfully", async () => {
+            const mockNode = createMockNode();
+            mockNode.fullPath = "/u/test/directory";
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                overwrite: true,
+                dirOptions: {
+                    includeHidden: false,
+                    directoryEncoding: { kind: "other", codepage: "IBM-1047" },
+                },
+                encoding: { kind: "other", codepage: "IBM-1047" },
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback({ report: jest.fn() }, { isCancellationRequested: false });
+            });
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(ZoweLogger.trace).toHaveBeenCalledWith("uss.actions.downloadUssDirectory called.");
+            expect(USSUtils.countAllFilesRecursively).toHaveBeenCalledWith(mockNode, undefined);
+            expect(ZoweExplorerApiRegister.getUssApi).toHaveBeenCalledWith(mockNode.getProfile());
+            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
+                "/u/test/directory",
+                expect.objectContaining({
+                    directory: "/test/download/path",
+                    overwrite: true,
+                    binary: false,
+                    encoding: "IBM-1047",
+                    includeHidden: false,
+                    maxConcurrentRequests: 1,
+                })
+            );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS directory");
+        });
+
+        it("should download a USS directory with directory structure generation", async () => {
+            const mockNode = createMockNode();
+            mockNode.fullPath = "/u/test/directory";
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: true,
+                overwrite: false,
+                dirOptions: { includeHidden: true },
+                encoding: { kind: "binary" },
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(3);
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback({ report: jest.fn() }, { isCancellationRequested: false });
+            });
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
+                "/u/test/directory",
+                expect.objectContaining({
+                    directory: expect.stringMatching(/u.test.directory$/),
+                    overwrite: false,
+                    includeHidden: true,
+                })
+            );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS directory");
+        });
+
+        it("should show info message when directory contains no files", async () => {
+            const mockNode = createMockNode();
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                overwrite: false,
+                includeHidden: false,
+                encoding: { kind: "binary" },
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(0);
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(globalMocks.infoMessage).toHaveBeenCalledWith("The selected directory contains no files to download.");
+            expect(globalMocks.ussApi.downloadDirectory).not.toHaveBeenCalled();
+        });
+
+        it("should show warning and prompt for large directory downloads", async () => {
+            const mockNode = createMockNode();
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                overwrite: false,
+                dirOptions: { includeHidden: false },
+                encoding: undefined,
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(1000);
+
+            globalMocks.showMessage.mockResolvedValue("Yes");
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback({ report: jest.fn() }, { isCancellationRequested: false });
+            });
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(globalMocks.showMessage).toHaveBeenCalledWith(
+                "This directory has {0} members. Downloading a large number of files may take a long time. Do you want to continue?",
+                expect.objectContaining({
+                    severity: MessageSeverity.WARN,
+                    items: ["Yes", "No"],
+                    vsCodeOpts: { modal: true },
+                })
+            );
+            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalled();
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS directory");
+        });
+
+        it("should cancel download when user chooses No for large directory", async () => {
+            const mockNode = createMockNode();
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                overwrite: false,
+                dirOptions: { includeHidden: false },
+                encoding: undefined,
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(1000);
+
+            globalMocks.showMessage.mockResolvedValue("No");
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(globalMocks.ussApi.downloadDirectory).not.toHaveBeenCalled();
+        });
+
+        it("should handle cancellation during download", async () => {
+            const mockNode = createMockNode();
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                overwrite: false,
+                dirOptions: { includeHidden: false },
+                encoding: undefined,
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback({ report: jest.fn() }, { isCancellationRequested: true });
+            });
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(globalMocks.showMessage).toHaveBeenCalledWith("Download cancelled");
+            expect(globalMocks.ussApi.downloadDirectory).not.toHaveBeenCalled();
+        });
+
+        it("should show cancellation message when download options are cancelled", async () => {
+            const mockNode = createMockNode();
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(undefined);
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(globalMocks.showMessage).toHaveBeenCalledWith("Operation cancelled");
+            expect(globalMocks.ussApi.downloadDirectory).not.toHaveBeenCalled();
+        });
+
+        it("should handle download errors properly", async () => {
+            const mockNode = createMockNode();
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                overwrite: false,
+                dirOptions: { includeHidden: false },
+                encoding: undefined,
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
+
+            const error = new Error("Download failed");
+            globalMocks.ussApi.downloadDirectory.mockRejectedValue(error);
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback({ report: jest.fn() }, { isCancellationRequested: false });
+            });
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(AuthUtils.errorHandling).toHaveBeenCalledWith(error, {
+                apiType: ZoweExplorerApiType.Uss,
+                profile: mockNode.getProfile(),
+            });
+        });
+
+        it("should use profile settings for maxConcurrentRequests and responseTimeout", async () => {
+            const mockNode = createMockNode();
+            mockNode.getProfile = jest.fn().mockReturnValue({
+                profile: {
+                    encoding: "utf-8",
+                    maxConcurrentRequests: 5,
+                    responseTimeout: 30000,
+                },
+            });
+
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                overwrite: false,
+                dirOptions: { includeHidden: false },
+                encoding: undefined,
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback({ report: jest.fn() }, { isCancellationRequested: false });
+            });
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.objectContaining({
+                    maxConcurrentRequests: 5,
+                    responseTimeout: 30000,
+                })
+            );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS directory");
+        });
     });
 });
