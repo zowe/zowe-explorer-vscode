@@ -12,6 +12,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Refactored data set pagination to use the new `getCount` API (if available) to optimize access to the total item count.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 - Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
 - Added support for `encoding` profile property when retrieving JCL with z/OSMF. [#3877](https://github.com/zowe/zowe-explorer-vscode/pull/3877)
+- Added support for copying data sets from multiple source LPARs at once in the cross-LPAR copy/paste functionality. [#3945](https://github.com/zowe/zowe-explorer-vscode/issues/3945)
 
 ### Bug fixes
 
