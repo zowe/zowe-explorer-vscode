@@ -2521,7 +2521,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [{ name: "HLQ.TEST.DATASET" }],
+                items: [{ dsname: "HLQ.TEST.DATASET" }],
             },
         });
         mocked(vscode.window.showInputBox).mockResolvedValue("HLQ.TEST.DATASET");
@@ -4108,6 +4108,154 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
             preview: false,
             viewColumn: 1,
         });
+    });
+});
+
+describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const mvsApi = createMvsApi(imperativeProfile);
+        bindMvsApi(mvsApi);
+
+        return {
+            imperativeProfile,
+            mvsApi,
+        };
+    }
+
+    afterAll(() => jest.restoreAllMocks());
+
+    it("Should not show replacement dialog when A.B does not exist but A.B.C exists (false positive fix)", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        // Mock the dataSet API to return A.B.C when querying for A.B
+        const dataSetSpy = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { dsname: "A.B.C" }, // Similar name but not an exact match
+                ],
+            },
+        });
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "A.B", "ps");
+
+        // Should return "notFound" because A.B doesn't exist (only A.B.C exists)
+        expect(result).toBe("notFound");
+        expect(dataSetSpy).toHaveBeenCalledWith("A.B", { responseTimeout: undefined });
+        expect(mocked(Gui.showMessage)).not.toHaveBeenCalled();
+
+        dataSetSpy.mockRestore();
+    });
+
+    it("Should show replacement dialog when exact match exists", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        // Mock the dataSet API to return exact match
+        const dataSetSpy = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { dsname: "A.B" }, // Exact match
+                    { dsname: "A.B.C" }, // Also returned but should still match
+                ],
+            },
+        });
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "A.B", "ps");
+
+        // Should return "replace" because A.B exists (exact match)
+        expect(result).toBe("replace");
+        expect(dataSetSpy).toHaveBeenCalledWith("A.B", { responseTimeout: undefined });
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+
+        dataSetSpy.mockRestore();
+    });
+
+    it("Should handle case-insensitive exact match", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        // Mock the dataSet API to return lowercase match
+        const dataSetSpy = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { dsname: "a.b" }, // Lowercase exact match
+                ],
+            },
+        });
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Cancel");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "A.B", "ps");
+
+        // Should return "cancel" because exact match exists but user cancelled
+        expect(result).toBe("cancel");
+        expect(dataSetSpy).toHaveBeenCalledWith("A.B", { responseTimeout: undefined });
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+
+        dataSetSpy.mockRestore();
+    });
+
+    it("Should not show replacement dialog for member when similar PDS exists but member doesn't", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        // Mock allMembers to return different member
+        const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { member: "MEMBER2" }, // Different member
+                ],
+            },
+        });
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "A.B(MEMBER1)", "mem");
+
+        // Should return "notFound" because MEMBER1 doesn't exist
+        expect(result).toBe("notFound");
+        expect(allMembersSpy).toHaveBeenCalledWith("A.B", { responseTimeout: undefined });
+        expect(mocked(Gui.showMessage)).not.toHaveBeenCalled();
+
+        allMembersSpy.mockRestore();
+    });
+
+    it("Should show replacement dialog for partitioned dataset when exact match exists", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        // Mock the dataSet API to return exact match for PO
+        const dataSetSpy = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { dsname: "MY.PDS" }, // Exact match
+                ],
+            },
+        });
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "MY.PDS", "po");
+
+        // Should return "replace" because MY.PDS exists
+        expect(result).toBe("replace");
+        expect(dataSetSpy).toHaveBeenCalledWith("MY.PDS", { responseTimeout: undefined });
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(expect.stringContaining("partitioned (PO) data set already exists"), expect.anything());
+
+        dataSetSpy.mockRestore();
     });
 });
 

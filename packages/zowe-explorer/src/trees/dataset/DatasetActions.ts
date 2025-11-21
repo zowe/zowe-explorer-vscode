@@ -2256,7 +2256,9 @@ export class DatasetActions {
             }
         } else {
             const res = await mvsApi.dataSet(name, options);
-            if (res?.success && res.apiResponse?.items.length > 0) {
+            // Filter results to ensure exact match (e.g., A.B should not match A.B.C)
+            const exactMatch = res?.success && res.apiResponse?.items.some((item) => item.dsname?.toUpperCase() === name.toUpperCase());
+            if (exactMatch) {
                 if (type === "ps") {
                     q = vscode.l10n.t("The physical sequential (PS) data set already exists.\nDo you want to replace it?");
                 } else if (type === "po") {
