@@ -4113,7 +4113,6 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
 
 describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
     function createBlockMocks() {
-        const session = createISession();
         const imperativeProfile = createIProfile();
         const mvsApi = createMvsApi(imperativeProfile);
         bindMvsApi(mvsApi);
