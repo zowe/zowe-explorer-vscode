@@ -13,239 +13,237 @@ import { useCallback } from "react";
 import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "./useUtilityHelpers";
 import { updateChangesForRenames } from "../utils/renameUtils";
-import {
-  flattenProfiles,
-  getRenamedProfileKeyWithNested,
-  sortProfilesAtLevel,
-} from "../utils";
+import { flattenProfiles, getRenamedProfileKeyWithNested, sortProfilesAtLevel } from "../utils";
 
 export function useProfileUtils() {
-  const {
-    configurations,
-    selectedTab,
-    pendingChanges,
-    deletions,
-    pendingDefaults,
-    defaultsDeletions,
-    autostoreChanges,
-    renames,
-    dragDroppedProfiles,
-    configEditorSettings,
-  } = useConfigContext();
+    const {
+        configurations,
+        selectedTab,
+        pendingChanges,
+        deletions,
+        pendingDefaults,
+        defaultsDeletions,
+        autostoreChanges,
+        renames,
+        dragDroppedProfiles,
+        configEditorSettings,
+    } = useConfigContext();
 
-  const { profileSortOrder } = configEditorSettings;
+    const { profileSortOrder } = configEditorSettings;
 
-  const utilityHelpers = useUtilityHelpers();
+    const utilityHelpers = useUtilityHelpers();
 
-  const formatPendingChanges = useCallback(() => {
-    const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
-      Object.keys(changesForPath).map((key) => {
-        const { value, path, profile, secure } = changesForPath[key];
-        return { key, value, path, profile, configPath, secure };
-      })
-    );
+    const formatPendingChanges = useCallback(() => {
+        const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
+            Object.keys(changesForPath).map((key) => {
+                const { value, path, profile, secure } = changesForPath[key];
+                return { key, value, path, profile, configPath, secure };
+            })
+        );
 
-    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
+        const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
 
-    const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
-      Object.keys(changesForPath).map((key) => {
-        const { value, path } = changesForPath[key];
-        return { key, value, path, configPath, secure: false };
-      })
-    );
+        const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
+            Object.keys(changesForPath).map((key) => {
+                const { value, path } = changesForPath[key];
+                return { key, value, path, configPath, secure: false };
+            })
+        );
 
-    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
-      keys.map((key) => ({ key, configPath, secure: false }))
-    );
+        const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
+            keys.map((key) => ({ key, configPath, secure: false }))
+        );
 
-    const renamesData = Object.entries(renames).flatMap(([configPath, configRenames]) =>
-      Object.entries(configRenames).map(([originalKey, newKey]) => ({
-        originalKey,
-        newKey,
-        configPath,
-      }))
-    );
+        const renamesData = Object.entries(renames).flatMap(([configPath, configRenames]) =>
+            Object.entries(configRenames).map(([originalKey, newKey]) => ({
+                originalKey,
+                newKey,
+                configPath,
+            }))
+        );
 
-    const updatedChanges = updateChangesForRenames(changes, renamesData);
+        const updatedChanges = updateChangesForRenames(changes, renamesData);
 
-    const result = {
-      changes: updatedChanges,
-      deletions: deleteKeys,
-      defaultsChanges,
-      defaultsDeleteKeys: defaultsDeleteKeys,
-      renames: renamesData,
-    };
+        const result = {
+            changes: updatedChanges,
+            deletions: deleteKeys,
+            defaultsChanges,
+            defaultsDeleteKeys: defaultsDeleteKeys,
+            renames: renamesData,
+        };
 
-    return result;
-  }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, renames]);
+        return result;
+    }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, renames]);
 
-  const getAvailableProfiles = useCallback(() => {
-    if (selectedTab === null) return ["root"];
+    const getAvailableProfiles = useCallback(() => {
+        if (selectedTab === null) return ["root"];
 
-    const config = configurations[selectedTab].properties;
-    const flatProfiles = flattenProfiles(config.profiles);
-    const profileNames = Object.keys(flatProfiles);
+        const config = configurations[selectedTab].properties;
+        const flatProfiles = flattenProfiles(config.profiles);
+        const profileNames = Object.keys(flatProfiles);
 
-    const pendingProfiles = new Set<string>();
-    Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([_, entry]) => {
-      if (entry.profile) {
-        pendingProfiles.add(entry.profile);
-      }
-    });
-
-    const deletedProfiles = new Set<string>();
-    const configPath = configurations[selectedTab].configPath;
-    const deletedKeys = deletions[configPath] || [];
-    deletedKeys.forEach((key) => {
-      const keyParts = key.split(".");
-      if (keyParts[0] === "profiles" && keyParts.length >= 2) {
-        const profileParts: string[] = [];
-        for (let i = 1; i < keyParts.length; i++) {
-          if (keyParts[i] !== "profiles") {
-            profileParts.push(keyParts[i]);
-          }
-        }
-        const profileName = profileParts.join(".");
-        deletedProfiles.add(profileName);
-
-        const renamedDeletedProfile = getRenamedProfileKeyWithNested(profileName, configPath, renames);
-        if (renamedDeletedProfile !== profileName) {
-          deletedProfiles.add(renamedDeletedProfile);
-        }
-
-        profileNames.forEach((existingProfile) => {
-          if (existingProfile.startsWith(profileName + ".")) {
-            deletedProfiles.add(existingProfile);
-            const renamedProfile = getRenamedProfileKeyWithNested(existingProfile, configPath, renames);
-            deletedProfiles.add(renamedProfile);
-          }
+        const pendingProfiles = new Set<string>();
+        Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([_, entry]) => {
+            if (entry.profile) {
+                pendingProfiles.add(entry.profile);
+            }
         });
-      }
-    });
 
-    const renamedProfileNames = profileNames.map((profileName) => {
-      const configPath = configurations[selectedTab].configPath;
-      return getRenamedProfileKeyWithNested(profileName, configPath, renames);
-    });
+        const deletedProfiles = new Set<string>();
+        const configPath = configurations[selectedTab].configPath;
+        const deletedKeys = deletions[configPath] || [];
+        deletedKeys.forEach((key) => {
+            const keyParts = key.split(".");
+            if (keyParts[0] === "profiles" && keyParts.length >= 2) {
+                const profileParts: string[] = [];
+                for (let i = 1; i < keyParts.length; i++) {
+                    if (keyParts[i] !== "profiles") {
+                        profileParts.push(keyParts[i]);
+                    }
+                }
+                const profileName = profileParts.join(".");
+                deletedProfiles.add(profileName);
 
-    const allProfiles = new Set(["root", ...renamedProfileNames, ...Array.from(pendingProfiles)]);
-    deletedProfiles.forEach((profile) => allProfiles.delete(profile));
+                const renamedDeletedProfile = getRenamedProfileKeyWithNested(profileName, configPath, renames);
+                if (renamedDeletedProfile !== profileName) {
+                    deletedProfiles.add(renamedDeletedProfile);
+                }
 
-    const profilesToSort = Array.from(allProfiles);
-    const result = sortProfilesAtLevel(profilesToSort, profileSortOrder);
+                profileNames.forEach((existingProfile) => {
+                    if (existingProfile.startsWith(profileName + ".")) {
+                        deletedProfiles.add(existingProfile);
+                        const renamedProfile = getRenamedProfileKeyWithNested(existingProfile, configPath, renames);
+                        deletedProfiles.add(renamedProfile);
+                    }
+                });
+            }
+        });
 
-    return result;
-  }, [selectedTab, configurations, pendingChanges, deletions, renames, profileSortOrder]);
+        const renamedProfileNames = profileNames.map((profileName) => {
+            const configPath = configurations[selectedTab].configPath;
+            return getRenamedProfileKeyWithNested(profileName, configPath, renames);
+        });
 
-  const getAvailableProfilesForConfig = useCallback(
-    (configPath: string): string[] => {
-      const config = configurations.find((c) => c.configPath === configPath);
-      const profilesObj = config?.properties?.profiles;
-      if (!profilesObj) {
-        return [];
-      }
+        const allProfiles = new Set(["root", ...renamedProfileNames, ...Array.from(pendingProfiles)]);
+        deletedProfiles.forEach((profile) => allProfiles.delete(profile));
 
-      const pendingProfiles = utilityHelpers.extractPendingProfiles(configPath);
+        const profilesToSort = Array.from(allProfiles);
+        const result = sortProfilesAtLevel(profilesToSort, profileSortOrder);
 
-      const getAvailableProfiles = (profiles: any, parentKey = ""): string[] => {
-        const available: string[] = [];
-        for (const key of Object.keys(profiles)) {
-          const profile = profiles[key];
-          const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+        return result;
+    }, [selectedTab, configurations, pendingChanges, deletions, renames, profileSortOrder]);
 
-          if (!utilityHelpers.isProfileOrParentDeleted(qualifiedKey, configPath)) {
-            available.push(qualifiedKey);
-          }
+    const getAvailableProfilesForConfig = useCallback(
+        (configPath: string): string[] => {
+            const config = configurations.find((c) => c.configPath === configPath);
+            const profilesObj = config?.properties?.profiles;
+            if (!profilesObj) {
+                return [];
+            }
 
-          if (profile.profiles) {
-            available.push(...getAvailableProfiles(profile.profiles, qualifiedKey));
-          }
-        }
-        return available;
-      };
+            const pendingProfiles = utilityHelpers.extractPendingProfiles(configPath);
 
-      const existingProfiles = getAvailableProfiles(profilesObj);
-      const pendingProfileKeys = Object.keys(pendingProfiles).filter(
-        (key) => !existingProfiles.includes(key) && !utilityHelpers.isProfileOrParentDeleted(key, configPath)
-      );
+            const getAvailableProfiles = (profiles: any, parentKey = ""): string[] => {
+                const available: string[] = [];
+                for (const key of Object.keys(profiles)) {
+                    const profile = profiles[key];
+                    const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
 
-      return [...existingProfiles, ...pendingProfileKeys];
-    },
-    [configurations, selectedTab, deletions, utilityHelpers]
-  );
+                    if (!utilityHelpers.isProfileOrParentDeleted(qualifiedKey, configPath)) {
+                        available.push(qualifiedKey);
+                    }
 
-  const doesProfileExist = useCallback(
-    (profileKey: string, configPath: string): boolean => {
-      const availableProfiles = getAvailableProfilesForConfig(configPath);
-      return availableProfiles.includes(profileKey);
-    },
-    [getAvailableProfilesForConfig]
-  );
+                    if (profile.profiles) {
+                        available.push(...getAvailableProfiles(profile.profiles, qualifiedKey));
+                    }
+                }
+                return available;
+            };
 
-  const hasPendingChanges = useCallback(() => {
-    const hasChanges = Object.keys(pendingChanges).length > 0;
-    const hasDeletions = Object.entries(deletions).some(([_, keys]) => keys.length > 0);
-    const hasPendingDefaults = Object.keys(pendingDefaults).length > 0;
-    const hasDefaultsDeletions = Object.entries(defaultsDeletions).some(([_, keys]) => keys.length > 0);
-    const hasAutostoreChanges = Object.keys(autostoreChanges).length > 0;
-    const hasRenames = Object.entries(renames).some(([_, configRenames]) => Object.keys(configRenames).length > 0);
-    const hasDragDroppedProfiles = Object.entries(dragDroppedProfiles).some(([_, profiles]) => profiles.size > 0);
+            const existingProfiles = getAvailableProfiles(profilesObj);
+            const pendingProfileKeys = Object.keys(pendingProfiles).filter(
+                (key) => !existingProfiles.includes(key) && !utilityHelpers.isProfileOrParentDeleted(key, configPath)
+            );
 
-    return hasChanges || hasDeletions || hasPendingDefaults || hasDefaultsDeletions || hasAutostoreChanges || hasRenames || hasDragDroppedProfiles;
-  }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, autostoreChanges, renames, dragDroppedProfiles]);
+            return [...existingProfiles, ...pendingProfileKeys];
+        },
+        [configurations, selectedTab, deletions, utilityHelpers]
+    );
 
-  const findOptimalReplacementProfile = useCallback(
-    (deletedProfileKey: string, configPath: string): string | null => {
-      const allAvailableProfiles = getAvailableProfilesForConfig(configPath);
+    const doesProfileExist = useCallback(
+        (profileKey: string, configPath: string): boolean => {
+            const availableProfiles = getAvailableProfilesForConfig(configPath);
+            return availableProfiles.includes(profileKey);
+        },
+        [getAvailableProfilesForConfig]
+    );
 
-      if (allAvailableProfiles.length === 0) {
-        return null;
-      }
+    const hasPendingChanges = useCallback(() => {
+        const hasChanges = Object.keys(pendingChanges).length > 0;
+        const hasDeletions = Object.entries(deletions).some(([_, keys]) => keys.length > 0);
+        const hasPendingDefaults = Object.keys(pendingDefaults).length > 0;
+        const hasDefaultsDeletions = Object.entries(defaultsDeletions).some(([_, keys]) => keys.length > 0);
+        const hasAutostoreChanges = Object.keys(autostoreChanges).length > 0;
+        const hasRenames = Object.entries(renames).some(([_, configRenames]) => Object.keys(configRenames).length > 0);
+        const hasDragDroppedProfiles = Object.entries(dragDroppedProfiles).some(([_, profiles]) => profiles.size > 0);
 
-      if (deletedProfileKey.includes(".")) {
-        const parentKey = deletedProfileKey.split(".").slice(0, -1).join(".");
-        if (allAvailableProfiles.includes(parentKey)) {
-          return parentKey;
-        }
-      }
+        return (
+            hasChanges || hasDeletions || hasPendingDefaults || hasDefaultsDeletions || hasAutostoreChanges || hasRenames || hasDragDroppedProfiles
+        );
+    }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, autostoreChanges, renames, dragDroppedProfiles]);
 
-      const deletedParts = deletedProfileKey.split(".");
-      if (deletedParts.length > 1) {
-        const parentKey = deletedParts.slice(0, -1).join(".");
-        const siblings = allAvailableProfiles.filter((profile) => profile.startsWith(parentKey + ".") && profile !== deletedProfileKey);
-        if (siblings.length > 0) {
-          return siblings[0];
-        }
-      }
+    const findOptimalReplacementProfile = useCallback(
+        (deletedProfileKey: string, configPath: string): string | null => {
+            const allAvailableProfiles = getAvailableProfilesForConfig(configPath);
 
-      const currentIndex = allAvailableProfiles.indexOf(deletedProfileKey);
-      if (currentIndex !== -1) {
-        for (let i = currentIndex + 1; i < allAvailableProfiles.length; i++) {
-          const candidate = allAvailableProfiles[i];
-          if (candidate !== deletedProfileKey) {
-            return candidate;
-          }
-        }
+            if (allAvailableProfiles.length === 0) {
+                return null;
+            }
 
-        for (let i = currentIndex - 1; i >= 0; i--) {
-          const candidate = allAvailableProfiles[i];
-          if (candidate !== deletedProfileKey) {
-            return candidate;
-          }
-        }
-      }
+            if (deletedProfileKey.includes(".")) {
+                const parentKey = deletedProfileKey.split(".").slice(0, -1).join(".");
+                if (allAvailableProfiles.includes(parentKey)) {
+                    return parentKey;
+                }
+            }
 
-      return allAvailableProfiles[0] || null;
-    },
-    [getAvailableProfilesForConfig]
-  );
+            const deletedParts = deletedProfileKey.split(".");
+            if (deletedParts.length > 1) {
+                const parentKey = deletedParts.slice(0, -1).join(".");
+                const siblings = allAvailableProfiles.filter((profile) => profile.startsWith(parentKey + ".") && profile !== deletedProfileKey);
+                if (siblings.length > 0) {
+                    return siblings[0];
+                }
+            }
 
-  return {
-    formatPendingChanges,
-    getAvailableProfiles,
-    getAvailableProfilesForConfig,
-    doesProfileExist,
-    hasPendingChanges,
-    findOptimalReplacementProfile,
-  };
+            const currentIndex = allAvailableProfiles.indexOf(deletedProfileKey);
+            if (currentIndex !== -1) {
+                for (let i = currentIndex + 1; i < allAvailableProfiles.length; i++) {
+                    const candidate = allAvailableProfiles[i];
+                    if (candidate !== deletedProfileKey) {
+                        return candidate;
+                    }
+                }
+
+                for (let i = currentIndex - 1; i >= 0; i--) {
+                    const candidate = allAvailableProfiles[i];
+                    if (candidate !== deletedProfileKey) {
+                        return candidate;
+                    }
+                }
+            }
+
+            return allAvailableProfiles[0] || null;
+        },
+        [getAvailableProfilesForConfig]
+    );
+
+    return {
+        formatPendingChanges,
+        getAvailableProfiles,
+        getAvailableProfilesForConfig,
+        doesProfileExist,
+        hasPendingChanges,
+        findOptimalReplacementProfile,
+    };
 }

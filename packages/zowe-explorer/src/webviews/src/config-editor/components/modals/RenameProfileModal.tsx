@@ -288,10 +288,6 @@ export function RenameProfileModal({
             {error && <div className="modal-error">{error}</div>}
             <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>Use letters, numbers, underscores, and hyphens only</div>
           </div>
-
-          <div className="modal-hint" style={{ marginBottom: "16px" }}>
-            <strong>Note:</strong> Unsaved renames may result in inaccurate rendering of profiles. Make sure to save your changes after renaming.
-          </div>
         </div>
         <div className="modal-actions">
           <button className="modal-button secondary" id="rename-cancel" onClick={onCancel}>

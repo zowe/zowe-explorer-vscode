@@ -46,4 +46,3 @@ export interface ConfigEditorSettings {
     defaultsCollapsed: boolean;
     profilesCollapsed: boolean;
 }
-

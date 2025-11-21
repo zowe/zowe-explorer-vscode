@@ -20,22 +20,10 @@ interface RenderDefaultsProps {
   handleDefaultsChange: (key: string, value: string) => void;
 }
 
-export const RenderDefaults = ({
-  defaults,
-  handleDefaultsChange,
-}: RenderDefaultsProps) => {
-  const {
-    configurations,
-    selectedTab,
-    pendingDefaults,
-    defaultsDeletions,
-    renames,
-  } = useConfigContext();
+export const RenderDefaults = ({ defaults, handleDefaultsChange }: RenderDefaultsProps) => {
+  const { configurations, selectedTab, pendingDefaults, defaultsDeletions, renames } = useConfigContext();
 
-  const {
-    getWizardTypeOptions,
-    getAvailableProfilesByType,
-  } = useUtilityHelpers();
+  const { getWizardTypeOptions, getAvailableProfilesByType } = useUtilityHelpers();
   const renderDefaults = useCallback(
     (defaults: { [key: string]: any }) => {
       if (!defaults || typeof defaults !== "object") return null;

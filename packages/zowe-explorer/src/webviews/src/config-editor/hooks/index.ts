@@ -16,3 +16,4 @@ export * from "./useModalFocus";
 export * from "./usePropertyHandlers";
 export * from "./useConfigHandlers";
 export * from "./useProfileUtils";
+export * from "./useHandlerContext";

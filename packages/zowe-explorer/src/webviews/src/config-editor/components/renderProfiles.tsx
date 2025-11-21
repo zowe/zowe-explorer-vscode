@@ -25,7 +25,7 @@ import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 // Props interface for the renderProfiles component
 interface RenderProfilesProps {
   profilesObj: any;
-  
+
   // Handler functions
   handleProfileSelection: (profileKey: string) => void;
   handleDeleteProfile: (profileKey: string) => void;

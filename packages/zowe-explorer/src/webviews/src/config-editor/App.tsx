@@ -24,11 +24,10 @@ import {
   stringifyValueByType,
   fetchTypeOptions,
   getPropertyDescriptions,
-  extractPendingProfiles,
 } from "./utils";
 
 import { getProfileNameForMergedProperties } from "./utils/renameUtils";
-import { useProfileWizard, usePropertyHandlers, useConfigHandlers, useProfileUtils } from "./hooks";
+import { useProfileWizard, usePropertyHandlers, useConfigHandlers, useProfileUtils, useHandlerContext } from "./hooks";
 import { usePanelResizer } from "./hooks/usePanelResizer";
 import { useMessageHandler } from "./hooks/useMessageHandler";
 import { useUtilityHelpers } from "./hooks/useUtilityHelpers";
@@ -42,7 +41,6 @@ import {
   handleNavigateToSource as handleNavigateToSourceHandler,
 } from "./handlers/profileHandlers";
 
-
 const vscodeApi = acquireVsCodeApi();
 
 export function App() {
@@ -55,25 +53,28 @@ export function App() {
 
 function AppContent() {
   const {
-    configurations, setConfigurations,
-    selectedTab, setSelectedTab,
+    configurations,
+    setConfigurations,
+    selectedTab,
+    setSelectedTab,
     setFlattenedConfig,
     setFlattenedDefaults,
-    pendingChanges, setPendingChanges,
-    deletions, setDeletions,
+    pendingChanges,
+    setPendingChanges,
+    deletions,
+    setDeletions,
     setPendingDefaults,
     setDefaultsDeletions,
-    renames, setRenames,
-    dragDroppedProfiles, setDragDroppedProfiles,
+    renames,
     schemaValidations,
     setSchemaValidations,
     selectedProfileKey,
     setSelectedProfileKey,
-    selectedProfilesByConfig, setSelectedProfilesByConfig,
+    selectedProfilesByConfig,
+    setSelectedProfilesByConfig,
     setMergedProperties,
     configEditorSettings,
     setConfigEditorSettings,
-    pendingMergedPropertiesRequest,
     setPendingMergedPropertiesRequest,
     sortOrderVersion,
     setSortOrderVersion,
@@ -82,7 +83,6 @@ function AppContent() {
     pendingSaveSelection,
     setPendingSaveSelection,
     isNavigating,
-    setIsNavigating,
     setProfileSearchTerm,
     profileFilterType,
     setProfileFilterType,
@@ -92,19 +92,20 @@ function AppContent() {
     setSecureValuesAllowed,
     hasPromptedForZeroConfigs,
     setHasPromptedForZeroConfigs,
-    setExpandedNodesByConfig,
     configurationsRef,
     selectedProfileKeyRef,
     setLocalStorageValue,
     setViewModeWithStorage,
     profileMenuOpen,
     setProfileMenuOpen,
-
+    renameProfileModalOpen,
+    setRenameProfileModalOpen,
   } = useConfigContext();
 
   const { viewMode, profilesWidthPercent } = configEditorSettings;
 
   const utilityHelpers = useUtilityHelpers();
+  const handlerContext = useHandlerContext(vscodeApi);
 
   usePanelResizer({
     profilesWidthPercent,
@@ -127,48 +128,31 @@ function AppContent() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [addConfigModalOpen, setAddConfigModalOpen] = useState(false);
 
-  const [renameProfileModalOpen, setRenameProfileModalOpen] = useState(false);
+  // renameProfileModalOpen moved to context
   const [pendingPropertyDeletion, setPendingPropertyDeletion] = useState<string | null>(null);
   const [pendingProfileDeletion, setPendingProfileDeletion] = useState<string | null>(null);
 
-  const {
-    handleChange,
-    handleDefaultsChange,
-    handleDeleteProperty,
-    confirmDeleteProperty,
-    handleUnlinkMergedProperty,
-    handleAddNewProfileKey,
-  } = usePropertyHandlers({
-    setPendingPropertyDeletion,
-    setNewProfileKey,
-    setNewProfileValue,
-    setNewProfileKeyPath,
-    setNewProfileModalOpen,
-    setFocusValueInput,
-    newProfileKey,
-    newProfileValue,
-    newProfileKeyPath,
-    isSecure,
-    setIsSecure,
-  });
+  const { handleChange, handleDefaultsChange, handleDeleteProperty, confirmDeleteProperty, handleUnlinkMergedProperty, handleAddNewProfileKey } =
+    usePropertyHandlers({
+      setPendingPropertyDeletion,
+      setNewProfileKey,
+      setNewProfileValue,
+      setNewProfileKeyPath,
+      setNewProfileModalOpen,
+      setFocusValueInput,
+      newProfileKey,
+      newProfileValue,
+      newProfileKeyPath,
+      isSecure,
+      setIsSecure,
+    });
 
-  const {
-    handleSave,
-    handleRefresh,
-    handleTabChange,
-    handleAutostoreToggle,
-  } = useConfigHandlers({
+  const { handleSave, handleRefresh, handleTabChange, handleAutostoreToggle } = useConfigHandlers({
     setPendingProfileDeletion,
     setPendingPropertyDeletion,
   });
 
-  const {
-    formatPendingChanges,
-    getAvailableProfiles,
-    getAvailableProfilesForConfig,
-    hasPendingChanges,
-    findOptimalReplacementProfile,
-  } = useProfileUtils();
+  const { formatPendingChanges, getAvailableProfiles, hasPendingChanges } = useProfileUtils();
 
   const {
     wizardModalOpen,
@@ -218,12 +202,6 @@ function AppContent() {
     renames,
   });
 
-
-
-
-
-
-
   useEffect(() => {
     if (selectedTab !== null && configurations[selectedTab]) {
       const config = configurations[selectedTab].properties;
@@ -261,8 +239,6 @@ function AppContent() {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, wizardModalOpen, renameProfileModalOpen]);
 
-
-
   useEffect(() => {
     const handleClickOutside = () => {
       if (profileMenuOpen) {
@@ -278,8 +254,6 @@ function AppContent() {
       document.removeEventListener("click", handleClickOutside);
     };
   }, [profileMenuOpen]);
-
-
 
   const handleSetAsDefault = (profileKey: string) => {
     // Cancel any pending profile deletion when user sets profile as default
@@ -307,8 +281,6 @@ function AppContent() {
     }));
   };
 
-
-
   const handleOpenRawJson = (configPath: string) => {
     vscodeApi.postMessage({ command: "OPEN_CONFIG_FILE", filePath: configPath });
   };
@@ -321,123 +293,19 @@ function AppContent() {
     vscodeApi.postMessage({ command: "OPEN_SCHEMA_FILE", filePath: schemaPath });
   };
 
-
-
-
-
-
-
-
-
   const handleRenameProfile = useCallback(
     (originalKey: string, newKey: string, isDragDrop: boolean = false): boolean => {
-      return handleRenameProfileHandler(originalKey, newKey, isDragDrop, {
-        setRenames,
-        setSelectedProfileKey,
-        setPendingMergedPropertiesRequest,
-        setSortOrderVersion,
-        setSelectedProfilesByConfig,
-        setExpandedNodesByConfig,
-        setPendingDefaults,
-        setPendingChanges,
-        setRenameProfileModalOpen,
-        setDeletions,
-        setSelectedTab,
-        setIsNavigating,
-        setDragDroppedProfiles,
-        selectedTab,
-        configurations,
-        renames,
-        dragDroppedProfiles,
-        selectedProfileKey,
-        pendingMergedPropertiesRequest,
-        formatPendingChanges,
-        extractPendingProfiles: utilityHelpers.extractPendingProfiles,
-        findOptimalReplacementProfile,
-        getAvailableProfilesForConfig,
-        vscodeApi,
-      });
+      return handleRenameProfileHandler(originalKey, newKey, isDragDrop, handlerContext);
     },
-    [
-      selectedTab,
-      configurations,
-      renames,
-      dragDroppedProfiles,
-      selectedProfileKey,
-      pendingMergedPropertiesRequest,
-      formatPendingChanges,
-      extractPendingProfiles,
-      findOptimalReplacementProfile,
-      getAvailableProfilesForConfig,
-      setRenames,
-      setSelectedProfileKey,
-      setPendingMergedPropertiesRequest,
-      setSortOrderVersion,
-      setSelectedProfilesByConfig,
-      setExpandedNodesByConfig,
-      setPendingDefaults,
-      setPendingChanges,
-      setRenameProfileModalOpen,
-      setDeletions,
-      setSelectedTab,
-      setIsNavigating,
-    ]
+    [handlerContext]
   );
 
   const confirmDeleteProfile = useCallback(
     (profileKey: string): void => {
-      handleDeleteProfileHandler(profileKey, {
-        setRenames,
-        setSelectedProfileKey,
-        setPendingMergedPropertiesRequest,
-        setSortOrderVersion,
-        setSelectedProfilesByConfig,
-        setExpandedNodesByConfig,
-        setPendingDefaults,
-        setPendingChanges,
-        setRenameProfileModalOpen,
-        setDeletions,
-        setSelectedTab,
-        setIsNavigating,
-        setDragDroppedProfiles,
-        selectedTab,
-        configurations,
-        renames,
-        dragDroppedProfiles,
-        selectedProfileKey,
-        pendingMergedPropertiesRequest,
-        formatPendingChanges,
-        extractPendingProfiles: utilityHelpers.extractPendingProfiles,
-        findOptimalReplacementProfile,
-        getAvailableProfilesForConfig,
-        vscodeApi,
-      });
+      handleDeleteProfileHandler(profileKey, handlerContext);
       setPendingProfileDeletion(null);
     },
-    [
-      selectedTab,
-      configurations,
-      renames,
-      dragDroppedProfiles,
-      selectedProfileKey,
-      pendingMergedPropertiesRequest,
-      formatPendingChanges,
-      extractPendingProfiles,
-      findOptimalReplacementProfile,
-      getAvailableProfilesForConfig,
-      setRenames,
-      setSelectedProfileKey,
-      setPendingMergedPropertiesRequest,
-      setSortOrderVersion,
-      setSelectedProfilesByConfig,
-      setExpandedNodesByConfig,
-      setPendingDefaults,
-      setPendingChanges,
-      setRenameProfileModalOpen,
-      setDeletions,
-      setSelectedTab,
-      setIsNavigating,
-    ]
+    [handlerContext]
   );
 
   const handleDeleteProfile = useCallback((profileKey: string): void => {
@@ -451,114 +319,17 @@ function AppContent() {
       setPendingProfileDeletion(null);
       // Cancel any pending property deletion when user selects a profile
       setPendingPropertyDeletion(null);
-      return handleProfileSelectionHandler(profileKey, {
-        setRenames,
-        setSelectedProfileKey,
-        setPendingMergedPropertiesRequest,
-        setSortOrderVersion,
-        setSelectedProfilesByConfig,
-        setExpandedNodesByConfig,
-        setPendingDefaults,
-        setPendingChanges,
-        setRenameProfileModalOpen,
-        setDeletions,
-        setSelectedTab,
-        setIsNavigating,
-        setDragDroppedProfiles,
-        selectedTab,
-        configurations,
-        renames,
-        dragDroppedProfiles,
-        selectedProfileKey,
-        pendingMergedPropertiesRequest,
-        formatPendingChanges,
-        extractPendingProfiles: utilityHelpers.extractPendingProfiles,
-        findOptimalReplacementProfile,
-        getAvailableProfilesForConfig,
-        vscodeApi,
-      });
+      return handleProfileSelectionHandler(profileKey, handlerContext);
     },
-    [
-      selectedTab,
-      configurations,
-      renames,
-      dragDroppedProfiles,
-      selectedProfileKey,
-      pendingMergedPropertiesRequest,
-      formatPendingChanges,
-      extractPendingProfiles,
-      findOptimalReplacementProfile,
-      getAvailableProfilesForConfig,
-      setRenames,
-      setSelectedProfileKey,
-      setPendingMergedPropertiesRequest,
-      setSortOrderVersion,
-      setSelectedProfilesByConfig,
-      setExpandedNodesByConfig,
-      setPendingDefaults,
-      setPendingChanges,
-      setRenameProfileModalOpen,
-      setDeletions,
-      setSelectedTab,
-      setIsNavigating,
-    ]
+    [handlerContext]
   );
 
   const handleNavigateToSource = useCallback(
     (jsonLoc: string, osLoc?: string[]): void => {
-      const navigateHandler = handleNavigateToSourceHandler({
-        setRenames,
-        setSelectedProfileKey,
-        setPendingMergedPropertiesRequest,
-        setSortOrderVersion,
-        setSelectedProfilesByConfig,
-        setExpandedNodesByConfig,
-        setPendingDefaults,
-        setPendingChanges,
-        setRenameProfileModalOpen,
-        setDeletions,
-        setSelectedTab,
-        setIsNavigating,
-        setDragDroppedProfiles,
-        selectedTab,
-        configurations,
-        renames,
-        dragDroppedProfiles,
-        selectedProfileKey,
-        pendingMergedPropertiesRequest,
-        formatPendingChanges,
-        extractPendingProfiles: utilityHelpers.extractPendingProfiles,
-        findOptimalReplacementProfile,
-        getAvailableProfilesForConfig,
-        vscodeApi,
-      });
+      const navigateHandler = handleNavigateToSourceHandler(handlerContext);
       navigateHandler(jsonLoc, osLoc);
     },
-    [
-      selectedTab,
-      configurations,
-      renames,
-      dragDroppedProfiles,
-      selectedProfileKey,
-      pendingMergedPropertiesRequest,
-      formatPendingChanges,
-      extractPendingProfiles,
-      findOptimalReplacementProfile,
-      getAvailableProfilesForConfig,
-      setRenames,
-      setSelectedProfileKey,
-      setPendingMergedPropertiesRequest,
-      setSortOrderVersion,
-      setSelectedProfilesByConfig,
-      setExpandedNodesByConfig,
-      setPendingDefaults,
-      setPendingChanges,
-      setRenameProfileModalOpen,
-      setDeletions,
-      setSelectedTab,
-      setIsNavigating,
-      vscodeApi,
-    ]
+    [handlerContext]
   );
 
   useEffect(() => {
@@ -718,12 +489,7 @@ function AppContent() {
             propertyDescriptions={getWizardPropertyDescriptions()}
           />
         )}
-        renderDefaults={(defaults) => (
-          <RenderDefaults
-            defaults={defaults}
-            handleDefaultsChange={handleDefaultsChange}
-          />
-        )}
+        renderDefaults={(defaults) => <RenderDefaults defaults={defaults} handleDefaultsChange={handleDefaultsChange} />}
         onProfileWizard={() => setWizardModalOpen(true)}
         onViewModeToggle={() => setViewModeWithStorage(viewMode === "tree" ? "flat" : "tree")}
         onClearChanges={handleRefresh}
