@@ -50,6 +50,15 @@ describe("ProfilesUtils unit tests", () => {
         jest.clearAllMocks();
     });
 
+    describe("getCredentialManagerOptions", () => {
+        it("should call ProfilesCache.getCredentialManagerOptions", () => {
+            const getCredMgrOptionsSpy = jest.spyOn(ProfilesCache, "getCredentialManagerOptions").mockReturnValue({ key: "value" });
+            const options = ProfilesUtils.getCredentialManagerOptions();
+            expect(getCredMgrOptionsSpy).toHaveBeenCalledTimes(1);
+            expect(options).toEqual({ key: "value" });
+        });
+    });
+
     function createBlockMocks(): { [key: string]: any } {
         const newMocks = {
             mockExistsSync: jest.fn().mockReturnValue(true),
@@ -1465,6 +1474,23 @@ describe("ProfilesUtils unit tests", () => {
             await ProfilesUtils.setupDefaultCredentialManager();
             expect(profileManagerWillLoadSpy).toHaveBeenCalled();
             expect(disableCredMgmtSpy).toHaveBeenCalled();
+        });
+
+        it("should apply credential manager options if they exist", async () => {
+            const mockOptions = { someOption: "someValue" };
+            jest.spyOn(ProfilesUtils, "getCredentialManagerOptions").mockReturnValue(mockOptions);
+
+            const mockDefaultCredMgr = { options: {} };
+            jest.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar").mockReturnValue(mockDefaultCredMgr as any);
+
+            const loggerDebugSpy = jest.spyOn(ZoweLogger, "debug");
+
+            jest.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad").mockResolvedValueOnce(true);
+
+            await ProfilesUtils.setupDefaultCredentialManager();
+
+            expect(mockDefaultCredMgr.options).toBe(mockOptions);
+            expect(loggerDebugSpy).toHaveBeenCalledWith("Applied credential manager options from imperative.json to default credential manager");
         });
     });
 

@@ -73,6 +73,14 @@ export class ProfilesUtils {
     }
 
     /**
+     * Get the credential manager options from imperative.json
+     * @returns Record<string, any> | undefined the credential manager options, or undefined if not specified
+     */
+    public static getCredentialManagerOptions(): Record<string, any> | undefined {
+        return ProfilesCache.getCredentialManagerOptions();
+    }
+
+    /**
      * Get the map of names associated with the custom credential manager
      * @param string credentialManager the credential manager display name
      * @returns imperative.ICredentialManagerNameMap the map with all names related to the credential manager
@@ -199,7 +207,21 @@ export class ProfilesUtils {
         ZoweLogger.trace("ProfilesUtils.setupDefaultCredentialManager called.");
         ZoweLogger.info(vscode.l10n.t("No custom credential managers found, using the default instead."));
         ProfilesUtils.updateCredentialManagerSetting(Constants.ZOWE_CLI_SCM);
+
+        // Get credential manager options from imperative.json if available
+        const credMgrOptions = ProfilesUtils.getCredentialManagerOptions();
         const defaultCredentialManager = imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring);
+        // Apply options to the credential manager if they exist
+        if (credMgrOptions && defaultCredentialManager) {
+            defaultCredentialManager.options = credMgrOptions;
+            ZoweLogger.debug(
+                vscode.l10n.t({
+                    message: "Applied credential manager options from imperative.json to default credential manager",
+                    comment: [],
+                })
+            );
+        }
+
         const overrideWithEnv: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_OVERRIDE_WITH_ENV_VAR);
         const profileInfo = new imperative.ProfileInfo("zowe", {
             overrideWithEnv: overrideWithEnv,
