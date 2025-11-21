@@ -1,4 +1,4 @@
-# Zowe Explorer for IBM z/OS FTP
+# Zowe® Explorer for IBM® z/OS® FTP
 
 [![version](https://img.shields.io/visual-studio-marketplace/v/Zowe.zowe-explorer-ftp-extension.svg)](https://img.shields.io/visual-studio-marketplace/v/Zowe.zowe-explorer-ftp-extension.svg)
 [![downloads](https://img.shields.io/visual-studio-marketplace/d/Zowe.zowe-explorer-ftp-extension.svg)](https://img.shields.io/visual-studio-marketplace/d/Zowe.zowe-explorer-ftp-extension.svg)

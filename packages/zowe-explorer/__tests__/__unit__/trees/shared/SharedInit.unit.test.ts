@@ -539,6 +539,7 @@ describe("Test src/shared/extension", () => {
                     configurable: true,
                 });
 
+                // Replace real workspace with controlled data
                 jest.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue([
                     {
                         uri: folderUri as any,
@@ -547,19 +548,23 @@ describe("Test src/shared/extension", () => {
                     },
                 ]);
 
+                // Fake event fallback triggers workspaceFolders
                 const fakeEventInfo = getFakeEventInfo();
                 const addedArr = jest.fn(() => undefined);
                 Object.defineProperty(fakeEventInfo, "added", {
                     get: addedArr,
                 });
 
+                // Mock getInfoForUri to return a profile name
                 const getInfoSpy = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({ profileName: "ssh_profile" } as any);
 
+                // Match profile name
                 await Profiles.createInstance(undefined as any);
                 const getProfileSpy = jest
                     .spyOn(Profiles.getInstance(), "getProfiles")
                     .mockReturnValue([{ name: "ssh_profile", type: "ssh", message: ".", failNotFound: false }]);
 
+                // Avoid real FS lookup
                 const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory").mockResolvedValue(undefined!);
 
                 await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "ssh");
