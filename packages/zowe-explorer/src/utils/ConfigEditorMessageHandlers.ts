@@ -112,6 +112,8 @@ export class ConfigEditorMessageHandlers {
                 propertyIndex: message.propertyIndex,
                 isNewProperty: message.isNewProperty,
                 source: message.source,
+                fullKey: message.fullKey,
+                configPath: message.configPath,
             });
         }
     }

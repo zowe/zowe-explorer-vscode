@@ -158,7 +158,7 @@ export class SharedInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.configEditor", async (opts) => {
                 // Check if there's already an open ConfigEditor
-                if (existingConfigEditor && existingConfigEditor.panel && existingConfigEditor.panel.visible) {
+                if (existingConfigEditor && existingConfigEditor.panel) {
                     // Reuse existing ConfigEditor
                     existingConfigEditor.panel.reveal();
                     return existingConfigEditor;
@@ -187,7 +187,7 @@ export class SharedInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.configEditorWithProfile", async (profileName: string, configPath: string, profileType: string) => {
                 // Check if there's already an open ConfigEditor
-                if (existingConfigEditor && existingConfigEditor.panel && existingConfigEditor.panel.visible) {
+                if (existingConfigEditor && existingConfigEditor.panel) {
                     // Reuse existing ConfigEditor
                     existingConfigEditor.initialSelection = {
                         profileName: profileName,

@@ -81,8 +81,17 @@ When("the user clicks the {string} button", async function (buttonText: string) 
             button = await browser.$(".profile-action-button .codicon-star-empty, .profile-action-button .codicon-star-full");
             break;
         case "hide merged properties":
-            button = await browser.$(".profile-action-button .codicon-eye, .profile-action-button .codicon-eye-closed");
-            break;
+
+            const mergedPropsDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown:first-of-type .sort-dropdown-trigger");
+            await mergedPropsDropdown.waitForExist({ timeout: 1000 });
+            await mergedPropsDropdown.click();
+            await browser.pause(100);
+            
+            const hideOption = await browser.$(".config-section.profile-details-section .sort-dropdown-list .sort-dropdown-item");
+            await hideOption.waitForExist({ timeout: 1000 });
+            await hideOption.click();
+            await browser.pause(100);
+            return; // Skip the default button click logic
         case "rename profile":
             button = await browser.$("#rename-profile");
             break;

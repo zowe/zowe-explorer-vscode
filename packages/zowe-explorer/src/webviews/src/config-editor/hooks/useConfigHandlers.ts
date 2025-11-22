@@ -179,6 +179,8 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
         setAutostoreChanges({});
         setRenames({});
         setDragDroppedProfiles({});
+        setPendingPropertyDeletion(null);
+        setPendingProfileDeletion(null);
 
         // Clear search bar and type filter if there are no pending changes
         if (!hasPendingChanges) {

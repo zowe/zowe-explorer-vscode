@@ -1052,7 +1052,8 @@ export function mergeMergedProperties(
     pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
     renames: { [configPath: string]: { [originalKey: string]: string } },
     schemaValidations: { [configPath: string]: schemaValidation | undefined },
-    deletions: { [configPath: string]: string[] }
+    deletions: { [configPath: string]: string[] },
+    showMergedProperties?: string
 ): any {
     if (!mergedProps || path.length === 0 || path[path.length - 1] === "type" || path[path.length - 1] === "secure") {
         return combinedConfig;
@@ -1140,10 +1141,14 @@ export function mergeMergedProperties(
             isInDeletions = (deletions[configPath] ?? []).includes(nestedPendingKey);
         }
 
+        // If showMergedProperties is "unfiltered", skip schema validation and show ALL merged properties
+        // Otherwise, only show properties that are valid for the current profile type
+        const isAllowedBySchema = showMergedProperties === "unfiltered" || allowedProperties.includes(key);
+
         // If the property is in deletions, we should add the merged property to replace it
         // For secure properties that were deleted, we still want to show the merged property in properties
         const shouldAddMerged =
-            allowedProperties.includes(key) && !isInPendingChanges && (isInDeletions || !combinedConfig.properties.hasOwnProperty(key));
+            isAllowedBySchema && !isInPendingChanges && (isInDeletions || !combinedConfig.properties.hasOwnProperty(key));
 
         if (shouldAddMerged) {
             // Only add primitive values to avoid recursion
@@ -1305,7 +1310,7 @@ export function isPropertyFromMergedProps(
     path: string[],
     mergedProps: any,
     configPath: string,
-    showMergedProperties: boolean,
+    showMergedProperties: string | boolean,
     selectedTab: number | null,
     configurations: Configuration[],
     pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
@@ -1322,13 +1327,13 @@ export function isPropertyFromMergedProps(
         renames: { [configPath: string]: { [originalKey: string]: string } }
     ) => boolean
 ): boolean {
-    // consider properties as merged if showMergedProperties is true and profile is not untyped
+    // consider properties as merged if showMergedProperties is not "hide" and profile is not untyped
     const originalProfileKey = extractProfileKeyFromPath(path);
     const currentProfileKey = getRenamedProfileKeyWithNested(originalProfileKey, configPath, renames);
     const currentProfileType = getProfileType(currentProfileKey, selectedTab, configurations, pendingChanges, renames);
     const isProfileUntyped = !currentProfileType || currentProfileType.trim() === "";
 
-    if (!showMergedProperties || isProfileUntyped || !displayKey) {
+    if (showMergedProperties === "hide" || showMergedProperties === false || isProfileUntyped || !displayKey) {
         return false;
     }
 

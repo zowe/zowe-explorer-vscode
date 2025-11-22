@@ -57,7 +57,8 @@ export function useUtilityHelpers() {
                     pendingChanges,
                     renames,
                     schemaValidations,
-                    deletions
+                    deletions,
+                    showMergedProperties
                 ),
 
             filterSecureProperties: (value: any, combinedConfig: any, configPath?: string, pc?: any, del?: any, mergedProps?: any) =>

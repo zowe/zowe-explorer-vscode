@@ -235,8 +235,8 @@ export class ConfigEditorFileOperations {
             await new Promise((resolve) => setTimeout(resolve, 100));
 
             if (fs.existsSync(configFilePath)) {
-                await ZoweVsCodeExtension.openConfigFile(configFilePath);
-                vscode.window.showInformationMessage(`Configuration file created and opened: ${configFilePath}`);
+                // await ZoweVsCodeExtension.openConfigFile(configFilePath);
+                vscode.window.showInformationMessage(`Configuration file created: ${configFilePath}`);
             } else {
                 vscode.window.showErrorMessage(`Failed to create configuration file at: ${configFilePath}. Please check permissions and try again.`);
             }

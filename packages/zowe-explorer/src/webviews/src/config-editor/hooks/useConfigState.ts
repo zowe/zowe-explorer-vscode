@@ -23,7 +23,7 @@ export function useConfigState(vscodeApi: any) {
     const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
 
     const [configEditorSettings, setConfigEditorSettings] = useState<ConfigEditorSettings>({
-        showMergedProperties: true,
+        showMergedProperties: "show",
         viewMode: "tree",
         propertySortOrder: "alphabetical",
         profileSortOrder: "natural",
@@ -147,7 +147,7 @@ export function useConfigState(vscodeApi: any) {
 
     useEffect(() => {
         getLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, {
-            showMergedProperties: true,
+            showMergedProperties: "show",
             viewMode: "tree",
             propertySortOrder: "alphabetical",
             profileSortOrder: "natural",

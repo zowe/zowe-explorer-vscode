@@ -89,7 +89,7 @@ export function ProfileWizardModal({
   // Update search text when wizardRootProfile changes
   useEffect(() => {
     if (wizardRootProfile) {
-      setParentProfileSearch(wizardRootProfile === "root" ? "/" : wizardRootProfile);
+      setParentProfileSearch(wizardRootProfile === "root" ? "/ (root)" : wizardRootProfile);
     } else {
       setParentProfileSearch("");
     }
@@ -109,7 +109,7 @@ export function ProfileWizardModal({
       if (parentProfileDropdownRef.current && !parentProfileDropdownRef.current.contains(event.target as Node)) {
         setShowParentProfileDropdown(false);
         if (wizardRootProfile) {
-          setParentProfileSearch(wizardRootProfile === "root" ? "/" : wizardRootProfile);
+          setParentProfileSearch(wizardRootProfile === "root" ? "/ (root)" : wizardRootProfile);
         } else {
           setParentProfileSearch("");
         }
@@ -124,7 +124,7 @@ export function ProfileWizardModal({
 
   const handleParentProfileSelect = (profile: string) => {
     onRootProfileChange(profile);
-    setParentProfileSearch(profile === "root" ? "/" : profile);
+    setParentProfileSearch(profile === "root" ? "/ (root)" : profile);
     setShowParentProfileDropdown(false);
   };
 
@@ -135,7 +135,6 @@ export function ProfileWizardModal({
 
   const handleParentProfileFocus = () => {
     setShowParentProfileDropdown(true);
-    setParentProfileSearch("");
   };
 
   const isInvalidParentProfile = (parentProfile: string, profileName: string): boolean => {
@@ -157,8 +156,11 @@ export function ProfileWizardModal({
   };
 
   const filteredParentProfiles = availableProfiles.filter((profile) => {
-    const displayName = profile === "root" ? "/" : profile;
-    const matchesSearch = parentProfileSearch === "" || displayName.toLowerCase().includes(parentProfileSearch.toLowerCase());
+    const displayName = profile === "root" ? "/ (root)" : profile;
+    const isCurrentSelection =
+      wizardRootProfile && parentProfileSearch === (wizardRootProfile === "root" ? "/ (root)" : wizardRootProfile);
+    const matchesSearch =
+      parentProfileSearch === "" || isCurrentSelection || displayName.toLowerCase().includes(parentProfileSearch.toLowerCase());
     const isValidParent = !isInvalidParentProfile(profile, wizardProfileName);
     return matchesSearch && isValidParent;
   });
@@ -260,7 +262,7 @@ export function ProfileWizardModal({
                     } else if (e.key === "Escape") {
                       setShowParentProfileDropdown(false);
                       if (wizardRootProfile) {
-                        setParentProfileSearch(wizardRootProfile === "root" ? "/" : wizardRootProfile);
+                        setParentProfileSearch(wizardRootProfile === "root" ? "/ (root)" : wizardRootProfile);
                       } else {
                         setParentProfileSearch("");
                       }
@@ -269,6 +271,7 @@ export function ProfileWizardModal({
                     }
                   }}
                   onClick={handleParentProfileFocus}
+                  onFocus={(e) => (e.target as HTMLInputElement).select()}
                   className={`modal-input wizard-input ${isParentProfileInvalid ? "error" : ""}`}
                   placeholder={l10n.t("Select parent profile...")}
                 />
@@ -281,7 +284,7 @@ export function ProfileWizardModal({
                         className="dropdown-item"
                         onMouseDown={() => handleParentProfileSelect(profile)}
                       >
-                        {profile === "root" ? "/" : profile}
+                        {profile === "root" ? "/ (root)" : profile}
                       </li>
                     ))}
                     {filteredParentProfiles.length === 0 && <li className="dropdown-item disabled">{l10n.t("No profiles found")}</li>}
@@ -469,6 +472,21 @@ export function ProfileWizardModal({
                     <div className="auth-order-button-container" id="auth-order-button-container">
                       {["token", "basic", "bearer", "cert-pem"].map((authMethod) => {
                         const isSelected = isAuthMethodAlreadyAdded(authMethod);
+                        let iconClass = "";
+                        switch (authMethod) {
+                          case "basic":
+                            iconClass = "codicon-account";
+                            break;
+                          case "token":
+                            iconClass = "codicon-key";
+                            break;
+                          case "bearer":
+                            iconClass = "codicon-shield";
+                            break;
+                          case "cert-pem":
+                            iconClass = "codicon-verified";
+                            break;
+                        }
                         return (
                           <button
                             key={authMethod}
@@ -478,6 +496,7 @@ export function ProfileWizardModal({
                             className={`auth-order-button ${isSelected ? "selected" : ""}`}
                             title={`${getAuthMethodTooltip(authMethod)} (${isSelected ? "Click to remove" : "Click to add"})`}
                           >
+                            <span className={`codicon ${iconClass}`} style={{ marginRight: "4px" }}></span>
                             {authMethod}
                           </button>
                         );

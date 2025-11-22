@@ -497,7 +497,7 @@ export function ProfileList({
                     <span
                       className={`codicon codicon-${isProfileDefault(profileKey) ? "star-full" : "star-empty"}`}
                       style={{
-                        fontSize: "14px",
+                        fontSize: "16px",
                         color: isProfileDefault(profileKey) ? "var(--vscode-textPreformat-foreground)" : "var(--vscode-disabledForeground)",
                       }}
                     />

@@ -27,7 +27,8 @@ import {
   PropertySortOrder,
   schemaValidation,
 } from "../utils";
-import type { Configuration, PendingChange } from "../types";
+import { isFileProperty } from "../utils/propertyUtils";
+import type { Configuration, PendingChange, MergedPropertiesVisibility } from "../types";
 import { useConfigContext } from "../context/ConfigContext";
 
 // Props interface for the renderConfig component
@@ -39,7 +40,7 @@ interface RenderConfigProps {
   selectedTab: number | null;
   pendingChanges: { [configPath: string]: { [key: string]: PendingChange } };
   deletions: { [configPath: string]: string[] };
-  showMergedProperties: boolean;
+  showMergedProperties: MergedPropertiesVisibility;
   propertySortOrder: PropertySortOrder;
   sortOrderVersion: number;
   selectedProfileKey: string | null;
@@ -59,7 +60,7 @@ interface RenderConfigProps {
   handleUnlinkMergedProperty: (propertyKey: string | undefined, fullKey: string) => void;
   handleNavigateToSource: (jsonLoc: string, osLoc?: string[]) => void;
   handleToggleSecure: (fullKey: string, displayKey: string, path: string[]) => void;
-  openAddProfileModalAtPath: (path: string[]) => void;
+  openAddProfileModalAtPath: (path: string[], key?: string, value?: string) => void;
   getWizardTypeOptions: () => string[];
 
   // Utility functions
@@ -133,7 +134,22 @@ export const RenderConfig = ({
   isMergedPropertySecure,
   vscodeApi,
 }: RenderConfigProps) => {
-  const { setPropertySortOrderWithStorage } = useConfigContext();
+  const { setPropertySortOrderWithStorage, setShowMergedPropertiesWithStorage } = useConfigContext();
+
+  const MERGED_PROPERTIES_OPTIONS: MergedPropertiesVisibility[] = ["hide", "show", "unfiltered"];
+
+  const getMergedPropertiesDisplayName = (option: MergedPropertiesVisibility) => {
+    switch (option) {
+      case "hide":
+        return l10n.t("Hide merged");
+      case "show":
+        return l10n.t("Show merged");
+      case "unfiltered":
+        return l10n.t("Show merged unfiltered");
+      default:
+        return option;
+    }
+  };
 
   const renderConfig = useCallback(
     (obj: any, path: string[] = [], mergedProps?: any) => {
@@ -149,8 +165,8 @@ export const RenderConfig = ({
       // Track original properties for merged property detection
       const originalProperties = baseObj.properties || {};
 
-      // Only merge merged properties if showMergedProperties is true and profile is not untyped
-      if (showMergedProperties && mergedProps && !isCurrentProfileUntyped()) {
+      // Only merge merged properties if showMergedProperties is NOT "hide" and profile is not untyped
+      if (showMergedProperties !== "hide" && mergedProps && !isCurrentProfileUntyped()) {
         combinedConfig = mergeMergedProperties(combinedConfig, path, mergedProps, configPath);
       }
 
@@ -263,7 +279,7 @@ export const RenderConfig = ({
 
         // Add merged properties that aren't already in the entriesForSorting
         // Mark them with a special flag so they're properly identified as merged in sorting
-        if (mergedProps && showMergedProperties && selectedProfileKey) {
+        if (mergedProps && showMergedProperties !== "hide" && selectedProfileKey) {
           // Get the current profile type and schema validation for filtering
           const currentProfileKey = extractProfileKeyFromPath(path);
           const profileType = getProfileType(currentProfileKey, selectedTab, configurations, pendingChanges, renames);
@@ -357,6 +373,12 @@ export const RenderConfig = ({
         const isMergedProperty = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath);
 
         if (isInDeletions && !isMergedProperty) {
+          return null;
+        }
+
+        // If showMergedProperties is "unfiltered", do NOT hide deleted merged properties
+        // If showMergedProperties is "show" (default), hide deleted merged properties (standard behavior)
+        if (isInDeletions && isMergedProperty && showMergedProperties !== "unfiltered") {
           return null;
         }
 
@@ -522,43 +544,84 @@ export const RenderConfig = ({
             <div key={fullKey} className="config-item parent">
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 {displayKey?.toLocaleLowerCase() === "properties" ? (
-                  <div className="sort-dropdown-container">
+                  <>
                     <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`} style={{ margin: 0, fontSize: "16px" }}>
                       Profile Properties
                     </h3>
-                  </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <SortDropdown<MergedPropertiesVisibility>
+                        options={MERGED_PROPERTIES_OPTIONS}
+                        selectedOption={showMergedProperties}
+                        onOptionChange={setShowMergedPropertiesWithStorage}
+                        getDisplayName={getMergedPropertiesDisplayName}
+                        icon="codicon-eye"
+                      />
+                      <SortDropdown<PropertySortOrder>
+                        options={SORT_ORDER_OPTIONS}
+                        selectedOption={propertySortOrder || "alphabetical"}
+                        onOptionChange={setPropertySortOrderWithStorage}
+                        getDisplayName={getSortOrderDisplayName}
+                      />
+                      <button
+                        className="header-button"
+                        title={l10n.t('Create new property for "{0}"', extractProfileKeyFromPath(currentPath))}
+                        onClick={() => openAddProfileModalAtPath(currentPath)}
+                        id="add-profile-property-button"
+                        style={{
+                          padding: "2px",
+                          width: "20px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "transparent",
+                          color: "var(--vscode-button-secondaryForeground)",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          lineHeight: "1",
+                          border: "none",
+                          marginLeft: "0",
+                        }}
+                      >
+                        <span className="codicon codicon-add"></span>
+                      </button>
+                    </div>
+                  </>
                 ) : (
-                  <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>{displayKey}</h3>
+                  <>
+                    <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>{displayKey}</h3>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <SortDropdown<PropertySortOrder>
+                        options={SORT_ORDER_OPTIONS}
+                        selectedOption={propertySortOrder || "alphabetical"}
+                        onOptionChange={setPropertySortOrderWithStorage}
+                        getDisplayName={getSortOrderDisplayName}
+                      />
+                      <button
+                        className="header-button"
+                        title={l10n.t('Create new property for "{0}"', extractProfileKeyFromPath(currentPath))}
+                        onClick={() => openAddProfileModalAtPath(currentPath)}
+                        id="add-profile-property-button"
+                        style={{
+                          padding: "2px",
+                          width: "20px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "transparent",
+                          color: "var(--vscode-button-secondaryForeground)",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          lineHeight: "1",
+                          border: "none",
+                        }}
+                      >
+                        <span className="codicon codicon-add"></span>
+                      </button>
+                    </div>
+                  </>
                 )}
-                <SortDropdown<PropertySortOrder>
-                  options={SORT_ORDER_OPTIONS}
-                  selectedOption={propertySortOrder || "alphabetical"}
-                  onOptionChange={setPropertySortOrderWithStorage}
-                  getDisplayName={getSortOrderDisplayName}
-                  className="sort-dropdown-right"
-                />
-                <button
-                  className="header-button"
-                  title={l10n.t('Create new property for "{0}"', extractProfileKeyFromPath(currentPath))}
-                  onClick={() => openAddProfileModalAtPath(currentPath)}
-                  id="add-profile-property-button"
-                  style={{
-                    padding: "2px",
-                    width: "20px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: "transparent",
-                    color: "var(--vscode-button-secondaryForeground)",
-                    borderRadius: "3px",
-                    cursor: "pointer",
-                    fontSize: "12px",
-                    lineHeight: "1",
-                    border: "none",
-                  }}
-                >
-                  <span className="codicon codicon-add"></span>
-                </button>
               </div>
               <div style={{ paddingLeft: displayKey?.toLocaleLowerCase() === "properties" ? "16px" : "0px" }}>
                 {renderConfig(value, currentPath, mergedProps)}
@@ -1007,11 +1070,40 @@ export const RenderConfig = ({
 
                   const showDeleteButton = !isFromMergedProps;
                   const showUnlinkButton = isFromMergedProps && !isDeletedMergedProperty;
+                  const showFilePickerButton = !isFromMergedProps && isFileProperty(displayKey) && pendingPropertyDeletion !== fullKey;
+                  const showAuthOrderButton = !isFromMergedProps && displayKey === "authOrder" && pendingPropertyDeletion !== fullKey;
 
                   // Only show the flex container if there are buttons to display
-                  if (showSecureButton || showDeleteButton || showUnlinkButton) {
+                  if (showSecureButton || showDeleteButton || showUnlinkButton || showFilePickerButton || showAuthOrderButton) {
                     return (
                       <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                        {showFilePickerButton && (
+                          <button
+                            className="action-button"
+                            onClick={() => {
+                              vscodeApi.postMessage({
+                                command: "SELECT_FILE",
+                                configPath: configurations[selectedTab!].configPath,
+                                fullKey: fullKey,
+                                source: "editor",
+                              });
+                            }}
+                            title={l10n.t("Select file")}
+                          >
+                            <span className="codicon codicon-folder-opened" style={{ position: "relative", top: "2px" }}></span>
+                          </button>
+                        )}
+                        {showAuthOrderButton && (
+                          <button
+                            className="action-button"
+                            onClick={() => {
+                              openAddProfileModalAtPath(path, displayKey, stringifyValueByType(pendingValue));
+                            }}
+                            title={l10n.t("Edit authentication order")}
+                          >
+                            <span className="codicon codicon-list-selection"></span>
+                          </button>
+                        )}
                         {showSecureButton &&
                           (secureValuesAllowed ? (
                             <button
@@ -1032,7 +1124,7 @@ export const RenderConfig = ({
                               }}
                               title={l10n.t("A credential manager is not available. Click to open VS Code settings to enable secure credentials.")}
                             >
-                              <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                              <span className="codicon codicon-lock" style={{ opacity: 0.5, position: "relative", top: "-1px" }}></span>
                             </button>
                           ))}
                         {showDeleteButton &&

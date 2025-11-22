@@ -35,7 +35,7 @@ interface RenderProfileDetailsProps {
   setPendingProfileDeletion: (key: string | null) => void;
   handleUnlinkMergedProperty: (propertyKey: string | undefined, fullKey: string) => void;
   handleNavigateToSource: (jsonLoc: string, osLoc?: string[]) => void;
-  openAddProfileModalAtPath: (path: string[]) => void;
+  openAddProfileModalAtPath: (path: string[], key?: string, value?: string) => void;
   propertyDescriptions: { [key: string]: string };
 }
 
@@ -151,14 +151,7 @@ export const RenderProfileDetails = ({
               >
                 <span className={`codicon codicon-${isProfileDefault(selectedProfileKey) ? "star-full" : "star-empty"}`}></span>
               </button>
-              <button
-                className="profile-action-button"
-                id="merge-property-toggle"
-                onClick={() => setShowMergedPropertiesWithStorage(!showMergedProperties)}
-                title={showMergedProperties ? l10n.t("Hide merged properties") : l10n.t("Show merged properties")}
-              >
-                <span className={`codicon codicon-${showMergedProperties ? "eye-closed" : "eye"}`}></span>
-              </button>
+
               <button
                 className="profile-action-button"
                 id="rename-profile"
@@ -303,7 +296,7 @@ export const RenderProfileDetails = ({
             });
             // We can still show merged properties even with parent renames, as long as we request them
             // using the correct profile name (which getProfileNameForMergedProperties handles)
-            const shouldShowMergedProperties = showMergedProperties;
+            const shouldShowMergedProperties = showMergedProperties !== "hide";
 
             return (
               <div key={`${selectedProfileKey}-${propertySortOrder}-${sortOrderVersion}`}>

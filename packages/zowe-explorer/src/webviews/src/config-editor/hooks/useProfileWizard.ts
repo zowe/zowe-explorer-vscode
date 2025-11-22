@@ -418,7 +418,7 @@ export function useProfileWizard({
 
         const existingKeys = new Set(wizardProperties.map((prop) => prop.key));
 
-        const mergedKeys = new Set(Object.keys(wizardMergedProperties));
+
 
         const newProperties: { key: string; value: string | boolean | number | Object; secure?: boolean }[] = [];
         const populatedKeys = new Set<string>();
@@ -429,22 +429,12 @@ export function useProfileWizard({
             }
 
             if (schema.default !== undefined) {
-                // For port, always override merged values unless they're the same
-                if (key === "port") {
-                    const mergedValue = wizardMergedProperties[key]?.value;
-                    if (mergedValue !== schema.default) {
-                        newProperties.push({
-                            key,
-                            value: schema.default,
-                            secure: false,
-                        });
-                        populatedKeys.add(key);
-                    }
-                    return;
-                }
-
-                // For other properties, only add if not in merged properties
-                if (!mergedKeys.has(key)) {
+                // Check if we should add the default value
+                // We add it if:
+                // 1. There is no merged value (inherited)
+                // 2. The merged value is different from the default (override inheritance)
+                const mergedValue = wizardMergedProperties[key]?.value;
+                if (mergedValue !== schema.default) {
                     newProperties.push({
                         key,
                         value: schema.default,

@@ -7,6 +7,7 @@ interface SortDropdownProps<T extends string = string> {
   onOptionChange: (option: T) => void;
   getDisplayName?: (option: T) => string;
   className?: string;
+  icon?: string;
 }
 
 export function SortDropdown<T extends string = string>({
@@ -15,6 +16,7 @@ export function SortDropdown<T extends string = string>({
   onOptionChange,
   getDisplayName = (option) => option,
   className = "",
+  icon = "codicon-sort-precedence",
 }: SortDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [alignLeft, setAlignLeft] = useState(false);
@@ -67,7 +69,7 @@ export function SortDropdown<T extends string = string>({
         aria-haspopup="listbox"
         title={l10n.t("Change sort order. Current: {0}", getDisplayName(selectedOption))}
       >
-        <span className="codicon codicon-sort-precedence"></span>
+        <span className={`codicon ${icon}`}></span>
       </button>
       {isOpen && (
         <div className={`sort-dropdown-list ${alignLeft ? "align-left" : ""}`} role="listbox" ref={listRef}>

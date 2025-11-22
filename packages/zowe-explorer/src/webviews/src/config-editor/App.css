@@ -2177,3 +2177,18 @@ ul {
     background-color: var(--vscode-list-activeSelectionBackground);
     color: var(--vscode-list-activeSelectionForeground);
 }
+
+/* Light theme specific fixes */
+body.vscode-light .profile-list-item {
+    border: 1px solid var(--vscode-input-border) !important;
+}
+
+body.vscode-light .profile-list-item.selected {
+    border: 2px solid var(--vscode-button-background) !important;
+}
+
+/* Fix context menu background in light theme */
+.monaco-menu .monaco-action-bar.vertical .action-item:hover {
+    background-color: var(--vscode-menu-selectionBackground) !important;
+    color: var(--vscode-menu-selectionForeground) !important;
+}

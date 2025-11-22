@@ -59,6 +59,7 @@ export interface MessageHandlerProps {
     // Functions
     handleRefresh: () => void;
     handleSave: () => void;
+    handleChange: (key: string, value: string) => void;
     vscodeApi: any;
 }
 
@@ -206,13 +207,16 @@ export const handleMergedPropertiesMessage = (data: any, props: MessageHandlerPr
 
 // Handle FILE_SELECTED message
 export const handleFileSelectedMessage = (data: any, props: MessageHandlerProps) => {
-    const { setNewProfileValue } = props;
+    const { setNewProfileValue, handleChange } = props;
 
     // Handle file selection response from VS Code
     if (data.filePath) {
         if (data.isNewProperty) {
             // Update the add profile modal value
             setNewProfileValue(data.filePath);
+        } else if (data.source === "editor" && data.fullKey) {
+            // Update the property value in the main editor using handleChange
+            handleChange(data.fullKey, data.filePath);
         }
     }
 };
@@ -266,7 +270,7 @@ export const handleLocalStorageValueMessage = (data: any, props: MessageHandlerP
             value !== undefined
                 ? value
                 : {
-                      showMergedProperties: true,
+                      showMergedProperties: "show",
                       viewMode: "tree",
                       propertySortOrder: "alphabetical",
                       profileSortOrder: "natural",

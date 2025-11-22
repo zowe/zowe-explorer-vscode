@@ -131,7 +131,7 @@ Then("the profile details section should be displayed", async () => {
 });
 
 When("the user clicks on the property sort dropdown", async () => {
-    const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown-trigger");
+    const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown:nth-of-type(2) .sort-dropdown-trigger");
     await propertySortDropdown.waitForExist({ timeout: 1000 });
     await propertySortDropdown.click();
     await browser.pause(100);
@@ -161,7 +161,7 @@ When("the user selects {string} from the property sort dropdown", async (sortOpt
 });
 
 Then("the property sort dropdown should show {string} as selected", async (expectedSort: string) => {
-    const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown-trigger");
+    const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown:nth-of-type(2) .sort-dropdown-trigger");
     await propertySortDropdown.waitForExist({ timeout: 1000 });
 
     const title = await propertySortDropdown.getAttribute("title");
@@ -173,7 +173,7 @@ Then("the property sort dropdown should show {string} as selected", async (expec
 });
 
 Then("the property sort dropdown should show {string} as selected by default", async (expectedSort: string) => {
-    const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown-trigger");
+    const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown:nth-of-type(2) .sort-dropdown-trigger");
     await propertySortDropdown.waitForExist({ timeout: 1000 });
 
     const title = await propertySortDropdown.getAttribute("title");
@@ -223,7 +223,8 @@ Then("the properties should be displayed according to the sort order", async () 
 });
 
 Then("the property sort dropdown should maintain the current sort order", async () => {
-    const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown-trigger");
+    // Target the second sort dropdown (property sort), not the first one (merged properties visibility)
+    const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown:nth-of-type(2) .sort-dropdown-trigger");
     await propertySortDropdown.waitForExist({ timeout: 1000 });
 
     const title = await propertySortDropdown.getAttribute("title");

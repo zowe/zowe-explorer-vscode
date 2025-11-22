@@ -361,12 +361,12 @@ function AppContent() {
     }
   }, [selectedTab, configurations, profileFilterType, deletions, pendingChanges]);
 
-  const openAddProfileModalAtPath = (path: string[]) => {
+  const openAddProfileModalAtPath = (path: string[], key?: string, value?: string) => {
     // Cancel any pending property deletion when user opens add property modal
     setPendingPropertyDeletion(null);
     setNewProfileKeyPath(path);
-    setNewProfileKey("");
-    setNewProfileValue("");
+    setNewProfileKey(key || "");
+    setNewProfileValue(value || "");
     setNewProfileModalOpen(true);
   };
 
@@ -440,6 +440,7 @@ function AppContent() {
     hasPromptedForZeroConfigs,
     handleRefresh,
     handleSave,
+    handleChange,
     vscodeApi,
     selectedProfileKeyRef,
   });

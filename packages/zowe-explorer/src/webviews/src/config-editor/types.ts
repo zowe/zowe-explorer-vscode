@@ -37,8 +37,11 @@ export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-fi
 // Profile sort order options
 export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
 
+// Merged properties visibility options
+export type MergedPropertiesVisibility = "show" | "hide" | "unfiltered";
+
 export interface ConfigEditorSettings {
-    showMergedProperties: boolean;
+    showMergedProperties: MergedPropertiesVisibility;
     viewMode: "flat" | "tree";
     propertySortOrder: "alphabetical" | "merged-first" | "non-merged-first";
     profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
