@@ -10,13 +10,24 @@
  */
 
 import { writeFileSync } from "fs";
-import { Builder, By, Key, until, WebDriver } from "selenium-webdriver";
+import { Builder, By, Key, until, WebDriver, WebElement } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox";
 import { TheiaLocator, DatasetsLocators, UssLocators, JobsLocators } from "./Locators";
 
 const SHORTSLEEPTIME = 2000;
 const WAITTIME = 30000;
 let driverFirefox: WebDriver;
+
+async function waitForVisibleElement(locator: By, timeout = WAITTIME): Promise<WebElement> {
+    const element = await driverFirefox.wait(until.elementLocated(locator), timeout);
+    await driverFirefox.wait(until.elementIsVisible(element), timeout);
+    return element;
+}
+
+async function clickWhenVisible(locator: By, timeout = WAITTIME): Promise<void> {
+    const element = await waitForVisibleElement(locator, timeout);
+    await element.click();
+}
 
 export async function openBrowser(headless = true): Promise<WebDriver> {
     const firefoxOptions = new firefox.Options();
@@ -37,52 +48,52 @@ export async function OpenTheiaInFirefox(): Promise<void> {
 }
 
 export async function clickOnZoweExplorer(): Promise<void> {
-    await driverFirefox.wait(until.elementLocated(By.id(TheiaLocator.zoweExplorerxId)), WAITTIME).click();
+    await clickWhenVisible(By.id(TheiaLocator.zoweExplorerxId));
 }
 
 export async function clickOnDatasetsTab(): Promise<void> {
-    await driverFirefox.findElement(By.id(DatasetsLocators.datasetTabId)).click();
-    await driverFirefox.findElement(By.xpath(DatasetsLocators.datasetTabXpath)).click();
+    await clickWhenVisible(By.id(DatasetsLocators.datasetTabId));
+    await clickWhenVisible(By.xpath(DatasetsLocators.datasetTabXpath));
 }
 
 export async function clickOnUssTab(): Promise<void> {
-    await driverFirefox.findElement(By.id(UssLocators.ussTabId)).click();
-    await driverFirefox.findElement(By.xpath(UssLocators.ussTabXpath)).click();
+    await clickWhenVisible(By.id(UssLocators.ussTabId));
+    await clickWhenVisible(By.xpath(UssLocators.ussTabXpath));
 }
 
 export async function clickOnJobsTab(): Promise<void> {
-    await driverFirefox.findElement(By.id(JobsLocators.jobTabId)).click();
-    await driverFirefox.findElement(By.xpath(JobsLocators.jobTabXpath)).click();
+    await clickWhenVisible(By.id(JobsLocators.jobTabId));
+    await clickWhenVisible(By.xpath(JobsLocators.jobTabXpath));
 }
 
 export async function clickOnUssPanel(): Promise<void> {
-    await driverFirefox.findElement(By.id(UssLocators.ussPanelId)).click();
+    await clickWhenVisible(By.id(UssLocators.ussPanelId));
 }
 
 export async function clickOnAddSessionInUss(): Promise<void> {
-    await driverFirefox.findElement(By.id(UssLocators.ussAddSessionId)).click();
+    await clickWhenVisible(By.id(UssLocators.ussAddSessionId));
 }
 
 export async function clickOnJobsPanel(): Promise<void> {
-    await driverFirefox.findElement(By.id(JobsLocators.jobsPanelId)).click();
+    await clickWhenVisible(By.id(JobsLocators.jobsPanelId));
 }
 
 export async function clickOnAddSessionInJobs(): Promise<void> {
-    await driverFirefox.findElement(By.id(JobsLocators.jobsAddSessionId)).click();
+    await clickWhenVisible(By.id(JobsLocators.jobsAddSessionId));
 }
 
 export async function addProfileDetailsInUss(profileName: string): Promise<void> {
-    const ussProfileName = await driverFirefox.findElement(By.xpath(UssLocators.emptyInputBoxXpath));
+    const ussProfileName = await waitForVisibleElement(By.xpath(UssLocators.emptyInputBoxXpath));
     await ussProfileName.sendKeys(profileName);
     await ussProfileName.sendKeys(Key.ENTER);
     await driverFirefox.sleep(SHORTSLEEPTIME);
-    const addToAllTrees = await driverFirefox.findElement(By.xpath(JobsLocators.emptyInputBoxXpath));
+    const addToAllTrees = await waitForVisibleElement(By.xpath(JobsLocators.emptyInputBoxXpath));
     await addToAllTrees.sendKeys("No");
     await addToAllTrees.sendKeys(Key.ENTER);
 }
 
 export async function addProfileDetailsInJobs(profileName: string): Promise<void> {
-    const jobsProfileName = await driverFirefox.findElement(By.xpath(JobsLocators.emptyInputBoxXpath));
+    const jobsProfileName = await waitForVisibleElement(By.xpath(JobsLocators.emptyInputBoxXpath));
     await jobsProfileName.sendKeys(profileName);
     await jobsProfileName.sendKeys(Key.ENTER);
 }
