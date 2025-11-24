@@ -364,7 +364,7 @@ describe("ConfigUtils", () => {
             expect(consoleWarnSpy).not.toHaveBeenCalled();
         });
 
-        it("should filter out invalid profile types when schema validation is provided", () => {
+        it("should preserve all profile types regardless of schema validation", () => {
             const profiles = {
                 validProfile: {
                     type: "zosmf",
@@ -372,8 +372,8 @@ describe("ConfigUtils", () => {
                         host: "test-host",
                     },
                 },
-                invalidProfile: {
-                    type: "invalid-type",
+                customProfile: {
+                    type: "custom-type",
                     properties: {
                         host: "test-host",
                     },
@@ -392,10 +392,8 @@ describe("ConfigUtils", () => {
             ConfigUtils.processProfilesRecursively(profiles, schemaValidation);
 
             expect(profiles.validProfile.type).toBe("zosmf");
-            expect(profiles.invalidProfile.type).toBeUndefined();
-            expect(consoleWarnSpy).toHaveBeenCalledWith(
-                'Setting type to undefined for profile "invalidProfile" with invalid type "invalid-type". Valid types are: zosmf'
-            );
+            expect(profiles.customProfile.type).toBe("custom-type");
+            expect(consoleWarnSpy).not.toHaveBeenCalled();
         });
 
         it("should handle profiles without type property", () => {
@@ -479,7 +477,7 @@ describe("ConfigUtils", () => {
             });
         });
 
-        it("should process nested profiles recursively", () => {
+        it("should process nested profiles recursively and preserve all types", () => {
             const profiles = {
                 parentProfile: {
                     type: "zosmf",
@@ -488,7 +486,7 @@ describe("ConfigUtils", () => {
                     },
                     profiles: {
                         childProfile: {
-                            type: "invalid-type",
+                            type: "custom-type",
                             secure: ["password"],
                             properties: {
                                 host: "child-host",
@@ -511,16 +509,14 @@ describe("ConfigUtils", () => {
             ConfigUtils.processProfilesRecursively(profiles, schemaValidation);
 
             expect(profiles.parentProfile.type).toBe("zosmf");
-            expect(profiles.parentProfile.profiles.childProfile.type).toBeUndefined();
+            expect(profiles.parentProfile.profiles.childProfile.type).toBe("custom-type");
             expect(profiles.parentProfile.profiles.childProfile.properties).toEqual({
                 host: "child-host",
             });
-            expect(consoleWarnSpy).toHaveBeenCalledWith(
-                'Setting type to undefined for profile "childProfile" with invalid type "invalid-type". Valid types are: zosmf'
-            );
+            expect(consoleWarnSpy).not.toHaveBeenCalled();
         });
 
-        it("should handle deeply nested profiles", () => {
+        it("should handle deeply nested profiles and preserve all types", () => {
             const profiles = {
                 level1: {
                     type: "zosmf",
@@ -529,7 +525,7 @@ describe("ConfigUtils", () => {
                             type: "zosmf",
                             profiles: {
                                 level3: {
-                                    type: "invalid-type",
+                                    type: "custom-type",
                                     properties: {
                                         host: "deep-host",
                                     },
@@ -553,10 +549,8 @@ describe("ConfigUtils", () => {
 
             expect(profiles.level1.type).toBe("zosmf");
             expect(profiles.level1.profiles.level2.type).toBe("zosmf");
-            expect(profiles.level1.profiles.level2.profiles.level3.type).toBeUndefined();
-            expect(consoleWarnSpy).toHaveBeenCalledWith(
-                'Setting type to undefined for profile "level3" with invalid type "invalid-type". Valid types are: zosmf'
-            );
+            expect(profiles.level1.profiles.level2.profiles.level3.type).toBe("custom-type");
+            expect(consoleWarnSpy).not.toHaveBeenCalled();
         });
 
         it("should handle empty profiles object", () => {
@@ -568,7 +562,7 @@ describe("ConfigUtils", () => {
             expect(consoleWarnSpy).not.toHaveBeenCalled();
         });
 
-        it("should handle schema validation with empty propertySchema", () => {
+        it("should preserve types even with empty propertySchema", () => {
             const profiles = {
                 testProfile: {
                     type: "any-type",
@@ -585,10 +579,8 @@ describe("ConfigUtils", () => {
 
             ConfigUtils.processProfilesRecursively(profiles, schemaValidation);
 
-            expect(profiles.testProfile.type).toBeUndefined();
-            expect(consoleWarnSpy).toHaveBeenCalledWith(
-                'Setting type to undefined for profile "testProfile" with invalid type "any-type". Valid types are: '
-            );
+            expect(profiles.testProfile.type).toBe("any-type");
+            expect(consoleWarnSpy).not.toHaveBeenCalled();
         });
 
         it("should handle schema validation with null propertySchema", () => {
@@ -612,14 +604,14 @@ describe("ConfigUtils", () => {
             expect(consoleWarnSpy).not.toHaveBeenCalled();
         });
 
-        it("should handle multiple invalid profile types in the same profiles object", () => {
+        it("should preserve multiple custom profile types in the same profiles object", () => {
             const profiles = {
-                invalid1: {
-                    type: "invalid-type-1",
+                custom1: {
+                    type: "custom-type-1",
                     properties: { host: "host1" },
                 },
-                invalid2: {
-                    type: "invalid-type-2",
+                custom2: {
+                    type: "custom-type-2",
                     properties: { host: "host2" },
                 },
                 valid: {
@@ -639,10 +631,10 @@ describe("ConfigUtils", () => {
 
             ConfigUtils.processProfilesRecursively(profiles, schemaValidation);
 
-            expect(profiles.invalid1.type).toBeUndefined();
-            expect(profiles.invalid2.type).toBeUndefined();
+            expect(profiles.custom1.type).toBe("custom-type-1");
+            expect(profiles.custom2.type).toBe("custom-type-2");
             expect(profiles.valid.type).toBe("zosmf");
-            expect(consoleWarnSpy).toHaveBeenCalledTimes(2);
+            expect(consoleWarnSpy).not.toHaveBeenCalled();
         });
 
         it("should handle secure property with empty array", () => {
