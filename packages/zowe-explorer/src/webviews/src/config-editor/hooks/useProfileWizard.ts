@@ -75,7 +75,35 @@ export function useProfileWizard({
     // Helper functions
     const getWizardTypeOptions = () => {
         if (selectedTab === null) return [];
-        return schemaValidations[configurations[selectedTab].configPath]?.validDefaults || [];
+        
+        // Get types from schema
+        const schemaTypes = schemaValidations[configurations[selectedTab].configPath]?.validDefaults || [];
+        
+        // Get unique types from existing profiles
+        const config = configurations[selectedTab].properties;
+        const flatProfiles = flattenProfiles(config.profiles || {});
+        const profileTypes = new Set<string>();
+        
+        // Extract types from all profiles
+        Object.values(flatProfiles).forEach((profile: any) => {
+            if (profile?.type && typeof profile.type === 'string') {
+                profileTypes.add(profile.type);
+            }
+        });
+        
+        // Also check pending changes for types
+        const configPath = configurations[selectedTab].configPath;
+        Object.entries(pendingChanges[configPath] || {}).forEach(([key, entry]) => {
+            if (key.endsWith('.type') && typeof entry.value === 'string') {
+                profileTypes.add(entry.value);
+            }
+        });
+        
+        // Combine schema types and profile types, removing duplicates
+        const allTypes = new Set([...schemaTypes, ...Array.from(profileTypes)]);
+        
+        // Return as sorted array
+        return Array.from(allTypes).sort((a, b) => a.localeCompare(b));
     };
 
     const getWizardPropertyOptions = () => {

@@ -246,7 +246,7 @@ export function ProfileWizardModal({
             {/* Parent Profile Selection */}
             <div>
               <label className="wizard-label" id="parent-profile-label">
-                {l10n.t("Parent Profile")}:
+                {l10n.t("Parent Profile")}
               </label>
               <div className="wizard-parent-profile-container" ref={parentProfileDropdownRef}>
                 <input
@@ -301,7 +301,7 @@ export function ProfileWizardModal({
             {/* Profile Name */}
             <div>
               <label className="wizard-label" id="profile-name-label">
-                {l10n.t("Profile Name")}:
+                {l10n.t("Profile Name")}
               </label>
               <input
                 id="profile-name-input"
@@ -345,7 +345,7 @@ export function ProfileWizardModal({
             {/* Type Selection with Populate Defaults Button */}
             <div>
               <label className="wizard-label" id="profile-type-label">
-                {l10n.t("Profile Type")}:
+                {l10n.t("Profile Type")}
               </label>
               <div style={{ display: "flex", gap: "8px", alignItems: "stretch" }}>
                 <select
@@ -391,7 +391,7 @@ export function ProfileWizardModal({
             {/* Add New Property */}
             <div className="wizard-add-property-section" id="add-property-section">
               <label className="wizard-label" id="add-property-label">
-                {l10n.t("Add Property")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}:
+                {l10n.t("Add Property")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}
               </label>
               <div className="wizard-property-form">
                 <div className="wizard-property-input-container">
@@ -467,7 +467,7 @@ export function ProfileWizardModal({
                 {isAuthOrderProperty(wizardNewPropertyKey.trim()) && (
                   <div className="auth-order-buttons" id="auth-order-buttons">
                     <label className="auth-order-label" id="auth-order-label">
-                      {l10n.t("Select Authentication Order")}:
+                      {l10n.t("Select Authentication Order")}
                     </label>
                     <div className="auth-order-button-container" id="auth-order-button-container">
                       {["token", "basic", "bearer", "cert-pem"].map((authMethod) => {
@@ -673,7 +673,7 @@ export function ProfileWizardModal({
           {/* Right Column - Properties List */}
           <div className="wizard-right-column" id="properties-column">
             <label className="wizard-label" id="properties-label">
-              {l10n.t("Properties")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}:
+              {l10n.t("Properties")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}
             </label>
             <div className="wizard-properties-container" id="properties-container">
               {/* Combined Properties - User properties take precedence over inherited ones */}

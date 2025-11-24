@@ -274,7 +274,7 @@ export function RenameProfileModal({
 
           <div style={{ marginBottom: "16px" }}>
             <label htmlFor="profile-name" style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>
-              New Profile Name:
+              New Profile Name
             </label>
             <input
               id="profile-name"

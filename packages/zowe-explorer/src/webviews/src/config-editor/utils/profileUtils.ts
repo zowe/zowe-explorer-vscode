@@ -272,65 +272,109 @@ export function getAvailableProfilesByType(
 ): string[] {
     if (selectedTab === null) return [];
 
-    const config = configurations[selectedTab].properties;
-    const flatProfiles = flattenProfiles(config.profiles);
-    const profileNames = Object.keys(flatProfiles);
+    const currentConfig = configurations[selectedTab];
 
-    // Get all profiles that have pending type changes
-    const profilesWithPendingTypeChanges = new Set<string>();
-    Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([key, entry]) => {
-        if (entry.profile) {
-            const keyParts = key.split(".");
-            const isTypeKey = keyParts[keyParts.length - 1] === "type";
-            if (isTypeKey) {
-                // Extract the profile name from the key path
-                const profilePathParts = keyParts.slice(0, -1); // Remove "type" from the end
-                if (profilePathParts[0] === "profiles") {
-                    const profileNameParts = profilePathParts.slice(1);
-                    const profileName = profileNameParts.join(".");
-                    profilesWithPendingTypeChanges.add(profileName);
+    // Helper to get profiles from a specific config
+    const getProfilesFromConfig = (config: Configuration): string[] => {
+        const configProps = config.properties;
+        const flatProfiles = flattenProfiles(configProps.profiles);
+        const profileNames = Object.keys(flatProfiles);
+
+        // Get all profiles that have pending type changes
+        const profilesWithPendingTypeChanges = new Set<string>();
+        Object.entries(pendingChanges[config.configPath] || {}).forEach(([key, entry]) => {
+            if (entry.profile) {
+                const keyParts = key.split(".");
+                const isTypeKey = keyParts[keyParts.length - 1] === "type";
+                if (isTypeKey) {
+                    const profilePathParts = keyParts.slice(0, -1);
+                    if (profilePathParts[0] === "profiles") {
+                        const profileNameParts = profilePathParts.slice(1);
+                        const profileName = profileNameParts.join(".");
+                        profilesWithPendingTypeChanges.add(profileName);
+                    }
                 }
             }
-        }
-    });
+        });
 
-    // Filter profiles by type, excluding those with pending type changes
-    const profilesOfType = profileNames.filter((profileKey) => {
-        // Skip profiles that have pending type changes
-        if (profilesWithPendingTypeChanges.has(profileKey)) {
-            return false;
-        }
-        const profileTypeValue = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
-        return profileTypeValue === profileType;
-    });
+        // Filter profiles by type
+        const profilesOfType = profileNames.filter((profileKey) => {
+            if (profilesWithPendingTypeChanges.has(profileKey)) {
+                return false;
+            }
 
-    // Include pending profiles from pendingChanges that match the type
-    const pendingProfiles = new Set<string>();
-    Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([key, entry]) => {
-        if (entry.profile) {
-            // Check if the pending profile has the correct type
-            const keyParts = key.split(".");
-            const isTypeKey = keyParts[keyParts.length - 1] === "type";
-            if (isTypeKey && entry.value === profileType) {
-                // Extract the profile name from the key path
-                // Remove "profiles" prefix and get just the profile name
-                const profilePathParts = keyParts.slice(0, -1); // Remove "type" from the end
-                if (profilePathParts[0] === "profiles") {
-                    // Remove "profiles" prefix and get the actual profile name
-                    const profileNameParts = profilePathParts.slice(1);
-                    const profileName = profileNameParts.join(".");
-                    pendingProfiles.add(profileName);
+            const configIndex = configurations.findIndex((c) => c.configPath === config.configPath);
+            const profileTypeValue = getProfileType(profileKey, configIndex, configurations, pendingChanges, renames);
+            return profileTypeValue === profileType;
+        });
+
+        // Include pending profiles
+        const pendingProfiles = new Set<string>();
+        Object.entries(pendingChanges[config.configPath] || {}).forEach(([key, entry]) => {
+            if (entry.profile) {
+                const keyParts = key.split(".");
+                const isTypeKey = keyParts[keyParts.length - 1] === "type";
+                if (isTypeKey && entry.value === profileType) {
+                    const profilePathParts = keyParts.slice(0, -1);
+                    if (profilePathParts[0] === "profiles") {
+                        const profileNameParts = profilePathParts.slice(1);
+                        const profileName = profileNameParts.join(".");
+                        pendingProfiles.add(profileName);
+                    }
                 }
             }
-        }
+        });
+
+        // Apply renames
+        const renamedProfilesOfType = profilesOfType.map((profileKey) =>
+            getRenamedProfileKeyWithNested(profileKey, config.configPath, renames)
+        );
+        const renamedPendingProfiles = Array.from(pendingProfiles).map((profileKey) =>
+            getRenamedProfileKeyWithNested(profileKey, config.configPath, renames)
+        );
+
+        return [...renamedProfilesOfType, ...renamedPendingProfiles];
+    };
+
+    // Determine which configs to include based on hierarchy
+    const configsToInclude: Configuration[] = [currentConfig];
+
+    const isProjectUser = currentConfig.user && !currentConfig.global;
+    const isProjectTeam = !currentConfig.user && !currentConfig.global;
+    const isGlobalUser = currentConfig.user && currentConfig.global;
+    // const isGlobalTeam = !currentConfig.user && currentConfig.global;
+
+    if (isProjectUser) {
+        // Add Project Team
+        const projectTeam = configurations.find((c) => !c.user && !c.global);
+        if (projectTeam) configsToInclude.push(projectTeam);
+        // Add Global User
+        const globalUser = configurations.find((c) => c.user && c.global);
+        if (globalUser) configsToInclude.push(globalUser);
+        // Add Global Team
+        const globalTeam = configurations.find((c) => !c.user && c.global);
+        if (globalTeam) configsToInclude.push(globalTeam);
+    } else if (isProjectTeam) {
+        // Add Global User
+        const globalUser = configurations.find((c) => c.user && c.global);
+        if (globalUser) configsToInclude.push(globalUser);
+        // Add Global Team
+        const globalTeam = configurations.find((c) => !c.user && c.global);
+        if (globalTeam) configsToInclude.push(globalTeam);
+    } else if (isGlobalUser) {
+        // Add Global Team
+        const globalTeam = configurations.find((c) => !c.user && c.global);
+        if (globalTeam) configsToInclude.push(globalTeam);
+    }
+
+    // Collect all profiles
+    const allProfiles = new Set<string>();
+    configsToInclude.forEach((config) => {
+        const profiles = getProfilesFromConfig(config);
+        profiles.forEach((p) => allProfiles.add(p));
     });
 
-    // Apply renames to all profile names, including nested profiles
-    const configPath = configurations[selectedTab].configPath;
-    const renamedProfilesOfType = profilesOfType.map((profileKey) => getRenamedProfileKeyWithNested(profileKey, configPath, renames));
-    const renamedPendingProfiles = Array.from(pendingProfiles).map((profileKey) => getRenamedProfileKeyWithNested(profileKey, configPath, renames));
-
-    return [...renamedProfilesOfType, ...renamedPendingProfiles];
+    return Array.from(allProfiles);
 }
 
 export function getOrderedProfileKeys(
