@@ -89,6 +89,7 @@ export const config: Options.Testrunner = {
                 userSettings: {
                     "editor.fontSize": 14,
                     "zowe.settings.displayReleaseNotes": false,
+                    "zowe.automaticProfileValidation": false,
                 },
                 vscodeArgs: {
                     // installExtension: profileVsixs,

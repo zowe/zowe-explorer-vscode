@@ -197,7 +197,7 @@ When("enters a valid profile and dataset pattern", async function () {
         }
     );
 
-    // Enter dataset pattern
+    // Enter data set pattern
     const pattern = testInfo.testPattern || testInfo.dsFilter || "*.DATASET";
     await browser.keys(pattern);
     await browser.keys([Key.Enter]);

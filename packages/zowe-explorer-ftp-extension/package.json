@@ -1,11 +1,11 @@
 {
   "name": "zowe-explorer-ftp-extension",
-  "displayName": "IBM z/OS FTP for Zowe Explorer",
+  "displayName": "Zowe Explorer for IBM z/OS FTP",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
   "description": "Adds zFTP support to Zowe Explorer demonstrating how to extend the Zowe Explorer using its extensibility API.",
-  "version": "3.3.0-SNAPSHOT",
+  "version": "3.4.0-SNAPSHOT",
   "icon": "resources/zowe-ftp-color.png",
   "repository": {
     "url": "https://github.com/zowe/zowe-explorer-vscode"
@@ -45,21 +45,17 @@
     "clean": "rimraf out",
     "fresh-clone": "pnpm clean && (rimraf node_modules || true)",
     "vscode:prepublish": "webpack --mode production",
-    "license": "node ../../scripts/updateLicenses.js",
+    "license": "node ../../scripts/updateLicenses.mjs",
     "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix"
   },
   "engines": {
     "vscode": "^1.79.0"
   },
   "dependencies": {
-    "@zowe/zos-files-for-zowe-sdk": "^8.24.1",
+    "@zowe/zos-files-for-zowe-sdk": "^8.28.0",
     "@zowe/zos-ftp-for-zowe-cli": "^3.0.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.24.1",
-    "@zowe/zowe-explorer-api": "3.3.0-SNAPSHOT",
-    "tmp": "0.2.3"
-  },
-  "devDependencies": {
-    "@types/tmp": "0.2.6"
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.28.0",
+    "@zowe/zowe-explorer-api": "3.4.0-SNAPSHOT"
   },
   "jest": {
     "moduleFileExtensions": [

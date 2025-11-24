@@ -6,6 +6,30 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Introduced `getCount` API to let extenders efficiently retrieve the total number of data sets matching a filter, enabling more performant pagination. [#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
+- Added support for `jobEncoding` profile property when submitting jobs with the `ZosmfJesApi` class. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
+- Added support for `encoding` profile property when retrieving JCL with the `ZosmfJesApi` class. [#3877](https://github.com/zowe/zowe-explorer-vscode/pull/3877)
+- Added support to delete VSAM data sets for z/OSMF type profiles. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
+
+### Bug fixes
+
+- Fixed an issue where secure credentials and headers were being logged to the Zowe logger and VSCode output channel. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
+- Updated Zowe SDKs to version `8.28.0` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
+
+## `3.3.1`
+
+### Bug fixes
+
+- Fixed an issue where the `promptForAuthentication` function would throw an `AuthCanceledError` on invalid authentication for SSO login. [#3830](https://github.com/zowe/zowe-explorer-vscode/pull/3830)
+- Fixed an issue where the `IMvs.putContents` function did not properly strip carriage returns from chunks during upload operations on Windows. Now, the function correctly converts CRLF sequences to LF, even if the sequence lands on a chunk boundary. [#3853](https://github.com/zowe/zowe-explorer-vscode/issues/3853)
+- Fixed an issue where the `vscode.workspace.fs.readFile` function would return empty contents for a USS file when an error occurred while fetching the file from the mainframe, instead of displaying an error message. [#3894](https://github.com/zowe/zowe-explorer-vscode/issues/3894)
+- Updated Zowe SDKs to version `8.27.3` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
+
+## `3.3.0`
+
+### New features and enhancements
+
+- Deprecated `protected _lookupParentDirectory()` and redefined it as a `public lookupParentDirectory()` method. [#3485] (https://github.com/zowe/zowe-explorer-vscode/issues/3485)
 - Added `DataSetAttributesProvider` class to allow extenders to provide additional attributes for data sets. [#3730](https://github.com/zowe/zowe-explorer-vscode/pull/3730)
 - Added the handling of cause error details in the ErrorCorrelator. [#3611](https://github.com/zowe/zowe-explorer-vscode/pull/3611)
 - Added hostname validation to prevent encountering a VSCode Proxy bug that occurs when attempting to connect to a z/OSMF server with the protocol specified as part of the hostname. [#3364](https://github.com/zowe/zowe-explorer-vscode/issues/3364)
@@ -24,12 +48,15 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added row pinning functionality to table views with new APIs: `pinRows()` to pin specific rows to the top of the grid, `unpinRows()` to unpin rows, `getPinnedRows()` to retrieve currently pinned rows, and `setPinnedRows()` to replace all pinned rows with a new set. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
 - Added `waitForAPI()` function to the `Table.View` class to allow extensions to wait for the AG Grid API to be fully initialized before performing operations on the table view. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
 - Added grid state management functions `getGridState()` and `setGridState()` to the `Table.View` class to allow extensions to save and restore the complete state of the table view, including column positions, sorting, filtering, and other grid configurations. [#3751](https://github.com/zowe/zowe-explorer-vscode/pull/3751)
+  New `ProfilesCache.isCertFileValid()` method to check validity of profile's certificate file if certificate auth used, returning a boolean value. [#3699](https://github.com/zowe/zowe-explorer-vscode/issues/3699)
+- Changed `request` property in the `PollRequest` type to now support both asynchronous and synchronous functions. [#3764](https://github.com/zowe/zowe-explorer-vscode/pull/3764/)
 
 ### Bug fixes
 
 - BugFix: Resolved a bug where extenders adding `ssh` or `base` to `allTypes` on `ProfileCache` will result in duplicate nodes when adding a profile of that type in Zowe Explorer. [#3625](https://github.com/zowe/zowe-explorer-vscode/pull/3625)
 - Fixed error message shown when creating a config file that already exists. [#3647](https://github.com/zowe/zowe-explorer-vscode/issues/3647)
 - Fixed wrong error message received when accessing a mainframe resource with a file system URI containing invalid profile name. [#3760](https://github.com/zowe/zowe-explorer-vscode/issues/3760)
+- Fixed regression with the `ZoweTreeNode.getProfile` function that caused unhandled exceptions to occur when a profile is no longer accessible. [#3772](https://github.com/zowe/zowe-explorer-vscode/issues/3772)
 
 ## `3.2.2`
 
@@ -44,6 +71,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Resolved an issue where secure credentials were inadvertently converted to non-string data types. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)
 - Fixed an issue where the `ZoweVsCodeExtension.profilesCache` getter was creating new ProfilesCache instances instead of using the existing one from the Zowe Explorer API, which could lead to inconsistencies and synchronization issues. [#3735](https://github.com/zowe/zowe-explorer-vscode/pull/3735)
 - Fixed an issue where the `ProfilesCache` class did not cache the `ProfileInfo` class instance it creates, making every call to the `ProfilesCache.getProfileInfo` function result in a new initialization of the `ProfileInfo` class. Now, the `getProfileInfo` function caches the new instance of the `ProfileInfo` class and reuses it for efficiency. [#3735](https://github.com/zowe/zowe-explorer-vscode/pull/3735)
+- Updated Zowe SDKs to `8.26.1` for technical currency. [#3696](https://github.com/zowe/zowe-explorer-vscode/pull/3696)
 
 ## `3.2.1`
 
@@ -166,7 +194,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added optional function `move` to the `MainframeInteraction.IUss` interface to move USS folders/files from one path to another. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
 - Added the `buildUniqueSpoolName` function to build spool names for Zowe resource URIs and VS Code editor tabs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
 - Added the `isNodeInEditor` function to determine whether a tree node is open in the editor. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
-- Added Created Date to `stats` optional variable for storing dataset stats [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
+- Added Created Date to `stats` optional variable for storing dataset stats. [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
 - Added Date created to DatasetSortOpts enum [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
 - Added new `ProfilesCache.convertV1ProfToConfig` API endpoint for extenders migrating from v1 profiles to team configuration files. [#2284](https://github.com/zowe/vscode-extension-for-zowe/issues/2284)
 - Added new APIs for Issue UNIX Command. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)

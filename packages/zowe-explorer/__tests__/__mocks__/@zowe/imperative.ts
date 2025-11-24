@@ -15,6 +15,7 @@
 
 import * as os from "os";
 import * as path from "path";
+
 const log4js = require("log4js");
 
 export class EventProcessor {
@@ -190,6 +191,11 @@ export interface ICredentialManagerNameMap {
     credMgrZEName?: string;
 }
 
+export interface IDataSetCount {
+    count: number;
+    lastItemName?: string;
+}
+
 export class Session {
     constructor(public ISession: ISessionOptions) {}
 }
@@ -218,6 +224,13 @@ export class ProfileInfo {
             version?: string;
         }
     ): any {
+        return;
+    }
+    public static profAttrsToProfLoaded(): any {
+        return true;
+    }
+
+    public mergeArgsForProfile(): any {
         return;
     }
 }
@@ -250,6 +263,9 @@ export class ImperativeError extends Error {
     }
     public get details() {
         return this.mDetails;
+    }
+    public get errorCode() {
+        return this.mDetails.errorCode;
     }
 }
 
@@ -370,8 +386,11 @@ export class TextUtils {
     public static chalk = jest.requireActual("chalk");
 }
 
-export namespace SessConstants {
-    export declare const AUTH_TYPE_TOKEN = "token";
+export class SessConstants {
+    public static readonly AUTH_TYPE_TOKEN = "token";
+    public static readonly AUTH_TYPE_BASIC = "basic";
+    public static readonly AUTH_TYPE_BEARER = "bearer";
+    public static readonly AUTH_TYPE_CERT_PEM = "cert-pem";
 }
 
 export const apiErrorHeader = {
@@ -406,5 +425,29 @@ export class EventOperator {
 }
 
 export class DeferredPromise {
-    public resolve(value: any): void {}
+    public promise: Promise<any> = Promise.resolve();
+    public resolve(value?: any): void {}
+    public reject(reason?: any): void {}
+}
+
+export class AuthOrder {
+    // private static originalAuthOrder = jest.requireActual("@zowe/imperative").AuthOrder;
+    public static addCredsToSession(...args: any[]): void {
+        // this.originalAuthOrder.addCredsToSession(...args);
+    }
+    public static putNewAuthsFirstInSess(...args: any[]): void {
+        // this.originalAuthOrder.putNewAuthsFirstInSess(...args);
+    }
+    public static putNewAuthsFirstOnDisk(...args: any[]): void {
+        // this.originalAuthOrder.putNewAuthsFirstOnDisk(...args);
+    }
+    public static makingRequestForToken(...args: any[]): void {
+        // this.originalAuthOrder.makingRequestForToken(...args);
+    }
+}
+
+export class Censor {
+    public static censorRawData(data: string): string {
+        return data;
+    }
 }

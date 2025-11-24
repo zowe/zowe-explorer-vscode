@@ -50,6 +50,7 @@ import { AuthUtils } from "../../../../src/utils/AuthUtils";
 // Missing the definition of path module, because I need the original logic for tests
 jest.mock("fs");
 jest.mock("vscode");
+jest.mock("../../../../src/tools/ZoweLocalStorage");
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
 const mocked = <T extends (...args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
@@ -65,7 +66,10 @@ function createGlobalMocks() {
 
     newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
     newMocks.mvsApi = createMvsApi(newMocks.imperativeProfile);
-    newMocks.getContentsSpy = jest.spyOn(newMocks.mvsApi, "getContents");
+    // Only spy on getContents if it's actually defined on the mock
+    if ("getContents" in newMocks.mvsApi) {
+        newMocks.getContentsSpy = jest.spyOn(newMocks.mvsApi, "getContents");
+    }
     bindMvsApi(newMocks.mvsApi);
     Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: jest.fn(), configurable: true });
@@ -1353,6 +1357,65 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
         mockProfilesInstance.mockRestore();
         errorHandlingMock[Symbol.dispose]();
     });
+
+    it("calls error handling when getDatasets throws an error", async () => {
+        const errorHandlingMock = new MockedProperty(AuthUtils, "errorHandling");
+        const mockProfilesInstance = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+        });
+        sessionNode.pattern = "HLQ.PROD1.STUFF";
+        sessionNode.dirty = true;
+
+        jest.spyOn(sessionNode as any, "listDatasets").mockImplementation(() => {
+            throw new Error("Network error");
+        });
+
+        const result = await sessionNode.getChildren();
+
+        expect(result).toStrictEqual([]);
+        expect(errorHandlingMock.mock).toHaveBeenCalledWith(
+            expect.any(Error),
+            expect.objectContaining({
+                apiType: expect.any(String),
+                profile: profileOne,
+            })
+        );
+        mockProfilesInstance.mockRestore();
+        errorHandlingMock[Symbol.dispose]();
+    });
+
+    it("returns empty array when getDatasets returns undefined", async () => {
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+        });
+        sessionNode.pattern = "TEST.*";
+        sessionNode.dirty = true;
+
+        // Mock getDatasets to return undefined (simulating invalid session scenario)
+        const getDatasetsSpy = jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce(undefined);
+        const mockProfilesInstance = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+
+        const result = await sessionNode.getChildren();
+
+        expect(result).toStrictEqual([]);
+        expect(getDatasetsSpy).toHaveBeenCalledWith(profileOne, undefined);
+        getDatasetsSpy.mockRestore();
+        mockProfilesInstance.mockRestore();
+    });
 });
 
 describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
@@ -1530,10 +1593,76 @@ describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
         expect(getCurrentPageItemsMock).toHaveBeenCalledTimes(1);
         getDirectValueMock.mockRestore();
     });
+
+    it("calls refetchCurrentPage successfully when paginator is initialized and data exists", async () => {
+        const profile = createIProfile();
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.EXAMPLE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        // Set up paginator and data to simulate an initialized state
+        const mockPaginator = new Paginator(100, jest.fn());
+        jest.spyOn(mockPaginator, "isInitialized").mockReturnValueOnce(true);
+        const refetchCurrentPageSpy = jest.spyOn(mockPaginator, "refetchCurrentPage").mockResolvedValueOnce(undefined);
+        const getCurrentPageItemsSpy = jest
+            .spyOn(mockPaginator, "getCurrentPageItems")
+            .mockReset()
+            .mockReturnValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [{ member: "MEMBER1" }, { member: "MEMBER2" }],
+                        returnedRows: 2,
+                    },
+                },
+            ]);
+
+        (pdsNode as any).paginator = mockPaginator;
+        (pdsNode as any).paginatorData = { totalItems: 10 };
+
+        const result = await (pdsNode as any).getDatasets(profile, true);
+
+        expect(refetchCurrentPageSpy).toHaveBeenCalledTimes(1);
+        expect(getCurrentPageItemsSpy).toHaveBeenCalledTimes(1);
+        expect(result).toHaveLength(1);
+        expect(result[0].apiResponse.items).toHaveLength(2);
+    });
+
+    it("handles refetchCurrentPage error by resetting paginator data", async () => {
+        const profile = createIProfile();
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.EXAMPLE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        // Set up paginator and data to simulate an initialized state
+        const mockPaginator = new Paginator(100, jest.fn());
+        jest.spyOn(mockPaginator, "isInitialized").mockReturnValueOnce(true);
+        const refetchError = new Error("Network timeout during refetch");
+        const refetchCurrentPageMock = jest.spyOn(Paginator.prototype, "refetchCurrentPage").mockRejectedValueOnce(refetchError);
+        const loggerErrorSpy = jest.spyOn(ZoweLogger, "error").mockImplementation();
+
+        (pdsNode as any).paginator = mockPaginator;
+        (pdsNode as any).paginatorData = { totalItems: 10, lastItemName: "MEMBER5" };
+
+        // No result from getDatasets() if refetchCurrentPage fails
+        await expect((pdsNode as any).getDatasets(profile, true)).resolves.toBeUndefined();
+
+        expect(refetchCurrentPageMock).toHaveBeenCalledTimes(1);
+        expect(loggerErrorSpy).toHaveBeenCalledWith("[ZoweDatasetNode.getDatasets]: Error refetching current page: Network timeout during refetch");
+        expect((pdsNode as any).paginatorData).toBeUndefined();
+
+        loggerErrorSpy.mockRestore();
+        refetchCurrentPageMock.mockRestore();
+    });
 });
 
 describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
     it("calls listDatasets to fetch basic list when cached data is null", async () => {
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({} as any);
         const sessionNode = new ZoweDatasetNode({
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
@@ -1566,7 +1695,6 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
                     commandResponse: "2 data set(s) were listed successfully",
                 });
             });
-
         await (sessionNode as any).listDatasetsInRange(undefined, 2);
         expect(listDatasetsMock).toHaveBeenCalledTimes(2);
         expect(listDatasetsMock.mock.calls[0][1]).toStrictEqual({ attributes: false });
@@ -1627,6 +1755,42 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
         expect(listDatasetsMock).toHaveBeenCalledTimes(1);
         // maxLength: given limit parameter in listDatasets + 1 to account for filtering the start DS
         expect(listDatasetsMock.mock.calls[0][1]).toStrictEqual({ attributes: true, start: "PDS.EXAMPLE2", maxLength: 3 });
+    });
+
+    it("filters out duplicate dsnames when list is not cached", async () => {
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile: createIProfile(),
+            session: createISession(),
+        });
+        sessionNode.dirty = true;
+        const actualResponses: zosfiles.IZosFilesResponse[] = [];
+        const listDatasetsMock = jest.spyOn(sessionNode, "listDatasets").mockImplementation(async (responses) => {
+            const resp = {
+                success: true,
+                apiResponse: {
+                    items: [
+                        { dsname: "PDS.EXAMPLE3", dsorg: "PO" },
+                        { dsname: "PDS.EXAMPLE4", dsorg: "PO" },
+                    ],
+                    returnedRows: 2,
+                },
+                commandResponse: "2 data set(s) were listed successfully",
+            };
+            responses.push(resp, resp);
+            actualResponses.push(resp);
+        });
+
+        expect(await (sessionNode as any).listDatasetsInRange("PDS.EXAMPLE2", 2)).toStrictEqual({
+            items: actualResponses,
+            nextPageCursor: undefined,
+            totalItems: 2, // 4 deduped becomes 2
+        });
+        expect(listDatasetsMock).toHaveBeenCalledTimes(2);
+        expect(listDatasetsMock.mock.calls[0][1]).toStrictEqual({ attributes: false });
+        expect(listDatasetsMock.mock.calls[1][1]).toStrictEqual({ attributes: true, start: "PDS.EXAMPLE2", maxLength: 3 });
     });
 });
 
@@ -1725,5 +1889,41 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         expect(listMembersMock).toHaveBeenCalledTimes(1);
         // maxLength: given limit parameter in listMembersInRange + 1 to account for filtering the start member
         expect(listMembersMock.mock.calls[0][1]).toStrictEqual({ attributes: true, start: "EX2", maxLength: 3 });
+    });
+    it("uses getCount from mvsApi when available to set totalItems", async () => {
+        const mocks = createGlobalMocks(); // Get existing mocks
+        const getCountMock = jest.fn().mockResolvedValue({ count: 42, lastItem: "SOME.DATASET" });
+        mocks.mvsApi.getCount = getCountMock;
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile: mocks.imperativeProfile,
+            session: createISession(),
+        });
+        sessionNode.pattern = "PDS.*"; // getCount to run
+        sessionNode.dirty = true;
+        const listDatasetsMock = jest.spyOn(sessionNode, "listDatasets").mockImplementationOnce(async () => {});
+        const result = await (sessionNode as any).listDatasetsInRange(undefined, 5);
+        expect(getCountMock).toHaveBeenCalledWith(["PDS.*"]);
+        expect(result.totalItems).toBe(42);
+        expect(listDatasetsMock).toHaveBeenCalledTimes(1);
+    });
+    it("returns an empty list, if listMembersInRange throws a 404 error", async () => {
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.404",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        jest.spyOn(pdsNode, "listMembers").mockRejectedValueOnce(
+            new imperative.ImperativeError({
+                msg: "Dataset not cataloged",
+                errorCode: `${imperative.RestConstants.HTTP_STATUS_404}`,
+            })
+        );
+
+        const result = await (pdsNode as any).listMembersInRange(undefined, 2);
+        expect(result).toStrictEqual({ items: [] });
     });
 });

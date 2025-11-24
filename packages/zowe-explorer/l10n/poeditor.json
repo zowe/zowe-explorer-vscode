@@ -110,6 +110,9 @@
   "uploadDialog": {
     "Upload Member...": ""
   },
+  "uploadDialogWithEncoding": {
+    "Upload Member with Encoding...": ""
+  },
   "pattern": {
     "Search Data Sets": ""
   },
@@ -121,6 +124,12 @@
   },
   "stopPolling": {
     "Stop Polling": ""
+  },
+  "jobs.startPollingActiveJobs": {
+    "Start Polling Active Jobs": ""
+  },
+  "jobs.stopPollingActiveJobs": {
+    "Stop Polling Active Jobs": ""
   },
   "refreshNode": {
     "Pull from Mainframe": ""
@@ -178,6 +187,9 @@
   },
   "uss.uploadDialogBinary": {
     "Upload Files (Binary)...": ""
+  },
+  "uss.uploadDialogWithEncoding": {
+    "Upload Files with Encoding...": ""
   },
   "uss.text": {
     "Toggle Text": ""
@@ -409,6 +421,9 @@
   },
   "zowe.commands.tso.history": {
     "Toggle if TSO Commands persist locally": ""
+  },
+  "zowe.commands.tso.defaultProfile": {
+    "Toggle to use default TSO profile when issuing a TSO command": ""
   },
   "zowe.commands.uss.history": {
     "Toggle if Unix Commands persist locally": ""
@@ -669,6 +684,9 @@
   "Certificate Keys": "",
   "Select Certificate Key": "",
   "Required parameter 'host' must not be blank.": "",
+  "Your available creds: {0}": "",
+  "Your authOrder: {0}": "",
+  "Selected auth type: {0}": "",
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.": "",
   "Auth Method: ": "",
   "Token-based Authentication": "",
@@ -699,6 +717,7 @@
   "Binary": "",
   "Create a new filter": "",
   "Failed to move file {0}: {1}": "",
+  "You must specify a directory before moving.": "",
   "Moving USS files...": "",
   "Enter a new name for the {0}": "",
   "Unable to rename node:": "",
@@ -710,7 +729,7 @@
   "No previous path in history.": "",
   "No next path in history.": "",
   "Prompting the user for a USS path": "",
-  "Select a filter": "",
+  "Select a filter or type to create a new one": "",
   "No selection made. Operation cancelled.": "",
   "New filter": "",
   "Please enter a valid USS path.": "",
@@ -737,7 +756,10 @@
   "Unable to create node:": "",
   "Uploading file to USS tree": "",
   "Upload action was cancelled.": "",
+  "This action is only supported for USS directories.": "",
+  "Uploading file...": "",
   "Uploading USS file": "",
+  "Uploading USS file with encoding": "",
   "Delete action was canceled.": "",
   "Copying file structure...": "",
   "The paste operation is not supported for this node.": "",
@@ -754,8 +776,10 @@
   "From profile {0}": "",
   "USS file tag": "",
   "Choose encoding for {0}": "",
-  "Current encoding is {0}": "",
   "Enter a codepage (e.g., 1047, IBM-1047)": "",
+  "Choose encoding for upload to {0}": "",
+  "Default encoding is {0}": "",
+  "Current encoding is {0}": "",
   "A search must be set for {0} before it can be added to a workspace.": "",
   "(default)": "",
   "Confirm": "",
@@ -805,11 +829,17 @@
   "Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}": "",
   "Remove": "",
   "This will remove all favorited jobs items for profile {0}. Continue?": "",
+  "Select a filter": "",
   "Enter a job ID": "",
   "Job search cancelled.": "",
   "The polling interval must be greater than or equal to 1000ms.": "",
   "Poll interval (in ms) for: {0}": "",
   "Polling: {0}...": "",
+  "No active jobs found for session: {0}": "",
+  "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?": "",
+  "Polling {0} active jobs...": "",
+  "Job completed {0} - {1}": "",
+  "No more active jobs for {0}. Stopping polling.": "",
   "Filter: {0}": "",
   "Set a filter...": "",
   "Filter cleared for {0}": "",
@@ -867,6 +897,8 @@
   "User ID": "",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "",
   "Failed to move {0}: {1}": "",
+  "Data set(s) moved successfully.": "",
+  "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.": "",
   "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "",
   "Cannot drop a partitioned dataset or member into a sequential dataset.": "",
   "Moving MVS files...": "",
@@ -930,7 +962,7 @@
   "No profiles available.": "",
   "Select a profile to search for data sets": "",
   "Select a profile": "",
-  "Enter Dataset Pattern": "",
+  "Enter Data Set Pattern": "",
   "e.g., USER.*, PUBLIC.DATA.*, etc.": "",
   "Enter a dataset pattern to search for": "",
   "Profile {0} not found.": "",
@@ -953,6 +985,8 @@
   "Failed to list datasets": "",
   "Failed to read {0}": "",
   "Saving data set...": "",
+  "This upload operation may result in data loss.": "",
+  "Please review the following lines:": "",
   "Failed to save {0}": "",
   "Partitioned Data Set: Binary": "",
   "Partitioned Data Set: C": "",
@@ -979,6 +1013,8 @@
   "Unable to create data set.": "",
   "{0} was created like {1}.": "",
   "Uploading to data set": "",
+  "This action is only supported for partitioned data sets.": "",
+  "Uploading to data set...": "",
   "No data sets selected for deletion, cancelling...": "",
   "Deleting data set(s): {0}": "",
   "Deleting items": "",
@@ -1005,6 +1041,7 @@
   "Selection is not a valid data set member name.": "",
   "Selection is not a valid data set name.": "",
   "Select the profile to use to open the data set": "",
+  "PDS {0} could not be found.": "",
   "Data set member {0} does not exist or cannot be opened in data set {1}.": "",
   "Data set {0} does not exist or cannot be opened.": "",
   "Opening data set failed.": "",
@@ -1066,6 +1103,7 @@
   "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "",
   "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.": "",
+  "Profile {0} has an invalid SSL certificate.": "",
   "Auto Store: ": "",
   "Config File: ": "",
   "Global": "",
@@ -1085,7 +1123,6 @@
   "Validating {0} Profile.": "",
   "Validating {0} was cancelled.": "",
   "Profile validation failed for {0}.": "",
-  "This profile is using basic authentication and does not support token authentication.": "",
   "Error getting supported tokenType value for profile {0}": "",
   "Login to authentication service was successful for {0}.": "",
   "Unable to log in with {0}. {1}": "",

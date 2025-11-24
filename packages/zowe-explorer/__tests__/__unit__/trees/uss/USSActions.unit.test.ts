@@ -177,7 +177,7 @@ function createGlobalMocks() {
 describe("USS Action Unit Tests - Function createUSSNode", () => {
     function createBlockMocks(globalMocks) {
         const newMocks = {
-            testUSSTree: null,
+            testUSSTree: undefined as unknown as USSTree,
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
             testTreeView: createTreeView(),
             mockCheckCurrentProfile: jest.fn(),
@@ -262,7 +262,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         await USSActions.createUSSNode(blockMocks.ussNode.getParent(), blockMocks.testUSSTree, "directory");
         expect(refreshProviderMock).toHaveBeenCalled();
         expect(createApiMock).toHaveBeenCalled();
-        expect(blockMocks.testUSSTree.refreshElement).not.toHaveBeenCalled();
+        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalled();
         createApiMock.mockRestore();
     });
 
@@ -605,6 +605,154 @@ describe("USS Action Unit Tests - function uploadFile", () => {
     });
 });
 
+describe("USS Action Unit Tests - upload with encoding", () => {
+    function createBlockMocks(globalMocks) {
+        const newMocks = {
+            withProgress: jest.spyOn(vscode.window, "withProgress").mockImplementation((progLocation, callback) => {
+                const progress = { report: jest.fn() };
+                const token = { isCancellationRequested: false, onCancellationRequested: jest.fn() };
+                return callback(progress, token);
+            }),
+            ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
+            testUSSTree: null as unknown as USSTree,
+        };
+        newMocks.testUSSTree = createUSSTree(
+            [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
+            [newMocks.ussNode],
+            createTreeView()
+        );
+        return newMocks;
+    }
+
+    afterEach(() => {
+        jest.resetAllMocks();
+        jest.restoreAllMocks();
+        jest.clearAllMocks();
+    });
+
+    it("uploadDialogWithEncoding returns early if node is not a directory", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        const fileNode = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.USS_TEXT_FILE_CONTEXT,
+            parentNode: blockMocks.ussNode,
+            parentPath: blockMocks.ussNode.fullPath,
+        });
+        await USSActions.uploadDialogWithEncoding(fileNode, blockMocks.testUSSTree);
+        expect(infoMessageSpy).toHaveBeenCalledWith("This action is only supported for USS directories.");
+    });
+
+    it("uploadDialogWithEncoding returns early if promptForUploadEncoding returns falsy value", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValueOnce(undefined);
+        const showOpenDialogSpy = jest.spyOn(Gui, "showOpenDialog");
+        await USSActions.uploadDialogWithEncoding(blockMocks.ussNode, blockMocks.testUSSTree);
+        expect(showOpenDialogSpy).not.toHaveBeenCalled();
+    });
+
+    it("uploadDialogWithEncoding returns early if showOpenDialog returns falsy value", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const showProgressSpy = jest.spyOn(Gui, "withProgress");
+        const showOpenDialogSpy = jest.spyOn(Gui, "showOpenDialog");
+        const promptForUploadEncodingMock = jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValueOnce({ kind: "binary" });
+        await USSActions.uploadDialogWithEncoding(blockMocks.ussNode, blockMocks.testUSSTree);
+        expect(showOpenDialogSpy).toHaveBeenCalled();
+        expect(showProgressSpy).not.toHaveBeenCalled();
+        expect(promptForUploadEncodingMock).toHaveBeenCalled();
+        expect(promptForUploadEncodingMock).toHaveBeenCalledWith(blockMocks.ussNode.getProfile(), blockMocks.ussNode.fullPath);
+    });
+
+    it("uploadDialogWithEncoding uploads as binary when binary is selected", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "binary" } as any);
+        const fileUri = { fsPath: "/tmp/foo.zip" } as any;
+        globalMocks.showOpenDialog.mockReturnValue([fileUri]);
+        const uploadBinarySpy = jest.spyOn(USSActions, "uploadBinaryFile").mockResolvedValue();
+
+        await USSActions.uploadDialogWithEncoding(blockMocks.ussNode, blockMocks.testUSSTree);
+
+        expect(SharedUtils.promptForUploadEncoding).toHaveBeenCalled();
+        expect(globalMocks.showOpenDialog).toHaveBeenCalled();
+        expect(uploadBinarySpy).toHaveBeenCalledWith(blockMocks.ussNode, fileUri.fsPath);
+        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalledWith(blockMocks.ussNode);
+    });
+
+    it("uploadDialogWithEncoding uploads as text/other when a codepage is selected", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" } as any);
+        const fileUri = { fsPath: "/tmp/foo.txt" } as any;
+        globalMocks.showOpenDialog.mockReturnValue([fileUri]);
+        const openDoc = createTextDocument(path.normalize("/tmp/foo.txt"));
+        globalMocks.openTextDocument.mockResolvedValue(openDoc);
+        const uploadWithEncSpy = jest.spyOn(USSActions, "uploadFileWithEncoding").mockResolvedValue();
+
+        await USSActions.uploadDialogWithEncoding(blockMocks.ussNode, blockMocks.testUSSTree);
+
+        expect(SharedUtils.promptForUploadEncoding).toHaveBeenCalled();
+        expect(globalMocks.openTextDocument).toHaveBeenCalled();
+        expect(uploadWithEncSpy).toHaveBeenCalledWith(blockMocks.ussNode, openDoc, { kind: "other", codepage: "IBM-1047" });
+        expect(blockMocks.testUSSTree.refreshElement).toHaveBeenCalledWith(blockMocks.ussNode);
+    });
+
+    it("uploadFileWithEncoding passes correct options to API for text", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const putContent = jest.fn();
+        ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(() => ({ putContent } as any));
+        const doc = createTextDocument(path.normalize("/tmp/bar.txt"));
+
+        await USSActions.uploadFileWithEncoding(blockMocks.ussNode, doc, { kind: "text" } as any);
+
+        expect(putContent).toHaveBeenCalled();
+        const options = putContent.mock.calls[0][2];
+        expect(options.binary).toBe(false);
+        // encoding should not be set for text
+        expect(options.encoding).toBeUndefined();
+    });
+
+    it("uploadFileWithEncoding passes correct options to API for other/codepage", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const putContent = jest.fn();
+        ZoweExplorerApiRegister.getUssApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(() => ({ putContent } as any));
+        const doc = createTextDocument(path.normalize("/tmp/bar.txt"));
+
+        await USSActions.uploadFileWithEncoding(blockMocks.ussNode, doc, { kind: "other", codepage: "ISO8859-1" } as any);
+
+        const options = putContent.mock.calls[0][2];
+        expect(options.binary).toBe(false);
+        expect(options.encoding).toBe("ISO8859-1");
+    });
+
+    it("uploadDialogWithEncoding should handle cancellation", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "binary" } as any);
+        const fileUri = { fsPath: "/tmp/foo.zip" } as any;
+        globalMocks.showOpenDialog.mockReturnValue([fileUri]);
+        const uploadBinarySpy = jest.spyOn(USSActions, "uploadBinaryFile").mockResolvedValue();
+
+        blockMocks.withProgress.mockImplementation((progLocation, callback) => {
+            const progress = { report: jest.fn() };
+            const token = {
+                isCancellationRequested: true, // Simulate cancellation
+                onCancellationRequested: jest.fn(),
+            };
+            return callback(progress, token);
+        });
+
+        await USSActions.uploadDialogWithEncoding(blockMocks.ussNode, blockMocks.testUSSTree);
+        expect(uploadBinarySpy).not.toHaveBeenCalled();
+    });
+});
+
 describe("USS Action Unit Tests - copy file / directory", () => {
     function createBlockMocks(globalMocks) {
         const newMocks = {
@@ -612,7 +760,13 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
             testTreeView: createTreeView(),
             mockCheckCurrentProfile: jest.fn(),
-            ussApi: createUssApi(globalMocks.testProfile),
+            ussApi:
+                (createUssApi(globalMocks.testProfile) as any) ??
+                ({
+                    fileList: jest.fn(),
+                    copy: jest.fn(),
+                    uploadFromBuffer: jest.fn(),
+                } as any),
             ussNodes: [] as IZoweUSSTreeNode[],
         };
 
@@ -724,21 +878,9 @@ describe("USS Action Unit Tests - copy file / directory", () => {
             type: USSFileStructure.UssFileType.Directory,
         };
 
-        const originalFileList = blockMocks.ussApi.fileList;
-        blockMocks.ussApi.copy = blockMocks.ussApi.fileList = undefined;
+        const apiMissingCopyMethods: any = { fileList: jest.fn() };
         try {
-            await blockMocks.ussNodes[1].paste(blockMocks.ussNodes[1].resourceUri, { tree: rootTree, api: blockMocks.ussApi });
-        } catch (err) {
-            expect(err).toBeDefined();
-            expect(err.message).toBe("Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.");
-        }
-
-        // Test for uploadFromBuffer also being undefined
-        blockMocks.ussApi.fileList = originalFileList;
-        blockMocks.ussApi.copy = jest.fn();
-        blockMocks.ussApi.uploadFromBuffer = undefined;
-        try {
-            await blockMocks.ussNodes[1].paste(blockMocks.ussNodes[1].resourceUri, { tree: rootTree, api: blockMocks.ussApi });
+            await blockMocks.ussNodes[1].paste(blockMocks.ussNodes[1].resourceUri, { tree: rootTree, api: apiMissingCopyMethods });
         } catch (err) {
             expect(err).toBeDefined();
             expect(err.message).toBe("Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.");
@@ -829,6 +971,7 @@ describe("USS Action Unit Tests - function deleteUSSFilesPrompt", () => {
         const nodes = [createUSSNode(createISession(), createIProfile())];
         const deleteUSSNodeSpy = jest.spyOn(ZoweUSSNode.prototype, "deleteUSSNode");
         jest.spyOn(Gui, "warningMessage").mockReturnValue(Promise.resolve("Delete"));
+        testUSSTree.getTreeView = jest.fn().mockReturnValue({ selection: [] });
         await USSActions.deleteUSSFilesPrompt(testNode, nodes, testUSSTree);
         expect(deleteUSSNodeSpy).toHaveBeenCalledWith(testUSSTree, "", false);
     });

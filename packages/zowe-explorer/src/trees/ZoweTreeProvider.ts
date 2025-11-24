@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { IZoweTreeNode, imperative, Types, IZoweTree, PersistenceSchemaEnum, Validation } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, imperative, Types, IZoweTree, PersistenceSchemaEnum, Validation, AuthHandler } from "@zowe/zowe-explorer-api";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { Profiles } from "../configuration/Profiles";
@@ -30,12 +30,12 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     public mOnDidChangeTreeData: vscode.EventEmitter<T | undefined | null | void> = new vscode.EventEmitter();
     public readonly onDidChangeTreeData = this.mOnDidChangeTreeData.event;
 
-    protected mHistory: ZowePersistentFilters;
+    protected mPersistence: ZowePersistentFilters;
     protected log: imperative.Logger = imperative.Logger.getAppLogger();
     protected validProfile: number = -1;
 
     public constructor(protected persistenceSchema: PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
-        this.mHistory = new ZowePersistentFilters(this.persistenceSchema);
+        this.mPersistence = new ZowePersistentFilters(this.persistenceSchema);
     }
 
     /**
@@ -159,7 +159,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
 
     public getSearchHistory(): string[] {
         ZoweLogger.trace("ZoweTreeProvider.getSearchHistory called.");
-        return this.mHistory.getSearchHistory();
+        return this.mPersistence.getSearchHistory();
     }
 
     public getTreeType(): PersistenceSchemaEnum {
@@ -170,7 +170,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     public addSearchHistory(criteria: string): void {
         ZoweLogger.trace("ZoweTreeProvider.addSearchHistory called.");
         if (criteria) {
-            this.mHistory.addSearchHistory(criteria);
+            this.mPersistence.addSearchHistory(criteria);
         }
     }
 
@@ -270,11 +270,15 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         ZoweLogger.trace("ZoweTreeProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
         const profileName = profile.name ?? node.getProfileName();
-
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, node);
-        const jwtCheckResult = (await AuthUtils.isUsingTokenAuth(profileName))
-            ? await ZoweTreeProvider.checkJwtForProfile(profileName)
-            : JwtCheckResult.TokenUnusedOrUnsupported;
+
+        let jwtCheckResult: JwtCheckResult;
+        const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
+        if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER) {
+            jwtCheckResult = await ZoweTreeProvider.checkJwtForProfile(profileName);
+        } else {
+            jwtCheckResult = JwtCheckResult.TokenUnusedOrUnsupported;
+        }
 
         if (jwtCheckResult === JwtCheckResult.TokenExpired) {
             // Mark profile as inactive if user dismissed "token expired/login" prompt or login failed

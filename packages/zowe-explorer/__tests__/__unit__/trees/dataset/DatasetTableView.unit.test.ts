@@ -32,6 +32,8 @@ import { ZoweExplorerExtender } from "../../../../src/extending/ZoweExplorerExte
 import * as imperative from "@zowe/imperative";
 import { l10n } from "vscode";
 
+jest.mock("../../../../src/tools/ZoweLocalStorage");
+
 describe("TreeDataSource", () => {
     describe("fetchDatasets", () => {
         it("returns a map of data set info based on the result of getChildren", async () => {
@@ -1825,7 +1827,7 @@ describe("DatasetTableView", () => {
                 const rows: Table.RowData[] = [];
 
                 const result = (datasetTableView as any).canOpenInEditor(rows);
-                expect(result).toBe(true); // every() returns true for empty arrays
+                expect(result).toBe(false); // can't open in editor if no rows
             });
 
             it("should return true for PDS member with undefined dsorg", () => {

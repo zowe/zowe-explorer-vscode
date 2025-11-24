@@ -21,6 +21,7 @@ import {
     IDataSetTableEvent,
     DataSetTableEventType,
     Sorting,
+    PersistenceSchemaEnum,
 } from "@zowe/zowe-explorer-api";
 import { commands, Event, EventEmitter, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -33,6 +34,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { AuthUtils } from "../../utils/AuthUtils";
 import * as imperative from "@zowe/imperative";
 import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
+import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
 
 /**
  * Tree-based data source that uses existing tree nodes
@@ -495,11 +497,15 @@ export class DatasetTableView {
             type: "primary",
             command: "back",
             callback: { fn: this.goBack.bind(this), typ: "no-selection" },
-            hideCondition: () => this.previousTableData == null || this.currentTableType !== "members",
+            hideCondition: () => this.currentTableType == null || this.currentTableType === "dataSets",
         },
     };
 
     private canOpenInEditor(rows: Table.RowData[]): boolean {
+        if (rows.length === 0) {
+            return false;
+        }
+
         return rows.every((r) => {
             // Check if it's a sequential dataset (PS) or a PDS member
             const dsorg = r["dsorg"] as string;
@@ -595,7 +601,7 @@ export class DatasetTableView {
 
             // Restore previous table state
             this.currentDataSource = dataSourceToRestore;
-            this.currentTableType = this.previousTableData.tableType;
+            this.currentTableType = "dataSets";
             this.shouldShow = this.previousTableData.shouldShow;
             // Restore the original pattern from when the table was first created
             this.originalPattern = this.previousTableData.originalPattern;
@@ -737,6 +743,7 @@ export class DatasetTableView {
     private currentDataSource: IDataSetSource = null;
     private context: ExtensionContext = null;
     private originalPattern: string = null;
+    private persistence = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
 
     // Store previous table state for navigation
     private previousTableData: {
@@ -1026,21 +1033,14 @@ export class DatasetTableView {
     }
 
     /**
-     * Gets the effective sort settings for a tree node, falling back to session sort if needed
+     * Gets the effective sort settings for a tree node, preferring persisted settings.
      */
     private getEffectiveSortSettings(treeNode: IZoweDatasetTreeNode): Sorting.NodeSort | undefined {
-        // Use the PDS sort settings if defined; otherwise, use session sort method
-        if (treeNode.sort) {
-            return treeNode.sort;
-        }
-
-        // Fall back to session node sort settings
-        const sessionNode = treeNode.getSessionNode?.();
-        if (sessionNode && sessionNode.sort) {
-            return sessionNode.sort;
-        }
-
-        return undefined;
+        return (
+            this.persistence.getSortSetting(treeNode) ??
+            treeNode.sort ??
+            (SharedContext.isSession(treeNode) ? undefined : treeNode.getSessionNode()?.sort)
+        );
     }
 
     /**
@@ -1290,7 +1290,7 @@ export class DatasetTableView {
 
         // Get the pattern from user
         const pattern = await Gui.showInputBox({
-            title: l10n.t("Enter Dataset Pattern"),
+            title: l10n.t("Enter Data Set Pattern"),
             placeHolder: l10n.t("e.g., USER.*, PUBLIC.DATA.*, etc."),
             prompt: l10n.t("Enter a dataset pattern to search for"),
             ignoreFocusOut: true,

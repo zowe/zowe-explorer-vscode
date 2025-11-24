@@ -19,11 +19,15 @@ import {
     ErrorCorrelator,
     ZoweExplorerApiType,
     AuthHandler,
+    ZoweExplorerZosmf,
     AuthPromptParams,
+    AuthCancelledError,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
+import { SettingsConfig } from "../configuration/SettingsConfig";
+import { SharedContext } from "../trees/shared/SharedContext";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -34,25 +38,14 @@ interface ErrorContext {
 
 export class AuthUtils {
     /**
-     * Checks if a profile's authentication was previously cancelled and, if so,
-     * re-prompts the user to authenticate. This should be called before any
-     * remote operation that requires authentication.
+     * Ensures that a profile is in a usable state by throwing if authentication was previously cancelled.
+     * Callers should handle the error and trigger a fresh authentication prompt through {@link handleProfileAuthOnError}.
      * @param profile The profile to check.
-     * @throws {AuthCancelledError} If the user cancels the re-authentication prompt.
+     * @throws {AuthCancelledError} If the user has an unresolved authentication cancellation.
      */
-    public static async reauthenticateIfCancelled(profile: imperative.IProfileLoaded): Promise<void> {
-        if (AuthHandler.isProfileLocked(profile) && AuthHandler.wasAuthCancelled(profile)) {
-            try {
-                // The original error doesn't matter here, we just need to trigger the flow.
-                await this.handleProfileAuthOnError(
-                    new Error("User cancelled previous authentication, but a new action requires authentication. Prompting user to re-authenticate."),
-                    profile
-                );
-            } catch (err) {
-                // If handleProfileAuthOnError fails (e.g., user cancels again),
-                // we should propagate that failure.
-                throw err;
-            }
+    public static async ensureAuthNotCancelled(profile: imperative.IProfileLoaded): Promise<void> {
+        if (AuthHandler.wasAuthCancelled(profile)) {
+            throw new AuthCancelledError(profile.name, "User cancelled previous authentication");
         }
     }
 
@@ -64,19 +57,13 @@ export class AuthUtils {
      * @param profile {imperative.IProfileLoaded} The profile used when the error occurred
      * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
-    public static async handleProfileAuthOnError(err: Error, profile?: imperative.IProfileLoaded): Promise<void> {
+    public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
         if (
             (err instanceof imperative.ImperativeError &&
-                profile != null &&
                 (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
                     err.message.includes("All configured authentication methods failed"))) ||
             err.message.includes("HTTP(S) status 401")
         ) {
-            if (!(await AuthHandler.shouldHandleAuthError(profile.name))) {
-                ZoweLogger.debug(`[AuthUtils] Skipping authentication prompt for profile ${profile.name} due to debouncing`);
-                return;
-            }
-
             // In the case of an authentication error, find a more user-friendly error message if available.
             const errorCorrelation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err, {
                 templateArgs: {
@@ -84,25 +71,63 @@ export class AuthUtils {
                 },
             });
 
+            const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
             const authOpts: AuthPromptParams = {
                 authMethods: Constants.PROFILES_CACHE,
                 imperativeError: err as unknown as imperative.ImperativeError,
-                isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
+                isUsingTokenAuth:
+                    sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
+                    (await Constants.PROFILES_CACHE.profileHasSecureToken(profile)) ||
+                    sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                 errorCorrelation,
                 throwErrorOnCancel: true,
             };
-            // If the profile is already locked, prompt the user to re-authenticate.
-            if (AuthHandler.isProfileLocked(profile)) {
-                await AuthHandler.waitForUnlock(profile);
-            } else {
-                // Lock the profile and prompt the user for authentication by providing login/credential prompt options.
-                // This may throw AuthCancelledError if the user cancels the authentication prompt
-                await AuthHandler.lockProfile(profile, authOpts);
-            }
-        } else if (profile != null && AuthHandler.isProfileLocked(profile)) {
+            AuthHandler.enableSequentialRequests(profile);
+            await AuthHandler.getOrCreateAuthFlow(profile, authOpts);
+        } else if (AuthHandler.isProfileLocked(profile)) {
             // Error doesn't satisfy criteria to continue holding the lock. Unlock the profile to allow further use
             AuthHandler.unlockProfile(profile);
         }
+    }
+
+    public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
+        const executeWithRetries = async (): Promise<void> => {
+            while (true) {
+                try {
+                    await AuthHandler.waitForUnlock(profile);
+                    await AuthUtils.ensureAuthNotCancelled(profile);
+                    const callbackValue = await callback();
+                    AuthHandler.disableSequentialRequests(profile);
+                    return callbackValue;
+                } catch (err) {
+                    if (err instanceof Error) {
+                        ZoweLogger.error(err.message);
+                    }
+                    if (
+                        (err instanceof imperative.ImperativeError &&
+                            (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                                err.message.includes("All configured authentication methods failed"))) ||
+                        err.message.includes("HTTP(S) status 401")
+                    ) {
+                        if (profile) {
+                            const authPromptLock = AuthHandler.authPromptLocks.get(profile.name);
+                            if (authPromptLock?.isLocked()) {
+                                await authPromptLock.waitForUnlock();
+                                if (AuthHandler.isProfileLocked(profile)) {
+                                    throw vscode.FileSystemError.Unavailable();
+                                }
+                                continue;
+                            }
+                            await this.handleProfileAuthOnError(err, profile);
+                        }
+                    } else {
+                        throw err;
+                    }
+                }
+            }
+        };
+
+        return AuthHandler.runSequentialIfEnabled(profile, executeWithRetries);
     }
 
     public static async openConfigForMissingHostname(profile: imperative.IProfileLoaded): Promise<void> {
@@ -128,7 +153,7 @@ export class AuthUtils {
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, ...{ ...moreInfo, profile: undefined } }, { depth: null }));
 
-        const profile = typeof moreInfo.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo?.profile;
+        const profile = typeof moreInfo?.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo?.profile;
         const errorCorrelation = ErrorCorrelator.getInstance().correlateError(moreInfo?.apiType ?? ZoweExplorerApiType.All, errorDetails, {
             profileType: profile?.type,
             ...Object.keys(moreInfo).reduce((all, k) => (typeof moreInfo[k] === "string" ? { ...all, [k]: moreInfo[k] } : all), {}),
@@ -149,10 +174,40 @@ export class AuthUtils {
                 if (!AuthHandler.isProfileLocked(profile)) {
                     await AuthHandler.lockProfile(profile);
                 }
+                const addDet = imperativeError.mDetails.additionalDetails;
+                if (addDet?.includes("Auth order:") && addDet?.includes("Auth type:") && addDet?.includes("Available creds:")) {
+                    const additionalDetails = [addDet.split("\n")[0]];
+                    additionalDetails.push(
+                        vscode.l10n.t({
+                            message: "Your available creds: {0}",
+                            args: [addDet.match(/\nAvailable creds:(.*?)(?=\n|$)/)?.[1]?.trim()],
+                            comment: ["Available credentials"],
+                        })
+                    );
+                    additionalDetails.push(
+                        vscode.l10n.t({
+                            message: "Your authOrder: {0}",
+                            args: [addDet.match(/\nAuth order:(.*?)(?=\n|$)/)?.[1]?.trim()],
+                            comment: ["Authentication order"],
+                        })
+                    );
+                    additionalDetails.push(
+                        vscode.l10n.t({
+                            message: "Selected auth type: {0}",
+                            args: [addDet.match(/\nAuth type:(.*?)(?=\n|$)/)?.[1]?.trim()],
+                            comment: ["Selected authentication method"],
+                        })
+                    );
+                    imperativeError.mDetails.additionalDetails = additionalDetails.join("\n");
+                }
+
+                const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
                 return await AuthHandler.promptForAuthentication(profile, {
                     authMethods: Constants.PROFILES_CACHE,
                     imperativeError,
-                    isUsingTokenAuth: await AuthUtils.isUsingTokenAuth(profile.name),
+                    isUsingTokenAuth:
+                        sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
+                        sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                     errorCorrelation,
                 });
             }
@@ -189,16 +244,28 @@ export class AuthUtils {
         return false;
     }
 
-    public static async updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
-        const usingBasicAuth = profile.profile.user && profile.profile.password;
-        const usingCertAuth = profile.profile.certFile && profile.profile.certKeyFile;
-        let usingTokenAuth: boolean;
-        try {
-            usingTokenAuth = await AuthUtils.isUsingTokenAuth(profile.name);
-        } catch (err) {
-            ZoweLogger.error(err);
+    public static updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): void {
+        const iSessFromProf = AuthHandler.getSessFromProfile(profile).ISession;
+        imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
+
+        let usingBasicAuth: boolean = false;
+        let usingTokenAuth: boolean = false;
+        let usingCertAuth: boolean = false;
+        switch (iSessFromProf.type) {
+            case imperative.SessConstants.AUTH_TYPE_BASIC:
+                usingBasicAuth = true;
+                break;
+            case imperative.SessConstants.AUTH_TYPE_TOKEN:
+            case imperative.SessConstants.AUTH_TYPE_BEARER:
+                usingTokenAuth = true;
+                break;
+            case imperative.SessConstants.AUTH_TYPE_CERT_PEM:
+                usingCertAuth = true;
+                break;
         }
-        const toolTipList = sessionNode.tooltip === "" ? [] : (sessionNode.tooltip as string).split("\n");
+        const tooltipValue: string | undefined =
+            sessionNode.tooltip instanceof vscode.MarkdownString ? sessionNode.tooltip.value : sessionNode.tooltip;
+        const toolTipList = tooltipValue ? tooltipValue.split("\n") : [];
 
         const authMethodIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auth Method: ")));
         if (authMethodIndex === -1) {
@@ -317,11 +384,11 @@ export class AuthUtils {
      * @param getSessionForProfile is a function to build a valid specific session based on provided profile
      * @param sessionNode is a tree node, containing session information
      */
-    public static async syncSessionNode(
+    public static syncSessionNode(
         getCommonApi: (profile: imperative.IProfileLoaded) => MainframeInteraction.ICommon,
         sessionNode: IZoweTreeNode,
         nodeToRefresh?: IZoweTreeNode
-    ): Promise<void> {
+    ): void {
         ZoweLogger.trace("ProfilesUtils.syncSessionNode called.");
 
         const profileType = sessionNode.getProfile()?.type;
@@ -337,7 +404,7 @@ export class AuthUtils {
         sessionNode.setProfileToChoice(profile);
         try {
             const commonApi = getCommonApi(profile);
-            await this.updateNodeToolTip(sessionNode, profile);
+            this.updateNodeToolTip(sessionNode, profile);
             sessionNode.setSessionToChoice(commonApi.getSession());
         } catch (err) {
             if (err instanceof Error) {
@@ -348,12 +415,18 @@ export class AuthUtils {
         }
         if (nodeToRefresh) {
             nodeToRefresh.dirty = true;
-            void nodeToRefresh.getChildren().then(() => SharedTreeProviders.getProviderForNode(nodeToRefresh).refreshElement(nodeToRefresh));
+            const shouldPaginate =
+                SharedContext.isDatasetNode(nodeToRefresh) &&
+                SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE) > 0;
+            void nodeToRefresh
+                .getChildren(shouldPaginate)
+                .then(() => SharedTreeProviders.getProviderForNode(nodeToRefresh).refreshElement(nodeToRefresh));
         }
     }
 
     /**
      * Function that checks whether a profile is using basic authentication
+     * @deprecated Use AuthHandler.sessTypeFromProfile and/or AuthHandler.sessTypeFromSession, which will adhere to authOrder.
      * @param profile
      * @returns {Promise<boolean>} a boolean representing whether basic auth is being used or not
      */
@@ -365,16 +438,12 @@ export class AuthUtils {
 
     /**
      * Function that checks whether a profile is using token based authentication
+     * @deprecated Use AuthHandler.sessTypeFromProfile and/or AuthHandler.sessTypeFromSession, which will adhere to authOrder.
      * @param profileName the name of the profile to check
      * @returns {Promise<boolean>} a boolean representing whether token based auth is being used or not
      */
     public static async isUsingTokenAuth(profileName: string): Promise<boolean> {
         const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
-        const shouldRemoveToken = Constants.PROFILES_CACHE.shouldRemoveTokenFromProfile(
-            Constants.PROFILES_CACHE.loadNamedProfile(profileName),
-            baseProfile
-        );
-        if (shouldRemoveToken) return false;
         const props = await Constants.PROFILES_CACHE.getPropsForProfile(profileName, false);
         const baseProps = await Constants.PROFILES_CACHE.getPropsForProfile(baseProfile?.name, false);
         return AuthHandler.isUsingTokenAuth(props, baseProps);

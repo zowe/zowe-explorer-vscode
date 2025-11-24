@@ -32,8 +32,15 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "./SharedContext";
 import { Definitions } from "../../configuration/Definitions";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
+import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 
+export const isDataTransfer = (o: any): o is { get: (m: string) => any } => !!o && typeof o.get === "function";
+
+export const isPayload = (o: any): o is { value: any[] } => !!o && Array.isArray(o.value);
 export class SharedUtils {
+    public static ERROR_SAME_OBJECT_DROP =
+        "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
+
     public static async copyExternalLink(this: void, context: vscode.ExtensionContext, node: IZoweTreeNode): Promise<void> {
         if (node?.resourceUri != null) {
             await vscode.env.clipboard.writeText(`vscode://${context.extension.id}?${node.resourceUri.toString()}`);
@@ -201,10 +208,14 @@ export class SharedUtils {
             .filter(Boolean);
     }
 
-    public static async promptForEncoding(
-        node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode,
-        taggedEncoding?: string
-    ): Promise<ZosEncoding | undefined> {
+    /**
+     * Builds the options for an encoding selection prompt.
+     *
+     * @param {imperative.IProfileLoaded} profile - The profile loaded
+     * @param {string} taggedEncoding - The tagged encoding
+     * @returns {vscode.QuickPickItem[]} The encoding options for the prompt
+     */
+    private static buildEncodingOptions(profile: imperative.IProfileLoaded, taggedEncoding?: string): vscode.QuickPickItem[] {
         const ebcdicItem: vscode.QuickPickItem = {
             label: vscode.l10n.t("EBCDIC"),
             description: vscode.l10n.t("z/OS default codepage"),
@@ -218,7 +229,7 @@ export class SharedUtils {
             description: vscode.l10n.t("Specify another codepage"),
         };
         const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, Constants.SEPARATORS.RECENT];
-        const profile = node.getProfile();
+
         if (profile.profile?.encoding != null) {
             items.splice(0, 0, {
                 label: String(profile.profile?.encoding),
@@ -236,18 +247,6 @@ export class SharedUtils {
             });
         }
 
-        let zosEncoding = await node.getEncoding();
-        if (zosEncoding === undefined && SharedUtils.isZoweUSSTreeNode(node)) {
-            zosEncoding = await UssFSProvider.instance.fetchEncodingForUri(node.resourceUri);
-        }
-        let currentEncoding = zosEncoding ? USSUtils.zosEncodingToString(zosEncoding) : await SharedUtils.getCachedEncoding(node);
-        if (zosEncoding?.kind === "binary" || currentEncoding === "binary") {
-            currentEncoding = binaryItem.label;
-        } else if (zosEncoding?.kind === "text" || currentEncoding === "text") {
-            currentEncoding = ebcdicItem.label;
-        } else if (zosEncoding == null && currentEncoding == null) {
-            currentEncoding = profile.profile?.encoding ?? ebcdicItem.label;
-        }
         const encodingHistory = ZoweLocalStorage.getValue<string[]>(Definitions.LocalStorageKey.ENCODING_HISTORY) ?? [];
         if (encodingHistory.length > 0) {
             for (const encoding of encodingHistory) {
@@ -258,54 +257,144 @@ export class SharedUtils {
             items.push({ label: "IBM-1047" }, { label: "ISO8859-1" });
         }
 
-        let response = (
-            await Gui.showQuickPick(items, {
-                title: vscode.l10n.t({
-                    message: "Choose encoding for {0}",
-                    args: [node.label as string],
-                    comment: ["Node label"],
-                }),
-                placeHolder:
-                    currentEncoding &&
-                    vscode.l10n.t({
-                        message: "Current encoding is {0}",
-                        args: [currentEncoding],
-                        comment: ["Encoding name"],
-                    }),
-            })
-        )?.label;
+        return items;
+    }
+
+    /**
+     * Processes the encoding selection response and returns the appropriate `ZosEncoding` object.
+     *
+     * @param {string} response - The response from the user
+     * @param {string} contextLabel - The context label of the node
+     * @returns {Promise<ZosEncoding | undefined>} The {@link ZosEncoding} object or `undefined` if the user dismisses the prompt
+     */
+    private static async processEncodingResponse(response: string | undefined, contextLabel: string): Promise<ZosEncoding | undefined> {
+        if (!response) {
+            return undefined;
+        }
+
         let encoding: ZosEncoding;
+        const encodingHistory = ZoweLocalStorage.getValue<string[]>(Definitions.LocalStorageKey.ENCODING_HISTORY) ?? [];
+
+        // Use localized labels for comparison
+        const ebcdicLabel = vscode.l10n.t("EBCDIC");
+        const binaryLabel = vscode.l10n.t("Binary");
+        const otherLabel = vscode.l10n.t("Other");
+
         switch (response) {
-            case ebcdicItem.label:
+            case ebcdicLabel:
                 encoding = { kind: "text" };
                 break;
-            case binaryItem.label:
+            case binaryLabel:
                 encoding = { kind: "binary" };
                 break;
-            case otherItem.label:
-                response = await Gui.showInputBox({
+            case otherLabel:
+                const customResponse = await Gui.showInputBox({
                     title: vscode.l10n.t({
                         message: "Choose encoding for {0}",
-                        args: [node.label as string],
-                        comment: ["Node label"],
+                        args: [contextLabel],
+                        comment: ["Context label"],
                     }),
                     placeHolder: vscode.l10n.t("Enter a codepage (e.g., 1047, IBM-1047)"),
                 });
-                if (response) {
-                    encoding = { kind: "other", codepage: response };
+                if (customResponse) {
+                    encoding = { kind: "other", codepage: customResponse };
                     encodingHistory.push(encoding.codepage);
                     ZoweLocalStorage.setValue(Definitions.LocalStorageKey.ENCODING_HISTORY, encodingHistory.slice(0, Constants.MAX_FILE_HISTORY));
                 } else {
                     Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+                    return undefined;
                 }
                 break;
             default:
-                if (response != null) {
-                    encoding = response === "binary" ? { kind: "binary" } : { kind: "other", codepage: response };
-                }
+                encoding = response === "binary" ? { kind: "binary" } : { kind: "other", codepage: response };
                 break;
         }
         return encoding;
+    }
+
+    /**
+     * Helper function to prompt user for encoding selection
+     */
+    private static async promptForEncodingSelection(items: vscode.QuickPickItem[], title: string, placeHolder?: string): Promise<string | undefined> {
+        return (
+            await Gui.showQuickPick(items, {
+                title,
+                placeHolder,
+            })
+        )?.label;
+    }
+
+    /**
+     * Prompts user for encoding selection for upload operations.
+     *
+     * @param {imperative.IProfileLoaded} profile - The profile loaded
+     * @param {string} contextLabel - The context label of the node (e.g. USS directory path, PDS name)
+     * @param {string} taggedEncoding - The tagged encoding (optional), specifically used for USS files
+     * @returns {Promise<ZosEncoding | undefined>} The {@link ZosEncoding} object or `undefined` if the user dismisses the prompt
+     */
+    public static async promptForUploadEncoding(
+        profile: imperative.IProfileLoaded,
+        contextLabel: string,
+        taggedEncoding?: string
+    ): Promise<ZosEncoding | undefined> {
+        const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding);
+
+        // For uploads, default to profile encoding or EBCDIC
+        const defaultEncoding = profile.profile?.encoding ?? vscode.l10n.t("EBCDIC");
+
+        const response = await SharedUtils.promptForEncodingSelection(
+            items,
+            vscode.l10n.t({
+                message: "Choose encoding for upload to {0}",
+                args: [contextLabel],
+                comment: ["Context label"],
+            }),
+            vscode.l10n.t({
+                message: "Default encoding is {0}",
+                args: [defaultEncoding],
+                comment: ["Encoding name"],
+            })
+        );
+
+        return SharedUtils.processEncodingResponse(response, contextLabel);
+    }
+
+    public static async promptForEncoding(
+        node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode,
+        taggedEncoding?: string
+    ): Promise<ZosEncoding | undefined> {
+        const profile = node.getProfile();
+        const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding);
+
+        let zosEncoding = await node.getEncoding();
+        if (zosEncoding === undefined && SharedUtils.isZoweUSSTreeNode(node)) {
+            zosEncoding = await UssFSProvider.instance.fetchEncodingForUri(node.resourceUri);
+        }
+        let currentEncoding = zosEncoding ? USSUtils.zosEncodingToString(zosEncoding) : await SharedUtils.getCachedEncoding(node);
+        if (zosEncoding?.kind === "binary" || currentEncoding === "binary") {
+            currentEncoding = vscode.l10n.t("Binary");
+        } else if (zosEncoding?.kind === "text" || currentEncoding === "text") {
+            currentEncoding = vscode.l10n.t("EBCDIC");
+        } else if (zosEncoding == null && currentEncoding == null) {
+            currentEncoding = profile.profile?.encoding ?? vscode.l10n.t("EBCDIC");
+        }
+
+        const response = await SharedUtils.promptForEncodingSelection(
+            items,
+            vscode.l10n.t({
+                message: "Choose encoding for {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            }),
+            currentEncoding &&
+                vscode.l10n.t({
+                    message: "Current encoding is {0}",
+                    args: [currentEncoding],
+                    comment: ["Encoding name"],
+                })
+        );
+
+        return SharedUtils.processEncodingResponse(response, node.label as string);
     }
 
     public static getSessionLabel(node: IZoweTreeNode): string {
@@ -497,5 +586,96 @@ export class SharedUtils {
                 return;
             }
         }
+    }
+
+    /**
+     * Determines if a dataset is the same physical object on two profiles.
+     * Returns true if both profiles have a dataset with the same name and volumes.
+     * Blocks ambiguous cases by default.
+     */
+    public static async isSamePhysicalDataset(
+        srcProfile: imperative.IProfileLoaded,
+        dstProfile: imperative.IProfileLoaded,
+        srcDsn: string
+    ): Promise<boolean> {
+        try {
+            // get API for each profile
+            const mvsSrc = ZoweExplorerApiRegister.getMvsApi(srcProfile);
+            const mvsDst = ZoweExplorerApiRegister.getMvsApi(dstProfile);
+
+            // look up the same dataset name on BOTH profiles
+            const srcAttr = await mvsSrc.dataSet(srcDsn, { attributes: true });
+            const dstAttr = await mvsDst.dataSet(srcDsn, { attributes: true });
+            const srcDataset = srcAttr?.apiResponse?.items?.[0];
+            const dstDataset = dstAttr?.apiResponse?.items?.[0];
+
+            // if dstDataset dataset doesn't exist, it's not the same.
+            if (!dstDataset || !srcDataset) return false;
+
+            // compare names
+            const namesAreEqual = srcDataset.dsname === dstDataset.dsname;
+
+            // compare vols (could be stored across multiple vols!)
+            const srcVols = srcDataset.vols
+                ? (Array.isArray(srcDataset.vols) ? srcDataset.vols : [srcDataset.vols]).map((v: any) => String(v).trim().toUpperCase())
+                : [];
+            const dstVols = dstDataset.vols
+                ? (Array.isArray(dstDataset.vols) ? dstDataset.vols : [dstDataset.vols]).map((v: any) => String(v).trim().toUpperCase())
+                : [];
+
+            srcVols.sort();
+            dstVols.sort();
+
+            const volsAreEqual = srcVols.length === dstVols.length && srcVols.every((vol: any, idx: number) => vol === dstVols[idx]);
+
+            // if both name and vols match, they're the same dataset
+            return namesAreEqual && volsAreEqual;
+        } catch (err) {
+            // fallback to not being same data set
+            return false;
+        }
+    }
+
+    /**
+     * Checks if a USS file or directory is likely the same actual object as another
+     * by comparing the normalized paths (ignoring profile) and verifying existence
+     *
+     * @param sourceNode - source USS tree node being moved
+     * @param targetParent - target USS tree node parent receiving the drop
+     * @param droppedLabel - name of the dropped item
+     * @returns Promise resolves to true if the normalized paths match and the target path exists. false otherwise
+     */
+    public static async isLikelySameUssObjectByUris(
+        sourceNode: IZoweUSSTreeNode,
+        targetParent: IZoweUSSTreeNode,
+        droppedLabel: string
+    ): Promise<boolean> {
+        //normalize paths
+        const equal =
+            path.posix.normalize(sourceNode.fullPath.replace(/\\/g, "/")) ===
+            path.posix.normalize(path.posix.join(targetParent.fullPath.replace(/\\/g, "/"), (droppedLabel || "").replace(/^[/\\]+/, "")));
+        return equal;
+    }
+
+    /**
+     * Gets a string property from a node, whether it's a string or an object with that property
+     */
+    public static getNodeProperty(node: any, prop: string): string | null {
+        if (!node || node[prop] == null) return null;
+        const value = node[prop];
+        if (typeof value === "string") return value;
+        if (typeof value === "object" && value !== null && typeof value[prop] === "string") {
+            return value[prop];
+        }
+        return null;
+    }
+
+    /**
+     * Checks if there are any case-insensitive, trimmed name collisions between two lists.
+     * Used for PDS member collisions and USS folder/file name collisions.
+     */
+    public static hasNameCollision(srcNames: string[], tgtNames: string[]): boolean {
+        const tgtSet = new Set(tgtNames.map((n) => n.toUpperCase().trim()));
+        return srcNames.some((name) => tgtSet.has(name.toUpperCase().trim()));
     }
 }

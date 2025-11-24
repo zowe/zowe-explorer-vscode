@@ -22,11 +22,12 @@ import { FileManagement } from "../utils";
 import { Types } from "../Types";
 import { ProfilesCache } from "../profiles/ProfilesCache";
 import { VscSettings } from "../vscode/doc/VscSettings";
+import { IZosmfListResponse, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
+import { IDataSetCount } from "../dataset/IDataSetCount";
 
 /**
  * Implementations of Zowe Explorer API for z/OSMF profiles
- */
-export namespace ZoweExplorerZosmf {
+ */ export namespace ZoweExplorerZosmf {
     /**
      * An implementation of the Zowe Explorer API Common interface for zOSMF.
      */
@@ -67,22 +68,16 @@ export namespace ZoweExplorerZosmf {
             return this.session ? ProfilesCache.getProfileSessionWithVscProxy(this.session) : undefined;
         }
 
-        private _getSession(serviceProfile: imperative.IProfileLoaded): imperative.Session {
+        public static getCommandArgs(profile: imperative.IProfileLoaded): imperative.ICommandArguments {
             const cmdArgs: imperative.ICommandArguments = {
                 $0: "zowe",
                 _: [""],
-                host: serviceProfile.profile.host as string,
-                port: serviceProfile.profile.port as number,
-                protocol: serviceProfile.profile.protocol as string,
-                basePath: serviceProfile.profile.basePath as string,
-                rejectUnauthorized: serviceProfile.profile.rejectUnauthorized as boolean,
-                tokenType: serviceProfile.profile.tokenType as string,
-                tokenValue: serviceProfile.profile.tokenValue as string,
-                user: serviceProfile.profile.user as string,
-                password: serviceProfile.profile.password as string,
-                certFile: serviceProfile.profile.certFile as string,
-                certKeyFile: serviceProfile.profile.certKeyFile as string,
+                ...profile.profile,
             };
+            return cmdArgs;
+        }
+        private _getSession(serviceProfile: imperative.IProfileLoaded): imperative.Session {
+            const cmdArgs = CommonApi.getCommandArgs(serviceProfile);
             return this.getSessionFromCommandArgument(cmdArgs);
         }
 
@@ -358,10 +353,17 @@ export namespace ZoweExplorerZosmf {
         }
 
         public deleteDataSet(dataSetName: string, options?: zosfiles.IDeleteDatasetOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.Delete.dataSet(this.getSession(), dataSetName, {
-                responseTimeout: this.profile?.profile?.responseTimeout,
-                ...options,
-            });
+            if (options.volume == "*VSAM*") {
+                return zosfiles.Delete.vsam(this.getSession(), dataSetName, {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...options,
+                });
+            } else {
+                return zosfiles.Delete.dataSet(this.getSession(), dataSetName, {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...options,
+                });
+            }
         }
 
         public dataSetsMatchingPattern(filter: string[], options?: zosfiles.IDsmListOptions): Promise<zosfiles.IZosFilesResponse> {
@@ -406,6 +408,19 @@ export namespace ZoweExplorerZosmf {
                 this.getSession()
             );
         }
+
+        public async getCount(dataSetPatterns: string[]): Promise<IDataSetCount> {
+            const response: IZosFilesResponse[] = [];
+            response.push(await this.dataSetsMatchingPattern(dataSetPatterns, { attributes: false }));
+            const allDatasets = response
+                .filter((r) => r.success)
+                .reduce((arr: Set<string>, r) => {
+                    const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
+                    responseItems?.forEach((item) => arr.add(item.dsname));
+                    return arr;
+                }, new Set<string>());
+            return { count: allDatasets.size, lastItem: Array.from(allDatasets).pop() };
+        }
     }
 
     /**
@@ -437,15 +452,24 @@ export namespace ZoweExplorerZosmf {
         }
 
         public getJclForJob(job: zosjobs.IJob): Promise<string> {
-            return zosjobs.GetJobs.getJclForJob(this.getSession(), job);
+            return zosjobs.GetJobs.getJclCommon(this.getSession(), { ...job, encoding: this.profile?.profile?.encoding });
         }
 
         public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zosjobs.IJob> {
-            return zosjobs.SubmitJobs.submitJcl(this.getSession(), jcl, internalReaderRecfm, internalReaderLrecl);
+            const jesEncoding = this.profile?.profile?.jobEncoding;
+            return zosjobs.SubmitJobs.submitJcl(this.getSession(), jcl, internalReaderRecfm, internalReaderLrecl, jesEncoding);
         }
 
-        public submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
-            return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
+        public async submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
+            if (this.profile?.profile?.jobEncoding == null) {
+                // Make single API call to submit if job encoding is not specified
+                return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
+            } else {
+                // Download JCL with `encoding` to perform codepage conversion with z/OSMF.
+                // Then submit as text with `jobEncoding` which is passed to JES reader.
+                const rawJcl = await zosfiles.Get.dataSet(this.getSession(), jobDataSet, { encoding: this.profile?.profile?.encoding });
+                return this.submitJcl(rawJcl.toString());
+            }
         }
 
         public async deleteJob(jobname: string, jobid: string): Promise<void> {

@@ -18,6 +18,8 @@ import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 import { Types } from "../Types";
 import { VscSettings } from "../vscode/doc/VscSettings";
+import * as fs from "fs";
+import * as crypto from "crypto";
 
 export class ProfilesCache {
     private profileInfo: imperative.ProfileInfo;
@@ -41,7 +43,7 @@ export class ProfilesCache {
         this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
     }
 
-    public static requireKeyring(this: void): NodeModule {
+    public static requireKeyring(this: void): NodeJS.Module {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-var-requires
         return require("@zowe/secrets-for-zowe-sdk").keyring;
     }
@@ -135,7 +137,7 @@ export class ProfilesCache {
     public updateCachedProfile(
         profileLoaded: imperative.IProfileLoaded,
         profileNode?: Types.IZoweNodeType,
-        zeRegister?: Types.IApiRegisterClient
+        _zeRegister?: Types.IApiRegisterClient
     ): void {
         // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
         const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
@@ -228,10 +230,38 @@ export class ProfilesCache {
             this.profilesByType.delete(oldType);
             this.defaultProfileByType.delete(oldType);
         }
-        // check for proper merging of apiml tokens
-        this.checkMergingConfigAllProfiles();
         this.checkForEnvVarAndUpdate();
         this.profilesForValidation = [];
+
+        imperative.Censor.setCensoredOptions({
+            config: mProfileInfo.getTeamConfig(),
+            profiles: [...this.getCoreProfileTypes(), ...this.getConfigArray()],
+        });
+    }
+
+    /**
+     * Used to check validity of a profile's certfile used for authentication
+     *
+     * @param {string} certFile Path to certFile from profile
+     *
+     * @returns {boolean} True if certFile is valid and false otherwise
+     */
+    public isCertFileValid(certFile: string): boolean {
+        try {
+            const certPem = fs.readFileSync(certFile, "utf8");
+            const certificate = new crypto.X509Certificate(certPem);
+
+            // Check validity dates
+            const now = new Date();
+            if (now >= new Date(certificate.validFrom) && now <= new Date(certificate.validTo)) {
+                return true;
+            } else {
+                this.log.error(`Certificate file ${certFile} is outside its validity period.`);
+            }
+        } catch (e) {
+            this.log.error(`Certificate file validation failed for ${certFile}: ${(e as Error).message}`);
+        }
+        return false;
     }
 
     public validateAndParseUrl(newUrl: string): Validation.IValidationUrl {
@@ -294,8 +324,7 @@ export class ProfilesCache {
         if (profilesForType && profilesForType.length > 0) {
             for (const prof of profilesForType) {
                 const profAttr = this.getMergedAttrs(mProfileInfo, prof);
-                let profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
-                profile = this.checkMergingConfigSingleProfile(profile);
+                const profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
                 profByType.push(profile);
             }
         }
@@ -430,24 +459,6 @@ export class ProfilesCache {
 
     public getCoreProfileTypes(): imperative.IProfileTypeConfiguration[] {
         return [ZosmfProfile, ZosTsoProfile, ZosUssProfile];
-    }
-
-    // used by refresh to check correct merging of allProfiles
-    protected checkMergingConfigAllProfiles(): void {
-        for (const profs of this.profilesByType.values()) {
-            profs.forEach((profile) => {
-                this.checkMergingConfigSingleProfile(profile);
-            });
-        }
-    }
-
-    // check correct merging of a single profile
-    protected checkMergingConfigSingleProfile(profile: imperative.IProfileLoaded): imperative.IProfileLoaded {
-        const baseProfile = this.defaultProfileByType.get("base");
-        if (this.shouldRemoveTokenFromProfile(profile, baseProfile)) {
-            profile.profile.tokenType = profile.profile.tokenValue = undefined;
-        }
-        return profile;
     }
 
     protected getMergedAttrs(mProfileInfo: imperative.ProfileInfo, profAttrs: imperative.IProfAttrs): imperative.IProfile {

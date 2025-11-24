@@ -21,6 +21,8 @@ import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { DatasetSearch } from "../../../../src/trees/dataset/DatasetSearch";
 import { DatasetTableView } from "../../../../src/trees/dataset/DatasetTableView";
 
+jest.mock("../../../../src/tools/ZoweLocalStorage");
+
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
         let registerCommand;
@@ -96,7 +98,7 @@ describe("Test src/dataset/extension", () => {
             },
             {
                 name: "zowe.ds.deleteDataset",
-                mock: [{ spy: jest.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value] }],
+                mock: [{ spy: jest.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value, undefined] }],
             },
             {
                 name: "zowe.ds.allocateLike",
@@ -115,8 +117,12 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(DatasetActions, "uploadDialog"), arg: [test.value, dsProvider] }],
             },
             {
+                name: "zowe.ds.uploadDialogWithEncoding",
+                mock: [{ spy: jest.spyOn(DatasetActions, "uploadDialogWithEncoding"), arg: [test.value, dsProvider] }],
+            },
+            {
                 name: "zowe.ds.deleteMember",
-                mock: [{ spy: jest.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value] }],
+                mock: [{ spy: jest.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value, undefined] }],
             },
             {
                 name: "zowe.ds.editDataSet",

@@ -51,20 +51,6 @@ describe("TreeProvider Unit Tests - getters", () => {
         expect(SharedTreeProviders.job).toEqual(mockTree);
     });
 });
-describe("TreeProvider Unit Tests - Function initializeProviders", () => {
-    it("should call its postInit function", async () => {
-        const postInitMock = jest.fn();
-        await SharedTreeProviders.initializeProviders(
-            {
-                ds: jest.fn(),
-                uss: jest.fn(),
-                job: jest.fn(),
-            },
-            postInitMock
-        );
-        expect(postInitMock).toHaveBeenCalled();
-    });
-});
 
 describe("TreeProvider Unit Tests - Function sessionIsPresentInOtherTrees", () => {
     it("should return true if session is present in another tree", async () => {

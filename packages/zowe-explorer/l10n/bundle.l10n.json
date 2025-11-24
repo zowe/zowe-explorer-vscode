@@ -180,6 +180,24 @@
   "Certificate Keys": "Certificate Keys",
   "Select Certificate Key": "Select Certificate Key",
   "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
+  "Your available creds: {0}/Available credentials": {
+    "message": "Your available creds: {0}",
+    "comment": [
+      "Available credentials"
+    ]
+  },
+  "Your authOrder: {0}/Authentication order": {
+    "message": "Your authOrder: {0}",
+    "comment": [
+      "Authentication order"
+    ]
+  },
+  "Selected auth type: {0}/Selected authentication method": {
+    "message": "Selected auth type: {0}",
+    "comment": [
+      "Selected authentication method"
+    ]
+  },
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Profile name": {
     "message": "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
     "comment": [
@@ -240,6 +258,7 @@
   "Binary": "Binary",
   "Create a new filter": "Create a new filter",
   "Failed to move file {0}: {1}": "Failed to move file {0}: {1}",
+  "You must specify a directory before moving.": "You must specify a directory before moving.",
   "Moving USS files...": "Moving USS files...",
   "Enter a new name for the {0}/Node type": {
     "message": "Enter a new name for the {0}",
@@ -267,7 +286,7 @@
   "No next path in history.": "No next path in history.",
   "No previous path in history.": "No previous path in history.",
   "Prompting the user for a USS path": "Prompting the user for a USS path",
-  "Select a filter": "Select a filter",
+  "Select a filter or type to create a new one": "Select a filter or type to create a new one",
   "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
   "New filter": "New filter",
   "Please enter a valid USS path.": "Please enter a valid USS path.",
@@ -342,7 +361,10 @@
   "Unable to create node:": "Unable to create node:",
   "Uploading file to USS tree": "Uploading file to USS tree",
   "Upload action was cancelled.": "Upload action was cancelled.",
+  "This action is only supported for USS directories.": "This action is only supported for USS directories.",
+  "Uploading file...": "Uploading file...",
   "Uploading USS file": "Uploading USS file",
+  "Uploading USS file with encoding": "Uploading USS file with encoding",
   "Delete action was canceled.": "Delete action was canceled.",
   "Copying file structure...": "Copying file structure...",
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
@@ -373,6 +395,25 @@
     ]
   },
   "USS file tag": "USS file tag",
+  "Choose encoding for {0}/Context label": {
+    "message": "Choose encoding for {0}",
+    "comment": [
+      "Context label"
+    ]
+  },
+  "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
+  "Choose encoding for upload to {0}/Context label": {
+    "message": "Choose encoding for upload to {0}",
+    "comment": [
+      "Context label"
+    ]
+  },
+  "Default encoding is {0}/Encoding name": {
+    "message": "Default encoding is {0}",
+    "comment": [
+      "Encoding name"
+    ]
+  },
   "Choose encoding for {0}/Node label": {
     "message": "Choose encoding for {0}",
     "comment": [
@@ -385,7 +426,6 @@
       "Encoding name"
     ]
   },
-  "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
   "A search must be set for {0} before it can be added to a workspace./Name of USS session": {
     "message": "A search must be set for {0} before it can be added to a workspace.",
     "comment": [
@@ -456,6 +496,7 @@
       "Profile name"
     ]
   },
+  "Select a filter": "Select a filter",
   "Enter a job ID": "Enter a job ID",
   "Job search cancelled.": "Job search cancelled.",
   "The polling interval must be greater than or equal to 1000ms.": "The polling interval must be greater than or equal to 1000ms.",
@@ -469,6 +510,37 @@
     "message": "Polling: {0}...",
     "comment": [
       "Unique spool name"
+    ]
+  },
+  "No active jobs found for session: {0}/Session label": {
+    "message": "No active jobs found for session: {0}",
+    "comment": [
+      "Session label"
+    ]
+  },
+  "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?/Number of active jobs": {
+    "message": "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?",
+    "comment": [
+      "Number of active jobs"
+    ]
+  },
+  "Polling {0} active jobs.../Number of active jobs": {
+    "message": "Polling {0} active jobs...",
+    "comment": [
+      "Number of active jobs"
+    ]
+  },
+  "Job completed {0} - {1}/Job ID with clickable linkJob status": {
+    "message": "Job completed {0} - {1}",
+    "comment": [
+      "Job ID with clickable link",
+      "Job status"
+    ]
+  },
+  "No more active jobs for {0}. Stopping polling./Session label": {
+    "message": "No more active jobs for {0}. Stopping polling.",
+    "comment": [
+      "Session label"
     ]
   },
   "Filter: {0}/The new filter": {
@@ -611,6 +683,8 @@
   "User ID": "User ID",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
   "Failed to move {0}: {1}": "Failed to move {0}: {1}",
+  "Data set(s) moved successfully.": "Data set(s) moved successfully.",
+  "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.": "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.",
   "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.",
   "Cannot drop a partitioned dataset or member into a sequential dataset.": "Cannot drop a partitioned dataset or member into a sequential dataset.",
   "Moving MVS files...": "Moving MVS files...",
@@ -762,7 +836,7 @@
   "No profiles available.": "No profiles available.",
   "Select a profile to search for data sets": "Select a profile to search for data sets",
   "Select a profile": "Select a profile",
-  "Enter Dataset Pattern": "Enter Dataset Pattern",
+  "Enter Data Set Pattern": "Enter Data Set Pattern",
   "e.g., USER.*, PUBLIC.DATA.*, etc.": "e.g., USER.*, PUBLIC.DATA.*, etc.",
   "Enter a dataset pattern to search for": "Enter a dataset pattern to search for",
   "Profile {0} not found./Name of the selected profile": {
@@ -816,6 +890,8 @@
     ]
   },
   "Saving data set...": "Saving data set...",
+  "This upload operation may result in data loss.": "This upload operation may result in data loss.",
+  "Please review the following lines:": "Please review the following lines:",
   "Failed to save {0}/Data set name": {
     "message": "Failed to save {0}",
     "comment": [
@@ -870,6 +946,8 @@
     ]
   },
   "Uploading to data set": "Uploading to data set",
+  "This action is only supported for partitioned data sets.": "This action is only supported for partitioned data sets.",
+  "Uploading to data set...": "Uploading to data set...",
   "No data sets selected for deletion, cancelling...": "No data sets selected for deletion, cancelling...",
   "Deleting data set(s): {0}/Data Sets to delete": {
     "message": "Deleting data set(s): {0}",
@@ -939,6 +1017,7 @@
   "Selection is not a valid data set member name.": "Selection is not a valid data set member name.",
   "Selection is not a valid data set name.": "Selection is not a valid data set name.",
   "Select the profile to use to open the data set": "Select the profile to use to open the data set",
+  "PDS {0} could not be found.": "PDS {0} could not be found.",
   "Data set member {0} does not exist or cannot be opened in data set {1}.": "Data set member {0} does not exist or cannot be opened in data set {1}.",
   "Data set {0} does not exist or cannot be opened.": "Data set {0} does not exist or cannot be opened.",
   "Opening data set failed.": "Opening data set failed.",
@@ -1098,6 +1177,12 @@
       "Profile name"
     ]
   },
+  "Profile {0} has an invalid SSL certificate./Profile name": {
+    "message": "Profile {0} has an invalid SSL certificate.",
+    "comment": [
+      "Profile name"
+    ]
+  },
   "Auto Store: ": "Auto Store: ",
   "Config File: ": "Config File: ",
   "Global": "Global",
@@ -1148,7 +1233,6 @@
       "The profile name"
     ]
   },
-  "This profile is using basic authentication and does not support token authentication.": "This profile is using basic authentication and does not support token authentication.",
   "Error getting supported tokenType value for profile {0}/Service profile name": {
     "message": "Error getting supported tokenType value for profile {0}",
     "comment": [
