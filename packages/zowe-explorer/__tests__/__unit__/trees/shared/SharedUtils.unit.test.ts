@@ -28,6 +28,7 @@ import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { createIJobFile, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 
 jest.mock("../../../../src/tools/ZoweLocalStorage");
 
@@ -58,6 +59,19 @@ function createGlobalMocks() {
 
     return newMocks;
 }
+
+function makeFakeMvsApi(items: any[] = []) {
+    return {
+        dataSet: jest.fn().mockResolvedValue({ apiResponse: { items } }),
+        allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
+    };
+}
+
+beforeEach(() => {
+    jest.resetAllMocks();
+    jest.clearAllMocks();
+    jest.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockImplementation(() => makeFakeMvsApi());
+});
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
     it("Checks that concatChildNodes returns the proper array of children", async () => {
@@ -1512,5 +1526,100 @@ describe("SharedUtils.handleProfileChange", () => {
         expect(dsSession.getProfile().profile?.password).toBe(profile.profile?.password);
         expect(errorSpy).toHaveBeenCalledTimes(1);
         expect(errorSpy).toHaveBeenCalledWith("error while updating profile on node");
+    });
+});
+
+describe("SharedUtils helpers", () => {
+    const mockGetMvsApi = jest.fn();
+    let originalGetMvsApi: any;
+
+    beforeEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+
+        originalGetMvsApi = (ZoweExplorerApiRegister as any).getMvsApi;
+        (ZoweExplorerApiRegister as any).getMvsApi = mockGetMvsApi;
+    });
+
+    afterEach(() => {
+        (ZoweExplorerApiRegister as any).getMvsApi = originalGetMvsApi;
+        jest.restoreAllMocks();
+    });
+
+    it("isSamePhysicalDataset returns true when dsname and vols match", async () => {
+        const srcProfile = { name: "SRC" } as any;
+        const dstProfile = { name: "DST" } as any;
+        const dsn = "USER.TEST.PDS";
+
+        const srcResp = {
+            apiResponse: {
+                items: [{ dsname: dsn, vols: ["VOL01", "VOL02"] }],
+            },
+        };
+        const dstResp = {
+            apiResponse: {
+                items: [{ dsname: dsn, vols: ["VOL02", "VOL01"] }],
+            },
+        };
+
+        const srcApi = { dataSet: jest.fn().mockResolvedValue(srcResp) };
+        const dstApi = { dataSet: jest.fn().mockResolvedValue(dstResp) };
+
+        mockGetMvsApi.mockImplementationOnce(() => srcApi);
+        mockGetMvsApi.mockImplementationOnce(() => dstApi);
+
+        const same = await SharedUtils.isSamePhysicalDataset(srcProfile, dstProfile, dsn);
+        expect(same).toBe(true);
+
+        expect(srcApi.dataSet).toHaveBeenCalled();
+        expect(dstApi.dataSet).toHaveBeenCalled();
+        expect(mockGetMvsApi).toHaveBeenCalledTimes(2);
+    });
+
+    it("isSamePhysicalDataset returns false when dst dataset missing", async () => {
+        const srcProfile = { name: "SRC" } as any;
+        const dstProfile = { name: "DST" } as any;
+        const dsn = "NON.EXISTENT";
+
+        const srcApi = { dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [{ dsname: dsn, vols: "VOL01" }] } }) };
+        const dstApi = { dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
+
+        mockGetMvsApi.mockImplementationOnce(() => srcApi);
+        mockGetMvsApi.mockImplementationOnce(() => dstApi);
+
+        const same = await SharedUtils.isSamePhysicalDataset(srcProfile, dstProfile, dsn);
+        expect(same).toBe(false);
+
+        expect(srcApi.dataSet).toHaveBeenCalled();
+        expect(dstApi.dataSet).toHaveBeenCalled();
+    });
+
+    it("getNodeProperty works for string and nested object", () => {
+        const node1 = { label: "SOME_LABEL" } as any;
+        // direct string prop
+        expect(SharedUtils.getNodeProperty(node1, "label")).toEqual("SOME_LABEL");
+        // not found returns null
+        expect(SharedUtils.getNodeProperty({}, "label")).toBeNull();
+        // nested property extraction, when value is an object and prop exists on it
+        const node3 = { label: { label: "INNER" } } as any;
+        expect(SharedUtils.getNodeProperty(node3, "label")).toEqual("INNER");
+    });
+
+    it("hasNameCollision detects case-insensitive collisions", () => {
+        const src = ["one", "Two", "Three "];
+        const dst = ["ONE", "two"];
+        expect(SharedUtils.hasNameCollision(src, dst)).toBe(true);
+
+        const src2 = ["alpha", "beta"];
+        const dst2 = ["gamma", "delta"];
+        expect(SharedUtils.hasNameCollision(src2, dst2)).toBe(false);
+    });
+
+    it("isLikelySameUssObjectByUris normalizes and compares paths", async () => {
+        const srcNode = { fullPath: "/u/foo/bar" } as any;
+        const targetParent = { fullPath: "/u/foo" } as any;
+        const label = "bar";
+        expect(await SharedUtils.isLikelySameUssObjectByUris(srcNode, targetParent, label)).toBe(true);
+        expect(await SharedUtils.isLikelySameUssObjectByUris({ fullPath: "/u/other" } as any, targetParent, "bar")).toBe(false);
     });
 });
