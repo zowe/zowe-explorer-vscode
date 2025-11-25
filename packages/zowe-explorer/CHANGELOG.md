@@ -13,6 +13,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated `js-yaml` dependency for technical currency. [#3937](https://github.com/zowe/zowe-explorer-vscode/pull/3937)
 - Updated Zowe SDKs to version `8.28.0` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
 - Added support for copying data sets from multiple source LPARs at once in the cross-LPAR copy/paste functionality. [#3945](https://github.com/zowe/zowe-explorer-vscode/issues/3945)
+- Added support for loading credential manager options from the imperative.json file. Add a `credentialManagerOptions` object in the JSON object in `imperative.json` to specify options for the current credential manager. [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
+- Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, refer to the ["Troubleshooting Zowe CLI credentials"](https://docs.zowe.org/stable/troubleshoot/cli/troubleshoot-cli-credentials/#secrets-sdk-persistence-level-for-windows) page on Zowe Docs. [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
 
 ### Bug fixes
 
