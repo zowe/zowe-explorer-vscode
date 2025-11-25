@@ -97,7 +97,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         ZoweLogger.trace("UnixCommandHandler.issueUnixCommand called.");
 
         if (node) {
-            await this.checkCurrentProfile(node);
             this.nodeProfile = node.getProfile();
             this.sshCwd = node.fullPath;
         }
