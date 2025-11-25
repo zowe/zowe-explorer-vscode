@@ -175,7 +175,7 @@ export class AuthUtils {
                     await AuthHandler.lockProfile(profile);
                 }
                 const addDet = imperativeError.mDetails.additionalDetails;
-                if (addDet.includes("Auth order:") && addDet.includes("Auth type:") && addDet.includes("Available creds:")) {
+                if (addDet?.includes("Auth order:") && addDet?.includes("Auth type:") && addDet?.includes("Available creds:")) {
                     const additionalDetails = [addDet.split("\n")[0]];
                     additionalDetails.push(
                         vscode.l10n.t({
