@@ -88,10 +88,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         const key = "stat_" + uri.toString();
         if (this.requestCache.has(key)) {
-            console.log(`[Cache] Joining existing request for: ${key}`);
+            console.log(`[RequestCache] Joining existing request for: ${key}`);
             return this.requestCache.get(key);
         }
 
+        // TODO: Break promise into helper function for ease of testing seperation of logic
         const requestPromise = (async () => {
             try {
                 ZoweLogger.trace(`[DatasetFSProvider] stat called with ${uri.toString()}`);
@@ -106,6 +107,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     const secondLastComponent = numComponents > 1 ? pathComponents[numComponents - 2] : "";
 
                     if (isInvalidComponent(lastComponent) || isInvalidComponent(secondLastComponent)) {
+                        // console.log("Invalid URI, Discarding request: " + uri);
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
                 }
@@ -430,6 +432,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             return this.requestCache.get(key);
         }
 
+        // TODO: Break promise into helper function for ease of testing seperation of logic
         const requestPromise = (async () => {
             try {
                 let dsEntry: DirEntry | DsEntry = null;
@@ -601,6 +604,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             return this.requestCache.get(key);
         }
 
+        // TODO: Break promise into helper function for ease of testing seperation of logic
         const requestPromise = (async () => {
             try {
                 let ds: DsEntry | DirEntry;
