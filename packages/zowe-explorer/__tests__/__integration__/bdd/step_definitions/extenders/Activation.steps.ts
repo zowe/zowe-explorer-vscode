@@ -68,7 +68,7 @@ export async function activate(context) {
   "publisher": "Zowe",
   "repository": "https://github.com/zowe/zowe-explorer-vscode/samples/profile-type-template-sample#{{profileType}}",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.90.0"
   },
   "categories": [
     "Other"
