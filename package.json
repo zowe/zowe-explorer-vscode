@@ -12,9 +12,6 @@
     "packages/*",
     "packages/zowe-explorer/src/webviews"
   ],
-  "engines": {
-    "vscode": "^1.79.0"
-  },
   "packageManager": "pnpm@10.17.1",
   "dependencies": {
     "@vscode/l10n": "^0.0.18",

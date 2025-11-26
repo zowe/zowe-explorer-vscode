@@ -2192,7 +2192,7 @@
     "build:nls": "pnpm run build:nlsPseudo"
   },
   "engines": {
-    "vscode": "^1.79.0"
+    "vscode": "^1.90.0"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^10.0.0",
