@@ -16,11 +16,6 @@ const testProfileData = "./resources/testProfileData.ts";
 const testProfileDataExample = "./resources/testProfileData.example.ts";
 
 (async () => {
-    try {
-        await util.promisify(fs.access)(testProfileData);
-        console.log(testProfileData, "- File already exists");
-    } catch (err) {
-        await util.promisify(fs.copyFile)(testProfileDataExample, testProfileData);
-        console.log(testProfileData, "- File created");
-    }
+    await util.promisify(fs.copyFile)(testProfileDataExample, testProfileData);
+    console.log(testProfileData, "- File created/updated");
 })();
