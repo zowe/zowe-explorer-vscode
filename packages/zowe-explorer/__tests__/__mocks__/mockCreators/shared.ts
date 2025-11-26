@@ -316,11 +316,16 @@ export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode |
 export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
     return {
         addToConfigArray: Profiles.prototype.addToConfigArray,
-        allProfiles: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
+        allProfiles: [profile],
         defaultProfile: { name: "sestest" },
         getDefaultProfile: jest.fn(),
         promptCredentials: jest.fn(),
-        loadNamedProfile: jest.fn().mockReturnValue(profile),
+        loadNamedProfile: jest.fn(function (this: any, profileName: string) {
+            const match: imperative.IProfileLoaded | undefined = this.allProfiles?.find(
+                (prof: imperative.IProfileLoaded) => prof.name === profileName
+            );
+            return match ?? profile;
+        }),
         usesSecurity: true,
         validProfile: Validation.ValidationType.VALID,
         checkCurrentProfile: jest.fn(() => {
