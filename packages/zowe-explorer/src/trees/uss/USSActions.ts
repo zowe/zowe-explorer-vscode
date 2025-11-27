@@ -26,6 +26,8 @@ import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { ProfileManagement } from "../../management/ProfileManagement";
+import { Definitions } from "../../configuration/Definitions";
 
 export class USSActions {
     /**
@@ -517,4 +519,123 @@ export class USSActions {
             await vscode.env.clipboard.writeText(node.fullPath);
         }
     }
+
+    /**
+     * Prompts user for profile name and USS path, then filters the tree by that path
+     */
+    public static async filterUssTreePrompt(ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
+        ZoweLogger.trace("uss.actions.filterUssTreePrompt called.");
+        const profileNames = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.USS);
+
+        if (profileNames.length === 0) {
+            await Gui.errorMessage(vscode.l10n.t("No USS profiles found. Please add a profile first."));
+            return;
+        }
+        
+        const quickPick = vscode.window.createQuickPick();
+        quickPick.placeholder = vscode.l10n.t("Select a profile");
+        quickPick.ignoreFocusOut = true;
+        quickPick.items = profileNames.map((name) => ({ label: name }));
+        
+        let selectedProfile: string | undefined;
+        
+        const profilePromise = new Promise<string | undefined>((resolve) => {
+            quickPick.onDidAccept(() => {
+                const selection = quickPick.activeItems[0];
+                if (selection) {
+                    selectedProfile = selection.label;
+                } else if (quickPick.value) {
+                    selectedProfile = quickPick.value;
+                }
+                quickPick.hide();
+                resolve(selectedProfile);
+            });
+            
+            quickPick.onDidHide(() => {
+                resolve(undefined);
+            });
+            
+            quickPick.show();
+        });
+        
+        selectedProfile = await profilePromise;
+        quickPick.dispose();
+        
+        if (!selectedProfile || selectedProfile.trim().length === 0) {
+            return; 
+        }
+        
+        const ussPath = await Gui.showInputBox({
+            prompt: vscode.l10n.t("Enter the USS path to filter on"),
+            placeHolder: vscode.l10n.t("/u/username/directory"),
+            value: "/",
+            ignoreFocusOut: true,
+            validateInput: (value: string) => {
+                if (!value || value.trim().length === 0) {
+                    return vscode.l10n.t("USS path cannot be empty");
+                }
+                if (!value.startsWith("/")) {
+                    return vscode.l10n.t("USS path must start with /");
+                }
+                return null;
+            },
+        });
+        
+        if (!ussPath) {
+            return; 
+        }
+        try {
+            await USSActions.filterUssTree(ussFileProvider, selectedProfile.trim(), ussPath.trim());
+        } catch (e) {
+            if (e instanceof Error) {
+                await Gui.errorMessage(
+                    vscode.l10n.t({
+                        message: "Failed to filter USS tree: {0}",
+                        args: [e.message],
+                        comment: ["Error message"],
+                    })
+                );
+            }
+        }
+    }
+
+    /**
+     * Filter the USS tree by the specified path
+     * @param ussFileProvider is a USS tree
+     * @param sessionName is a profile name to use in the USS tree
+     * @param ussPath is a USS path to filter by
+     */
+    public static async filterUssTree(ussFileProvider: Types.IZoweUSSTreeType, sessionName: string, ussPath: string): Promise<void> {
+        ZoweLogger.trace("uss.actions.filterUssTree called.");
+        let sessionNode: IZoweUSSTreeNode | undefined = ussFileProvider.mSessionNodes.find(
+            (ussNode) => ussNode.label.toString() === sessionName.trim()
+        ) as IZoweUSSTreeNode;
+        if (!sessionNode) {
+            try {
+                await ussFileProvider.addSession({ sessionName: sessionName.trim() });
+            } catch (error) {
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Uss, profile: sessionName });
+                return;
+            }
+            sessionNode = ussFileProvider.mSessionNodes.find((ussNode) => ussNode.label.toString() === sessionName.trim()) as IZoweUSSTreeNode;
+        }
+        // Set the full path and filter the tree BEFORE refreshing
+        sessionNode.fullPath = ussPath;
+        sessionNode.tooltip = ussPath;
+        sessionNode.description = ussPath;
+        if (!SharedContext.isFilterFolder(sessionNode)) {
+            sessionNode.contextValue += `_${Constants.FILTER_SEARCH}`;
+        }
+        sessionNode.dirty = true;
+        try {
+            ussFileProvider.refreshElement(sessionNode);
+            await sessionNode.getChildren();
+        } catch (error) {
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Uss, profile: sessionName });
+            return;
+        }
+        ussFileProvider.setItem(ussFileProvider.getTreeView(), sessionNode);
+        await ussFileProvider.getTreeView().reveal(sessionNode, { select: true, focus: true, expand: true });
+    }
+
 }
