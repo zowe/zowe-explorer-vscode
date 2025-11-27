@@ -1102,7 +1102,7 @@ describe("USS Action Unit Tests - function filterUssTreePrompt", () => {
         globalMocks.mockShowInputBox.mockResolvedValueOnce("/u/myuser");
         const filterUssTreeSpy = jest.spyOn(USSActions, "filterUssTree").mockResolvedValue();
         await USSActions.filterUssTreePrompt(blockMocks.testUSSTree);
-
+        
         expect(getRegisteredProfileNameListSpy).toHaveBeenCalled();
         expect(createQuickPickSpy).toHaveBeenCalled();
         expect(globalMocks.mockShowInputBox).toHaveBeenCalled();
@@ -1165,7 +1165,7 @@ describe("USS Action Unit Tests - function filterUssTreePrompt", () => {
             blockMocks.quickPick.activeItems = [{ label: "profile1" }];
             callback();
             return { dispose: jest.fn() };
-        });    
+        });
         globalMocks.mockShowInputBox.mockResolvedValueOnce(undefined);
         
         const filterUssTreeSpy = jest.spyOn(USSActions, "filterUssTree");
@@ -1281,6 +1281,34 @@ describe("USS Action Unit Tests - function filterUssTree", () => {
         getChildrenSpy.mockRestore();
     });
 
+    it("should add new session if profile doesn't exist", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        
+        blockMocks.testUSSTree.mSessionNodes = [];
+        
+        const newNode = createUSSNode(globalMocks.testSession, createIProfile());
+        newNode.label = "newProfile";
+        
+        // Mock addSession to simulate adding the node to mSessionNodes
+        const addSessionSpy = jest.spyOn(blockMocks.testUSSTree, "addSession").mockImplementation(async () => {
+            blockMocks.testUSSTree.mSessionNodes.push(newNode);
+        });
+        
+        const getChildrenSpy = jest.spyOn(newNode, "getChildren").mockResolvedValue([]);
+        const refreshElementSpy = jest.spyOn(blockMocks.testUSSTree, "refreshElement");
+        
+        await USSActions.filterUssTree(blockMocks.testUSSTree, "newProfile", "/u/newuser");
+        
+        expect(addSessionSpy).toHaveBeenCalledWith({ sessionName: "newProfile" });
+        expect(newNode.fullPath).toBe("/u/newuser");
+        expect(newNode.description).toBe("/u/newuser");
+        expect(refreshElementSpy).toHaveBeenCalled();
+        
+        addSessionSpy.mockRestore();
+        getChildrenSpy.mockRestore();
+    });
+
     it("should add filter context if not already present", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
@@ -1295,6 +1323,24 @@ describe("USS Action Unit Tests - function filterUssTree", () => {
         await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/u/myuser");
         
         expect(blockMocks.ussNode.contextValue).toContain(Constants.FILTER_SEARCH);
+    });
+
+    it("should handle errors when adding session fails", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        
+        blockMocks.testUSSTree.mSessionNodes = [];
+        
+        const testError = new Error("Failed to add session");
+        const addSessionSpy = jest.spyOn(blockMocks.testUSSTree, "addSession").mockRejectedValue(testError);
+        const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockResolvedValue(undefined as any);
+        
+        await USSActions.filterUssTree(blockMocks.testUSSTree, "newProfile", "/u/newuser");
+        
+        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, { apiType: "uss" as any, profile: "newProfile" });
+        
+        addSessionSpy.mockRestore();
+        errorHandlingSpy.mockRestore();
     });
 
     it("should handle errors when refreshing node fails", async () => {
