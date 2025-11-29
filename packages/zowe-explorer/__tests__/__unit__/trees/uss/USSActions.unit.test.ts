@@ -1444,7 +1444,6 @@ describe("USS Action Unit Tests - function filterUssTree", () => {
         } as any);
         
         const getChildrenSpy = jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValue([fileNode]);
-        const refreshElementSpy = jest.spyOn(blockMocks.testUSSTree, "refreshElement");
         const revealSpy = jest.spyOn(blockMocks.testTreeView, "reveal");
         
         await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/test/path/testfile.txt");
