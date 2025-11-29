@@ -1299,7 +1299,6 @@ describe("USS Action Unit Tests - function filterUssTree", () => {
         const newNode = createUSSNode(globalMocks.testSession, createIProfile());
         newNode.label = "newProfile";
         
-        // Mock addSession to simulate adding the node to mSessionNodes
         const addSessionSpy = jest.spyOn(blockMocks.testUSSTree, "addSession").mockImplementation(async () => {
             blockMocks.testUSSTree.mSessionNodes.push(newNode);
         });
@@ -1481,7 +1480,6 @@ describe("USS Action Unit Tests - function filterUssTree", () => {
         } as any);
         
         const getChildrenSpy = jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValue([]);
-        const refreshElementSpy = jest.spyOn(blockMocks.testUSSTree, "refreshElement");
         
         await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/u/myuser/somedir");
         
