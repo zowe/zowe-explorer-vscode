@@ -619,23 +619,73 @@ export class USSActions {
             }
             sessionNode = ussFileProvider.mSessionNodes.find((ussNode) => ussNode.label.toString() === sessionName.trim()) as IZoweUSSTreeNode;
         }
-        // Set the full path and filter the tree BEFORE refreshing
-        sessionNode.fullPath = ussPath;
-        sessionNode.tooltip = ussPath;
-        sessionNode.description = ussPath;
+        
+        // Clear any existing children to avoid conflicts with cached entries
+        sessionNode.children = [];
+        
+        let targetPath = ussPath;
+        let targetFileName: string | null = null;
+        
+        try {
+            const profile = sessionNode.getProfile();
+            const response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
+    
+            // we get 3 entries for a directory like ., .., and directory itself with mode d
+            //For a file there will be single entry
+            if (response.success && response.apiResponse?.items?.length === 1) {
+                const item = response.apiResponse.items[0];
+                if (item.mode && !item.mode.startsWith('d')) {
+                    targetFileName = path.posix.basename(ussPath);
+                    targetPath = path.posix.dirname(ussPath);
+                    ZoweLogger.trace(`Detected file path, filtering to parent directory: ${targetPath}`);
+                }
+            }
+        } catch (err) {
+            ZoweLogger.trace(`Could not determine if path is file or directory, treating as directory: ${err}`);
+        }
+        
+        sessionNode.fullPath = targetPath;
+        sessionNode.tooltip = targetPath;
+        sessionNode.description = targetPath;
         if (!SharedContext.isFilterFolder(sessionNode)) {
             sessionNode.contextValue += `_${Constants.FILTER_SEARCH}`;
         }
         sessionNode.dirty = true;
+        
         try {
             ussFileProvider.refreshElement(sessionNode);
             await sessionNode.getChildren();
+            ussFileProvider.setItem(ussFileProvider.getTreeView(), sessionNode);
+            await ussFileProvider.getTreeView().reveal(sessionNode, { select: true, focus: true, expand: true });
+            
+            if (targetFileName) {
+                const fileNode = sessionNode.children.find(child => child.label === targetFileName);
+                if (fileNode) {
+                    try {
+                        await ussFileProvider.getTreeView().reveal(fileNode, { select: true, focus: true });
+                    } catch (err) {
+                        ZoweLogger.trace(`Could not reveal node: ${err}`);
+                        await Gui.errorMessage(
+                            vscode.l10n.t({
+                                message: "Failed to reveal '{0}': {1}",
+                                args: [targetFileName, err instanceof Error ? err.message : String(err)],
+                                comment: ["Item name", "Error message"],
+                            })
+                        );
+                    }
+                } else {
+                    await Gui.warningMessage(
+                        vscode.l10n.t({
+                            message: "'{0}' not found in directory '{1}'",
+                            args: [targetFileName, targetPath],
+                            comment: ["Item name", "Directory path"],
+                        })
+                    );
+                }
+            }
         } catch (error) {
             await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Uss, profile: sessionName });
             return;
         }
-        ussFileProvider.setItem(ussFileProvider.getTreeView(), sessionNode);
-        await ussFileProvider.getTreeView().reveal(sessionNode, { select: true, focus: true, expand: true });
     }
-
 }
