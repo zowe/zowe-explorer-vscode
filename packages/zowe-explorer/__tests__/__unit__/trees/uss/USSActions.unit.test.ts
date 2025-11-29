@@ -1240,11 +1240,17 @@ describe("USS Action Unit Tests - function filterUssTreePrompt", () => {
 
 describe("USS Action Unit Tests - function filterUssTree", () => {
     function createBlockMocks(globalMocks) {
+        const ussApi = createUssApi(globalMocks.testProfile);
+        // Ensure fileList method exists on the API
+        if (!ussApi.fileList) {
+            ussApi.fileList = jest.fn();
+        }
+        
         const newMocks = {
             testUSSTree: null as unknown as USSTree,
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
             testTreeView: createTreeView(),
-            ussApi: createUssApi(globalMocks.testProfile),
+            ussApi: ussApi,
         };
         newMocks.testUSSTree = createUSSTree(
             [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
