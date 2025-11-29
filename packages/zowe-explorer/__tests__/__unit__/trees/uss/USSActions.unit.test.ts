@@ -1240,9 +1240,13 @@ describe("USS Action Unit Tests - function filterUssTreePrompt", () => {
 
 describe("USS Action Unit Tests - function filterUssTree", () => {
     function createBlockMocks(globalMocks) {
-        const ussApi = createUssApi(globalMocks.testProfile);
-        // Ensure fileList method exists on the API
-        if (!ussApi.fileList) {
+        let ussApi = createUssApi(globalMocks.testProfile);
+        // Ensure ussApi exists and has fileList method
+        if (!ussApi) {
+            ussApi = {
+                fileList: jest.fn(),
+            } as any;
+        } else if (!ussApi.fileList) {
             ussApi.fileList = jest.fn();
         }
         
