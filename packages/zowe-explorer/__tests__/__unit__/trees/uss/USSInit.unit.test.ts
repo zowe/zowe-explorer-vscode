@@ -131,6 +131,11 @@ describe("Test src/uss/extension", () => {
                 mock: [{ spy: jest.spyOn(USSActions, "filterUssTreePrompt"), arg: [ussFileProvider] }],
             },
             {
+                name: "zowe.uss.setUssPath",
+                parm: ["testSession", "/u/myuser"],
+                mock: [{ spy: jest.spyOn(USSActions, "filterUssTree"), arg: [ussFileProvider, "testSession", "/u/myuser"] }],
+            },
+            {
                 name: "onDidChangeConfiguration",
                 mock: [{ spy: jest.spyOn(ussFileProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },

@@ -1217,7 +1217,6 @@ describe("USS Action Unit Tests - function filterUssTreePrompt", () => {
         
         const createQuickPickSpy = jest.spyOn(vscode.window, "createQuickPick").mockReturnValue(blockMocks.quickPick as any);
         
-        // Simulate user typing custom profile name
         blockMocks.quickPick.onDidAccept.mockImplementation((callback) => {
             blockMocks.quickPick.activeItems = [];
             blockMocks.quickPick.value = "customProfile";
@@ -1241,11 +1240,21 @@ describe("USS Action Unit Tests - function filterUssTreePrompt", () => {
 
 describe("USS Action Unit Tests - function filterUssTree", () => {
     function createBlockMocks(globalMocks) {
+        let ussApi = createUssApi(globalMocks.testProfile);
+        // Ensure ussApi exists and has fileList method
+        if (!ussApi) {
+            ussApi = {
+                fileList: jest.fn(),
+            } as any;
+        } else if (!ussApi.fileList) {
+            ussApi.fileList = jest.fn();
+        }
+        
         const newMocks = {
             testUSSTree: null as unknown as USSTree,
             ussNode: createUSSNode(globalMocks.testSession, createIProfile()),
             testTreeView: createTreeView(),
-            ussApi: createUssApi(globalMocks.testProfile),
+            ussApi: ussApi,
         };
         newMocks.testUSSTree = createUSSTree(
             [createFavoriteUSSNode(globalMocks.testSession, globalMocks.testProfile)],
@@ -1262,20 +1271,22 @@ describe("USS Action Unit Tests - function filterUssTree", () => {
         const blockMocks = createBlockMocks(globalMocks);
         
         blockMocks.ussNode.label = "testProfile";
+        blockMocks.ussNode.children = [createUSSNode(globalMocks.testSession, createIProfile())];
         blockMocks.testUSSTree.mSessionNodes = [blockMocks.ussNode];
         
         const getChildrenSpy = jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValue([]);
-        const refreshElementSpy = jest.spyOn(blockMocks.testUSSTree, "refreshElement");
+        const nodeDataChangedSpy = jest.spyOn(blockMocks.testUSSTree, "nodeDataChanged");
         const revealSpy = jest.spyOn(blockMocks.testTreeView, "reveal");
         
-        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/u/myuser");
+        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/test/path");
         
-        expect(blockMocks.ussNode.fullPath).toBe("/u/myuser");
-        expect(blockMocks.ussNode.tooltip).toBe("/u/myuser");
-        expect(blockMocks.ussNode.description).toBe("/u/myuser");
+        expect(blockMocks.ussNode.children).toEqual([]);
+        expect(blockMocks.ussNode.fullPath).toBe("/test/path");
+        expect(blockMocks.ussNode.tooltip).toBe("/test/path");
+        expect(blockMocks.ussNode.description).toBe("/test/path");
         expect(blockMocks.ussNode.dirty).toBe(true);
-        expect(refreshElementSpy).toHaveBeenCalledWith(blockMocks.ussNode);
         expect(getChildrenSpy).toHaveBeenCalled();
+        expect(nodeDataChangedSpy).toHaveBeenCalledWith(blockMocks.ussNode);
         expect(revealSpy).toHaveBeenCalledWith(blockMocks.ussNode, { select: true, focus: true, expand: true });
         
         getChildrenSpy.mockRestore();
@@ -1290,20 +1301,19 @@ describe("USS Action Unit Tests - function filterUssTree", () => {
         const newNode = createUSSNode(globalMocks.testSession, createIProfile());
         newNode.label = "newProfile";
         
-        // Mock addSession to simulate adding the node to mSessionNodes
         const addSessionSpy = jest.spyOn(blockMocks.testUSSTree, "addSession").mockImplementation(async () => {
             blockMocks.testUSSTree.mSessionNodes.push(newNode);
         });
         
         const getChildrenSpy = jest.spyOn(newNode, "getChildren").mockResolvedValue([]);
-        const refreshElementSpy = jest.spyOn(blockMocks.testUSSTree, "refreshElement");
+        const nodeDataChangedSpy = jest.spyOn(blockMocks.testUSSTree, "nodeDataChanged");
         
         await USSActions.filterUssTree(blockMocks.testUSSTree, "newProfile", "/u/newuser");
         
         expect(addSessionSpy).toHaveBeenCalledWith({ sessionName: "newProfile" });
         expect(newNode.fullPath).toBe("/u/newuser");
         expect(newNode.description).toBe("/u/newuser");
-        expect(refreshElementSpy).toHaveBeenCalled();
+        expect(nodeDataChangedSpy).toHaveBeenCalledWith(newNode);
         
         addSessionSpy.mockRestore();
         getChildrenSpy.mockRestore();
@@ -1320,7 +1330,7 @@ describe("USS Action Unit Tests - function filterUssTree", () => {
         jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValue([]);
         jest.spyOn(blockMocks.testUSSTree, "refreshElement");
         
-        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/u/myuser");
+        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/test/path");
         
         expect(blockMocks.ussNode.contextValue).toContain(Constants.FILTER_SEARCH);
     });
@@ -1350,15 +1360,16 @@ describe("USS Action Unit Tests - function filterUssTree", () => {
         blockMocks.ussNode.label = "testProfile";
         blockMocks.testUSSTree.mSessionNodes = [blockMocks.ussNode];
         
-        const testError = new Error("Failed to refresh");
-        jest.spyOn(blockMocks.testUSSTree, "refreshElement").mockImplementation(() => {
-            throw testError;
-        });
+        const testError = new Error("Failed to get children");
+        jest.spyOn(blockMocks.ussNode, "getChildren").mockRejectedValue(testError);
         const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockResolvedValue(undefined as any);
         
-        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/u/myuser");
+        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/test/path");
         
-        expect(errorHandlingSpy).toHaveBeenCalledWith(testError, { apiType: "uss" as any, profile: "testProfile" });
+        expect(errorHandlingSpy).toHaveBeenCalled();
+        const callArgs = errorHandlingSpy.mock.calls[0];
+        expect(callArgs[0]).toBe(testError);
+        expect(callArgs[1]).toMatchObject({ apiType: "uss" });
         
         errorHandlingSpy.mockRestore();
     });
@@ -1382,4 +1393,329 @@ describe("USS Action Unit Tests - function filterUssTree", () => {
         expect(blockMocks.ussNode.description).toBe("/u/newpath");
         expect(blockMocks.ussNode.dirty).toBe(true);
     });
+
+    it("should detect file path and filter to parent directory", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        
+        blockMocks.ussNode.label = "testProfile";
+        blockMocks.testUSSTree.mSessionNodes = [blockMocks.ussNode];
+        
+        const fileListSpy = jest.spyOn(blockMocks.ussApi, "fileList").mockResolvedValue({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        name: "testfile.txt",
+                        mode: "-rwxr-xr-x",
+                    },
+                ],
+            },
+        } as any);
+        
+        const getChildrenSpy = jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValue([]);
+        const nodeDataChangedSpy = jest.spyOn(blockMocks.testUSSTree, "nodeDataChanged");
+        
+        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/test/path/testfile.txt");
+        
+        expect(blockMocks.ussNode.fullPath).toBe("/test/path");
+        expect(blockMocks.ussNode.tooltip).toBe("/test/path");
+        expect(blockMocks.ussNode.description).toBe("/test/path");
+        expect(fileListSpy).toHaveBeenCalledWith("/test/path/testfile.txt");
+        expect(nodeDataChangedSpy).toHaveBeenCalledWith(blockMocks.ussNode);
+        
+        fileListSpy.mockRestore();
+        getChildrenSpy.mockRestore();
+    });
+
+    it("should select file node after filtering to parent directory", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        
+        blockMocks.ussNode.label = "testProfile";
+        blockMocks.testUSSTree.mSessionNodes = [blockMocks.ussNode];
+        
+        const fileNode = new ZoweUSSNode({
+            label: "testfile.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.ussNode,
+            parentPath: "/test/path",
+        });
+        fileNode.fullPath = "/test/path/testfile.txt";
+        
+        const fileListSpy = jest.spyOn(blockMocks.ussApi, "fileList").mockResolvedValue({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        name: "testfile.txt",
+                        mode: "-rwxr-xr-x",
+                    },
+                ],
+            },
+        } as any);
+        
+        const getChildrenSpy = jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValue([fileNode]);
+        const revealSpy = jest.spyOn(blockMocks.testTreeView, "reveal");
+        
+        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/test/path/testfile.txt");
+        
+        expect(revealSpy).toHaveBeenCalledWith(blockMocks.ussNode, { select: true, focus: true, expand: true });
+        expect(blockMocks.ussNode.fullPath).toBe("/test/path");
+        expect(getChildrenSpy).toHaveBeenCalled();
+        
+        fileListSpy.mockRestore();
+        getChildrenSpy.mockRestore();
+    });
+
+    it("should handle file detection when fileList returns empty items", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        
+        blockMocks.ussNode.label = "testProfile";
+        blockMocks.testUSSTree.mSessionNodes = [blockMocks.ussNode];
+        
+        const fileListSpy = jest.spyOn(blockMocks.ussApi, "fileList").mockResolvedValue({
+            success: true,
+            apiResponse: {
+                items: [],
+            },
+        } as any);
+        
+        const getChildrenSpy = jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValue([]);
+        
+        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/u/myuser/somedir");
+        
+        expect(blockMocks.ussNode.fullPath).toBe("/u/myuser/somedir");
+        expect(fileListSpy).toHaveBeenCalledWith("/u/myuser/somedir");
+        
+        fileListSpy.mockRestore();
+        getChildrenSpy.mockRestore();
+    });
+
+    it("should handle file with extension like .config", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        
+        blockMocks.ussNode.label = "testProfile";
+        blockMocks.testUSSTree.mSessionNodes = [blockMocks.ussNode];
+        
+        const fileListSpy = jest.spyOn(blockMocks.ussApi, "fileList").mockResolvedValue({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        name: "testfile.config",
+                        mode: "-rw-r--r--",
+                    },
+                ],
+            },
+        } as any);
+        
+        const fileNode = new ZoweUSSNode({
+            label: "testfile.config",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.ussNode,
+            parentPath: "/test/dir",
+        });
+        fileNode.fullPath = "/test/dir/testfile.config";
+        
+        const getChildrenSpy = jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValue([fileNode]);
+        const revealSpy = jest.spyOn(blockMocks.testTreeView, "reveal");
+        
+        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/test/dir/testfile.config");
+        
+        expect(blockMocks.ussNode.fullPath).toBe("/test/dir");
+        expect(revealSpy).toHaveBeenCalledWith(blockMocks.ussNode, { select: true, focus: true, expand: true });
+        expect(getChildrenSpy).toHaveBeenCalled();
+        
+        fileListSpy.mockRestore();
+        getChildrenSpy.mockRestore();
+    });
+
+    it("should handle file detection error gracefully", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        
+        blockMocks.ussNode.label = "testProfile";
+        blockMocks.testUSSTree.mSessionNodes = [blockMocks.ussNode];
+        
+        const fileListSpy = jest.spyOn(blockMocks.ussApi, "fileList").mockRejectedValue(new Error("API error"));
+        
+        const getChildrenSpy = jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValue([]);
+        
+        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/test/path/testfile.txt");
+        
+        expect(blockMocks.ussNode.fullPath).toBe("/test/path/testfile.txt");
+        
+        fileListSpy.mockRestore();
+        getChildrenSpy.mockRestore();
+    });
+
+    it("should show warning message when file is not found in children after filtering", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        
+        blockMocks.ussNode.label = "testProfile";
+        blockMocks.testUSSTree.mSessionNodes = [blockMocks.ussNode];
+        
+        const fileListSpy = jest.spyOn(blockMocks.ussApi, "fileList").mockResolvedValue({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        name: "testfile.txt",
+                        mode: "-rwxr-xr-x",
+                    },
+                ],
+            },
+        } as any);
+        
+        const getChildrenSpy = jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValue([]);
+        const revealSpy = jest.spyOn(blockMocks.testTreeView, "reveal");
+        const warningMessageSpy = jest.spyOn(Gui, "warningMessage");
+        
+        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/test/path/testfile.txt");
+        
+        expect(revealSpy).toHaveBeenCalledWith(blockMocks.ussNode, { select: true, focus: true, expand: true });
+        expect(warningMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("testfile.txt")
+        );
+        fileListSpy.mockRestore();
+        getChildrenSpy.mockRestore();
+    });
+
+    it("should handle error when revealing file node fails", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        
+        blockMocks.ussNode.label = "testProfile";
+        blockMocks.testUSSTree.mSessionNodes = [blockMocks.ussNode];
+        
+        const fileNode = new ZoweUSSNode({
+            label: "testfile.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.ussNode,
+            parentPath: "/test/path",
+        });
+        fileNode.fullPath = "/test/path/testfile.txt";
+        
+        const fileListSpy = jest.spyOn(blockMocks.ussApi, "fileList").mockResolvedValue({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        name: "testfile.txt",
+                        mode: "-rwxr-xr-x",
+                    },
+                ],
+            },
+        } as any);
+        
+        // Mock getChildren to return the file node and also populate children array
+        const getChildrenSpy = jest.spyOn(blockMocks.ussNode, "getChildren").mockImplementation(async () => {
+            blockMocks.ussNode.children = [fileNode];
+            return [fileNode];
+        });
+        
+        const revealError = new Error("Failed to reveal node");
+        const revealSpy = jest.spyOn(blockMocks.testTreeView, "reveal").mockImplementation((node: any, options: any) => {
+            // First call is for session node - succeeds
+            if (node === blockMocks.ussNode) {
+                return Promise.resolve();
+            }
+            // Second call is for file node - fails
+            return Promise.reject(revealError);
+        });
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+        const loggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
+        
+        await USSActions.filterUssTree(blockMocks.testUSSTree, "testProfile", "/test/path/testfile.txt");
+        
+        expect(revealSpy).toHaveBeenCalledTimes(2);
+        expect(loggerTraceSpy).toHaveBeenCalledWith(expect.stringContaining("Could not reveal node"));
+        expect(errorMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Failed to reveal 'testfile.txt': Failed to reveal node")
+        );
+        
+        fileListSpy.mockRestore();
+        getChildrenSpy.mockRestore();
+        loggerTraceSpy.mockRestore();
+    });
 });
+
+describe("USS Action Unit Tests - function validatePath", () => {
+    it("should return error message when input is empty string", () => {
+        const result = (USSActions as any).validatePath("");
+        expect(result).toBe("USS path cannot be empty");
+    });
+
+    it("should return error message when input is null", () => {
+        const result = (USSActions as any).validatePath(null);
+        expect(result).toBe("USS path cannot be empty");
+    });
+
+    it("should return error message when input is undefined", () => {
+        const result = (USSActions as any).validatePath(undefined);
+        expect(result).toBe("USS path cannot be empty");
+    });
+
+    it("should return error message when input is only whitespace", () => {
+        const result = (USSActions as any).validatePath("   ");
+        expect(result).toBe("USS path cannot be empty");
+    });
+
+    it("should return error message when input does not start with /", () => {
+        const result = (USSActions as any).validatePath("u/myuser");
+        expect(result).toBe("USS path must start with /");
+    });
+
+    it("should return error message when input has leading whitespace and no /", () => {
+        const result = (USSActions as any).validatePath("  u/myuser");
+        expect(result).toBe("USS path must start with /");
+    });
+
+    it("should return undefined for valid USS path", () => {
+        const result = (USSActions as any).validatePath("/u/myuser");
+        expect(result).toBeUndefined();
+    });
+
+    it("should return undefined for valid USS path with trailing slash", () => {
+        const result = (USSActions as any).validatePath("/u/myuser/");
+        expect(result).toBeUndefined();
+    });
+
+    it("should return undefined for root path", () => {
+        const result = (USSActions as any).validatePath("/");
+        expect(result).toBeUndefined();
+    });
+
+    it("should return undefined for valid USS path with leading whitespace", () => {
+        const result = (USSActions as any).validatePath("  /u/myuser");
+        expect(result).toBeUndefined();
+    });
+
+    it("should return undefined for valid USS path with trailing whitespace", () => {
+        const result = (USSActions as any).validatePath("/u/myuser  ");
+        expect(result).toBeUndefined();
+    });
+
+    it("should return undefined for valid USS path with both leading and trailing whitespace", () => {
+        const result = (USSActions as any).validatePath("  /u/myuser  ");
+        expect(result).toBeUndefined();
+    });
+
+    it("should return undefined for complex valid USS path", () => {
+        const result = (USSActions as any).validatePath("/u/myuser/documents/project/file.txt");
+        expect(result).toBeUndefined();
+    });
+
+    it("should return undefined for USS path with special characters", () => {
+        const result = (USSActions as any).validatePath("/u/my-user_123/test.file");
+        expect(result).toBeUndefined();
+    });
+});
+
+
+
+
