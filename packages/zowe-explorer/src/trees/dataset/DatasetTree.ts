@@ -114,6 +114,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
         const sourceInfo = FsAbstractUtils.getInfoForUri(sourceUri, Profiles.getInstance());
         let dsname = destUri.path.substring(destinationInfo.slashAfterProfilePos + 1);
+
         if (SharedContext.isPds(sourceNode)) {
             if (!DatasetFSProvider.instance.exists(destUri)) {
                 // find source PDS attributes and make destination PDS have same attributes
@@ -159,13 +160,53 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
             await vscode.workspace.fs.delete(sourceUri, { recursive: true });
         } else {
+            let destinationMemberUri = destUri;
+            const sourceMemberLabel = sourceNode.getLabel() as string;
+
+            // calculate the correct PDS name for the API and error messages.
+            let fullPathAfterProfile = destUri.path.substring(destinationInfo.slashAfterProfilePos + 1);
+            const lastSlashIndex = fullPathAfterProfile.lastIndexOf('/');
+            let fullPdsName: string;
+
+            if (lastSlashIndex !== -1) {
+                fullPdsName = fullPathAfterProfile.substring(0, lastSlashIndex).replace(/\//g, '.');
+            } else {
+                fullPdsName = fullPathAfterProfile.replace(/\//g, '.');
+            }
+
+            // Set dsname for API and error messages: PDS.NAME(MEMBER_LABEL)
+            dsname = fullPdsName + "(" + sourceMemberLabel + ")";
+
+            // Reconstruct the path to ensure it is correctly formed
+            if (SharedContext.isDsMember(sourceNode)) {
+                // 1. get URI path up to the PDS name (ie '/system/PDSNAME.TEST')
+                const pdsBasePath = destUri.path.substring(0, destUri.path.lastIndexOf('/'));
+
+                // 2. add member label, results in '/system/PDSNAME.TEST/TEST'
+                const newMemberPath = pdsBasePath + '/' + sourceMemberLabel;
+
+                destinationMemberUri = destUri.with({
+                    path: newMemberPath,
+                });
+
+                // create the member before writing content.
+                try {
+                    await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
+                } catch (err) {
+                    // ignore if it already exists, but bail out on 404/500 if the PDS itself is missing
+                    const code = err.errorCode?.toString();
+                    if (code === "404" || code === "500") {
+                        Gui.errorMessage(vscode.l10n.t("Failed to move {0}: The target PDS does not exist on the host: {1}", fullPdsName, err.message));
+                        return;
+                    }
+                }
+            }
+
             try {
                 const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
                 if (entry == null) {
-                    if (SharedContext.isDsMember(sourceNode)) {
-                        dsname = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
-                        await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
-                    } else {
+                    // If entry is null, only create the destination if it's NOT a PDS member being dropped (ie a sequential data set)
+                    if (!SharedContext.isDsMember(sourceNode)) {
                         dsname = sourceNode.getLabel() as string;
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
                             zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
@@ -174,8 +215,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         );
                     }
                 }
+
             } catch (err) {
-                //file might already exist. Ignore the error and try to write it to lpar
+                // file might already exist. Ignore the error and try to write it to lpar
                 // only bail out on a real 404/500 – guard against undefined
                 const code = err.errorCode?.toString();
                 if (code === "404" || code === "500") {
@@ -189,29 +231,68 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             try {
                 const encodingInfo = await sourceNode.getEncoding();
                 // If the encoding is binary, we need to force upload it as binary
-                const queryString = `forceUpload=true${
-                    encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
-                }`;
+                const queryString = `forceUpload=true${encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
+                    }`;
+
+                // use destinationMemberUri
                 await DatasetFSProvider.instance.writeFile(
-                    destUri.with({
+                    destinationMemberUri.with({
                         query: queryString,
                     }),
                     contents,
                     { create: true, overwrite: true }
                 );
+
+                // Retry verification with backoff to handle remote file system lag -> race condition between file creation and checking for file
+                let verifyContents: Uint8Array;
+                const maxRetries = 5;
+                let retryDelay = 200; // Start with 200ms
+
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        // Attempt to read the newly written file
+                        verifyContents = await DatasetFSProvider.instance.readFile(destinationMemberUri);
+
+                        // Success if file exists and content size matches
+                        if (verifyContents.length === contents.length) {
+                            break; // Exit loop on successful verification
+                        }
+                    } catch (err) {
+                        // Only continue if the error is due to the file not being found yet.
+                        if (err.name !== "EntryNotFound" && err.name !== "FileNotFound" && err.name !== "FileSystemError") {
+                            throw err;
+                        }
+                    }
+
+                    if (i === maxRetries - 1) {
+                        // If this is the last attempt throw the definitive verification error.
+                        throw new Error(vscode.l10n.t("Failed to verify data write to {0}. Content size mismatch or member empty after multiple retries.", dsname));
+                    }
+
+                    // Wait for the calculated delay (exponential backoff: 200ms, 400ms, 800ms, 1600ms, 3200ms)
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                    retryDelay *= 2;
+                }
+
+                // source deletion and success message ONLY happen if write succeeded and verified
+                if (!recursiveCall) {
+                    await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
+                    Gui.infoMessage(vscode.l10n.t("Data set(s) moved successfully."));
+                }
             } catch (err) {
-                // If the write fails, we cannot move to the next file
+                // if the write, verification, or deletion fails, hard stop
                 if (err instanceof Error) {
-                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
+                    // Check if the error is from verification and provide a specific message
+                    if (err.message.includes("Failed to verify data write to")) {
+                        Gui.errorMessage(vscode.l10n.t(
+                            "Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible.",
+                            dsname
+                        ));
+                    } else {
+                        Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
+                    }
                 }
                 return;
-            }
-
-            if (!recursiveCall) {
-                // Delete any files from the selection on the source LPAR
-                await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
-                //dialog message for successful move of pds and members
-                Gui.infoMessage(vscode.l10n.t("Data set(s) moved successfully."));
             }
         }
     }
@@ -404,8 +485,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     }
 
     /**
-     * Find profile node that matches specified profile name in a tree nodes array (e.g. this.mFavorites or this.mSessionNodes).
-     * @param datasetProvider - The array of tree nodes to search through (e.g. this.mFavorites)
+     * Find profile node that matches specified profile name in a tree nodes array (ie this.mFavorites or this.mSessionNodes).
+     * @param datasetProvider - The array of tree nodes to search through (ie this.mFavorites)
      * @param profileName - The name of the profile you are looking for
      * @returns {IZoweDatasetTreeNode | undefined} Returns matching profile node if found. Otherwise, returns undefined.
      */
@@ -1773,15 +1854,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                  message: "all PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              })
+                message: "all PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            })
             : vscode.l10n.t({
-                  message: "the PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              });
+                message: "the PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            });
         const selection = await Gui.showQuickPick(
             DatasetUtils.DATASET_SORT_OPTS.map((opt, i) => ({
                 label: sortOpts.method === i ? `${opt} $(check)` : opt,
@@ -1846,10 +1927,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         node.filter = newFilter;
         node.description = newFilter
             ? vscode.l10n.t({
-                  message: "Filter: {0}",
-                  args: [newFilter.value],
-                  comment: ["Filter value"],
-              })
+                message: "Filter: {0}",
+                args: [newFilter.value],
+                comment: ["Filter value"],
+            })
             : null;
         this.nodeDataChanged(node);
 
@@ -1910,15 +1991,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                  message: "all PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              })
+                message: "all PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            })
             : vscode.l10n.t({
-                  message: "the PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              });
+                message: "the PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            });
         const clearFilter = isSession
             ? `$(clear-all) ${vscode.l10n.t("Clear filter for profile")}`
             : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;
