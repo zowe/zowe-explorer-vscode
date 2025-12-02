@@ -12,7 +12,7 @@ interface TabsProps {
 }
 
 export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchemaFile, onAddNewConfig, onToggleAutostore }: TabsProps) {
-  const { configurations, selectedTab, pendingChanges, autostoreChanges, renames, deletions } = useConfigContext();
+  const { configurations, selectedTab, pendingChanges, autostoreChanges, renames, deletions, pendingDefaults, defaultsDeletions } = useConfigContext();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabIndex: number } | null>(null);
 
   const getRevealText = () => {
@@ -26,9 +26,16 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
     }
   };
 
-  const getTabLabel = (configPath: string) => {
-    const parts = configPath.split(/[/\\]/);
-    return parts[parts.length - 1] || configPath;
+  const getTabLabel = (config: { global?: boolean; user?: boolean }) => {
+    if (config.global && config.user) {
+      return l10n.t("Global User");
+    } else if (config.global && !config.user) {
+      return l10n.t("Global Team");
+    } else if (!config.global && config.user) {
+      return l10n.t("Project User");
+    } else {
+      return l10n.t("Project Team");
+    }
   };
 
   const getConfigIcon = (config: { global?: boolean; user?: boolean }) => {
@@ -100,15 +107,20 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
           {configurations.map((config, index) => {
             const configPendingChanges = pendingChanges[config.configPath] || {};
+            const configPendingDefaults = pendingDefaults[config.configPath] || {};
             const hasRegularChanges = Object.keys(configPendingChanges).length > 0;
+            const hasDefaultsChanges = Object.keys(configPendingDefaults).length > 0;
             const hasProfilePropertyChanges = Object.keys(configPendingChanges).some((key) => key.startsWith("profiles."));
             const hasDeletions = deletions[config.configPath] && deletions[config.configPath].length > 0;
+            const hasDefaultsDeletions = defaultsDeletions[config.configPath] && defaultsDeletions[config.configPath].length > 0;
             const hasPendingChanges =
               hasRegularChanges ||
+              hasDefaultsChanges ||
               hasProfilePropertyChanges ||
               autostoreChanges[config.configPath] !== undefined ||
               (renames[config.configPath] && Object.keys(renames[config.configPath]).length > 0) ||
-              hasDeletions;
+              hasDeletions ||
+              hasDefaultsDeletions;
             return (
               <div
                 key={index}
@@ -119,7 +131,7 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
               >
                 <span className="tab-label" title={config.configPath} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <span className={`codicon ${getConfigIcon(config)}`} style={{ fontSize: "14px" }}></span>
-                  {getTabLabel(config.configPath)}
+                  {getTabLabel(config)}
                   {hasPendingChanges && (
                     <span
                       className="codicon codicon-circle-filled"
@@ -130,6 +142,7 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
                         flexShrink: 0,
                         display: "flex",
                         alignItems: "center",
+                        transform: "translateY(-1px)",
                       }}
                       title={l10n.t("Unsaved changes")}
                     />

@@ -768,7 +768,7 @@ export function ProfileTree({
                 <span
                   className={`codicon codicon-${isDefault ? "star-full" : "star-empty"}`}
                   style={{
-                    fontSize: "14px",
+                    fontSize: "16px",
                     color: isDefault ? "var(--vscode-textPreformat-foreground)" : "var(--vscode-disabledForeground)",
                     pointerEvents: "none",
                   }}

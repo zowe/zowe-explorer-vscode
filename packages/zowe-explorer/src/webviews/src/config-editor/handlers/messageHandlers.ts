@@ -88,6 +88,10 @@ export const handleConfigurationsMessage = (data: any, props: MessageHandlerProp
     } = props;
 
     const { contents, secureValuesAllowed } = data;
+    
+    // Capture the previous configurations BEFORE updating the ref
+    const previousConfigurations = configurationsRef.current;
+    
     setConfigurations(contents);
     const newSecureValuesAllowed = secureValuesAllowed !== undefined ? secureValuesAllowed : true;
     setSecureValuesAllowed(newSecureValuesAllowed);
@@ -113,7 +117,25 @@ export const handleConfigurationsMessage = (data: any, props: MessageHandlerProp
         // Increment sort order version to trigger re-render with updated merged properties after save
         setSortOrderVersion((prev) => prev + 1);
     } else {
+        // Check if a new configuration was added by comparing paths
+        const previousLength = previousConfigurations.length;
+        const newLength = contents.length;
+        
         setSelectedTab((prevSelectedTab) => {
+            // If a new configuration was added, find and select it
+            if (newLength > previousLength && newLength > 0) {
+                // Get the set of previous config paths
+                const previousPaths = new Set(previousConfigurations.map((c: any) => c.configPath));
+                
+                // Find the new configuration that wasn't in the previous set
+                const newConfigIndex = contents.findIndex((config: any) => !previousPaths.has(config.configPath));
+                
+                // If we found the new configuration, select it
+                if (newConfigIndex !== -1) {
+                    return newConfigIndex;
+                }
+            }
+            // Otherwise, maintain the previous tab if it's still valid
             if (prevSelectedTab !== null && prevSelectedTab < contents.length) {
                 return prevSelectedTab;
             }
