@@ -72,125 +72,196 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             // Check cache for resource
             const localLookup = this.lookup(uri);
+            //TODO: Remove log
             console.log("isFetching: false");
             if (localLookup) return localLookup;
         } catch {}
         // If resource not found, remote lookup
+        //TODO: Remove log
         console.log("isFetching: true");
         return this.remoteLookupForResource(uri);
     }
+
+    /**
+     * Executes the core logic for the stat operation on a given URI.
+     * This is separated to facilitate caching and testing.
+     * @param uri The URI of the resource to stat.
+     * @returns A promise that resolves to a vscode.FileStat object.
+     * @throws vscode.FileSystemError on failures like FileNotFound or profile unavailability.
+     */
+    private async statImplementation(uri: vscode.Uri): Promise<vscode.FileStat> {
+        try {
+            ZoweLogger.trace(`[DatasetFSProvider] statImplementation called with ${uri.toString()}`);
+            let isFetching = false;
+            const isInvalidComponent = (component: string): boolean => component.startsWith(".") && component.length > 0;
+
+            const pathComponents = uri.path.split("/");
+            const numComponents = pathComponents.length;
+
+            if (numComponents > 0) {
+                const lastComponent = pathComponents[numComponents - 1];
+                const secondLastComponent = numComponents > 1 ? pathComponents[numComponents - 2] : "";
+
+                if (isInvalidComponent(lastComponent) || isInvalidComponent(secondLastComponent)) {
+                    throw vscode.FileSystemError.FileNotFound(uri);
+                }
+            }
+
+            const queryParams = new URLSearchParams(uri.query);
+            if (queryParams.has("conflict")) {
+                return { ...this.lookup(uri, false), permissions: vscode.FilePermission.Readonly };
+            } else if (queryParams.has("inDiff")) {
+                return this.lookup(uri, false);
+            }
+
+            const fetchByDefault: boolean = FeatureFlags.get("fetchByDefault");
+
+            isFetching = (queryParams?.has("fetch") && queryParams?.get("fetch") === "true") || fetchByDefault;
+
+            const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+
+            const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
+            if (
+                (isFetching && ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile)) ||
+                (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+            ) {
+                throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+            }
+
+            const entry = isFetching ? await this.lookupWithCache(uri) : this.lookup(uri, false);
+            // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on PS or PDS members only
+            if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
+                return entry;
+            }
+
+            ZoweLogger.trace(`[DatasetFSProvider] stat is locating resource ${uri.toString()}`);
+
+            // Locate the resource using the profile in the given URI.
+            let resp;
+            const isPdsMember = !FsDatasetsUtils.isPdsEntry(entry) && (entry as DsEntry).isMember;
+            const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
+
+            // Wait for any ongoing authentication process to complete
+            await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+            await AuthHandler.waitForUnlock(uriInfo.profile);
+
+            // Check if the profile is locked (indicating an auth error is being handled)
+            // If it's locked, we should wait and not make additional requests
+            if (AuthHandler.isProfileLocked(uriInfo.profile)) {
+                ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
+                return entry;
+            }
+
+            await AuthUtils.retryRequest(uriInfo.profile, async () => {
+                if (isPdsMember) {
+                    const pds = this.lookupParentDirectory(uri);
+                    resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(pds.name, { attributes: true });
+                } else {
+                    resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(dsPath), {
+                        attributes: true,
+                    });
+                }
+            });
+
+            let pdsEntry: PdsEntry;
+            if (resp.success) {
+                const items = resp.apiResponse?.items ?? [];
+
+                if (isPdsMember) {
+                    pdsEntry = this.lookupParentDirectory(uri) as PdsEntry;
+                    const pdsMetadata = pdsEntry.metadata as DsEntryMetadata;
+                    const cleanParentPath = pdsMetadata?.path ?? uri.path.split("/").slice(0, -1).join("/");
+
+                    for (const item of items) {
+                        if (!item.member || !("m4date" in item)) continue;
+
+                        const { m4date, mtime, msec } = item;
+                        const itemTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
+
+                        const cachedMember = pdsEntry.entries.get(item.member);
+
+                        if (cachedMember) {
+                            if (cachedMember.mtime !== itemTime) {
+                                cachedMember.mtime = itemTime;
+                                cachedMember.wasAccessed = false;
+                            }
+                        } else {
+                            const newEntry = new DsEntry(item.member, true);
+
+                            newEntry.mtime = itemTime;
+                            newEntry.ctime = itemTime;
+                            newEntry.size = item.size ?? 0;
+
+                            const memberPath = `${cleanParentPath}/${item.member}`;
+                            newEntry.metadata = new DsEntryMetadata({
+                                profile: uriInfo.profile,
+                                path: memberPath,
+                            });
+
+                            pdsEntry.entries.set(item.member, newEntry);
+                        }
+                    }
+                } else {
+                    const ds = items?.[0];
+                    if (ds != null && "m4date" in ds) {
+                        const { m4date, mtime, msec } = ds;
+                        const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
+                        if (entry.mtime != newTime) {
+                            entry.mtime = newTime;
+                            entry.wasAccessed = false;
+                        }
+                    }
+                }
+            }
+
+            return pdsEntry;
+        } catch (e) {
+            throw e;
+        }
+    }
+
     /**
      * Returns file statistics about a given URI.
      * @param uri A URI that must exist as an entry in the provider
      * @returns A structure containing file type, time, size and other metrics
      */
-
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        const key = "stat_" + uri.toString();
-        if (this.requestCache.has(key)) {
-            console.log(`[RequestCache] Joining existing request for: ${key}`);
-            return this.requestCache.get(key);
+        const parentKey = "stat_" + uri.toString().split("/").slice(0, 3).join("/");
+
+        const segments = uri.path.split("/").filter((s) => s.length > 0);
+        const isMemberRequest = segments.length === 3;
+        const memberName = isMemberRequest ? segments[2] : null;
+
+        if (!this.requestCache.has(parentKey)) {
+            const requestPromise = (async () => {
+                try {
+                    return await this.statImplementation(uri);
+                } finally {
+                    this.requestCache.delete(parentKey);
+                }
+            })();
+
+            this.requestCache.set(parentKey, requestPromise);
+        } else {
+            //TODO: Remove log
+            console.log(`[RequestCache] Joining in-flight request for: ${parentKey}`);
         }
 
-        // TODO: Break promise into helper function for ease of testing seperation of logic
-        const requestPromise = (async () => {
-            try {
-                ZoweLogger.trace(`[DatasetFSProvider] stat called with ${uri.toString()}`);
-                let isFetching = false;
-                const isInvalidComponent = (component: string): boolean => component.startsWith(".") && component.length > 0;
+        const pdsEntry = await this.requestCache.get(parentKey);
 
-                const pathComponents = uri.path.split("/");
-                const numComponents = pathComponents.length;
+        if (!isMemberRequest) {
+            return pdsEntry;
+        }
 
-                if (numComponents > 0) {
-                    const lastComponent = pathComponents[numComponents - 1];
-                    const secondLastComponent = numComponents > 1 ? pathComponents[numComponents - 2] : "";
+        if (pdsEntry && pdsEntry.entries && memberName) {
+            const memberStat = pdsEntry.entries.get(memberName);
 
-                    if (isInvalidComponent(lastComponent) || isInvalidComponent(secondLastComponent)) {
-                        // console.log("Invalid URI, Discarding request: " + uri);
-                        throw vscode.FileSystemError.FileNotFound(uri);
-                    }
-                }
-
-                const queryParams = new URLSearchParams(uri.query);
-                if (queryParams.has("conflict")) {
-                    return { ...this.lookup(uri, false), permissions: vscode.FilePermission.Readonly };
-                } else if (queryParams.has("inDiff")) {
-                    return this.lookup(uri, false);
-                }
-
-                const fetchByDefault: boolean = FeatureFlags.get("fetchByDefault");
-
-                isFetching = (queryParams?.has("fetch") && queryParams?.get("fetch") === "true") || fetchByDefault;
-
-                const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-
-                const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
-                if (
-                    (isFetching && ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile)) ||
-                    (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-                ) {
-                    throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
-                }
-
-                const entry = isFetching ? await this.lookupWithCache(uri) : this.lookup(uri, false);
-                // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on PS or PDS members only
-                if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
-                    return entry;
-                }
-
-                ZoweLogger.trace(`[DatasetFSProvider] stat is locating resource ${uri.toString()}`);
-
-                // Locate the resource using the profile in the given URI.
-                let resp;
-                const isPdsMember = !FsDatasetsUtils.isPdsEntry(entry) && (entry as DsEntry).isMember;
-                const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
-
-                // Wait for any ongoing authentication process to complete
-                await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
-                await AuthHandler.waitForUnlock(uriInfo.profile);
-
-                // Check if the profile is locked (indicating an auth error is being handled)
-                // If it's locked, we should wait and not make additional requests
-                if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-                    ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
-                    return entry;
-                }
-
-                await AuthUtils.retryRequest(uriInfo.profile, async () => {
-                    if (isPdsMember) {
-                        const pds = this.lookupParentDirectory(uri);
-                        resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(pds.name, { attributes: true });
-                    } else {
-                        resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(dsPath), {
-                            attributes: true,
-                        });
-                    }
-                });
-
-                // Attempt to parse a successful API response and update the data set's cached stats.
-                if (resp.success) {
-                    const items = resp.apiResponse?.items ?? [];
-                    const ds = isPdsMember ? items.find((it) => it.member === path.posix.basename(dsPath)) : items?.[0];
-                    if (ds != null && "m4date" in ds) {
-                        const { m4date, mtime, msec }: { m4date: string; mtime: string; msec: string } = ds;
-                        const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
-                        if (entry.mtime != newTime) {
-                            entry.mtime = newTime;
-                            // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
-                            entry.wasAccessed = false;
-                        }
-                    }
-                }
-
-                return entry;
-            } finally {
-                this.requestCache.delete(key);
+            if (memberStat) {
+                return memberStat;
             }
-        })();
+        }
 
-        this.requestCache.set(key, requestPromise);
-        return requestPromise;
+        throw vscode.FileSystemError.FileNotFound(uri);
     }
 
     private async fetchEntriesForProfile(uri: vscode.Uri, uriInfo: UriFsInfo, pattern: string): Promise<FilterEntry> {
