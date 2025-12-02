@@ -1,3 +1,35 @@
+## `3.4.0`
+
+### VS Code engine support change
+
+Updated minimum VS Code version from 1.79 to 1.90. We are dropping support for VS Code releases that bundle versions of Node.js no longer receiving security updates.
+
+### Loading credential manager options
+
+Added support for loading credential manager options from the imperative.json file. Add a `credentialManagerOptions` object in the JSON object in `imperative.json` to specify options for the current credential manager.
+
+### Windows custom persistence levels
+
+Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, refer to the ["Troubleshooting Zowe CLI credentials"](https://docs.zowe.org/stable/troubleshoot/cli/troubleshoot-cli-credentials/#secrets-sdk-persistence-level-for-windows) page on Zowe Docs.
+
+### Copy across LPAR updates
+
+Added support for copying data sets from multiple source LPARs at once in the cross-LPAR copy/paste functionality.
+
+Updated Zowe SDKs to version `8.28.0` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied.
+
+### Get JCL encoding
+
+Added support for `encoding` profile property when retrieving JCL with z/OSMF.
+
+### Submit job with encoding
+
+Added support for `jobEncoding` profile property when submitting jobs to z/OSMF.
+
+### VSAM support updates
+
+Added support to delete VSAM data sets.
+
 ## `3.3.0`
 
 ### Release notes
