@@ -186,3 +186,5 @@ export class IZosFilesResponse {
      */
     public apiResponse?: any;
 }
+
+export const { Copy } = jest.requireActual("@zowe/zos-files-for-zowe-sdk");
