@@ -1835,7 +1835,7 @@ export class DatasetActions {
                     await Gui.withProgress(
                         {
                             location: vscode.ProgressLocation.Notification,
-                            title: DatasetActions.localizedStrings.copyingMembers,
+                            title: DatasetActions.localizedStrings.copyingDatasets,
                             cancellable: true,
                         },
                         async () => {
@@ -1867,7 +1867,7 @@ export class DatasetActions {
         await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: DatasetActions.localizedStrings.copyingMembers,
+                title: DatasetActions.localizedStrings.copyingDatasets,
                 cancellable: true,
             },
             async (_progress, token) => {
@@ -2069,7 +2069,7 @@ export class DatasetActions {
                 await Gui.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
-                        title: DatasetActions.localizedStrings.copyingMembers,
+                        title: DatasetActions.localizedStrings.copyingDatasets,
                         cancellable: true,
                     },
                     () => {
@@ -2095,7 +2095,7 @@ export class DatasetActions {
         await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: DatasetActions.localizedStrings.copyingMembers,
+                title: DatasetActions.localizedStrings.copyingDatasets,
                 cancellable: true,
             },
             async (_progress, token) => {
