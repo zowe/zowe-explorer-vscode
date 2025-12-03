@@ -74,6 +74,7 @@
   "Reload window": "Reload window",
   "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.": "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.",
   "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
+  "Applied credential manager options from imperative.json to default credential manager": "Applied credential manager options from imperative.json to default credential manager",
   "Custom credential manager {0} found/Credential manager display name": {
     "message": "Custom credential manager {0} found",
     "comment": [
@@ -258,6 +259,7 @@
   "Binary": "Binary",
   "Create a new filter": "Create a new filter",
   "Failed to move file {0}: {1}": "Failed to move file {0}: {1}",
+  "You must specify a directory before moving.": "You must specify a directory before moving.",
   "Moving USS files...": "Moving USS files...",
   "Enter a new name for the {0}/Node type": {
     "message": "Enter a new name for the {0}",
@@ -312,7 +314,6 @@
       "File path"
     ]
   },
-  "Cannot fetch encoding for directories. Encoding options are only available for files.": "Cannot fetch encoding for directories. Encoding options are only available for files.",
   "Profile does not exist for this file.": "Profile does not exist for this file.",
   "Saving USS file...": "Saving USS file...",
   "Failed to rename {0}/File path": {
@@ -761,6 +762,7 @@
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
   "Failed to move {0}: {1}": "Failed to move {0}: {1}",
   "Data set(s) moved successfully.": "Data set(s) moved successfully.",
+  "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.": "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.",
   "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.",
   "Cannot drop a partitioned dataset or member into a sequential dataset.": "Cannot drop a partitioned dataset or member into a sequential dataset.",
   "Moving MVS files...": "Moving MVS files...",

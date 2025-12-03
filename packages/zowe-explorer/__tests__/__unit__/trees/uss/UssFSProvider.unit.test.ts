@@ -22,9 +22,10 @@ import {
     ZoweExplorerApiType,
     ZoweScheme,
     imperative,
+    ZoweVsCodeExtension,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
-import { createIProfile } from "../../../__mocks__/mockCreators/shared";
+import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
@@ -33,6 +34,7 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import * as vscode from "vscode";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 const testProfile = createIProfile();
 
@@ -97,6 +99,11 @@ describe("UssFSProvider", () => {
             } as any),
         });
         jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
+        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+            if (key === "zowe.settings.maxRequestRetry") {
+                return 1;
+            }
+        });
     });
 
     afterAll(() => {
@@ -105,7 +112,13 @@ describe("UssFSProvider", () => {
 
     describe("stat", () => {
         const lookupMock = jest.spyOn((UssFSProvider as any).prototype, "lookup");
-
+        beforeEach(() => {
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                getCommonApi: () => ({
+                    getSession: () => createISession(),
+                }),
+            } as any);
+        });
         it("returns a file entry", async () => {
             lookupMock.mockReturnValueOnce(testEntries.file);
             const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
@@ -413,7 +426,7 @@ describe("UssFSProvider", () => {
             const fileEntry = { ...testEntries.file };
             const _fireSoonSpy = jest.spyOn((UssFSProvider as any).prototype, "_fireSoon");
             const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
-            const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
+            const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValueOnce(undefined);
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
                 getContents: jest.fn().mockRejectedValue(new Error("error retrieving contents")),
             } as any);
@@ -503,17 +516,17 @@ describe("UssFSProvider", () => {
             expect(_updateResourceInEditorMock).toHaveBeenCalledWith(testUris.file);
             autoDetectEncodingMock.mockRestore();
         });
-        it("returns null when a 401 error is encountered", async () => {
+        it("returns null when an error that is not 401 is encountered", async () => {
             const fileEntry = { ...testEntries.file };
             jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation();
-            const error401 = new imperative.ImperativeError({
+            const error404 = new imperative.ImperativeError({
                 msg: "Username or password are not valid or expired",
-                errorCode: `${imperative.RestConstants.HTTP_STATUS_401}`,
+                errorCode: `${imperative.RestConstants.HTTP_STATUS_404}`,
             });
             const loggerErrorSpy = jest.spyOn(ZoweLogger, "error");
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
-                getContents: jest.fn().mockRejectedValue(error401),
+                getContents: jest.fn().mockRejectedValue(error404),
             } as any);
 
             const result = await UssFSProvider.instance.fetchFileAtUri(testUris.file);
@@ -1791,9 +1804,9 @@ describe("UssFSProvider", () => {
         describe("listFiles", () => {
             it("returns early without making API calls when profile is locked and user cancelled last auth prompt", async () => {
                 isProfileLockedMock.mockReturnValueOnce(true);
-                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
+                const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValueOnce(undefined);
                 const ussApiMock = {
-                    fileList: jest.fn().mockResolvedValueOnce({ success: true, items: [] }),
+                    fileList: jest.fn(),
                 } as any;
 
                 const getUssApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(ussApiMock);
@@ -1801,8 +1814,8 @@ describe("UssFSProvider", () => {
 
                 const result = await UssFSProvider.instance.listFiles(testProfile, testUris.file);
 
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
@@ -1837,12 +1850,13 @@ describe("UssFSProvider", () => {
                 } as any;
 
                 const getUssApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(ussApiMock);
-                const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockResolvedValueOnce(undefined);
+                const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
+
                 const loadProfileMock = jest.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(testProfile);
 
                 await UssFSProvider.instance.listFiles(testProfile, testUris.file);
 
-                expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
+                expect(waitForUnlockMock).toHaveBeenCalledTimes(2);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(ussApiMock.fileList).toHaveBeenCalled();
@@ -1864,12 +1878,12 @@ describe("UssFSProvider", () => {
                 const getUssApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ getContents: getContentsMock } as any);
 
                 isProfileLockedMock.mockReturnValueOnce(true);
-                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockResolvedValueOnce(undefined);
+                const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
 
                 await UssFSProvider.instance.fetchFileAtUri(testUris.file);
 
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
@@ -1889,7 +1903,7 @@ describe("UssFSProvider", () => {
                 const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(testEntries.file);
 
                 isProfileLockedMock.mockReturnValueOnce(true);
-                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
+                const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
 
                 await (UssFSProvider.instance as any).fetchEntries(testUris.file, {
                     isRoot: false,
@@ -1901,8 +1915,8 @@ describe("UssFSProvider", () => {
                 expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(existsMock).toHaveBeenCalledTimes(1);
                 expect(existsMock).toHaveBeenCalledWith(testUris.file);
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
@@ -1917,7 +1931,7 @@ describe("UssFSProvider", () => {
             it("throws error if entry does not exist and profile is locked and user cancelled last auth prompt", async () => {
                 const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
-                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
+                const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
                 const lookupSpy = jest.spyOn(UssFSProvider.instance, "lookup");
 
                 isProfileLockedMock.mockReturnValueOnce(true);
@@ -1934,8 +1948,8 @@ describe("UssFSProvider", () => {
                 expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(existsMock).toHaveBeenCalledTimes(1);
                 expect(existsMock).toHaveBeenCalledWith(testUris.file);
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(lookupSpy).not.toHaveBeenCalled();
@@ -1955,7 +1969,7 @@ describe("UssFSProvider", () => {
                         parent: testEntries.session,
                         parentUri: testUris.session,
                     });
-                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
+                const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
                 const loadNamedProfileSpy = jest.spyOn(Profiles.prototype, "loadNamedProfile");
 
@@ -1964,8 +1978,8 @@ describe("UssFSProvider", () => {
                 await UssFSProvider.instance.delete(testUris.file, { recursive: false });
                 expect(getDeleteInfoMock).toHaveBeenCalledTimes(1);
                 expect(getDeleteInfoMock).toHaveBeenCalledWith(testUris.file);
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
                 expect(loadNamedProfileSpy).not.toHaveBeenCalled();
@@ -1981,13 +1995,13 @@ describe("UssFSProvider", () => {
                 const listFilesSpy = jest.spyOn(UssFSProvider.instance, "listFiles");
 
                 isProfileLockedMock.mockReturnValueOnce(true);
-                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
+                const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
 
                 await UssFSProvider.instance.stat(testUris.file);
 
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
@@ -2008,13 +2022,13 @@ describe("UssFSProvider", () => {
                 const getUssApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ getTag: getTagMock } as any);
 
                 isProfileLockedMock.mockReturnValueOnce(true);
-                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
+                const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
 
                 await UssFSProvider.instance.autoDetectEncoding(file);
 
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
@@ -2039,14 +2053,14 @@ describe("UssFSProvider", () => {
                 const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValueOnce(undefined);
 
                 isProfileLockedMock.mockReturnValueOnce(true);
-                const reauthenticateIfCancelledMock = jest.spyOn(AuthUtils, "reauthenticateIfCancelled").mockClear().mockResolvedValueOnce(undefined);
+                const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
                 const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
                 const setStatusBarMessageMock = jest.spyOn(Gui, "setStatusBarMessage").mockReturnValueOnce({ dispose: jest.fn() });
 
                 await expect((UssFSProvider.instance as any).uploadEntry(file, content)).rejects.toThrow();
 
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledTimes(1);
-                expect(reauthenticateIfCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
                 expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);

@@ -8,11 +8,21 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Introduced `getCount` API to let extenders efficiently retrieve the total number of data sets matching a filter, enabling more performant pagination. [#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 - Added support for `jobEncoding` profile property when submitting jobs with the `ZosmfJesApi` class. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
+- Added support for `encoding` profile property when retrieving JCL with the `ZosmfJesApi` class. [#3877](https://github.com/zowe/zowe-explorer-vscode/pull/3877)
+- Added support to delete VSAM data sets for z/OSMF type profiles. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
+- Added support for loading credential manager options from the `imperative.json` file. Added a `credentialManagerOptions` object in the JSON object in `imperative.json` to specify options for the current credential manager. [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
+- Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, see the "Troubleshooting Zowe CLI credentials" on [Zowe Docs](https://docs.zowe.org/stable/troubleshoot/cli/troubleshoot-cli-credentials/#secrets-sdk-persistence-level-for-windows). [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
 
 ### Bug fixes
 
 - Fixed an issue where secure credentials and headers were being logged to the Zowe logger and VSCode output channel. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
-- Added support to delete VSAM data sets for z/OSMF type profiles. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
+- Updated Zowe SDKs to version `8.28.0` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
+
+## `3.3.1`
+
+### Bug fixes
+
+- Fixed an issue where the `promptForAuthentication` function would throw an `AuthCanceledError` on invalid authentication for SSO login. [#3830](https://github.com/zowe/zowe-explorer-vscode/pull/3830)
 - Fixed an issue where the `IMvs.putContents` function did not properly strip carriage returns from chunks during upload operations on Windows. Now, the function correctly converts CRLF sequences to LF, even if the sequence lands on a chunk boundary. [#3853](https://github.com/zowe/zowe-explorer-vscode/issues/3853)
 - Fixed an issue where the `vscode.workspace.fs.readFile` function would return empty contents for a USS file when an error occurred while fetching the file from the mainframe, instead of displaying an error message. [#3894](https://github.com/zowe/zowe-explorer-vscode/issues/3894)
 - Updated Zowe SDKs to version `8.27.3` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)

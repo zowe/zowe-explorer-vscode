@@ -471,7 +471,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         }
 
         public getJclForJob(job: zosjobs.IJob): Promise<string> {
-            return zosjobs.GetJobs.getJclForJob(this.getSession(), job);
+            return zosjobs.GetJobs.getJclCommon(this.getSession(), { ...job, encoding: this.profile?.profile?.encoding });
         }
 
         public submitJcl(jcl: string, internalReaderRecfm?: string, internalReaderLrecl?: string): Promise<zosjobs.IJob> {
@@ -480,11 +480,13 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         }
 
         public async submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
-            const jesEncoding = this.profile?.profile?.jobEncoding;
-            if (jesEncoding == null) {
+            if (this.profile?.profile?.jobEncoding == null) {
+                // Make single API call to submit if job encoding is not specified
                 return zosjobs.SubmitJobs.submitJob(this.getSession(), jobDataSet);
             } else {
-                const rawJcl = await zosfiles.Get.dataSet(this.getSession(), jobDataSet, { encoding: jesEncoding });
+                // Download JCL with `encoding` to perform codepage conversion with z/OSMF.
+                // Then submit as text with `jobEncoding` which is passed to JES reader.
+                const rawJcl = await zosfiles.Get.dataSet(this.getSession(), jobDataSet, { encoding: this.profile?.profile?.encoding });
                 return this.submitJcl(rawJcl.toString());
             }
         }

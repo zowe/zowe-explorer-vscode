@@ -33,8 +33,15 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "./SharedContext";
 import { Definitions } from "../../configuration/Definitions";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
+import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 
+export const isDataTransfer = (o: any): o is { get: (m: string) => any } => !!o && typeof o.get === "function";
+
+export const isPayload = (o: any): o is { value: any[] } => !!o && Array.isArray(o.value);
 export class SharedUtils {
+    public static ERROR_SAME_OBJECT_DROP =
+        "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
+
     public static async copyExternalLink(this: void, context: vscode.ExtensionContext, node: IZoweTreeNode): Promise<void> {
         if (node?.resourceUri != null) {
             await vscode.env.clipboard.writeText(`vscode://${context.extension.id}?${node.resourceUri.toString()}`);
@@ -765,5 +772,96 @@ export class SharedUtils {
         } else {
             Gui.showMessage(message);
         }
+    }
+
+    /**
+     * Determines if a dataset is the same physical object on two profiles.
+     * Returns true if both profiles have a dataset with the same name and volumes.
+     * Blocks ambiguous cases by default.
+     */
+    public static async isSamePhysicalDataset(
+        srcProfile: imperative.IProfileLoaded,
+        dstProfile: imperative.IProfileLoaded,
+        srcDsn: string
+    ): Promise<boolean> {
+        try {
+            // get API for each profile
+            const mvsSrc = ZoweExplorerApiRegister.getMvsApi(srcProfile);
+            const mvsDst = ZoweExplorerApiRegister.getMvsApi(dstProfile);
+
+            // look up the same dataset name on BOTH profiles
+            const srcAttr = await mvsSrc.dataSet(srcDsn, { attributes: true });
+            const dstAttr = await mvsDst.dataSet(srcDsn, { attributes: true });
+            const srcDataset = srcAttr?.apiResponse?.items?.[0];
+            const dstDataset = dstAttr?.apiResponse?.items?.[0];
+
+            // if dstDataset dataset doesn't exist, it's not the same.
+            if (!dstDataset || !srcDataset) return false;
+
+            // compare names
+            const namesAreEqual = srcDataset.dsname === dstDataset.dsname;
+
+            // compare vols (could be stored across multiple vols!)
+            const srcVols = srcDataset.vols
+                ? (Array.isArray(srcDataset.vols) ? srcDataset.vols : [srcDataset.vols]).map((v: any) => String(v).trim().toUpperCase())
+                : [];
+            const dstVols = dstDataset.vols
+                ? (Array.isArray(dstDataset.vols) ? dstDataset.vols : [dstDataset.vols]).map((v: any) => String(v).trim().toUpperCase())
+                : [];
+
+            srcVols.sort();
+            dstVols.sort();
+
+            const volsAreEqual = srcVols.length === dstVols.length && srcVols.every((vol: any, idx: number) => vol === dstVols[idx]);
+
+            // if both name and vols match, they're the same dataset
+            return namesAreEqual && volsAreEqual;
+        } catch (err) {
+            // fallback to not being same data set
+            return false;
+        }
+    }
+
+    /**
+     * Checks if a USS file or directory is likely the same actual object as another
+     * by comparing the normalized paths (ignoring profile) and verifying existence
+     *
+     * @param sourceNode - source USS tree node being moved
+     * @param targetParent - target USS tree node parent receiving the drop
+     * @param droppedLabel - name of the dropped item
+     * @returns Promise resolves to true if the normalized paths match and the target path exists. false otherwise
+     */
+    public static async isLikelySameUssObjectByUris(
+        sourceNode: IZoweUSSTreeNode,
+        targetParent: IZoweUSSTreeNode,
+        droppedLabel: string
+    ): Promise<boolean> {
+        //normalize paths
+        const equal =
+            path.posix.normalize(sourceNode.fullPath.replace(/\\/g, "/")) ===
+            path.posix.normalize(path.posix.join(targetParent.fullPath.replace(/\\/g, "/"), (droppedLabel || "").replace(/^[/\\]+/, "")));
+        return equal;
+    }
+
+    /**
+     * Gets a string property from a node, whether it's a string or an object with that property
+     */
+    public static getNodeProperty(node: any, prop: string): string | null {
+        if (!node || node[prop] == null) return null;
+        const value = node[prop];
+        if (typeof value === "string") return value;
+        if (typeof value === "object" && value !== null && typeof value[prop] === "string") {
+            return value[prop];
+        }
+        return null;
+    }
+
+    /**
+     * Checks if there are any case-insensitive, trimmed name collisions between two lists.
+     * Used for PDS member collisions and USS folder/file name collisions.
+     */
+    public static hasNameCollision(srcNames: string[], tgtNames: string[]): boolean {
+        const tgtSet = new Set(tgtNames.map((n) => n.toUpperCase().trim()));
+        return srcNames.some((name) => tgtSet.has(name.toUpperCase().trim()));
     }
 }

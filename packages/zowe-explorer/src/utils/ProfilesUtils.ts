@@ -29,6 +29,7 @@ import { AuthUtils } from "./AuthUtils";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { Definitions } from "../configuration/Definitions";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
+import { IProfileLoaded, ISession, SessConstants } from "@zowe/imperative";
 
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
@@ -69,6 +70,14 @@ export class ProfilesUtils {
             ZoweLogger.info("imperative.json does not exist, returning the default override of @zowe/cli");
             return imperative.CredentialManagerOverride.DEFAULT_CRED_MGR_NAME;
         }
+    }
+
+    /**
+     * Get the credential manager options from imperative.json
+     * @returns Record<string, any> | undefined the credential manager options, or undefined if not specified
+     */
+    public static getCredentialManagerOptions(): Record<string, any> | undefined {
+        return ProfilesCache.getCredentialManagerOptions();
     }
 
     /**
@@ -198,7 +207,21 @@ export class ProfilesUtils {
         ZoweLogger.trace("ProfilesUtils.setupDefaultCredentialManager called.");
         ZoweLogger.info(vscode.l10n.t("No custom credential managers found, using the default instead."));
         ProfilesUtils.updateCredentialManagerSetting(Constants.ZOWE_CLI_SCM);
+
+        // Get credential manager options from imperative.json if available
+        const credMgrOptions = ProfilesUtils.getCredentialManagerOptions();
         const defaultCredentialManager = imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring);
+        // Apply options to the credential manager if they exist
+        if (credMgrOptions && defaultCredentialManager) {
+            defaultCredentialManager.options = credMgrOptions;
+            ZoweLogger.debug(
+                vscode.l10n.t({
+                    message: "Applied credential manager options from imperative.json to default credential manager",
+                    comment: [],
+                })
+            );
+        }
+
         const overrideWithEnv: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_OVERRIDE_WITH_ENV_VAR);
         const profileInfo = new imperative.ProfileInfo("zowe", {
             overrideWithEnv: overrideWithEnv,
@@ -751,5 +774,9 @@ export class ProfilesUtils {
             }
         }
         await vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", extenderType);
+    }
+
+    public static hasNoAuthType(session: ISession, profile: IProfileLoaded): boolean {
+        return session.type === SessConstants.AUTH_TYPE_NONE && profile.type !== "ssh";
     }
 }

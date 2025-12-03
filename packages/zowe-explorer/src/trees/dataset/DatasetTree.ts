@@ -222,67 +222,80 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         _token: vscode.CancellationToken
     ): Promise<void> {
         const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.ds.explorer");
-        if (!droppedItems) {
-            return;
-        }
+        if (!droppedItems) return;
 
         let target = targetNode;
-        if (target) {
-            for (const item of droppedItems.value) {
-                const node = this.draggedNodes[item.uri.path];
+        if (!target) return;
 
-                if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
-                    if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
-                        Gui.errorMessage(
-                            vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.")
-                        );
-                        return;
-                    }
-                }
+        // check each dropped node for same-object, member collision, and structure issues
+        for (const item of droppedItems.value) {
+            const node = this.draggedNodes[item.uri.path];
+            if (!node) continue;
+            const srcDsn = SharedUtils.getNodeProperty(node, "label");
 
-                if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
-                    Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member into a sequential dataset."));
-                    return;
-                }
-                const parent = target.getParent();
-                if ((SharedContext.isPds(node) || SharedContext.isDs(node)) && parent && SharedContext.isPds(parent)) {
-                    const message = SharedContext.isPds(node)
-                        ? "Cannot drop a partitioned dataset into another partitioned dataset."
-                        : "Cannot drop a sequential dataset into a partitioned dataset.";
-                    Gui.errorMessage(vscode.l10n.t(message));
+            // 1. Same-object check
+            if (node.getProfile && target.getProfile && (await SharedUtils.isSamePhysicalDataset(node.getProfile(), target.getProfile(), srcDsn))) {
+                Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
+                return;
+            }
+
+            // 2. PDS member collision check (only if both are PDS)
+            if (SharedContext.isPds(node) && SharedContext.isPds(target)) {
+                const srcMembersResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(srcDsn, { attributes: true });
+                const tgtMembersResp = await ZoweExplorerApiRegister.getMvsApi(target.getProfile()).allMembers(srcDsn, { attributes: true }); //using the same dsn, but checking against target
+
+                const srcNames = (srcMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
+                const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
+
+                if (SharedUtils.hasNameCollision(srcNames, tgtNames)) {
+                    Gui.errorMessage(
+                        vscode.l10n.t(
+                            "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving."
+                        )
+                    );
                     return;
                 }
             }
+
+            // 3. Dataset structure checks
+            if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
+                if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
+                    Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset."));
+                    return;
+                }
+            }
+            if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
+                Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member into a sequential dataset."));
+                return;
+            }
+            const parent = target.getParent();
+            if ((SharedContext.isPds(node) || SharedContext.isDs(node)) && parent && SharedContext.isPds(parent)) {
+                const message = SharedContext.isPds(node)
+                    ? "Cannot drop a partitioned dataset into another partitioned dataset."
+                    : "Cannot drop a sequential dataset into a partitioned dataset.";
+                Gui.errorMessage(vscode.l10n.t(message));
+                return;
+            }
         }
 
-        const isProfileNode = (node: IZoweDatasetTreeNode): boolean => {
-            const segments = node.resourceUri.path.split("/").filter(Boolean);
-            return segments.length === 1;
-        };
-
-        if (!target || (!SharedContext.isPds(target) && !isProfileNode(target))) {
-            target = target?.getParent() as IZoweDatasetTreeNode;
-        }
-
+        // 4. Overwrite prompt (name collision only)
         const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
-        if (overwrite === false) {
-            return;
-        }
+        if (!overwrite) return;
 
+        // 5. Move logic
         const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving MVS files...")}`);
         const parentsToUpdate = new Set<IZoweDatasetTreeNode>();
 
+        // Actually perform the move for each item
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             const nodeParent = node.getParent();
-            if (nodeParent === target) {
-                //skip nodes that are direct children of the target node
-                continue;
-            }
+            if (!node || nodeParent === target) continue;
 
+            const nodeLabel = SharedUtils.getNodeProperty(node, "label");
             const newUriForNode = vscode.Uri.from({
                 scheme: ZoweScheme.DS,
-                path: path.posix.join("/", target.resourceUri.path, item.label as string),
+                path: path.posix.join("/", target.resourceUri.path, nodeLabel),
             });
 
             await this.crossLparMove(node, node.resourceUri, newUriForNode);
@@ -291,6 +304,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 parentsToUpdate.add(nodeParent as IZoweDatasetTreeNode);
             }
         }
+        // Refresh UI
         for (const parent of parentsToUpdate) {
             this.refreshElement(parent);
         }

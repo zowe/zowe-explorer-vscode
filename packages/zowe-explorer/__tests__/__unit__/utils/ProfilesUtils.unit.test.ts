@@ -28,12 +28,13 @@ import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 import { FilterItem } from "../../../src/management/FilterManagement";
-import { ProfilesConvertStatus, ProfilesUtils } from "../../../src/utils/ProfilesUtils";
+import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { Definitions } from "../../../src/configuration/Definitions";
 import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
+import { SessConstants } from "@zowe/imperative";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("../../../src/tools/ZoweLocalStorage");
@@ -42,8 +43,20 @@ jest.mock("vscode");
 jest.mock("@zowe/imperative");
 
 describe("ProfilesUtils unit tests", () => {
+    beforeAll(() => {
+        (SessConstants as any).AUTH_TYPE_NONE = "none";
+    });
     afterEach(() => {
         jest.clearAllMocks();
+    });
+
+    describe("getCredentialManagerOptions", () => {
+        it("should call ProfilesCache.getCredentialManagerOptions", () => {
+            const getCredMgrOptionsSpy = jest.spyOn(ProfilesCache, "getCredentialManagerOptions").mockReturnValue({ key: "value" });
+            const options = ProfilesUtils.getCredentialManagerOptions();
+            expect(getCredMgrOptionsSpy).toHaveBeenCalledTimes(1);
+            expect(options).toEqual({ key: "value" });
+        });
     });
 
     function createBlockMocks(): { [key: string]: any } {
@@ -1462,6 +1475,23 @@ describe("ProfilesUtils unit tests", () => {
             expect(profileManagerWillLoadSpy).toHaveBeenCalled();
             expect(disableCredMgmtSpy).toHaveBeenCalled();
         });
+
+        it("should apply credential manager options if they exist", async () => {
+            const mockOptions = { someOption: "someValue" };
+            jest.spyOn(ProfilesUtils, "getCredentialManagerOptions").mockReturnValue(mockOptions);
+
+            const mockDefaultCredMgr = { options: {} };
+            jest.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar").mockReturnValue(mockDefaultCredMgr as any);
+
+            const loggerDebugSpy = jest.spyOn(ZoweLogger, "debug");
+
+            jest.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad").mockResolvedValueOnce(true);
+
+            await ProfilesUtils.setupDefaultCredentialManager();
+
+            expect(mockDefaultCredMgr.options).toBe(mockOptions);
+            expect(loggerDebugSpy).toHaveBeenCalledWith("Applied credential manager options from imperative.json to default credential manager");
+        });
     });
 
     describe("Profiles unit tests - function awaitExtenderType", () => {
@@ -1499,6 +1529,42 @@ describe("ProfilesUtils unit tests", () => {
             ProfilesUtils.resolveTypePromise("test", mockProfilesCache);
             expect(mockResolve).not.toHaveBeenCalled();
             expect(executeCommandMock).toHaveBeenCalledWith("zowe.setupRemoteWorkspaceFolders", "test");
+        });
+    });
+    describe("Profiles unit tests - function hasNoAuthType", () => {
+        it("should determine if an ssh profile has an auth type", () => {
+            const session = {
+                hostname: "example.com",
+                port: 22,
+                privateKey: "path/to/id_rsa",
+                type: "none",
+                user: "user123",
+            } as any;
+            const profile = {
+                name: "ssh123",
+                type: "ssh",
+                message: "",
+                failNotFound: false,
+                profile: {},
+            };
+            expect(ProfilesUtils.hasNoAuthType(session, profile)).toBeFalsy();
+        });
+
+        it("should determine if a profile has an auth type", () => {
+            const session = {
+                hostname: "example.com",
+                port: 443,
+                type: "none",
+                user: "user123",
+            } as any;
+            const profile = {
+                name: "profile123",
+                type: "",
+                message: "",
+                failNotFound: false,
+                profile: {},
+            };
+            expect(ProfilesUtils.hasNoAuthType(session, profile)).toBeTruthy();
         });
     });
 });

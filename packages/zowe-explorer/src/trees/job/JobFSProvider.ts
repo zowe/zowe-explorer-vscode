@@ -41,7 +41,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profInfo = this._getInfoFromUri(doc.uri);
         try {
             const paginationEnabled = SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled");
-            const supportPagination = ZoweExplorerApiRegister.getJesApi(profInfo.profile).supportSpoolPagination?.();
+            const supportPagination = ZoweExplorerApiRegister.getJesApi(profInfo.profile).supportSpoolPagination?.() ?? false;
             return paginationEnabled && supportPagination;
         } catch (err) {
             return false;
@@ -106,7 +106,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const results: [string, vscode.FileType][] = [];
 
-        await AuthUtils.reauthenticateIfCancelled(uriInfo.profile);
+        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile);
         const jesApi = ZoweExplorerApiRegister.getJesApi(uriInfo.profile);
         try {
@@ -225,7 +225,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profileEncoding = spoolEntry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
         const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
-        await AuthUtils.reauthenticateIfCancelled(profile);
+        await AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
         const query = new URLSearchParams(uri.query);
         let recordRange = "";
@@ -242,7 +242,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
         }
 
-        try {
+        await AuthUtils.retryRequest(metadata.profile, async () => {
             const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
             if (jesApi.downloadSingleSpool) {
                 const spoolDownloadObject: IDownloadSpoolContentParms = {
@@ -261,10 +261,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 const jobEntry = this.lookupParentDirectory(uri) as JobEntry;
                 bufBuilder.write(await jesApi.getSpoolContentById(jobEntry.job.jobname, jobEntry.job.jobid, spoolEntry.spool.id, spoolEncoding));
             }
-        } catch (err) {
-            await AuthUtils.handleProfileAuthOnError(err, spoolEntry.metadata.profile);
-            throw err;
-        }
+        });
 
         this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
 
@@ -345,9 +342,9 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     /**
-     * Deletes a spool file or job at the given URI.
+     * Deletes a spool job at the given URI.
      * @param uri The URI that points to the file/folder to delete
-     * @param options Options for deleting the spool file or job
+     * @param options Options for deleting the spool job
      * - `deleteRemote` - Deletes the job from the remote system if set to true.
      */
     public async delete(uri: vscode.Uri, options: { readonly recursive: boolean }): Promise<void> {
@@ -360,7 +357,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const parent = this.lookupParentDirectory(uri, false);
         const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         try {
-            await AuthUtils.reauthenticateIfCancelled(profInfo.profile);
+            await AuthUtils.ensureAuthNotCancelled(profInfo.profile);
             await AuthHandler.waitForUnlock(profInfo.profile);
             await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
         } catch (err) {
