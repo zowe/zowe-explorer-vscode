@@ -5302,7 +5302,7 @@ describe("DatasetActions - downloading functions", () => {
                 expect.objectContaining({
                     file: expect.stringMatching(/Member1\.txt$/),
                     binary: false,
-                    record: false,
+                    encoding: "IBM-1047",
                     overwrite: true,
                     responseTimeout: 30000,
                 })
@@ -5383,7 +5383,7 @@ describe("DatasetActions - downloading functions", () => {
                 expect.objectContaining({
                     file: expect.stringMatching(/test\.dataset\.seq\.txt$/),
                     binary: false,
-                    record: false,
+                    encoding: "IBM-1047",
                     overwrite: false,
                     responseTimeout: 30000,
                 })
@@ -5490,7 +5490,7 @@ describe("DatasetActions - downloading functions", () => {
                 expect.objectContaining({
                     file: expect.stringMatching(/DATASET\.txt$/),
                     binary: false,
-                    record: false,
+                    encoding: "IBM-1047",
                     overwrite: true,
                     responseTimeout: 30000,
                 })
