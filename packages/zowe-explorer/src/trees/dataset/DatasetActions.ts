@@ -620,16 +620,32 @@ export class DatasetActions {
         }
     }
 
-    private static async getDataSetDownloadOptions(): Promise<Definitions.DataSetDownloadOptions> {
+    private static async getDataSetDownloadOptions(node: IZoweDatasetTreeNode): Promise<Definitions.DataSetDownloadOptions> {
         const dataSetDownloadOptions: Definitions.DataSetDownloadOptions =
             ZoweLocalStorage.getValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS) ?? {};
 
         dataSetDownloadOptions.overwrite ??= true;
         dataSetDownloadOptions.generateDirectory ??= false;
         dataSetDownloadOptions.preserveCase ??= false;
-        dataSetDownloadOptions.binary ??= false;
-        dataSetDownloadOptions.record ??= false;
+        dataSetDownloadOptions.chooseEncoding ??= false;
         dataSetDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
+
+        const profile = node.getProfile();
+        const getEncodingDescription = (): string => {
+            if (dataSetDownloadOptions.encoding) {
+                if (dataSetDownloadOptions.encoding.kind === "binary") {
+                    return vscode.l10n.t("Choose encoding for download (current: Binary)");
+                } else if (dataSetDownloadOptions.encoding.kind === "text") {
+                    return vscode.l10n.t("Choose encoding for download (current: EBCDIC)");
+                } else if (dataSetDownloadOptions.encoding.kind === "other") {
+                    return vscode.l10n.t("Choose encoding for download (current: {0})", dataSetDownloadOptions.encoding.codepage);
+                }
+            }
+            if (profile.profile?.encoding) {
+                return vscode.l10n.t("Choose encoding for download (current: {0})", profile.profile.encoding);
+            }
+            return vscode.l10n.t("Choose encoding for download (current: EBCDIC)");
+        };
 
         const optionItems: vscode.QuickPickItem[] = [
             {
@@ -648,14 +664,9 @@ export class DatasetActions {
                 picked: dataSetDownloadOptions.preserveCase,
             },
             {
-                label: vscode.l10n.t("Binary"),
-                description: vscode.l10n.t("Download members as binary files"),
-                picked: dataSetDownloadOptions.binary,
-            },
-            {
-                label: vscode.l10n.t("Record"),
-                description: vscode.l10n.t("Download members in record mode"),
-                picked: dataSetDownloadOptions.record,
+                label: vscode.l10n.t("Choose Encoding"),
+                description: getEncodingDescription(),
+                picked: dataSetDownloadOptions.chooseEncoding,
             },
         ];
 
@@ -692,6 +703,23 @@ export class DatasetActions {
             return;
         }
 
+        const getOption = (label: string): boolean => selectedOptions.some((opt) => opt.label === vscode.l10n.t(label));
+        dataSetDownloadOptions.overwrite = getOption("Overwrite");
+        dataSetDownloadOptions.generateDirectory = getOption("Generate Directory Structure");
+        dataSetDownloadOptions.preserveCase = getOption("Preserve Original Letter Case");
+        dataSetDownloadOptions.chooseEncoding = getOption("Choose Encoding");
+
+        if (dataSetDownloadOptions.chooseEncoding) {
+            const encoding = await SharedUtils.promptForDownloadEncoding(profile, node.label as string);
+            if (encoding === undefined) {
+                Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                return;
+            }
+            dataSetDownloadOptions.encoding = encoding;
+        } else {
+            dataSetDownloadOptions.encoding = undefined;
+        }
+
         const dialogOptions: vscode.OpenDialogOptions = {
             canSelectFiles: false,
             canSelectFolders: true,
@@ -707,12 +735,6 @@ export class DatasetActions {
         }
 
         const selectedPath = downloadPath[0].fsPath;
-        const getOption = (label: string): boolean => selectedOptions.some((opt) => opt.label === vscode.l10n.t(label));
-        dataSetDownloadOptions.overwrite = getOption("Overwrite");
-        dataSetDownloadOptions.generateDirectory = getOption("Generate Directory Structure");
-        dataSetDownloadOptions.preserveCase = getOption("Preserve Original Letter Case");
-        dataSetDownloadOptions.binary = getOption("Binary");
-        dataSetDownloadOptions.record = getOption("Record");
         dataSetDownloadOptions.selectedPath = vscode.Uri.file(selectedPath);
         await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS, dataSetDownloadOptions);
 
@@ -789,11 +811,11 @@ export class DatasetActions {
             }
         }
 
-        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions();
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions(node);
         if (!dataSetDownloadOptions) {
             return;
         }
-        const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, binary, record, selectedPath } = dataSetDownloadOptions;
+        const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, encoding, selectedPath } = dataSetDownloadOptions;
 
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading all members"),
@@ -829,8 +851,8 @@ export class DatasetActions {
                     maxConcurrentRequests,
                     preserveOriginalLetterCase,
                     extensionMap,
-                    binary,
-                    record,
+                    binary: encoding?.kind === "binary",
+                    encoding: encoding?.kind === "other" ? encoding.codepage : undefined,
                     overwrite,
                     task,
                     responseTimeout: profile?.profile?.responseTimeout,
@@ -856,11 +878,11 @@ export class DatasetActions {
             return;
         }
 
-        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions();
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions(node);
         if (!dataSetDownloadOptions) {
             return;
         }
-        const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, binary, record, selectedPath } = dataSetDownloadOptions;
+        const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, encoding, selectedPath } = dataSetDownloadOptions;
 
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading member"),
@@ -882,8 +904,8 @@ export class DatasetActions {
 
                 const downloadOptions = {
                     file: filePath,
-                    binary,
-                    record,
+                    binary: encoding?.kind === "binary",
+                    encoding: encoding?.kind === "other" ? encoding.codepage : undefined,
                     overwrite,
                     responseTimeout: profile?.profile?.responseTimeout,
                 };
@@ -913,11 +935,11 @@ export class DatasetActions {
             return;
         }
 
-        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions();
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions(node);
         if (!dataSetDownloadOptions) {
             return;
         }
-        const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, binary, record, selectedPath } = dataSetDownloadOptions;
+        const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, encoding, selectedPath } = dataSetDownloadOptions;
 
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading data set"),
@@ -940,8 +962,8 @@ export class DatasetActions {
 
                 const downloadOptions = {
                     file: filePath,
-                    binary,
-                    record,
+                    binary: encoding?.kind === "binary",
+                    encoding: encoding?.kind === "other" ? encoding.codepage : undefined,
                     overwrite,
                     responseTimeout: profile?.profile?.responseTimeout,
                 };

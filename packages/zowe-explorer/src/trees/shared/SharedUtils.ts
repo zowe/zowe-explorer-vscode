@@ -402,6 +402,36 @@ export class SharedUtils {
         return SharedUtils.processEncodingResponse(response, contextLabel);
     }
 
+    /**
+     * Prompts user for encoding selection for download operations.
+     *
+     * @param {imperative.IProfileLoaded} profile - The profile loaded
+     * @param {string} contextLabel - The context label of the node (e.g. data set name)
+     * @returns {Promise<ZosEncoding | undefined>} The {@link ZosEncoding} object or `undefined` if the user dismisses the prompt
+     */
+    public static async promptForDownloadEncoding(profile: imperative.IProfileLoaded, contextLabel: string): Promise<ZosEncoding | undefined> {
+        const items = SharedUtils.buildEncodingOptions(profile);
+
+        // For downloads, default to profile encoding or EBCDIC
+        const defaultEncoding = profile.profile?.encoding ?? vscode.l10n.t("EBCDIC");
+
+        const response = await SharedUtils.promptForEncodingSelection(
+            items,
+            vscode.l10n.t({
+                message: "Choose encoding for download from {0}",
+                args: [contextLabel],
+                comment: ["Context label"],
+            }),
+            vscode.l10n.t({
+                message: "Default encoding is {0}",
+                args: [defaultEncoding],
+                comment: ["Encoding name"],
+            })
+        );
+
+        return SharedUtils.processEncodingResponse(response, contextLabel);
+    }
+
     public static async promptForEncoding(
         node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode,
         taggedEncoding?: string

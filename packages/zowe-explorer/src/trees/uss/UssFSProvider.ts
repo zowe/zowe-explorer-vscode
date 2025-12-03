@@ -454,18 +454,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         });
     }
 
+    /**
+     * Attempts to fetches the encoding for a file at the given URI.
+     * @param uri The URI pointing to a valid file on the remote system
+     * @returns The file's encoding
+     */
     public async fetchEncodingForUri(uri: vscode.Uri): Promise<ZosEncoding> {
-        try {
-            const file = this._lookupAsFile(uri) as UssFile;
-            await this.autoDetectEncoding(file);
-
-            return file.encoding;
-        } catch (error) {
-            if (error instanceof vscode.FileSystemError && error.code === "FileIsADirectory") {
-                throw new Error(vscode.l10n.t("Cannot fetch encoding for directories. Encoding options are only available for files."));
-            }
-            throw error;
-        }
+        const file = this._lookupAsFile(uri) as UssFile;
+        await this.autoDetectEncoding(file);
+        return file.encoding;
     }
 
     /**

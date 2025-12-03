@@ -43,8 +43,8 @@ export namespace Definitions {
         overwrite?: boolean;
         generateDirectory?: boolean;
         preserveCase?: boolean;
-        binary?: boolean;
-        record?: boolean;
+        chooseEncoding?: boolean;
+        encoding?: ZosEncoding;
         selectedPath?: vscode.Uri;
     };
     export type UssDownloadOptions = {
