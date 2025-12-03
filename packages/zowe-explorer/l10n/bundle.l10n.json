@@ -55,18 +55,27 @@
   "By Type": "By Type",
   "By Defaults": "By Defaults",
   "Select a profile": "Select a profile",
+  "Hide merged": "Hide merged",
+  "Show merged": "Show merged",
+  "Show merged unfiltered": "Show merged unfiltered",
   "Click to navigate to profile": "Click to navigate to profile",
   "Create new property for \"{0}\"": "Create new property for \"{0}\"",
   "Confirm delete": "Confirm delete",
   "Cancel": "Cancel",
   "Overwrite merged property": "Overwrite merged property",
   "Select a type": "Select a type",
+  "Select file": "Select file",
+  "Edit authentication order": "Edit authentication order",
   "Make property secure": "Make property secure",
   "A credential manager is not available. Click to open VS Code settings to enable secure credentials.": "A credential manager is not available. Click to open VS Code settings to enable secure credentials.",
   "Inherited from: {0} ({1})": "Inherited from: {0} ({1})",
   "Reveal in Finder": "Reveal in Finder",
   "Reveal in File Explorer": "Reveal in File Explorer",
   "Reveal in File Manager": "Reveal in File Manager",
+  "Global User": "Global User",
+  "Global Team": "Global Team",
+  "Project User": "Project User",
+  "Project Team": "Project Team",
   "Unsaved changes": "Unsaved changes",
   "Add new configuration": "Add new configuration",
   "Team Configuration Documentation": "Team Configuration Documentation",
@@ -80,8 +89,6 @@
   "Open config file with profile highlighted": "Open config file with profile highlighted",
   "Click to remove default": "Click to remove default",
   "Set as default": "Set as default",
-  "Hide merged properties": "Hide merged properties",
-  "Show merged properties": "Show merged properties",
   "Cannot rename: This profile or a related profile has been moved via drag-and-drop. Save and refresh to enable renaming.": "Cannot rename: This profile or a related profile has been moved via drag-and-drop. Save and refresh to enable renaming.",
   "Rename profile": "Rename profile",
   "Delete profile": "Delete profile",
@@ -326,6 +333,42 @@
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
+    ]
+  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -389,42 +432,6 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Failed to move {0}/File path": {
-    "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to delete {0}/File name": {
-    "message": "Failed to delete {0}",
-    "comment": [
-      "File name"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
-  "Failed to copy {0} to {1}/Source pathDestination path": {
-    "message": "Failed to copy {0} to {1}",
-    "comment": [
-      "Source path",
-      "Destination path"
-    ]
-  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
