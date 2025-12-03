@@ -351,6 +351,12 @@ describe("FtpUssApi", () => {
         }).rejects.toThrow(ZoweFtpExtensionError);
     });
 
+    it("should throw error when downloadDirectory is called", async () => {
+        await expect(async () => {
+            await UssApi.downloadDirectory("test", null, null);
+        }).rejects.toThrow(ZoweFtpExtensionError);
+    });
+
     describe("uploadFromBuffer", () => {
         function getBlockMocks(): Record<string, jest.SpyInstance> {
             return {
