@@ -4515,8 +4515,8 @@ describe("DatasetActions - downloading functions", () => {
         overwrite: true,
         generateDirectory: false,
         preserveCase: false,
-        binary: false,
-        record: false,
+        chooseEncoding: false,
+        encoding: undefined,
         selectedPath: vscode.Uri.file("/test/download/path"),
     };
 
@@ -4621,6 +4621,13 @@ describe("DatasetActions - downloading functions", () => {
         });
 
         it("should return download options with default values when no stored values exist", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
             mockZoweLocalStorage.mock.mockReturnValue(undefined);
 
             // Mock user selecting only "Overwrite" option
@@ -4631,14 +4638,14 @@ describe("DatasetActions - downloading functions", () => {
 
             mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/user/selected/path")]);
 
-            const result = await DatasetActions["getDataSetDownloadOptions"]();
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
 
             expect(result).toEqual({
                 overwrite: true,
                 generateDirectory: false,
                 preserveCase: false,
-                binary: false,
-                record: false,
+                chooseEncoding: false,
+                encoding: undefined,
                 selectedPath: vscode.Uri.file("/user/selected/path"),
             });
             expect(mockQuickPick.show).toHaveBeenCalled();
@@ -4652,12 +4659,19 @@ describe("DatasetActions - downloading functions", () => {
         });
 
         it("should use stored values as initial selection", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
             const storedOptions = {
                 overwrite: false,
                 generateDirectory: true,
                 preserveCase: true,
-                binary: true,
-                record: false,
+                chooseEncoding: false,
+                encoding: { kind: "other", codepage: "IBM-1047" } as any,
                 selectedPath: vscode.Uri.file("/stored/path"),
             };
             mockZoweLocalStorage.mock.mockReturnValue(storedOptions);
@@ -4666,36 +4680,48 @@ describe("DatasetActions - downloading functions", () => {
                 mockQuickPick.selectedItems = [
                     { label: "Generate Directory Structure", picked: true },
                     { label: "Preserve Original Letter Case", picked: true },
-                    { label: "Binary", picked: true },
                 ];
                 callback();
             });
 
             mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/new/path")]);
 
-            const result = await DatasetActions["getDataSetDownloadOptions"]();
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
 
             expect(result.generateDirectory).toBe(true);
             expect(result.preserveCase).toBe(true);
-            expect(result.binary).toBe(true);
+            expect(result.chooseEncoding).toBe(false);
             expect(result.overwrite).toBe(false);
-            expect(result.record).toBe(false);
         });
 
         it("should return undefined when user cancels quick pick selection", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
             mockZoweLocalStorage.mock.mockReturnValue(defaultDownloadOptions);
 
             mockQuickPick.onDidHide.mockImplementation((callback: () => void) => {
                 callback();
             });
 
-            const result = await DatasetActions["getDataSetDownloadOptions"]();
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
 
             expect(result).toBeUndefined();
             expect(mockGui.mock).toHaveBeenCalledWith("Operation cancelled");
         });
 
         it("should return undefined when user cancels folder selection", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
             mockZoweLocalStorage.mock.mockReturnValue(defaultDownloadOptions);
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
@@ -4705,13 +4731,20 @@ describe("DatasetActions - downloading functions", () => {
 
             mockShowOpenDialog.mock.mockResolvedValue(undefined);
 
-            const result = await DatasetActions["getDataSetDownloadOptions"]();
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
 
             expect(result).toBeUndefined();
             expect(mockGui.mock).toHaveBeenCalledWith("Operation cancelled");
         });
 
         it("should handle empty folder selection", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
             mockZoweLocalStorage.mock.mockReturnValue(defaultDownloadOptions);
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
@@ -4721,13 +4754,20 @@ describe("DatasetActions - downloading functions", () => {
 
             mockShowOpenDialog.mock.mockResolvedValue([]);
 
-            const result = await DatasetActions["getDataSetDownloadOptions"]();
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
 
             expect(result).toBeUndefined();
             expect(mockGui.mock).toHaveBeenCalledWith("Operation cancelled");
         });
 
         it("should allow selecting no options (all unchecked)", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
             mockZoweLocalStorage.mock.mockReturnValue(defaultDownloadOptions);
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
@@ -4737,16 +4777,111 @@ describe("DatasetActions - downloading functions", () => {
 
             mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/test/path")]);
 
-            const result = await DatasetActions["getDataSetDownloadOptions"]();
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
 
             expect(result).toEqual({
                 overwrite: false,
                 generateDirectory: false,
                 preserveCase: false,
-                binary: false,
-                record: false,
+                chooseEncoding: false,
+                encoding: undefined,
                 selectedPath: vscode.Uri.file("/test/path"),
             });
+        });
+
+        it("should handle encoding selection when Choose Encoding is selected", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mockZoweLocalStorage.mock.mockReturnValue(defaultDownloadOptions);
+
+            const mockPromptForDownloadEncoding = new MockedProperty(
+                SharedUtils,
+                "promptForDownloadEncoding",
+                undefined,
+                jest.fn().mockResolvedValue({ kind: "binary" })
+            );
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Choose Encoding"), picked: true }];
+                callback();
+            });
+
+            mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
+
+            expect(mockPromptForDownloadEncoding.mock).toHaveBeenCalledWith(defaultTestProfile, "TEST.DS");
+            expect(result.chooseEncoding).toBe(true);
+            expect(result.encoding).toEqual({ kind: "binary" });
+
+            mockPromptForDownloadEncoding[Symbol.dispose]();
+        });
+
+        it("should return undefined when encoding selection is cancelled", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mockZoweLocalStorage.mock.mockReturnValue(defaultDownloadOptions);
+
+            const mockPromptForDownloadEncoding = new MockedProperty(
+                SharedUtils,
+                "promptForDownloadEncoding",
+                undefined,
+                jest.fn().mockResolvedValue(undefined)
+            );
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Choose Encoding"), picked: true }];
+                callback();
+            });
+
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
+
+            expect(mockPromptForDownloadEncoding.mock).toHaveBeenCalled();
+            expect(result).toBeUndefined();
+            expect(mockGui.mock).toHaveBeenCalledWith("Operation cancelled");
+
+            mockPromptForDownloadEncoding[Symbol.dispose]();
+        });
+
+        it("should handle codepage encoding selection", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mockZoweLocalStorage.mock.mockReturnValue(defaultDownloadOptions);
+
+            const mockPromptForDownloadEncoding = new MockedProperty(
+                SharedUtils,
+                "promptForDownloadEncoding",
+                undefined,
+                jest.fn().mockResolvedValue({ kind: "other", codepage: "IBM-1047" })
+            );
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Choose Encoding"), picked: true }];
+                callback();
+            });
+
+            mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
+
+            expect(result.encoding).toEqual({ kind: "other", codepage: "IBM-1047" });
+
+            mockPromptForDownloadEncoding[Symbol.dispose]();
         });
     });
 

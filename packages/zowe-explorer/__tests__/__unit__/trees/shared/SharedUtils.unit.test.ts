@@ -718,6 +718,112 @@ describe("Shared utils unit tests - function promptForUploadEncoding", () => {
     });
 });
 
+describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
+    beforeEach(() => {
+        jest.resetAllMocks();
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    it("returns binary when Binary is selected", async () => {
+        const profile = createIProfile();
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
+            value: { get: jest.fn().mockReturnValue(undefined), update: jest.fn() },
+            configurable: true,
+        });
+        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Binary") } as any);
+        const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+        expect(showQuickPick).toHaveBeenCalled();
+        expect(enc).toEqual({ kind: "binary" });
+    });
+
+    it("returns text when EBCDIC is selected", async () => {
+        const profile = createIProfile();
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
+            value: { get: jest.fn().mockReturnValue(undefined), update: jest.fn() },
+            configurable: true,
+        });
+        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("EBCDIC") } as any);
+        const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+        expect(enc).toEqual({ kind: "text" });
+        expect(showQuickPick).toHaveBeenCalled();
+    });
+
+    it("prompts for codepage when Other is selected and stores it in history", async () => {
+        const profile = createIProfile();
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
+            value: { get: jest.fn().mockReturnValue([]), update: jest.fn() },
+            configurable: true,
+        });
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
+        jest.spyOn(Gui, "showInputBox").mockResolvedValue("ISO8859-1");
+        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValueOnce(undefined);
+        const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+        expect(enc).toEqual({ kind: "other", codepage: "ISO8859-1" });
+        expect(setValueSpy).toHaveBeenCalled();
+    });
+
+    it("returns undefined when user cancels selection", async () => {
+        const profile = createIProfile();
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
+            value: { get: jest.fn().mockReturnValue(undefined), update: jest.fn() },
+            configurable: true,
+        });
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+        const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+        expect(enc).toBeUndefined();
+    });
+
+    it("returns undefined when user cancels codepage input", async () => {
+        const profile = createIProfile();
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
+            value: { get: jest.fn().mockReturnValue([]), update: jest.fn() },
+            configurable: true,
+        });
+        jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
+        jest.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
+        jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+        const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+        expect(enc).toBeUndefined();
+    });
+
+    it("uses profile encoding in options when available", async () => {
+        const profile = createIProfile();
+        if (profile.profile) {
+            profile.profile.encoding = "IBM-037";
+        }
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
+            value: { get: jest.fn().mockReturnValue([]), update: jest.fn() },
+            configurable: true,
+        });
+        const mockShowQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: "IBM-037" } as any);
+
+        const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+
+        const callArgs = mockShowQuickPick.mock.calls[0][0] as any[];
+        const profileEncodingOption = callArgs.find((item: any) => item.label === "IBM-037");
+        expect(profileEncodingOption).toBeDefined();
+        expect(profileEncodingOption.description).toContain("From profile");
+        expect(enc).toEqual({ kind: "other", codepage: "IBM-037" });
+    });
+
+    it("includes encoding history in options", async () => {
+        const profile = createIProfile();
+        Object.defineProperty(ZoweLocalStorage, "globalState", {
+            value: { get: jest.fn().mockReturnValue(["IBM-1047", "ISO8859-1"]), update: jest.fn() },
+            configurable: true,
+        });
+        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(["IBM-1047", "ISO8859-1"]);
+        const mockShowQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: "IBM-1047" } as any);
+
+        await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+
+        const callArgs = mockShowQuickPick.mock.calls[0][0] as any[];
+        expect(callArgs.some((item: any) => item.label === "IBM-1047")).toBe(true);
+        expect(callArgs.some((item: any) => item.label === "ISO8859-1")).toBe(true);
+    });
+});
+
 describe("Shared utils unit tests - function getCachedEncoding", () => {
     const mockSession = createISession();
     const mockProfile = createIProfile();
