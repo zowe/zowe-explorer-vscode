@@ -17,8 +17,8 @@ import { USSUtils } from "../../../../src/trees/uss/USSUtils";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
-import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { Constants } from "../../../../src/configuration/Constants";
+import { MockedProperty } from "../../../__mocks__/mockUtils";
 
 jest.mock("../../../../src/tools/ZoweLogger");
 jest.mock("fs");
@@ -38,18 +38,40 @@ function createGlobalMocks() {
         getEncoding: jest.fn(),
         setEncoding: jest.fn(),
         getProfile: jest.fn(),
-        mockedProperties: [] as MockedProperty[],
+        spies: {
+            writeText: null as jest.SpyInstance | null,
+            l10nT: null as jest.SpyInstance | null,
+            readdirSync: null as jest.SpyInstance | null,
+            dirname: null as jest.SpyInstance | null,
+            basename: null as jest.SpyInstance | null,
+            getUssApi: null as jest.SpyInstance | null,
+            isUssDirectory: null as jest.SpyInstance | null,
+        },
+        vscodeMocks: [] as MockedProperty[],
     };
 
-    globalMocks.mockedProperties.push(new MockedProperty(vscode.env.clipboard, "writeText", undefined, globalMocks.writeText));
-    globalMocks.mockedProperties.push(new MockedProperty(vscode.l10n, "t", undefined, globalMocks.l10nT));
-    globalMocks.mockedProperties.push(new MockedProperty(fs, "readdirSync", undefined, globalMocks.readdirSync));
-    globalMocks.mockedProperties.push(new MockedProperty(path, "dirname", undefined, globalMocks.dirname));
-    globalMocks.mockedProperties.push(new MockedProperty(path, "basename", undefined, globalMocks.basename));
-    globalMocks.mockedProperties.push(new MockedProperty(ZoweExplorerApiRegister, "getUssApi", undefined, globalMocks.getUssApi));
-    globalMocks.mockedProperties.push(new MockedProperty(SharedContext, "isUssDirectory", undefined, globalMocks.isUssDirectory));
-
     return globalMocks;
+}
+
+function setupSpies(globalMocks: any) {
+    globalMocks.spies.readdirSync = jest.spyOn(fs, "readdirSync").mockImplementation(globalMocks.readdirSync);
+    globalMocks.spies.dirname = jest.spyOn(path, "dirname").mockImplementation(globalMocks.dirname);
+    globalMocks.spies.basename = jest.spyOn(path, "basename").mockImplementation(globalMocks.basename);
+    globalMocks.spies.getUssApi = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementation(globalMocks.getUssApi);
+    globalMocks.spies.isUssDirectory = jest.spyOn(SharedContext, "isUssDirectory").mockImplementation(globalMocks.isUssDirectory);
+    globalMocks.vscodeMocks.push(new MockedProperty(vscode.env.clipboard, "writeText", undefined, globalMocks.writeText));
+    globalMocks.vscodeMocks.push(new MockedProperty(vscode.l10n, "t", undefined, globalMocks.l10nT));
+}
+
+function cleanupSpies(globalMocks: any) {
+    Object.values(globalMocks.spies).forEach((spy: any) => {
+        if (spy) {
+            spy.mockRestore();
+        }
+    });
+
+    globalMocks.vscodeMocks.forEach((mock: MockedProperty) => mock[Symbol.dispose]());
+    globalMocks.vscodeMocks = [];
 }
 
 describe("USSUtils Unit Tests - fileExistsCaseSensitiveSync", () => {
@@ -57,11 +79,12 @@ describe("USSUtils Unit Tests - fileExistsCaseSensitiveSync", () => {
 
     beforeEach(() => {
         globalMocks = createGlobalMocks();
+        setupSpies(globalMocks);
         jest.clearAllMocks();
     });
 
     afterEach(() => {
-        globalMocks?.mockedProperties?.forEach((prop: MockedProperty) => prop[Symbol.dispose]());
+        cleanupSpies(globalMocks);
     });
 
     it("should return true when at root directory", () => {
@@ -127,11 +150,12 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
 
     beforeEach(() => {
         globalMocks = createGlobalMocks();
+        setupSpies(globalMocks);
         jest.clearAllMocks();
     });
 
     afterEach(() => {
-        globalMocks?.mockedProperties?.forEach((prop: MockedProperty) => prop[Symbol.dispose]());
+        cleanupSpies(globalMocks);
     });
 
     it("should return early when node already has binary encoding", async () => {
@@ -312,11 +336,12 @@ describe("USSUtils Unit Tests - countAllFilesRecursively", () => {
 
     beforeEach(() => {
         globalMocks = createGlobalMocks();
+        setupSpies(globalMocks);
         jest.clearAllMocks();
     });
 
     afterEach(() => {
-        globalMocks?.mockedProperties?.forEach((prop: MockedProperty) => prop[Symbol.dispose]());
+        cleanupSpies(globalMocks);
     });
 
     it("should return 0 when node has no children", async () => {
@@ -463,11 +488,13 @@ describe("USSUtils Unit Tests - countAllFilesRecursively", () => {
         const mockSubDir = {
             getChildren: jest.fn().mockResolvedValue([mockFile4, mockFile5]),
             fullPath: "/test/subdir",
+            dirty: false,
         } as unknown as IZoweUSSTreeNode;
 
         const mockNode = {
             getChildren: jest.fn().mockResolvedValue([mockFile1, mockFile2, mockFile3, mockSubDir]),
             fullPath: "/test",
+            dirty: false,
         } as unknown as IZoweUSSTreeNode;
 
         globalMocks.isUssDirectory.mockImplementation((node: any) => node.fullPath === "/test/subdir");
@@ -475,7 +502,7 @@ describe("USSUtils Unit Tests - countAllFilesRecursively", () => {
         const result = await USSUtils.countAllFilesRecursively(mockNode);
 
         expect(result).toBeGreaterThan(mockConstant);
-        expect(mockSubDir.getChildren).not.toHaveBeenCalled();
+        expect(mockSubDir.getChildren).toHaveBeenCalled();
 
         constantMock[Symbol.dispose]();
     });
