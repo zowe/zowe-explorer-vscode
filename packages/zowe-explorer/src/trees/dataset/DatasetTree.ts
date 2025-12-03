@@ -162,8 +162,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         } else {
             let destinationMemberUri = destUri;
             const sourceMemberLabel = sourceNode.getLabel() as string;
+            const memberNameWithoutExtension = path.parse(sourceMemberLabel).name;
 
-            // calculate the correct PDS name for the API and error messages.
+            // calculate the correct PDS name (ie, PDSNAME.TEST) for the API and error messages
             let fullPathAfterProfile = destUri.path.substring(destinationInfo.slashAfterProfilePos + 1);
             const lastSlashIndex = fullPathAfterProfile.lastIndexOf('/');
             let fullPdsName: string;
@@ -174,8 +175,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 fullPdsName = fullPathAfterProfile.replace(/\//g, '.');
             }
 
-            // Set dsname for API and error messages: PDS.NAME(MEMBER_LABEL)
-            dsname = fullPdsName + "(" + sourceMemberLabel + ")";
+            // Set dsname for API and error messages: PDSNAME.TEST(MEMBER_LABEL)
+            // Use memberNameWithoutExtension for the API dsname
+            dsname = fullPdsName + "(" + memberNameWithoutExtension + ")";
 
             // Reconstruct the path to ensure it is correctly formed
             if (SharedContext.isDsMember(sourceNode)) {
@@ -183,6 +185,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 const pdsBasePath = destUri.path.substring(0, destUri.path.lastIndexOf('/'));
 
                 // 2. add member label, results in '/system/PDSNAME.TEST/TEST'
+                // NOTE: We use the original sourceMemberLabel here as the FS provider cache may expect the extension in the path key
                 const newMemberPath = pdsBasePath + '/' + sourceMemberLabel;
 
                 destinationMemberUri = destUri.with({
@@ -191,6 +194,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
                 // create the member before writing content.
                 try {
+                    // This call now uses the clean dsname without client extension.
                     await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
                 } catch (err) {
                     // ignore if it already exists, but bail out on 404/500 if the PDS itself is missing
