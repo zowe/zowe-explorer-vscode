@@ -38,15 +38,16 @@ function createGlobalMocks() {
         getEncoding: jest.fn(),
         setEncoding: jest.fn(),
         getProfile: jest.fn(),
+        mockedProperties: [] as MockedProperty[],
     };
 
-    new MockedProperty(vscode.env.clipboard, "writeText", undefined, globalMocks.writeText);
-    new MockedProperty(vscode.l10n, "t", undefined, globalMocks.l10nT);
-    new MockedProperty(fs, "readdirSync", undefined, globalMocks.readdirSync);
-    new MockedProperty(path, "dirname", undefined, globalMocks.dirname);
-    new MockedProperty(path, "basename", undefined, globalMocks.basename);
-    new MockedProperty(ZoweExplorerApiRegister, "getUssApi", undefined, globalMocks.getUssApi);
-    new MockedProperty(SharedContext, "isUssDirectory", undefined, globalMocks.isUssDirectory);
+    globalMocks.mockedProperties.push(new MockedProperty(vscode.env.clipboard, "writeText", undefined, globalMocks.writeText));
+    globalMocks.mockedProperties.push(new MockedProperty(vscode.l10n, "t", undefined, globalMocks.l10nT));
+    globalMocks.mockedProperties.push(new MockedProperty(fs, "readdirSync", undefined, globalMocks.readdirSync));
+    globalMocks.mockedProperties.push(new MockedProperty(path, "dirname", undefined, globalMocks.dirname));
+    globalMocks.mockedProperties.push(new MockedProperty(path, "basename", undefined, globalMocks.basename));
+    globalMocks.mockedProperties.push(new MockedProperty(ZoweExplorerApiRegister, "getUssApi", undefined, globalMocks.getUssApi));
+    globalMocks.mockedProperties.push(new MockedProperty(SharedContext, "isUssDirectory", undefined, globalMocks.isUssDirectory));
 
     return globalMocks;
 }
@@ -57,6 +58,10 @@ describe("USSUtils Unit Tests - fileExistsCaseSensitiveSync", () => {
     beforeEach(() => {
         globalMocks = createGlobalMocks();
         jest.clearAllMocks();
+    });
+
+    afterEach(() => {
+        globalMocks?.mockedProperties?.forEach((prop: MockedProperty) => prop[Symbol.dispose]());
     });
 
     it("should return true when at root directory", () => {
@@ -123,6 +128,10 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
     beforeEach(() => {
         globalMocks = createGlobalMocks();
         jest.clearAllMocks();
+    });
+
+    afterEach(() => {
+        globalMocks?.mockedProperties?.forEach((prop: MockedProperty) => prop[Symbol.dispose]());
     });
 
     it("should return early when node already has binary encoding", async () => {
@@ -304,6 +313,10 @@ describe("USSUtils Unit Tests - countAllFilesRecursively", () => {
     beforeEach(() => {
         globalMocks = createGlobalMocks();
         jest.clearAllMocks();
+    });
+
+    afterEach(() => {
+        globalMocks?.mockedProperties?.forEach((prop: MockedProperty) => prop[Symbol.dispose]());
     });
 
     it("should return 0 when node has no children", async () => {

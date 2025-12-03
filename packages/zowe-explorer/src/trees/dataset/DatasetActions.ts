@@ -725,6 +725,12 @@ export class DatasetActions {
         }
 
         const dirsFromDataset = zosfiles.ZosFilesUtils.getDirsFromDataSet(datasetName);
+        if (!dirsFromDataset) {
+            const fallbackDirs = datasetName.replace(/\./g, path.sep);
+            return preserveCase
+                ? path.join(selectedPath.fsPath, fallbackDirs.toUpperCase())
+                : path.join(selectedPath.fsPath, fallbackDirs.toLowerCase());
+        }
         return preserveCase ? path.join(selectedPath.fsPath, dirsFromDataset.toUpperCase()) : path.join(selectedPath.fsPath, dirsFromDataset);
     }
 

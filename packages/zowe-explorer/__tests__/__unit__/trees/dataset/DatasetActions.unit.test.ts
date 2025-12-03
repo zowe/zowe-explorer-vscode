@@ -4578,6 +4578,9 @@ describe("DatasetActions - downloading functions", () => {
         let mockZoweLocalStorage: MockedProperty;
         let mockGui: MockedProperty;
         let mockShowOpenDialog: MockedProperty;
+        let mockCreateQuickPick: MockedProperty;
+        let mockSetValue: MockedProperty;
+        let mockGetDefaultUri: MockedProperty;
 
         beforeEach(() => {
             mockQuickPick = {
@@ -4594,13 +4597,27 @@ describe("DatasetActions - downloading functions", () => {
                 dispose: jest.fn(),
             };
 
-            new MockedProperty(Gui, "createQuickPick", undefined, jest.fn().mockReturnValue(mockQuickPick));
+            mockCreateQuickPick = new MockedProperty(Gui, "createQuickPick", undefined, jest.fn().mockReturnValue(mockQuickPick));
             mockShowOpenDialog = new MockedProperty(Gui, "showOpenDialog", undefined, jest.fn());
             mockZoweLocalStorage = new MockedProperty(ZoweLocalStorage, "getValue", undefined, jest.fn());
             mockGui = new MockedProperty(Gui, "showMessage", undefined, jest.fn());
 
-            new MockedProperty(ZoweLocalStorage, "setValue", undefined, jest.fn());
-            new MockedProperty(LocalFileManagement, "getDefaultUri", undefined, jest.fn().mockReturnValue(vscode.Uri.file("/default/path")));
+            mockSetValue = new MockedProperty(ZoweLocalStorage, "setValue", undefined, jest.fn());
+            mockGetDefaultUri = new MockedProperty(
+                LocalFileManagement,
+                "getDefaultUri",
+                undefined,
+                jest.fn().mockReturnValue(vscode.Uri.file("/default/path"))
+            );
+        });
+
+        afterEach(() => {
+            mockCreateQuickPick[Symbol.dispose]();
+            mockShowOpenDialog[Symbol.dispose]();
+            mockZoweLocalStorage[Symbol.dispose]();
+            mockGui[Symbol.dispose]();
+            mockSetValue[Symbol.dispose]();
+            mockGetDefaultUri[Symbol.dispose]();
         });
 
         it("should return download options with default values when no stored values exist", async () => {
@@ -4777,6 +4794,11 @@ describe("DatasetActions - downloading functions", () => {
         let mockGetDataSetDownloadOptions: MockedProperty;
         let mockExecuteDownloadWithProgress: MockedProperty;
         let mockGetChildren: jest.Mock;
+        let mockShowMessage: MockedProperty;
+        let mockErrorMessage: MockedProperty;
+        let mockTrace: MockedProperty;
+        let mockGetValue: MockedProperty;
+        let mockHandleDownloadResponse: MockedProperty;
 
         beforeEach(() => {
             testMocks = createDownloadTestMocks();
@@ -4798,11 +4820,21 @@ describe("DatasetActions - downloading functions", () => {
 
             mockGetChildren = jest.fn();
 
-            new MockedProperty(Gui, "showMessage", undefined, jest.fn());
-            new MockedProperty(Gui, "errorMessage", undefined, jest.fn());
-            new MockedProperty(ZoweLogger, "trace", undefined, jest.fn());
-            new MockedProperty(ZoweLocalStorage, "getValue", undefined, jest.fn());
-            new MockedProperty(SharedUtils, "handleDownloadResponse", undefined, jest.fn().mockResolvedValue(undefined));
+            mockShowMessage = new MockedProperty(Gui, "showMessage", undefined, jest.fn());
+            mockErrorMessage = new MockedProperty(Gui, "errorMessage", undefined, jest.fn());
+            mockTrace = new MockedProperty(ZoweLogger, "trace", undefined, jest.fn());
+            mockGetValue = new MockedProperty(ZoweLocalStorage, "getValue", undefined, jest.fn());
+            mockHandleDownloadResponse = new MockedProperty(SharedUtils, "handleDownloadResponse", undefined, jest.fn().mockResolvedValue(undefined));
+        });
+
+        afterEach(() => {
+            mockGetDataSetDownloadOptions[Symbol.dispose]();
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockShowMessage[Symbol.dispose]();
+            mockErrorMessage[Symbol.dispose]();
+            mockTrace[Symbol.dispose]();
+            mockGetValue[Symbol.dispose]();
+            mockHandleDownloadResponse[Symbol.dispose]();
         });
 
         it("should successfully download all members of a PDS", async () => {
@@ -4905,11 +4937,11 @@ describe("DatasetActions - downloading functions", () => {
             pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
 
-            const mockShowMessage = new MockedProperty(Gui, "showMessage", undefined, jest.fn().mockResolvedValue("No"));
+            const localMockShowMessage = new MockedProperty(Gui, "showMessage", undefined, jest.fn().mockResolvedValue("No"));
 
             await DatasetActions.downloadAllMembers(pdsNode);
 
-            expect(mockShowMessage.mock).toHaveBeenCalledWith(
+            expect(localMockShowMessage.mock).toHaveBeenCalledWith(
                 expect.stringMatching(/large number of files.*continue/i),
                 expect.objectContaining({
                     severity: expect.any(Number),
@@ -4917,6 +4949,8 @@ describe("DatasetActions - downloading functions", () => {
                 })
             );
             expect(mockGetDataSetDownloadOptions.mock).not.toHaveBeenCalled();
+
+            localMockShowMessage[Symbol.dispose]();
         });
 
         it("should proceed when user confirms downloading many members", async () => {
@@ -4935,12 +4969,14 @@ describe("DatasetActions - downloading functions", () => {
             pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
 
-            const mockShowMessage = new MockedProperty(Gui, "showMessage", undefined, jest.fn().mockResolvedValue("Yes"));
+            const localMockShowMessage = new MockedProperty(Gui, "showMessage", undefined, jest.fn().mockResolvedValue("Yes"));
 
             await DatasetActions.downloadAllMembers(pdsNode);
 
-            expect(mockShowMessage.mock).toHaveBeenCalled();
+            expect(localMockShowMessage.mock).toHaveBeenCalled();
             expect(mockGetDataSetDownloadOptions.mock).toHaveBeenCalled();
+
+            localMockShowMessage[Symbol.dispose]();
         });
 
         it("should return early when download options are cancelled", async () => {
@@ -4970,6 +5006,11 @@ describe("DatasetActions - downloading functions", () => {
         let testMocks: ReturnType<typeof createDownloadTestMocks>;
         let mockGetDataSetDownloadOptions: MockedProperty;
         let mockExecuteDownloadWithProgress: MockedProperty;
+        let mockErrorMessage: MockedProperty;
+        let mockTrace: MockedProperty;
+        let mockGetExtensionMap: MockedProperty;
+        let mockGetExtension: MockedProperty;
+        let mockGetDirsFromDataSet: MockedProperty;
 
         beforeEach(() => {
             testMocks = createDownloadTestMocks();
@@ -4988,11 +5029,26 @@ describe("DatasetActions - downloading functions", () => {
                 })
             );
 
-            new MockedProperty(Gui, "errorMessage", undefined, jest.fn());
-            new MockedProperty(ZoweLogger, "trace", undefined, jest.fn());
-            new MockedProperty(DatasetUtils, "getExtensionMap", undefined, jest.fn().mockResolvedValue({}));
-            new MockedProperty(DatasetUtils, "getExtension", undefined, jest.fn().mockReturnValue("txt"));
-            new MockedProperty(zosfiles.ZosFilesUtils, "getDirsFromDataSet", undefined, jest.fn().mockReturnValue("test/directory"));
+            mockErrorMessage = new MockedProperty(Gui, "errorMessage", undefined, jest.fn());
+            mockTrace = new MockedProperty(ZoweLogger, "trace", undefined, jest.fn());
+            mockGetExtensionMap = new MockedProperty(DatasetUtils, "getExtensionMap", undefined, jest.fn().mockResolvedValue({}));
+            mockGetExtension = new MockedProperty(DatasetUtils, "getExtension", undefined, jest.fn().mockReturnValue("txt"));
+            mockGetDirsFromDataSet = new MockedProperty(
+                zosfiles.ZosFilesUtils,
+                "getDirsFromDataSet",
+                undefined,
+                jest.fn().mockReturnValue("test/directory")
+            );
+        });
+
+        afterEach(() => {
+            mockGetDataSetDownloadOptions[Symbol.dispose]();
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockErrorMessage[Symbol.dispose]();
+            mockTrace[Symbol.dispose]();
+            mockGetExtensionMap[Symbol.dispose]();
+            mockGetExtension[Symbol.dispose]();
+            mockGetDirsFromDataSet[Symbol.dispose]();
         });
 
         it("should successfully download a PDS member", async () => {
@@ -5125,6 +5181,10 @@ describe("DatasetActions - downloading functions", () => {
         let mockExecuteDownloadWithProgress: MockedProperty;
         let mockIsPds: MockedProperty;
         let mockIsVsam: MockedProperty;
+        let mockErrorMessage: MockedProperty;
+        let mockShowMessage: MockedProperty;
+        let mockTrace: MockedProperty;
+        let mockGetExtension: MockedProperty;
 
         beforeEach(() => {
             testMocks = createDownloadTestMocks();
@@ -5146,10 +5206,21 @@ describe("DatasetActions - downloading functions", () => {
             mockIsPds = new MockedProperty(SharedContext, "isPds", undefined, jest.fn().mockReturnValue(false));
             mockIsVsam = new MockedProperty(SharedContext, "isVsam", undefined, jest.fn().mockReturnValue(false));
 
-            new MockedProperty(Gui, "errorMessage", undefined, jest.fn());
-            new MockedProperty(Gui, "showMessage", undefined, jest.fn());
-            new MockedProperty(ZoweLogger, "trace", undefined, jest.fn());
-            new MockedProperty(DatasetUtils, "getExtension", undefined, jest.fn().mockReturnValue("txt"));
+            mockErrorMessage = new MockedProperty(Gui, "errorMessage", undefined, jest.fn());
+            mockShowMessage = new MockedProperty(Gui, "showMessage", undefined, jest.fn());
+            mockTrace = new MockedProperty(ZoweLogger, "trace", undefined, jest.fn());
+            mockGetExtension = new MockedProperty(DatasetUtils, "getExtension", undefined, jest.fn().mockReturnValue("txt"));
+        });
+
+        afterEach(() => {
+            mockGetDataSetDownloadOptions[Symbol.dispose]();
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockIsPds[Symbol.dispose]();
+            mockIsVsam[Symbol.dispose]();
+            mockErrorMessage[Symbol.dispose]();
+            mockShowMessage[Symbol.dispose]();
+            mockTrace[Symbol.dispose]();
+            mockGetExtension[Symbol.dispose]();
         });
 
         it("should successfully download a sequential dataset", async () => {
