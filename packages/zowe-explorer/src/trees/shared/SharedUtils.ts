@@ -13,6 +13,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
+import * as fs from "fs";
 import {
     Gui,
     IZoweTreeNode,
@@ -716,12 +717,14 @@ export class SharedUtils {
      *
      * @param response The response from the download API
      * @param downloadType The type of download (File, Directory, Data set, etc.)
+     * @param downloadedPath The path to the downloaded file or directory (optional)
      */
-    public static async handleDownloadResponse(response: any, downloadType: string): Promise<void> {
+    public static async handleDownloadResponse(response: any, downloadType: string, downloadedPath?: string): Promise<void> {
         ZoweLogger.trace("SharedUtils.handleDownloadResponse called.");
 
         if (!response) {
-            Gui.showMessage(vscode.l10n.t("{0} download completed.", downloadType));
+            const message = vscode.l10n.t("{0} download completed.", downloadType);
+            await SharedUtils.showDownloadMessage(message, downloadedPath, false, false);
             return;
         }
 
@@ -774,13 +777,8 @@ export class SharedUtils {
                 },
             });
 
-            await Gui.errorMessage(errorMessage, {
-                items: [vscode.l10n.t("View Details")],
-                vsCodeOpts: { modal: false },
-            }).then((selection) => {
-                if (selection === vscode.l10n.t("View Details")) {
-                    vscode.commands.executeCommand("zowe.troubleshootError", correlatedError, detailedInfo.join("\n\n"));
-                }
+            await SharedUtils.showDownloadMessage(errorMessage, downloadedPath, true, false, () => {
+                void vscode.commands.executeCommand("zowe.troubleshootError", correlatedError, detailedInfo.join("\n\n"));
             });
         } else if (hasWarnings) {
             const warningMessage = vscode.l10n.t("{0}\n\nSome files may have been skipped.", message);
@@ -791,16 +789,76 @@ export class SharedUtils {
                 },
             });
 
-            await Gui.warningMessage(warningMessage, {
-                items: [vscode.l10n.t("View Details")],
-                vsCodeOpts: { modal: false },
-            }).then((selection) => {
-                if (selection === vscode.l10n.t("View Details")) {
-                    vscode.commands.executeCommand("zowe.troubleshootError", correlatedWarning, detailedInfo.join("\n\n"));
-                }
+            await SharedUtils.showDownloadMessage(warningMessage, downloadedPath, false, true, () => {
+                void vscode.commands.executeCommand("zowe.troubleshootError", correlatedWarning, detailedInfo.join("\n\n"));
             });
         } else {
-            Gui.showMessage(message);
+            await SharedUtils.showDownloadMessage(message, downloadedPath, false, false);
+        }
+    }
+
+    /**
+     * Shows a download completion message with an optional link to open the file or directory
+     *
+     * @param message The message to display
+     * @param downloadedPath The path to the downloaded file or directory
+     * @param isError Whether this is an error message
+     * @param isWarning Whether this is a warning message
+     * @param onViewDetails Optional callback for View Details action
+     */
+    private static async showDownloadMessage(
+        message: string,
+        downloadedPath: string | undefined,
+        isError: boolean,
+        isWarning: boolean,
+        onViewDetails?: () => void
+    ): Promise<void> {
+        const items: string[] = [];
+
+        if (onViewDetails) {
+            items.push(vscode.l10n.t("View Details"));
+        }
+
+        if (downloadedPath) {
+            const stats = fs.existsSync(downloadedPath) ? fs.statSync(downloadedPath) : null;
+
+            if (stats) {
+                if (stats.isDirectory()) {
+                    items.push(vscode.l10n.t("Open Folder"));
+                } else {
+                    items.push(vscode.l10n.t("Open File"));
+                }
+            }
+        }
+
+        let selection: string | undefined;
+        if (isError) {
+            selection = await Gui.errorMessage(message, {
+                items,
+                vsCodeOpts: { modal: false },
+            });
+        } else if (isWarning) {
+            selection = await Gui.warningMessage(message, {
+                items,
+                vsCodeOpts: { modal: false },
+            });
+        } else {
+            if (items.length > 0) {
+                selection = await Gui.showMessage(message, { items });
+            } else {
+                Gui.showMessage(message);
+                return;
+            }
+        }
+
+        if (selection === vscode.l10n.t("View Details") && onViewDetails) {
+            onViewDetails();
+        } else if (selection === vscode.l10n.t("Open File") && downloadedPath) {
+            const fileUri = vscode.Uri.file(downloadedPath);
+            await vscode.commands.executeCommand("vscode.open", fileUri);
+        } else if (selection === vscode.l10n.t("Open Folder") && downloadedPath) {
+            const folderUri = vscode.Uri.file(downloadedPath);
+            await vscode.commands.executeCommand("revealFileInOS", folderUri);
         }
     }
 

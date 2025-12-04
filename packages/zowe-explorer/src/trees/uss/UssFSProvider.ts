@@ -501,7 +501,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profInfo = this._getInfoFromUri(uri);
 
         if (profInfo.profile == null) {
-            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
+            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("A profile does not exist for this file."));
         }
 
         const urlQuery = new URLSearchParams(uri.query);

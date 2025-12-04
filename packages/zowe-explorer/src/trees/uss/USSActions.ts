@@ -707,10 +707,12 @@ export class USSActions {
                 cancellable: true,
             },
             async () => {
+                const filePath = downloadOptions.generateDirectory
+                    ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
+                    : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath));
+
                 const options: zosfiles.IDownloadSingleOptions = {
-                    file: downloadOptions.generateDirectory
-                        ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
-                        : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath)),
+                    file: filePath,
                     binary: downloadOptions.encoding?.kind === "binary",
                     encoding: downloadOptions.encoding?.kind === "other" ? downloadOptions.encoding.codepage : profile.profile?.encoding,
                     overwrite: downloadOptions.overwrite,
@@ -718,7 +720,7 @@ export class USSActions {
 
                 try {
                     const response = await ZoweExplorerApiRegister.getUssApi(profile).getContents(node.fullPath, options);
-                    void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS file"));
+                    void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS file"), filePath);
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
                 }
@@ -778,10 +780,12 @@ export class USSActions {
                     stageName: 0, // TaskStage.IN_PROGRESS
                 };
 
+                const directoryPath = downloadOptions.generateDirectory
+                    ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
+                    : downloadOptions.selectedPath.fsPath;
+
                 const options: zosfiles.IDownloadOptions = {
-                    directory: downloadOptions.generateDirectory
-                        ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
-                        : downloadOptions.selectedPath.fsPath,
+                    directory: directoryPath,
                     overwrite: downloadOptions.overwrite,
                     includeHidden: downloadOptions.dirOptions.includeHidden,
                     maxConcurrentRequests: profile?.profile?.maxConcurrentRequests || 1,
@@ -806,7 +810,7 @@ export class USSActions {
                     }
 
                     const response = await ZoweExplorerApiRegister.getUssApi(profile).downloadDirectory(node.fullPath, options);
-                    void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"));
+                    void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"), directoryPath);
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
                 }

@@ -758,7 +758,7 @@ export class DatasetActions {
 
     private static async executeDownloadWithProgress(
         title: string,
-        downloadFn: (progress?: vscode.Progress<{ message?: string; increment?: number }>) => Promise<void>,
+        downloadFn: (progress?: vscode.Progress<{ message?: string; increment?: number }>) => Promise<{ response?: any; downloadedPath?: string }>,
         downloadType: string,
         node: IZoweDatasetTreeNode
     ): Promise<void> {
@@ -770,8 +770,8 @@ export class DatasetActions {
             },
             async (progress) => {
                 try {
-                    const response = await downloadFn(progress);
-                    void SharedUtils.handleDownloadResponse(response, downloadType);
+                    const { response, downloadedPath } = await downloadFn(progress);
+                    void SharedUtils.handleDownloadResponse(response, downloadType, downloadedPath);
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
                 }
@@ -858,7 +858,8 @@ export class DatasetActions {
                     responseTimeout: profile?.profile?.responseTimeout,
                 };
 
-                await ZoweExplorerApiRegister.getMvsApi(profile).downloadAllMembers(datasetName, downloadOptions);
+                const response = await ZoweExplorerApiRegister.getMvsApi(profile).downloadAllMembers(datasetName, downloadOptions);
+                return { response, downloadedPath: generatedFileDirectory };
             },
             vscode.l10n.t("Data set members"),
             node
@@ -910,7 +911,8 @@ export class DatasetActions {
                     responseTimeout: profile?.profile?.responseTimeout,
                 };
 
-                await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
+                const response = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
+                return { response, downloadedPath: filePath };
             },
             vscode.l10n.t("Data set member"),
             node
@@ -968,7 +970,8 @@ export class DatasetActions {
                     responseTimeout: profile?.profile?.responseTimeout,
                 };
 
-                await ZoweExplorerApiRegister.getMvsApi(profile).getContents(datasetName, downloadOptions);
+                const response = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(datasetName, downloadOptions);
+                return { response, downloadedPath: filePath };
             },
             vscode.l10n.t("Data set"),
             node

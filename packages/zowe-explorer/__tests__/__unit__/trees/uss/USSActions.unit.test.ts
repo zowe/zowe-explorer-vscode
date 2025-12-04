@@ -1742,7 +1742,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     encoding: undefined,
                 })
             );
-            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS file");
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
+                { success: true, commandResponse: "", apiResponse: {} },
+                "USS file",
+                expect.stringContaining("file.txt")
+            );
         });
 
         it("should download a USS file with binary encoding", async () => {
@@ -1767,7 +1771,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     binary: true,
                 })
             );
-            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS file");
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
+                { success: true, commandResponse: "", apiResponse: {} },
+                "USS file",
+                expect.stringContaining("file.txt")
+            );
         });
 
         it("should download a USS file with custom codepage encoding", async () => {
@@ -1793,7 +1801,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     encoding: "IBM-1047",
                 })
             );
-            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS file");
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
+                { success: true, commandResponse: "", apiResponse: {} },
+                "USS file",
+                expect.stringContaining("file.txt")
+            );
         });
 
         it("should download a USS file with directory structure generation", async () => {
@@ -1818,7 +1830,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     file: expect.stringMatching(/u.test.file\.txt$/),
                 })
             );
-            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS file");
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
+                { success: true, commandResponse: "", apiResponse: {} },
+                "USS file",
+                expect.stringMatching(/u.test.file\.txt$/)
+            );
         });
 
         it("should show cancellation message when download options are cancelled", async () => {
@@ -1895,7 +1911,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     maxConcurrentRequests: 1,
                 })
             );
-            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS directory");
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
+                { success: true, commandResponse: "", apiResponse: {} },
+                "USS directory",
+                "/test/download/path"
+            );
         });
 
         it("should download a USS directory with directory structure generation", async () => {
@@ -1926,7 +1946,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     includeHidden: true,
                 })
             );
-            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS directory");
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
+                { success: true, commandResponse: "", apiResponse: {} },
+                "USS directory",
+                expect.stringMatching(/u.test.directory$/)
+            );
         });
 
         it("should show info message when directory contains no files", async () => {
@@ -1978,7 +2002,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 })
             );
             expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalled();
-            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS directory");
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
+                { success: true, commandResponse: "", apiResponse: {} },
+                "USS directory",
+                "/test/download/path"
+            );
         });
 
         it("should cancel download when user chooses No for large directory", async () => {
@@ -2096,7 +2124,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     responseTimeout: 30000,
                 })
             );
-            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith({ success: true, commandResponse: "", apiResponse: {} }, "USS directory");
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
+                { success: true, commandResponse: "", apiResponse: {} },
+                "USS directory",
+                "/test/download/path"
+            );
         });
     });
 });
