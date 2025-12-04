@@ -11,9 +11,9 @@
 
 import * as vscode from "vscode";
 import * as profileLoader from "../../../src/configuration/Profiles";
-import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
+import { SshSession, Shell } from "@zowe/zos-uss-for-zowe-sdk";
 import { createInstanceOfProfile, createIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
-import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, Validation, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor, FilterItem } from "../../../src/management/FilterManagement";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
@@ -26,6 +26,15 @@ import { Definitions } from "../../../src/configuration/Definitions";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 
 jest.mock("Session");
+jest.mock("@zowe/zos-uss-for-zowe-sdk", () => {
+    const actual = jest.requireActual("@zowe/zos-uss-for-zowe-sdk");
+    return {
+        ...actual,
+        Shell: {
+            isConnectionValid: jest.fn(),
+        },
+    };
+});
 
 describe("UnixCommand Actions Unit Testing", () => {
     const showErrorMessage = jest.fn();
@@ -254,6 +263,12 @@ describe("UnixCommand Actions Unit Testing", () => {
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
         jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo1" as any);
 
+        let helperFunctionArgs;
+        jest.spyOn(getUnixActions().profileInstance, "profileValidationHelper").mockImplementation((prof, _fun) => {
+            helperFunctionArgs = { prof, _fun };
+            return Promise.resolve("active");
+        });
+
         await getUnixActions().issueUnixCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
@@ -269,6 +284,20 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(appendLine.mock.calls[0][0]).toBe("> testUser@ssh:/u/directorypath $ /d iplinfo1");
         expect(appendLine.mock.calls[1][0]["commandResponse"]).toBe("iplinfo1");
         expect(showInformationMessage.mock.calls.length).toBe(0);
+
+        expect(helperFunctionArgs).toBeDefined();
+
+        const actions = getUnixActions();
+        const sampleSshSession = { ISshSession: { hostname: "host.com" } };
+        const sampleSshProfile = { profile: { host: "host.com" } };
+        actions.sshSession = sampleSshSession as any;
+        actions.sshProfile = sampleSshProfile as any;
+
+        jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockReturnValue(Promise.resolve(sampleSshProfile as any));
+        (Shell.isConnectionValid as jest.Mock).mockResolvedValue(true);
+
+        const result = await helperFunctionArgs._fun(helperFunctionArgs.prof, helperFunctionArgs.prof.type);
+        expect(result).toBe("active");
     });
 
     it("tests the selectServiceProfile function with quickpick", async () => {
@@ -362,7 +391,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueUnixCommand function user escapes the commandbox", async () => {
+    it("tests the issueUnixCommand function user escapes the input box", async () => {
         showQuickPick.mockReturnValueOnce("firstProfile");
         showInputBox.mockReturnValueOnce("/directorypath");
         showInputBox.mockReturnValueOnce(undefined);
@@ -425,7 +454,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError");
     });
 
-    it("If nothing is entered in the inputbox of path", async () => {
+    it("If nothing is entered in the input box of path", async () => {
         Object.defineProperty(profInstance, "getDefaultProfile", {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
@@ -538,7 +567,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showErrorMessage.mock.calls[0][0]).toEqual("No SSH profile found. Please create an SSH profile.");
     });
 
-    it("the ssh profile doesnot have user and pw", async () => {
+    it("the ssh profile does not have user and password", async () => {
         fetchSshProfiles = [
             {
                 name: "ssh",
@@ -561,7 +590,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         ((await getUnixActions()) as any).getSshProfile();
     });
 
-    it("the shh profile does not have port or host or both", async () => {
+    it("the ssh profile does not have port or host or both", async () => {
         fetchSshProfiles = [
             {
                 name: "ssh",
@@ -578,7 +607,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showErrorMessage.mock.calls[0][0]).toEqual("SSH profile missing connection details. Please update.");
     });
 
-    it("tests the selectServiceProfile function-1", async () => {
+    it("tests the selectServiceProfile function", async () => {
         await expect(
             getUnixActions().selectServiceProfile([
                 {

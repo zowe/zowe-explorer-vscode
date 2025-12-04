@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
-import { Gui, IZoweTreeNode, PersistenceSchemaEnum, Validation, ZoweExplorerApiType, ZoweExplorerZosmf, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, PersistenceSchemaEnum, Validation, ZoweExplorerApiType, ZoweVsCodeExtension, imperative } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { AuthUtils } from "../utils/AuthUtils";
@@ -20,7 +20,6 @@ import { Definitions } from "../configuration/Definitions";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { Constants } from "../configuration/Constants";
-import { Profiles } from "../configuration/Profiles";
 
 /**
  * Provides a class that manages submitting a Unix command on the server
@@ -151,23 +150,12 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     async (prof: imperative.IProfileLoaded, type: string): Promise<string> => {
                         if (type !== "ssh" || prof.profile.host !== this.sshSession.ISshSession.hostname) return "unverified";
                         if (this.sshSession.ISshSession.privateKey == null) {
-                            let values: string[];
-                            try {
-                                values = await Profiles.getInstance().promptCredentials(this.sshProfile);
-                            } catch (error) {
-                                await AuthUtils.errorHandling(error, { profile: this.sshProfile });
-                                return "inactive";
+                            const tempProfile = await ZoweVsCodeExtension.updateCredentials({ profile: this.sshProfile }, ZoweExplorerApiRegister.getInstance());
+                            if (!tempProfile) {
+                                return "unverified";
                             }
-                            if (values) {
-                                this.sshProfile.profile.user = values[0];
-                                this.sshProfile.profile.password = values[1];
-                            } else {
-                                return "inactive";
-                            }
-                            imperative.AuthOrder.addCredsToSession(
-                                this.sshSession.ISshSession,
-                                ZoweExplorerZosmf.CommonApi.getCommandArgs(this.sshProfile)
-                            );
+                            this.sshSession.ISshSession.password = tempProfile.profile.password;
+                            this.sshSession.ISshSession.user = tempProfile.profile.user;
                         }
                         return (await zosuss.Shell.isConnectionValid(this.sshSession)) ? "active" : "inactive";
                     }
