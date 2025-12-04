@@ -460,7 +460,8 @@ describe("ZosmfUssApi", () => {
         {
             name: "downloadDirectory",
             spy: jest.spyOn(zosfiles.Download, "ussDir"),
-            args: ["localPath", fakeProperties],
+            args: ["ussDirectoryPath", fakeProperties, undefined],
+            transform: (args) => [args[0], fakeProperties, args[2]],
         },
         {
             name: "putContent",
