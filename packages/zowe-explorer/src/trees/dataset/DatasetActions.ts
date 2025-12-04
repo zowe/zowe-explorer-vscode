@@ -846,13 +846,15 @@ export class DatasetActions {
                     preserveOriginalLetterCase
                 );
 
+                const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
                 const downloadOptions: zosfiles.IDownloadOptions = {
                     directory: generatedFileDirectory,
                     maxConcurrentRequests,
                     preserveOriginalLetterCase,
                     extensionMap,
                     binary: encoding?.kind === "binary",
-                    encoding: encoding?.kind === "other" ? encoding.codepage : undefined,
+                    record: isRecordEncoding,
+                    encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
                     overwrite,
                     task,
                     responseTimeout: profile?.profile?.responseTimeout,
@@ -903,10 +905,12 @@ export class DatasetActions {
                     : selectedPath.fsPath;
                 const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
 
+                const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
                 const downloadOptions = {
                     file: filePath,
                     binary: encoding?.kind === "binary",
-                    encoding: encoding?.kind === "other" ? encoding.codepage : undefined,
+                    record: isRecordEncoding,
+                    encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
                     overwrite,
                     responseTimeout: profile?.profile?.responseTimeout,
                 };
@@ -962,10 +966,12 @@ export class DatasetActions {
                     : selectedPath.fsPath;
                 const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
 
+                const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
                 const downloadOptions = {
                     file: filePath,
                     binary: encoding?.kind === "binary",
-                    encoding: encoding?.kind === "other" ? encoding.codepage : undefined,
+                    record: isRecordEncoding,
+                    encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
                     overwrite,
                     responseTimeout: profile?.profile?.responseTimeout,
                 };

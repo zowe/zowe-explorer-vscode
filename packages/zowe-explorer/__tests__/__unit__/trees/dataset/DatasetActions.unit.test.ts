@@ -5135,6 +5135,50 @@ describe("DatasetActions - downloading functions", () => {
 
             expect(mockExecuteDownloadWithProgress.mock).not.toHaveBeenCalled();
         });
+
+        it("should handle record codepage by setting record option", async () => {
+            const optionsWithRecord = {
+                ...defaultDownloadOptions,
+                encoding: { kind: "other" as const, codepage: "record" },
+            };
+            mockGetDataSetDownloadOptions.mock.mockResolvedValue(optionsWithRecord);
+
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            const memberNodes = [
+                new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode }),
+            ];
+
+            pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
+            pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+            pdsNode.getLabel = jest.fn().mockReturnValue("TEST.PDS");
+
+            const downloadAllMembersSpy = jest.spyOn(testMocks.mvsApi, "downloadAllMembers").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: {},
+            });
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalled();
+            const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
+            await downloadFn();
+
+            expect(downloadAllMembersSpy).toHaveBeenCalledWith(
+                "TEST.PDS",
+                expect.objectContaining({
+                    record: true,
+                    encoding: undefined,
+                    binary: false,
+                })
+            );
+        });
     });
 
     describe("downloadMember", () => {
@@ -5305,6 +5349,53 @@ describe("DatasetActions - downloading functions", () => {
                     encoding: "IBM-1047",
                     overwrite: true,
                     responseTimeout: 30000,
+                })
+            );
+        });
+
+        it("should handle record codepage by setting record option", async () => {
+            const optionsWithRecord = {
+                ...defaultDownloadOptions,
+                encoding: { kind: "other" as const, codepage: "record" },
+            };
+            mockGetDataSetDownloadOptions.mock.mockResolvedValue(optionsWithRecord);
+
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+            });
+
+            const memberNode = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNode,
+                profile: defaultTestProfile,
+            });
+
+            memberNode.getParent = jest.fn().mockReturnValue(pdsNode);
+            memberNode.getLabel = jest.fn().mockReturnValue("MEMBER1");
+            memberNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+            pdsNode.getLabel = jest.fn().mockReturnValue("TEST.PDS");
+
+            const getContentsSpy = jest.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { etag: "123" },
+            });
+
+            await DatasetActions.downloadMember(memberNode);
+
+            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalled();
+            const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
+            await downloadFn();
+
+            expect(getContentsSpy).toHaveBeenCalledWith(
+                "TEST.PDS(MEMBER1)",
+                expect.objectContaining({
+                    record: true,
+                    encoding: undefined,
+                    binary: false,
                 })
             );
         });
@@ -5493,6 +5584,41 @@ describe("DatasetActions - downloading functions", () => {
                     encoding: "IBM-1047",
                     overwrite: true,
                     responseTimeout: 30000,
+                })
+            );
+        });
+
+        it("should handle record codepage by setting record option", async () => {
+            const optionsWithRecord = {
+                ...defaultDownloadOptions,
+                encoding: { kind: "other" as const, codepage: "record" },
+            };
+            mockGetDataSetDownloadOptions.mock.mockResolvedValue(optionsWithRecord);
+
+            const dsNode = new ZoweDatasetNode({
+                label: "TEST.DATASET.SEQ",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            dsNode.getLabel = jest.fn().mockReturnValue("TEST.DATASET.SEQ");
+            dsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            const getContentsSpy = jest.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue(undefined);
+
+            await DatasetActions.downloadDataSet(dsNode);
+
+            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalled();
+            const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
+            await downloadFn();
+
+            expect(getContentsSpy).toHaveBeenCalledWith(
+                "TEST.DATASET.SEQ",
+                expect.objectContaining({
+                    record: true,
+                    encoding: undefined,
+                    binary: false,
                 })
             );
         });
