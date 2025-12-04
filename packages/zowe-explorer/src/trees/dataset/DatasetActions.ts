@@ -801,7 +801,7 @@ export class DatasetActions {
         if (children.length > Constants.MIN_WARN_DOWNLOAD_FILES) {
             const proceed = await Gui.showMessage(
                 vscode.l10n.t(
-                    "This data set has {0} members. Downloading a large number of files may take a long time. Do you want to continue?",
+                    "This data set has {0} members. Downloading a large number of files can take a long time. Do you want to continue?",
                     children.length
                 ),
                 { severity: MessageSeverity.WARN, items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")], vsCodeOpts: { modal: true } }
