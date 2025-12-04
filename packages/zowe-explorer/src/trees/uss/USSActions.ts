@@ -634,10 +634,9 @@ export class USSActions {
 
             if (getOption(localizedLabels.setFilterOptions)) {
                 const filterOptions = await USSActions.getUssDirFilterOptions(downloadOpts.dirFilterOptions);
-                if (filterOptions === null) {
-                    return;
+                if (filterOptions && Object.keys(filterOptions).length > 0) {
+                    downloadOpts.dirFilterOptions = filterOptions;
                 }
-                downloadOpts.dirFilterOptions = filterOptions;
             }
         }
 
@@ -739,7 +738,24 @@ export class USSActions {
             return;
         }
 
-        const totalFileCount = await USSUtils.countAllFilesRecursively(node, downloadOptions.dirFilterOptions?.depth);
+        let totalFileCount = 0;
+        try {
+            const countListOptions: zosfiles.IUSSListOptions = {
+                ...downloadOptions.dirFilterOptions,
+                type: "f",
+                filesys: downloadOptions.dirOptions.filesys,
+                symlinks: downloadOptions.dirOptions.symlinks,
+            };
+            const listResponse = await ZoweExplorerApiRegister.getUssApi(profile).fileList(node.fullPath, countListOptions);
+            if (listResponse?.apiResponse?.items) {
+                totalFileCount = listResponse.apiResponse.items.length;
+            }
+        } catch (e) {
+            // Fallback to an inaccurate count of items from the tree
+            // Inaccurate as it doesnt take into account the filter options
+            totalFileCount = await USSUtils.countAllFilesRecursively(node, downloadOptions.dirFilterOptions?.depth);
+        }
+
         if (totalFileCount === 0) {
             Gui.infoMessage(vscode.l10n.t("The selected directory contains no files to download."));
             return;
@@ -791,7 +807,6 @@ export class USSActions {
                     maxConcurrentRequests: profile?.profile?.maxConcurrentRequests || 1,
                     task,
                     responseTimeout: profile?.profile?.responseTimeout,
-                    ...downloadOptions.dirFilterOptions,
                 };
 
                 // only set encoding/binary if user chose a specific encoding (not auto detect)
@@ -803,13 +818,21 @@ export class USSActions {
                             : profile.profile?.encoding;
                 }
 
+                downloadOptions.dirFilterOptions ??= {};
+                downloadOptions.dirFilterOptions.type ??= "f"; // fallback to files only
+                const listOptions: zosfiles.IUSSListOptions = {
+                    ...downloadOptions.dirFilterOptions,
+                    filesys: downloadOptions.dirOptions.filesys,
+                    symlinks: downloadOptions.dirOptions.symlinks,
+                };
+
                 try {
                     if (token.isCancellationRequested) {
                         Gui.showMessage(vscode.l10n.t("Download cancelled"));
                         return;
                     }
 
-                    const response = await ZoweExplorerApiRegister.getUssApi(profile).downloadDirectory(node.fullPath, options);
+                    const response = await ZoweExplorerApiRegister.getUssApi(profile).downloadDirectory(node.fullPath, options, listOptions);
                     void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"), directoryPath);
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });

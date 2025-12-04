@@ -1113,6 +1113,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             getTag: jest.fn().mockResolvedValue("untagged"),
             getContents: jest.fn().mockResolvedValue({ success: true, commandResponse: "", apiResponse: {} }),
             downloadDirectory: jest.fn().mockResolvedValue({ success: true, commandResponse: "", apiResponse: {} }),
+            fileList: jest.fn().mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [] } }),
         };
         jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(globalMocks.ussApi);
 
@@ -1885,11 +1886,12 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     includeHidden: false,
                     directoryEncoding: { kind: "other", codepage: "IBM-1047" },
                 },
+                dirFilterOptions: {},
                 encoding: { kind: "other", codepage: "IBM-1047" },
             };
 
             jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
-            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [{}, {}, {}, {}, {}] } });
 
             globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
                 return await callback({ report: jest.fn() }, { isCancellationRequested: false });
@@ -1898,7 +1900,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             await USSActions.downloadUssDirectory(mockNode);
 
             expect(ZoweLogger.trace).toHaveBeenCalledWith("uss.actions.downloadUssDirectory called.");
-            expect(USSUtils.countAllFilesRecursively).toHaveBeenCalledWith(mockNode, undefined);
+            expect(globalMocks.ussApi.fileList).toHaveBeenCalledWith("/u/test/directory", expect.objectContaining({ type: "f" }));
             expect(ZoweExplorerApiRegister.getUssApi).toHaveBeenCalledWith(mockNode.getProfile());
             expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
                 "/u/test/directory",
@@ -1909,6 +1911,10 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     encoding: "IBM-1047",
                     includeHidden: false,
                     maxConcurrentRequests: 1,
+                }),
+                expect.objectContaining({
+                    filesys: undefined,
+                    symlinks: undefined,
                 })
             );
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
@@ -1926,11 +1932,12 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 generateDirectory: true,
                 overwrite: false,
                 dirOptions: { includeHidden: true },
+                dirFilterOptions: {},
                 encoding: { kind: "binary" },
             };
 
             jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
-            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(3);
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [{}, {}, {}] } });
 
             globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
                 return await callback({ report: jest.fn() }, { isCancellationRequested: false });
@@ -1944,6 +1951,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     directory: expect.stringMatching(/u.test.directory$/),
                     overwrite: false,
                     includeHidden: true,
+                }),
+                expect.objectContaining({
+                    type: "f",
+                    filesys: undefined,
+                    symlinks: undefined,
                 })
             );
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
@@ -1959,12 +1971,13 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: false,
-                includeHidden: false,
+                dirOptions: { includeHidden: false },
+                dirFilterOptions: {},
                 encoding: { kind: "binary" },
             };
 
             jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
-            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(0);
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [] } });
 
             await USSActions.downloadUssDirectory(mockNode);
 
@@ -1979,11 +1992,13 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 generateDirectory: false,
                 overwrite: false,
                 dirOptions: { includeHidden: false },
+                dirFilterOptions: {},
                 encoding: undefined,
             };
 
             jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
-            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(1000);
+            const largeFileList = Array(1000).fill({});
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: largeFileList } });
 
             globalMocks.showMessage.mockResolvedValue("Yes");
 
@@ -2001,7 +2016,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     vsCodeOpts: { modal: true },
                 })
             );
-            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalled();
+            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
+                expect.any(String),
+                expect.any(Object),
+                expect.objectContaining({ type: "f" })
+            );
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
@@ -2016,11 +2035,13 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 generateDirectory: false,
                 overwrite: false,
                 dirOptions: { includeHidden: false },
+                dirFilterOptions: {},
                 encoding: undefined,
             };
 
             jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
-            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(1000);
+            const largeFileList = Array(1000).fill({});
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: largeFileList } });
 
             globalMocks.showMessage.mockResolvedValue("No");
 
@@ -2036,11 +2057,12 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 generateDirectory: false,
                 overwrite: false,
                 dirOptions: { includeHidden: false },
+                dirFilterOptions: {},
                 encoding: undefined,
             };
 
             jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
-            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [{}, {}, {}, {}, {}] } });
 
             globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
                 return await callback({ report: jest.fn() }, { isCancellationRequested: true });
@@ -2069,11 +2091,12 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 generateDirectory: false,
                 overwrite: false,
                 dirOptions: { includeHidden: false },
+                dirFilterOptions: {},
                 encoding: undefined,
             };
 
             jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
-            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [{}, {}, {}, {}, {}] } });
 
             const error = new Error("Download failed");
             globalMocks.ussApi.downloadDirectory.mockRejectedValue(error);
@@ -2105,11 +2128,12 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 generateDirectory: false,
                 overwrite: false,
                 dirOptions: { includeHidden: false },
+                dirFilterOptions: {},
                 encoding: undefined,
             };
 
             jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
-            jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [{}, {}, {}, {}, {}] } });
 
             globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
                 return await callback({ report: jest.fn() }, { isCancellationRequested: false });
@@ -2122,6 +2146,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 expect.objectContaining({
                     maxConcurrentRequests: 5,
                     responseTimeout: 30000,
+                }),
+                expect.objectContaining({
+                    type: "f",
+                    filesys: undefined,
+                    symlinks: undefined,
                 })
             );
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
