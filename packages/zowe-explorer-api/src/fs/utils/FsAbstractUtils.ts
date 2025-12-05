@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { imperative } from "@zowe/imperative";
+import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../../profiles/ProfilesCache";
 import { DirEntry, FileEntry, FilterEntry, IFileSystemEntry, UriFsInfo } from "../types/abstract";
 import { Gui } from "../../globals";

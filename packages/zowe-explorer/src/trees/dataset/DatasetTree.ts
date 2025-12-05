@@ -508,6 +508,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode): Promise<ZoweDatasetNode> {
         ZoweLogger.trace("DatasetTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
+
         let node: ZoweDatasetNode;
         if (contextValue.includes(Constants.DS_PDS_CONTEXT) || contextValue.includes(Constants.DS_DS_CONTEXT)) {
             if (contextValue.includes(Constants.DS_PDS_CONTEXT)) {
@@ -517,7 +518,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     parentNode,
                     profile,
                 });
-                if (!DatasetFSProvider.instance.exists(node.resourceUri)) {
+                if (
+                    !DatasetFSProvider.instance.exists(node.resourceUri) &&
+                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type)
+                ) {
                     await vscode.workspace.fs.createDirectory(node.resourceUri);
                 }
             } else {
@@ -528,7 +532,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     profile,
                     contextOverride: contextValue,
                 });
-                if (!DatasetFSProvider.instance.exists(node.resourceUri)) {
+                if (
+                    !DatasetFSProvider.instance.exists(node.resourceUri) &&
+                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type)
+                ) {
                     vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
                 }
             }
@@ -602,11 +609,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             } catch (error) {
                 const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe data set favorites that refer to a non-existent CLI profile named: {0}.
-                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.
-                    Would you like to do this now? {1}`,
+                    message: `Error: You have Zowe data set favorites that refer to a non-existent profile named: {0}.
+To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n
+Would you like to do this now?`,
                     args: [profileName, SharedUtils.getAppName()],
-                    comment: ["Profile name", "Application name"],
+                    comment: ["Profile name"],
                 });
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                 ZoweLogger.error(errMessage + error.toString());

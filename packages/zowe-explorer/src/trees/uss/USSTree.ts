@@ -1040,7 +1040,10 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     profile,
                 });
                 node.description = path.dirname(label);
-                if (!UssFSProvider.instance.exists(node.resourceUri)) {
+                if (
+                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type) &&
+                    !UssFSProvider.instance.exists(node.resourceUri)
+                ) {
                     await vscode.workspace.fs.createDirectory(node.resourceUri);
                 }
                 break;
@@ -1064,14 +1067,10 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     profile,
                 });
                 node.description = path.dirname(label);
-                if (!UssFSProvider.instance.exists(node.resourceUri)) {
-                    const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
-                    if (!UssFSProvider.instance.exists(parentUri)) {
-                        await vscode.workspace.fs.createDirectory(parentUri);
-                    }
-                    await vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
-                }
-                if (!UssFSProvider.instance.exists(node.resourceUri)) {
+                if (
+                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type) &&
+                    !UssFSProvider.instance.exists(node.resourceUri)
+                ) {
                     const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
                     if (!UssFSProvider.instance.exists(parentUri)) {
                         await vscode.workspace.fs.createDirectory(parentUri);
@@ -1130,13 +1129,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             } catch (error) {
                 ZoweLogger.error(error);
                 const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.
-                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.
-                      Would you like to do this now? {1}`,
+                    message: `Error: You have Zowe USS favorites that refer to a non-existent profile named: {0}.
+To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n
+Would you like to do this now?`,
                     args: [profileName, SharedUtils.getAppName()],
-                    comment: ["Profile name", "Application name"],
+                    comment: ["Profile name"],
                 });
-                const btnLabelRemove = vscode.l10n.t("initializeUSSFavorites.error.buttonRemove", "Remove");
+                const btnLabelRemove = vscode.l10n.t("Remove");
                 Gui.errorMessage(errMessage, {
                     items: [btnLabelRemove],
                     vsCodeOpts: { modal: true },

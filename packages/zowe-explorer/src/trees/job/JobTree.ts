@@ -443,11 +443,11 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 }
             } catch (error) {
                 const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.
-                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.
-                          Would you like to do this now? {1}`,
+                    message: `Error: You have Zowe job favorites that refer to a non-existent profile named: {0}.
+To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n
+Would you like to do this now?`,
                     args: [profileName, SharedUtils.getAppName()],
-                    comment: ["Profile name", "Application name"],
+                    comment: ["Profile name"],
                 });
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                 ZoweLogger.error(errMessage + error.toString());
