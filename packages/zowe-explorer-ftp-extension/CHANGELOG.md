@@ -8,6 +8,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Fixed volume attribute not being retrieved for datasets by normalizing property name from `volume` to `vols` to match z/OSMF API standard. [#3946](https://github.com/zowe/zowe-explorer-vscode/issues/3946)
 - Updated Zowe SDKs to `8.28.0` for technical currency. [#3877](https://github.com/zowe/zowe-explorer-vscode/pull/3877)
 
 ## `3.3.1`
