@@ -92,17 +92,11 @@ export class FeatureFlags {
     }
 
     private static async saveToDisk(): Promise<void> {
-        try {
-            const dir = path.dirname(this.filePath);
-            if (!existsSync(dir)) {
-                await fs.mkdir(dir, { recursive: true });
-            }
-
-            await fs.writeFile(this.filePath, JSON.stringify(this.flags, null, 2), "utf-8");
-        } catch (error) {
-            // TODO: Remove Comment
-            // console.error(`Failed to save feature flags to ${this.filePath}:`, error);
-            throw error;
+        const dir = path.dirname(this.filePath);
+        if (!existsSync(dir)) {
+            await fs.mkdir(dir, { recursive: true });
         }
+
+        await fs.writeFile(this.filePath, JSON.stringify(this.flags, null, 2), "utf-8");
     }
 }

@@ -259,7 +259,14 @@ describe("AuthUtils", () => {
                 // Act
                 const runSequentialMock = jest.spyOn(AuthHandler, "runSequentialIfEnabled").mockImplementation((_profile, action) => action());
                 try {
-                    const statResult = await DatasetFSProvider.instance.stat(testUris.ps);
+                    const statResult = await DatasetFSProvider.instance.stat(
+                        Uri.from({
+                            scheme: ZoweScheme.DS,
+                            path: "/sestest/USER.DATA.PS",
+                        }).with({
+                            query: "fetch=true",
+                        })
+                    );
                     const fetchResult = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
 
                     // Assert

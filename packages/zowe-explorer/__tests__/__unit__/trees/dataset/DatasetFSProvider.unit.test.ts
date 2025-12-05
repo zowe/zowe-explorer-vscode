@@ -1012,6 +1012,7 @@ describe("DatasetFSProvider", () => {
             });
 
             const fakePdsMember = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pdsMember)), testEntries.pdsMember);
+            testEntries.pds.entries.set("MEMBER1", fakePdsMember);
             const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePdsMember);
             const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(testEntries.pds);
             const allMembersMock = jest.fn().mockResolvedValue({

@@ -203,6 +203,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                             entry.wasAccessed = false;
                         }
                     }
+                    return entry;
                 }
             }
 
