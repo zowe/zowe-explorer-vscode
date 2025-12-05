@@ -72,6 +72,7 @@ describe("FtpMvsApi", () => {
         const result = await MvsApi.dataSet(mockParams.filter);
 
         expect(result.apiResponse.items[0].dsname).toContain("IBMUSER.DS1");
+        expect(result.apiResponse.items[0].vols).toBe("MIGRATED");
         expect(DataSetUtils.listDataSets).toHaveBeenCalledTimes(1);
         expect(MvsApi.releaseConnection).toHaveBeenCalledTimes(0);
     });
