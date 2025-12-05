@@ -217,8 +217,14 @@ describe("UnixCommand Actions Unit Testing", () => {
         }),
     });
 
-    beforeEach(() => {
+    let mockCommandApi;
+    beforeEach(async () => {
         jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+        mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        mockCommandApi.sshProfileRequired = jest.fn().mockReturnValueOnce(true);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
     });
 
     afterEach(() => {
@@ -238,6 +244,31 @@ describe("UnixCommand Actions Unit Testing", () => {
         return UnixCommandHandler.getInstance();
     };
 
+    it("issueUnixCommand should validate the nodeProfile if a separate ssh profile is not required", async () => {
+        const actions = getUnixActions();
+        mockCommandApi.sshProfileRequired = jest.fn().mockReturnValueOnce(false);
+        jest.spyOn(actions.profileInstance, "checkCurrentProfile").mockResolvedValue({ status: "invalid", name: "fake" } as any);
+        actions.profileInstance.validProfile = Validation.ValidationType.INVALID;
+
+        await actions.issueUnixCommand({ getProfile: () => profileOne } as any);
+
+        expect(actions.profileInstance.checkCurrentProfile).toHaveBeenCalled();
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Profile is invalid");
+    });
+
+    it("issueUnixCommand should return early if profilestatus is not active", async () => {
+        const actions = getUnixActions();
+        jest.spyOn(actions.profileInstance, "profileValidationHelper").mockResolvedValue("inactive");
+
+        await actions.issueUnixCommand({ getProfile: () => profileOne } as any);
+
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual(
+            "Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness."
+        );
+    });
+
     it("test the issueUnixCommand function", async () => {
         const mockUssApi = await apiRegisterInstance.getUssApi(profileOne);
         const getUssApiMock = jest.fn();
@@ -246,11 +277,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         jest.spyOn(mockUssApi, "getSession").mockReturnValue(session);
 
         showQuickPick.mockReturnValueOnce("firstProfile");
-
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         showInputBox.mockReturnValueOnce("/u/directorypath");
         showInputBox.mockReturnValueOnce("/d iplinfo1");
@@ -269,7 +295,16 @@ describe("UnixCommand Actions Unit Testing", () => {
             return Promise.resolve("active");
         });
 
-        await getUnixActions().issueUnixCommand();
+        const actions = getUnixActions();
+        const sampleSshSession = { ISshSession: { hostname: "host.com" } };
+        const sampleSshProfile = { profile: { host: "host.com" } };
+        actions.sshSession = sampleSshSession as any;
+        actions.sshProfile = sampleSshProfile as any;
+
+        jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockReturnValue(Promise.resolve(sampleSshProfile as any));
+        (Shell.isConnectionValid as jest.Mock).mockResolvedValue(false);
+
+        await actions.issueUnixCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstProfile", "secondProfile"]);
@@ -286,18 +321,10 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(0);
 
         expect(helperFunctionArgs).toBeDefined();
-
-        const actions = getUnixActions();
-        const sampleSshSession = { ISshSession: { hostname: "host.com" } };
-        const sampleSshProfile = { profile: { host: "host.com" } };
         actions.sshSession = sampleSshSession as any;
         actions.sshProfile = sampleSshProfile as any;
-
-        jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockReturnValue(Promise.resolve(sampleSshProfile as any));
-        (Shell.isConnectionValid as jest.Mock).mockResolvedValue(true);
-
         const result = await helperFunctionArgs._fun(helperFunctionArgs.prof, helperFunctionArgs.prof.type);
-        expect(result).toBe("active");
+        expect(result).toBe("inactive");
     });
 
     it("tests the selectServiceProfile function with quickpick", async () => {
@@ -324,11 +351,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         jest.spyOn(mockUssApi, "getSession").mockReturnValue(session);
 
         showQuickPick.mockReturnValueOnce("firstProfile");
-
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         Object.defineProperty(profInstance, "getDefaultProfile", {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
@@ -363,11 +385,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         showQuickPick.mockReturnValueOnce("firstProfile");
         showInputBox.mockReturnValueOnce("/u/directorypath");
 
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-
         Object.defineProperty(profInstance, "getDefaultProfile", {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
@@ -396,11 +413,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         showInputBox.mockReturnValueOnce("/directorypath");
         showInputBox.mockReturnValueOnce(undefined);
 
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-
         Object.defineProperty(profInstance, "getDefaultProfile", {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
@@ -426,11 +438,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         showInputBox.mockReturnValueOnce("/u/directorypath");
         showInputBox.mockReturnValueOnce("/d iplinfo3");
         withProgress.mockRejectedValueOnce(Error("fake testError"));
-
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         Object.defineProperty(profInstance, "getDefaultProfile", {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
@@ -508,11 +515,6 @@ describe("UnixCommand Actions Unit Testing", () => {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
-
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 

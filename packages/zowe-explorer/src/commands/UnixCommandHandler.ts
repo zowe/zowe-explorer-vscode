@@ -150,7 +150,10 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     async (prof: imperative.IProfileLoaded, type: string): Promise<string> => {
                         if (type !== "ssh" || prof.profile.host !== this.sshSession.ISshSession.hostname) return "unverified";
                         if (this.sshSession.ISshSession.privateKey == null) {
-                            const tempProfile = await ZoweVsCodeExtension.updateCredentials({ profile: this.sshProfile }, ZoweExplorerApiRegister.getInstance());
+                            const tempProfile = await ZoweVsCodeExtension.updateCredentials(
+                                { profile: this.sshProfile },
+                                ZoweExplorerApiRegister.getInstance()
+                            );
                             if (!tempProfile) {
                                 return "unverified";
                             }

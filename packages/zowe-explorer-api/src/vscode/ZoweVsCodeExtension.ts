@@ -119,10 +119,7 @@ export class ZoweVsCodeExtension {
                 await profInfo.updateProperty({ ...upd, property: "password", value: creds[1], setSecure });
             }
             cache.updateCachedProfile(loadProfile, undefined, apiRegister);
-            imperative.AuthOrder.addCredsToSession(
-                loadSession,
-                ZoweExplorerZosmf.CommonApi.getCommandArgs(loadProfile)
-            );
+            imperative.AuthOrder.addCredsToSession(loadSession, ZoweExplorerZosmf.CommonApi.getCommandArgs(loadProfile));
             ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(loadProfile);
 
             return loadProfile;
