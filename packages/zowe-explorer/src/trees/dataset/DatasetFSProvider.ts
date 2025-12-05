@@ -219,7 +219,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         const parentKey =
-            "stat_" + (uri.query.toLocaleLowerCase().includes("fetch=true") ? "fetch_" : "") + uri.toString().split("/").slice(0, 3).join("/");
+            "stat_" +
+            (uri.query && uri.query.toLocaleLowerCase().includes("fetch=true") ? "fetch_" : "") +
+            uri.toString().split("/").slice(0, 3).join("/");
 
         const segments = uri.path.split("/").filter((s) => s.length > 0);
         const isMemberRequest = segments.length === 3;

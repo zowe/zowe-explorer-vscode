@@ -55,13 +55,15 @@ export class FeatureFlags {
      */
     public static async set(key: string, value: any, save: boolean = false): Promise<void> {
         this.flags[key] = value;
-        if (save) await this.saveToDisk();
+        if (save) {
+            await this.saveToDisk();
+        }
     }
 
     /**
      * Deletes a flag and persists the change.
      */
-    public static async remove(key: string): Promise<void> {
+    public static remove(key: string): void {
         if (key in this.flags) {
             delete this.flags[key];
         }
@@ -83,7 +85,8 @@ export class FeatureFlags {
 
             this.flags = JSON.parse(data);
         } catch (error) {
-            console.error(`Failed to load feature flags from ${this.filePath}:`, error);
+            // TODO: Remove Comment
+            // console.error(`Failed to load feature flags from ${this.filePath}:`, error);
             this.flags = {};
         }
     }
@@ -97,7 +100,8 @@ export class FeatureFlags {
 
             await fs.writeFile(this.filePath, JSON.stringify(this.flags, null, 2), "utf-8");
         } catch (error) {
-            console.error(`Failed to save feature flags to ${this.filePath}:`, error);
+            // TODO: Remove Comment
+            // console.error(`Failed to save feature flags to ${this.filePath}:`, error);
             throw error;
         }
     }
