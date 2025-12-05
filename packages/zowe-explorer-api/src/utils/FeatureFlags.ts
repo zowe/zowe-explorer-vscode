@@ -18,7 +18,7 @@ export interface FlagSchema {
 }
 
 export class FeatureFlags {
-    private static filePath: string = path.join(__dirname, "../../../../feature-flags.json");
+    private static filePath: string = path.join(__dirname, "../../feature-flags.json");
     private static flags: FlagSchema = {};
     private static isInitialized: boolean = false;
 

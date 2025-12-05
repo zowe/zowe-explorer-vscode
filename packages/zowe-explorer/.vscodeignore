@@ -10,6 +10,7 @@
 !resources/**/*.svg
 !prebuilds/**
 !src/webviews/dist/**
+!feature-flags.json
 
 !CHANGELOG.md
 !LICENSE
