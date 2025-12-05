@@ -533,7 +533,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns An array of tuples containing each entry name and type
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        const key = "readDir_" + (uri.query.toLocaleLowerCase().includes("fetch=true") ? "fetch_" : "") + uri.toString();
+        const key = "readDir_" + uri.toString();
 
         if (this.requestCache.has(key)) {
             return this.requestCache.get(key);
@@ -743,7 +743,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns The data set's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const key = "readFile_" + (uri.query.toLocaleLowerCase().includes("fetch=true") ? "fetch_" : "") + uri.toString();
+        const key = "readFile_" + uri.toString();
 
         if (this.requestCache.has(key)) {
             return this.requestCache.get(key);
