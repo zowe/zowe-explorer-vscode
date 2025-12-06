@@ -625,9 +625,10 @@ export class DatasetActions {
             ZoweLocalStorage.getValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS) ?? {};
 
         dataSetDownloadOptions.overwrite ??= true;
-        dataSetDownloadOptions.generateDirectory ??= false;
-        dataSetDownloadOptions.preserveCase ??= false;
+        dataSetDownloadOptions.generateDirectory ??= true;
+        dataSetDownloadOptions.preserveCase ??= true;
         dataSetDownloadOptions.chooseEncoding ??= false;
+        dataSetDownloadOptions.overrideExtension ??= false;
         dataSetDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
 
         const profile = node.getProfile();
@@ -647,6 +648,13 @@ export class DatasetActions {
             return vscode.l10n.t("Choose encoding for download (current: EBCDIC)");
         };
 
+        const getExtensionDescription = (): string => {
+            if (dataSetDownloadOptions.fileExtension) {
+                return vscode.l10n.t("Override file extension (current: {0})", dataSetDownloadOptions.fileExtension);
+            }
+            return vscode.l10n.t("Override file extension");
+        };
+
         const optionItems: vscode.QuickPickItem[] = [
             {
                 label: vscode.l10n.t("Overwrite"),
@@ -662,6 +670,11 @@ export class DatasetActions {
                 label: vscode.l10n.t("Preserve Original Letter Case"),
                 description: vscode.l10n.t("Specifies if the automatically generated directories and files use the original letter case"),
                 picked: dataSetDownloadOptions.preserveCase,
+            },
+            {
+                label: vscode.l10n.t("Override Extension"),
+                description: getExtensionDescription(),
+                picked: dataSetDownloadOptions.overrideExtension,
             },
             {
                 label: vscode.l10n.t("Choose Encoding"),
@@ -708,6 +721,7 @@ export class DatasetActions {
         dataSetDownloadOptions.generateDirectory = getOption("Generate Directory Structure");
         dataSetDownloadOptions.preserveCase = getOption("Preserve Original Letter Case");
         dataSetDownloadOptions.chooseEncoding = getOption("Choose Encoding");
+        dataSetDownloadOptions.overrideExtension = getOption("Override Extension");
 
         if (dataSetDownloadOptions.chooseEncoding) {
             const encoding = await SharedUtils.promptForDownloadEncoding(profile, node.label as string);
@@ -718,6 +732,30 @@ export class DatasetActions {
             dataSetDownloadOptions.encoding = encoding;
         } else {
             dataSetDownloadOptions.encoding = undefined;
+        }
+
+        if (dataSetDownloadOptions.overrideExtension) {
+            const extensionInput = await Gui.showInputBox({
+                placeHolder: vscode.l10n.t("Enter file extension (e.g. csv)"),
+                value: dataSetDownloadOptions.fileExtension || "",
+                ignoreFocusOut: true,
+                validateInput: (text: string) => {
+                    if (!text || text.trim().length === 0) {
+                        return vscode.l10n.t("File extension cannot be empty");
+                    }
+                    const ext = text.trim().startsWith(".") ? text.trim().slice(1) : text.trim();
+                    if (!/^[a-zA-Z0-9_-]+$/.test(ext)) {
+                        return vscode.l10n.t("File extension can only contain letters, numbers, hyphens, and underscores");
+                    }
+                    return null;
+                },
+            });
+            if (extensionInput === undefined) {
+                Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                return;
+            }
+            const normalizedExtension = extensionInput.trim().startsWith(".") ? extensionInput.trim().slice(1) : extensionInput.trim();
+            dataSetDownloadOptions.fileExtension = normalizedExtension;
         }
 
         const dialogOptions: vscode.OpenDialogOptions = {
@@ -815,7 +853,15 @@ export class DatasetActions {
         if (!dataSetDownloadOptions) {
             return;
         }
-        const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, encoding, selectedPath } = dataSetDownloadOptions;
+        const {
+            overwrite,
+            generateDirectory,
+            preserveCase: preserveOriginalLetterCase,
+            encoding,
+            selectedPath,
+            overrideExtension,
+            fileExtension,
+        } = dataSetDownloadOptions;
 
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading all members"),
@@ -837,7 +883,12 @@ export class DatasetActions {
 
                 const datasetName = node.label as string;
                 const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
-                const extensionMap = await DatasetUtils.getExtensionMap(node, preserveOriginalLetterCase);
+
+                const extensionMap = await DatasetUtils.getExtensionMap(
+                    node,
+                    preserveOriginalLetterCase,
+                    overrideExtension && fileExtension ? fileExtension : undefined
+                );
 
                 const generatedFileDirectory = DatasetActions.generateDirectoryPath(
                     datasetName,
@@ -885,7 +936,15 @@ export class DatasetActions {
         if (!dataSetDownloadOptions) {
             return;
         }
-        const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, encoding, selectedPath } = dataSetDownloadOptions;
+        const {
+            overwrite,
+            generateDirectory,
+            preserveCase: preserveOriginalLetterCase,
+            encoding,
+            selectedPath,
+            overrideExtension,
+            fileExtension,
+        } = dataSetDownloadOptions;
 
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading member"),
@@ -897,7 +956,11 @@ export class DatasetActions {
 
                 const fileName = preserveOriginalLetterCase ? memberName : memberName.toLowerCase();
 
-                const extensionMap = await DatasetUtils.getExtensionMap(parent, preserveOriginalLetterCase);
+                const extensionMap = await DatasetUtils.getExtensionMap(
+                    parent,
+                    preserveOriginalLetterCase,
+                    overrideExtension && fileExtension ? fileExtension : undefined
+                );
                 const extension = extensionMap[fileName] ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
 
                 const targetDirectory = generateDirectory
@@ -945,7 +1008,15 @@ export class DatasetActions {
         if (!dataSetDownloadOptions) {
             return;
         }
-        const { overwrite, generateDirectory, preserveCase: preserveOriginalLetterCase, encoding, selectedPath } = dataSetDownloadOptions;
+        const {
+            overwrite,
+            generateDirectory,
+            preserveCase: preserveOriginalLetterCase,
+            encoding,
+            selectedPath,
+            overrideExtension,
+            fileExtension,
+        } = dataSetDownloadOptions;
 
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading data set"),
@@ -959,7 +1030,12 @@ export class DatasetActions {
                     fileName = pathParts[pathParts.length - 1];
                 }
 
-                const extension = DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+                let extension: string;
+                if (overrideExtension && fileExtension) {
+                    extension = fileExtension;
+                } else {
+                    extension = DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+                }
 
                 const targetDirectory = generateDirectory
                     ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, preserveOriginalLetterCase)

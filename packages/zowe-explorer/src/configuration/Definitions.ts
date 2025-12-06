@@ -46,6 +46,8 @@ export namespace Definitions {
         chooseEncoding?: boolean;
         encoding?: ZosEncoding;
         selectedPath?: vscode.Uri;
+        overrideExtension?: boolean;
+        fileExtension?: string;
     };
     export type UssDownloadOptions = {
         overwrite?: boolean;

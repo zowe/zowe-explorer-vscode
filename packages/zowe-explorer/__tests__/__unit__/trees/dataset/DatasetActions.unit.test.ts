@@ -4516,6 +4516,7 @@ describe("DatasetActions - downloading functions", () => {
         generateDirectory: false,
         preserveCase: false,
         chooseEncoding: false,
+        overrideExtension: false,
         encoding: undefined,
         selectedPath: vscode.Uri.file("/test/download/path"),
     };
@@ -4645,6 +4646,7 @@ describe("DatasetActions - downloading functions", () => {
                 generateDirectory: false,
                 preserveCase: false,
                 chooseEncoding: false,
+                overrideExtension: false,
                 encoding: undefined,
                 selectedPath: vscode.Uri.file("/user/selected/path"),
             });
@@ -4784,6 +4786,7 @@ describe("DatasetActions - downloading functions", () => {
                 generateDirectory: false,
                 preserveCase: false,
                 chooseEncoding: false,
+                overrideExtension: false,
                 encoding: undefined,
                 selectedPath: vscode.Uri.file("/test/path"),
             });
@@ -4883,6 +4886,149 @@ describe("DatasetActions - downloading functions", () => {
 
             mockPromptForDownloadEncoding[Symbol.dispose]();
         });
+
+        it("should handle override extension selection with valid extension", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mockZoweLocalStorage.mock.mockReturnValue(defaultDownloadOptions);
+
+            const mockShowInputBox = new MockedProperty(Gui, "showInputBox", undefined, jest.fn().mockResolvedValue("csv"));
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Extension"), picked: true }];
+                callback();
+            });
+
+            mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
+
+            expect(mockShowInputBox.mock).toHaveBeenCalled();
+            expect(result.overrideExtension).toBe(true);
+            expect(result.fileExtension).toBe("csv");
+
+            mockShowInputBox[Symbol.dispose]();
+        });
+
+        it("should handle override extension with dot", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mockZoweLocalStorage.mock.mockReturnValue(defaultDownloadOptions);
+
+            const mockShowInputBox = new MockedProperty(Gui, "showInputBox", undefined, jest.fn().mockResolvedValue(".csv"));
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Extension"), picked: true }];
+                callback();
+            });
+
+            mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
+
+            expect(result.overrideExtension).toBe(true);
+            expect(result.fileExtension).toBe("csv");
+
+            mockShowInputBox[Symbol.dispose]();
+        });
+
+        it("should cancel when user cancels extension input", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mockZoweLocalStorage.mock.mockReturnValue(defaultDownloadOptions);
+
+            const mockShowInputBox = new MockedProperty(Gui, "showInputBox", undefined, jest.fn().mockResolvedValue(undefined));
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Extension"), picked: true }];
+                callback();
+            });
+
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
+
+            expect(result).toBeUndefined();
+            expect(mockGui.mock).toHaveBeenCalledWith("Operation cancelled");
+
+            mockShowInputBox[Symbol.dispose]();
+        });
+
+        it("should preserve saved fileExtension when override extension is unchecked", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            const storedOptions = {
+                ...defaultDownloadOptions,
+                overrideExtension: false,
+                fileExtension: "txt",
+            };
+            mockZoweLocalStorage.mock.mockReturnValue(storedOptions);
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [];
+                callback();
+            });
+
+            mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
+
+            expect(result.overrideExtension).toBe(false);
+            expect(result.fileExtension).toBe("txt");
+        });
+
+        it("should prepopulate extension input with saved value", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            const storedOptions = {
+                ...defaultDownloadOptions,
+                fileExtension: "xml",
+            };
+            mockZoweLocalStorage.mock.mockReturnValue(storedOptions);
+
+            const mockShowInputBox = new MockedProperty(Gui, "showInputBox", undefined, jest.fn().mockResolvedValue("json"));
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Extension"), picked: true }];
+                callback();
+            });
+
+            mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
+
+            expect(mockShowInputBox.mock).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    value: "xml",
+                })
+            );
+            expect(result.fileExtension).toBe("json");
+
+            mockShowInputBox[Symbol.dispose]();
+        });
     });
 
     describe("generateDirectoryPath", () => {
@@ -4941,7 +5087,7 @@ describe("DatasetActions - downloading functions", () => {
                 DatasetActions,
                 "getDataSetDownloadOptions" as any,
                 undefined,
-                jest.fn().mockResolvedValue(defaultDownloadOptions)
+                jest.fn().mockResolvedValue({ ...defaultDownloadOptions })
             );
             mockExecuteDownloadWithProgress = new MockedProperty(
                 DatasetActions,
@@ -5197,7 +5343,7 @@ describe("DatasetActions - downloading functions", () => {
                 DatasetActions,
                 "getDataSetDownloadOptions" as any,
                 undefined,
-                jest.fn().mockResolvedValue(defaultDownloadOptions)
+                jest.fn().mockResolvedValue({ ...defaultDownloadOptions })
             );
             mockExecuteDownloadWithProgress = new MockedProperty(
                 DatasetActions,
@@ -5346,7 +5492,7 @@ describe("DatasetActions - downloading functions", () => {
                 expect.objectContaining({
                     file: expect.stringMatching(/Member1\.txt$/),
                     binary: false,
-                    encoding: "IBM-1047",
+                    encoding: undefined,
                     overwrite: true,
                     responseTimeout: 30000,
                 })
@@ -5418,7 +5564,7 @@ describe("DatasetActions - downloading functions", () => {
                 DatasetActions,
                 "getDataSetDownloadOptions" as any,
                 undefined,
-                jest.fn().mockResolvedValue(defaultDownloadOptions)
+                jest.fn().mockResolvedValue({ ...defaultDownloadOptions })
             );
             mockExecuteDownloadWithProgress = new MockedProperty(
                 DatasetActions,
@@ -5457,10 +5603,17 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
+            const optionsWithDirectory = {
+                ...defaultDownloadOptions,
+                overrideExtension: false,
+            };
+            mockGetDataSetDownloadOptions.mock.mockResolvedValue(optionsWithDirectory);
+
             dsNode.getLabel = jest.fn().mockReturnValue("TEST.DATASET.SEQ");
             dsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
 
             const getContentsSpy = jest.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue(undefined);
+            mockGetExtension.mock.mockReturnValue("txt");
 
             await DatasetActions.downloadDataSet(dsNode);
 
@@ -5474,7 +5627,7 @@ describe("DatasetActions - downloading functions", () => {
                 expect.objectContaining({
                     file: expect.stringMatching(/test\.dataset\.seq\.txt$/),
                     binary: false,
-                    encoding: "IBM-1047",
+                    encoding: undefined,
                     overwrite: false,
                     responseTimeout: 30000,
                 })
@@ -5554,6 +5707,7 @@ describe("DatasetActions - downloading functions", () => {
                 generateDirectory: true,
                 preserveCase: true,
                 overwrite: true,
+                overrideExtension: false,
             };
             mockGetDataSetDownloadOptions.mock.mockResolvedValue(optionsWithDirectory);
 
@@ -5581,7 +5735,7 @@ describe("DatasetActions - downloading functions", () => {
                 expect.objectContaining({
                     file: expect.stringMatching(/DATASET\.txt$/),
                     binary: false,
-                    encoding: "IBM-1047",
+                    encoding: undefined,
                     overwrite: true,
                     responseTimeout: 30000,
                 })

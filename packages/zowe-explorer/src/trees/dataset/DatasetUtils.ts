@@ -162,7 +162,11 @@ export class DatasetUtils {
     /**
      * Gets a map of file extensions for all members of a PDS to be used for IDownloadOptions.
      */
-    public static async getExtensionMap(node: IZoweDatasetTreeNode, preserveCase: boolean): Promise<{ [key: string]: string }> {
+    public static async getExtensionMap(
+        node: IZoweDatasetTreeNode,
+        preserveCase: boolean,
+        overrideExtension?: string
+    ): Promise<{ [key: string]: string }> {
         ZoweLogger.trace("dataset.utils.getExtensionMap called.");
         const extensionMap: { [key: string]: string } = {};
         const children = await node.getChildren();
@@ -170,15 +174,32 @@ export class DatasetUtils {
         for (const child of children) {
             let extension;
             let label = child.label as string;
-            for (const [ext, matches] of DS_EXTENSION_MAP.entries()) {
-                if (ext === ".c") {
-                    // Special case for ".c" extension, skip the following logic
-                    // As it's not unique enough and would otherwise match on anything containing "C"
-                    continue;
+
+            if (overrideExtension) {
+                extension = overrideExtension;
+            } else {
+                for (const [ext, matches] of DS_EXTENSION_MAP.entries()) {
+                    if (ext === ".c") {
+                        // Special case for ".c" extension, skip the following logic
+                        // As it's not unique enough and would otherwise match on anything containing "C"
+                        // TODO: rrevisit later if this can be handled better while still allowing c files
+                        continue;
+                    }
+                    if (matches.some((match) => (match instanceof RegExp ? match.test(label) : label.includes(match)))) {
+                        extension = ext;
+                        break;
+                    }
                 }
-                if (matches.some((match) => (match instanceof RegExp ? match.test(label) : label.includes(match)))) {
-                    extension = ext;
-                    break;
+
+                // If no extension found, fall back to using the PDS name as extension
+                if (!extension) {
+                    const parentExtension = DatasetUtils.getExtension(node.label as string);
+                    if (parentExtension) {
+                        extension = parentExtension;
+                    } else {
+                        // Use default extension if nothing else matches
+                        extension = ".txt";
+                    }
                 }
             }
 
@@ -186,15 +207,7 @@ export class DatasetUtils {
                 label = label.toLowerCase();
             }
 
-            if (extension) {
-                extensionMap[label] = extension.startsWith(".") ? extension.slice(1) : extension;
-            } else {
-                // Fall back to just using the PDS name as extension
-                const parentExtension = DatasetUtils.getExtension(node.label as string);
-                if (parentExtension) {
-                    extensionMap[label] = parentExtension.startsWith(".") ? parentExtension.slice(1) : parentExtension;
-                }
-            }
+            extensionMap[label] = extension.startsWith(".") ? extension.slice(1) : extension;
         }
 
         return extensionMap;
