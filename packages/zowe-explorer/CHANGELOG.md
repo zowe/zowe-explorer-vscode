@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Enhanced "Show Attributes" feature with improved visual presentation: aligned all attribute table columns consistently across core and extender sections, added thousands separators for numeric values, and automatically appends the `%` symbol to "Used Space" values for better readability. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)
 - Added support to delete VSAM data sets. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
 - Refactored data set pagination to use the new `getCount` API (if available) to optimize access to the total item count.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 - Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)

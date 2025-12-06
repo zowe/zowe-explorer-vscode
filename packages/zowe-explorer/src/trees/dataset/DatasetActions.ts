@@ -1088,20 +1088,81 @@ export class DatasetActions {
 
             if (dsNameForExtenders) {
                 DatasetActions.attributeInfo.push(
-                    ...(await extenderAttributes.fetchAll({ dsName: dsNameForExtenders, profile: sessionNode.getProfile() }))
+                    ...(await extenderAttributes.fetchAll({
+                        dsName: dsNameForExtenders,
+                        profile: sessionNode.getProfile(),
+                        attributes: attributeRecord,
+                    }))
                 );
             }
 
             // Check registered DataSetAttributesProvider, send dsname and profile. get results and append to `attributeInfo`
             const attributesMessage = vscode.l10n.t("Attributes");
 
+            // Helper function to format numbers with thousands separators
+            const formatNumber = (value: number): string => {
+                return value.toLocaleString("en-US");
+            };
+
+            // Helper function to format attribute values
+            const formatAttributeValue = (key: string, value: string | number | boolean): string => {
+                // Add % character for "Used Space" attribute
+                if (key === "used" && typeof value === "number") {
+                    return `${formatNumber(value)}%`;
+                }
+                // Format numbers with thousands separators
+                if (typeof value === "number") {
+                    return formatNumber(value);
+                }
+                return String(value);
+            };
+
             const webviewHTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>${label} "${attributesMessage}"</title>
+    <style>
+        body {
+            font-family: var(--vscode-font-family);
+            padding: 1em;
+        }
+        .attributes-container {
+            display: flex;
+            flex-direction: column;
+        }
+        .attributes-section {
+            margin-bottom: 2em;
+        }
+        .attributes-table {
+            width: 100%;
+            table-layout: fixed;
+            border-spacing: 0;
+        }
+        .attributes-table td {
+            padding: 0.3em 0;
+        }
+        .attribute-key {
+            width: 40%;
+            color: var(--vscode-settings-textInputForeground);
+            font-weight: bold;
+            text-align: left;
+            padding-right: 2em;
+        }
+        .attribute-value {
+            width: 60%;
+            text-align: right;
+        }
+        .attribute-value-string {
+            color: var(--vscode-settings-textInputForeground);
+        }
+        .attribute-value-number {
+            color: var(--vscode-problemsWarningIcon-foreground);
+        }
+    </style>
 </head>
 <body>
+    <div class="attributes-container">
     ${DatasetActions.attributeInfo
         .map(({ title, reference, keys }) => {
             const linkedTitle = reference
@@ -1115,6 +1176,8 @@ export class DatasetActions {
                     if (info.value === undefined || info.value === null) {
                         return html;
                     }
+                    const formattedValue = formatAttributeValue(key, info.value);
+                    const isNumeric = typeof info.value === "number";
                     return html.concat(`
                         <tr ${
                             info.displayName || info.description
@@ -1123,28 +1186,27 @@ export class DatasetActions {
                                   }"`
                                 : ""
                         }>
-                            <td align="left" style="color: var(--vscode-settings-textInputForeground); font-weight: bold">
+                            <td class="attribute-key">
                                 ${info.displayName || key}:
                             </td>
-                            <td align="right" style="color: ${
-                                isNaN(info.value as any)
-                                    ? "var(--vscode-settings-textInputForeground)"
-                                    : "var(--vscode-problemsWarningIcon-foreground)"
-                            }">
-                                ${info.value as string}
+                            <td class="attribute-value ${isNumeric ? "attribute-value-number" : "attribute-value-string"}">
+                                ${formattedValue}
                             </td>
                         </tr>
                 `);
                 }, "");
 
             return `
-            ${linkedTitle}
-            <table style="margin-top: 2em; border-spacing: 2em 0">
-                ${tableRows}
-            </table>
+            <div class="attributes-section">
+                ${linkedTitle}
+                <table class="attributes-table">
+                    ${tableRows}
+                </table>
+            </div>
         `;
         })
         .join("")}
+    </div>
 </body>
 </html>`;
 
