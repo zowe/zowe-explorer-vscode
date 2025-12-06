@@ -1105,9 +1105,9 @@ export class DatasetActions {
             };
 
             // Helper function to format attribute values
-            const formatAttributeValue = (key: string, value: string | number | boolean): string => {
-                // Add % character for "Used Space" attribute
-                if (key === "used" && typeof value === "number") {
+            const formatAttributeValue = (key: string, value: string | number | boolean, sectionTitle: string): string => {
+                // Add % character for "Used Space" attribute only from core Zowe Explorer section
+                if (key === "used" && typeof value === "number" && sectionTitle === "Zowe Explorer") {
                     return `${formatNumber(value)}%`;
                 }
                 // Format numbers with thousands separators
@@ -1176,7 +1176,7 @@ export class DatasetActions {
                     if (info.value === undefined || info.value === null) {
                         return html;
                     }
-                    const formattedValue = formatAttributeValue(key, info.value);
+                    const formattedValue = formatAttributeValue(key, info.value, title);
                     const isNumeric = typeof info.value === "number";
                     return html.concat(`
                         <tr ${
