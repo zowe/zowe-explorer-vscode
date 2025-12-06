@@ -1423,7 +1423,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
         });
 
         mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-            mockQuickPick.selectedItems = [{ label: "Set Filter Options" }];
+            mockQuickPick.selectedItems = [{ label: "Apply Filter Options" }];
             callback();
         });
 
@@ -1486,7 +1486,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 { label: "Include Hidden Files" },
                 { label: "Search All Filesystems" },
                 { label: "Return Symlinks" },
-                { label: "Set Filter Options" },
+                { label: "Apply Filter Options" },
             ];
             callback();
         });

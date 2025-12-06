@@ -552,7 +552,7 @@ export class USSActions {
                 },
                 {
                     label: vscode.l10n.t("Search All Filesystems"),
-                    description: vscode.l10n.t("Search all filesystems under the path (not just same filesystem)"),
+                    description: vscode.l10n.t("Search all mounted filesystems under the path"),
                     picked: downloadOpts.dirOptions.filesys,
                 },
                 {
@@ -561,11 +561,11 @@ export class USSActions {
                     picked: downloadOpts.dirOptions.symlinks,
                 },
                 {
-                    label: vscode.l10n.t("Set Filter Options"),
+                    label: vscode.l10n.t("Apply Filter Options"),
                     description:
                         downloadOpts.dirFilterOptions && Object.keys(downloadOpts.dirFilterOptions).length > 0
-                            ? vscode.l10n.t("Configure file filtering options (currently configured)")
-                            : vscode.l10n.t("Configure file filtering options"),
+                            ? vscode.l10n.t("Configure and apply file filtering options (currently configured)")
+                            : vscode.l10n.t("Configure and apply file filtering options"),
                     picked: downloadOpts.dirOptions.chooseFilterOptions,
                 }
             );
@@ -617,7 +617,7 @@ export class USSActions {
             includeHidden: vscode.l10n.t("Include Hidden Files"),
             searchAllFilesystems: vscode.l10n.t("Search All Filesystems"),
             returnSymlinks: vscode.l10n.t("Return Symlinks"),
-            setFilterOptions: vscode.l10n.t("Set Filter Options"),
+            applyFilterOptions: vscode.l10n.t("Apply Filter Options"),
         };
 
         const getOption = (localizedLabel: string): boolean => selectedOptions.some((opt) => opt.label === localizedLabel);
@@ -630,9 +630,9 @@ export class USSActions {
             downloadOpts.dirOptions.includeHidden = getOption(localizedLabels.includeHidden);
             downloadOpts.dirOptions.filesys = getOption(localizedLabels.searchAllFilesystems);
             downloadOpts.dirOptions.symlinks = getOption(localizedLabels.returnSymlinks);
-            downloadOpts.dirOptions.chooseFilterOptions = getOption(localizedLabels.setFilterOptions);
+            downloadOpts.dirOptions.chooseFilterOptions = getOption(localizedLabels.applyFilterOptions);
 
-            if (getOption(localizedLabels.setFilterOptions)) {
+            if (getOption(localizedLabels.applyFilterOptions)) {
                 const filterOptions = await USSActions.getUssDirFilterOptions(downloadOpts.dirFilterOptions);
                 if (filterOptions && Object.keys(filterOptions).length > 0) {
                     downloadOpts.dirFilterOptions = filterOptions;
@@ -741,7 +741,7 @@ export class USSActions {
         let totalFileCount = 0;
         try {
             const countListOptions: zosfiles.IUSSListOptions = {
-                ...downloadOptions.dirFilterOptions,
+                ...(downloadOptions.dirOptions.chooseFilterOptions ? downloadOptions.dirFilterOptions : {}),
                 type: "f",
                 filesys: downloadOptions.dirOptions.filesys,
                 symlinks: downloadOptions.dirOptions.symlinks,
@@ -818,10 +818,11 @@ export class USSActions {
                             : profile.profile?.encoding;
                 }
 
-                downloadOptions.dirFilterOptions ??= {};
-                downloadOptions.dirFilterOptions.type ??= "f"; // fallback to files only
+                // only apply filter options if chooseFilterOptions is enabled
+                const filterOpts = downloadOptions.dirOptions.chooseFilterOptions ? downloadOptions.dirFilterOptions : {};
                 const listOptions: zosfiles.IUSSListOptions = {
-                    ...downloadOptions.dirFilterOptions,
+                    ...filterOpts,
+                    type: filterOpts.type ?? "f", // fallback to files only
                     filesys: downloadOptions.dirOptions.filesys,
                     symlinks: downloadOptions.dirOptions.symlinks,
                 };
