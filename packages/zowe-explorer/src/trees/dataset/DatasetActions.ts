@@ -25,6 +25,7 @@ import {
     type AttributeInfo,
     DataSetAttributesProvider,
     ZosEncoding,
+    Poller,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
@@ -44,6 +45,7 @@ import { Definitions } from "../../configuration/Definitions";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 type ClipboardItem = {
     profileName: string;
@@ -1238,13 +1240,16 @@ export class DatasetActions {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
                 const args = [sessProfileName, job.jobid];
                 const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
-                Gui.showMessage(
-                    vscode.l10n.t({
-                        message: "Job submitted {0}",
-                        args: [`[${job.jobid}](${setJobCmd})`],
-                        comment: ["Job ID and set job command"],
-                    })
-                );
+                const notifyButton = vscode.l10n.t("Notify When Complete");
+                const message = vscode.l10n.t({
+                    message: "Job submitted {0}",
+                    args: [`[${job.jobid}](${setJobCmd})`],
+                    comment: ["Job ID and set job command"],
+                });
+                const selection = await Gui.showMessage(message, { items: [notifyButton] });
+                if (selection === notifyButton) {
+                    DatasetActions.pollSubmittedJob(sessProfile, sessProfileName, job.jobid, job.jobname);
+                }
                 ZoweLogger.info(
                     vscode.l10n.t({
                         message: "Job submitted {0} using profile {1}.",
@@ -1476,13 +1481,16 @@ export class DatasetActions {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
                 const args = [sesName, job.jobid];
                 const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
-                Gui.showMessage(
-                    vscode.l10n.t({
-                        message: "Job submitted {0}",
-                        args: [`[${job.jobid}](${setJobCmd})`],
-                        comment: ["Job ID and set job command"],
-                    })
-                );
+                const notifyButton = vscode.l10n.t("Notify When Complete");
+                const message = vscode.l10n.t({
+                    message: "Job submitted {0}",
+                    args: [`[${job.jobid}](${setJobCmd})`],
+                    comment: ["Job ID and set job command"],
+                });
+                const selection = await Gui.showMessage(message, { items: [notifyButton] });
+                if (selection === notifyButton) {
+                    DatasetActions.pollSubmittedJob(sessProfile, sesName, job.jobid, job.jobname);
+                }
                 ZoweLogger.info(
                     vscode.l10n.t({
                         message: "Job submitted {0} using profile {1}.",
@@ -2433,5 +2441,75 @@ export class DatasetActions {
         }
         const contents = await DatasetFSProvider.instance.readFile(sourceUri);
         await DatasetFSProvider.instance.writeFile(destUri.with({ query: "forceUpload=true" }), contents, { create: true, overwrite: true });
+    }
+
+    /**
+     * Polls a submitted job until it completes and sends notification with link to view job in tree
+     *
+     * @param sessProfile - The profile used to submit the job
+     * @param sessProfileName - The name of the session/profile
+     * @param jobId - The job ID to poll
+     * @param jobName - The job name (optional, for display purposes)
+     */
+    public static pollSubmittedJob(sessProfile: imperative.IProfileLoaded, sessProfileName: string, jobId: string, jobName?: string): void {
+        ZoweLogger.trace("dataset.actions.pollSubmittedJob called.");
+
+        const pollInterval = SettingsConfig.getDirectValue<number>("zowe.jobs.pollInterval");
+        const pollKey = `submitted-job-${sessProfileName}-${jobId}`;
+        const displayName = jobName ? `${jobName}(${jobId})` : jobId;
+
+        ZoweLogger.info(
+            vscode.l10n.t({
+                message: "Starting to poll job {0} for completion.",
+                args: [displayName],
+                comment: ["Job display name"],
+            })
+        );
+
+        Poller.addRequest(pollKey, {
+            msInterval: pollInterval,
+            request: async () => {
+                try {
+                    const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).getJob(jobId);
+                    const status = job?.status?.toUpperCase();
+
+                    if (status === "ACTIVE" || status === "INPUT") {
+                        return;
+                    }
+
+                    Poller.pollRequests[pollKey].dispose = true;
+
+                    const args = [sessProfileName, jobId];
+                    const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
+                    const retcode = job?.retcode || vscode.l10n.t("unknown");
+
+                    Gui.showMessage(
+                        vscode.l10n.t({
+                            message: "Job {0} has completed with return code: {1}",
+                            args: [`[${displayName}](${setJobCmd})`, retcode],
+                            comment: ["Job ID with clickable link", "Return code"],
+                        })
+                    );
+
+                    ZoweLogger.info(
+                        vscode.l10n.t({
+                            message: "Job {0} completed with return code {1}.",
+                            args: [displayName, retcode],
+                            comment: ["Job display name", "Return code"],
+                        })
+                    );
+                } catch (error) {
+                    // If cant get job status, stop polling
+                    Poller.pollRequests[pollKey].dispose = true;
+                    ZoweLogger.error(
+                        vscode.l10n.t({
+                            message: "Error polling job {0}: {1}",
+                            args: [displayName, error instanceof Error ? error.message : String(error)],
+                            comment: ["Job display name", "Error message"],
+                        })
+                    );
+                }
+            },
+        });
     }
 }
