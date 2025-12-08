@@ -639,6 +639,7 @@
   "Reload window": "",
   "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.": "",
   "No custom credential managers found, using the default instead.": "",
+  "Applied credential manager options from imperative.json to default credential manager": "",
   "Custom credential manager {0} found": "",
   "Do you wish to use this credential manager instead?": "",
   "Yes": "",
