@@ -528,10 +528,10 @@
       "Number of active jobs"
     ]
   },
-  "Job completed {0} - {1}/Job ID with clickable linkJob status": {
-    "message": "Job completed {0} - {1}",
+  "Job {0} completed - {1}/Job name and ID with clickable linkJob status": {
+    "message": "Job {0} completed - {1}",
     "comment": [
-      "Job ID with clickable link",
+      "Job name and ID with clickable link",
       "Job status"
     ]
   },
@@ -914,7 +914,8 @@
   "Partitioned Data Set: Default": "Partitioned Data Set: Default",
   "Partitioned Data Set: Extended": "Partitioned Data Set: Extended",
   "Sequential Data Set": "Sequential Data Set",
-  "Copying File(s)": "Copying File(s)",
+  "Copying member(s)": "Copying member(s)",
+  "Copying data set(s)": "Copying data set(s)",
   "Profile is invalid, check connection details.": "Profile is invalid, check connection details.",
   "Allocate Data Set": "Allocate Data Set",
   "Edit Attributes": "Edit Attributes",
@@ -996,10 +997,11 @@
   "Select the profile to use to submit the job": "Select the profile to use to submit the job",
   "No profiles available": "No profiles available",
   "Session for submitting JCL was null or undefined!": "Session for submitting JCL was null or undefined!",
-  "Job submitted {0}/Job ID and set job command": {
+  "Start Polling": "Start Polling",
+  "Job submitted {0}/Job name and ID with set job command": {
     "message": "Job submitted {0}",
     "comment": [
-      "Job ID and set job command"
+      "Job name and ID with set job command"
     ]
   },
   "Job submitted {0} using profile {1}./Job IDProfile name": {
@@ -1070,13 +1072,62 @@
   "Unable to gather more information": "Unable to gather more information",
   "Invalid paste. Copy data set(s) first.": "Invalid paste. Copy data set(s) first.",
   "Copying data sets is not supported.": "Copying data sets is not supported.",
-  "Copying data sets cross lpars is not yet supported for this profile.": "Copying data sets cross lpars is not yet supported for this profile.",
   "Name of data set member": "Name of data set member",
+  "Failed to create {0}: {1}/Data set nameError message": {
+    "message": "Failed to create {0}: {1}",
+    "comment": [
+      "Data set name",
+      "Error message"
+    ]
+  },
+  "Failed to copy member {0}: {1}/Member nameError message": {
+    "message": "Failed to copy member {0}: {1}",
+    "comment": [
+      "Member name",
+      "Error message"
+    ]
+  },
   "Replace": "Replace",
   "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
   "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
   "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",
   "Unable to copy data set.": "Unable to copy data set.",
+  "Profile {0} is no longer available. Skipping item.": "Profile {0} is no longer available. Skipping item.",
+  "Unable to retrieve attributes for {0}": "Unable to retrieve attributes for {0}",
+  "Starting to poll job {0} for completion./Job display name": {
+    "message": "Starting to poll job {0} for completion.",
+    "comment": [
+      "Job display name"
+    ]
+  },
+  "Polling job: {0}.../Job display name": {
+    "message": "Polling job: {0}...",
+    "comment": [
+      "Job display name"
+    ]
+  },
+  "unknown retcode": "unknown retcode",
+  "Job {0} completed - {1}/Job ID with clickable linkJob status": {
+    "message": "Job {0} completed - {1}",
+    "comment": [
+      "Job ID with clickable link",
+      "Job status"
+    ]
+  },
+  "Job {0} completed - {1}./Job display nameReturn code": {
+    "message": "Job {0} completed - {1}.",
+    "comment": [
+      "Job display name",
+      "Return code"
+    ]
+  },
+  "Error polling job {0}: {1}/Job display nameError message": {
+    "message": "Error polling job {0}: {1}",
+    "comment": [
+      "Job display name",
+      "Error message"
+    ]
+  },
   "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
     "message": "Failed to upload changes for {0}: {1}",
     "comment": [
