@@ -42,6 +42,7 @@ import { DatasetUtils } from "./DatasetUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
 
+const EXPECTED_MEMBER_LENGTH = 2; // /DATA.SET/MEMBER
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
     private constructor() {
@@ -411,8 +412,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entryExists = entry != null;
             entryIsDir = entry != null ? entry.type === vscode.FileType.Directory : false;
             // /DATA.SET/MEMBER
-            uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
-            pdsMember = uriPath.length === 2;
+            uriPath = uri.path
+                .substring(uriInfo.slashAfterProfilePos + 1)
+                .split("/")
+                .filter(Boolean);
+            pdsMember = uriPath.length === EXPECTED_MEMBER_LENGTH;
 
             // Wait for any ongoing authentication process to complete
             await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
@@ -629,8 +633,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 //if an entry does not exist for the dataset, create it
                 if (!dsEntry) {
                     const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-                    const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
-                    const pdsMember = uriPath.length === 2;
+                    const uriPath = uri.path
+                        .substring(uriInfo.slashAfterProfilePos + 1)
+                        .split("/")
+                        .filter(Boolean);
+                    const pdsMember = uriPath.length === EXPECTED_MEMBER_LENGTH;
                     this.createDirectory(uri.with({ path: path.posix.join(uri.path, "..") }));
                     const parentDir = this.lookupParentDirectory(uri);
                     const dsname = uriPath[Number(pdsMember)];
@@ -779,9 +786,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         encoding?: string
     ): Promise<IZosFilesResponse> {
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-        // /DATA.SET/MEMBER
-        const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
-        const isPdsMember = uriPath.length === 2;
+        const uriPath = uri.path
+            .substring(uriInfo.slashAfterProfilePos + 1)
+            .split("/")
+            .filter(Boolean);
+        const isPdsMember = uriPath.length === EXPECTED_MEMBER_LENGTH;
 
         let dsStats: Types.DatasetStats = entry.stats;
         if (dsStats == null) {
@@ -1100,15 +1109,22 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     private validatePath(uri: vscode.Uri): void {
-        const pathComponents = uri.path.split("/");
+        const cleanedPath = uri.path.replace(/\/$/, "");
+        const pathComponents = cleanedPath.split("/");
         const INVALID_URI_EXPECTED_LENGTH = 5;
 
-        let segmentsToCheck;
+        let segmentsToCheck: string[];
+
         if (pathComponents.length === INVALID_URI_EXPECTED_LENGTH) {
-            segmentsToCheck = pathComponents[pathComponents.length - 2];
+            segmentsToCheck = [pathComponents[pathComponents.length - 2]];
         } else {
-            segmentsToCheck = pathComponents.slice(-1);
+            segmentsToCheck = [pathComponents[pathComponents.length - 1]];
         }
+
+        if (segmentsToCheck.length === 0 || (segmentsToCheck.length === 1 && segmentsToCheck[0] === "")) {
+            return;
+        }
+
         const hasInvalidSegment = segmentsToCheck.some((component) => component.startsWith(".") && component.length > 0);
 
         if (hasInvalidSegment) {
