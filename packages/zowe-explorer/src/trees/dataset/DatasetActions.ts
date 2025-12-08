@@ -1241,7 +1241,7 @@ export class DatasetActions {
                 const args = [sessProfileName, job.jobid];
                 const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                 const notifyButton = vscode.l10n.t("Start Polling");
-                const jobDisplay = job.jobname ? `${job.jobname}(${job.jobid})` : job.jobid;
+                const jobDisplay = `${job.jobname}(${job.jobid})`;
                 const message = vscode.l10n.t({
                     message: "Job submitted {0}",
                     args: [`[${jobDisplay}](${setJobCmd})`],
@@ -1483,7 +1483,7 @@ export class DatasetActions {
                 const args = [sesName, job.jobid];
                 const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                 const notifyButton = vscode.l10n.t("Start Polling");
-                const jobDisplay = job.jobname ? `${job.jobname}(${job.jobid})` : job.jobid;
+                const jobDisplay = `${job.jobname}(${job.jobid})`;
                 const message = vscode.l10n.t({
                     message: "Job submitted {0}",
                     args: [`[${jobDisplay}](${setJobCmd})`],
@@ -2451,14 +2451,14 @@ export class DatasetActions {
      * @param sessProfile - The profile used to submit the job
      * @param sessProfileName - The name of the session/profile
      * @param jobId - The job ID to poll
-     * @param jobName - The job name (optional, for display purposes)
+     * @param jobName - The job name
      */
-    public static pollSubmittedJob(sessProfile: imperative.IProfileLoaded, sessProfileName: string, jobId: string, jobName?: string): void {
+    public static pollSubmittedJob(sessProfile: imperative.IProfileLoaded, sessProfileName: string, jobId: string, jobName: string): void {
         ZoweLogger.trace("dataset.actions.pollSubmittedJob called.");
 
         const pollInterval = SettingsConfig.getDirectValue<number>("zowe.jobs.pollInterval");
         const pollKey = `submitted-job-${sessProfileName}-${jobId}`;
-        const displayName = jobName ? `${jobName}(${jobId})` : jobId;
+        const displayName = `${jobName}(${jobId})`;
 
         ZoweLogger.info(
             vscode.l10n.t({
