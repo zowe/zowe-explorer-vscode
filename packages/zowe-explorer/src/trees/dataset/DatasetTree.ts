@@ -161,8 +161,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             await vscode.workspace.fs.delete(sourceUri, { recursive: true });
         } else {
             let destinationMemberUri = destUri;
-            const sourceMemberLabel = sourceNode.getLabel() as string;
-            const memberNameWithoutExtension = path.parse(sourceMemberLabel).name;
+            const sourceMemberLabel = sourceNode.getLabel() as string ?? '';
+            const memberNameWithoutExtension = sourceMemberLabel
+                ? path.parse(sourceMemberLabel).name
+                : '';
 
             // calculate the correct PDS name (ie, PDSNAME.TEST) for the API and error messages
             let fullPathAfterProfile = destUri.path.substring(destinationInfo.slashAfterProfilePos + 1);
