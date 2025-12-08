@@ -5189,46 +5189,50 @@ describe("DatasetTree.handleDrop - blocking behavior", () => {
         } as unknown as vscode.DataTransfer;
     }
 
-    it("blocks drop and shows error when SharedUtils.isSamePhysicalDataset returns true", async () => {
+    it("prompts overwrite when target dataset name matches source and moves dataset when user confirms", async () => {
         const session = createISession();
         const srcProfile = createIProfile();
         const dstProfile = createIProfile();
+
         (srcProfile as any).name = "SRC";
         (dstProfile as any).name = "DST";
 
-        const { pdsNode } = makeDraggedPdsNode("USER.TEST", session, srcProfile);
-        const targetSession = createDatasetSessionNode(session, dstProfile);
+        const { pdsNode: srcPds } = makeDraggedPdsNode("USER.TEST", session, srcProfile);
+        const { pdsNode: dstPds } = makeDraggedPdsNode("USER.TEST", session, dstProfile);
 
-        // create draggedNodes AFTER dsTree created
-        const draggedNodeMock = new MockedProperty(dsTree, "draggedNodes", undefined, {
-            [pdsNode.resourceUri!.path]: pdsNode,
-        });
+        jest.spyOn(SharedContext, "isDs").mockReturnValue(true);
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
+        jest.spyOn(SharedContext, "isDsMember").mockReturnValue(false);
 
-        // local dataTransfer that returns the exact resourceUri used as key
-        const dataTransfer = makeDataTransfer([{ label: pdsNode.label as string, uri: pdsNode.resourceUri }]);
-
-        // ensure getMvsApi returns an object with allMembers
-        const srcApi = { allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
-        const dstApi = { allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
+        // Mock dataset attributes API so crossLparMove does not crash
+        const apiResp = { apiResponse: { items: [{ dsname: "USER.TEST" }] } };
+        const srcApi = { dataSet: jest.fn().mockResolvedValue(apiResp) };
+        const dstApi = { dataSet: jest.fn().mockResolvedValue(apiResp) };
         (ZoweExplorerApiRegister as any).getMvsApi = jest
             .fn()
             .mockImplementationOnce(() => srcApi)
             .mockImplementationOnce(() => dstApi);
 
-        // Force same-physical-dataset detection -> block
-        (SharedUtils as any).isSamePhysicalDataset = jest.fn().mockResolvedValue(true);
-        (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
-            "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
+        // Dragged dataset registered in DatasetTree.draggedNodes
+        const draggedNodeMock = new MockedProperty(dsTree, "draggedNodes", undefined, {
+            [srcPds.resourceUri!.path]: srcPds,
+        });
+        const dataTransfer = makeDataTransfer([{ label: srcPds.label as string, uri: srcPds.resourceUri }]);
+        const overwriteSpy = jest.spyOn(SharedUtils, "handleDragAndDropOverwrite").mockResolvedValue(true);
+        const moveSpy = jest.spyOn(dsTree as any, "crossLparMove").mockResolvedValue(undefined);
 
-        const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
+        // Mock status bar message
+        jest.spyOn(Gui, "setStatusBarMessage").mockReturnValue({ dispose: jest.fn() });
 
-        // DatasetTree.handleDrop signature: handleDrop(targetNode, dataTransfer, token)
-        // @ts-ignore token intentionally undefined
-        await dsTree.handleDrop(targetSession, dataTransfer as any, undefined);
+        // Mock no error on move
+        jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
-        expect((SharedUtils as any).isSamePhysicalDataset).toHaveBeenCalled();
-        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Cannot move:"));
+        // Handle the drop
+        await dsTree.handleDrop(dstPds, dataTransfer, undefined);
 
+        // Asserions
+        expect(overwriteSpy).toHaveBeenCalled();
+        expect(moveSpy).toHaveBeenCalledWith(srcPds, srcPds.resourceUri, expect.anything());
         draggedNodeMock[Symbol.dispose]();
     });
 

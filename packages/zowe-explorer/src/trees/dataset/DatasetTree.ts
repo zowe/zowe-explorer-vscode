@@ -233,12 +233,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (!node) continue;
             const srcDsn = SharedUtils.getNodeProperty(node, "label");
 
-            // 1. Same-object check
-            if (node.getProfile && target.getProfile && (await SharedUtils.isSamePhysicalDataset(node.getProfile(), target.getProfile(), srcDsn))) {
-                Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
-                return;
-            }
-
             // 2. PDS member collision check (only if both are PDS)
             if (SharedContext.isPds(node) && SharedContext.isPds(target)) {
                 const srcMembersResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(srcDsn, { attributes: true });
