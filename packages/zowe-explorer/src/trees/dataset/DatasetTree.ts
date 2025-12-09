@@ -200,7 +200,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     // ignore if it already exists, but bail out on 404/500 if the PDS itself is missing
                     const code = err.errorCode?.toString();
                     if (code === "404" || code === "500") {
-                        Gui.errorMessage(vscode.l10n.t("Failed to move {0}: The target PDS does not exist on the host: {1}", dsname, err.message));
+                        Gui.errorMessage("Failed to move {0}: The target PDS does not exist on the host: {1}", dsname, err.message);
                         return;
                     }
                 }

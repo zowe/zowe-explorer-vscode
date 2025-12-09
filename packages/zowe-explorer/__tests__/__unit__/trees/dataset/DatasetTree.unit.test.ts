@@ -5644,7 +5644,7 @@ describe("DatasetTree.crossLparMove", () => {
 
         // Verify that the path calculation hit the 'else' branch (lastSlashIndex === -1)
         expect(writeFileSpy).toHaveBeenCalledWith(
-            expect.objectContaining({ path: expect.stringContaining("/HLQ.PDSNAME/MEMBER") }),
+            expect.objectContaining({ path: expect.stringContaining("/DST_PROFILE/MEMBER") }),
             expect.any(Buffer),
             expect.objectContaining({ create: true, overwrite: true })
         );
@@ -5685,8 +5685,8 @@ describe("DatasetTree.crossLparMove", () => {
 
         // Verify the localized message for missing PDS was called
         expect(errorMessageSpy).toHaveBeenCalledWith(
-            expect.stringContaining("Failed to move member {0}: The target PDS does not exist on the host: {1}"),
-            "BAR(MEMBER)",
+            "Failed to move {0}: The target PDS does not exist on the host: {1}",
+            "BAR",
             "Target data set 'DST.BAR' does not exist."
         );
         expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
@@ -5695,7 +5695,8 @@ describe("DatasetTree.crossLparMove", () => {
     it("should display verification failure message after max retries (lines 379-381, 400-405 coverage)", async () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const fakeProfile = (FsAbstractUtils as any).getInfoForUri(dstUri, Profiles.getInstance()).profile;
-
+        const contents = Buffer.from("FILE CONTENTS");
+        (DatasetFSProvider.instance.readFile as jest.Mock).mockResolvedValue(contents);
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
         jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
 
@@ -5711,7 +5712,7 @@ describe("DatasetTree.crossLparMove", () => {
 
         jest.spyOn(global, 'setTimeout').mockImplementation(jest.fn());
 
-        (DatasetFSProvider.instance.writeFile as jest.Mock).mockResolvedValue(true);
+        (DatasetFSProvider.instance.writeFile as jest.Mock).mockResolvedValue(contents);
         (DatasetFSProvider.instance.readFile as jest.Mock)
             // Fail 4 times due to EntryNotFound (simulating the race condition wait)
             .mockRejectedValueOnce({ name: "EntryNotFound" })
