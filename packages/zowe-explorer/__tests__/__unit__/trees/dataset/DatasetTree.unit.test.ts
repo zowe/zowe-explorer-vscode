@@ -5574,9 +5574,9 @@ describe("DatasetTree.crossLparMove", () => {
 
         // Mock the source node as a Sequential Dataset (DS)
         const fakeSequentialDsNode: Partial<IZoweDatasetTreeNode> = {
-            label: "TEST.SEQ.DS" as string, // Required for dsname calculation in the creation block
+            label: "TEST.SEQ.DS" as string,
             contextValue: "ds",
-            getProfile: () => fakeProfile, // Use the profile mock
+            getProfile: () => fakeProfile,
             getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
             resourceUri: srcUri.with({ path: "/SRC_PROFILE/TEST.SEQ.DS" }),
         };
@@ -5587,9 +5587,10 @@ describe("DatasetTree.crossLparMove", () => {
             message: "Dataset not found on host.",
         });
 
-        jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockImplementation(async () => ({}) as any);
+        (DatasetFSProvider.instance.fetchDatasetAtUri as jest.Mock).mockResolvedValueOnce(null);
+
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
-        jest.spyOn(SharedContext, "isDsMember").mockReturnValue(false); // Must be false for sequential DS logic
+        jest.spyOn(SharedContext, "isDsMember").mockReturnValue(false);
         (fakeSequentialDsNode as any).getLabel = jest.fn().mockReturnValue("TEST.SEQ.DS");
 
         await tree["crossLparMove"](
@@ -5598,14 +5599,16 @@ describe("DatasetTree.crossLparMove", () => {
             dstUri.with({ path: "/DST_PROFILE/TEST.SEQ.DS" }),
             false
         );
+
         expect(apiMock.createDataSet).toHaveBeenCalledWith(
             zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-            "TEST.SEQ.DS", // dsname extracted from sourceNode.getLabel()
+            "TEST.SEQ.DS",
             {}
         );
         expect(errorMessageSpy).toHaveBeenCalledWith(
             expect.stringContaining("Failed to move TEST.SEQ.DS: Dataset not found on host."),
         );
+        // ensure write/delete logic was NOT executed
         expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
         expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
     });
