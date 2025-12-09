@@ -5703,7 +5703,6 @@ describe("DatasetTree.crossLparMove", () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const fakeProfile = (FsAbstractUtils as any).getInfoForUri(dstUri, Profiles.getInstance()).profile;
         const contents = Buffer.from("FILE CONTENTS");
-        const retryDelay = 200;
 
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
         jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
@@ -5720,17 +5719,16 @@ describe("DatasetTree.crossLparMove", () => {
 
         (DatasetFSProvider.instance.writeFile as jest.Mock).mockResolvedValue(true);
 
-        // mock chain to only run 3 failures (i=0, 1, 2) + final size mismatch (i=3)
-        // ensures the logic runs through several retries but stops quickly.
+        // 1 success (initial read) + 4 fails (retries) + 1 size fail (final attempt)
         (DatasetFSProvider.instance.readFile as jest.Mock)
-            .mockResolvedValueOnce(contents) // 1. Initial content read SUCCESS
-            .mockRejectedValueOnce({ name: "EntryNotFound" }) // 2. Read 1 (i=0)
-            .mockRejectedValueOnce({ name: "EntryNotFound" }) // 3. Read 2 (i=1)
-            .mockRejectedValueOnce({ name: "EntryNotFound" }) // 4. Read 3 (i=2)
-            // 5. Read 4 (i=3) FAILS SIZE CHECK. The loop stops because maxRetries is 5.
+            .mockResolvedValueOnce(contents)
+            .mockRejectedValueOnce({ name: "EntryNotFound" })
+            .mockRejectedValueOnce({ name: "EntryNotFound" })
+            .mockRejectedValueOnce({ name: "EntryNotFound" })
+            .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockResolvedValueOnce(Buffer.from("SHORT"));
 
-        // the async call that starts the polling loop.
+        // This promise starts the work which then blocks on the first setTimeout
         const movePromise = tree["crossLparMove"](
             fakeMemberNode as IZoweDatasetTreeNode,
             fakeMemberNode.resourceUri,
@@ -5738,21 +5736,17 @@ describe("DatasetTree.crossLparMove", () => {
             false
         );
 
-        // timers for the necessary delays only (3 delays total)
+        // repeatedly advance the clock until the movePromise resolves
+        // It runs asynchronously to avoid blocking the whole test
+        let advancingDelay = 200;
+        for (let i = 0; i < 4; i++) { // Need 4 advances for 5 attempts
+            jest.advanceTimersByTime(advancingDelay);
+            // Process microtasks after advancement
+            await Promise.resolve();
+            advancingDelay *= 2;
+        }
 
-        // i=0 delay (200ms)
-        jest.advanceTimersByTime(retryDelay * 1);
-        await Promise.resolve();
-
-        // i=1 delay (400ms)
-        jest.advanceTimersByTime(retryDelay * 2);
-        await Promise.resolve();
-
-        // i=2 delay (800ms). The 4th attempt (i=3) is the one that triggers the final error.
-        jest.advanceTimersByTime(retryDelay * 4);
-        await Promise.resolve();
-
-        // Await the function now that the final advancement has occurred.
+        // The 5th attempt (i=4) throws the error, resolving the movePromise.
         await movePromise;
 
         expect(errorMessageSpy).toHaveBeenCalledWith(
