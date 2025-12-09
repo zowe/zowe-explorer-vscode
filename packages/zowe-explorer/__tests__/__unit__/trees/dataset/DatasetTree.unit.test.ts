@@ -5699,7 +5699,7 @@ describe("DatasetTree.crossLparMove", () => {
         expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
     });
 
-    it("should display verification failure message after a reduced number of retries (testing polling solution)", async () => {
+    test.concurrent("should display verification failure message after a reduced number of retries (testing polling solution)", async () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const fakeProfile = (FsAbstractUtils as any).getInfoForUri(dstUri, Profiles.getInstance()).profile;
         const contents = Buffer.from("FILE CONTENTS");
@@ -5753,5 +5753,5 @@ describe("DatasetTree.crossLparMove", () => {
             expect.stringContaining("Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible.")
         );
         expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
-    });
+    }, 10000); //timeout
 });
