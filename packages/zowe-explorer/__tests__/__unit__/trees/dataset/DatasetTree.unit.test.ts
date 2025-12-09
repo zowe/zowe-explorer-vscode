@@ -5606,7 +5606,7 @@ describe("DatasetTree.crossLparMove", () => {
             {}
         );
         expect(errorMessageSpy).toHaveBeenCalledWith(
-            expect.stringContaining("Failed to move {0}: {1}"),
+            "Failed to move {0}: {1}",
             "TEST.SEQ.DS",
             "Dataset not found on host."
         );
