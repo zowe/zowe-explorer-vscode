@@ -5606,9 +5606,10 @@ describe("DatasetTree.crossLparMove", () => {
             {}
         );
         expect(errorMessageSpy).toHaveBeenCalledWith(
-            expect.stringContaining("Failed to move TEST.SEQ.DS: Dataset not found on host."),
+            expect.stringContaining("Failed to move {0}: {1}"),
+            "TEST.SEQ.DS",
+            "Dataset not found on host."
         );
-        // ensure write/delete logic was NOT executed
         expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
         expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
     });
