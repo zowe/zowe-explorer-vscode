@@ -5699,10 +5699,11 @@ describe("DatasetTree.crossLparMove", () => {
         expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
     });
 
-    it("should display verification failure message after max retries (lines 379-381, 400-405 coverage)", async () => {
+    it("should display verification failure message after max retries", async () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const fakeProfile = (FsAbstractUtils as any).getInfoForUri(dstUri, Profiles.getInstance()).profile;
         const contents = Buffer.from("FILE CONTENTS");
+        const retryDelay = 200;
 
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
         jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
@@ -5724,6 +5725,7 @@ describe("DatasetTree.crossLparMove", () => {
             .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockRejectedValueOnce({ name: "EntryNotFound" })
+            .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockResolvedValueOnce(Buffer.from("SHORT"));
 
         // The async call that starts the polling loop.
@@ -5734,9 +5736,26 @@ describe("DatasetTree.crossLparMove", () => {
             false
         );
 
-        jest.advanceTimersByTime(4500); // max timeout for test is 5000ms so stopping there
-        await movePromise;
+        // i=0 delay (200ms)
+        jest.advanceTimersByTime(retryDelay * 1);
+        await Promise.resolve(); // Process microtasks so the rejection is caught
 
+        // i=1 delay (400ms)
+        jest.advanceTimersByTime(retryDelay * 2);
+        await Promise.resolve();
+
+        // i=2 delay (800ms)
+        jest.advanceTimersByTime(retryDelay * 4);
+        await Promise.resolve();
+
+        // i=3 delay (1600ms)
+        jest.advanceTimersByTime(retryDelay * 8);
+        await Promise.resolve();
+
+        // The final (5th) attempt (i=4) runs immediately after the 4th delay,
+        // throws the final verification error, and resolves the promise.
+
+        await movePromise;
         expect(errorMessageSpy).toHaveBeenCalledWith(
             expect.stringContaining("Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible.")
         );
