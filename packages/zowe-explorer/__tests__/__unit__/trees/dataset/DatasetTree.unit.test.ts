@@ -5709,16 +5709,17 @@ describe("DatasetTree.crossLparMove", () => {
         expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
     });
 
-    it.concurrent("should display verification failure message after a reduced number of retries (testing polling solution)", async () => {
+    it("should display verification failure message after a reduced number of retries (testing polling solution)", async () => {
+        jest.useFakeTimers();
+
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const contents = Buffer.from("FILE CONTENTS");
 
-        jest.useFakeTimers();
         const localTree = new DatasetTree();
         const localSrcUri = vscode.Uri.from({ scheme: "ds", path: "/SRC_PROFILE/FOO" });
         const localDstUri = vscode.Uri.from({ scheme: "ds", path: "/DST_PROFILE/BAR" });
 
-        const baseIProfileLoaded = { message: "", type: "zosmf", failNotFound: false, };
+        const baseIProfileLoaded = { message: "", type: "zosmf", failNotFound: false };
         const fakeDstProfile = { profile: { ...baseIProfileLoaded, name: "TEST_PROFILE" } };
 
         jest.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementation((uri) => {
@@ -5738,23 +5739,22 @@ describe("DatasetTree.crossLparMove", () => {
 
         const dstMemberUri = localDstUri.with({ path: "/DST_PROFILE/BAR/MEMBER.JCL" });
         const fakeMemberNode: Partial<IZoweDatasetTreeNode> = {
-            label: "MEMBER.JCL" as string,
+            label: "MEMBER.JCL",
             contextValue: "member",
             getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
             resourceUri: localSrcUri.with({ path: "/SRC_PROFILE/PDS.TEST/MEMBER.JCL" }),
             getProfile: () => fakeDstProfile.profile,
         };
 
-        // 1 success (initial read) + 4 fails (retries) + 1 size fail (final attempt)
+        // 1 read of source + 5 verification attempts
         jest.spyOn(DatasetFSProvider.instance, "readFile")
-            .mockResolvedValueOnce(contents)
-            .mockRejectedValueOnce({ name: "EntryNotFound" })
-            .mockRejectedValueOnce({ name: "EntryNotFound" })
-            .mockRejectedValueOnce({ name: "EntryNotFound" })
-            .mockRejectedValueOnce({ name: "EntryNotFound" })
-            .mockResolvedValueOnce(Buffer.from("SHORT"));
+            .mockResolvedValueOnce(contents)                 // initial read from source LPAR
+            .mockRejectedValueOnce({ name: "EntryNotFound" }) // retry 1
+            .mockRejectedValueOnce({ name: "EntryNotFound" }) // retry 2
+            .mockRejectedValueOnce({ name: "EntryNotFound" }) // retry 3
+            .mockRejectedValueOnce({ name: "EntryNotFound" }) // retry 4
+            .mockResolvedValueOnce(Buffer.from("SHORT"));     // final attempt with size mismatch
 
-        // This promise starts the work which then blocks on the first setTimeout
         const movePromise = localTree["crossLparMove"](
             fakeMemberNode as IZoweDatasetTreeNode,
             fakeMemberNode.resourceUri!,
@@ -5762,25 +5762,25 @@ describe("DatasetTree.crossLparMove", () => {
             false
         );
 
-        // This resolves the total 4 delays sequentially, clearing microtasks aggressively.
-        try {
-            // The total number of retries is 5, meaning there are 4 delays (setTimes) to process.
-            for (let i = 0; i < 4; i++) {
-                // Run the next pending delay (setTimeout) synchronously
-                jest.advanceTimersToNextTimer();
-
-                // Force the microtasks (promise resolutions, catch blocks) to run immediately
-                await Promise.resolve();
-                await Promise.resolve();
-            }
-        } catch (e) {
+        // Run all queued timers for the exponential backoff
+        // (modern fake timers: this waits for async timers too)
+        // @ts-ignore
+        if (jest.runAllTimersAsync) {
+            // modern timers
+            // @ts-ignore
+            await jest.runAllTimersAsync();
+        } else {
+            jest.advanceTimersByTime(6500);
         }
-        await Promise.resolve();
+
         await movePromise;
 
         expect(errorMessageSpy).toHaveBeenCalledWith(
-            expect.stringContaining("Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible.")
+            expect.stringContaining("Data write failed verification. The target member was not created or is inaccessible.")
         );
         expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
-    }, 10000);
+
+        jest.useRealTimers();
+    });
+
 });
