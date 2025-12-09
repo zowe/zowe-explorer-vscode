@@ -36,7 +36,7 @@ jobs:
       - name: Use Node.js LTS
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: '20.x'
 
       - name: Install Yarn and Lerna
         run: npm install -g yarn lerna@6 ovsx@0.9.4
