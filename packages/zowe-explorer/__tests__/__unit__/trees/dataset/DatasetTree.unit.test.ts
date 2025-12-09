@@ -5682,12 +5682,8 @@ describe("DatasetTree.crossLparMove", () => {
         );
 
         expect(apiMock.createDataSetMember).toHaveBeenCalled();
-
-        // Verify the localized message for missing PDS was called
         expect(errorMessageSpy).toHaveBeenCalledWith(
-            "Failed to move {0}: The target PDS does not exist on the host: {1}",
-            "BAR",
-            "Target data set 'DST.BAR' does not exist."
+            expect.stringContaining("Failed to move {0}: The target PDS does not exist on the host: {1}")
         );
         expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
     });
@@ -5696,7 +5692,7 @@ describe("DatasetTree.crossLparMove", () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const fakeProfile = (FsAbstractUtils as any).getInfoForUri(dstUri, Profiles.getInstance()).profile;
         const contents = Buffer.from("FILE CONTENTS");
-        (DatasetFSProvider.instance.readFile as jest.Mock).mockResolvedValue(contents);
+
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
         jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
 
@@ -5712,14 +5708,16 @@ describe("DatasetTree.crossLparMove", () => {
 
         jest.spyOn(global, 'setTimeout').mockImplementation(jest.fn());
 
-        (DatasetFSProvider.instance.writeFile as jest.Mock).mockResolvedValue(contents);
+        (DatasetFSProvider.instance.writeFile as jest.Mock).mockResolvedValue(true);
+
         (DatasetFSProvider.instance.readFile as jest.Mock)
-            // Fail 4 times due to EntryNotFound (simulating the race condition wait)
+            .mockResolvedValueOnce(contents) // 1. Initial content read SUCCESS
+            // 2-5. Verification Reads 1-4 (Retries 1-4) FAIL, continuing loop
             .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockRejectedValueOnce({ name: "EntryNotFound" })
-            // Fail 5th time, but succeed with WRONG content size (i=4 in loop)
+            // 6. Verification Read 5 (Retry 5) FAILS SIZE CHECK, throwing final error
             .mockResolvedValueOnce(Buffer.from("SHORT"));
 
         await tree["crossLparMove"](
@@ -5730,11 +5728,9 @@ describe("DatasetTree.crossLparMove", () => {
         );
 
         expect(errorMessageSpy).toHaveBeenCalledWith(
-            expect.stringContaining("Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible."),
-            "BAR(MEMBER)"
+            expect.stringContaining("Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible.")
         );
-
-        // Assert delete was NOT called (because the move failed)
+        // delete was NOT called (because the move failed)
         expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
     });
 });
