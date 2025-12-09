@@ -153,7 +153,7 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
 }
 
 describe("ProfilesCache", () => {
-    const fakeLogger = { debug: jest.fn(), error: jest.fn() };
+    const fakeLogger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
     const fakeZoweDir = "~/.zowe";
     const readProfilesFromDiskSpy = jest.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk");
     const defaultCredMgrWithKeytarSpy = jest.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar");
@@ -178,6 +178,46 @@ describe("ProfilesCache", () => {
             path.join(fakeZoweDir, teamConfig.configName),
         ]);
         existsSync.mockRestore();
+    });
+
+    describe("getCredentialManagerOptions", () => {
+        it("should return undefined if imperative.json does not exist", () => {
+            jest.spyOn(fs, "existsSync").mockReturnValue(false);
+            const options = ProfilesCache.getCredentialManagerOptions();
+            expect(options).toBeUndefined();
+        });
+
+        it("should return undefined if imperative.json does not contain credentialManagerOptions", () => {
+            jest.spyOn(fs, "existsSync").mockReturnValue(true);
+            jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({}));
+            const options = ProfilesCache.getCredentialManagerOptions();
+            expect(options).toBeUndefined();
+        });
+
+        it("should return credentialManagerOptions if they exist in imperative.json", () => {
+            const mockOptions = { key: "value" };
+            jest.spyOn(fs, "existsSync").mockReturnValue(true);
+            jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({ credentialManagerOptions: mockOptions }));
+            const options = ProfilesCache.getCredentialManagerOptions();
+            expect(options).toEqual(mockOptions);
+        });
+
+        it("should return persistence value from imperative.json if it exists", () => {
+            const mockOptions = { persist: "session" };
+            jest.spyOn(fs, "existsSync").mockReturnValue(true);
+            jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({ credentialManagerOptions: mockOptions }));
+            const persistence = ProfilesCache.getCredentialManagerOptions()?.persist;
+            expect(persistence).toEqual("session");
+        });
+
+        it("should return undefined and log a warning if imperative.json is malformed", () => {
+            jest.spyOn(fs, "existsSync").mockReturnValue(true);
+            jest.spyOn(fs, "readFileSync").mockReturnValue("not json");
+            const loggerSpy = jest.spyOn(imperative.Logger.prototype, "warn");
+            const options = ProfilesCache.getCredentialManagerOptions();
+            expect(options).toBeUndefined();
+            expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to read credential manager options from imperative.json"));
+        });
     });
 
     it("getProfileInfo should replace user and password with environment variables", async () => {
