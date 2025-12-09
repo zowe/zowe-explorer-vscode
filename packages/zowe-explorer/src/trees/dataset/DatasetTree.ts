@@ -161,7 +161,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             await vscode.workspace.fs.delete(sourceUri, { recursive: true });
         } else {
             let destinationMemberUri = destUri;
-            const sourceMemberLabel = sourceNode.getLabel() as string ?? '';
+            const sourceMemberLabel = sourceNode.label as string ?? '';
             const memberNameWithoutExtension = sourceMemberLabel
                 ? path.parse(sourceMemberLabel).name
                 : '';
