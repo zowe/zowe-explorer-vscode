@@ -183,11 +183,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
             // Reconstruct the path to ensure it is correctly formed
             if (SharedContext.isDsMember(sourceNode)) {
-                // 1. get URI path up to the PDS name (ie '/system/PDSNAME.TEST')
+                // get URI path up to the PDS name ie '/system/PDSNAME.TEST'
                 const pdsBasePath = destUri.path.substring(0, destUri.path.lastIndexOf('/'));
-
-                // 2. add member label, results in '/system/PDSNAME.TEST/TEST'
-                // NOTE: We use the original sourceMemberLabel here as the FS provider cache may expect the extension in the path key
+                // add member label, results in '/system/PDSNAME.TEST/TEST'
                 const newMemberPath = pdsBasePath + '/' + sourceMemberLabel;
 
                 destinationMemberUri = destUri.with({
@@ -202,7 +200,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     // ignore if it already exists, but bail out on 404/500 if the PDS itself is missing
                     const code = err.errorCode?.toString();
                     if (code === "404" || code === "500") {
-                        Gui.errorMessage(vscode.l10n.t("Failed to move {0}: The target PDS does not exist on the host: {1}", fullPdsName, err.message));
+                        Gui.errorMessage(vscode.l10n.t("Failed to move {0}: The target PDS does not exist on the host: {1}", dsname, err.message));
                         return;
                     }
                 }
