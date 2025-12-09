@@ -5699,7 +5699,7 @@ describe("DatasetTree.crossLparMove", () => {
         expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
     });
 
-    it("should display verification failure message after max retries", async () => {
+    it("should display verification failure message after a reduced number of retries (testing polling solution)", async () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const fakeProfile = (FsAbstractUtils as any).getInfoForUri(dstUri, Profiles.getInstance()).profile;
         const contents = Buffer.from("FILE CONTENTS");
@@ -5720,15 +5720,17 @@ describe("DatasetTree.crossLparMove", () => {
 
         (DatasetFSProvider.instance.writeFile as jest.Mock).mockResolvedValue(true);
 
+        // mock chain to only run 3 failures (i=0, 1, 2) + final size mismatch (i=3)
+        // ensures the logic runs through several retries but stops quickly.
         (DatasetFSProvider.instance.readFile as jest.Mock)
-            .mockResolvedValueOnce(contents)
-            .mockRejectedValueOnce({ name: "EntryNotFound" })
-            .mockRejectedValueOnce({ name: "EntryNotFound" })
-            .mockRejectedValueOnce({ name: "EntryNotFound" })
-            .mockRejectedValueOnce({ name: "EntryNotFound" })
+            .mockResolvedValueOnce(contents) // 1. Initial content read SUCCESS
+            .mockRejectedValueOnce({ name: "EntryNotFound" }) // 2. Read 1 (i=0)
+            .mockRejectedValueOnce({ name: "EntryNotFound" }) // 3. Read 2 (i=1)
+            .mockRejectedValueOnce({ name: "EntryNotFound" }) // 4. Read 3 (i=2)
+            // 5. Read 4 (i=3) FAILS SIZE CHECK. The loop stops because maxRetries is 5.
             .mockResolvedValueOnce(Buffer.from("SHORT"));
 
-        // The async call that starts the polling loop.
+        // the async call that starts the polling loop.
         const movePromise = tree["crossLparMove"](
             fakeMemberNode as IZoweDatasetTreeNode,
             fakeMemberNode.resourceUri,
@@ -5736,26 +5738,23 @@ describe("DatasetTree.crossLparMove", () => {
             false
         );
 
+        // timers for the necessary delays only (3 delays total)
+
         // i=0 delay (200ms)
         jest.advanceTimersByTime(retryDelay * 1);
-        await Promise.resolve(); // Process microtasks so the rejection is caught
+        await Promise.resolve();
 
         // i=1 delay (400ms)
         jest.advanceTimersByTime(retryDelay * 2);
         await Promise.resolve();
 
-        // i=2 delay (800ms)
+        // i=2 delay (800ms). The 4th attempt (i=3) is the one that triggers the final error.
         jest.advanceTimersByTime(retryDelay * 4);
         await Promise.resolve();
 
-        // i=3 delay (1600ms)
-        jest.advanceTimersByTime(retryDelay * 8);
-        await Promise.resolve();
-
-        // The final (5th) attempt (i=4) runs immediately after the 4th delay,
-        // throws the final verification error, and resolves the promise.
-
+        // Await the function now that the final advancement has occurred.
         await movePromise;
+
         expect(errorMessageSpy).toHaveBeenCalledWith(
             expect.stringContaining("Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible.")
         );
