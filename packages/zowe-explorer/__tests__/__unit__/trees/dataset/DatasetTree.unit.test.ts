@@ -5710,9 +5710,10 @@ describe("DatasetTree.crossLparMove", () => {
     });
 
     it.concurrent("should display verification failure message after a reduced number of retries (testing polling solution)", async () => {
-        jest.useFakeTimers();
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const contents = Buffer.from("FILE CONTENTS");
+
+        jest.useFakeTimers();
 
         const localTree = new DatasetTree();
 
@@ -5736,7 +5737,7 @@ describe("DatasetTree.crossLparMove", () => {
 
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
         jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
-
+        // Use local spy for writeFile and ensure it's the target of the mockResolvedValue call
         jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue(undefined);
 
         const dstMemberUri = localDstUri.with({ path: "/DST_PROFILE/BAR/MEMBER.JCL" });
@@ -5765,19 +5766,12 @@ describe("DatasetTree.crossLparMove", () => {
             false
         );
 
-        // repeatedly advance the clock until the movePromise resolves
-        let advancingDelay = 200;
-        for (let i = 0; i < 4; i++) { // Need 4 advances for 5 attempts
-            jest.advanceTimersByTime(advancingDelay);
-            await Promise.resolve();
-            advancingDelay *= 2;
-        }
-
-        // final microtask cycle before awaiting the movePromise
+        // runAllTimers and await to resolve the whole queue at once
+        // This will advance time by the full duration and resolve all nested setTimeouts.
+        jest.runAllTimers();
+        // Ensure all microtasks (the promise resolutions and error propagation) are processed.
         await Promise.resolve();
-
         await movePromise;
-
         expect(errorMessageSpy).toHaveBeenCalledWith(
             expect.stringContaining("Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible.")
         );
