@@ -56,7 +56,7 @@ jobs:
           GIT_COMMITTER_EMAIL: ${{ secrets.ZOWE_ROBOT_EMAIL }}
           GIT_CREDENTIALS: x-access-token:${{ secrets.ZOWE_ROBOT_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_PUBLISHER_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_PUBLIC_TOKEN }}
           OVSX_PAT: ${{ secrets.VSCODE_OVSX_PUBLISHER_TOKEN }}
           VSCE_PAT: ${{ secrets.VSCODE_VSCE_PUBLISHER_TOKEN }}
         with:
