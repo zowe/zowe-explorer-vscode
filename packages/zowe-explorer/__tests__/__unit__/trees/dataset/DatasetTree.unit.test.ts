@@ -5568,4 +5568,45 @@ describe("DatasetTree.crossLparMove", () => {
         );
         expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(srcUri, { recursive: true });
     });
+    it("should fail gracefully if sequential dataset creation fails (404/500)", async () => {
+        const fakeProfile = (FsAbstractUtils as any).getInfoForUri(dstUri, Profiles.getInstance()).profile;
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+
+        // Mock the source node as a Sequential Dataset (DS)
+        const fakeSequentialDsNode: Partial<IZoweDatasetTreeNode> = {
+            label: "TEST.SEQ.DS" as string, // Required for dsname calculation in the creation block
+            contextValue: "ds",
+            getProfile: () => fakeProfile, // Use the profile mock
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+            resourceUri: srcUri.with({ path: "/SRC_PROFILE/TEST.SEQ.DS" }),
+        };
+
+        // Mock API to throw a 404 error during createDataSet
+        apiMock.createDataSet.mockRejectedValueOnce({
+            errorCode: "404",
+            message: "Dataset not found on host.",
+        });
+
+        jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockImplementation(async () => ({}) as any);
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
+        jest.spyOn(SharedContext, "isDsMember").mockReturnValue(false); // Must be false for sequential DS logic
+        (fakeSequentialDsNode as any).getLabel = jest.fn().mockReturnValue("TEST.SEQ.DS");
+
+        await tree["crossLparMove"](
+            fakeSequentialDsNode as IZoweDatasetTreeNode,
+            fakeSequentialDsNode.resourceUri,
+            dstUri.with({ path: "/DST_PROFILE/TEST.SEQ.DS" }),
+            false
+        );
+        expect(apiMock.createDataSet).toHaveBeenCalledWith(
+            zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
+            "TEST.SEQ.DS", // dsname extracted from sourceNode.getLabel()
+            {}
+        );
+        expect(errorMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Failed to move TEST.SEQ.DS: Dataset not found on host."),
+        );
+        expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
+        expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
+    });
 });
