@@ -5703,7 +5703,6 @@ describe("DatasetTree.crossLparMove", () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const fakeProfile = (FsAbstractUtils as any).getInfoForUri(dstUri, Profiles.getInstance()).profile;
         const contents = Buffer.from("FILE CONTENTS");
-        const retryDelay = 200; // Starting delay
 
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
         jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
@@ -5725,7 +5724,6 @@ describe("DatasetTree.crossLparMove", () => {
             .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockRejectedValueOnce({ name: "EntryNotFound" })
-            .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockResolvedValueOnce(Buffer.from("SHORT"));
 
         // The async call that starts the polling loop.
@@ -5736,10 +5734,7 @@ describe("DatasetTree.crossLparMove", () => {
             false
         );
 
-        // timer calls (4 Delays)
-        jest.advanceTimersByTime(10000); // Advance far enough to cover the total delay (6200ms) + buffer
-
-        // Await the function now that timers have advanced
+        jest.advanceTimersByTime(4500); // max timeout for test is 5000ms so stopping there
         await movePromise;
 
         expect(errorMessageSpy).toHaveBeenCalledWith(
