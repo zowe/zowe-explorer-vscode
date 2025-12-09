@@ -5493,7 +5493,7 @@ describe("DatasetTree.crossLparMove", () => {
         jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue({});
         jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(Buffer.from("hello"));
-        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => {});
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => { });
 
         apiMock = {
             createDataSet: jest.fn().mockResolvedValue({}),
@@ -5540,7 +5540,8 @@ describe("DatasetTree.crossLparMove", () => {
         fakeNode.contextValue = "ds.pds";
 
         const childNode: Partial<IZoweDatasetTreeNode> = {
-            getLabel: () => "M1",
+            label: "M1" as string,
+
             resourceUri: srcUri.with({ path: `${srcUri.path}/M1` }),
             contextValue: "member",
             getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
@@ -5555,8 +5556,13 @@ describe("DatasetTree.crossLparMove", () => {
 
         expect(apiMock.createDataSet).toHaveBeenCalled();
         expect(DatasetFSProvider.instance.createDirectory).toHaveBeenCalledWith(dstUri);
+
+        // and confirm the correct member path on the final URI object.
         expect(DatasetFSProvider.instance.writeFile).toHaveBeenCalledWith(
-            expect.objectContaining({ path: "/DST_PROFILE/BAR/M1" }),
+            expect.objectContaining({
+                path: "/DST_PROFILE/BAR/M1",
+                query: "forceUpload=true",
+            }),
             expect.any(Buffer),
             expect.objectContaining({ overwrite: true })
         );
