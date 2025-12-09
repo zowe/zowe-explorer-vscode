@@ -5714,17 +5714,13 @@ describe("DatasetTree.crossLparMove", () => {
         const contents = Buffer.from("FILE CONTENTS");
 
         jest.useFakeTimers();
-
         const localTree = new DatasetTree();
-
-        // Define local URIs and profiles for concurrent test isolation
         const localSrcUri = vscode.Uri.from({ scheme: "ds", path: "/SRC_PROFILE/FOO" });
         const localDstUri = vscode.Uri.from({ scheme: "ds", path: "/DST_PROFILE/BAR" });
 
         const baseIProfileLoaded = { message: "", type: "zosmf", failNotFound: false, };
         const fakeDstProfile = { profile: { ...baseIProfileLoaded, name: "TEST_PROFILE" } };
 
-        // Spy on utility function locally
         jest.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementation((uri) => {
             if (!uri) {
                 return { profile: { ...baseIProfileLoaded }, slashAfterProfilePos: 0, isRoot: true, profileName: "" };
@@ -5737,7 +5733,7 @@ describe("DatasetTree.crossLparMove", () => {
 
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
         jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
-        // Use local spy for writeFile and ensure it's the target of the mockResolvedValue call
+
         jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue(undefined);
 
         const dstMemberUri = localDstUri.with({ path: "/DST_PROFILE/BAR/MEMBER.JCL" });
@@ -5766,12 +5762,20 @@ describe("DatasetTree.crossLparMove", () => {
             false
         );
 
-        let totalDelay = 3000; // Total cumulative delay (200+400+800+1600)
-        // Advance time for the full duration
-        jest.advanceTimersByTime(totalDelay);
-        // Run Jest's microtask queue until the promise chain settles
+        // This resolves the total 4 delays sequentially, clearing microtasks aggressively.
+        try {
+            // The total number of retries is 5, meaning there are 4 delays (setTimes) to process.
+            for (let i = 0; i < 4; i++) {
+                // Run the next pending delay (setTimeout) synchronously
+                jest.advanceTimersToNextTimer();
+
+                // Force the microtasks (promise resolutions, catch blocks) to run immediately
+                await Promise.resolve();
+                await Promise.resolve();
+            }
+        } catch (e) {
+        }
         await Promise.resolve();
-        // Final attempt to force resolution (This often fixes complex stalls)
         await movePromise;
 
         expect(errorMessageSpy).toHaveBeenCalledWith(
