@@ -4,8 +4,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
-### Bug fixes
-
 ## `2.18.2`
 
 ### Bug fixes
