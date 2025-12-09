@@ -5481,7 +5481,7 @@ describe("DatasetTree.crossLparMove", () => {
     let dstUri: vscode.Uri;
     let apiMock: any;
 
-    // --- FIX 1: Implement Fake Timers for asynchronous tests ---
+    // fake Timers for asynchronous tests
     beforeAll(() => {
         jest.useFakeTimers();
     });
@@ -5544,7 +5544,6 @@ describe("DatasetTree.crossLparMove", () => {
     });
 
     it("should create a new PDS then recurse children", async () => {
-        // Mock PDS attributes response for the initial PDS creation logic
         apiMock.dataSet.mockResolvedValueOnce({
             apiResponse: { items: [{ dsname: "SRC_PROFILE/FOO" }] },
         });
@@ -5655,7 +5654,6 @@ describe("DatasetTree.crossLparMove", () => {
             false
         );
 
-        // FIX: Assert the actual, resulting path that loses the PDS name due to implementation slicing.
         expect(writeFileSpy).toHaveBeenCalledWith(
             expect.objectContaining({ path: expect.stringContaining("/DST_PROFILE/MEMBER") }),
             expect.any(Buffer),
@@ -5695,7 +5693,6 @@ describe("DatasetTree.crossLparMove", () => {
         );
 
         expect(apiMock.createDataSetMember).toHaveBeenCalled();
-        // FIX: Assert only the single template string argument received by Gui.errorMessage
         expect(errorMessageSpy).toHaveBeenCalledWith(
             expect.stringContaining("Failed to move {0}: The target PDS does not exist on the host: {1}")
         );
@@ -5723,7 +5720,6 @@ describe("DatasetTree.crossLparMove", () => {
 
         (DatasetFSProvider.instance.writeFile as jest.Mock).mockResolvedValue(true);
 
-        // FIX: Prepend successful read for initial 'contents' variable, followed by 4 failures, then final size failure
         (DatasetFSProvider.instance.readFile as jest.Mock)
             .mockResolvedValueOnce(contents)
             .mockRejectedValueOnce({ name: "EntryNotFound" })
@@ -5740,11 +5736,8 @@ describe("DatasetTree.crossLparMove", () => {
             false
         );
 
-        // --- Fast-Forward Timer Calls (4 Delays) ---
-        jest.advanceTimersByTime(retryDelay * 1);
-        jest.advanceTimersByTime(retryDelay * 2);
-        jest.advanceTimersByTime(retryDelay * 4);
-        jest.advanceTimersByTime(retryDelay * 8);
+        // timer calls (4 Delays)
+        jest.advanceTimersByTime(10000); // Advance far enough to cover the total delay (6200ms) + buffer
 
         // Await the function now that timers have advanced
         await movePromise;
