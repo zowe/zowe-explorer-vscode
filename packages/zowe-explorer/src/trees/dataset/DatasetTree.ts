@@ -146,8 +146,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
             const children = await sourceNode.getChildren();
             for (const childNode of children) {
-                const memberLabel = childNode.label as string;
-
+                const memberLabel = (childNode.label as string) || '';
                 await this.crossLparMove(
                     childNode,
                     sourceUri.with({
