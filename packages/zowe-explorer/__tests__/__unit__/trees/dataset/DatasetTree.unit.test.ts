@@ -5766,12 +5766,14 @@ describe("DatasetTree.crossLparMove", () => {
             false
         );
 
-        // runAllTimers and await to resolve the whole queue at once
-        // This will advance time by the full duration and resolve all nested setTimeouts.
-        jest.runAllTimers();
-        // Ensure all microtasks (the promise resolutions and error propagation) are processed.
+        let totalDelay = 3000; // Total cumulative delay (200+400+800+1600)
+        // Advance time for the full duration
+        jest.advanceTimersByTime(totalDelay);
+        // Run Jest's microtask queue until the promise chain settles
         await Promise.resolve();
+        // Final attempt to force resolution (This often fixes complex stalls)
         await movePromise;
+
         expect(errorMessageSpy).toHaveBeenCalledWith(
             expect.stringContaining("Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible.")
         );
