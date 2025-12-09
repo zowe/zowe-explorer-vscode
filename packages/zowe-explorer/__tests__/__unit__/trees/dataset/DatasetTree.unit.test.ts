@@ -5701,58 +5701,55 @@ describe("DatasetTree.crossLparMove", () => {
     test.concurrent("should display verification failure message after a reduced number of retries (testing polling solution)", async () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const contents = Buffer.from("FILE CONTENTS");
+
+        // 1. DEFINE LOCAL URIS
         const localSrcUri = vscode.Uri.from({ scheme: "ds", path: "/SRC_PROFILE/FOO" });
         const localDstUri = vscode.Uri.from({ scheme: "ds", path: "/DST_PROFILE/BAR" });
-        const fakeMemberNode: Partial<IZoweDatasetTreeNode> = {
-            label: "MEMBER.JCL" as string,
-            contextValue: "member",
-            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
-            resourceUri: localSrcUri.with({ path: "/SRC_PROFILE/PDS.TEST/MEMBER.JCL" }), // Use localSrcUri
-        };
 
-        const dstMemberUri = localDstUri.with({ path: "/DST_PROFILE/BAR/MEMBER.JCL" }); // Use localDstUri
-        // Define the structure needed for the 'profile' property, which must satisfy IProfileLoaded
+        // 2. DEFINE BASE PROFILE STRUCTURES
         const baseIProfileLoaded = {
             message: "",
-            type: "zosmf", // Assuming 'zosmf' or similar is the expected type
+            type: "zosmf",
             failNotFound: false,
-            // Add other required properties of IProfileLoaded if any exist
         };
+        const fakeDstProfile = { profile: { ...baseIProfileLoaded, name: "TEST_PROFILE" } };
 
+        // 3. FIX: CORRECTLY SPY ON UTILITY FUNCTION
         jest.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementation((uri) => {
-            // default profile structure used for source/undefined URIs
-            const srcProfile = {
-                profile: { ...baseIProfileLoaded, name: "SRC_PROFILE" }, // Ensure IProfileLoaded fields are present
-                slashAfterProfilePos: 11,
-                isRoot: false,
-                profileName: "SRC_PROFILE"
-            };
-            // 1. Handle case where URI is null/undefined
-            if (!uri) {
+            // Check against known destination URIs (using path substring is safer than === object comparison)
+            if (uri && uri.path.includes("/DST_PROFILE/BAR")) {
                 return {
-                    profile: { ...baseIProfileLoaded }, // Return the base structure
-                    slashAfterProfilePos: 0,
-                    isRoot: false,
-                    profileName: ""
-                };
-            }
-            // 2. Handle Destination URIs
-            if (uri.path.includes("/DST_PROFILE/BAR")) {
-                const dstProfile = {
-                    profile: { ...baseIProfileLoaded, name: "TEST_PROFILE" }, // Ensure IProfileLoaded fields are present
+                    profile: fakeDstProfile.profile,
                     slashAfterProfilePos: 11,
                     isRoot: false,
                     profileName: "TEST_PROFILE"
                 };
-                return dstProfile;
             }
-
-            // 3. Handle Source URIs (Default Case)
-            return srcProfile;
+            // Default Source URI profile structure
+            if (uri && uri.path.includes("/SRC_PROFILE")) {
+                return {
+                    profile: { ...baseIProfileLoaded, name: "SRC_PROFILE" },
+                    slashAfterProfilePos: 11,
+                    isRoot: false,
+                    profileName: "SRC_PROFILE"
+                };
+            }
+            return { profile: { ...baseIProfileLoaded }, slashAfterProfilePos: 0, isRoot: true, profileName: "" };
         });
 
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
         jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
+
+        const dstMemberUri = localDstUri.with({ path: "/DST_PROFILE/BAR/MEMBER.JCL" });
+
+        // 4. Use localSrcUri in fakeMemberNode definition
+        const fakeMemberNode: Partial<IZoweDatasetTreeNode> = {
+            label: "MEMBER.JCL" as string,
+            contextValue: "member",
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+            resourceUri: localSrcUri.with({ path: "/SRC_PROFILE/PDS.TEST/MEMBER.JCL" }),
+            getProfile: () => fakeDstProfile.profile, // Ensure getProfile returns the mock profile structure
+        };
 
         (DatasetFSProvider.instance.writeFile as jest.Mock).mockResolvedValue(true);
 
@@ -5765,7 +5762,7 @@ describe("DatasetTree.crossLparMove", () => {
             .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockResolvedValueOnce(Buffer.from("SHORT"));
 
-        // This promise starts the work which then blocks on the first setTimeout
+        // promise starts the work which then blocks on the first setTimeout
         const movePromise = tree["crossLparMove"](
             fakeMemberNode as IZoweDatasetTreeNode,
             fakeMemberNode.resourceUri,
@@ -5777,13 +5774,11 @@ describe("DatasetTree.crossLparMove", () => {
         let advancingDelay = 200;
         for (let i = 0; i < 4; i++) { // Need 4 advances for 5 attempts
             jest.advanceTimersByTime(advancingDelay);
-            // Process microtasks after advancement
             await Promise.resolve();
             advancingDelay *= 2;
         }
 
-        // final cycle before awaiting the movePromise to ensure the final
-        // exception (which resolves movePromise) has time to propagate and be caught.
+        // final microtask cycle before awaiting the movePromise
         await Promise.resolve();
 
         await movePromise;
