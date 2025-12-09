@@ -5701,8 +5701,16 @@ describe("DatasetTree.crossLparMove", () => {
 
     test.concurrent("should display verification failure message after a reduced number of retries (testing polling solution)", async () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
-        const fakeProfile = (FsAbstractUtils as any).getInfoForUri(dstUri, Profiles.getInstance()).profile;
+        const fakeProfile = { profile: {}, name: "TEST_PROFILE" };
         const contents = Buffer.from("FILE CONTENTS");
+        // Explicitly mock the utility to return defined objects for the URIs used in the test.
+        (FsAbstractUtils.getInfoForUri as jest.Mock).mockImplementation((uri) => {
+            if (uri === dstUri || uri === dstMemberUri) { // Check against known destination URIs
+                return { profile: fakeProfile, slashAfterProfilePos: 11 };
+            }
+            // Return a valid object structure for all other calls (like sourceUri)
+            return { profile: { profile: {}, name: "SRC_PROFILE" }, slashAfterProfilePos: 11 };
+        });
 
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
         jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
