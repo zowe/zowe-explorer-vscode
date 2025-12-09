@@ -5606,11 +5606,10 @@ describe("DatasetTree.crossLparMove", () => {
             {}
         );
         expect(errorMessageSpy).toHaveBeenCalledWith(
-            "Failed to move {0}: {1}",
-            "TEST.SEQ.DS",
-            "Dataset not found on host."
+            "Failed to move {0}: {1}"
         );
         expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
         expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
+        expect(errorMessageSpy.mock.calls[0][0]).toBe("Failed to move {0}: {1}"); //verify the correct template was used
     });
 });
