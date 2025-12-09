@@ -5701,7 +5701,16 @@ describe("DatasetTree.crossLparMove", () => {
     test.concurrent("should display verification failure message after a reduced number of retries (testing polling solution)", async () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const contents = Buffer.from("FILE CONTENTS");
+        const localSrcUri = vscode.Uri.from({ scheme: "ds", path: "/SRC_PROFILE/FOO" });
+        const localDstUri = vscode.Uri.from({ scheme: "ds", path: "/DST_PROFILE/BAR" });
+        const fakeMemberNode: Partial<IZoweDatasetTreeNode> = {
+            label: "MEMBER.JCL" as string,
+            contextValue: "member",
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+            resourceUri: localSrcUri.with({ path: "/SRC_PROFILE/PDS.TEST/MEMBER.JCL" }), // Use localSrcUri
+        };
 
+        const dstMemberUri = localDstUri.with({ path: "/DST_PROFILE/BAR/MEMBER.JCL" }); // Use localDstUri
         // Define the structure needed for the 'profile' property, which must satisfy IProfileLoaded
         const baseIProfileLoaded = {
             message: "",
@@ -5711,7 +5720,6 @@ describe("DatasetTree.crossLparMove", () => {
         };
 
         jest.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementation((uri) => {
-
             // default profile structure used for source/undefined URIs
             const srcProfile = {
                 profile: { ...baseIProfileLoaded, name: "SRC_PROFILE" }, // Ensure IProfileLoaded fields are present
@@ -5719,7 +5727,6 @@ describe("DatasetTree.crossLparMove", () => {
                 isRoot: false,
                 profileName: "SRC_PROFILE"
             };
-
             // 1. Handle case where URI is null/undefined
             if (!uri) {
                 return {
@@ -5729,7 +5736,6 @@ describe("DatasetTree.crossLparMove", () => {
                     profileName: ""
                 };
             }
-
             // 2. Handle Destination URIs
             if (uri.path.includes("/DST_PROFILE/BAR")) {
                 const dstProfile = {
@@ -5747,15 +5753,6 @@ describe("DatasetTree.crossLparMove", () => {
 
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
         jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
-
-        const fakeMemberNode: Partial<IZoweDatasetTreeNode> = {
-            label: "MEMBER.JCL" as string,
-            contextValue: "member",
-            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
-            resourceUri: srcUri.with({ path: "/SRC_PROFILE/PDS.TEST/MEMBER.JCL" }),
-        };
-
-        const dstMemberUri = dstUri.with({ path: "/DST_PROFILE/BAR/MEMBER.JCL" });
 
         (DatasetFSProvider.instance.writeFile as jest.Mock).mockResolvedValue(true);
 
