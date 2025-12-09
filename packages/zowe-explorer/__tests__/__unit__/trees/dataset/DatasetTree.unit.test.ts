@@ -5710,6 +5710,7 @@ describe("DatasetTree.crossLparMove", () => {
     });
 
     it.concurrent("should display verification failure message after a reduced number of retries (testing polling solution)", async () => {
+        jest.useFakeTimers();
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const contents = Buffer.from("FILE CONTENTS");
 
