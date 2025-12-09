@@ -5713,11 +5713,12 @@ describe("DatasetTree.crossLparMove", () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
         const contents = Buffer.from("FILE CONTENTS");
 
+        const localTree = new DatasetTree();
+
         // Define local URIs and profiles for concurrent test isolation
         const localSrcUri = vscode.Uri.from({ scheme: "ds", path: "/SRC_PROFILE/FOO" });
         const localDstUri = vscode.Uri.from({ scheme: "ds", path: "/DST_PROFILE/BAR" });
 
-        // Define base profile structure
         const baseIProfileLoaded = { message: "", type: "zosmf", failNotFound: false, };
         const fakeDstProfile = { profile: { ...baseIProfileLoaded, name: "TEST_PROFILE" } };
 
@@ -5735,6 +5736,8 @@ describe("DatasetTree.crossLparMove", () => {
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
         jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
 
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue(undefined);
+
         const dstMemberUri = localDstUri.with({ path: "/DST_PROFILE/BAR/MEMBER.JCL" });
         const fakeMemberNode: Partial<IZoweDatasetTreeNode> = {
             label: "MEMBER.JCL" as string,
@@ -5744,9 +5747,9 @@ describe("DatasetTree.crossLparMove", () => {
             getProfile: () => fakeDstProfile.profile,
         };
 
-        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue(undefined);
+        // 1 success (initial read) + 4 fails (retries) + 1 size fail (final attempt)
         jest.spyOn(DatasetFSProvider.instance, "readFile")
-            .mockResolvedValueOnce(contents) // 1. Initial content read SUCCESS
+            .mockResolvedValueOnce(contents)
             .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockRejectedValueOnce({ name: "EntryNotFound" })
             .mockRejectedValueOnce({ name: "EntryNotFound" })
@@ -5754,9 +5757,9 @@ describe("DatasetTree.crossLparMove", () => {
             .mockResolvedValueOnce(Buffer.from("SHORT"));
 
         // This promise starts the work which then blocks on the first setTimeout
-        const movePromise = tree["crossLparMove"](
+        const movePromise = localTree["crossLparMove"](
             fakeMemberNode as IZoweDatasetTreeNode,
-            fakeMemberNode.resourceUri,
+            fakeMemberNode.resourceUri!,
             dstMemberUri,
             false
         );
@@ -5778,5 +5781,5 @@ describe("DatasetTree.crossLparMove", () => {
             expect.stringContaining("Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible.")
         );
         expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
-    }, 10000); // Increased timeout for reliability
+    }, 10000);
 });
