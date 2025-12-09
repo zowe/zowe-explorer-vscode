@@ -5503,7 +5503,6 @@ describe("DatasetTree.crossLparMove", () => {
         jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue({});
         jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(Buffer.from("hello"));
         jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => { });
-
         apiMock = {
             createDataSet: jest.fn().mockResolvedValue({}),
             createDataSetMember: jest.fn().mockResolvedValue({}),
@@ -5701,15 +5700,49 @@ describe("DatasetTree.crossLparMove", () => {
 
     test.concurrent("should display verification failure message after a reduced number of retries (testing polling solution)", async () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
-        const fakeProfile = { profile: {}, name: "TEST_PROFILE" };
         const contents = Buffer.from("FILE CONTENTS");
-        // Explicitly mock the utility to return defined objects for the URIs used in the test.
-        (FsAbstractUtils.getInfoForUri as jest.Mock).mockImplementation((uri) => {
-            if (uri === dstUri || uri === dstMemberUri) { // Check against known destination URIs
-                return { profile: fakeProfile, slashAfterProfilePos: 11 };
+
+        // Define the structure needed for the 'profile' property, which must satisfy IProfileLoaded
+        const baseIProfileLoaded = {
+            message: "",
+            type: "zosmf", // Assuming 'zosmf' or similar is the expected type
+            failNotFound: false,
+            // Add other required properties of IProfileLoaded if any exist
+        };
+
+        jest.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementation((uri) => {
+
+            // default profile structure used for source/undefined URIs
+            const srcProfile = {
+                profile: { ...baseIProfileLoaded, name: "SRC_PROFILE" }, // Ensure IProfileLoaded fields are present
+                slashAfterProfilePos: 11,
+                isRoot: false,
+                profileName: "SRC_PROFILE"
+            };
+
+            // 1. Handle case where URI is null/undefined
+            if (!uri) {
+                return {
+                    profile: { ...baseIProfileLoaded }, // Return the base structure
+                    slashAfterProfilePos: 0,
+                    isRoot: false,
+                    profileName: ""
+                };
             }
-            // Return a valid object structure for all other calls (like sourceUri)
-            return { profile: { profile: {}, name: "SRC_PROFILE" }, slashAfterProfilePos: 11 };
+
+            // 2. Handle Destination URIs
+            if (uri.path.includes("/DST_PROFILE/BAR")) {
+                const dstProfile = {
+                    profile: { ...baseIProfileLoaded, name: "TEST_PROFILE" }, // Ensure IProfileLoaded fields are present
+                    slashAfterProfilePos: 11,
+                    isRoot: false,
+                    profileName: "TEST_PROFILE"
+                };
+                return dstProfile;
+            }
+
+            // 3. Handle Source URIs (Default Case)
+            return srcProfile;
         });
 
         jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
@@ -5718,7 +5751,6 @@ describe("DatasetTree.crossLparMove", () => {
         const fakeMemberNode: Partial<IZoweDatasetTreeNode> = {
             label: "MEMBER.JCL" as string,
             contextValue: "member",
-            getProfile: () => fakeProfile,
             getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
             resourceUri: srcUri.with({ path: "/SRC_PROFILE/PDS.TEST/MEMBER.JCL" }),
         };
@@ -5745,7 +5777,6 @@ describe("DatasetTree.crossLparMove", () => {
         );
 
         // repeatedly advance the clock until the movePromise resolves
-        // It runs asynchronously to avoid blocking the whole test
         let advancingDelay = 200;
         for (let i = 0; i < 4; i++) { // Need 4 advances for 5 attempts
             jest.advanceTimersByTime(advancingDelay);
@@ -5754,12 +5785,15 @@ describe("DatasetTree.crossLparMove", () => {
             advancingDelay *= 2;
         }
 
-        // The 5th attempt (i=4) throws the error, resolving the movePromise.
+        // final cycle before awaiting the movePromise to ensure the final
+        // exception (which resolves movePromise) has time to propagate and be caught.
+        await Promise.resolve();
+
         await movePromise;
 
         expect(errorMessageSpy).toHaveBeenCalledWith(
             expect.stringContaining("Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible.")
         );
         expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
-    }, 10000); //timeout
+    }, 10000); // Increased timeout for reliability
 });
