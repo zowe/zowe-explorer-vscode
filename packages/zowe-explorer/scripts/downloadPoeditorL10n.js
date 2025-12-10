@@ -17,28 +17,12 @@ const defaultHeaders = { "Content-Type": "application/x-www-form-urlencoded" };
     }).then(r => r.json()).catch(e => {
         console.error(`Error downloading languages list: ${e.message}`);
         console.error(`Response: ${JSON.stringify(e)}`);
-        // process.exit(1);
+        process.exit(1);
     });
     if (listResponse.response?.status !== "success") {
         console.error(`Error downloading languages list: ${listResponse.response?.code} - ${listResponse.response?.message}`);
         console.error(`Response: ${JSON.stringify(listResponse.response)}`);
-
-        // list contributors
-        const contributorsResponse = await fetch("https://api.poeditor.com/v2/contributors/list", {
-            method: "POST",
-            body: `api_token=${poeditorToken}&id=${projectId}`,
-            headers: defaultHeaders
-        }).then(r => r.json())
-        console.log(JSON.stringify(contributorsResponse, null, 2));
-
-        // Adding zFernand0 to the project
-        const addContributorResponse = await fetch("https://api.poeditor.com/v2/contributors/add", {
-            method: "POST",
-            body: `api_token=${poeditorToken}&id=${projectId}&email=fernando@rijo.dev&name=zFernand0`,
-            headers: defaultHeaders
-        }).then(r => r.json())
-        console.log(JSON.stringify(addContributorResponse, null, 2));
-        // process.exit(1);
+        process.exit(1);
     }
     for (const { code } of listResponse.result.languages.filter(lang => lang.percentage > 0)) {
         const exportResponse = await fetch("https://api.poeditor.com/v2/projects/export", {
