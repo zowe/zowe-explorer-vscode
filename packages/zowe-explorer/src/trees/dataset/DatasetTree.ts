@@ -119,7 +119,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (!DatasetFSProvider.instance.exists(destUri)) {
                 // Compute source PDS name from sourceUri (previous bug: used destUri here)
                 const sourcePdsName = sourceUri.path.substring(sourceInfo.slashAfterProfilePos + 1);
-                ZoweLogger.debug(`crossLparMove: creating destination PDS ${dsname} from source PDS ${sourcePdsName} (profiles: ${sourceInfo.profile?.name} -> ${destinationInfo.profile?.name})`);
 
                 // fetch attributes from source PDS
                 const sourceAttributesResponse = await ZoweExplorerApiRegister.getMvsApi(sourceInfo.profile).dataSet(sourcePdsName, {
@@ -127,9 +126,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     responseTimeout: sourceInfo.profile?.profile?.responseTimeout,
                 });
                 const { dsname: dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
+                // need to transform labels
                 const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
 
                 let dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
+                // if alcunit is cyl, divide primary by 15 to get the number of cylinders
                 const TRACKS_PER_CYLINDER = 15;
                 const primary = Number(transformedAttrs.primary);
                 if (!isNaN(primary) && primary > 0) {
@@ -192,8 +193,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const destApi = ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile);
             const sourceApi = ZoweExplorerApiRegister.getMvsApi(sourceInfo.profile);
 
-            ZoweLogger.debug(`crossLparMove: preparing to create member ${dsname} on profile ${destinationInfo.profile?.name} (source profile: ${sourceInfo.profile?.name})`);
-
             // First check destination PDS presence
             let destPdsExists = false;
             try {
@@ -201,20 +200,23 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 destPdsExists = destCheck?.success === true && (Array.isArray(destCheck.apiResponse) ? destCheck.apiResponse.length > 0 : (destCheck.apiResponse?.items?.length > 0));
             } catch (err) {
                 const code = err?.errorCode?.toString();
-                ZoweLogger.debug(`crossLparMove: destApi.dataSet(${fullPdsName}) failed with code=${code} message=${err?.message}`);
                 destPdsExists = false;
             }
 
-            // If destination PDS missing, attempt to create it using source PDS attributes (best-effort)
+            // If destination PDS missing, attempt to create it using source PDS attributes
             if (!destPdsExists) {
                 try {
                     const sourcePdsName = sourceUri.path.substring(sourceInfo.slashAfterProfilePos + 1);
-                    ZoweLogger.debug(`crossLparMove: destination PDS ${fullPdsName} missing; attempting to create from source PDS ${sourcePdsName}`);
-                    const sourceAttributesResponse = await sourceApi.dataSet(sourcePdsName, { attributes: true, responseTimeout: sourceInfo.profile?.profile?.responseTimeout });
+                    const sourceAttributesResponse = await sourceApi.dataSet(sourcePdsName, {
+                        attributes: true,
+                        responseTimeout: sourceInfo.profile?.profile?.responseTimeout,
+                    });
                     const { dsname: dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
                     const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
 
                     let dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
+
+                    // If alcunit is cyl, divide primary by 15 to get the number of cylinders
                     const TRACKS_PER_CYLINDER = 15;
                     const primary = Number(transformedAttrs.primary);
                     if (!isNaN(primary) && primary > 0) {
@@ -222,22 +224,27 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     }
 
                     await destApi.createDataSet(dataSetTypeEnum, fullPdsName, transformedAttrs);
-                    DatasetFSProvider.instance.createDirectory(destUri.with({ path: destUri.path.substring(0, destUri.path.lastIndexOf('/')) }));
-                    destPdsExists = true;
-                    ZoweLogger.debug(`crossLparMove: created destination PDS ${fullPdsName} successfully`);
+
+                    DatasetFSProvider.instance.createDirectory(
+                        destUri.with({ path: destUri.path.substring(0, destUri.path.lastIndexOf("/")) })
+                    );
                 } catch (err) {
                     // If create fails because dest PDS is genuinely unavailable, surface a clear error
                     const code = err?.errorCode?.toString();
-                    ZoweLogger.debug(`crossLparMove: failed to create destination PDS ${fullPdsName}: code=${code} message=${err?.message}`);
                     if (code === "404" || code === "500") {
-                        Gui.errorMessage(vscode.l10n.t("Failed to move {0}: The target PDS does not exist on the host: {1}", dsname, err.message));
+                        Gui.errorMessage(
+                            vscode.l10n.t(
+                                "Failed to move {0}: The target PDS does not exist on the host: {1}",
+                                dsname,
+                                err.message
+                            )
+                        );
                         return;
                     }
                     // Otherwise, rethrow so caller can handle unexpected errors
                     throw err;
                 }
             }
-
             // Now ensure the member exists (or create it)
             try {
                 await destApi.createDataSetMember(dsname, {});
@@ -249,7 +256,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     return;
                 }
                 // If member already exists ignore the error and continue
-                ZoweLogger.debug(`crossLparMove: createDataSetMember(${dsname}) failed but continuing: ${err?.message}`);
             }
         } else {
             // Non-member: ensure sequential dataset exists if needed
@@ -274,7 +280,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
         }
 
-        // read source content and write to destinationMemberUri (common flow)
+        // read source content and write to destinationMemberUri
         const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
         try {
             const encodingInfo = await sourceNode.getEncoding();
