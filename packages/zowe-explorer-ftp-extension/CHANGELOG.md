@@ -8,6 +8,7 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Fixed an issue where Zowe Explorer could not detect the volume in data set attributes returned from the FTP extension. Renamed the `volume` property in the data sets list response object to `vols`, establishing consistency with the z/OSMF API. [#3946](https://github.com/zowe/zowe-explorer-vscode/issues/3946)
 - Updated Zowe SDKs to `8.28.0` for technical currency. [#3877](https://github.com/zowe/zowe-explorer-vscode/pull/3877)
 
 ## `3.3.1`
