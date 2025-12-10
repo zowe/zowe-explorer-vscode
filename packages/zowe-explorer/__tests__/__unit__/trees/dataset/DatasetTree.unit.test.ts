@@ -5768,4 +5768,58 @@ describe("DatasetTree.crossLparMove", () => {
         jest.useRealTimers();
     });
 
+    it("shows clear error when destination PDS creation fails with 404/500 during member move", async () => {
+        const memberSrcUri = vscode.Uri.from({ scheme: "ds", path: "/SRC_PROFILE/SRC.PDS/SRC" });
+        const memberDstUri = vscode.Uri.from({ scheme: "ds", path: "/DST_PROFILE/DEST.PDS/SRC" });
+
+        jest.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementation((uri: vscode.Uri) => {
+            const slashAfterProfilePos = uri.path.indexOf("/", 1);
+            const isRoot = slashAfterProfilePos === -1;
+            const profileName = uri.path.startsWith("/") ? uri.path.substring(1, isRoot ? uri.path.length : slashAfterProfilePos) : uri.path.substring(0, isRoot ? uri.path.length : slashAfterProfilePos);
+            return {
+                profile: { ...baseIProfileLoaded, profile: {}, name: profileName },
+                slashAfterProfilePos,
+                isRoot,
+                profileName,
+            } as any;
+        });
+
+        // Create distinct source/dest API mocks and return the correct one based on profile.name
+        const apiMockSource = {
+            dataSet: jest.fn().mockResolvedValue({
+                apiResponse: { items: [{ dsname: "SRC_PROFILE/SRC.PDS", primary: "30" }] },
+            }),
+        } as any;
+
+        const apiMockDest = {
+            dataSet: jest.fn().mockRejectedValue({ errorCode: "404", message: "Not found" }), // dest PDS absent
+            createDataSet: jest.fn().mockRejectedValue({ errorCode: "404", message: "Create PDS failed: not allowed" }), // fail when attempting to create PDS
+            createDataSetMember: jest.fn(),
+        } as any;
+
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockImplementation((profile: any) => {
+            return profile?.name === "SRC_PROFILE" ? apiMockSource : apiMockDest;
+        });
+
+        // Ensure provider thinks the destination member/DS is not present so the create path is taken
+        jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(null);
+        jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+
+        const sourceNode: any = {
+            label: "SRC",
+            resourceUri: memberSrcUri,
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+        };
+
+        await tree["crossLparMove"](sourceNode as any, memberSrcUri, memberDstUri, false);
+
+        // fake attempt to create the destination PDS (createDataSet called)
+        expect(apiMockDest.createDataSet).toHaveBeenCalled();
+        // create fails w 404/500, we surfaced the PDS-missing error and did not write the member
+        expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to move {0}: The target PDS does not exist on the host: {1}"));
+        expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
+    });
+
 });
