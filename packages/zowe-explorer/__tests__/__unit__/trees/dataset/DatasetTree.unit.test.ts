@@ -5482,18 +5482,9 @@ describe("DatasetTree.crossLparMove", () => {
     let apiMock: any;
     const baseIProfileLoaded = {
         message: "",
-        type: "zosmf", // Use a sensible default type
+        type: "zosmf",
         failNotFound: false,
     };
-
-    // Set up and teardown fake timers for asynchronous tests
-    beforeAll(() => {
-        jest.useFakeTimers();
-    });
-
-    afterAll(() => {
-        jest.useRealTimers();
-    });
 
     beforeEach(() => {
         if (!(zosfiles as any).Copy) {
@@ -5508,8 +5499,6 @@ describe("DatasetTree.crossLparMove", () => {
         jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue({});
         jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(Buffer.from("hello"));
         jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => { });
-
-        // Stubbing getInfoForUri for other tests (it will be overridden in the polling test)
         jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
             profile: { ...baseIProfileLoaded, profile: {}, name: "DEFAULT" },
             slashAfterProfilePos: 0,
@@ -5590,8 +5579,6 @@ describe("DatasetTree.crossLparMove", () => {
 
     it("should fail gracefully if sequential dataset creation fails (404/500)", async () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
-
-        // Set up mock node
         const fakeSequentialDsNode: Partial<IZoweDatasetTreeNode> = {
             label: "TEST.SEQ.DS" as string,
             contextValue: "ds",
@@ -5664,7 +5651,7 @@ describe("DatasetTree.crossLparMove", () => {
             false
         );
 
-        // Assert the actual, resulting path that loses the PDS name due to implementation slicing.
+        // ensure resulting path that loses the PDS name due to implementation slicing.
         expect(writeFileSpy).toHaveBeenCalledWith(
             expect.objectContaining({ path: expect.stringContaining("/DST_PROFILE/MEMBER") }),
             expect.any(Buffer),
@@ -5762,8 +5749,6 @@ describe("DatasetTree.crossLparMove", () => {
             false
         );
 
-        // Run all queued timers for the exponential backoff
-        // (modern fake timers: this waits for async timers too)
         // @ts-ignore
         if (jest.runAllTimersAsync) {
             // modern timers
