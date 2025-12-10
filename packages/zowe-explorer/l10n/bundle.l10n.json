@@ -244,6 +244,42 @@
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
+    ]
+  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -307,42 +343,6 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Failed to move {0}/File path": {
-    "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to delete {0}/File name": {
-    "message": "Failed to delete {0}",
-    "comment": [
-      "File name"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
-  "Failed to copy {0} to {1}/Source pathDestination path": {
-    "message": "Failed to copy {0} to {1}",
-    "comment": [
-      "Source path",
-      "Destination path"
-    ]
-  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -914,7 +914,8 @@
   "Partitioned Data Set: Default": "Partitioned Data Set: Default",
   "Partitioned Data Set: Extended": "Partitioned Data Set: Extended",
   "Sequential Data Set": "Sequential Data Set",
-  "Copying File(s)": "Copying File(s)",
+  "Copying member(s)": "Copying member(s)",
+  "Copying data set(s)": "Copying data set(s)",
   "Profile is invalid, check connection details.": "Profile is invalid, check connection details.",
   "Allocate Data Set": "Allocate Data Set",
   "Edit Attributes": "Edit Attributes",
@@ -1070,13 +1071,28 @@
   "Unable to gather more information": "Unable to gather more information",
   "Invalid paste. Copy data set(s) first.": "Invalid paste. Copy data set(s) first.",
   "Copying data sets is not supported.": "Copying data sets is not supported.",
-  "Copying data sets cross lpars is not yet supported for this profile.": "Copying data sets cross lpars is not yet supported for this profile.",
   "Name of data set member": "Name of data set member",
+  "Failed to create {0}: {1}/Data set nameError message": {
+    "message": "Failed to create {0}: {1}",
+    "comment": [
+      "Data set name",
+      "Error message"
+    ]
+  },
+  "Failed to copy member {0}: {1}/Member nameError message": {
+    "message": "Failed to copy member {0}: {1}",
+    "comment": [
+      "Member name",
+      "Error message"
+    ]
+  },
   "Replace": "Replace",
   "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
   "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
   "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",
   "Unable to copy data set.": "Unable to copy data set.",
+  "Profile {0} is no longer available. Skipping item.": "Profile {0} is no longer available. Skipping item.",
+  "Unable to retrieve attributes for {0}": "Unable to retrieve attributes for {0}",
   "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
     "message": "Failed to upload changes for {0}: {1}",
     "comment": [
