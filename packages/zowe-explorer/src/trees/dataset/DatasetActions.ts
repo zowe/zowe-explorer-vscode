@@ -1127,26 +1127,23 @@ export class DatasetActions {
             flex-direction: column;
         }
         .attributes-section {
-            margin-bottom: 2em;
+            margin-bottom: 1em;
         }
         .attributes-table {
-            width: 100%;
-            table-layout: fixed;
             border-spacing: 0;
         }
         .attributes-table td {
-            padding: 0.3em 0;
+            padding: 0.15em 0;
         }
         .attribute-key {
-            width: 40%;
             color: var(--vscode-settings-textInputForeground);
             font-weight: bold;
             text-align: left;
-            padding-right: 2em;
+            padding-right: 1em;
+            white-space: nowrap;
         }
         .attribute-value {
-            width: 60%;
-            text-align: right;
+            text-align: left;
         }
         .attribute-value-string {
             color: var(--vscode-settings-textInputForeground);
