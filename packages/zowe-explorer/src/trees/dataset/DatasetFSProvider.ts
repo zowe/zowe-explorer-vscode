@@ -91,7 +91,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
 
-        const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
+        const apiRegister = ZoweExplorerApiRegister.getInstance();
+        const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(
+            uriInfo.profile,
+            () => apiRegister.getCommonApi(uriInfo.profile),
+            { apiName: vscode.l10n.t("Common API"), registeredTypes: apiRegister.registeredApiTypes() }
+        );
+        const session = commonApi.getSession(uriInfo.profile);
         if (
             (isFetching && ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile)) ||
             (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
@@ -270,7 +276,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let pdsMember: boolean;
         let uriPath: string[];
 
-        const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
+        const apiRegister = ZoweExplorerApiRegister.getInstance();
+        const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(
+            uriInfo.profile,
+            () => apiRegister.getCommonApi(uriInfo.profile),
+            { apiName: vscode.l10n.t("Common API"), registeredTypes: apiRegister.registeredApiTypes() }
+        );
+        const session = commonApi.getSession(uriInfo.profile);
 
         if (
             ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
@@ -553,7 +565,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
-        const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
+        const apiRegister = ZoweExplorerApiRegister.getInstance();
+        const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(
+            uriInfo.profile,
+            () => apiRegister.getCommonApi(uriInfo.profile),
+            { apiName: vscode.l10n.t("Common API"), registeredTypes: apiRegister.registeredApiTypes() }
+        );
+        const session = commonApi.getSession(uriInfo.profile);
         if (
             ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
             (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)

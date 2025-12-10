@@ -3977,7 +3977,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         setupMocksForZoom(blockMocks, "MY.DATASET", "MY.DATASET", "", true, true, ["prof1"]);
         jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "prof1" }],
-            loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
+            loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1", type: "zosmf" }),
             checkCurrentProfile: jest.fn(),
             validProfile: Validation.ValidationType.INVALID,
         } as any);
@@ -3995,7 +3995,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         setupMocksForZoom(blockMocks, "MY.DATASET(MEMBER1)", "MY.DATASET", "MEMBER1", true, true, ["prof1"]);
         jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "prof1" }],
-            loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
+            loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1", type: "zosmf" }),
             checkCurrentProfile: jest.fn(),
             validProfile: Validation.ValidationType.UNVERIFIED,
         } as any);
@@ -4014,22 +4014,23 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         setupMocksForZoom(blockMocks, "MY.DATASET", "MY.DATASET", "", true, true, ["prof1"]);
         jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "prof1" }],
-            loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
+            loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1", type: "zosmf" }),
             checkCurrentProfile: jest.fn(),
             validProfile: Validation.ValidationType.UNVERIFIED,
         } as any);
 
         const testError = new Error("Some error");
+        jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce(null);
         const readFileMock = jest.spyOn(vscode.workspace.fs, "readFile").mockRejectedValueOnce(testError);
         const authUtilsSpy = jest.spyOn(AuthUtils, "errorHandling").mockResolvedValue(undefined);
 
         await DatasetActions.zoom();
 
         expect(authUtilsSpy).toHaveBeenCalledWith(
-            expect.objectContaining(testError),
+            testError,
             expect.objectContaining({
                 apiType: ZoweExplorerApiType.Mvs,
-                profile: { name: "prof1" },
+                profile: { name: "prof1", type: "zosmf" },
                 scenario: "Opening data set failed.",
             })
         );
@@ -4042,13 +4043,13 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         setupMocksForZoom(blockMocks, "MY.DATASET(MEMBER1)", "MY.DATASET", "MEMBER1", true, true, ["prof1"]);
         jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "prof1" }],
-            loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1" }),
+            loadNamedProfile: jest.fn().mockReturnValue({ name: "prof1", type: "zosmf" }),
             checkCurrentProfile: jest.fn(),
             validProfile: Validation.ValidationType.UNVERIFIED,
         } as any);
 
         jest.spyOn(vscode.workspace.fs, "readFile").mockResolvedValueOnce(Buffer.from("data"));
-        const execCmdSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+        const execCmdSpy = jest.spyOn(vscode.commands, "executeCommand");
         const mockedEditor = new MockedProperty(vscode.window, "activeTextEditor", undefined, blockMocks.editor);
 
         await DatasetActions.zoom();

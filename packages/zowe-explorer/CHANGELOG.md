@@ -29,6 +29,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where user attempts to perform a search on an individual PDS from the Zowe-Explorer extension using the "Search PDS members" action and query a search string, it brings out additional dataset as a part of the result.[#3682](https://github.com/zowe/zowe-explorer-vscode/issues/3682)
 - Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. [#3923](https://github.com/zowe/zowe-explorer-vscode/pull/3923)
 - Fixed issue seen by extender profile types where a type error was returned with 401 instead of notification with update option. [#3943](https://github.com/zowe/zowe-explorer-vscode/issues/3943)
+- Fixed issue where favorited items caused a failure during initialization, specifically when the favorited item belongs to a profile type that's no longer registered or accessible. [#3962](https://github.com/zowe/zowe-explorer-vscode/pull/3962)
+- Fixed issue where the filesystem throws a vague `Unknown` FileSystemError if an API cannot be loaded for the given profile type. Now, if the API is inaccessible for the given profile type, an `Unavailable` error is thrown from the filesystem with more context. [#3962](https://github.com/zowe/zowe-explorer-vscode/pull/3962)
 
 ## `3.3.1`
 

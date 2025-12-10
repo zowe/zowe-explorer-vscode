@@ -417,13 +417,20 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     /**
      * Creates and returns new profile node, and pushes it to mFavorites
      * @param profileName Name of profile
+     * @param targetProfileType Optional profile type to filter creation
      * @returns {ZoweDatasetNode}
      */
-    public async createProfileNodeForFavs(profileName: string): Promise<ZoweDatasetNode | null> {
+    public async createProfileNodeForFavs(profileName: string, targetProfileType?: string): Promise<ZoweDatasetNode | null> {
         ZoweLogger.trace("DatasetTree.createProfileNodeForFavs called.");
         let favProfileNode: ZoweDatasetNode;
         try {
             const profile = Profiles.getInstance().loadNamedProfile(profileName);
+            if (targetProfileType && profile.type !== targetProfileType) {
+                return null;
+            }
+            if (!ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes().includes(profile.type)) {
+                return null;
+            }
             favProfileNode = new ZoweDatasetNode({
                 label: profileName,
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -473,7 +480,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         await this.refreshFavorites();
     }
 
-    public async refreshFavorites(): Promise<void> {
+    public async refreshFavorites(profileType?: string): Promise<void> {
         const lines: string[] = this.mPersistence.readFavorites();
         if (lines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
@@ -485,7 +492,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // The profile node used for grouping respective favorited items.
             // Create a node if it does not already exist in the Favorites array
             const favProfileNode =
-                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? (await this.createProfileNodeForFavs(fav.profileName));
+                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ??
+                (await this.createProfileNodeForFavs(fav.profileName, profileType));
 
             if (favProfileNode == null || fav.contextValue == null || favProfileNode.children.some((child) => child.label === fav.label)) {
                 continue;
@@ -508,6 +516,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode): Promise<ZoweDatasetNode> {
         ZoweLogger.trace("DatasetTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
+
         let node: ZoweDatasetNode;
         if (contextValue.includes(Constants.DS_PDS_CONTEXT) || contextValue.includes(Constants.DS_DS_CONTEXT)) {
             if (contextValue.includes(Constants.DS_PDS_CONTEXT)) {
@@ -517,7 +526,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     parentNode,
                     profile,
                 });
-                if (!DatasetFSProvider.instance.exists(node.resourceUri)) {
+                if (
+                    !DatasetFSProvider.instance.exists(node.resourceUri) &&
+                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type)
+                ) {
                     await vscode.workspace.fs.createDirectory(node.resourceUri);
                 }
             } else {
@@ -528,7 +540,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     profile,
                     contextOverride: contextValue,
                 });
-                if (!DatasetFSProvider.instance.exists(node.resourceUri)) {
+                if (
+                    !DatasetFSProvider.instance.exists(node.resourceUri) &&
+                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type)
+                ) {
                     vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
                 }
             }
@@ -602,11 +617,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             } catch (error) {
                 const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe data set favorites that refer to a non-existent CLI profile named: {0}.
-                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.
-                    Would you like to do this now? {1}`,
+                    message: `Error: You have Zowe data set favorites that refer to a non-existent profile named: {0}.
+To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n
+Would you like to do this now?`,
                     args: [profileName, SharedUtils.getAppName()],
-                    comment: ["Profile name", "Application name"],
+                    comment: ["Profile name"],
                 });
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                 ZoweLogger.error(errMessage + error.toString());
