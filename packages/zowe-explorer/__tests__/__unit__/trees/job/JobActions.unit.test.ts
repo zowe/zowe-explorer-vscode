@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as zosconsole from "@zowe/zos-console-for-zowe-sdk";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
-import { Gui, IZoweJobTreeNode, ProfilesCache, Sorting, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweJobTreeNode, ProfilesCache, Sorting, Validation, ZoweScheme, Poller } from "@zowe/zowe-explorer-api";
 import {
     createISession,
     createIProfile,
@@ -27,6 +27,8 @@ import { createJesApi, bindJesApi, createCommandApi, bindCommandApi } from "../.
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { Constants } from "../../../../src/configuration/Constants";
 import { Profiles } from "../../../../src/configuration/Profiles";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
@@ -36,7 +38,7 @@ import { ZoweJobNode, ZoweSpoolNode } from "../../../../src/trees/job/ZoweJobNod
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { LocalFileManagement } from "../../../../src/management/LocalFileManagement";
 import { ProfileManagement } from "../../../../src/management/ProfileManagement";
-import { mocked } from "../../../__mocks__/mockUtils";
+import { mocked, MockedProperty } from "../../../__mocks__/mockUtils";
 import { JobActions } from "../../../../src/trees/job/JobActions";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { Definitions } from "../../../../src/configuration/Definitions";
@@ -541,7 +543,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+            "Job submitted [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
         showTextDocumentSpy.mockClear();
     });
@@ -576,7 +578,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+            "Job submitted [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
         showTextDocumentSpy.mockClear();
     });
@@ -600,7 +602,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+            "Job submitted [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
 
@@ -628,7 +630,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+            "Job submitted [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
     it("Checking failure of submitting JCL via command palette if not active text editor", async () => {
@@ -799,7 +801,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+            "Job submitted [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
     it("Checking Submit Job for PDS Member content with Unverified Profile", async () => {
@@ -833,7 +835,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+            "Job submitted [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
     it("Checking Submit Job for PS Dataset content", async () => {
@@ -855,7 +857,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
+            "Job submitted [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
         );
     });
     it("Checking Submit Job for Favourite PDS Member content", async () => {
@@ -889,7 +891,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL(pds)");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
+            "Job submitted [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
         );
     });
     it("Checking Submit Job for Favourite PS Dataset content", async () => {
@@ -917,7 +919,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted [JOB1234](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
+            "Job submitted [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
         );
     });
     it("Checking Submit Job for unsupported Dataset content", async () => {
@@ -1558,5 +1560,162 @@ describe("copyName function", () => {
         await JobActions.copyName(node);
         expect(writeTextSpy).toHaveBeenCalledWith("JES2:JESMSGLG(2)");
         writeTextSpy.mockRestore();
+    });
+});
+
+describe("Job Actions - Function pollSubmittedJob", () => {
+    let mockCollection: MockedProperty[];
+    let pollRequest: () => Promise<void>;
+    let statusMsgDisposeSpy: jest.Mock;
+    let mockJob: any;
+
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const profileInstance = createInstanceOfProfile(imperativeProfile);
+        const treeView = createTreeView();
+        const iJob = createIJobObject();
+        const jesApi = createJesApi(imperativeProfile);
+        bindJesApi(jesApi);
+
+        return {
+            session,
+            imperativeProfile,
+            profileInstance,
+            treeView,
+            iJob,
+            jesApi,
+        };
+    }
+
+    beforeEach(() => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mockCollection = [
+            new MockedProperty(Gui, "setStatusBarMessage", undefined, jest.fn()),
+            new MockedProperty(ZoweLogger, "info", undefined, jest.fn()),
+            new MockedProperty(ZoweLogger, "error", undefined, jest.fn()),
+            new MockedProperty(Poller, "addRequest", undefined, jest.fn()),
+            new MockedProperty(SettingsConfig, "getDirectValue", undefined, jest.fn().mockReturnValue(5000)),
+        ];
+
+        statusMsgDisposeSpy = jest.fn();
+        const statusMsg = { dispose: statusMsgDisposeSpy };
+        mocked(Gui.setStatusBarMessage).mockReturnValue(statusMsg as any);
+
+        mockJob = {
+            status: "OUTPUT",
+            retcode: "CC 0000",
+        };
+        jest.spyOn(blockMocks.jesApi, "getJob").mockResolvedValue(mockJob);
+
+        DatasetActions.pollSubmittedJob(blockMocks.imperativeProfile, "testProfile", "JOB12345", "TESTJOB");
+
+        const addRequestCall = mocked(Poller.addRequest).mock.calls[0];
+        pollRequest = addRequestCall[1].request;
+
+        jest.clearAllMocks();
+    });
+
+    afterEach(() => {
+        mockCollection.forEach((mock) => mock[Symbol.dispose]());
+        jest.restoreAllMocks();
+    });
+
+    it("should start polling a job with job name", () => {
+        const blockMocks = createBlockMocks();
+
+        DatasetActions.pollSubmittedJob(blockMocks.imperativeProfile, "testProfile", "JOB12345", "TESTJOB");
+
+        expect(mocked(ZoweLogger.info)).toHaveBeenCalledWith(expect.stringContaining("Starting to poll job TESTJOB(JOB12345) for completion."));
+        expect(mocked(Poller.addRequest)).toHaveBeenCalledWith(
+            "submitted-job-testProfile-JOB12345",
+            expect.objectContaining({
+                msInterval: 5000,
+                request: expect.any(Function),
+            })
+        );
+    });
+
+    it("should use custom poll interval from settings", () => {
+        const blockMocks = createBlockMocks();
+        mocked(SettingsConfig.getDirectValue).mockReturnValue(3000);
+
+        DatasetActions.pollSubmittedJob(blockMocks.imperativeProfile, "testProfile", "JOB12345", "TESTJOB");
+
+        expect(mocked(SettingsConfig.getDirectValue)).toHaveBeenCalledWith("zowe.jobs.pollInterval");
+        expect(mocked(Poller.addRequest)).toHaveBeenCalledWith(
+            "submitted-job-testProfile-JOB12345",
+            expect.objectContaining({
+                msInterval: 3000,
+                request: expect.any(Function),
+            })
+        );
+    });
+
+    it("should continue polling for active jobs", async () => {
+        mockJob.status = "ACTIVE";
+
+        await pollRequest();
+
+        expect(mocked(Gui.setStatusBarMessage)).toHaveBeenCalledWith(
+            expect.stringContaining("Polling job: TESTJOB(JOB12345)..."),
+            Constants.STATUS_BAR_TIMEOUT_MS
+        );
+        expect(statusMsgDisposeSpy).toHaveBeenCalledTimes(1);
+        expect(mocked(Gui.showMessage)).not.toHaveBeenCalled();
+    });
+
+    it("should continue polling for input jobs", async () => {
+        mockJob.status = "INPUT";
+
+        await pollRequest();
+
+        expect(mocked(Gui.setStatusBarMessage)).toHaveBeenCalledWith(
+            expect.stringContaining("Polling job: TESTJOB(JOB12345)..."),
+            Constants.STATUS_BAR_TIMEOUT_MS
+        );
+        expect(statusMsgDisposeSpy).toHaveBeenCalledTimes(1);
+        expect(mocked(Gui.showMessage)).not.toHaveBeenCalled();
+    });
+
+    it("should show completion notification for completed jobs", async () => {
+        mockCollection.push(new MockedProperty(Poller, "pollRequests", undefined, { "submitted-job-testProfile-JOB12345": { dispose: false } }));
+        mockJob.status = "OUTPUT";
+        mockJob.retcode = "CC 0000";
+
+        await pollRequest();
+
+        expect(mocked(Gui.setStatusBarMessage)).toHaveBeenCalled();
+        expect(statusMsgDisposeSpy).toHaveBeenCalledTimes(1);
+        expect(Poller.pollRequests["submitted-job-testProfile-JOB12345"].dispose).toBe(true);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
+            expect.stringContaining("Job [TESTJOB(JOB12345)](command:zowe.jobs.setJobSpool") && expect.stringContaining("completed - CC 0000")
+        );
+        expect(mocked(ZoweLogger.info)).toHaveBeenCalledWith(expect.stringContaining("Job TESTJOB(JOB12345) completed - CC 0000."));
+    });
+
+    it("should handle jobs with unknown retcode", async () => {
+        mockCollection.push(new MockedProperty(Poller, "pollRequests", undefined, { "submitted-job-testProfile-JOB12345": { dispose: false } }));
+        mockJob.status = "OUTPUT";
+        mockJob.retcode = null;
+
+        await pollRequest();
+
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(expect.stringContaining("unknown retcode"));
+    });
+
+    it("should handle polling errors gracefully", async () => {
+        mockCollection.push(new MockedProperty(Poller, "pollRequests", undefined, { "submitted-job-testProfile-JOB12345": { dispose: false } }));
+        const error = new Error("fake error");
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            getJob: jest.fn().mockRejectedValue(error),
+        } as any);
+
+        await pollRequest();
+
+        expect(statusMsgDisposeSpy).toHaveBeenCalledTimes(1);
+        expect(Poller.pollRequests["submitted-job-testProfile-JOB12345"].dispose).toBe(true);
+        expect(mocked(ZoweLogger.error)).toHaveBeenCalledWith(expect.stringContaining("Error polling job TESTJOB(JOB12345): fake error"));
     });
 });

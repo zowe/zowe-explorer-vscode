@@ -1474,7 +1474,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         await pollRequest.request();
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job completed [JOB001]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB001)]"));
         expect(mockActiveJob.contextValue).not.toContain(Constants.POLL_CONTEXT);
     });
 
@@ -1523,7 +1523,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         await pollRequest.request();
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job completed [JOB001]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB001)]"));
         expect(mockActiveJob1.contextValue).not.toContain(Constants.POLL_CONTEXT);
         expect(mockActiveJob2.contextValue).toBe(Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT);
     });
@@ -1573,8 +1573,8 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
         expect(showMessageSpy).toHaveBeenCalledTimes(3);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job completed [JOB001]"));
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job completed [JOB002]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB001)]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB002)]"));
         expect(mockActiveJob1.contextValue).not.toContain(Constants.POLL_CONTEXT);
         expect(mockActiveJob2.contextValue).not.toContain(Constants.POLL_CONTEXT);
     });
