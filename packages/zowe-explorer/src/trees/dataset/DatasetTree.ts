@@ -417,13 +417,20 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     /**
      * Creates and returns new profile node, and pushes it to mFavorites
      * @param profileName Name of profile
+     * @param targetProfileType Optional profile type to filter creation
      * @returns {ZoweDatasetNode}
      */
-    public async createProfileNodeForFavs(profileName: string): Promise<ZoweDatasetNode | null> {
+    public async createProfileNodeForFavs(profileName: string, targetProfileType?: string): Promise<ZoweDatasetNode | null> {
         ZoweLogger.trace("DatasetTree.createProfileNodeForFavs called.");
         let favProfileNode: ZoweDatasetNode;
         try {
             const profile = Profiles.getInstance().loadNamedProfile(profileName);
+            if (targetProfileType && profile.type !== targetProfileType) {
+                return null;
+            }
+            if (!ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes().includes(profile.type)) {
+                return null;
+            }
             favProfileNode = new ZoweDatasetNode({
                 label: profileName,
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -473,7 +480,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         await this.refreshFavorites();
     }
 
-    public async refreshFavorites(): Promise<void> {
+    public async refreshFavorites(profileType?: string): Promise<void> {
         const lines: string[] = this.mPersistence.readFavorites();
         if (lines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
@@ -485,7 +492,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // The profile node used for grouping respective favorited items.
             // Create a node if it does not already exist in the Favorites array
             const favProfileNode =
-                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? (await this.createProfileNodeForFavs(fav.profileName));
+                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ??
+                (await this.createProfileNodeForFavs(fav.profileName, profileType));
 
             if (favProfileNode == null || fav.contextValue == null || favProfileNode.children.some((child) => child.label === fav.label)) {
                 continue;
