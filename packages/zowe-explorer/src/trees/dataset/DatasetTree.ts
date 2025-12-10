@@ -312,7 +312,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
             if (!recursiveCall) {
                 await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
-                Gui.infoMessage(vscode.l10n.t("Data set(s) moved successfully."));
+                Gui.infoMessage(vscode.l10n.t("Data moved successfully."));
             }
         } catch (err) {
             if (err instanceof Error) {
