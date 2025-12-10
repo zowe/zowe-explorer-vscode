@@ -1,0 +1,28 @@
+name: Test Workflow
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+
+    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - run: |
+          npm install -g pnpm
+          pnpm install
+
+      - name: Download Translations
+        run: node scripts/downloadPoeditorL10n.js
+        working-directory: packages/zowe-explorer
+        env:
+          POEDITOR_TOKEN: ${{ secrets.POEDITOR_TOKEN }}
