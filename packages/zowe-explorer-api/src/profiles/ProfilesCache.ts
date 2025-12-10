@@ -39,6 +39,8 @@ export class ProfilesCache {
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected overrideWithEnv = false;
+    // Maps profile location path to profile name for rename detection
+    private profileLocationMap = new Map<string, string>();
 
     public constructor(protected log: imperative.Logger, protected cwd?: string) {
         this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
@@ -245,6 +247,7 @@ export class ProfilesCache {
         const allTypes = new Set(this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []));
         allTypes.add("ssh");
         allTypes.add("base");
+
         for (const type of allTypes) {
             const tmpAllProfiles: imperative.IProfileLoaded[] = [];
             // Step 1: Get all profiles for each registered type
@@ -263,6 +266,19 @@ export class ProfilesCache {
                     // Step 3: Update allProfiles list
                     const existingProfile = this.allProfiles.find((tmpProf) => tmpProf.name === prof.profName && tmpProf.type === prof.profType);
                     tmpAllProfiles.push(existingProfile ? Object.assign(existingProfile, profileFix) : profileFix);
+
+                    // Step 4: Detect profile rename and update AuthHandler state
+                    const profLoc = Array.isArray(prof.profLoc.osLoc) ? prof.profLoc.osLoc.join("/") : prof.profLoc.osLoc;
+                    if (profLoc) {
+                        const oldName = this.profileLocationMap.get(profLoc);
+                        if (oldName && oldName !== prof.profName) {
+                            // Profile was renamed - update AuthHandler state
+                            const { AuthHandler } = await import("./AuthHandler");
+                            AuthHandler.updateProfileName(oldName, prof.profName);
+                        }
+                        // Update the map with the current name for this location
+                        this.profileLocationMap.set(profLoc, prof.profName);
+                    }
                 }
                 allProfiles.push(...tmpAllProfiles);
                 this.profilesByType.set(type, tmpAllProfiles);
