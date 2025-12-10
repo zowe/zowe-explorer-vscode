@@ -6,7 +6,7 @@ jobs:
   test:
     runs-on: ubuntu-22.04
 
-    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
+    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository)')
 
     steps:
       - name: Checkout
@@ -16,10 +16,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
-
-      - run: |
-          npm install -g pnpm
-          pnpm install
 
       - name: Download Translations
         run: node scripts/downloadPoeditorL10n.js
