@@ -199,7 +199,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 const destCheck = await destApi.dataSet(fullPdsName, { attributes: false, responseTimeout: destinationInfo.profile?.profile?.responseTimeout });
                 destPdsExists = destCheck?.success === true && (Array.isArray(destCheck.apiResponse) ? destCheck.apiResponse.length > 0 : (destCheck.apiResponse?.items?.length > 0));
             } catch (err) {
-                const code = err?.errorCode?.toString();
+                // If failed, assume dest PDS does not exist
                 destPdsExists = false;
             }
 
