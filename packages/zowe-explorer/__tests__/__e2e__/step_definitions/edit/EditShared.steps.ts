@@ -11,6 +11,7 @@
 
 import { Then, When } from "@cucumber/cucumber";
 import { TreeItem } from "wdio-vscode-service";
+import { getDatasetExtension } from "../utils/datasetExtensions";
 
 Then("the user should be able to save it successfully", async function () {
     await this.editorForFile.save();
@@ -57,10 +58,14 @@ Then("the user can select the favorite in the list and open it", async function 
     this.editingFavorite = true;
     this.editorView = (await browser.getWorkbench()).getEditorView();
     if (this.tree.toLowerCase() === "data sets") {
+        const pdsName = process.env.ZE_TEST_PDS as string;
+        const pdsMemberName = process.env.ZE_TEST_PDS_MEMBER as string;
+        const pdsExtension = getDatasetExtension(pdsName);
+        const memberEditorTitle = `${pdsMemberName}${pdsExtension ?? ""}`;
         await expect(this.pdsMember).toBeDefined();
         await this.pdsMember.select();
-        await browser.waitUntil(async () => (await this.editorView.getTabByTitle(process.env.ZE_TEST_PDS_MEMBER)) !== undefined);
-        this.editorForFile = await this.editorView.openEditor(process.env.ZE_TEST_PDS_MEMBER);
+        await browser.waitUntil(async () => (await this.editorView.getTabByTitle(memberEditorTitle)) !== undefined);
+        this.editorForFile = await this.editorView.openEditor(memberEditorTitle);
     } else {
         await expect(this.ussFile).toBeDefined();
         await this.ussFile.select();
