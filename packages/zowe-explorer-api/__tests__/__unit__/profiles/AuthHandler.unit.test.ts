@@ -673,4 +673,160 @@ describe("AuthHandler", () => {
             expect(AuthHandler.isUsingTokenAuth([], [])).toBe(false);
         });
     });
+
+    describe("updateProfileName", () => {
+        beforeEach(() => {
+            // Clear all auth state before each test
+            (AuthHandler as any).authPromptLocks.clear();
+            (AuthHandler as any).profileLocks.clear();
+            (AuthHandler as any).authCancelledProfiles.clear();
+            (AuthHandler as any).authFlows.clear();
+            (AuthHandler as any).sequentialLocks.clear();
+            (AuthHandler as any).parallelEnabledProfiles.clear();
+        });
+
+        it("should transfer auth prompt lock from old name to new name", () => {
+            const oldName = "old-profile";
+            const newName = "new-profile";
+            const mockMutex = new Mutex();
+
+            (AuthHandler as any).authPromptLocks.set(oldName, mockMutex);
+
+            AuthHandler.updateProfileName(oldName, newName);
+
+            expect((AuthHandler as any).authPromptLocks.has(newName)).toBe(true);
+            expect((AuthHandler as any).authPromptLocks.get(newName)).toBe(mockMutex);
+            expect((AuthHandler as any).authPromptLocks.has(oldName)).toBe(false);
+        });
+
+        it("should transfer profile lock from old name to new name", () => {
+            const oldName = "old-profile";
+            const newName = "new-profile";
+            const mockMutex = new Mutex();
+
+            (AuthHandler as any).profileLocks.set(oldName, mockMutex);
+
+            AuthHandler.updateProfileName(oldName, newName);
+
+            expect((AuthHandler as any).profileLocks.has(newName)).toBe(true);
+            expect((AuthHandler as any).profileLocks.get(newName)).toBe(mockMutex);
+            expect((AuthHandler as any).profileLocks.has(oldName)).toBe(false);
+        });
+
+        it("should transfer auth cancelled state from old name to new name", () => {
+            const oldName = "old-profile";
+            const newName = "new-profile";
+
+            (AuthHandler as any).authCancelledProfiles.add(oldName);
+
+            AuthHandler.updateProfileName(oldName, newName);
+
+            expect((AuthHandler as any).authCancelledProfiles.has(newName)).toBe(true);
+            expect((AuthHandler as any).authCancelledProfiles.has(oldName)).toBe(false);
+        });
+
+        it("should transfer auth flow from old name to new name", () => {
+            const oldName = "old-profile";
+            const newName = "new-profile";
+            const mockAuthFlow = "basic";
+
+            (AuthHandler as any).authFlows.set(oldName, mockAuthFlow);
+
+            AuthHandler.updateProfileName(oldName, newName);
+
+            expect((AuthHandler as any).authFlows.has(newName)).toBe(true);
+            expect((AuthHandler as any).authFlows.get(newName)).toBe(mockAuthFlow);
+            expect((AuthHandler as any).authFlows.has(oldName)).toBe(false);
+        });
+
+        it("should transfer sequential lock from old name to new name", () => {
+            const oldName = "old-profile";
+            const newName = "new-profile";
+            const mockMutex = new Mutex();
+
+            (AuthHandler as any).sequentialLocks.set(oldName, mockMutex);
+
+            AuthHandler.updateProfileName(oldName, newName);
+
+            expect((AuthHandler as any).sequentialLocks.has(newName)).toBe(true);
+            expect((AuthHandler as any).sequentialLocks.get(newName)).toBe(mockMutex);
+            expect((AuthHandler as any).sequentialLocks.has(oldName)).toBe(false);
+        });
+
+        it("should transfer parallel enabled state from old name to new name", () => {
+            const oldName = "old-profile";
+            const newName = "new-profile";
+
+            (AuthHandler as any).parallelEnabledProfiles.add(oldName);
+
+            AuthHandler.updateProfileName(oldName, newName);
+
+            expect((AuthHandler as any).parallelEnabledProfiles.has(newName)).toBe(true);
+            expect((AuthHandler as any).parallelEnabledProfiles.has(oldName)).toBe(false);
+        });
+
+        it("should transfer all auth state when all structures have data for old profile", () => {
+            const oldName = "old-profile";
+            const newName = "new-profile";
+            const mockMutex1 = new Mutex();
+            const mockMutex2 = new Mutex();
+            const mockMutex3 = new Mutex();
+            const mockAuthFlow = "token";
+
+            (AuthHandler as any).authPromptLocks.set(oldName, mockMutex1);
+            (AuthHandler as any).profileLocks.set(oldName, mockMutex2);
+            (AuthHandler as any).authCancelledProfiles.add(oldName);
+            (AuthHandler as any).authFlows.set(oldName, mockAuthFlow);
+            (AuthHandler as any).sequentialLocks.set(oldName, mockMutex3);
+            (AuthHandler as any).parallelEnabledProfiles.add(oldName);
+
+            AuthHandler.updateProfileName(oldName, newName);
+
+            // Verify all state was transferred to new name
+            expect((AuthHandler as any).authPromptLocks.get(newName)).toBe(mockMutex1);
+            expect((AuthHandler as any).profileLocks.get(newName)).toBe(mockMutex2);
+            expect((AuthHandler as any).authCancelledProfiles.has(newName)).toBe(true);
+            expect((AuthHandler as any).authFlows.get(newName)).toBe(mockAuthFlow);
+            expect((AuthHandler as any).sequentialLocks.get(newName)).toBe(mockMutex3);
+            expect((AuthHandler as any).parallelEnabledProfiles.has(newName)).toBe(true);
+
+            // Verify old name was removed from all structures
+            expect((AuthHandler as any).authPromptLocks.has(oldName)).toBe(false);
+            expect((AuthHandler as any).profileLocks.has(oldName)).toBe(false);
+            expect((AuthHandler as any).authCancelledProfiles.has(oldName)).toBe(false);
+            expect((AuthHandler as any).authFlows.has(oldName)).toBe(false);
+            expect((AuthHandler as any).sequentialLocks.has(oldName)).toBe(false);
+            expect((AuthHandler as any).parallelEnabledProfiles.has(oldName)).toBe(false);
+        });
+
+        it("should do nothing when old and new names are the same", () => {
+            const profileName = "same-profile";
+            const mockMutex = new Mutex();
+
+            (AuthHandler as any).authPromptLocks.set(profileName, mockMutex);
+            (AuthHandler as any).authCancelledProfiles.add(profileName);
+
+            AuthHandler.updateProfileName(profileName, profileName);
+
+            // State should remain unchanged
+            expect((AuthHandler as any).authPromptLocks.get(profileName)).toBe(mockMutex);
+            expect((AuthHandler as any).authCancelledProfiles.has(profileName)).toBe(true);
+        });
+
+        it("should handle when old profile has no auth state", () => {
+            const oldName = "old-profile";
+            const newName = "new-profile";
+
+            // Don't set up any state for old profile
+            AuthHandler.updateProfileName(oldName, newName);
+
+            // Should not throw and should not create any new entries
+            expect((AuthHandler as any).authPromptLocks.has(newName)).toBe(false);
+            expect((AuthHandler as any).profileLocks.has(newName)).toBe(false);
+            expect((AuthHandler as any).authCancelledProfiles.has(newName)).toBe(false);
+            expect((AuthHandler as any).authFlows.has(newName)).toBe(false);
+            expect((AuthHandler as any).sequentialLocks.has(newName)).toBe(false);
+            expect((AuthHandler as any).parallelEnabledProfiles.has(newName)).toBe(false);
+        });
+    });
 });

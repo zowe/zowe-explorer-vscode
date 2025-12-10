@@ -465,6 +465,58 @@ export class AuthHandler {
         return flow;
     }
 
+    /**
+     * Updates all authentication state when a profile is renamed.
+     * This transfers locks, auth flows, and other state from the old profile name to the new one.
+     * @param oldProfileName The previous name of the profile
+     * @param newProfileName The new name of the profile
+     */
+    public static updateProfileName(oldProfileName: string, newProfileName: string): void {
+        if (oldProfileName === newProfileName) {
+            return;
+        }
+
+        // Transfer auth prompt lock
+        const authPromptLock = this.authPromptLocks.get(oldProfileName);
+        if (authPromptLock != null) {
+            this.authPromptLocks.set(newProfileName, authPromptLock);
+            this.authPromptLocks.delete(oldProfileName);
+        }
+
+        // Transfer profile lock
+        const profileLock = this.profileLocks.get(oldProfileName);
+        if (profileLock != null) {
+            this.profileLocks.set(newProfileName, profileLock);
+            this.profileLocks.delete(oldProfileName);
+        }
+
+        // Transfer auth cancelled state
+        if (this.authCancelledProfiles.has(oldProfileName)) {
+            this.authCancelledProfiles.add(newProfileName);
+            this.authCancelledProfiles.delete(oldProfileName);
+        }
+
+        // Transfer auth flow
+        const authFlow = this.authFlows.get(oldProfileName);
+        if (authFlow != null) {
+            this.authFlows.set(newProfileName, authFlow);
+            this.authFlows.delete(oldProfileName);
+        }
+
+        // Transfer sequential lock
+        const sequentialLock = this.sequentialLocks.get(oldProfileName);
+        if (sequentialLock != null) {
+            this.sequentialLocks.set(newProfileName, sequentialLock);
+            this.sequentialLocks.delete(oldProfileName);
+        }
+
+        // Transfer parallel enabled state
+        if (this.parallelEnabledProfiles.has(oldProfileName)) {
+            this.parallelEnabledProfiles.add(newProfileName);
+            this.parallelEnabledProfiles.delete(oldProfileName);
+        }
+    }
+
     private static releaseMutexIfLocked(mutex?: Mutex): void {
         if (mutex?.isLocked()) {
             mutex.release();
