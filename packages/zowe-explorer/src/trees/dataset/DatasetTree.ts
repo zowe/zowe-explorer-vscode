@@ -117,97 +117,145 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         if (SharedContext.isPds(sourceNode)) {
             if (!DatasetFSProvider.instance.exists(destUri)) {
-                // find source PDS attributes and make destination PDS have same attributes
-                const sourceAttributesResponse = await ZoweExplorerApiRegister.getMvsApi(sourceInfo.profile).dataSet(dsname, {
+                // Compute source PDS name from sourceUri (previous bug: used destUri here)
+                const sourcePdsName = sourceUri.path.substring(sourceInfo.slashAfterProfilePos + 1);
+                ZoweLogger.debug(`crossLparMove: creating destination PDS ${dsname} from source PDS ${sourcePdsName} (profiles: ${sourceInfo.profile?.name} -> ${destinationInfo.profile?.name})`);
+
+                // fetch attributes from source PDS
+                const sourceAttributesResponse = await ZoweExplorerApiRegister.getMvsApi(sourceInfo.profile).dataSet(sourcePdsName, {
                     attributes: true,
                     responseTimeout: sourceInfo.profile?.profile?.responseTimeout,
                 });
                 const { dsname: dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
-                // need to transform labels
                 const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
+
                 let dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
-                // if alcunit is cyl, divide primary by 15 to get the number of cylinders
                 const TRACKS_PER_CYLINDER = 15;
                 const primary = Number(transformedAttrs.primary);
                 if (!isNaN(primary) && primary > 0) {
                     transformedAttrs.primary = Math.ceil(primary / TRACKS_PER_CYLINDER);
                 }
-                // create a PDS on remote with the same attributes as source PDS
+
                 try {
                     await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(dataSetTypeEnum, dsname, transformedAttrs);
                 } catch (err) {
-                    if (err.errorCode.toString() === "404" || err.errorCode.toString() === "500") {
+                    const code = err?.errorCode?.toString();
+                    if (code === "404" || code === "500") {
                         Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                         return;
                     }
+                    throw err;
                 }
-                // create directory entry in local
+
+                // ensure local FS entry exists
                 DatasetFSProvider.instance.createDirectory(destUri);
             }
+
             const children = await sourceNode.getChildren();
             for (const childNode of children) {
                 const memberLabel = (childNode.label as string) || '';
                 await this.crossLparMove(
                     childNode,
-                    sourceUri.with({
-                        path: path.posix.join(sourceUri.path, memberLabel),
-                    }),
-                    destUri.with({
-                        path: path.posix.join(destUri.path, memberLabel),
-                    }),
+                    sourceUri.with({ path: path.posix.join(sourceUri.path, memberLabel) }),
+                    destUri.with({ path: path.posix.join(destUri.path, memberLabel) }),
                     true
                 );
             }
             await vscode.workspace.fs.delete(sourceUri, { recursive: true });
+            return;
+        }
+
+        // MEMBER or sequential dataset case
+        let destinationMemberUri = destUri;
+        const sourceMemberLabel = sourceNode.label as string ?? '';
+        const memberNameWithoutExtension = sourceMemberLabel ? path.parse(sourceMemberLabel).name : '';
+
+        // compute PDS name for API usage (PDSNAME.TEST)
+        let fullPathAfterProfile = destUri.path.substring(destinationInfo.slashAfterProfilePos + 1);
+        const lastSlashIndex = fullPathAfterProfile.lastIndexOf('/');
+        let fullPdsName: string;
+        if (lastSlashIndex !== -1) {
+            fullPdsName = fullPathAfterProfile.substring(0, lastSlashIndex).replace(/\//g, '.');
         } else {
-            let destinationMemberUri = destUri;
-            const sourceMemberLabel = sourceNode.label as string ?? '';
-            const memberNameWithoutExtension = sourceMemberLabel
-                ? path.parse(sourceMemberLabel).name
-                : '';
+            fullPdsName = fullPathAfterProfile.replace(/\//g, '.');
+        }
 
-            // calculate the correct PDS name (ie, PDSNAME.TEST) for the API and error messages
-            let fullPathAfterProfile = destUri.path.substring(destinationInfo.slashAfterProfilePos + 1);
-            const lastSlashIndex = fullPathAfterProfile.lastIndexOf('/');
-            let fullPdsName: string;
+        dsname = fullPdsName + "(" + memberNameWithoutExtension + ")";
 
-            if (lastSlashIndex !== -1) {
-                fullPdsName = fullPathAfterProfile.substring(0, lastSlashIndex).replace(/\//g, '.');
-            } else {
-                fullPdsName = fullPathAfterProfile.replace(/\//g, '.');
+        if (SharedContext.isDsMember(sourceNode)) {
+            // ensure destination member path is correct
+            const pdsBasePath = destUri.path.substring(0, destUri.path.lastIndexOf('/'));
+            const newMemberPath = pdsBasePath + '/' + sourceMemberLabel;
+            destinationMemberUri = destUri.with({ path: newMemberPath });
+
+            // Before blindly creating the member, check whether the PDS exists on destination profile.
+            const destApi = ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile);
+            const sourceApi = ZoweExplorerApiRegister.getMvsApi(sourceInfo.profile);
+
+            ZoweLogger.debug(`crossLparMove: preparing to create member ${dsname} on profile ${destinationInfo.profile?.name} (source profile: ${sourceInfo.profile?.name})`);
+
+            // First check destination PDS presence
+            let destPdsExists = false;
+            try {
+                const destCheck = await destApi.dataSet(fullPdsName, { attributes: false, responseTimeout: destinationInfo.profile?.profile?.responseTimeout });
+                destPdsExists = destCheck?.success === true && (Array.isArray(destCheck.apiResponse) ? destCheck.apiResponse.length > 0 : (destCheck.apiResponse?.items?.length > 0));
+            } catch (err) {
+                const code = err?.errorCode?.toString();
+                ZoweLogger.debug(`crossLparMove: destApi.dataSet(${fullPdsName}) failed with code=${code} message=${err?.message}`);
+                destPdsExists = false;
             }
 
-            // Set dsname for API and error messages: PDSNAME.TEST(MEMEBER)
-            dsname = fullPdsName + "(" + memberNameWithoutExtension + ")";
-
-            // Reconstruct the path to ensure it is correctly formed
-            if (SharedContext.isDsMember(sourceNode)) {
-                // get URI path up to the PDS name ie '/system/PDSNAME.TEST'
-                const pdsBasePath = destUri.path.substring(0, destUri.path.lastIndexOf('/'));
-                // add member label, results in '/system/PDSNAME.TEST/TEST'
-                const newMemberPath = pdsBasePath + '/' + sourceMemberLabel;
-
-                destinationMemberUri = destUri.with({
-                    path: newMemberPath,
-                });
-
-                // create the member before writing content.
+            // If destination PDS missing, attempt to create it using source PDS attributes (best-effort)
+            if (!destPdsExists) {
                 try {
-                    await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
+                    const sourcePdsName = sourceUri.path.substring(sourceInfo.slashAfterProfilePos + 1);
+                    ZoweLogger.debug(`crossLparMove: destination PDS ${fullPdsName} missing; attempting to create from source PDS ${sourcePdsName}`);
+                    const sourceAttributesResponse = await sourceApi.dataSet(sourcePdsName, { attributes: true, responseTimeout: sourceInfo.profile?.profile?.responseTimeout });
+                    const { dsname: dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
+                    const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
+
+                    let dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
+                    const TRACKS_PER_CYLINDER = 15;
+                    const primary = Number(transformedAttrs.primary);
+                    if (!isNaN(primary) && primary > 0) {
+                        transformedAttrs.primary = Math.ceil(primary / TRACKS_PER_CYLINDER);
+                    }
+
+                    await destApi.createDataSet(dataSetTypeEnum, fullPdsName, transformedAttrs);
+                    DatasetFSProvider.instance.createDirectory(destUri.with({ path: destUri.path.substring(0, destUri.path.lastIndexOf('/')) }));
+                    destPdsExists = true;
+                    ZoweLogger.debug(`crossLparMove: created destination PDS ${fullPdsName} successfully`);
                 } catch (err) {
-                    // ignore if it already exists, but bail out on 404/500 if the PDS itself is missing
-                    const code = err.errorCode?.toString();
+                    // If create fails because dest PDS is genuinely unavailable, surface a clear error
+                    const code = err?.errorCode?.toString();
+                    ZoweLogger.debug(`crossLparMove: failed to create destination PDS ${fullPdsName}: code=${code} message=${err?.message}`);
                     if (code === "404" || code === "500") {
                         Gui.errorMessage(vscode.l10n.t("Failed to move {0}: The target PDS does not exist on the host: {1}", dsname, err.message));
                         return;
                     }
+                    // Otherwise, rethrow so caller can handle unexpected errors
+                    throw err;
                 }
             }
 
+            // Now ensure the member exists (or create it)
+            try {
+                await destApi.createDataSetMember(dsname, {});
+            } catch (err) {
+                const code = err?.errorCode?.toString();
+                // If we unexpectedly get 404/500 here, surface a clear message
+                if (code === "404" || code === "500") {
+                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: The target PDS does not exist on the host: {1}", dsname, err.message));
+                    return;
+                }
+                // If member already exists ignore the error and continue
+                ZoweLogger.debug(`crossLparMove: createDataSetMember(${dsname}) failed but continuing: ${err?.message}`);
+            }
+        } else {
+            // Non-member: ensure sequential dataset exists if needed
             try {
                 const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
                 if (entry == null) {
-                    // If entry is null, only create the destination if it's NOT a PDS member being dropped (ie a sequential data set)
                     if (!SharedContext.isDsMember(sourceNode)) {
                         dsname = sourceNode.getLabel() as string;
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
@@ -217,85 +265,58 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         );
                     }
                 }
-
             } catch (err) {
-                // file might already exist. Ignore the error and try to write it to lpar
-                // only bail out on a real 404/500 – guard against undefined
-                const code = err.errorCode?.toString();
+                const code = err?.errorCode?.toString();
                 if (code === "404" || code === "500") {
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                     return;
                 }
             }
-            // read the contents from the source LPAR
-            const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
-            //write the contents to the destination LPAR
-            try {
-                const encodingInfo = await sourceNode.getEncoding();
-                // If the encoding is binary, we need to force upload it as binary
-                const queryString = `forceUpload=true${encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
-                    }`;
+        }
 
-                // use destinationMemberUri
-                await DatasetFSProvider.instance.writeFile(
-                    destinationMemberUri.with({
-                        query: queryString,
-                    }),
-                    contents,
-                    { create: true, overwrite: true }
-                );
+        // read source content and write to destinationMemberUri (common flow)
+        const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
+        try {
+            const encodingInfo = await sourceNode.getEncoding();
+            const queryString = `forceUpload=true${encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""}`;
 
-                // Retry verification with backoff to handle remote file system lag -> race condition between file creation and checking for file
-                let verifyContents: Uint8Array;
-                const maxRetries = 5;
-                let retryDelay = 200; // Start with 200ms delay
+            await DatasetFSProvider.instance.writeFile(destinationMemberUri.with({ query: queryString }), contents, { create: true, overwrite: true });
 
-                for (let i = 0; i < maxRetries; i++) {
-                    try {
-                        // Attempt to read the newly written file
-                        verifyContents = await DatasetFSProvider.instance.readFile(destinationMemberUri);
-
-                        // Success if file exists and content size matches
-                        if (verifyContents.length === contents.length) {
-                            break;
-                        }
-                    } catch (err) {
-                        // Only continue if the error is due to the file not being found yet.
-                        if (err.name !== "EntryNotFound" && err.name !== "FileNotFound" && err.name !== "FileSystemError") {
-                            throw err;
-                        }
+            // verification with backoff
+            let verifyContents: Uint8Array;
+            const maxRetries = 5;
+            let retryDelay = 200;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    verifyContents = await DatasetFSProvider.instance.readFile(destinationMemberUri);
+                    if (verifyContents.length === contents.length) {
+                        break;
                     }
-
-                    if (i === maxRetries - 1) {
-                        // If this is the last attempt throw the definitive verification error.
-                        throw new Error(vscode.l10n.t("Failed to verify data write to {0}. Content size mismatch or member empty after multiple retries.", dsname));
-                    }
-
-                    // Wait for the calculated delay (exponential backoff: 200ms, 400ms, 800ms, 1600ms, 3200ms) -> zosfilessdk limitation work around
-                    await new Promise(resolve => setTimeout(resolve, retryDelay));
-                    retryDelay *= 2;
-                }
-
-                // source deletion and success message ONLY happen if write succeeded and verified
-                if (!recursiveCall) {
-                    await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
-                    Gui.infoMessage(vscode.l10n.t("Data set(s) moved successfully."));
-                }
-            } catch (err) {
-                // if the write, verification, or deletion fails, hard stop
-                if (err instanceof Error) {
-                    // Check if the error is from verification and provide a specific message
-                    if (err.message.includes("Failed to verify data write to")) {
-                        Gui.errorMessage(vscode.l10n.t(
-                            "Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible.",
-                            dsname
-                        ));
-                    } else {
-                        Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
+                } catch (err) {
+                    if (err.name !== "EntryNotFound" && err.name !== "FileNotFound" && err.name !== "FileSystemError") {
+                        throw err;
                     }
                 }
-                return;
+                if (i === maxRetries - 1) {
+                    throw new Error(vscode.l10n.t("Failed to verify data write to {0}. Content size mismatch or member empty after multiple retries.", dsname));
+                }
+                await new Promise((resolve) => setTimeout(resolve, retryDelay));
+                retryDelay *= 2;
             }
+
+            if (!recursiveCall) {
+                await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
+                Gui.infoMessage(vscode.l10n.t("Data set(s) moved successfully."));
+            }
+        } catch (err) {
+            if (err instanceof Error) {
+                if (err.message.includes("Failed to verify data write to")) {
+                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: Data write failed verification. The target member was not created or is inaccessible.", dsname));
+                } else {
+                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
+                }
+            }
+            return;
         }
     }
 
@@ -325,7 +346,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // 2. PDS member collision check (only if both are PDS)
             if (SharedContext.isPds(node) && SharedContext.isPds(target)) {
                 const srcMembersResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(srcDsn, { attributes: true });
-                const tgtMembersResp = await ZoweExplorerApiRegister.getMvsApi(target.getProfile()).allMembers(srcDsn, { attributes: true }); //using the same dsn, but checking against target
+                // use the target's DSN when checking members on the target profile
+                const targetDsn = SharedUtils.getNodeProperty(target, "label");
+                const tgtMembersResp = await ZoweExplorerApiRegister.getMvsApi(target.getProfile()).allMembers(targetDsn, { attributes: true });
 
                 const srcNames = (srcMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
                 const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
