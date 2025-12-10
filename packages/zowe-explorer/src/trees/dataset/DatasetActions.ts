@@ -1099,20 +1099,15 @@ export class DatasetActions {
             // Check registered DataSetAttributesProvider, send dsname and profile. get results and append to `attributeInfo`
             const attributesMessage = vscode.l10n.t("Attributes");
 
-            // Helper function to format numbers with thousands separators
-            const formatNumber = (value: number): string => {
-                return value.toLocaleString();
-            };
-
             // Helper function to format attribute values
             const formatAttributeValue = (key: string, value: string | number | boolean, sectionTitle: string): string => {
                 // Add % character for "Used Space" attribute only from core Zowe Explorer section
                 if (key === "used" && typeof value === "number" && sectionTitle === "Zowe Explorer") {
-                    return `${formatNumber(value)}%`;
+                    return `${value.toLocaleString()}%`;
                 }
                 // Format numbers with thousands separators
                 if (typeof value === "number") {
-                    return formatNumber(value);
+                    return value.toLocaleString();
                 }
                 return String(value);
             };
