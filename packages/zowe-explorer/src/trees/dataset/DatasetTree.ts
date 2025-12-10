@@ -177,8 +177,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 fullPdsName = fullPathAfterProfile.replace(/\//g, '.');
             }
 
-            // Set dsname for API and error messages: PDSNAME.TEST(MEMBER_LABEL)
-            // Use memberNameWithoutExtension for the API dsname
+            // Set dsname for API and error messages: PDSNAME.TEST(MEMEBER)
             dsname = fullPdsName + "(" + memberNameWithoutExtension + ")";
 
             // Reconstruct the path to ensure it is correctly formed
@@ -194,7 +193,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
                 // create the member before writing content.
                 try {
-                    // This call now uses the clean dsname without client extension.
                     await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
                 } catch (err) {
                     // ignore if it already exists, but bail out on 404/500 if the PDS itself is missing
@@ -250,7 +248,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 // Retry verification with backoff to handle remote file system lag -> race condition between file creation and checking for file
                 let verifyContents: Uint8Array;
                 const maxRetries = 5;
-                let retryDelay = 200; // Start with 200ms
+                let retryDelay = 200; // Start with 200ms delay
 
                 for (let i = 0; i < maxRetries; i++) {
                     try {
@@ -259,7 +257,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
                         // Success if file exists and content size matches
                         if (verifyContents.length === contents.length) {
-                            break; // Exit loop on successful verification
+                            break;
                         }
                     } catch (err) {
                         // Only continue if the error is due to the file not being found yet.
@@ -273,7 +271,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         throw new Error(vscode.l10n.t("Failed to verify data write to {0}. Content size mismatch or member empty after multiple retries.", dsname));
                     }
 
-                    // Wait for the calculated delay (exponential backoff: 200ms, 400ms, 800ms, 1600ms, 3200ms)
+                    // Wait for the calculated delay (exponential backoff: 200ms, 400ms, 800ms, 1600ms, 3200ms) -> zosfilessdk limitation work around
                     await new Promise(resolve => setTimeout(resolve, retryDelay));
                     retryDelay *= 2;
                 }
