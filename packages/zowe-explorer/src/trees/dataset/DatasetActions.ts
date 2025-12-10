@@ -1101,7 +1101,7 @@ export class DatasetActions {
 
             // Helper function to format numbers with thousands separators
             const formatNumber = (value: number): string => {
-                return value.toLocaleString("en-US");
+                return value.toLocaleString();
             };
 
             // Helper function to format attribute values
