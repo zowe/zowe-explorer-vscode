@@ -25,6 +25,8 @@ import {
     UriFsInfo,
     ZoweExplorerApiType,
     AuthHandler,
+    IFileSystemEntry,
+    FeatureFlags,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { USSFileStructure } from "./USSFileStructure";
@@ -59,14 +61,31 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
     /* Public functions: File operations */
 
+    protected async lookupWithCache(uri: vscode.Uri): Promise<UssDirectory | UssFile | IFileSystemEntry> {
+        try {
+            // Check cache for resource
+            const localLookup = this.lookup(uri);
+            //TODO: Remove log
+            console.log("isFetching: false");
+            if (localLookup) return localLookup;
+        } catch {}
+        // If resource not found, remote lookup
+        //TODO: Remove log
+        console.log("isFetching: true");
+        return this.remoteLookupForResource(uri);
+    }
+
     /**
-     * Returns file statistics about a given URI.
-     * @param uri A URI that must exist as an entry in the provider
-     * @returns A structure containing file type, time, size and other metrics
+     * Executes the core logic for the stat operation on a given URI.
+     * This is separated to facilitate caching and testing.
+     * @param uri The URI of the resource to stat.
+     * @returns A promise that resolves to a vscode.FileStat object.
      */
-    public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        ZoweLogger.trace(`[UssFSProvider] stat called with ${uri.toString()}`);
+    private async statImplementation(uri: vscode.Uri): Promise<vscode.FileStat> {
+        ZoweLogger.trace(`[UssFSProvider] statImplementation called with ${uri.toString()}`);
+
         let isFetching = false;
+        let forceLocal = false;
 
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
@@ -76,9 +95,19 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 return this.lookup(uri, false);
             }
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
+            forceLocal = queryParams.has("forceLocal") && queryParams.get("forceLocal") === "true";
         }
 
-        const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
+        const fetchByDefault: boolean = FeatureFlags.get("fetchByDefault");
+
+        const entry = forceLocal
+            ? this.lookup(uri)
+            : isFetching
+            ? await this.remoteLookupForResource(uri)
+            : fetchByDefault
+            ? await this.lookupWithCache(uri)
+            : this.lookup(uri, false);
+
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
         if (
@@ -130,6 +159,52 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return entry;
     }
 
+    /**
+     * Returns file statistics about a given URI.
+     * @param uri A URI that must exist as an entry in the provider
+     * @returns A structure containing file type, time, size and other metrics
+     */
+    public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
+        let cleanUri = uri.toString();
+        if (cleanUri.endsWith("/")) {
+            cleanUri = cleanUri.slice(0, -1);
+        }
+        const cacheKey = "stat_" + (uri.query && uri.query.toLocaleLowerCase().includes("fetch=true") ? "fetch_" : "") + cleanUri;
+        let entry: vscode.FileStat | undefined;
+
+        try {
+            if (this.requestCache.has(cacheKey)) {
+                // TODO: Remove log
+                console.log(`[RequestCache] Joining in-flight request for: ${cacheKey}`);
+                entry = await this.requestCache.get(cacheKey);
+            }
+        } catch (error) {
+            // TODO: Remove log
+            console.warn(`[RequestCache] Cached request failed for ${cacheKey}, falling back to fresh request.`, error);
+            entry = undefined;
+        }
+
+        if (!entry) {
+            const requestPromise = (async () => {
+                try {
+                    return await this.statImplementation(uri);
+                } finally {
+                    if (this.requestCache.get(cacheKey) === requestPromise) {
+                        this.requestCache.delete(cacheKey);
+                    }
+                }
+            })();
+
+            this.requestCache.set(cacheKey, requestPromise);
+            entry = await requestPromise;
+        }
+
+        if (entry) {
+            return entry;
+        }
+
+        throw vscode.FileSystemError.FileNotFound(uri);
+    }
     /**
      * Moves an entry in the file system, both remotely and within the provider.
      * @param oldUri The old, source URI pointing to an entry that needs moved
@@ -201,7 +276,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
             // If request was successful, create directories for the path if it doesn't exist
             if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
-                await vscode.workspace.fs.createDirectory(uri.with({ query: "" }));
+                await vscode.workspace.fs.createDirectory(uri.with({ query: "forceLocal=true" }));
             }
         });
 
