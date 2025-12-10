@@ -4738,7 +4738,7 @@ describe("Dataset Tree Unit Tests - Function createProfileNodeForFavs", () => {
         const createDirMock = jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
         const existsMock = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false);
 
-        const createdFavProfileNode = await testTree.createProfileNodeForFavs("testProfile", globalMocks.testProfileLoaded);
+        const createdFavProfileNode = await testTree.createProfileNodeForFavs("testProfile");
         expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
         expect(existsMock).toHaveBeenCalledWith(expectedFavProfileNode.resourceUri);
         expect(createDirMock).toHaveBeenCalledWith(expectedFavProfileNode.resourceUri);
@@ -4764,7 +4764,11 @@ describe("Dataset Tree Unit Tests - Function createProfileNodeForFavs", () => {
         const createDirMock = jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
         const existsMock = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false);
 
-        const createdFavProfileNode = await testTree.createProfileNodeForFavs("testProfile", globalMocks.testProfileLoaded);
+        const registeredApiTypesMock = jest
+            .spyOn(ZoweExplorerApiRegister.getInstance(), "registeredMvsApiTypes")
+            .mockReturnValueOnce([globalMocks.testProfileLoaded.type]);
+
+        const createdFavProfileNode = await testTree.createProfileNodeForFavs("testProfile", globalMocks.testProfileLoaded.type);
         expect(createdFavProfileNode).toEqual(expectedFavProfileNode);
         expect(existsMock).toHaveBeenCalledWith(expectedFavProfileNode.resourceUri);
         expect(createDirMock).toHaveBeenCalledWith(expectedFavProfileNode.resourceUri);
@@ -4772,6 +4776,7 @@ describe("Dataset Tree Unit Tests - Function createProfileNodeForFavs", () => {
         createDirMock.mockRestore();
         existsMock.mockRestore();
         isGlobalProfNodeMock.mockRestore();
+        registeredApiTypesMock.mockRestore();
     });
 });
 
