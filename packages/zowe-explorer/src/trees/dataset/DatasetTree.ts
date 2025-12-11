@@ -337,6 +337,17 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         let target = targetNode;
         if (!target) return;
 
+        // check if the drop target is a child of a valid container aka pds:
+        // ( might be a member, sequential dataset, or placeholder text)
+        this.getParent(target)
+        if (!SharedContext.isPds(target)) {
+            const parent = target.getParent();
+            // if the target has a parent AND that parent is a PDS, pivot to new target
+            if (parent && SharedContext.isPds(parent)) {
+                target = parent as IZoweDatasetTreeNode;
+            }
+        }
+
         // check each dropped node for same-object, member collision, and structure issues
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
