@@ -4884,6 +4884,7 @@ describe("DataSetTree Unit Tests - Function handleDrag", () => {
 });
 
 describe("DataSetTree Unit Tests - Function handleDrop", () => {
+    let apiMock: any;
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
@@ -4951,10 +4952,31 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             draggedPdsNode,
         };
     }
-
+    const baseIProfileLoaded = {
+        message: "",
+        type: "zosmf",
+        failNotFound: false,
+    };
     beforeEach(() => {
         jest.resetAllMocks();
         jest.clearAllMocks();
+
+        apiMock = {
+            createDataSet: jest.fn().mockResolvedValue({}),
+            createDataSetMember: jest.fn().mockResolvedValue({}),
+            dataSet: jest.fn().mockResolvedValue({
+                apiResponse: { items: [{ dsname: "TEST.DSN", vols: [] }] }
+            }), allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
+        };
+
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(apiMock);
+
+        jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+            profile: { profile: {}, name: "DEFAULT", ...baseIProfileLoaded },
+            slashAfterProfilePos: 0,
+            isRoot: true,
+            profileName: "DEFAULT"
+        });
     });
     afterEach(() => {
         jest.restoreAllMocks();
@@ -5480,6 +5502,11 @@ describe("DatasetTree.crossLparMove", () => {
     let srcUri: vscode.Uri;
     let dstUri: vscode.Uri;
     let apiMock: any;
+    const baseIProfileLoaded = {
+        message: "",
+        type: "zosmf",
+        failNotFound: false,
+    };
 
     beforeEach(() => {
         if (!(zosfiles as any).Copy) {
@@ -5493,7 +5520,13 @@ describe("DatasetTree.crossLparMove", () => {
         jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue({});
         jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(Buffer.from("hello"));
-        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => {});
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => { });
+        jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+            profile: { ...baseIProfileLoaded, profile: {}, name: "DEFAULT" },
+            slashAfterProfilePos: 0,
+            isRoot: true,
+            profileName: "DEFAULT"
+        });
 
         apiMock = {
             createDataSet: jest.fn().mockResolvedValue({}),
@@ -5504,10 +5537,6 @@ describe("DatasetTree.crossLparMove", () => {
         // make dataSet return a dummy attributes response so PDS branch runs
         (apiMock.dataSet as jest.Mock).mockResolvedValue({
             apiResponse: { items: [{ dsname: "DST_PROFILE/BAR" }] },
-        });
-        (FsAbstractUtils as any).getInfoForUri = jest.fn().mockReturnValue({
-            profile: { profile: {}, name: "" },
-            slashAfterProfilePos: 0,
         });
 
         tree = new DatasetTree();
@@ -5525,7 +5554,7 @@ describe("DatasetTree.crossLparMove", () => {
 
     it("should copy a sequential dataset and delete the source", async () => {
         await tree["crossLparMove"](fakeNode, srcUri, dstUri, false);
-        expect(DatasetFSProvider.instance.createDirectory).not.toHaveBeenCalled(); // sequential ds shouldn't create directory
+        expect(DatasetFSProvider.instance.createDirectory).not.toHaveBeenCalled();
         expect(DatasetFSProvider.instance.writeFile).toHaveBeenCalledWith(
             expect.objectContaining({ path: "/DST_PROFILE/BAR", query: "forceUpload=true" }),
             Buffer.from("hello"),
@@ -5535,12 +5564,15 @@ describe("DatasetTree.crossLparMove", () => {
     });
 
     it("should create a new PDS then recurse children", async () => {
-        // only the root fakeNode is a PDS; its single child is a member
+        apiMock.dataSet.mockResolvedValueOnce({
+            apiResponse: { items: [{ dsname: "SRC_PROFILE/FOO" }] },
+        });
+
         jest.spyOn(SharedContext, "isPds").mockImplementation((node) => node === fakeNode);
         fakeNode.contextValue = "ds.pds";
 
         const childNode: Partial<IZoweDatasetTreeNode> = {
-            getLabel: () => "M1",
+            label: "M1" as string,
             resourceUri: srcUri.with({ path: `${srcUri.path}/M1` }),
             contextValue: "member",
             getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
@@ -5555,11 +5587,261 @@ describe("DatasetTree.crossLparMove", () => {
 
         expect(apiMock.createDataSet).toHaveBeenCalled();
         expect(DatasetFSProvider.instance.createDirectory).toHaveBeenCalledWith(dstUri);
+
         expect(DatasetFSProvider.instance.writeFile).toHaveBeenCalledWith(
-            expect.objectContaining({ path: "/DST_PROFILE/BAR/M1" }),
+            expect.objectContaining({
+                path: "/DST_PROFILE/BAR/M1",
+                query: "forceUpload=true",
+            }),
             expect.any(Buffer),
             expect.objectContaining({ overwrite: true })
         );
         expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(srcUri, { recursive: true });
     });
+
+    it("should fail gracefully if sequential dataset creation fails (404/500)", async () => {
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+        const fakeSequentialDsNode: Partial<IZoweDatasetTreeNode> = {
+            label: "TEST.SEQ.DS" as string,
+            contextValue: "ds",
+            getProfile: () => ({ ...baseIProfileLoaded, profile: {}, name: "TEST_PROFILE" }),
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+            resourceUri: srcUri.with({ path: "/SRC_PROFILE/TEST.SEQ.DS" }),
+        };
+
+        apiMock.createDataSet.mockRejectedValueOnce({
+            errorCode: "404",
+            message: "Dataset not found on host.",
+        });
+
+        (DatasetFSProvider.instance.fetchDatasetAtUri as jest.Mock).mockResolvedValueOnce(null);
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
+        jest.spyOn(SharedContext, "isDsMember").mockReturnValue(false);
+        (fakeSequentialDsNode as any).getLabel = jest.fn().mockReturnValue("TEST.SEQ.DS");
+
+        await tree["crossLparMove"](
+            fakeSequentialDsNode as IZoweDatasetTreeNode,
+            fakeSequentialDsNode.resourceUri,
+            dstUri.with({ path: "/DST_PROFILE/TEST.SEQ.DS" }),
+            false
+        );
+
+        expect(apiMock.createDataSet).toHaveBeenCalledWith(
+            zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
+            "TEST.SEQ.DS",
+            {}
+        );
+        expect(errorMessageSpy).toHaveBeenCalledWith(
+            "Failed to move {0}: {1}"
+        );
+        expect(errorMessageSpy.mock.calls[0][0]).toBe("Failed to move {0}: {1}");
+        expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
+        expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
+    });
+
+    it("should calculate fullPdsName correctly when destUri is a top-level dataset", async () => {
+
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
+        jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
+
+        const topLevelDstUri = vscode.Uri.from({ scheme: "ds", path: "/DST_PROFILE/HLQ.PDSNAME" });
+
+        // Temporarily override the global getInfoForUri to ensure correct slash position for this test
+        jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+            profile: { ...baseIProfileLoaded, profile: {}, name: "TEST_PROFILE" },
+            slashAfterProfilePos: 11,
+            isRoot: false,
+            profileName: "TEST_PROFILE"
+        });
+
+        const fakeMemberNode: Partial<IZoweDatasetTreeNode> = {
+            label: "MEMBER" as string,
+            contextValue: "member",
+            getProfile: () => ({ ...baseIProfileLoaded, profile: {}, name: "TEST_PROFILE" }),
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+            resourceUri: srcUri.with({ path: "/SRC_PROFILE/PDS.TEST/MEMBER" }),
+        };
+
+        (DatasetFSProvider.instance.fetchDatasetAtUri as jest.Mock).mockResolvedValueOnce({});
+
+        const writeFileSpy = jest.spyOn(DatasetFSProvider.instance, "writeFile");
+
+        await tree["crossLparMove"](
+            fakeMemberNode as IZoweDatasetTreeNode,
+            fakeMemberNode.resourceUri,
+            topLevelDstUri,
+            false
+        );
+
+        // ensure resulting path that loses the PDS name due to implementation slicing.
+        expect(writeFileSpy).toHaveBeenCalledWith(
+            expect.objectContaining({ path: expect.stringContaining("/DST_PROFILE/MEMBER") }),
+            expect.any(Buffer),
+            expect.objectContaining({ create: true, overwrite: true })
+        );
+    });
+
+    it("should display PDS missing error when createDataSetMember API returns 404/500", async () => {
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
+        jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
+
+        const fakeMemberNode: Partial<IZoweDatasetTreeNode> = {
+            label: "MEMBER.JCL" as string,
+            contextValue: "member",
+            getProfile: () => ({ ...baseIProfileLoaded, profile: {}, name: "TEST_PROFILE" }),
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+            resourceUri: srcUri.with({ path: "/SRC_PROFILE/PDS.TEST/MEMBER.JCL" }),
+        };
+
+        const dstMemberUri = dstUri.with({ path: "/DST_PROFILE/BAR/MEMBER.JCL" });
+
+        apiMock.createDataSetMember.mockRejectedValueOnce({
+            errorCode: "404",
+            message: "Target data set 'DST.BAR' does not exist.",
+        });
+
+        (DatasetFSProvider.instance.fetchDatasetAtUri as jest.Mock).mockResolvedValueOnce({});
+
+        await tree["crossLparMove"](
+            fakeMemberNode as IZoweDatasetTreeNode,
+            fakeMemberNode.resourceUri,
+            dstMemberUri,
+            false
+        );
+
+        expect(apiMock.createDataSetMember).toHaveBeenCalled();
+        expect(errorMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Failed to move {0}: The target PDS does not exist on the host: {1}")
+        );
+        expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
+    });
+
+    it("should display verification failure message after a reduced number of retries (testing polling solution)", async () => {
+        jest.useFakeTimers();
+
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+        const contents = Buffer.from("FILE CONTENTS");
+
+        const localTree = new DatasetTree();
+        const localSrcUri = vscode.Uri.from({ scheme: "ds", path: "/SRC_PROFILE/FOO" });
+        const localDstUri = vscode.Uri.from({ scheme: "ds", path: "/DST_PROFILE/BAR" });
+
+        const baseIProfileLoaded = { message: "", type: "zosmf", failNotFound: false };
+        const fakeDstProfile = { profile: { ...baseIProfileLoaded, name: "TEST_PROFILE" } };
+
+        jest.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementation((uri) => {
+            if (!uri) {
+                return { profile: { ...baseIProfileLoaded }, slashAfterProfilePos: 0, isRoot: true, profileName: "" };
+            }
+            if (uri.path.includes("/DST_PROFILE/BAR")) {
+                return { profile: fakeDstProfile.profile, slashAfterProfilePos: 11, isRoot: false, profileName: "TEST_PROFILE" };
+            }
+            return { profile: { ...baseIProfileLoaded, name: "SRC_PROFILE" }, slashAfterProfilePos: 11, isRoot: false, profileName: "SRC_PROFILE" };
+        });
+
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
+        jest.spyOn(SharedContext, "isDsMember").mockReturnValue(true);
+
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockResolvedValue(undefined);
+
+        const dstMemberUri = localDstUri.with({ path: "/DST_PROFILE/BAR/MEMBER.JCL" });
+        const fakeMemberNode: Partial<IZoweDatasetTreeNode> = {
+            label: "MEMBER.JCL",
+            contextValue: "member",
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+            resourceUri: localSrcUri.with({ path: "/SRC_PROFILE/PDS.TEST/MEMBER.JCL" }),
+            getProfile: () => fakeDstProfile.profile,
+        };
+
+        // 1 read of source + 5 verification attempts
+        jest.spyOn(DatasetFSProvider.instance, "readFile")
+            .mockResolvedValueOnce(contents)                 // initial read from source LPAR
+            .mockRejectedValueOnce({ name: "EntryNotFound" }) // retry 1
+            .mockRejectedValueOnce({ name: "EntryNotFound" }) // retry 2
+            .mockRejectedValueOnce({ name: "EntryNotFound" }) // retry 3
+            .mockRejectedValueOnce({ name: "EntryNotFound" }) // retry 4
+            .mockResolvedValueOnce(Buffer.from("SHORT"));     // final attempt with size mismatch
+
+        const movePromise = localTree["crossLparMove"](
+            fakeMemberNode as IZoweDatasetTreeNode,
+            fakeMemberNode.resourceUri!,
+            dstMemberUri,
+            false
+        );
+
+        // @ts-ignore
+        if (jest.runAllTimersAsync) {
+            // modern timers
+            // @ts-ignore
+            await jest.runAllTimersAsync();
+        } else {
+            jest.advanceTimersByTime(6500);
+        }
+
+        await movePromise;
+
+        expect(errorMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Data write failed verification. The target member was not created or is inaccessible.")
+        );
+        expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
+
+        jest.useRealTimers();
+    });
+
+    it("shows clear error when destination PDS creation fails with 404/500 during member move", async () => {
+        const memberSrcUri = vscode.Uri.from({ scheme: "ds", path: "/SRC_PROFILE/SRC.PDS/SRC" });
+        const memberDstUri = vscode.Uri.from({ scheme: "ds", path: "/DST_PROFILE/DEST.PDS/SRC" });
+
+        jest.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementation((uri: vscode.Uri) => {
+            const slashAfterProfilePos = uri.path.indexOf("/", 1);
+            const isRoot = slashAfterProfilePos === -1;
+            const profileName = uri.path.startsWith("/") ? uri.path.substring(1, isRoot ? uri.path.length : slashAfterProfilePos) : uri.path.substring(0, isRoot ? uri.path.length : slashAfterProfilePos);
+            return {
+                profile: { ...baseIProfileLoaded, profile: {}, name: profileName },
+                slashAfterProfilePos,
+                isRoot,
+                profileName,
+            } as any;
+        });
+
+        // Create distinct source/dest API mocks and return the correct one based on profile.name
+        const apiMockSource = {
+            dataSet: jest.fn().mockResolvedValue({
+                apiResponse: { items: [{ dsname: "SRC_PROFILE/SRC.PDS", primary: "30" }] },
+            }),
+        } as any;
+
+        const apiMockDest = {
+            dataSet: jest.fn().mockRejectedValue({ errorCode: "404", message: "Not found" }), // dest PDS absent
+            createDataSet: jest.fn().mockRejectedValue({ errorCode: "404", message: "Create PDS failed: not allowed" }), // fail when attempting to create PDS
+            createDataSetMember: jest.fn(),
+        } as any;
+
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockImplementation((profile: any) => {
+            return profile?.name === "SRC_PROFILE" ? apiMockSource : apiMockDest;
+        });
+
+        // Ensure provider thinks the destination member/DS is not present so the create path is taken
+        jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(null);
+        jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+
+        const sourceNode: any = {
+            label: "SRC",
+            resourceUri: memberSrcUri,
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+        };
+
+        await tree["crossLparMove"](sourceNode as any, memberSrcUri, memberDstUri, false);
+
+        // fake attempt to create the destination PDS (createDataSet called)
+        expect(apiMockDest.createDataSet).toHaveBeenCalled();
+        // create fails w 404/500, we surfaced the PDS-missing error and did not write the member
+        expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to move {0}: The target PDS does not exist on the host: {1}"));
+        expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
+    });
+
 });
