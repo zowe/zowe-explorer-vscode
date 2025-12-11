@@ -147,21 +147,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
                 const profileStatus = await this.profileInstance.profileValidationHelper(
                     this.sshProfile,
-                    async (prof: imperative.IProfileLoaded, type: string): Promise<string> => {
-                        if (type !== "ssh" || prof.profile.host !== this.sshSession.ISshSession.hostname) return "unverified";
-                        if (this.sshSession.ISshSession.privateKey == null) {
-                            const tempProfile = await ZoweVsCodeExtension.updateCredentials(
-                                { profile: this.sshProfile },
-                                ZoweExplorerApiRegister.getInstance()
-                            );
-                            if (!tempProfile) {
-                                return "unverified";
-                            }
-                            this.sshSession.ISshSession.password = tempProfile.profile.password;
-                            this.sshSession.ISshSession.user = tempProfile.profile.user;
-                        }
-                        return (await zosuss.Shell.isConnectionValid(this.sshSession)) ? "active" : "inactive";
-                    }
+                    this.validateSshConnection.bind(this)
                 );
 
                 if (!this.sshSession || profileStatus !== "active") {
@@ -251,6 +237,19 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             cmdArgs[prop] = sshProfile[prop];
         }
         return cmdArgs;
+    }
+
+    private async validateSshConnection(prof: imperative.IProfileLoaded, type: string): Promise<string> {
+        if (type !== "ssh" || prof.profile.host !== this.sshSession.ISshSession.hostname) return "unverified";
+        if (this.sshSession.ISshSession.privateKey == null) {
+            const tempProfile = await ZoweVsCodeExtension.updateCredentials({ profile: this.sshProfile }, ZoweExplorerApiRegister.getInstance());
+            if (!tempProfile) {
+                return "unverified";
+            }
+            this.sshSession.ISshSession.password = tempProfile.profile.password;
+            this.sshSession.ISshSession.user = tempProfile.profile.user;
+        }
+        return (await zosuss.Shell.isConnectionValid(this.sshSession)) ? "active" : "inactive";
     }
 
     public formatCommandLine(command: string, profile?: imperative.IProfileLoaded): string {
