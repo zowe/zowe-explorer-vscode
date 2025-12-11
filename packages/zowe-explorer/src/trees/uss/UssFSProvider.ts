@@ -169,7 +169,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (cleanUri.endsWith("/")) {
             cleanUri = cleanUri.slice(0, -1);
         }
-        const cacheKey = "stat_" + (uri.query && uri.query.toLocaleLowerCase().includes("fetch=true") ? "fetch_" : "") + cleanUri;
+        const cacheKey = "stat_" + this.getQueryKey(uri) + cleanUri;
         let entry: vscode.FileStat | undefined;
 
         try {
@@ -385,12 +385,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return this.fetchEntries(uri, uriInfo);
     }
 
-    /**
-     * Reads a directory located at the given URI.
-     * @param uri A valid URI within the provider
-     * @returns An array of tuples containing each entry name and type
-     */
-    public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+    private async readDirectoryImplementation(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         /**
          * TODOs:
          * - Look into pre-fetching a directory level below the one given
@@ -409,6 +404,52 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
 
         return Array.from(dir.entries.entries()).map((e: [string, UssDirectory | UssFile]) => [e[0], e[1].type]);
+    }
+
+    /**
+     * Reads a directory located at the given URI.
+     * @param uri A valid URI within the provider
+     * @returns An array of tuples containing each entry name and type
+     */
+    public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+        let cleanUri = uri.toString();
+        if (cleanUri.endsWith("/")) {
+            cleanUri = cleanUri.slice(0, -1);
+        }
+
+        // Use a distinct prefix (readdir_) to prevent collision with stat_ keys
+        const cacheKey = "readDir_" + this.getQueryKey(uri) + cleanUri;
+        let entries: [string, vscode.FileType][] | undefined;
+
+        try {
+            if (this.requestCache.has(cacheKey)) {
+                // TODO: Remove log
+                console.log(`[RequestCache] Joining in-flight request for: ${cacheKey}`);
+                entries = await this.requestCache.get(cacheKey);
+            }
+        } catch (error) {
+            // TODO: Remove log
+            console.warn(`[RequestCache] Cached request failed for ${cacheKey}, falling back to fresh request.`, error);
+            entries = undefined;
+        }
+
+        if (!entries) {
+            const requestPromise = (async () => {
+                try {
+                    return await this.readDirectoryImplementation(uri);
+                } finally {
+                    // Clean up the cache only if this specific promise is still the one cached
+                    if (this.requestCache.get(cacheKey) === requestPromise) {
+                        this.requestCache.delete(cacheKey);
+                    }
+                }
+            })();
+
+            this.requestCache.set(cacheKey, requestPromise);
+            entries = await requestPromise;
+        }
+
+        return entries;
     }
 
     /**
@@ -536,12 +577,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return file.encoding;
     }
 
-    /**
-     * Reads a file at the given URI and fetches it from the remote system (if not yet accessed).
-     * @param uri The URI pointing to a valid file on the remote system
-     * @returns The file's contents as an array of bytes
-     */
-    public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
+    private async readFileImplementation(uri: vscode.Uri): Promise<Uint8Array> {
         let file: UssFile | UssDirectory;
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
@@ -589,6 +625,50 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         return isConflict ? file.conflictData.contents : file.data;
+    }
+
+    /**
+     * Reads a file at the given URI and fetches it from the remote system (if not yet accessed).
+     * @param uri The URI pointing to a valid file on the remote system
+     * @returns The file's contents as an array of bytes
+     */
+    public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
+        let cleanUri = uri.toString();
+        if (cleanUri.endsWith("/")) {
+            cleanUri = cleanUri.slice(0, -1);
+        }
+
+        const cacheKey = "readFile_" + this.getQueryKey(uri) + cleanUri;
+        let data: Uint8Array | undefined;
+
+        try {
+            if (this.requestCache.has(cacheKey)) {
+                // TODO: Remove log
+                console.log(`[RequestCache] Joining in-flight request for: ${cacheKey}`);
+                data = await this.requestCache.get(cacheKey);
+            }
+        } catch (error) {
+            // TODO: Remove log
+            console.warn(`[RequestCache] Cached request failed for ${cacheKey}, falling back to fresh request.`, error);
+            data = undefined;
+        }
+
+        if (!data) {
+            const requestPromise = (async () => {
+                try {
+                    return await this.readFileImplementation(uri);
+                } finally {
+                    if (this.requestCache.get(cacheKey) === requestPromise) {
+                        this.requestCache.delete(cacheKey);
+                    }
+                }
+            })();
+
+            this.requestCache.set(cacheKey, requestPromise);
+            data = await requestPromise;
+        }
+
+        return data;
     }
 
     private async uploadEntry(

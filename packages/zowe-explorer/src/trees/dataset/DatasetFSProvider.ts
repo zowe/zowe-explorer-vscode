@@ -220,10 +220,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns A structure containing file type, time, size and other metrics
      */
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        const parentKey =
-            "stat_" +
-            (uri.query && uri.query.toLocaleLowerCase().includes("fetch=true") ? "fetch_" : "") +
-            uri.toString().split("/").slice(0, 3).join("/");
+        const parentKey = "stat" + this.getQueryKey(uri) + "_" + uri.toString().split("/").slice(0, 3).join("/");
 
         const segments = uri.path.split("/").filter((s) => s.length > 0);
         const isMemberRequest = segments.length === 3;
@@ -540,7 +537,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns An array of tuples containing each entry name and type
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        const key = "readDir_" + uri.toString();
+        const key = "readDir" + this.getQueryKey(uri) + "_" + uri.toString().split("/").slice(0, 3).join("/");
 
         if (this.requestCache.has(key)) {
             return this.requestCache.get(key);
@@ -753,7 +750,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns The data set's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const key = "readFile_" + uri.toString();
+        const key = "readFile" + this.getQueryKey(uri) + "_" + uri.toString().split("/").slice(0, 3).join("/");
 
         if (this.requestCache.has(key)) {
             return this.requestCache.get(key);

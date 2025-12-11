@@ -495,4 +495,21 @@ export class BaseProvider {
             silent ?? false
         );
     }
+
+    // Helper funciton to parse uri query params into a string for the requestCache key
+    protected getQueryKey(uri: vscode.Uri): string {
+        if (!uri.query) {
+            return "";
+        }
+        const params = new URLSearchParams(uri.query);
+        const activeParams: string[] = [];
+
+        params.forEach((value, key) => {
+            if (value === "true") {
+                activeParams.push(`${key}=${value}`);
+            }
+        });
+
+        return activeParams.length > 0 ? "_" + activeParams.sort().join("_") : "";
+    }
 }
