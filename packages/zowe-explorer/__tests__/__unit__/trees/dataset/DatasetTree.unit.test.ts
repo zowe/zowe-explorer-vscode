@@ -4884,6 +4884,7 @@ describe("DataSetTree Unit Tests - Function handleDrag", () => {
 });
 
 describe("DataSetTree Unit Tests - Function handleDrop", () => {
+    let apiMock: any;
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
@@ -4951,10 +4952,30 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             draggedPdsNode,
         };
     }
-
+    const baseIProfileLoaded = {
+        message: "",
+        type: "zosmf",
+        failNotFound: false,
+    };
     beforeEach(() => {
         jest.resetAllMocks();
         jest.clearAllMocks();
+
+        apiMock = {
+            createDataSet: jest.fn().mockResolvedValue({}),
+            createDataSetMember: jest.fn().mockResolvedValue({}),
+            dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }), // Default mock for validation
+            allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }), // Default mock for collision check
+        };
+
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(apiMock);
+
+        jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+            profile: { profile: {}, name: "DEFAULT", ...baseIProfileLoaded },
+            slashAfterProfilePos: 0,
+            isRoot: true,
+            profileName: "DEFAULT"
+        });
     });
     afterEach(() => {
         jest.restoreAllMocks();
