@@ -432,6 +432,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             movingMsg.dispose();
             this.draggedNodes = {};
         }
+    }
 
     /**
      * Rename data set
