@@ -628,8 +628,11 @@ export class SharedUtils {
 
             const volsAreEqual = srcVols.length === dstVols.length && srcVols.every((vol: any, idx: number) => vol === dstVols[idx]);
 
-            // if both name and vols match, they're the same dataset
-            return namesAreEqual && volsAreEqual;
+            //Compare system config to determine target and source datasets are on same system
+            const systemIsEqual = srcProfile.profile?.host === dstProfile.profile?.host;
+
+            // if name, vols and host match, they're the same dataset
+            return namesAreEqual && volsAreEqual && systemIsEqual;
         } catch (err) {
             // fallback to not being same data set
             return false;
