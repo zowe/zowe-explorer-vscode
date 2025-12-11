@@ -501,34 +501,30 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
     }
 
-    public async readDirectoryImplementation(uri: vscode.Uri, cacheKey: string): Promise<[string, vscode.FileType][]> {
+    public async readDirectoryImplementation(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+        let dsEntry: DirEntry | DsEntry = null;
         try {
-            let dsEntry: DirEntry | DsEntry = null;
-            try {
-                dsEntry = this._lookupAsDirectory(uri, false);
-            } catch (err) {
-                if (!(err instanceof vscode.FileSystemError)) {
-                    throw err;
-                }
-
-                if (err.code === "FileNotFound") {
-                    dsEntry = await this.remoteLookupForResource(uri);
-                }
+            dsEntry = this._lookupAsDirectory(uri, false);
+        } catch (err) {
+            if (!(err instanceof vscode.FileSystemError)) {
+                throw err;
             }
 
-            this.validatePath(uri);
-
-            if (dsEntry == null || FsDatasetsUtils.isDsEntry(dsEntry)) {
-                throw vscode.FileSystemError.FileNotFound(uri);
+            if (err.code === "FileNotFound") {
+                dsEntry = await this.remoteLookupForResource(uri);
             }
-
-            dsEntry = (await this.remoteLookupForResource(uri)) as DirEntry;
-            return Array.from(dsEntry.entries.entries()).map(
-                (value: [string, DirEntry | FileEntry]) => [value[0], value[1].type] as [string, vscode.FileType]
-            );
-        } finally {
-            this.requestCache.delete(cacheKey);
         }
+
+        this.validatePath(uri);
+
+        if (dsEntry == null || FsDatasetsUtils.isDsEntry(dsEntry)) {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
+
+        dsEntry = (await this.remoteLookupForResource(uri)) as DirEntry;
+        return Array.from(dsEntry.entries.entries()).map(
+            (value: [string, DirEntry | FileEntry]) => [value[0], value[1].type] as [string, vscode.FileType]
+        );
     }
 
     /**
@@ -537,13 +533,21 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns An array of tuples containing each entry name and type
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        const key = "readDir" + this.getQueryKey(uri) + "_" + uri.toString().split("/").slice(0, 3).join("/");
+        const key = "readDir" + this.getQueryKey(uri) + "_" + uri.toString();
 
         if (this.requestCache.has(key)) {
             return this.requestCache.get(key);
         }
 
-        const requestPromise = this.readDirectoryImplementation(uri, key);
+        const requestPromise = (async () => {
+            try {
+                return await this.readDirectoryImplementation(uri);
+            } finally {
+                if (this.requestCache.get(key) === requestPromise) {
+                    this.requestCache.delete(key);
+                }
+            }
+        })();
 
         this.requestCache.set(key, requestPromise);
         return requestPromise;
@@ -672,76 +676,72 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
     }
 
-    public async readFileImplementation(uri: vscode.Uri, cacheKey: string): Promise<Uint8Array> {
-        try {
-            let ds: DsEntry | DirEntry;
-            const urlQuery = new URLSearchParams(uri.query);
-            const isConflict = urlQuery.has("conflict");
+    public async readFileImplementation(uri: vscode.Uri): Promise<Uint8Array> {
+        let ds: DsEntry | DirEntry;
+        const urlQuery = new URLSearchParams(uri.query);
+        const isConflict = urlQuery.has("conflict");
 
-            this.validatePath(uri);
+        this.validatePath(uri);
 
-            // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
-            // If the extenderProfileReady map does not contain the profile, create a deferred promise for the profile.
-            const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-            await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
+        // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
+        // If the extenderProfileReady map does not contain the profile, create a deferred promise for the profile.
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
-            const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
-            if (
-                ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-                (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-            ) {
-                throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
-            }
-
-            try {
-                ds = this._lookupAsFile(uri) as DsEntry;
-            } catch (err) {
-                if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
-                    const metadata = this._getInfoFromUri(uri);
-                    this._handleError(err, {
-                        additionalContext: vscode.l10n.t({
-                            message: "Failed to read {0}",
-                            args: [uri.path],
-                            comment: ["File path"],
-                        }),
-                        apiType: ZoweExplorerApiType.Mvs,
-                        profileType: metadata.profile?.type,
-                        retry: {
-                            fn: this.readFile.bind(this),
-                            args: [uri],
-                        },
-                        templateArgs: { profileName: metadata.profile?.name ?? "" },
-                    });
-                    throw err;
-                }
-            }
-
-            if (ds && ds.metadata?.profile == null) {
-                throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
-            }
-
-            // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
-            if (!ds || (!ds.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
-                //try and fetch its contents from remote
-                ds = (await this.fetchDatasetAtUri(uri, { isConflict })) as DsEntry;
-                if (!isConflict && ds) {
-                    ds.wasAccessed = true;
-                }
-            }
-
-            if (FsAbstractUtils.isDirectoryEntry(ds)) {
-                throw vscode.FileSystemError.FileIsADirectory(uri);
-            }
-
-            // not found on remote, throw error
-            if (ds == null) {
-                throw vscode.FileSystemError.FileNotFound(uri);
-            }
-
-            return isConflict ? ds.conflictData.contents : ds.data;
-        } finally {
-            this.requestCache.delete(cacheKey);
+        const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
+        if (
+            ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
+            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+        ) {
+            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
+
+        try {
+            ds = this._lookupAsFile(uri) as DsEntry;
+        } catch (err) {
+            if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
+                const metadata = this._getInfoFromUri(uri);
+                this._handleError(err, {
+                    additionalContext: vscode.l10n.t({
+                        message: "Failed to read {0}",
+                        args: [uri.path],
+                        comment: ["File path"],
+                    }),
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profileType: metadata.profile?.type,
+                    retry: {
+                        fn: this.readFile.bind(this),
+                        args: [uri],
+                    },
+                    templateArgs: { profileName: metadata.profile?.name ?? "" },
+                });
+                throw err;
+            }
+        }
+
+        if (ds && ds.metadata?.profile == null) {
+            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
+        }
+
+        // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
+        if (!ds || (!ds.wasAccessed && !urlQuery.has("inDiff")) || isConflict) {
+            //try and fetch its contents from remote
+            ds = (await this.fetchDatasetAtUri(uri, { isConflict })) as DsEntry;
+            if (!isConflict && ds) {
+                ds.wasAccessed = true;
+            }
+        }
+
+        if (FsAbstractUtils.isDirectoryEntry(ds)) {
+            throw vscode.FileSystemError.FileIsADirectory(uri);
+        }
+
+        // not found on remote, throw error
+        if (ds == null) {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
+
+        return isConflict ? ds.conflictData.contents : ds.data;
     }
 
     /**
@@ -750,13 +750,21 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns The data set's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const key = "readFile" + this.getQueryKey(uri) + "_" + uri.toString().split("/").slice(0, 3).join("/");
+        const key = "readFile" + this.getQueryKey(uri) + "_" + uri.toString();
 
         if (this.requestCache.has(key)) {
             return this.requestCache.get(key);
         }
 
-        const requestPromise = this.readFileImplementation(uri, key);
+        const requestPromise = (async () => {
+            try {
+                return await this.readFileImplementation(uri);
+            } finally {
+                if (this.requestCache.get(key) === requestPromise) {
+                    this.requestCache.delete(key);
+                }
+            }
+        })();
 
         this.requestCache.set(key, requestPromise);
         return requestPromise;
