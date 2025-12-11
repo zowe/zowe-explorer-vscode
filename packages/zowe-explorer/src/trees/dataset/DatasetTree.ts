@@ -387,54 +387,51 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     return;
                 }
             }
-            if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
-                Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member into a sequential dataset."));
-                return;
-            }
             const parent = target.getParent();
-            if ((SharedContext.isPds(node) || SharedContext.isDs(node)) && parent && SharedContext.isPds(parent)) {
+            const parentIsPds = parent && SharedContext.isPds(parent);
+            const targetOrParentIsPds = SharedContext.isPds(target) || parentIsPds;
+            if ((SharedContext.isPds(node) || SharedContext.isDs(node)) && targetOrParentIsPds) {
                 const message = SharedContext.isPds(node)
                     ? "Cannot drop a partitioned dataset into another partitioned dataset."
                     : "Cannot drop a sequential dataset into a partitioned dataset.";
                 Gui.errorMessage(vscode.l10n.t(message));
                 return;
             }
-        }
 
-        // 4. Overwrite prompt (name collision only)
-        const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
-        if (!overwrite) return;
+            // 4. Overwrite prompt (name collision only)
+            const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
+            if (!overwrite) return;
 
-        // 5. Move logic
-        const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving MVS files...")}`);
-        const parentsToUpdate = new Set<IZoweDatasetTreeNode>();
+            // 5. Move logic
+            const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving MVS files...")}`);
+            const parentsToUpdate = new Set<IZoweDatasetTreeNode>();
 
-        // Actually perform the move for each item
-        for (const item of droppedItems.value) {
-            const node = this.draggedNodes[item.uri.path];
-            const nodeParent = node.getParent();
-            if (!node || nodeParent === target) continue;
+            // Actually perform the move for each item
+            for (const item of droppedItems.value) {
+                const node = this.draggedNodes[item.uri.path];
+                const nodeParent = node.getParent();
+                if (!node || nodeParent === target) continue;
 
-            const nodeLabel = SharedUtils.getNodeProperty(node, "label");
-            const newUriForNode = vscode.Uri.from({
-                scheme: ZoweScheme.DS,
-                path: path.posix.join("/", target.resourceUri.path, nodeLabel),
-            });
+                const nodeLabel = SharedUtils.getNodeProperty(node, "label");
+                const newUriForNode = vscode.Uri.from({
+                    scheme: ZoweScheme.DS,
+                    path: path.posix.join("/", target.resourceUri.path, nodeLabel),
+                });
 
-            await this.crossLparMove(node, node.resourceUri, newUriForNode);
+                await this.crossLparMove(node, node.resourceUri, newUriForNode);
 
-            if (nodeParent != null) {
-                parentsToUpdate.add(nodeParent as IZoweDatasetTreeNode);
+                if (nodeParent != null) {
+                    parentsToUpdate.add(nodeParent as IZoweDatasetTreeNode);
+                }
             }
+            // Refresh UI
+            for (const parent of parentsToUpdate) {
+                this.refreshElement(parent);
+            }
+            this.refreshElement(target);
+            movingMsg.dispose();
+            this.draggedNodes = {};
         }
-        // Refresh UI
-        for (const parent of parentsToUpdate) {
-            this.refreshElement(parent);
-        }
-        this.refreshElement(target);
-        movingMsg.dispose();
-        this.draggedNodes = {};
-    }
 
     /**
      * Rename data set
