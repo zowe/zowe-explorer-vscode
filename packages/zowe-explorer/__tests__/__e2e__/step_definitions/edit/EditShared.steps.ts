@@ -44,11 +44,16 @@ When("the user finds the child node in Favorites", async function () {
     await browser.waitUntil((): Promise<boolean> => favoritesNode.isExpanded());
     this.profileNode = await favoritesNode.findChildItem(process.env.ZE_TEST_PROFILE_NAME);
     await this.profileNode.expand();
+    await browser.waitUntil((): Promise<boolean> => this.profileNode.isExpanded());
     if (this.tree.toLowerCase() === "data sets") {
         // PDS member
+        await browser.waitUntil(async () => (await this.profileNode.getChildren()).length > 0);
         const pds: TreeItem = await this.profileNode.findChildItem(process.env.ZE_TEST_PDS);
-        await browser.waitUntil(async (): Promise<boolean> => pds.hasChildren());
+        await expect(pds).toBeDefined();
+        await pds.expand();
+        await browser.waitUntil(async (): Promise<boolean> => await pds.isExpanded());
         this.pdsMember = await pds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
+        await expect(this.pdsMember).toBeDefined();
     } else {
         // USS file
         this.ussFile = await this.profileNode.findChildItem(process.env.ZE_TEST_USS_FILE);
