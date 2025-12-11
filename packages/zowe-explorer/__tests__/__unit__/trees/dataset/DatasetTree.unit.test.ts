@@ -4964,8 +4964,8 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         apiMock = {
             createDataSet: jest.fn().mockResolvedValue({}),
             createDataSetMember: jest.fn().mockResolvedValue({}),
-            dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }), // Default mock for validation
-            allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }), // Default mock for collision check
+            dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
+            allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
         };
 
         jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(apiMock);
