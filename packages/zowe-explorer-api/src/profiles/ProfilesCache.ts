@@ -13,6 +13,7 @@ import * as imperative from "@zowe/imperative";
 import type { IRegisterClient } from "../extend/IRegisterClient";
 import { FileManagement } from "../utils/FileManagement";
 import { Validation } from "./Validation";
+import { AuthHandler } from "./AuthHandler";
 import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
@@ -39,8 +40,8 @@ export class ProfilesCache {
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected overrideWithEnv = false;
-    // Maps profile location path to profile name for rename detection
-    private profileLocationMap = new Map<string, string>();
+    // Maps profile location path to profile info for rename detection
+    private profileLocationMap = new Map<string, { name: string; type: string }>();
 
     public constructor(protected log: imperative.Logger, protected cwd?: string) {
         this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
@@ -247,6 +248,7 @@ export class ProfilesCache {
         const allTypes = new Set(this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []));
         allTypes.add("ssh");
         allTypes.add("base");
+        const currentProfileLocations = new Set<string>();
 
         for (const type of allTypes) {
             const tmpAllProfiles: imperative.IProfileLoaded[] = [];
@@ -270,14 +272,14 @@ export class ProfilesCache {
                     // Step 4: Detect profile rename and update AuthHandler state
                     const profLoc = Array.isArray(prof.profLoc.osLoc) ? prof.profLoc.osLoc.join("/") : prof.profLoc.osLoc;
                     if (profLoc) {
-                        const oldName = this.profileLocationMap.get(profLoc);
-                        if (oldName && oldName !== prof.profName) {
+                        currentProfileLocations.add(profLoc);
+                        const oldEntry = this.profileLocationMap.get(profLoc);
+                        if (oldEntry && oldEntry.name !== prof.profName && oldEntry.type === prof.profType) {
                             // Profile was renamed - update AuthHandler state
-                            const { AuthHandler } = await import("./AuthHandler");
-                            AuthHandler.updateProfileName(oldName, prof.profName);
+                            AuthHandler.updateProfileName(oldEntry.name, prof.profName);
                         }
-                        // Update the map with the current name for this location
-                        this.profileLocationMap.set(profLoc, prof.profName);
+                        // Update the map with the current profile info for this location
+                        this.profileLocationMap.set(profLoc, { name: prof.profName, type: prof.profType });
                     }
                 }
                 allProfiles.push(...tmpAllProfiles);
@@ -289,6 +291,13 @@ export class ProfilesCache {
         for (const oldType of [...this.profilesByType.keys()].filter((type) => !allProfiles.some((prof) => prof.type === type))) {
             this.profilesByType.delete(oldType);
             this.defaultProfileByType.delete(oldType);
+        }
+
+        // Clean up stale entries from profileLocationMap (profiles that no longer exist)
+        for (const [location] of this.profileLocationMap) {
+            if (!currentProfileLocations.has(location)) {
+                this.profileLocationMap.delete(location);
+            }
         }
         this.checkForEnvVarAndUpdate();
         this.profilesForValidation = [];
