@@ -9,10 +9,10 @@
  *
  */
 
+import * as fs from "fs/promises";
 import { WebView } from "@zowe/zowe-explorer-api";
 import { ExtensionContext, l10n, ViewColumn, Uri } from "vscode";
 import { ZoweLogger } from "../tools/ZoweLogger";
-import * as fs from "fs/promises";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { Constants } from "../configuration/Constants";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
@@ -31,19 +31,38 @@ export class ReleaseNotes extends WebView {
         return majorMinorVersion ? majorMinorVersion[0] : extensionVersion;
     }
 
+    public static compareVersions(a: string, b: string): number {
+        const [aMajor, aMinor] = a.split(".").map(Number);
+        const [bMajor, bMinor] = b.split(".").map(Number);
+
+        if (aMajor !== bMajor) {
+            return aMajor - bMajor;
+        }
+        return aMinor - bMinor;
+    }
+
     public static shouldDisplayReleaseNotes(context: ExtensionContext): { version: string; displayReleaseNotes: boolean } {
         // Get extension version (major.minor)
         const currentVersion = ReleaseNotes.getExtensionVersion(context);
 
+        // Check if current version is a SNAPSHOT version
+        const rawExtensionVersion: string = context.extension.packageJSON.version;
+        const isSnapshotVersion = /-SNAPSHOT/i.test(rawExtensionVersion);
+
         // Default: true (show after update)
         const showAfterUpdate = SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_DISPLAY_RELEASE_NOTES, true);
-        const previousVersion = ZoweLocalStorage.getValue<string>(Definitions.LocalStorageKey.DISPLAY_RELEASE_NOTES_VERSION) ?? "";
+        const previousVersion = ZoweLocalStorage.getValue<string>(Definitions.LocalStorageKey.DISPLAY_RELEASE_NOTES_VERSION);
 
-        // Only show if enabled and version changed
-        const displayReleaseNotes = showAfterUpdate && previousVersion !== currentVersion;
+        // Don't show release notes if:
+        // - Current version is a SNAPSHOT version
+        // - First install (no previous version stored)
+        // - Version stayed the same/decreased (only show if major or minor version increased)
+        const displayReleaseNotes =
+            showAfterUpdate && !isSnapshotVersion && previousVersion != null && ReleaseNotes.compareVersions(currentVersion, previousVersion) > 0;
 
-        // Update last displayed version in local storage if displaying notes
-        if (displayReleaseNotes) {
+        // Update last displayed version in local storage
+        // Only update if it's not a SNAPSHOT version, so that upgrading from SNAPSHOT to release will show notes
+        if (!isSnapshotVersion && (previousVersion == null || currentVersion !== previousVersion)) {
             ZoweLocalStorage.setValue(Definitions.LocalStorageKey.DISPLAY_RELEASE_NOTES_VERSION, currentVersion);
         }
 
