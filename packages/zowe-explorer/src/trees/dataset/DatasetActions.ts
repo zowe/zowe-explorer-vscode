@@ -1139,7 +1139,7 @@ export class DatasetActions {
             color: var(--vscode-settings-textInputForeground);
             font-weight: bold;
             text-align: left;
-            padding-right: 1em;
+            padding-right: 1.5em;
             white-space: nowrap;
         }
         .attribute-value {
