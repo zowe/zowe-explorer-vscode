@@ -65,6 +65,7 @@
   "uss.uploadDialogWithEncoding": "Upload Files with Encoding...",
   "uss.text": "Toggle Text",
   "uss.filterBy": "Search by Directory",
+  "uss.setUssPath": "Filter USS by Path",
   "uss.cd": "Go Up One Level",
   "jobs.search": "Search Jobs",
   "deleteJob": "Delete Job",
