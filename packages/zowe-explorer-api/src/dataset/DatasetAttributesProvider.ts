@@ -27,6 +27,7 @@ export type AttributeEntryInfo = {
 export type DsInfo = {
     profile: IProfileLoaded;
     dsName: string;
+    attributes?: Record<string, unknown>;
 };
 
 export interface IAttributesProvider {

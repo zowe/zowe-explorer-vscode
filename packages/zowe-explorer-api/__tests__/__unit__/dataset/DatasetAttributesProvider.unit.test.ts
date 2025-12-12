@@ -92,4 +92,35 @@ describe("DatasetAttributeProvider", () => {
             })
         );
     });
+
+    it("Should pass attributes from API response to extenders", async () => {
+        const mockAttributes = {
+            dsname: "TEST.DATASET",
+            blksz: 27920,
+            lrecl: 80,
+            vols: "VOL001",
+        };
+
+        const dsContextWithAttributes = {
+            dsName: "TEST.DATASET",
+            profile: {} as IProfileLoaded,
+            attributes: mockAttributes,
+        };
+
+        const mockExtender = {
+            fetchAttributes: jest.fn().mockImplementation((context) => {
+                // Verify that attributes are passed to the extender
+                expect(context.attributes).toBeDefined();
+                expect(context.attributes?.dsname).toBe("TEST.DATASET");
+                expect(context.attributes?.blksz).toBe(27920);
+                return [{ title: "Test", keys: new Map() }];
+            }),
+        };
+
+        provider.register(mockExtender);
+        const result = await provider.fetchAll(dsContextWithAttributes);
+
+        expect(result).toHaveLength(1);
+        expect(mockExtender.fetchAttributes).toHaveBeenCalledWith(dsContextWithAttributes);
+    });
 });
