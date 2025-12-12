@@ -339,7 +339,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         // check if the drop target is a child of a valid container aka pds:
         // ( might be a member, sequential dataset, or placeholder text)
-        this.getParent(target);
         if (!SharedContext.isPds(target)) {
             const parent = target.getParent();
             // if the target has a parent AND that parent is a PDS, pivot to new target
@@ -355,7 +354,23 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const srcDsn = SharedUtils.getNodeProperty(node, "label");
 
             // 1. Same-object check
-            if (node.getProfile && target.getProfile && (await SharedUtils.isSamePhysicalDataset(node.getProfile(), target.getProfile(), srcDsn))) {
+            const nodeProfile = node.getProfile();
+            const targetProfile = target.getProfile();
+            const nodeParentUri = node.getParent()?.resourceUri?.path;
+
+            // If the source and target profiles are the same, check if the target is the source's parent.
+            // If it's a different target PDS on the same profile, skip isSamePhysicalDataset API call
+            if (nodeProfile && targetProfile && nodeProfile.name === targetProfile.name) {
+                // Check if the source node's parent is the same as the target. If they are the same, block the drop.
+                if (nodeParentUri === target.resourceUri.path) {
+                    Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
+                    return;
+                }
+                // If profiles are the same but PDSs are different, we skip the expensive check
+                // and proceed to collision check ( step2) -> move is valid.
+            }
+            // If profiles are different, proceed with the expensive cross-LPAR same-object check.
+            else if (nodeProfile && targetProfile && (await SharedUtils.isSamePhysicalDataset(nodeProfile, targetProfile, srcDsn))) {
                 Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
                 return;
             }
@@ -410,7 +425,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             for (const item of droppedItems.value) {
                 const node = this.draggedNodes[item.uri.path];
                 const nodeParent = node.getParent();
-                if (!node || nodeParent === target) continue;
+                // Allow the move if the parent and target are different.
+                if (!node || nodeParent?.resourceUri?.path === target.resourceUri.path) continue;
 
                 const nodeLabel = SharedUtils.getNodeProperty(node, "label");
                 const newUriForNode = vscode.Uri.from({
