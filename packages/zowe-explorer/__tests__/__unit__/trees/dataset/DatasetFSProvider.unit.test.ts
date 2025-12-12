@@ -17,6 +17,7 @@ import {
     DirEntry,
     DsEntry,
     DsEntryMetadata,
+    FeatureFlags,
     FileEntry,
     FilterEntry,
     FsAbstractUtils,
@@ -1297,6 +1298,32 @@ describe("DatasetFSProvider", () => {
                 expect((callResult1 as any).size).toBe(100);
                 expect((callResult2 as any).size).toBe(200);
             });
+        });
+        it("should not make a system call when a member of the same PDS was already fetched", async () => {
+            jest.spyOn(FeatureFlags, "get").mockReturnValue(true);
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                allMembers: jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            { member: "MEM1", m4date: "2024-08-08", mtime: "12", msec: "30" },
+                            { member: "MEM2", m4date: "2024-08-08", mtime: "12", msec: "30" },
+                        ],
+                    },
+                    commandResponse: "",
+                }),
+            } as any);
+
+            const fetchUri = Uri.from({ scheme: ZoweScheme.DS, path: "sestest/USER.DATA.PDS/MEM1", query: "fetch=true" });
+            const localUri = Uri.from({ scheme: ZoweScheme.DS, path: "sestest/USER.DATA.PDS/MEM2" });
+
+            const remoteLookupForResourceSpy = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource");
+            const lookupSpy = jest.spyOn(DatasetFSProvider.instance, "lookup");
+            await DatasetFSProvider.instance.stat(fetchUri);
+            await DatasetFSProvider.instance.stat(localUri);
+
+            expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri);
+            expect(lookupSpy).toHaveBeenCalledWith(localUri);
         });
     });
 
