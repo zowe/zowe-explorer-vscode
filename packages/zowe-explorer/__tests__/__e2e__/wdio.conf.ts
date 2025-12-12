@@ -32,6 +32,10 @@ if (process.env.ZOWE_TEST_DIR) {
 
 const screenshotDir = joinPath(__dirname, "results", "screenshots");
 const isMac = process.platform === "darwin";
+const excludeFeatures = [];
+if (isMac) {
+    excludeFeatures.push("./features/views/JobTableView.feature", "./features/views/DatasetTableView.feature");
+}
 
 export const config: Options.Testrunner = {
     ...baseConfig,
@@ -66,7 +70,7 @@ export const config: Options.Testrunner = {
     specs: ["./features/**/*.feature"],
     // Patterns to exclude.
     exclude: [
-        isMac ? "./features/views/JobTableView.feature" : undefined,
+        ...excludeFeatures,
         // 'path/to/excluded/files'
     ].filter(Boolean),
     //
