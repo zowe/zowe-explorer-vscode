@@ -4964,7 +4964,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         jest.resetAllMocks();
         jest.clearAllMocks();
 
-        // FIX 1: Globally block "Same Object" check for this suite so structural validations run
         jest.spyOn(SharedUtils, "isSamePhysicalDataset").mockResolvedValue(false);
 
         apiMock = {
@@ -5205,7 +5204,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         draggedNodeMock[Symbol.dispose]();
     });
 });
-
 describe("DatasetTree.handleDrop - blocking behavior", () => {
     let dsTree: DatasetTree;
 
