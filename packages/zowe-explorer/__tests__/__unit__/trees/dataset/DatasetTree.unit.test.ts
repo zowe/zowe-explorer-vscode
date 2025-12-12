@@ -4884,6 +4884,12 @@ describe("DataSetTree Unit Tests - Function handleDrag", () => {
 });
 
 describe("DataSetTree Unit Tests - Function handleDrop", () => {
+    let apiMock: any;
+    const baseIProfileLoaded = {
+        message: "",
+        type: "zosmf",
+        failNotFound: false,
+    };
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
@@ -4955,7 +4961,40 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
     beforeEach(() => {
         jest.resetAllMocks();
         jest.clearAllMocks();
+
+        // FIX 1: Block the "Same Object" check globally for structural tests
         jest.spyOn(SharedUtils, "isSamePhysicalDataset").mockResolvedValue(false);
+
+        // FIX 2: Initialize apiMock with ALL required methods and complete attribute data
+        apiMock = {
+            createDataSet: jest.fn().mockResolvedValue({}),
+            createDataSetMember: jest.fn().mockResolvedValue({}),
+            dataSet: jest.fn().mockResolvedValue({
+                apiResponse: {
+                    items: [{
+                        dsname: "TEST.DSN",
+                        vols: [],
+                        // some essential ZosFiles attributes
+                        recfm: "FB",
+                        dsorg: "PO",
+                        alcunit: "CYL",
+                        primary: 10,
+                        secondary: 10
+                    }]
+                }
+            }),
+            allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
+        };
+
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(apiMock);
+
+        // make FsAbstractUtils return a valid profile structure
+        jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+            profile: { profile: {}, name: "DEFAULT", ...baseIProfileLoaded },
+            slashAfterProfilePos: 0,
+            isRoot: true,
+            profileName: "DEFAULT"
+        });
     });
     afterEach(() => {
         jest.restoreAllMocks();
@@ -4987,11 +5026,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
                 },
             ],
         } as any);
-        jest.spyOn(SharedContext, "isDs").mockImplementation((node) => {
-            if (node === blockMocks.datasetSeqNode) return true;
-            if (node === blockMocks.datasetPdsNode) return false;
-            return false;
-        });
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
             [blockMocks.datasetPdsNode.resourceUri.path]: blockMocks.datasetPdsNode,
         });
@@ -5045,13 +5079,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         const testTree = new DatasetTree();
         const blockMocks = createBlockMocks();
         const dataTransfer = new vscode.DataTransfer();
-        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
-            createDataSet: jest.fn(),
-            createDataSetMember: jest.fn(),
-            dataSet: jest.fn().mockResolvedValue({
-                apiResponse: { items: [{ dsname: "TEST.DSN", vols: [], alcunit: "TRK", primary: 10 }] }
-            }),
-        } as any);
         jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
             value: [
                 {
@@ -5486,6 +5513,7 @@ describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
         expect(result).toBe(false);
     });
 });
+
 describe("DatasetTree.crossLparMove", () => {
     let tree: any;
     let fakeNode: Partial<IZoweDatasetTreeNode>;
