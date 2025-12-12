@@ -5008,6 +5008,12 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
                 },
             ],
         } as any);
+        jest.spyOn(SharedContext, "isDs").mockImplementation((node) => {
+            // if statements necessary for test runner to know which data type the mock node is
+            if (node === blockMocks.datasetSeqNode) return true;
+            if (node === blockMocks.datasetPdsNode) return false;
+            return false;
+        });
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
             [blockMocks.datasetPdsNode.resourceUri.path]: blockMocks.datasetPdsNode,
         });
@@ -5090,6 +5096,10 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
                 },
             ],
         } as any);
+        jest.spyOn(blockMocks.datasetPdsNode, "children", "get").mockReturnValue([
+            //  mocked child that matches the name of the member being dragged ("mem1")
+            { label: blockMocks.memberNode.label } as any
+        ]);
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
             [blockMocks.memberNode.resourceUri.path]: blockMocks.memberNode,
         });
@@ -5183,6 +5193,8 @@ describe("DatasetTree.handleDrop - blocking behavior", () => {
         jest.resetAllMocks();
         jest.clearAllMocks();
         dsTree = new DatasetTree();
+        //make sure "Same Object" check doesnt mess up tests
+        jest.spyOn(SharedUtils, "isSamePhysicalDataset").mockResolvedValue(false);
     });
 
     afterEach(() => {
