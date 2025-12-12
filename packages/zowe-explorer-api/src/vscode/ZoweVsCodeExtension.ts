@@ -21,6 +21,7 @@ import { Types } from "../Types";
 import type { BaseProfileAuthOptions } from "./doc/BaseProfileAuth";
 import { FileManagement } from "../utils";
 import { VscSettings } from "./doc/VscSettings";
+import { ZoweExplorerZosmf } from "../profiles/ZoweExplorerZosmfApi";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -118,6 +119,7 @@ export class ZoweVsCodeExtension {
                 await profInfo.updateProperty({ ...upd, property: "password", value: creds[1], setSecure });
             }
             cache.updateCachedProfile(loadProfile, undefined, apiRegister);
+            imperative.AuthOrder.addCredsToSession(loadSession, ZoweExplorerZosmf.CommonApi.getCommandArgs(loadProfile));
             ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(loadProfile);
 
             return loadProfile;

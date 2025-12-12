@@ -694,6 +694,8 @@ describe("ZoweVsCodeExtension", () => {
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const addCredsToSessionSpy = jest.spyOn(imperative.AuthOrder, "addCredsToSession");
+
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
                 undefined as unknown as Types.IApiRegisterClient
@@ -703,6 +705,11 @@ describe("ZoweVsCodeExtension", () => {
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
             expect(saveCredentialsSpy).toHaveBeenCalledTimes(0);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(2);
+            expect(addCredsToSessionSpy).toHaveBeenCalledTimes(1);
+            expect(addCredsToSessionSpy.mock.calls[0][0]).toEqual(profileLoaded.profile);
+            expect(addCredsToSessionSpy.mock.calls[0][1]).toMatchObject({ $0: "zowe", _: [""] });
+            expect(addCredsToSessionSpy.mock.calls[0][1]?.password).toBe("fakePassword");
+            expect(addCredsToSessionSpy.mock.calls[0][1]?.user).toBe("fakeUser");
         });
 
         it("should update user and password as secure fields with rePrompt", async () => {
@@ -725,6 +732,8 @@ describe("ZoweVsCodeExtension", () => {
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const addCredsToSessionSpy = jest.spyOn(imperative.AuthOrder, "addCredsToSession");
+
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 {
                     ...promptCredsOptions,
@@ -737,6 +746,12 @@ describe("ZoweVsCodeExtension", () => {
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
             expect(saveCredentialsSpy).toHaveBeenCalledTimes(0);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(2);
+
+            expect(addCredsToSessionSpy).toHaveBeenCalledTimes(1);
+            expect(addCredsToSessionSpy.mock.calls[0][0]).toEqual(profileLoaded.profile);
+            expect(addCredsToSessionSpy.mock.calls[0][1]).toMatchObject({ $0: "zowe", _: [""] });
+            expect(addCredsToSessionSpy.mock.calls[0][1]?.password).toBe("fakePassword");
+            expect(addCredsToSessionSpy.mock.calls[0][1]?.user).toBe("fakeUser");
         });
 
         it("should update user and password as plain text if prompt accepted", async () => {
@@ -760,6 +775,8 @@ describe("ZoweVsCodeExtension", () => {
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("yes");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const addCredsToSessionSpy = jest.spyOn(imperative.AuthOrder, "addCredsToSession");
+
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
                 undefined as unknown as Types.IApiRegisterClient
@@ -769,6 +786,11 @@ describe("ZoweVsCodeExtension", () => {
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
             expect(saveCredentialsSpy).toHaveBeenCalledTimes(1);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(2);
+            expect(addCredsToSessionSpy).toHaveBeenCalledTimes(1);
+            expect(addCredsToSessionSpy.mock.calls[0][0]).toEqual(profileLoaded.profile);
+            expect(addCredsToSessionSpy.mock.calls[0][1]).toMatchObject({ $0: "zowe", _: [""] });
+            expect(addCredsToSessionSpy.mock.calls[0][1]?.password).toBe("fakePassword");
+            expect(addCredsToSessionSpy.mock.calls[0][1]?.user).toBe("fakeUser");
         });
 
         it("should not update user and password as plain text if prompt cancelled", async () => {
