@@ -29,6 +29,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where user attempts to perform a search on an individual PDS from the Zowe-Explorer extension using the "Search PDS members" action and query a search string, it brings out additional dataset as a part of the result.[#3682](https://github.com/zowe/zowe-explorer-vscode/issues/3682)
 - Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. [#3923](https://github.com/zowe/zowe-explorer-vscode/pull/3923)
 - Fixed issue seen by extender profile types where a type error was returned with 401 instead of notification with update option. [#3943](https://github.com/zowe/zowe-explorer-vscode/issues/3943)
+- Fixed issue where the Show Attributes view displayed "Open virtualization format" under data set attributes instead of "Space overflow" for the `ovf` attribute key. [#3985](https://github.com/zowe/zowe-explorer-vscode/issues/3985)
 - Fixed release notes displaying when Zowe Explorer is installed for the first time. [#3966](https://github.com/zowe/zowe-explorer-vscode/pull/3966)
 - Fixed release notes displaying when the Zowe Explorer version is downgraded. [#3966](https://github.com/zowe/zowe-explorer-vscode/pull/3966)
 
