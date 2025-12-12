@@ -4884,7 +4884,6 @@ describe("DataSetTree Unit Tests - Function handleDrag", () => {
 });
 
 describe("DataSetTree Unit Tests - Function handleDrop", () => {
-    let apiMock: any;
     function createBlockMocks() {
         const session = createISession();
         const imperativeProfile = createIProfile();
@@ -4952,41 +4951,10 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             draggedPdsNode,
         };
     }
-    const baseIProfileLoaded = {
-        message: "",
-        type: "zosmf",
-        failNotFound: false,
-    };
+
     beforeEach(() => {
-        apiMock = {
-            createDataSet: jest.fn().mockResolvedValue({}),
-            createDataSetMember: jest.fn().mockResolvedValue({}),
-            dataSet: jest.fn().mockResolvedValue({
-                apiResponse: { items: [{ dsname: "TEST.DSN", vols: [], alcunit: "TRK", primary: 10 }] }
-            }),
-            allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
-        };
-        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(apiMock);
-        jest.spyOn(SharedUtils, "isSamePhysicalDataset").mockResolvedValue(false);
         jest.resetAllMocks();
         jest.clearAllMocks();
-
-        apiMock = {
-            createDataSet: jest.fn().mockResolvedValue({}),
-            createDataSetMember: jest.fn().mockResolvedValue({}),
-            dataSet: jest.fn().mockResolvedValue({
-                apiResponse: { items: [{ dsname: "TEST.DSN", vols: [] }] }
-            }), allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
-        };
-
-        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(apiMock);
-
-        jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
-            profile: { profile: {}, name: "DEFAULT", ...baseIProfileLoaded },
-            slashAfterProfilePos: 0,
-            isRoot: true,
-            profileName: "DEFAULT"
-        });
     });
     afterEach(() => {
         jest.restoreAllMocks();
@@ -5018,17 +4986,15 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
                 },
             ],
         } as any);
-        jest.spyOn(SharedContext, "isDs").mockImplementation((node) => {
-            if (node === blockMocks.datasetSeqNode) return true; // Target is Sequential DS
-            if (node === blockMocks.datasetPdsNode) return false; // Source is PDS
-            return false;
-        });
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
             [blockMocks.datasetPdsNode.resourceUri.path]: blockMocks.datasetPdsNode,
         });
         const crossLparMoveMock = jest.spyOn(DatasetTree.prototype as any, "crossLparMove").mockResolvedValue(undefined);
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            createDataSet: jest.fn(),
+            createDataSetMember: jest.fn(),
+        } as any);
         await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
-
         expect(crossLparMoveMock).not.toHaveBeenCalled();
         expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a partitioned dataset or member into a sequential dataset.");
         draggedNodeMock[Symbol.dispose]();
@@ -5102,9 +5068,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
                 },
             ],
         } as any);
-        jest.spyOn(Object.getPrototypeOf(blockMocks.datasetPdsNode), "children", "get").mockReturnValue([
-            { label: blockMocks.memberNode.label } as any
-        ]);
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
             [blockMocks.memberNode.resourceUri.path]: blockMocks.memberNode,
         });
@@ -5198,8 +5161,6 @@ describe("DatasetTree.handleDrop - blocking behavior", () => {
         jest.resetAllMocks();
         jest.clearAllMocks();
         dsTree = new DatasetTree();
-        //make sure "Same Object" check doesnt mess up tests
-        jest.spyOn(SharedUtils, "isSamePhysicalDataset").mockResolvedValue(false);
     });
 
     afterEach(() => {
@@ -5255,7 +5216,7 @@ describe("DatasetTree.handleDrop - blocking behavior", () => {
             .mockImplementationOnce(() => dstApi);
 
         // Force same-physical-dataset detection -> block
-        jest.spyOn(SharedUtils, "isSamePhysicalDataset").mockResolvedValue(true);
+        (SharedUtils as any).isSamePhysicalDataset = jest.fn().mockResolvedValue(true);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
             "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
 
@@ -5512,7 +5473,6 @@ describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
         expect(result).toBe(false);
     });
 });
-
 describe("DatasetTree.crossLparMove", () => {
     let tree: any;
     let fakeNode: Partial<IZoweDatasetTreeNode>;
