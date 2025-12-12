@@ -1325,6 +1325,34 @@ describe("DatasetFSProvider", () => {
             expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri);
             expect(lookupSpy).toHaveBeenCalledWith(localUri);
         });
+
+        it("should make a system call and if fetchByDefault is enabled and the entry is not in the cache", async () => {
+            jest.spyOn(FeatureFlags, "get").mockReturnValue(true);
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                allMembers: jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            { member: "MEM1", m4date: "2024-08-08", mtime: "12", msec: "30" },
+                            { member: "MEM2", m4date: "2024-08-08", mtime: "12", msec: "30" },
+                        ],
+                    },
+                    commandResponse: "",
+                }),
+            } as any);
+
+            const fetchUri = Uri.from({ scheme: ZoweScheme.DS, path: "sestest/USER.DATA.PDS.NEW/MEM1" });
+
+            const cacheResourceSpy = jest.spyOn(DatasetFSProvider.instance as any, "lookupWithCache");
+            const lookupSpy = jest.spyOn(DatasetFSProvider.instance, "lookup");
+            const remoteLookupForResourceSpy = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource");
+
+            await DatasetFSProvider.instance.stat(fetchUri);
+
+            expect(cacheResourceSpy).toHaveBeenCalledWith(fetchUri);
+            expect(lookupSpy).toHaveBeenCalledWith(fetchUri);
+            expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri);
+        });
     });
 
     describe("fetchEntriesForDataset", () => {

@@ -700,3 +700,30 @@ describe("onCloseEvent", () => {
         visibleTextEditorsMock[Symbol.dispose]();
     });
 });
+
+describe("getQueryKey", () => {
+    let prov: any;
+
+    beforeEach(() => {
+        prov = new (BaseProvider as any)();
+    });
+
+    it("should return an empty string if the URI has no query parameters", () => {
+        const uri = { query: "" } as vscode.Uri;
+        const result = prov.getQueryKey(uri);
+        expect(result).toBe("");
+    });
+
+    it('should return an empty string if no parameters have the value "true"', () => {
+        const uri = { query: "foo=false&bar=123&baz=string" } as vscode.Uri;
+        const result = prov.getQueryKey(uri);
+        expect(result).toBe("");
+    });
+
+    it('should return a sorted, underscore-separated string of only parameters equal to "true"', () => {
+        const uri = { query: "c=true&b=false&a=true" } as vscode.Uri;
+        const result = prov.getQueryKey(uri);
+
+        expect(result).toBe("_a=true_c=true");
+    });
+});
