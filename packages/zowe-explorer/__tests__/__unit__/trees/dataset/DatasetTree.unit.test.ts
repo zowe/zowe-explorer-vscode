@@ -4955,6 +4955,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
     beforeEach(() => {
         jest.resetAllMocks();
         jest.clearAllMocks();
+        jest.spyOn(SharedUtils, "isSamePhysicalDataset").mockResolvedValue(false);
     });
     afterEach(() => {
         jest.restoreAllMocks();
@@ -4986,6 +4987,11 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
                 },
             ],
         } as any);
+        jest.spyOn(SharedContext, "isDs").mockImplementation((node) => {
+            if (node === blockMocks.datasetSeqNode) return true;
+            if (node === blockMocks.datasetPdsNode) return false;
+            return false;
+        });
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
             [blockMocks.datasetPdsNode.resourceUri.path]: blockMocks.datasetPdsNode,
         });
@@ -5039,6 +5045,13 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         const testTree = new DatasetTree();
         const blockMocks = createBlockMocks();
         const dataTransfer = new vscode.DataTransfer();
+        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            createDataSet: jest.fn(),
+            createDataSetMember: jest.fn(),
+            dataSet: jest.fn().mockResolvedValue({
+                apiResponse: { items: [{ dsname: "TEST.DSN", vols: [], alcunit: "TRK", primary: 10 }] }
+            }),
+        } as any);
         jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
             value: [
                 {
