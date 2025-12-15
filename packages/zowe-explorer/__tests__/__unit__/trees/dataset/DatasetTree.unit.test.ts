@@ -5133,7 +5133,12 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
 
         await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, new vscode.CancellationTokenSource().token);
 
-        expect(overwriteSpy).toHaveBeenCalledWith(blockMocks.datasetPdsNode, (testTree as any).draggedNodes);
+        expect(overwriteSpy).toHaveBeenCalledWith(
+            blockMocks.datasetPdsNode,
+            expect.objectContaining({
+                [blockMocks.memberNode.resourceUri.path]: blockMocks.memberNode,
+            })
+        );
         expect(crossLparMoveMock).toHaveBeenCalled();
 
         // Restore children
