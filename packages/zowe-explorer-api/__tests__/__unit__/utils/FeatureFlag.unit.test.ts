@@ -1,8 +1,9 @@
+import * as fs from "fs";
 import * as fsPromises from "fs/promises";
 import { FeatureFlags } from "../../../src";
 
 const FLAGS_FILE = "feature-flags.json";
-
+jest.mock("fs");
 describe("FeatureFlags", () => {
     let readFileSpy: jest.SpyInstance;
     let writeFileSpy: jest.SpyInstance;
@@ -17,10 +18,22 @@ describe("FeatureFlags", () => {
 
         readFileSpy = jest.spyOn(fsPromises, "readFile").mockResolvedValue("{}");
         writeFileSpy = jest.spyOn(fsPromises, "writeFile").mockResolvedValue(undefined);
+        jest.spyOn(fs, "existsSync").mockReturnValue(true);
     });
 
     afterEach(() => {
         jest.restoreAllMocks();
+    });
+
+    it("should initialize and load flags from disk", async () => {
+        const mockFlags = { featureA: true, limit: 10 };
+        readFileSpy.mockResolvedValue(JSON.stringify(mockFlags));
+
+        await FeatureFlags.init();
+
+        expect(readFileSpy).toHaveBeenCalledWith(expect.stringContaining(FLAGS_FILE), expect.anything());
+        expect(FeatureFlags.get("featureA")).toBe(true);
+        expect(FeatureFlags.get("limit")).toBe(10);
     });
 
     it("should set and get values in memory without writing to disk by default", async () => {
