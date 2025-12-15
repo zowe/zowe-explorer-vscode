@@ -409,10 +409,16 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
 
             // 3b) Members can only be dropped into a PDS
-            if (!SharedContext.isPds(target) && SharedContext.isDsMember(node)) {
-                Gui.errorMessage(vscode.l10n.t("Members can only be dropped into a partitioned dataset."));
-                return;
+            // Pivot when dropping onto a *child of a PDS* (member OR placeholder).
+            // The real container is the PDS parent
+            if (!SharedContext.isPds(target)) {
+                const parent = target.getParent?.();
+
+                if (parent && SharedContext.isPds(parent)) {
+                    target = parent as IZoweDatasetTreeNode;
+                }
             }
+
 
             // 3c) If the target is a PDS child (member), we should have pivoted already.
             // But in case something slipped through: block dropping DS/PDS into a PDS-child context.
@@ -464,7 +470,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             movingMsg?.dispose?.();
         }
     }
-
 
     /**
      * Rename data set
