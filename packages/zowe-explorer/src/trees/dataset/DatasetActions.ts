@@ -1130,7 +1130,8 @@ export class DatasetActions {
             margin-bottom: 1em;
         }
         .attributes-table {
-            border-spacing: 0;
+            border-collapse: separate;
+            border-spacing: 2em 0.25em;
         }
         .attributes-table td {
             padding: 0.15em 0;
@@ -1139,7 +1140,6 @@ export class DatasetActions {
             color: var(--vscode-settings-textInputForeground);
             font-weight: bold;
             text-align: left;
-            padding-right: 1.5em;
             white-space: nowrap;
         }
         .attribute-value {
