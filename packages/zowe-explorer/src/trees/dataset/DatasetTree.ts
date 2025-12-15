@@ -64,7 +64,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public mSessionNodes: IZoweDatasetTreeNode[] = [];
     public mFavorites: IZoweDatasetTreeNode[] = [];
     public lastOpened: Types.ZoweNodeInteraction = {};
-    // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
 
     public dragMimeTypes: string[] = [];
@@ -225,15 +224,31 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     transformedAttrs.primary = Math.ceil(primary / TRACKS_PER_CYLINDER);
                 }
 
-                await destApi.createDataSet(
-                    zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK,
-                    pdsName,
-                    transformedAttrs
-                );
+                try {
+                    await destApi.createDataSet(
+                        zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK,
+                        pdsName,
+                        transformedAttrs
+                    );
 
-                DatasetFSProvider.instance.createDirectory(
-                    destUri.with({ path: destUri.path.substring(0, destUri.path.lastIndexOf("/")) })
-                );
+                    DatasetFSProvider.instance.createDirectory(
+                        destUri.with({ path: destUri.path.substring(0, destUri.path.lastIndexOf("/")) })
+                    );
+
+                } catch (err) {
+                    const code = err?.errorCode?.toString();
+                    if (code === "404" || code === "500") {
+                        Gui.errorMessage(
+                            vscode.l10n.t(
+                                "Failed to move {0}: The target PDS does not exist on the host: {1}",
+                                dsname,
+                                err.message
+                            )
+                        );
+                        return;
+                    }
+                    return;
+                }
             }
 
             // Ensure member exists (ignore "already exists")
@@ -253,7 +268,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             }
         } else {
-            dsname = sourceNode.getLabel() as string;
+            dsname =
+                (sourceNode as any).getLabel?.() ??
+                (sourceNode as any).label ??
+                (SharedUtils.getNodeProperty(sourceNode as any, "label") as string) ??
+                "";
 
             try {
                 const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
