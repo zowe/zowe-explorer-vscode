@@ -408,14 +408,16 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 return;
             }
 
-            // 3b) Members can only be dropped into a PDS
-            // Pivot when dropping onto a *child of a PDS* (member OR placeholder).
-            // The real container is the PDS parent
-            if (!SharedContext.isPds(target)) {
+            // 3b) Members can only be dropped into a PDS.
+            // If the user drops a member onto a child node under a PDS (member OR placeholder),
+            // treat the PDS parent as the real drop target.
+            if (SharedContext.isDsMember(node) && !SharedContext.isPds(target)) {
                 const parent = target.getParent?.();
-
                 if (parent && SharedContext.isPds(parent)) {
                     target = parent as IZoweDatasetTreeNode;
+                } else {
+                    Gui.errorMessage(vscode.l10n.t("Members can only be dropped into a partitioned dataset."));
+                    return;
                 }
             }
 
