@@ -249,6 +249,15 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             this.sshSession.ISshSession.password = tempProfile.profile.password;
             this.sshSession.ISshSession.user = tempProfile.profile.user;
         }
+
+        // This happens when authentication type detected is something other than basic
+        // In that scenario, the user is removed from the session object by imperative.AuthOrder
+        // Checking for the existence of of a user in the profile is a workaround to ensure that the user is set in the session object
+        if (this.sshSession.ISshSession.user == null && prof.profile.user != null) {
+            // This workaround can be removed once the following CLI issue is resolved:
+            // https://github.com/zowe/zowe-cli/issues/2646
+            this.sshSession.ISshSession.user = prof.profile.user;
+        }
         return (await zosuss.Shell.isConnectionValid(this.sshSession)) ? "active" : "inactive";
     }
 

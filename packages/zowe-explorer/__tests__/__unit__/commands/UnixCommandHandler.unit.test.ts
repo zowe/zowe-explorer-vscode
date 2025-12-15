@@ -783,5 +783,23 @@ describe("UnixCommand Actions Unit Testing", () => {
             expect(result).toBe("unverified");
             expect(ZoweVsCodeExtension.updateCredentials).toHaveBeenCalled();
         });
+        it("should return 'active' when user is not set in session and is set in profile", async () => {
+            // This workaround can be removed once the following CLI issue is resolved:
+            // https://github.com/zowe/zowe-cli/issues/2646
+            const actions = getUnixActions();
+            const sampleSshSession: any = { ISshSession: { hostname: "host.com", privateKey: "someKey", tokenType: "someTokenType", tokenValue: "someTokenValue" } };
+            const sampleSshProfile = { profile: { host: "host.com", user: "newUser" }, type: "ssh" };
+
+            actions.sshSession = sampleSshSession as any;
+            actions.sshProfile = sampleSshProfile as any;
+
+            (Shell.isConnectionValid as jest.Mock).mockResolvedValue(true);
+
+            const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
+
+            expect(result).toBe("active");
+            expect(sampleSshSession.ISshSession.user).toBe("newUser");
+            expect(Shell.isConnectionValid).toHaveBeenCalledWith(sampleSshSession);
+        });
     });
 });
