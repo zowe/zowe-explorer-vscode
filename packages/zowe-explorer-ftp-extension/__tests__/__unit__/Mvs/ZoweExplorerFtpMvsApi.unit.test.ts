@@ -62,7 +62,7 @@ describe("FtpMvsApi", () => {
 
     it("should list datasets.", async () => {
         const response = [
-            { name: "IBMUSER.DS1", dsOrg: "PO", volume: "MIGRATED" },
+            { name: "IBMUSER.DS1", dsOrg: "PO", volume: "VOL001" },
             { name: "IBMUSER.DS2", dsOrg: "PS" },
         ];
         DataSetUtils.listDataSets = jest.fn().mockReturnValue(response);
@@ -72,6 +72,7 @@ describe("FtpMvsApi", () => {
         const result = await MvsApi.dataSet(mockParams.filter);
 
         expect(result.apiResponse.items[0].dsname).toContain("IBMUSER.DS1");
+        expect(result.apiResponse.items[0].vols).toBe("VOL001");
         expect(DataSetUtils.listDataSets).toHaveBeenCalledTimes(1);
         expect(MvsApi.releaseConnection).toHaveBeenCalledTimes(0);
     });

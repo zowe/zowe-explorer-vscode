@@ -1471,7 +1471,7 @@ export class DatasetActions {
                 ["lrecl", "Logical Record Length", "The length in bytes of each record"],
                 ["migr", "Migration", "Indicates if automatic migration is active"],
                 ["mvol", "Multivolume", "Whether the dataset is on multiple volumes"],
-                ["ovf", "Open virtualization format", ""],
+                ["ovf", "Space overflow", "Indicates if space overflow was encountered (YES or NO)"],
                 ["rdate", "Reference Date", "Last referenced date"],
                 ["recfm", "Record Format", "Valid values: A, B, D, F, M, S, T, U, V (combinable)"],
                 ["sizex", "Size", "Size of the first extent in tracks"],

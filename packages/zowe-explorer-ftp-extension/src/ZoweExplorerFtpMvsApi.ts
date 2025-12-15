@@ -39,7 +39,7 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
                     result.apiResponse.items = response.map((element) => ({
                         dsname: element.name,
                         dsorg: element.dsOrg,
-                        volume: element.volume,
+                        vols: element.volume,
                         recfm: element.recordFormat,
                         blksz: element.blockSize,
                         lrecl: element.recordLength,
