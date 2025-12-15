@@ -12,8 +12,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added support to delete VSAM data sets for z/OSMF type profiles. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
 - Added support for loading credential manager options from the `imperative.json` file. Added a `credentialManagerOptions` object in the JSON object in `imperative.json` to specify options for the current credential manager. [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
 - Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, see the "Troubleshooting Zowe CLI credentials" on [Zowe Docs](https://docs.zowe.org/stable/troubleshoot/cli/troubleshoot-cli-credentials/#secrets-sdk-persistence-level-for-windows). [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
-- Added support for `downloadDirectory` and `downloadAllMembers` to the `MainframeInteraction` namespace. [#3843](https://github.com/zowe/zowe-explorer-vscode/pull/3843)
-- Added support for calling `UssApi.fileList` with `zosfiles.IUSSListOptions`. [#3843](https://github.com/zowe/zowe-explorer-vscode/pull/3843)
+- Added support for `downloadDirectory` to the `MainframeInteraction` namespace. `downloadDirectory` is for downloading the contents of a USS directory based on a number of options and filters. [#3843](https://github.com/zowe/zowe-explorer-vscode/pull/3843)
+- Added support for `downloadAllMembers` to the `MainframeInteraction` namespace. `downloadAllMembers` is for downloading all members of a PDS based on a number of options. [#3843](https://github.com/zowe/zowe-explorer-vscode/pull/3843)
+- Added support for calling `UssApi.fileList` with the `zosfiles.IUSSListOptions` interface, which provides filters for listing USS files. [#3843](https://github.com/zowe/zowe-explorer-vscode/pull/3843)
 
 ### Bug fixes
 

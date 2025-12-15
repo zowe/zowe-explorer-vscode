@@ -254,7 +254,6 @@ export namespace MainframeInteraction {
          * Retrieve all members of a partitioned data set and save them to a directory.
          *
          * @param {string} dataSetName
-         * @param {string} directoryPath
          * @param {zosfiles.IDownloadOptions} [options]
          * @returns {Promise<zosfiles.IZosFilesResponse>}
          */
