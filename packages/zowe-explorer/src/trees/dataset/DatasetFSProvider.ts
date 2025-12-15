@@ -73,13 +73,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             // Check cache for resource
             const localLookup = this.lookup(uri);
-            //TODO: Remove log
-            console.log("isFetching: false");
             if (localLookup) return localLookup;
         } catch {}
         // If resource not found, remote lookup
-        //TODO: Remove log
-        console.log("isFetching: true");
         return this.remoteLookupForResource(uri);
     }
 
@@ -230,14 +226,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             if (this.requestCache.has(parentKey)) {
-                // TODO: Remove log
-                console.log(`[RequestCache] Joining in-flight request for: ${parentKey}`);
-
                 pdsEntry = await this.requestCache.get(parentKey);
             }
         } catch (error) {
-            // TODO: Remove log
-            console.warn(`[RequestCache] Cached request failed for ${parentKey}, falling back to fresh request.`, error);
             pdsEntry = undefined;
         }
 

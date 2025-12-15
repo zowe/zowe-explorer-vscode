@@ -23,6 +23,7 @@ import {
     ZoweScheme,
     imperative,
     ZoweVsCodeExtension,
+    FeatureFlags,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
@@ -243,6 +244,24 @@ describe("UssFSProvider", () => {
                 expect(callResult1).toStrictEqual(callResult2);
             });
 
+            it("should handle subsequent FS calls - different query parameters - should trigger distinct requests", async () => {
+                const testUriFetchTrue = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/usr/test/file_diff_params.txt", query: "fetch=true" });
+                const testUriConflictTrue = Uri.from({
+                    scheme: ZoweScheme.USS,
+                    path: "/sestest/usr/test/file_diff_params.txt",
+                    query: "conflict=true",
+                });
+
+                const call1 = UssFSProvider.instance.stat(testUriFetchTrue);
+                const call2 = UssFSProvider.instance.stat(testUriConflictTrue);
+                let [callResult1, callResult2] = await Promise.all([call1, call2]);
+
+                expect(statSpy).toHaveBeenCalledWith(testUriFetchTrue);
+                expect(statSpy).toHaveBeenCalledWith(testUriConflictTrue);
+                expect(statSpy).toHaveBeenCalledTimes(2);
+                expect(callResult1).not.toStrictEqual(callResult2);
+            });
+
             it("should handle subsequent FS calls - distinct files in same directory - should trigger distinct requests", async () => {
                 const testUriFile1 = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/usr/test/file123.txt", query: "fetch=true" });
                 const testUriFile2 = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/usr/test/file234.txt", query: "fetch=true" });
@@ -266,6 +285,21 @@ describe("UssFSProvider", () => {
                 expect((callResult1 as any).size).toBe(100);
                 expect((callResult2 as any).size).toBe(200);
             });
+        });
+        it("should make a system call if fetchByDefault is enabled and the entry is not in the cache", async () => {
+            jest.spyOn(FeatureFlags, "get").mockReturnValue(true);
+            const remoteLookupForResourceSpy = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockResolvedValue(testEntries.file);
+
+            const fetchUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/usr/test/newfileFetchBD.txt" });
+
+            const cacheResourceSpy = jest.spyOn(UssFSProvider.instance as any, "lookupWithCache");
+            const lookupSpy = jest.spyOn(UssFSProvider.instance, "lookup");
+
+            await UssFSProvider.instance.stat(fetchUri);
+
+            expect(cacheResourceSpy).toHaveBeenCalledWith(fetchUri);
+            expect(lookupSpy).toHaveBeenCalledWith(fetchUri);
+            expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri);
         });
     });
 

@@ -65,13 +65,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             // Check cache for resource
             const localLookup = this.lookup(uri);
-            //TODO: Remove log
-            console.log("isFetching: false");
             if (localLookup) return localLookup;
         } catch {}
         // If resource not found, remote lookup
-        //TODO: Remove log
-        console.log("isFetching: true");
         return this.remoteLookupForResource(uri);
     }
 
@@ -174,13 +170,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         try {
             if (this.requestCache.has(cacheKey)) {
-                // TODO: Remove log
-                console.log(`[RequestCache] Joining in-flight request for: ${cacheKey}`);
                 entry = await this.requestCache.get(cacheKey);
             }
         } catch (error) {
-            // TODO: Remove log
-            console.warn(`[RequestCache] Cached request failed for ${cacheKey}, falling back to fresh request.`, error);
             entry = undefined;
         }
 
@@ -423,13 +415,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         try {
             if (this.requestCache.has(cacheKey)) {
-                // TODO: Remove log
-                console.log(`[RequestCache] Joining in-flight request for: ${cacheKey}`);
                 entries = await this.requestCache.get(cacheKey);
             }
         } catch (error) {
-            // TODO: Remove log
-            console.warn(`[RequestCache] Cached request failed for ${cacheKey}, falling back to fresh request.`, error);
             entries = undefined;
         }
 
@@ -643,13 +631,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         try {
             if (this.requestCache.has(cacheKey)) {
-                // TODO: Remove log
-                console.log(`[RequestCache] Joining in-flight request for: ${cacheKey}`);
                 data = await this.requestCache.get(cacheKey);
             }
         } catch (error) {
-            // TODO: Remove log
-            console.warn(`[RequestCache] Cached request failed for ${cacheKey}, falling back to fresh request.`, error);
             data = undefined;
         }
 
