@@ -5104,8 +5104,8 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
         const blockMocks = createBlockMocks();
-        const dataTransfer = new vscode.DataTransfer();
 
+        const dataTransfer = new vscode.DataTransfer();
         jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
             value: [
                 {
@@ -5127,10 +5127,14 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             .spyOn(SharedUtils as any, "handleDragAndDropOverwrite")
             .mockResolvedValue(true);
 
-        // target must be the PDS (or a PDS child that pivots to the PDS)
+        const crossLparMoveMock = jest
+            .spyOn(DatasetTree.prototype as any, "crossLparMove")
+            .mockResolvedValue(undefined);
+
         await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, new vscode.CancellationTokenSource().token);
 
         expect(overwriteSpy).toHaveBeenCalledWith(blockMocks.datasetPdsNode, (testTree as any).draggedNodes);
+        expect(crossLparMoveMock).toHaveBeenCalled();
 
         // Restore children
         blockMocks.datasetPdsNode.children = originalChildren;
@@ -5200,19 +5204,27 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             [blockMocks.draggedNode.resourceUri.path]: blockMocks.draggedNode,
         });
 
+        // Ensure overwrite prompt doesn't short-circuit
+        jest.spyOn(SharedUtils as any, "handleDragAndDropOverwrite").mockResolvedValue(true);
+
+        // Make sure the drop target is considered a valid top-level container (NOT a PDS)
+        jest.spyOn(SharedContext as any, "isPds").mockImplementation((node: any) => node === blockMocks.datasetPdsNode);
+        jest.spyOn(SharedContext as any, "isDs").mockReturnValue(false);
+        jest.spyOn(SharedContext as any, "isDsMember").mockReturnValue(false);
+
         jest.spyOn(DatasetFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
         jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
         jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementationOnce(() => {
             throw Error("Write file error");
         });
 
-        // Drop onto the top-level session/container node instead.
-        await testTree.handleDrop(blockMocks.datasetSessionNode, dataTransfer, undefined);
+        await testTree.handleDrop(blockMocks.datasetNode, dataTransfer, new vscode.CancellationTokenSource().token);
 
         expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
         draggedNodeMock[Symbol.dispose]();
     });
 });
+
 describe("DatasetTree.handleDrop - blocking behavior", () => {
     let dsTree: DatasetTree;
 
