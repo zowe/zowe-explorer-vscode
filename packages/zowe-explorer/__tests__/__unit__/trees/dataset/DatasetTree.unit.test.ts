@@ -4997,7 +4997,49 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
     afterEach(() => {
         jest.restoreAllMocks();
     });
+    it("pivots target to Parent PDS if item is dropped onto a Member", async () => {
+        createGlobalMocks();
+        const testTree = new DatasetTree();
+        const blockMocks = createBlockMocks();
 
+        // Drop Target is a MEMBER, but its parent is a PDS
+        const targetMember = blockMocks.memberNode;
+        const parentPds = blockMocks.datasetPdsNode;
+
+        jest.spyOn(targetMember, "getParent").mockReturnValue(parentPds);
+
+        // Mock SharedContext to say Target is Member, Parent is PDS
+        jest.spyOn(SharedContext, "isPds").mockImplementation((node) => node === parentPds);
+        jest.spyOn(SharedContext, "isDsMember").mockImplementation((node) => node === targetMember);
+
+        const dataTransfer = new vscode.DataTransfer();
+        jest.spyOn(dataTransfer, "get").mockReturnValue({
+            value: [{
+                label: "draggedSeq",
+                uri: blockMocks.draggedNode.resourceUri
+            }]
+        } as any);
+
+        const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
+            [blockMocks.draggedNode.resourceUri.path]: blockMocks.draggedNode,
+        });
+
+        // Spy on the move logic to see which URI was passed as the destination
+        const crossLparMoveSpy = jest.spyOn(testTree as any, "crossLparMove").mockResolvedValue(undefined);
+
+        // Drop onto the MEMBER
+        await testTree.handleDrop(targetMember, dataTransfer, {} as any);
+
+        // the move should have targeted the PDS URI, not the Member URI
+        const expectedDestPath = path.posix.join("/", parentPds.resourceUri.path, blockMocks.draggedNode.label as string);
+
+        expect(crossLparMoveSpy).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.anything(),
+            expect.objectContaining({ path: expectedDestPath }) // Checks that dest is PDS path
+        );
+        draggedNodeMock[Symbol.dispose]();
+    });
     it("returns early if there are no items in the dataTransfer object", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -5795,5 +5837,30 @@ describe("DatasetTree.crossLparMove", () => {
         expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to move {0}: The target PDS does not exist on the host: {1}"));
         expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
     });
+    it("should show error and return early if source dataset name cannot be determined", async () => {
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
 
+        // Create a node with no label, no getLabel method, and no property label
+        const namelessNode: any = {
+            resourceUri: srcUri,
+            contextValue: "ds",
+            getProfile: () => ({ ...baseIProfileLoaded, profile: {}, name: "TEST_PROFILE" }),
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+            label: undefined,
+            getLabel: undefined
+        };
+
+        jest.spyOn(SharedUtils, "getNodeProperty").mockReturnValue(undefined);
+
+        await tree["crossLparMove"](
+            namelessNode,
+            srcUri,
+            dstUri,
+            false
+        );
+
+        expect(errorMessageSpy).toHaveBeenCalledWith("Failed to determine dataset name from source node.");
+        expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
+        expect(apiMock.createDataSet).not.toHaveBeenCalled();
+    });
 });
