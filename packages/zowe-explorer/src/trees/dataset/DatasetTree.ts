@@ -274,6 +274,12 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 (SharedUtils.getNodeProperty(sourceNode as any, "label") as string) ??
                 "";
 
+            // FIX: Safety check for empty dataset name (Requested by reviewer)
+            if (!dsname) {
+                Gui.errorMessage(vscode.l10n.t("Failed to determine dataset name from source node."));
+                return;
+            }
+
             try {
                 const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
                 if (entry == null) {
@@ -327,7 +333,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public async handleDrop(
         targetNode: IZoweDatasetTreeNode | undefined,
         dataTransfer: vscode.DataTransfer,
-        _token?: vscode.CancellationToken
+        _token: vscode.CancellationToken
     ): Promise<void> {
         const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.ds.explorer");
         if (!droppedItems) return;
@@ -337,7 +343,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         // Pivot ONLY when dropping onto a PDS child (member / placeholder), so the PDS is the real container.
         if (!SharedContext.isPds(target)) {
-            const parent = target.getParent?.();
+            const parent = target.getParent();
             const isMemberLike =
                 SharedContext.isDsMember(target) || target.contextValue === Constants.DS_MEMBER_CONTEXT;
 
@@ -360,8 +366,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
 
             // 1) Same-object check
-            const nodeProfile = node.getProfile?.();
-            const targetProfile = target.getProfile?.();
+            const nodeProfile = node.getProfile();
+            const targetProfile = target.getProfile();
             const nodeParentUri = node.getParent?.()?.resourceUri?.path;
 
             if (nodeProfile && targetProfile && nodeProfile.name === targetProfile.name) {
@@ -407,8 +413,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
 
             // 3b) Members can only be dropped into a PDS.
-            // If the user drops a member onto a child node under a PDS (member OR placeholder),
-            // treat the PDS parent as the real drop target.
             if (SharedContext.isDsMember(node) && !SharedContext.isPds(target)) {
                 const parent = target.getParent?.();
                 if (parent && SharedContext.isPds(parent)) {
@@ -419,9 +423,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             }
 
-
-            // 3c) If the target is a PDS child (member), we should have pivoted already.
-            // But in case something slipped through: block dropping DS/PDS into a PDS-child context.
+            // 3c) Block dropping DS/PDS into a PDS-child context if pivot failed.
             const parent = target.getParent?.();
             if ((SharedContext.isPds(node) || SharedContext.isDs(node)) && parent && SharedContext.isPds(parent)) {
                 const message = SharedContext.isPds(node)

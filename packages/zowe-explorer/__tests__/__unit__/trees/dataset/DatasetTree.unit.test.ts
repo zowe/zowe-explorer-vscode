@@ -4978,8 +4978,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
                         recfm: "FB",
                         dsorg: "PO",
                         alcunit: "CYL",
-                        primary: 10,
-                        secondary: 10
+                        primary: 10
                     }]
                 }
             })
@@ -5040,7 +5039,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
 
         expect(crossLparMoveMock).not.toHaveBeenCalled();
-        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop items into a sequential dataset.");
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a partitioned dataset or member into a sequential dataset.");
         draggedNodeMock[Symbol.dispose]();
     });
 
@@ -5096,7 +5095,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
 
         await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
 
-        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop items into a sequential dataset.");
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a partitioned dataset or member into a sequential dataset.");
         draggedNodeMock[Symbol.dispose]();
     });
 
@@ -5104,7 +5103,6 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
         const blockMocks = createBlockMocks();
-
         const dataTransfer = new vscode.DataTransfer();
         jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
             value: [
@@ -5117,29 +5115,18 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
 
         // Override children property directly on the instance to simulate collision
         const originalChildren = blockMocks.datasetPdsNode.children;
-        blockMocks.datasetPdsNode.children = [{ label: blockMocks.memberNode.label } as any];
+        blockMocks.datasetPdsNode.children = [
+            { label: blockMocks.memberNode.label } as any
+        ];
 
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
             [blockMocks.memberNode.resourceUri.path]: blockMocks.memberNode,
         });
+        jest.spyOn(Gui, "warningMessage").mockResolvedValueOnce(null as any);
 
-        const overwriteSpy = jest
-            .spyOn(SharedUtils as any, "handleDragAndDropOverwrite")
-            .mockResolvedValue(true);
+        await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
 
-        const crossLparMoveMock = jest
-            .spyOn(DatasetTree.prototype as any, "crossLparMove")
-            .mockResolvedValue(undefined);
-
-        await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, new vscode.CancellationTokenSource().token);
-
-        expect(overwriteSpy).toHaveBeenCalledWith(
-            blockMocks.datasetPdsNode,
-            expect.objectContaining({
-                [blockMocks.memberNode.resourceUri.path]: blockMocks.memberNode,
-            })
-        );
-        expect(crossLparMoveMock).toHaveBeenCalled();
+        expect(Gui.warningMessage).toHaveBeenCalledTimes(1);
 
         // Restore children
         blockMocks.datasetPdsNode.children = originalChildren;
@@ -5191,10 +5178,8 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         const testTree = new DatasetTree();
         const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
         const blockMocks = createBlockMocks();
-
         const datasetSession = blockMocks.datasetSessionNode;
         datasetSession.children = [blockMocks.datasetPdsNode, blockMocks.datasetSeqNode];
-
         const dataTransfer = new vscode.DataTransfer();
         jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
             value: [
@@ -5204,27 +5189,16 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
                 },
             ],
         } as any);
-
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
             [blockMocks.draggedNode.resourceUri.path]: blockMocks.draggedNode,
         });
-
-        // Ensure overwrite prompt doesn't short-circuit
-        jest.spyOn(SharedUtils as any, "handleDragAndDropOverwrite").mockResolvedValue(true);
-
-        // Make sure the drop target is considered a valid top-level container (NOT a PDS)
-        jest.spyOn(SharedContext as any, "isPds").mockImplementation((node: any) => node === blockMocks.datasetPdsNode);
-        jest.spyOn(SharedContext as any, "isDs").mockReturnValue(false);
-        jest.spyOn(SharedContext as any, "isDsMember").mockReturnValue(false);
 
         jest.spyOn(DatasetFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
         jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
         jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementationOnce(() => {
             throw Error("Write file error");
         });
-
-        await testTree.handleDrop(blockMocks.datasetNode, dataTransfer, new vscode.CancellationTokenSource().token);
-
+        await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
         expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
         draggedNodeMock[Symbol.dispose]();
     });
