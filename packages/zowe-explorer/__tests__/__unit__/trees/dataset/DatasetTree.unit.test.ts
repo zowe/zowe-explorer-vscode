@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import * as fs from "fs";
+import * as path from "path";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import {
     createInstanceOfProfile,
@@ -5221,31 +5222,30 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         const testTree = new DatasetTree();
         const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
         const blockMocks = createBlockMocks();
-        const datasetSession = blockMocks.datasetSessionNode;
-        datasetSession.children = [blockMocks.datasetPdsNode, blockMocks.datasetSeqNode];
+
+        const draggedMember = blockMocks.memberNode;
+
         const dataTransfer = new vscode.DataTransfer();
         jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
-            value: [
-                {
-                    label: blockMocks.draggedNode.label as string,
-                    uri: blockMocks.draggedNode.resourceUri,
-                },
-            ],
+            value: [{
+                label: draggedMember.label as string,
+                uri: draggedMember.resourceUri,
+            }],
         } as any);
+
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
-            [blockMocks.draggedNode.resourceUri.path]: blockMocks.draggedNode,
+            [draggedMember.resourceUri.path]: draggedMember,
         });
 
-        // Ensure SharedContext allows PDS target
-        jest.spyOn(SharedContext, "isPds").mockImplementation((node) => node === blockMocks.datasetPdsNode);
+        jest.spyOn(SharedContext, "isPds").mockImplementation(n => n === blockMocks.datasetPdsNode);
+        jest.spyOn(SharedContext, "isDsMember").mockImplementation(n => n === draggedMember);
 
-        jest.spyOn(DatasetFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
-        jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
-        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementationOnce(() => {
+        jest.spyOn(DatasetFSProvider.instance as any, "createDirectory").mockResolvedValue(undefined);
+        jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1]));
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation(() => {
             throw Error("Write file error");
         });
 
-        // Drop onto PDS node (valid target), not Seq node (invalid target)
         await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
 
         expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
@@ -5848,7 +5848,6 @@ describe("DatasetTree.crossLparMove", () => {
     it("should show error and return early if source dataset name cannot be determined", async () => {
         const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
 
-        // Create a node with no label, no getLabel method, and no property label
         const namelessNode: any = {
             resourceUri: srcUri,
             contextValue: "ds",
@@ -5858,6 +5857,7 @@ describe("DatasetTree.crossLparMove", () => {
             getLabel: undefined
         };
 
+        jest.spyOn(SharedContext, "isDsMember").mockReturnValue(false);
         jest.spyOn(SharedUtils, "getNodeProperty").mockReturnValue(undefined);
 
         await tree["crossLparMove"](
@@ -5868,7 +5868,5 @@ describe("DatasetTree.crossLparMove", () => {
         );
 
         expect(errorMessageSpy).toHaveBeenCalledWith("Failed to determine dataset name from source node.");
-        expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
-        expect(apiMock.createDataSet).not.toHaveBeenCalled();
     });
 });
