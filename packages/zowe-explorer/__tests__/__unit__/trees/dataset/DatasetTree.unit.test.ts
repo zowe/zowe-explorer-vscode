@@ -5067,9 +5067,9 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             ],
         } as any);
 
+        // Mock isDs to ensure target is seen as sequential
         jest.spyOn(SharedContext, "isDs").mockImplementation((node) => {
             if (node === blockMocks.datasetSeqNode) return true;
-            if (node === blockMocks.datasetPdsNode) return false;
             return false;
         });
 
@@ -5081,7 +5081,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
 
         expect(crossLparMoveMock).not.toHaveBeenCalled();
-        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a partitioned dataset or member into a sequential dataset.");
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop items into a sequential dataset.");
         draggedNodeMock[Symbol.dispose]();
     });
 
@@ -5126,6 +5126,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             ],
         } as any);
 
+        // Mock isDs to ensure target is seen as sequential
         jest.spyOn(SharedContext, "isDs").mockImplementation((node) => {
             if (node === blockMocks.datasetSeqNode) return true;
             return false;
@@ -5137,7 +5138,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
 
         await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
 
-        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop a partitioned dataset or member into a sequential dataset.");
+        expect(Gui.errorMessage).toHaveBeenCalledWith("Cannot drop items into a sequential dataset.");
         draggedNodeMock[Symbol.dispose]();
     });
 
@@ -5235,12 +5236,18 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             [blockMocks.draggedNode.resourceUri.path]: blockMocks.draggedNode,
         });
 
+        // Ensure SharedContext allows PDS target
+        jest.spyOn(SharedContext, "isPds").mockImplementation((node) => node === blockMocks.datasetPdsNode);
+
         jest.spyOn(DatasetFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
         jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
         jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementationOnce(() => {
             throw Error("Write file error");
         });
-        await testTree.handleDrop(blockMocks.datasetSeqNode, dataTransfer, undefined);
+
+        // Drop onto PDS node (valid target), not Seq node (invalid target)
+        await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
+
         expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
         draggedNodeMock[Symbol.dispose]();
     });
@@ -5617,6 +5624,7 @@ describe("DatasetTree.crossLparMove", () => {
         fakeNode = {
             resourceUri: srcUri,
             contextValue: "ds",
+            label: "fakeLabel"
         };
 
         (fakeNode as any).getEncoding = jest.fn().mockResolvedValue({ kind: "text" });
