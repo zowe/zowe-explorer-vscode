@@ -385,7 +385,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         continue; // Skip creating duplicate VSAM entries in filesystem
                     }
                     dsNode = new ZoweDatasetNode({
-                        label: item.dsname,
+                        label: altLabel,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         contextOverride: Constants.VSAM_CONTEXT,
