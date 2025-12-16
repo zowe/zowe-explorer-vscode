@@ -531,14 +531,14 @@ export class USSActions {
             await Gui.errorMessage(vscode.l10n.t("No USS profiles found. Please add a profile first."));
             return;
         }
-        
+
         const quickPick = vscode.window.createQuickPick();
         quickPick.placeholder = vscode.l10n.t("Select a profile");
         quickPick.ignoreFocusOut = true;
         quickPick.items = profileNames.map((name) => ({ label: name }));
-        
+
         let selectedProfile: string | undefined;
-        
+
         const profilePromise = new Promise<string | undefined>((resolve) => {
             quickPick.onDidAccept(() => {
                 const selection = quickPick.activeItems[0];
@@ -550,21 +550,21 @@ export class USSActions {
                 quickPick.hide();
                 resolve(selectedProfile);
             });
-            
+
             quickPick.onDidHide(() => {
                 resolve(undefined);
             });
-            
+
             quickPick.show();
         });
-        
+
         selectedProfile = (await profilePromise)?.trim();
         quickPick.dispose();
-        
+
         if (!selectedProfile || selectedProfile.length === 0) {
-            return; 
+            return;
         }
-        
+
         const ussPath = await Gui.showInputBox({
             prompt: vscode.l10n.t("Enter the USS path to filter on"),
             placeHolder: vscode.l10n.t("/u/username/directory"),
@@ -572,9 +572,9 @@ export class USSActions {
             ignoreFocusOut: true,
             validateInput: (input) => USSActions.validatePath(input),
         });
-        
+
         if (!ussPath) {
-            return; 
+            return;
         }
         try {
             await USSActions.filterUssTree(ussFileProvider, selectedProfile, ussPath.trim());
@@ -592,15 +592,15 @@ export class USSActions {
     }
     private static validatePath(input: string): string | vscode.InputBoxValidationMessage | undefined {
         const trimmedInput = input?.trim();
-        
+
         if (!trimmedInput || trimmedInput.length === 0) {
             return vscode.l10n.t("USS path cannot be empty");
         }
-        
+
         if (!trimmedInput.startsWith("/")) {
             return vscode.l10n.t("USS path must start with /");
         }
-        
+
         return undefined;
     }
 
@@ -624,22 +624,22 @@ export class USSActions {
             }
             sessionNode = ussFileProvider.mSessionNodes.find((ussNode) => ussNode.label.toString() === sessionName.trim()) as IZoweUSSTreeNode;
         }
-        
+
         // Clear any existing children to avoid conflicts with cached entries
         sessionNode.children = [];
-        
+
         let targetPath = ussPath;
         let targetFileName: string | null = null;
-        
+
         try {
             const profile = sessionNode.getProfile();
             const response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
-    
+
             // we get 3 entries for a directory like ., .., and directory itself with mode d
             //For a file there will be single entry
             if (response.success && response.apiResponse?.items?.length === 1) {
                 const item = response.apiResponse.items[0];
-                if (item.mode && !item.mode.startsWith('d')) {
+                if (item.mode && !item.mode.startsWith("d")) {
                     targetFileName = path.posix.basename(ussPath);
                     targetPath = path.posix.dirname(ussPath);
                     ZoweLogger.trace(`Detected file path, filtering to parent directory: ${targetPath}`);
@@ -648,7 +648,7 @@ export class USSActions {
         } catch (err) {
             ZoweLogger.trace(`Could not determine if path is file or directory, treating as directory: ${err}`);
         }
-        
+
         sessionNode.fullPath = targetPath;
         sessionNode.tooltip = targetPath;
         sessionNode.description = targetPath;
@@ -656,14 +656,14 @@ export class USSActions {
             sessionNode.contextValue += `_${Constants.FILTER_SEARCH}`;
         }
         sessionNode.dirty = true;
-        
+
         try {
-            await sessionNode.getChildren(); 
+            await sessionNode.getChildren();
             ussFileProvider.nodeDataChanged(sessionNode);
             await ussFileProvider.getTreeView().reveal(sessionNode, { select: true, focus: true, expand: true });
-            
+
             if (targetFileName) {
-                const fileNode = sessionNode.children.find(child => child.label === targetFileName);
+                const fileNode = sessionNode.children.find((child) => child.label === targetFileName);
                 if (fileNode) {
                     try {
                         await ussFileProvider.getTreeView().reveal(fileNode, { select: true, focus: true });
