@@ -122,11 +122,13 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (!DatasetFSProvider.instance.exists(destUri)) {
                 const sourcePdsName = sourceUri.path.substring(sourceInfo.slashAfterProfilePos + 1);
 
-                const sourceAttrsResp =
-                    await ZoweExplorerApiRegister.getMvsApi(sourceInfo.profile).dataSet(sourcePdsName, {
+                const sourceAttrsResp = await ZoweExplorerApiRegister.getMvsApi(sourceInfo.profile).dataSet(
+                    sourcePdsName,
+                    {
                         attributes: true,
                         responseTimeout: sourceInfo.profile?.profile?.responseTimeout,
-                    });
+                    }
+                );
 
                 const { dsname: _ignored, ...rest } = sourceAttrsResp.apiResponse.items[0];
                 const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
@@ -201,19 +203,17 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 const resp = await destApi.dataSet(pdsName, { attributes: false });
                 pdsExists =
                     resp?.success === true &&
-                    (Array.isArray(resp.apiResponse)
-                        ? resp.apiResponse.length > 0
-                        : resp.apiResponse?.items?.length > 0);
+                    (Array.isArray(resp.apiResponse) ? resp.apiResponse.length > 0 : resp.apiResponse?.items?.length > 0);
             } catch {
                 pdsExists = false;
             }
 
             if (!pdsExists) {
                 const sourcePdsName = sourceUri.path.substring(sourceInfo.slashAfterProfilePos + 1);
-                const sourceAttrsResp =
-                    await ZoweExplorerApiRegister.getMvsApi(sourceInfo.profile).dataSet(sourcePdsName, {
-                        attributes: true,
-                    });
+                const sourceAttrsResp = await ZoweExplorerApiRegister.getMvsApi(sourceInfo.profile).dataSet(
+                    sourcePdsName,
+                    { attributes: true }
+                );
 
                 const { dsname: _ignored, ...rest } = sourceAttrsResp.apiResponse.items[0];
                 const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
@@ -225,16 +225,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
 
                 try {
-                    await destApi.createDataSet(
-                        zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK,
-                        pdsName,
-                        transformedAttrs
-                    );
+                    await destApi.createDataSet(zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK, pdsName, transformedAttrs);
 
                     DatasetFSProvider.instance.createDirectory(
                         destUri.with({ path: destUri.path.substring(0, destUri.path.lastIndexOf("/")) })
                     );
-
                 } catch (err) {
                     const code = err?.errorCode?.toString();
                     if (code === "404" || code === "500") {
@@ -247,7 +242,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         );
                         return;
                     }
-                    return;
+                    throw err;
                 }
             }
 
@@ -266,28 +261,19 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     );
                     return;
                 }
+                throw err;
             }
         } else {
-            dsname =
-                (sourceNode as any).getLabel?.() ??
-                (sourceNode as any).label ??
-                (SharedUtils.getNodeProperty(sourceNode as any, "label") as string) ??
-                "";
-
-            // FIX: Safety check for empty dataset name (Requested by reviewer)
-            if (!dsname) {
-                Gui.errorMessage(vscode.l10n.t("Failed to determine dataset name from source node."));
-                return;
-            }
+            // extracting DSN from URI
+            const destName = destUri.path
+                .substring(destinationInfo.slashAfterProfilePos + 1)
+                .replace(/\//g, ".");
+            dsname = destName;
 
             try {
                 const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
                 if (entry == null) {
-                    await destApi.createDataSet(
-                        zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                        dsname,
-                        {}
-                    );
+                    await destApi.createDataSet(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dsname, {});
                 }
             } catch (err) {
                 const code = err?.errorCode?.toString();
@@ -295,6 +281,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                     return;
                 }
+                throw err;
             }
         }
 
@@ -313,11 +300,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         ? "&encoding=" + encodingInfo.codepage
                         : "");
 
-            await DatasetFSProvider.instance.writeFile(
-                destinationWriteUri.with({ query: queryString }),
-                contents,
-                { create: true, overwrite: true }
-            );
+            await DatasetFSProvider.instance.writeFile(destinationWriteUri.with({ query: queryString }), contents, {
+                create: true,
+                overwrite: true,
+            });
 
             if (!recursiveCall) {
                 await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });

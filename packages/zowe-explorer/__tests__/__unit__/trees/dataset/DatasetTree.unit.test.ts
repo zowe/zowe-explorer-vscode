@@ -5003,44 +5003,47 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         const testTree = new DatasetTree();
         const blockMocks = createBlockMocks();
 
-        // Drop Target is a MEMBER, but its parent is a PDS
         const targetMember = blockMocks.memberNode;
         const parentPds = blockMocks.datasetPdsNode;
 
         jest.spyOn(targetMember, "getParent").mockReturnValue(parentPds);
 
-        // Mock SharedContext to say Target is Member, Parent is PDS
+        // Treat the parent as PDS, and BOTH targetMember + draggedNode as members
         jest.spyOn(SharedContext, "isPds").mockImplementation((node) => node === parentPds);
-        jest.spyOn(SharedContext, "isDsMember").mockImplementation((node) => node === targetMember);
+        jest.spyOn(SharedContext, "isDsMember").mockImplementation((node) =>
+            node === targetMember || node === blockMocks.draggedNode
+        );
+
+        // Make the dragged node look like a member
+        blockMocks.draggedNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        // Important: allow overwrite step to continue
+        jest.spyOn(SharedUtils as any, "handleDragAndDropOverwrite").mockResolvedValue(true);
 
         const dataTransfer = new vscode.DataTransfer();
         jest.spyOn(dataTransfer, "get").mockReturnValue({
-            value: [{
-                label: "draggedSeq",
-                uri: blockMocks.draggedNode.resourceUri
-            }]
+            value: [{ label: "draggedMember", uri: blockMocks.draggedNode.resourceUri }],
         } as any);
 
         const draggedNodeMock = new MockedProperty(testTree, "draggedNodes", undefined, {
             [blockMocks.draggedNode.resourceUri.path]: blockMocks.draggedNode,
         });
 
-        // Spy on the move logic to see which URI was passed as the destination
         const crossLparMoveSpy = jest.spyOn(testTree as any, "crossLparMove").mockResolvedValue(undefined);
 
-        // Drop onto the MEMBER
         await testTree.handleDrop(targetMember, dataTransfer, {} as any);
 
-        // the move should have targeted the PDS URI, not the Member URI
         const expectedDestPath = path.posix.join("/", parentPds.resourceUri.path, blockMocks.draggedNode.label as string);
 
         expect(crossLparMoveSpy).toHaveBeenCalledWith(
             expect.anything(),
             expect.anything(),
-            expect.objectContaining({ path: expectedDestPath }) // Checks that dest is PDS path
+            expect.objectContaining({ path: expectedDestPath })
         );
+
         draggedNodeMock[Symbol.dispose]();
     });
+
     it("returns early if there are no items in the dataTransfer object", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -5240,6 +5243,8 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         jest.spyOn(SharedContext, "isPds").mockImplementation(n => n === blockMocks.datasetPdsNode);
         jest.spyOn(SharedContext, "isDsMember").mockImplementation(n => n === draggedMember);
 
+        jest.spyOn(SharedUtils as any, "handleDragAndDropOverwrite").mockResolvedValue(true);
+
         jest.spyOn(DatasetFSProvider.instance as any, "createDirectory").mockResolvedValue(undefined);
         jest.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1]));
         jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation(() => {
@@ -5251,6 +5256,7 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         expect(statusBarMsgSpy).toHaveBeenCalledWith("$(sync~spin) Moving MVS files...");
         draggedNodeMock[Symbol.dispose]();
     });
+
 });
 
 describe("DatasetTree.handleDrop - blocking behavior", () => {
