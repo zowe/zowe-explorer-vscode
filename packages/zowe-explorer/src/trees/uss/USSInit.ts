@@ -158,6 +158,15 @@ export class USSInit {
             vscode.commands.registerCommand("zowe.uss.copyRelativePath", async (node: IZoweUSSTreeNode) => USSActions.copyRelativePath(node))
         );
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.uss.setUssPath", async (session, ussPath) => {
+                if (session && ussPath) {
+                    await USSActions.filterUssTree(ussFileProvider, session, ussPath);
+                } else {
+                    await USSActions.filterUssTreePrompt(ussFileProvider);
+                }
+            })
+        );
+        context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {
                 await ussFileProvider.onDidChangeConfiguration(e);
             })

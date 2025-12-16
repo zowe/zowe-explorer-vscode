@@ -550,6 +550,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.uss.setUssPath",
+        "title": "%uss.setUssPath%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.uss.filterBy",
         "title": "%uss.filterBy%",
         "category": "Zowe Explorer"

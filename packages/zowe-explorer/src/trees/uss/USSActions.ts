@@ -26,6 +26,8 @@ import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { ProfileManagement } from "../../management/ProfileManagement";
+import { Definitions } from "../../configuration/Definitions";
 
 export class USSActions {
     /**
@@ -528,6 +530,179 @@ export class USSActions {
             await vscode.env.clipboard.writeText(relPath);
         } else {
             await vscode.env.clipboard.writeText(node.fullPath);
+        }
+    }
+
+    /**
+     * Prompts user for profile name and USS path, then filters the tree by that path
+     */
+    public static async filterUssTreePrompt(ussFileProvider: Types.IZoweUSSTreeType): Promise<void> {
+        ZoweLogger.trace("uss.actions.filterUssTreePrompt called.");
+        const profileNames = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.USS);
+
+        if (profileNames.length === 0) {
+            await Gui.errorMessage(vscode.l10n.t("No USS profiles found. Please add a profile first."));
+            return;
+        }
+
+        const quickPick = vscode.window.createQuickPick();
+        quickPick.placeholder = vscode.l10n.t("Select a profile");
+        quickPick.ignoreFocusOut = true;
+        quickPick.items = profileNames.map((name) => ({ label: name }));
+
+        let selectedProfile: string | undefined;
+
+        const profilePromise = new Promise<string | undefined>((resolve) => {
+            quickPick.onDidAccept(() => {
+                const selection = quickPick.activeItems[0];
+                if (selection) {
+                    selectedProfile = selection.label;
+                } else if (quickPick.value) {
+                    selectedProfile = quickPick.value;
+                }
+                quickPick.hide();
+                resolve(selectedProfile);
+            });
+
+            quickPick.onDidHide(() => {
+                resolve(undefined);
+            });
+
+            quickPick.show();
+        });
+
+        selectedProfile = (await profilePromise)?.trim();
+        quickPick.dispose();
+
+        if (!selectedProfile || selectedProfile.length === 0) {
+            return;
+        }
+
+        const ussPath = await Gui.showInputBox({
+            prompt: vscode.l10n.t("Enter the USS path to filter on"),
+            placeHolder: vscode.l10n.t("/u/username/directory"),
+            value: "",
+            ignoreFocusOut: true,
+            validateInput: (input) => USSActions.validatePath(input),
+        });
+
+        if (!ussPath) {
+            return;
+        }
+        try {
+            await USSActions.filterUssTree(ussFileProvider, selectedProfile, ussPath.trim());
+        } catch (e) {
+            if (e instanceof Error) {
+                await Gui.errorMessage(
+                    vscode.l10n.t({
+                        message: "Failed to filter USS tree: {0}",
+                        args: [e.message],
+                        comment: ["Error message"],
+                    })
+                );
+            }
+        }
+    }
+    private static validatePath(input: string): string | vscode.InputBoxValidationMessage | undefined {
+        const trimmedInput = input?.trim();
+
+        if (!trimmedInput || trimmedInput.length === 0) {
+            return vscode.l10n.t("USS path cannot be empty");
+        }
+
+        if (!trimmedInput.startsWith("/")) {
+            return vscode.l10n.t("USS path must start with /");
+        }
+
+        return undefined;
+    }
+
+    /**
+     * Filter the USS tree by the specified path
+     * @param ussFileProvider is a USS tree
+     * @param sessionName is a profile name to use in the USS tree
+     * @param ussPath is a USS path to filter by
+     */
+    public static async filterUssTree(ussFileProvider: Types.IZoweUSSTreeType, sessionName: string, ussPath: string): Promise<void> {
+        ZoweLogger.trace("uss.actions.filterUssTree called.");
+        let sessionNode: IZoweUSSTreeNode | undefined = ussFileProvider.mSessionNodes.find(
+            (ussNode) => ussNode.label.toString() === sessionName.trim()
+        ) as IZoweUSSTreeNode;
+        if (!sessionNode) {
+            try {
+                await ussFileProvider.addSession({ sessionName: sessionName.trim() });
+            } catch (error) {
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Uss, profile: sessionName });
+                return;
+            }
+            sessionNode = ussFileProvider.mSessionNodes.find((ussNode) => ussNode.label.toString() === sessionName.trim()) as IZoweUSSTreeNode;
+        }
+
+        // Clear any existing children to avoid conflicts with cached entries
+        sessionNode.children = [];
+
+        let targetPath = ussPath;
+        let targetFileName: string | null = null;
+
+        try {
+            const profile = sessionNode.getProfile();
+            const response = await ZoweExplorerApiRegister.getUssApi(profile).fileList(ussPath);
+
+            // we get 3 entries for a directory like ., .., and directory itself with mode d
+            //For a file there will be single entry
+            if (response.success && response.apiResponse?.items?.length === 1) {
+                const item = response.apiResponse.items[0];
+                if (item.mode && !item.mode.startsWith("d")) {
+                    targetFileName = path.posix.basename(ussPath);
+                    targetPath = path.posix.dirname(ussPath);
+                    ZoweLogger.trace(`Detected file path, filtering to parent directory: ${targetPath}`);
+                }
+            }
+        } catch (err) {
+            ZoweLogger.trace(`Could not determine if path is file or directory, treating as directory: ${err}`);
+        }
+
+        sessionNode.fullPath = targetPath;
+        sessionNode.tooltip = targetPath;
+        sessionNode.description = targetPath;
+        if (!SharedContext.isFilterFolder(sessionNode)) {
+            sessionNode.contextValue += `_${Constants.FILTER_SEARCH}`;
+        }
+        sessionNode.dirty = true;
+
+        try {
+            await sessionNode.getChildren();
+            ussFileProvider.nodeDataChanged(sessionNode);
+            await ussFileProvider.getTreeView().reveal(sessionNode, { select: true, focus: true, expand: true });
+
+            if (targetFileName) {
+                const fileNode = sessionNode.children.find((child) => child.label === targetFileName);
+                if (fileNode) {
+                    try {
+                        await ussFileProvider.getTreeView().reveal(fileNode, { select: true, focus: true });
+                    } catch (err) {
+                        ZoweLogger.trace(`Could not reveal node: ${err}`);
+                        await Gui.errorMessage(
+                            vscode.l10n.t({
+                                message: "Failed to reveal '{0}': {1}",
+                                args: [targetFileName, err instanceof Error ? err.message : String(err)],
+                                comment: ["Item name", "Error message"],
+                            })
+                        );
+                    }
+                } else {
+                    await Gui.warningMessage(
+                        vscode.l10n.t({
+                            message: "'{0}' not found in directory '{1}'",
+                            args: [targetFileName, targetPath],
+                            comment: ["Item name", "Directory path"],
+                        })
+                    );
+                }
+            }
+        } catch (error) {
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Uss, profile: sessionName });
+            return;
         }
     }
 }

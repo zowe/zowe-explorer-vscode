@@ -384,6 +384,32 @@
       "USS node label"
     ]
   },
+  "No USS profiles found. Please add a profile first.": "No USS profiles found. Please add a profile first.",
+  "Select a profile": "Select a profile",
+  "Enter the USS path to filter on": "Enter the USS path to filter on",
+  "/u/username/directory": "/u/username/directory",
+  "Failed to filter USS tree: {0}/Error message": {
+    "message": "Failed to filter USS tree: {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "USS path cannot be empty": "USS path cannot be empty",
+  "USS path must start with /": "USS path must start with /",
+  "Failed to reveal '{0}': {1}/Item nameError message": {
+    "message": "Failed to reveal '{0}': {1}",
+    "comment": [
+      "Item name",
+      "Error message"
+    ]
+  },
+  "'{0}' not found in directory '{1}'/Item nameDirectory path": {
+    "message": "'{0}' not found in directory '{1}'",
+    "comment": [
+      "Item name",
+      "Directory path"
+    ]
+  },
   "Invalid job owner": "Invalid job owner",
   "Invalid job prefix": "Invalid job prefix",
   "Failed to parse a saved favorite. Attempted to parse: {0}/Plaintext line": {
@@ -843,7 +869,6 @@
   "This action is only supported for session and PDS nodes. Please select a session or PDS node.": "This action is only supported for session and PDS nodes. Please select a session or PDS node.",
   "No profiles available.": "No profiles available.",
   "Select a profile to search for data sets": "Select a profile to search for data sets",
-  "Select a profile": "Select a profile",
   "Enter Data Set Pattern": "Enter Data Set Pattern",
   "e.g., USER.*, PUBLIC.DATA.*, etc.": "e.g., USER.*, PUBLIC.DATA.*, etc.",
   "Enter a dataset pattern to search for": "Enter a dataset pattern to search for",
