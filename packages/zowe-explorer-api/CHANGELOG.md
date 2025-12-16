@@ -18,6 +18,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Fixed an issue where secure credentials and headers were being logged to the Zowe logger and VSCode output channel. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3848)
 - Updated Zowe SDKs to version `8.28.0` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
+- Ensure that the `updateCredentials` function adds the given credentials to the `availableCreds` cache of the `Session` object. [#3940](https://github.com/zowe/zowe-explorer-vscode/pull/3940)
 
 ## `3.3.1`
 

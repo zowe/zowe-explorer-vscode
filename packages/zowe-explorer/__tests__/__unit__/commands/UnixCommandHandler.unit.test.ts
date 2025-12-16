@@ -11,9 +11,9 @@
 
 import * as vscode from "vscode";
 import * as profileLoader from "../../../src/configuration/Profiles";
-import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
+import { SshSession, Shell } from "@zowe/zos-uss-for-zowe-sdk";
 import { createInstanceOfProfile, createIProfile, createValidIProfile } from "../../__mocks__/mockCreators/shared";
-import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, Validation, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { FilterDescriptor, FilterItem } from "../../../src/management/FilterManagement";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
@@ -26,6 +26,15 @@ import { Definitions } from "../../../src/configuration/Definitions";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 
 jest.mock("Session");
+jest.mock("@zowe/zos-uss-for-zowe-sdk", () => {
+    const actual = jest.requireActual("@zowe/zos-uss-for-zowe-sdk");
+    return {
+        ...actual,
+        Shell: {
+            isConnectionValid: jest.fn(),
+        },
+    };
+});
 
 describe("UnixCommand Actions Unit Testing", () => {
     const showErrorMessage = jest.fn();
@@ -208,8 +217,14 @@ describe("UnixCommand Actions Unit Testing", () => {
         }),
     });
 
-    beforeEach(() => {
+    let mockCommandApi;
+    beforeEach(async () => {
         jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+        mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
+        const getCommandApiMock = jest.fn();
+        getCommandApiMock.mockReturnValue(mockCommandApi);
+        mockCommandApi.sshProfileRequired = jest.fn().mockReturnValueOnce(true);
+        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
     });
 
     afterEach(() => {
@@ -229,6 +244,31 @@ describe("UnixCommand Actions Unit Testing", () => {
         return UnixCommandHandler.getInstance();
     };
 
+    it("issueUnixCommand should validate the nodeProfile if a separate ssh profile is not required", async () => {
+        const actions = getUnixActions();
+        mockCommandApi.sshProfileRequired = jest.fn().mockReturnValueOnce(false);
+        jest.spyOn(actions.profileInstance, "checkCurrentProfile").mockResolvedValue({ status: "invalid", name: "fake" } as any);
+        actions.profileInstance.validProfile = Validation.ValidationType.INVALID;
+
+        await actions.issueUnixCommand({ getProfile: () => profileOne } as any);
+
+        expect(actions.profileInstance.checkCurrentProfile).toHaveBeenCalled();
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual("Profile is invalid");
+    });
+
+    it("issueUnixCommand should return early if profilestatus is not active", async () => {
+        const actions = getUnixActions();
+        jest.spyOn(actions.profileInstance, "profileValidationHelper").mockResolvedValue("inactive");
+
+        await actions.issueUnixCommand({ getProfile: () => profileOne } as any);
+
+        expect(showErrorMessage.mock.calls.length).toBe(1);
+        expect(showErrorMessage.mock.calls[0][0]).toEqual(
+            "Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness."
+        );
+    });
+
     it("test the issueUnixCommand function", async () => {
         const mockUssApi = await apiRegisterInstance.getUssApi(profileOne);
         const getUssApiMock = jest.fn();
@@ -237,11 +277,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         jest.spyOn(mockUssApi, "getSession").mockReturnValue(session);
 
         showQuickPick.mockReturnValueOnce("firstProfile");
-
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         showInputBox.mockReturnValueOnce("/u/directorypath");
         showInputBox.mockReturnValueOnce("/d iplinfo1");
@@ -253,8 +288,17 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
         jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo1" as any);
+        jest.spyOn(getUnixActions().profileInstance, "profileValidationHelper").mockResolvedValue("active");
 
-        await getUnixActions().issueUnixCommand();
+        const actions = getUnixActions();
+        const sampleSshSession = { ISshSession: { hostname: "host.com" } };
+        const sampleSshProfile = { profile: { host: "host.com" } };
+        actions.sshSession = sampleSshSession as any;
+        actions.sshProfile = sampleSshProfile as any;
+
+        jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockReturnValue(Promise.resolve(sampleSshProfile as any));
+
+        await actions.issueUnixCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstProfile", "secondProfile"]);
@@ -296,11 +340,6 @@ describe("UnixCommand Actions Unit Testing", () => {
 
         showQuickPick.mockReturnValueOnce("firstProfile");
 
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-
         Object.defineProperty(profInstance, "getDefaultProfile", {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
@@ -334,11 +373,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         showQuickPick.mockReturnValueOnce("firstProfile");
         showInputBox.mockReturnValueOnce("/u/directorypath");
 
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-
         Object.defineProperty(profInstance, "getDefaultProfile", {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
@@ -362,15 +396,10 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueUnixCommand function user escapes the commandbox", async () => {
+    it("tests the issueUnixCommand function user escapes the input box", async () => {
         showQuickPick.mockReturnValueOnce("firstProfile");
         showInputBox.mockReturnValueOnce("/directorypath");
         showInputBox.mockReturnValueOnce(undefined);
-
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         Object.defineProperty(profInstance, "getDefaultProfile", {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
@@ -398,11 +427,6 @@ describe("UnixCommand Actions Unit Testing", () => {
         showInputBox.mockReturnValueOnce("/d iplinfo3");
         withProgress.mockRejectedValueOnce(Error("fake testError"));
 
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-
         Object.defineProperty(profInstance, "getDefaultProfile", {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
@@ -425,7 +449,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError");
     });
 
-    it("If nothing is entered in the inputbox of path", async () => {
+    it("If nothing is entered in the input box of path", async () => {
         Object.defineProperty(profInstance, "getDefaultProfile", {
             value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
@@ -480,11 +504,6 @@ describe("UnixCommand Actions Unit Testing", () => {
             configurable: true,
         });
 
-        const mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
-        getCommandApiMock.mockReturnValue(mockCommandApi);
-        apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
-
         jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
         const actions = getUnixActions();
@@ -538,7 +557,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showErrorMessage.mock.calls[0][0]).toEqual("No SSH profile found. Please create an SSH profile.");
     });
 
-    it("the ssh profile doesnot have user and pw", async () => {
+    it("the ssh profile does not have user and password", async () => {
         fetchSshProfiles = [
             {
                 name: "ssh",
@@ -561,7 +580,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         ((await getUnixActions()) as any).getSshProfile();
     });
 
-    it("the shh profile does not have port or host or both", async () => {
+    it("the ssh profile does not have port or host or both", async () => {
         fetchSshProfiles = [
             {
                 name: "ssh",
@@ -578,7 +597,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showErrorMessage.mock.calls[0][0]).toEqual("SSH profile missing connection details. Please update.");
     });
 
-    it("tests the selectServiceProfile function-1", async () => {
+    it("tests the selectServiceProfile function", async () => {
         await expect(
             getUnixActions().selectServiceProfile([
                 {
@@ -668,5 +687,119 @@ describe("UnixCommand Actions Unit Testing", () => {
         await getUnixActions().selectNodeProfile(Definitions.Trees.USS);
 
         expect(showInformationMessage.mock.calls.length).toBe(0);
+    });
+
+    describe("validateSshConnection (private method)", () => {
+        it("should return 'inactive' when Shell.isConnectionValid returns false", async () => {
+            const actions = getUnixActions();
+            const sampleSshSession = { ISshSession: { hostname: "host.com", privateKey: "someKey" } };
+            const sampleSshProfile = { profile: { host: "host.com" }, type: "ssh" };
+
+            actions.sshSession = sampleSshSession as any;
+            actions.sshProfile = sampleSshProfile as any;
+
+            (Shell.isConnectionValid as jest.Mock).mockResolvedValue(false);
+
+            const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
+
+            expect(result).toBe("inactive");
+            expect(Shell.isConnectionValid).toHaveBeenCalledWith(sampleSshSession);
+        });
+
+        it("should return 'active' when Shell.isConnectionValid returns true", async () => {
+            const actions = getUnixActions();
+            const sampleSshSession = { ISshSession: { hostname: "host.com", privateKey: "someKey" } };
+            const sampleSshProfile = { profile: { host: "host.com" }, type: "ssh" };
+
+            actions.sshSession = sampleSshSession as any;
+            actions.sshProfile = sampleSshProfile as any;
+
+            (Shell.isConnectionValid as jest.Mock).mockResolvedValue(true);
+
+            const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
+
+            expect(result).toBe("active");
+            expect(Shell.isConnectionValid).toHaveBeenCalledWith(sampleSshSession);
+        });
+
+        it("should return 'unverified' when profile type is not ssh", async () => {
+            const actions = getUnixActions();
+            const sampleSshSession = { ISshSession: { hostname: "host.com" } };
+            const sampleProfile = { profile: { host: "host.com" }, type: "zosmf" };
+
+            actions.sshSession = sampleSshSession as any;
+            actions.sshProfile = sampleProfile as any;
+
+            const result = await (actions as any).validateSshConnection(sampleProfile, "zosmf");
+
+            expect(result).toBe("unverified");
+        });
+
+        it("should return 'unverified' when profile host does not match session hostname", async () => {
+            const actions = getUnixActions();
+            const sampleSshSession = { ISshSession: { hostname: "host.com" } };
+            const sampleSshProfile = { profile: { host: "different-host.com" }, type: "ssh" };
+
+            actions.sshSession = sampleSshSession as any;
+            actions.sshProfile = sampleSshProfile as any;
+
+            const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
+
+            expect(result).toBe("unverified");
+        });
+
+        it("should update credentials and return 'active' when privateKey is null and credentials are updated successfully", async () => {
+            const actions = getUnixActions();
+            const sampleSshSession = { ISshSession: { hostname: "host.com", privateKey: null } };
+            const sampleSshProfile = { profile: { host: "host.com", user: "oldUser" }, type: "ssh" };
+            const updatedProfile = { profile: { host: "host.com", user: "newUser", password: "newPassword" } };
+
+            actions.sshSession = sampleSshSession as any;
+            actions.sshProfile = sampleSshProfile as any;
+
+            jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValue(updatedProfile as any);
+            (Shell.isConnectionValid as jest.Mock).mockResolvedValue(true);
+
+            const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
+
+            expect(result).toBe("active");
+            expect(ZoweVsCodeExtension.updateCredentials).toHaveBeenCalled();
+            expect(sampleSshSession.ISshSession.password).toBe("newPassword");
+            expect(sampleSshSession.ISshSession.user).toBe("newUser");
+        });
+
+        it("should return 'unverified' when privateKey is null and updateCredentials returns undefined", async () => {
+            const actions = getUnixActions();
+            const sampleSshSession = { ISshSession: { hostname: "host.com", privateKey: null } };
+            const sampleSshProfile = { profile: { host: "host.com" }, type: "ssh" };
+
+            actions.sshSession = sampleSshSession as any;
+            actions.sshProfile = sampleSshProfile as any;
+
+            jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValue(undefined);
+
+            const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
+
+            expect(result).toBe("unverified");
+            expect(ZoweVsCodeExtension.updateCredentials).toHaveBeenCalled();
+        });
+        it("should return 'active' when user is not set in session and is set in profile", async () => {
+            // This workaround can be removed once the following CLI issue is resolved:
+            // https://github.com/zowe/zowe-cli/issues/2646
+            const actions = getUnixActions();
+            const sampleSshSession: any = { ISshSession: { hostname: "host.com", privateKey: "someKey", tokenType: "someTokenType", tokenValue: "someTokenValue" } };
+            const sampleSshProfile = { profile: { host: "host.com", user: "newUser" }, type: "ssh" };
+
+            actions.sshSession = sampleSshSession as any;
+            actions.sshProfile = sampleSshProfile as any;
+
+            (Shell.isConnectionValid as jest.Mock).mockResolvedValue(true);
+
+            const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
+
+            expect(result).toBe("active");
+            expect(sampleSshSession.ISshSession.user).toBe("newUser");
+            expect(Shell.isConnectionValid).toHaveBeenCalledWith(sampleSshSession);
+        });
     });
 });
