@@ -4511,6 +4511,40 @@ describe("DatasetActions - filterDatasetTreePrompt", () => {
         expect(filterDatasetTreeSpy).toHaveBeenCalledWith(blockMocks.testDatasetTree, "profile1", "HLQ.DATASET");
     });
 
+    it("should validate dataset pattern input", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["profile1"]);
+        jest.spyOn(vscode.window, "createQuickPick").mockReturnValue({
+            placeholder: "",
+            ignoreFocusOut: false,
+            items: [],
+            activeItems: [{ label: "profile1" }],
+            value: "",
+            onDidAccept: jest.fn((callback) => callback()),
+            onDidHide: jest.fn(),
+            show: jest.fn(),
+            hide: jest.fn(),
+            dispose: jest.fn(),
+        } as any);
+
+        let capturedValidateInput: ((input: string) => string | undefined) | undefined;
+        jest.spyOn(Gui, "showInputBox").mockImplementation((options: any) => {
+            capturedValidateInput = options.validateInput;
+            return Promise.resolve("HLQ.DATASET");
+        });
+        jest.spyOn(DatasetActions, "filterDatasetTree").mockResolvedValue();
+
+        await DatasetActions.filterDatasetTreePrompt(blockMocks.testDatasetTree);
+
+        expect(capturedValidateInput).toBeDefined();
+        if (capturedValidateInput) {
+            expect(capturedValidateInput("HLQ.DATASET")).toBeUndefined();
+            expect(capturedValidateInput("")).toBeTruthy();
+            expect(capturedValidateInput("invalid pattern!")).toBeTruthy();
+        }
+    });
+
     it("should return early if no profile is selected", async () => {
         const blockMocks = createBlockMocksShared();
 
@@ -4821,7 +4855,7 @@ describe("DatasetActions - filterDatasetTree", () => {
         });
         jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
 
-        const revealSpy = jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockImplementation((node: any) => {
+        jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockImplementation((node: any) => {
             if (node === memberNode) {
                 throw new Error("Reveal failed");
             }
@@ -4851,6 +4885,23 @@ describe("DatasetActions - filterDatasetTree", () => {
         await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, "profile1", "HLQ.DATASET");
 
         expect(errorHandlingSpy).toHaveBeenCalled();
+    });
+
+    it("should handle errors during getChildren and call errorHandling", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        const sessionNode = blockMocks.datasetSessionNode;
+        blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
+
+        jest.spyOn(sessionNode, "getChildren").mockRejectedValue(new Error("Failed to get children"));
+        const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockResolvedValue(undefined as any);
+
+        await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, sessionNode.label as string, "HLQ.DATASET");
+
+        expect(errorHandlingSpy).toHaveBeenCalledWith(expect.any(Error), {
+            apiType: ZoweExplorerApiType.Mvs,
+            profile: sessionNode.label,
+        });
     });
 
     describe("DatasetActions.validateDatasetPattern", () => {
