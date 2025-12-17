@@ -10,10 +10,10 @@
  */
 
 import { Given, Then, When } from "@cucumber/cucumber";
-import { ContextMenu, TreeItem } from "wdio-vscode-service";
+import { TreeItem } from "wdio-vscode-service";
 import { Key } from "webdriverio";
 import quickPick from "../../../__pageobjects__/QuickPick";
-import { paneDivForTree } from "../../../__common__/shared.wdio";
+import { clickContextMenuItem, paneDivForTree } from "../../../__common__/shared.wdio";
 
 const testInfo = {
     profileName: process.env.ZE_TEST_PROFILE_NAME,
@@ -27,11 +27,7 @@ const testInfo = {
 When('the user right-clicks on the dataset profile and selects "Show as Table"', async function () {
     this.workbench = await browser.getWorkbench();
 
-    const ctxMenu: ContextMenu = await this.profileNode.openContextMenu();
-    await ctxMenu.wait();
-
-    const showAsTableItem = await ctxMenu.getItem("Show as Table");
-    await (await showAsTableItem.elem).click();
+    await clickContextMenuItem(this.profileNode, "Show as Table");
     await browser.pause(1000); // Wait for table to load
 });
 
@@ -42,11 +38,7 @@ When('the user right-clicks on a PDS and selects "Show as Table"', async functio
     this.pdsNode = await this.profileNode.findChildItem(testInfo.pds);
     await expect(this.pdsNode).toBeDefined();
 
-    const ctxMenu: ContextMenu = await this.pdsNode.openContextMenu();
-    await ctxMenu.wait();
-
-    const showAsTableItem = await ctxMenu.getItem("Show as Table");
-    await (await showAsTableItem.elem).click();
+    await clickContextMenuItem(this.pdsNode, "Show as Table");
 });
 
 Then("the dataset table view appears in the Zowe Resources panel", async function () {

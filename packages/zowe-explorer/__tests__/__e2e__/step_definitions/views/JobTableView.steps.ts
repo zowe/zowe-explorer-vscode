@@ -10,16 +10,12 @@
  */
 
 import { Given, Then, When } from "@cucumber/cucumber";
-import { ContextMenu } from "wdio-vscode-service";
+import { clickContextMenuItem } from "../../../__common__/shared.wdio";
 
 When('the user right-clicks on the jobs profile and selects "Show as Table"', async function () {
     this.workbench = await browser.getWorkbench();
 
-    const ctxMenu: ContextMenu = await this.profileNode.openContextMenu();
-    await ctxMenu.wait();
-
-    const showAsTableItem = await ctxMenu.getItem("Show as Table");
-    await (await showAsTableItem.elem).click();
+    await clickContextMenuItem(this.profileNode, "Show as Table");
 });
 
 Then("the table view appears in the Zowe Resources panel", async function () {
