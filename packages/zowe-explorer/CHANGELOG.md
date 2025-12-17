@@ -33,6 +33,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed issue where the Show Attributes view displayed "Open virtualization format" under data set attributes instead of "Space overflow" for the `ovf` attribute key. [#3985](https://github.com/zowe/zowe-explorer-vscode/issues/3985)
 - Fixed release notes displaying when Zowe Explorer is installed for the first time. [#3966](https://github.com/zowe/zowe-explorer-vscode/pull/3966)
 - Fixed release notes displaying when the Zowe Explorer version is downgraded. [#3966](https://github.com/zowe/zowe-explorer-vscode/pull/3966)
+- Fixed issue where favorited items caused a failure during initialization, specifically when the favorited item belongs to a profile type that's no longer registered or accessible. [#3962](https://github.com/zowe/zowe-explorer-vscode/pull/3962)
+- Fixed issue where the filesystem throws a vague `Unknown` FileSystemError if an API cannot be loaded for the given profile type. Now, if the API is inaccessible for the given profile type, an `Unavailable` error is thrown from the filesystem with more context. [#3962](https://github.com/zowe/zowe-explorer-vscode/pull/3962)
 
 ## `3.3.1`
 
