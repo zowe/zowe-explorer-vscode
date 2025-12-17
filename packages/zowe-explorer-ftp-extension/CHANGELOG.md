@@ -5,7 +5,6 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 ### New features and enhancements
 
 - Updated minimum VS Code version from 1.79 to 1.90. We are dropping support for VS Code releases that bundle versions of Node.js no longer receiving security updates. [#3684](https://github.com/zowe/zowe-explorer-vscode/issues/3684)
-- Added unimplemented functions for `downloadDirectory` and `downloadAllMembers`, that may be implemented in the future. [#3843](https://github.com/zowe/zowe-explorer-vscode/pull/3843)
 
 ### Bug fixes
 

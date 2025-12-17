@@ -131,7 +131,7 @@ export namespace MainframeInteraction {
          * @param {zosfiles.IUSSListOptions} listOptions Options for listing files in USS
          * @returns {Promise<zosfiles.IZosFilesResponse>}
          */
-        downloadDirectory(
+        downloadDirectory?(
             ussDirectoryPath: string,
             fileOptions?: zosfiles.IDownloadOptions,
             listOptions?: zosfiles.IUSSListOptions
@@ -257,7 +257,7 @@ export namespace MainframeInteraction {
          * @param {zosfiles.IDownloadOptions} [options]
          * @returns {Promise<zosfiles.IZosFilesResponse>}
          */
-        downloadAllMembers(dataSetName: string, options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse>;
+        downloadAllMembers?(dataSetName: string, options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse>;
 
         /**
          * Uploads a given buffer as the contents of a file to a data set or member.

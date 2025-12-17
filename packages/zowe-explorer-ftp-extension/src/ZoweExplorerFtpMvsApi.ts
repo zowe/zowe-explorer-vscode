@@ -371,10 +371,6 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
         }
     }
 
-    public downloadAllMembers(_dataSetName: string, _options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
-        throw new ZoweFtpExtensionError("Download all members is not supported in ftp extension.");
-    }
-
     public hMigrateDataSet(_dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
         throw new ZoweFtpExtensionError("Migrate dataset is not supported in ftp extension.");
     }

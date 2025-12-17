@@ -372,12 +372,6 @@ describe("FtpMvsApi", () => {
         }).rejects.toThrow(ZoweFtpExtensionError);
     });
 
-    it("should throw an error when downloadAllMembers is called", async () => {
-        await expect(async () => {
-            await MvsApi.downloadAllMembers("test", null);
-        }).rejects.toThrow(ZoweFtpExtensionError);
-    });
-
     it("should throw an error when hMigrateDataSet is called", async () => {
         await expect(async () => {
             await MvsApi.hMigrateDataSet("test");

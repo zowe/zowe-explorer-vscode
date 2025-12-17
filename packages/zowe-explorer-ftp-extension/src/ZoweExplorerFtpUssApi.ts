@@ -102,23 +102,6 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
     }
 
     /**
-     * Download a USS directory to the local file system.
-     * Currently not supported by FTP extension.
-     *
-     * @param ussDirectoryPath The path of the USS directory to download
-     * @param fileOptions Download options including local directory path
-     * @param listOptions Options for listing files in USS
-     * @returns A file response with the results of the download operation.
-     */
-    public downloadDirectory(
-        _ussDirectoryPath: string,
-        _fileOptions?: zosfiles.IDownloadOptions,
-        _listOptions?: zosfiles.IUSSListOptions
-    ): Promise<zosfiles.IZosFilesResponse> {
-        throw new ZoweFtpExtensionError("Download directory operation is not supported in FTP extension.");
-    }
-
-    /**
      * Uploads a USS file from the given buffer.
      * @param buffer The buffer containing the contents of the USS file
      * @param filePath The path for the USS file
