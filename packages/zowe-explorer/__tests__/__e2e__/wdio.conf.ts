@@ -183,6 +183,8 @@ export const config: Options.Testrunner = {
         timeout: 60000,
         // <boolean> Enable this config to treat undefined definitions as warnings.
         ignoreUndefinedDefinitions: false,
+        // <boolean> Treat ambiguous definitions as errors.
+        failAmbiguousDefinitions: true,
     },
 
     //

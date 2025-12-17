@@ -294,41 +294,6 @@ Given("a user who has the dataset table view opened with many datasets", async f
     await this.tableView.close();
 });
 
-// Column selector functionality
-When("the user clicks on the Gear icon in the table view", async function () {
-    // Clear all notifications to avoid overlapping elements
-    await browser.executeWorkbench((vscode) => vscode.commands.executeCommand("notifications.clearAll"));
-
-    // Shift Selenium focus into webview
-    await this.tableView.open();
-    const colsBtn = await browser.$("#colsToggleBtn");
-    await colsBtn.waitForClickable();
-    await colsBtn.click();
-});
-
-Then("the column selector menu appears", async function () {
-    this.colSelectorMenu = await browser.$(".szh-menu.szh-menu--state-open.toggle-cols-menu");
-    await this.colSelectorMenu.waitForExist();
-});
-
-Then("the user can toggle a column on and off", async function () {
-    const columnInMenu = await this.colSelectorMenu.$("div > li:nth-child(2)");
-    await columnInMenu.waitForClickable();
-
-    const checkedIcon = await columnInMenu.$("div > span > .codicon-check");
-    await checkedIcon.waitForExist();
-
-    // First click toggles it off
-    await columnInMenu.click();
-    await checkedIcon.waitForExist({ reverse: true });
-
-    // Second click will toggle it back on
-    await columnInMenu.click();
-    await checkedIcon.waitForExist();
-
-    await this.tableView.close();
-});
-
 // Row actions functionality
 When("the user selects one or more sequential datasets", async function () {
     // Find and select PS datasets

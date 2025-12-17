@@ -32,34 +32,3 @@ Given("a user who has the jobs table view opened", async function () {
     this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
     await this.tableView.wait();
 });
-
-When("the user clicks on the Gear icon in the table view", async function () {
-    // clear all notifications to avoid overlapping elements
-    await browser.executeWorkbench((vscode) => vscode.commands.executeCommand("notifications.clearAll"));
-
-    // shift Selenium focus into webview
-    await this.tableView.open();
-    const colsBtn = await browser.$("#colsToggleBtn");
-    await colsBtn.waitForClickable();
-    await colsBtn.click();
-});
-
-Then("the column selector menu appears", async function () {
-    this.colSelectorMenu = await browser.$(".szh-menu.szh-menu--state-open.toggle-cols-menu");
-    this.colSelectorMenu.waitForExist();
-});
-
-Then("the user can toggle a column on and off", async function () {
-    const columnInMenu = await this.colSelectorMenu.$("div > li:nth-child(2)");
-    await columnInMenu.waitForClickable();
-
-    const checkedIcon = await columnInMenu.$("div > span > .codicon-check");
-    await checkedIcon.waitForExist();
-    // First click toggles it off
-    await columnInMenu.click();
-    await checkedIcon.waitForExist({ reverse: true });
-    // Second click will toggle it back on
-    await columnInMenu.click();
-    await checkedIcon.waitForExist();
-    await this.tableView.close();
-});
