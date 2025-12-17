@@ -17,6 +17,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, refer to the ["Troubleshooting Zowe CLI credentials"](https://docs.zowe.org/stable/troubleshoot/cli/troubleshoot-cli-credentials/#secrets-sdk-persistence-level-for-windows) page on Zowe Docs. [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
 - Updated minimum VS Code version from 1.79 to 1.90. We are dropping support for VS Code releases that bundle versions of Node.js no longer receiving security updates. [#3684](https://github.com/zowe/zowe-explorer-vscode/issues/3684)
 - Added a new `Poll For Job Completion` button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting `Zowe > Jobs: Poll Interval`. [#3967](https://github.com/zowe/zowe-explorer-vscode/pull/3967)
+- Expose commands to drive search in the USS and Data Sets views. [#3933](https://github.com/zowe/zowe-explorer-vscode/issues/3933)
 
 ### Bug fixes
 
@@ -50,9 +51,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where opening a USS file would show empty contents when an error occurred while fetching the file from the mainframe, instead of displaying an error message. [#3894](https://github.com/zowe/zowe-explorer-vscode/issues/3894)
 - Fixed an issue where the Delete action in the Data Sets tree could delete a PDS member previously selected in the tree rather than the one that was right-clicked. [#3883](https://github.com/zowe/zowe-explorer-vscode/issues/3883)
 - Fixed an issue where switching to a custom credential manager did not update the `imperative.json` file. [#3705](https://github.com/zowe/zowe-explorer-vscode/issues/3705)
+- Updated Zowe SDKs to version `8.28.0` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
 - Fixed an issue where user attempts to perform a search on an individual PDS from the Zowe-Explorer extension using the "Search PDS members" action and query a search string, it brings out additional dataset as a part of the result.[#3682](https://github.com/zowe/zowe-explorer-vscode/issues/3682)
 - Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. [#3923](https://github.com/zowe/zowe-explorer-vscode/pull/3923)
-- Updated Zowe SDKs to version `8.27.3` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3896](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
+- Updated `js-yaml` dependency for technical currency. [#3937](https://github.com/zowe/zowe-explorer-vscode/pull/3937)
+- Removed a misleading password prompt when issuing Unix commands. [#3940](https://github.com/zowe/zowe-explorer-vscode/pull/3940)
 
 ## `3.3.0`
 
