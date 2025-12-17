@@ -4585,6 +4585,31 @@ describe("DatasetActions - filterDatasetTreePrompt", () => {
 
         expect(errorMessageSpy).toHaveBeenCalledWith("Failed to filter dataset tree: Test error");
     });
+
+    it("should use quickPick.value when selection is undefined", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["profile1"]);
+        jest.spyOn(vscode.window, "createQuickPick").mockReturnValue({
+            placeholder: "",
+            ignoreFocusOut: false,
+            items: [],
+            activeItems: [],
+            value: "profile1",
+            onDidAccept: jest.fn((callback) => callback()),
+            onDidHide: jest.fn(),
+            show: jest.fn(),
+            hide: jest.fn(),
+            dispose: jest.fn(),
+        } as any);
+
+        jest.spyOn(Gui, "showInputBox").mockResolvedValue("HLQ.DATASET");
+        const filterDatasetTreeSpy = jest.spyOn(DatasetActions, "filterDatasetTree").mockResolvedValue();
+
+        await DatasetActions.filterDatasetTreePrompt(blockMocks.testDatasetTree);
+
+        expect(filterDatasetTreeSpy).toHaveBeenCalledWith(blockMocks.testDatasetTree, "profile1", "HLQ.DATASET");
+    });
 });
 
 describe("DatasetActions - filterDatasetTree", () => {
@@ -4680,7 +4705,7 @@ describe("DatasetActions - filterDatasetTree", () => {
         expect(sessionNode.pattern).toBe("HLQ.DATASET");
         const memberRevealCall = revealSpy.mock.calls.find((call) => call[0] === memberNode);
         expect(memberRevealCall).toBeDefined();
-        expect(memberRevealCall![1]).toMatchObject({ select: true, focus: true });
+        expect(memberRevealCall[1]).toMatchObject({ select: true, focus: true });
     });
 
     it("should show warning if member not found", async () => {
@@ -4736,8 +4761,6 @@ describe("DatasetActions - filterDatasetTree", () => {
         });
         otherPdsNode.contextValue = "pds";
 
-        // Mock getChildren to populate sessionNode.children with ONLY the other PDS (not the one we're looking for)
-        // The pattern is HLQ.NOTFOUND but we only return HLQ.OTHERPDS, so it should not find a match
         jest.spyOn(sessionNode, "getChildren").mockImplementation(async () => {
             sessionNode.children = [otherPdsNode];
             return [otherPdsNode];
@@ -4750,6 +4773,72 @@ describe("DatasetActions - filterDatasetTree", () => {
 
         expect(warningMessageSpy).toHaveBeenCalled();
         expect(warningMessageSpy.mock.calls[0][0]).toContain("HLQ.NOTFOUND");
+    });
+
+    it("should show error message if session node not found after addSession", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        blockMocks.testDatasetTree.mSessionNodes = [];
+
+        jest.spyOn(blockMocks.testDatasetTree, "addSession").mockResolvedValue(undefined as any);
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+
+        await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, "profile1", "HLQ.DATASET");
+
+        expect(errorMessageSpy).toHaveBeenCalledWith("Failed to find or create session node");
+    });
+
+    it("should show warning message when reveal fails for member node", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        const sessionNode = blockMocks.datasetSessionNode;
+        blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
+
+        const pdsNode = new ZoweDatasetNode({
+            label: "HLQ.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
+        pdsNode.contextValue = "pds";
+
+        const memberNode = new ZoweDatasetNode({
+            label: "MEMBER",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: pdsNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
+        memberNode.contextValue = "member";
+
+        jest.spyOn(sessionNode, "getChildren").mockImplementation(async () => {
+            sessionNode.children = [pdsNode];
+            return [pdsNode];
+        });
+        jest.spyOn(pdsNode, "getChildren").mockImplementation(async () => {
+            pdsNode.children = [memberNode];
+            return [memberNode];
+        });
+        jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
+
+        const revealSpy = jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockImplementation((node: any) => {
+            if (node === memberNode) {
+                throw new Error("Reveal failed");
+            }
+            return Promise.resolve(undefined as any);
+        });
+
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
+        const warningMessageSpy = jest.spyOn(Gui, "warningMessage");
+        const traceLogSpy = jest.spyOn(ZoweLogger, "trace");
+
+        await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, sessionNode.label as string, "HLQ.DATASET(MEMBER)");
+
+        expect(traceLogSpy).toHaveBeenCalledWith(expect.stringContaining("Could not reveal member node"));
+        expect(warningMessageSpy).toHaveBeenCalled();
+        const warningCall = warningMessageSpy.mock.calls[0][0];
+        expect(warningCall).toContain("HLQ.DATASET");
+        expect(warningCall).toContain("MEMBER");
     });
 
     it("should handle authentication errors", async () => {
