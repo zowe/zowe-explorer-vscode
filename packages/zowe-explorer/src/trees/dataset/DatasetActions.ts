@@ -1254,10 +1254,11 @@ export class DatasetActions {
                         comment: ["Job ID", "Profile name"],
                     })
                 );
-                const selection = await Gui.showMessage(message, { items: [notifyButton] });
-                if (selection === notifyButton) {
-                    DatasetActions.pollSubmittedJob(sessProfile, sessProfileName, job.jobid, job.jobname);
-                }
+                Gui.showMessage(message, { items: [notifyButton] }).then((selection) => {
+                    if (selection === notifyButton) {
+                        DatasetActions.pollSubmittedJob(sessProfile, sessProfileName, job.jobid, job.jobname);
+                    }
+                });
             } catch (error) {
                 if (error instanceof Error) {
                     await AuthUtils.errorHandling(error, {
@@ -1496,10 +1497,11 @@ export class DatasetActions {
                         comment: ["Job ID", "Session name"],
                     })
                 );
-                const selection = await Gui.showMessage(message, { items: [notifyButton] });
-                if (selection === notifyButton) {
-                    DatasetActions.pollSubmittedJob(sessProfile, sesName, job.jobid, job.jobname);
-                }
+                Gui.showMessage(message, { items: [notifyButton] }).then((selection) => {
+                    if (selection === notifyButton) {
+                        DatasetActions.pollSubmittedJob(sessProfile, sesName, job.jobid, job.jobname);
+                    }
+                });
             } catch (error) {
                 if (error instanceof Error) {
                     await AuthUtils.errorHandling(error, {
