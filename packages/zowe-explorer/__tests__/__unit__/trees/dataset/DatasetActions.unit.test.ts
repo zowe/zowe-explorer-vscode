@@ -38,6 +38,7 @@ import { FilterDescriptor } from "../../../../src/management/FilterManagement";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { mocked, MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
@@ -4464,5 +4465,578 @@ describe("Dataset Actions Unit Tests - upload with encoding", () => {
         expect(uploadFileWithEncodingSpy).not.toHaveBeenCalled();
         expect(withProgressMock).toHaveBeenCalled();
         getTreeViewMock.mockRestore();
+    });
+});
+
+describe("DatasetActions - filterDatasetTreePrompt", () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    it("should show error message when no profiles are found", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue([]);
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+
+        await DatasetActions.filterDatasetTreePrompt(blockMocks.testDatasetTree);
+
+        expect(errorMessageSpy).toHaveBeenCalledWith("No dataset profiles found. Please add a profile first.");
+    });
+
+    it("should prompt for profile and dataset pattern", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["profile1", "profile2"]);
+        const createQuickPickSpy = jest.spyOn(vscode.window, "createQuickPick").mockReturnValue({
+            placeholder: "",
+            ignoreFocusOut: false,
+            items: [],
+            activeItems: [{ label: "profile1" }],
+            value: "",
+            onDidAccept: jest.fn((callback) => callback()),
+            onDidHide: jest.fn(),
+            show: jest.fn(),
+            hide: jest.fn(),
+            dispose: jest.fn(),
+        } as any);
+
+        const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValue("HLQ.DATASET");
+        const filterDatasetTreeSpy = jest.spyOn(DatasetActions, "filterDatasetTree").mockResolvedValue();
+
+        await DatasetActions.filterDatasetTreePrompt(blockMocks.testDatasetTree);
+
+        expect(createQuickPickSpy).toHaveBeenCalled();
+        expect(showInputBoxSpy).toHaveBeenCalled();
+        expect(filterDatasetTreeSpy).toHaveBeenCalledWith(blockMocks.testDatasetTree, "profile1", "HLQ.DATASET");
+    });
+
+    it("should return early if no profile is selected", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["profile1"]);
+        jest.spyOn(vscode.window, "createQuickPick").mockReturnValue({
+            placeholder: "",
+            ignoreFocusOut: false,
+            items: [],
+            activeItems: [],
+            value: "",
+            onDidAccept: jest.fn(),
+            onDidHide: jest.fn((callback) => callback()),
+            show: jest.fn(),
+            hide: jest.fn(),
+            dispose: jest.fn(),
+        } as any);
+
+        const showInputBoxSpy = jest.spyOn(Gui, "showInputBox");
+
+        await DatasetActions.filterDatasetTreePrompt(blockMocks.testDatasetTree);
+
+        expect(showInputBoxSpy).not.toHaveBeenCalled();
+    });
+
+    it("should return early if no dataset pattern is entered", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["profile1"]);
+        jest.spyOn(vscode.window, "createQuickPick").mockReturnValue({
+            placeholder: "",
+            ignoreFocusOut: false,
+            items: [],
+            activeItems: [{ label: "profile1" }],
+            value: "",
+            onDidAccept: jest.fn((callback) => callback()),
+            onDidHide: jest.fn(),
+            show: jest.fn(),
+            hide: jest.fn(),
+            dispose: jest.fn(),
+        } as any);
+
+        jest.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
+        const filterDatasetTreeSpy = jest.spyOn(DatasetActions, "filterDatasetTree");
+
+        await DatasetActions.filterDatasetTreePrompt(blockMocks.testDatasetTree);
+
+        expect(filterDatasetTreeSpy).not.toHaveBeenCalled();
+    });
+
+    it("should show error message if filterDatasetTree fails", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["profile1"]);
+        jest.spyOn(vscode.window, "createQuickPick").mockReturnValue({
+            placeholder: "",
+            ignoreFocusOut: false,
+            items: [],
+            activeItems: [{ label: "profile1" }],
+            value: "",
+            onDidAccept: jest.fn((callback) => callback()),
+            onDidHide: jest.fn(),
+            show: jest.fn(),
+            hide: jest.fn(),
+            dispose: jest.fn(),
+        } as any);
+
+        jest.spyOn(Gui, "showInputBox").mockResolvedValue("HLQ.DATASET");
+        jest.spyOn(DatasetActions, "filterDatasetTree").mockRejectedValue(new Error("Test error"));
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+
+        await DatasetActions.filterDatasetTreePrompt(blockMocks.testDatasetTree);
+
+        expect(errorMessageSpy).toHaveBeenCalledWith("Failed to filter dataset tree: Test error");
+    });
+});
+
+describe("DatasetActions - filterDatasetTree", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    it("should filter dataset tree by pattern", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        const sessionNode = blockMocks.datasetSessionNode;
+        sessionNode.children = [];
+        blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
+
+        const getChildrenSpy = jest.spyOn(sessionNode, "getChildren").mockResolvedValue([]);
+        const nodeDataChangedSpy = jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
+        const revealSpy = jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
+
+        await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, sessionNode.label as string, "HLQ.DATASET");
+
+        expect(sessionNode.pattern).toBe("HLQ.DATASET");
+        expect(sessionNode.tooltip).toBe("HLQ.DATASET");
+        expect(sessionNode.description).toBe("HLQ.DATASET");
+        expect(getChildrenSpy).toHaveBeenCalled();
+        expect(nodeDataChangedSpy).toHaveBeenCalledWith(sessionNode);
+        expect(revealSpy).toHaveBeenCalledWith(sessionNode, { select: true, focus: true, expand: true });
+    });
+
+    it("should create session if it doesn't exist", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        blockMocks.testDatasetTree.mSessionNodes = [];
+
+        const newSessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        newSessionNode.label = "newProfile";
+        newSessionNode.children = [];
+
+        const addSessionSpy = jest.spyOn(blockMocks.testDatasetTree, "addSession").mockImplementation(async () => {
+            blockMocks.testDatasetTree.mSessionNodes.push(newSessionNode);
+            return undefined as any;
+        });
+
+        jest.spyOn(newSessionNode, "getChildren").mockResolvedValue([]);
+        jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
+        jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
+
+        await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, "newProfile", "HLQ.DATASET");
+
+        expect(addSessionSpy).toHaveBeenCalledWith({ sessionName: "newProfile" });
+    });
+
+    it("should handle member notation and highlight member", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        const sessionNode = blockMocks.datasetSessionNode;
+        blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
+
+        const pdsNode = new ZoweDatasetNode({
+            label: "HLQ.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
+        pdsNode.contextValue = "pds";
+
+        const memberNode = new ZoweDatasetNode({
+            label: "MEMBER",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: pdsNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
+        memberNode.contextValue = "member";
+
+        jest.spyOn(sessionNode, "getChildren").mockImplementation(async () => {
+            sessionNode.children = [pdsNode];
+            return [pdsNode];
+        });
+        jest.spyOn(pdsNode, "getChildren").mockImplementation(async () => {
+            pdsNode.children = [memberNode];
+            return [memberNode];
+        });
+        jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
+        const revealSpy = jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
+
+        await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, sessionNode.label as string, "HLQ.DATASET(MEMBER)");
+
+        expect(sessionNode.pattern).toBe("HLQ.DATASET");
+        const memberRevealCall = revealSpy.mock.calls.find((call) => call[0] === memberNode);
+        expect(memberRevealCall).toBeDefined();
+        expect(memberRevealCall![1]).toMatchObject({ select: true, focus: true });
+    });
+
+    it("should show warning if member not found", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        const sessionNode = blockMocks.datasetSessionNode;
+        sessionNode.children = [];
+        sessionNode.dirty = true;
+        blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
+
+        const pdsNode = new ZoweDatasetNode({
+            label: "HLQ.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
+        pdsNode.contextValue = "pds";
+        pdsNode.children = [];
+
+        jest.spyOn(sessionNode, "getChildren").mockImplementation(async () => {
+            sessionNode.children = [pdsNode];
+            return [pdsNode];
+        });
+        jest.spyOn(pdsNode, "getChildren").mockImplementation(async () => {
+            pdsNode.children = [];
+            return [];
+        });
+        jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
+        jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
+        jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
+        const warningMessageSpy = jest.spyOn(Gui, "warningMessage");
+
+        await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, sessionNode.label as string, "HLQ.DATASET(NOTFOUND)");
+
+        expect(warningMessageSpy).toHaveBeenCalled();
+        expect(warningMessageSpy.mock.calls[0][0]).toContain("NOTFOUND");
+        expect(warningMessageSpy.mock.calls[0][0]).toContain("HLQ.DATASET");
+    });
+
+    it("should show warning if PDS not found for member notation", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        const sessionNode = blockMocks.datasetSessionNode;
+        sessionNode.children = [];
+        sessionNode.dirty = true;
+        blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
+
+        const otherPdsNode = new ZoweDatasetNode({
+            label: "HLQ.OTHERPDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
+        otherPdsNode.contextValue = "pds";
+
+        // Mock getChildren to populate sessionNode.children with ONLY the other PDS (not the one we're looking for)
+        // The pattern is HLQ.NOTFOUND but we only return HLQ.OTHERPDS, so it should not find a match
+        jest.spyOn(sessionNode, "getChildren").mockImplementation(async () => {
+            sessionNode.children = [otherPdsNode];
+            return [otherPdsNode];
+        });
+        jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
+        jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
+        const warningMessageSpy = jest.spyOn(Gui, "warningMessage");
+
+        await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, sessionNode.label as string, "HLQ.NOTFOUND(MEMBER)");
+
+        expect(warningMessageSpy).toHaveBeenCalled();
+        expect(warningMessageSpy.mock.calls[0][0]).toContain("HLQ.NOTFOUND");
+    });
+
+    it("should handle authentication errors", async () => {
+        const blockMocks = createBlockMocksShared();
+
+        blockMocks.testDatasetTree.mSessionNodes = [];
+        jest.spyOn(blockMocks.testDatasetTree, "addSession").mockRejectedValue(new Error("Auth error"));
+        const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockResolvedValue(undefined as any);
+
+        await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, "profile1", "HLQ.DATASET");
+
+        expect(errorHandlingSpy).toHaveBeenCalled();
+    });
+
+    describe("DatasetActions.validateDatasetPattern", () => {
+        const EMPTY_PATTERN_ERROR = "Dataset pattern cannot be empty";
+        const INVALID_PATTERN_ERROR = "Invalid dataset pattern. Use alphanumeric characters, $, #, @, *, %, ., -, and () for members";
+
+        it("should return undefined for valid simple dataset pattern", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATASET");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with multiple qualifiers", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.MID.DATASET");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with member notation", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATASET(MEMBER)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with wildcard asterisk", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.*");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with multiple wildcards", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.*.DATASET.*");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with percent wildcard", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.%DATASET");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with dollar sign", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.$DATASET");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with hash sign", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.#DATASET");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with at sign", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.@DATASET");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with hyphen", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATA-SET");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with all special characters", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("$#@%*.DATA-SET(MEMBER)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern starting with number", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("1HLQ.DATASET");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with uppercase letters", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("UPPERCASE.DATASET");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with lowercase letters", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("lowercase.dataset");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with mixed case", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("MixedCase.DataSet");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid dataset pattern with member containing special chars", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATASET($MEMBER)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for valid single qualifier dataset", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("DATASET");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return error message for empty string", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("");
+            expect(result).toBe(EMPTY_PATTERN_ERROR);
+        });
+
+        it("should return error message for whitespace only string", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("   ");
+            expect(result).toBe(EMPTY_PATTERN_ERROR);
+        });
+
+        it("should return error message for null input", () => {
+            const result = (DatasetActions as any).validateDatasetPattern(null);
+            expect(result).toBe(EMPTY_PATTERN_ERROR);
+        });
+
+        it("should return error message for undefined input", () => {
+            const result = (DatasetActions as any).validateDatasetPattern(undefined);
+            expect(result).toBe(EMPTY_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern starting with invalid character (dot)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern(".DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern starting with hyphen", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("-DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern starting with opening parenthesis", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("(DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (space)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATA SET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (slash)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ/DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (backslash)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ\\DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (comma)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ,DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (semicolon)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ;DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (colon)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ:DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (exclamation)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ!DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (question mark)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ?DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (ampersand)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ&DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (equals)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ=DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (plus)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ+DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (square brackets)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ[DATASET]");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (curly braces)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ{DATASET}");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (pipe)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ|DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (tilde)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ~DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (backtick)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ`DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (single quote)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ'DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (double quote)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern('HLQ"DATASET');
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (less than)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ<DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should return error message for pattern with invalid character (greater than)", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ>DATASET");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should trim whitespace and validate correctly", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("  HLQ.DATASET  ");
+            expect(result).toBeUndefined();
+        });
+
+        it("should trim whitespace and return error for invalid pattern", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("  HLQ DATASET  ");
+            expect(result).toBe(INVALID_PATTERN_ERROR);
+        });
+
+        it("should handle complex valid pattern with multiple members notation", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATASET(MEMBER1)(MEMBER2)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should handle pattern with consecutive dots", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ..DATASET");
+            expect(result).toBeUndefined();
+        });
+
+        it("should handle pattern with consecutive hyphens", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATA--SET");
+            expect(result).toBeUndefined();
+        });
+
+        it("should handle pattern ending with dot", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATASET.");
+            expect(result).toBeUndefined();
+        });
+
+        it("should handle pattern ending with hyphen", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATASET-");
+            expect(result).toBeUndefined();
+        });
+
+        it("should handle pattern ending with asterisk", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATASET*");
+            expect(result).toBeUndefined();
+        });
+
+        it("should handle pattern with only special characters", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("$#@%*");
+            expect(result).toBeUndefined();
+        });
+
+        it("should handle very long valid pattern", () => {
+            const longPattern = "A".repeat(100) + ".DATASET";
+            const result = (DatasetActions as any).validateDatasetPattern(longPattern);
+            expect(result).toBeUndefined();
+        });
     });
 });

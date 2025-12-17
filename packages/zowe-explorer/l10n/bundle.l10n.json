@@ -1146,6 +1146,38 @@
       "Error message"
     ]
   },
+  "No dataset profiles found. Please add a profile first.": "No dataset profiles found. Please add a profile first.",
+  "Enter the dataset pattern to filter on": "Enter the dataset pattern to filter on",
+  "HLQ.**.DATASET or HLQ.DATASET.NAME": "HLQ.**.DATASET or HLQ.DATASET.NAME",
+  "Failed to filter dataset tree: {0}/Error message": {
+    "message": "Failed to filter dataset tree: {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Dataset pattern cannot be empty": "Dataset pattern cannot be empty",
+  "Invalid dataset pattern. Use alphanumeric characters, $, #, @, *, %, ., -, and () for members": "Invalid dataset pattern. Use alphanumeric characters, $, #, @, *, %, ., -, and () for members",
+  "Failed to find or create session node": "Failed to find or create session node",
+  "Found PDS '{0}' but could not reveal member '{1}'/PDS nameMember name": {
+    "message": "Found PDS '{0}' but could not reveal member '{1}'",
+    "comment": [
+      "PDS name",
+      "Member name"
+    ]
+  },
+  "Member '{0}' not found in PDS '{1}'/Member namePDS name": {
+    "message": "Member '{0}' not found in PDS '{1}'",
+    "comment": [
+      "Member name",
+      "PDS name"
+    ]
+  },
+  "PDS '{0}' not found/PDS name": {
+    "message": "PDS '{0}' not found",
+    "comment": [
+      "PDS name"
+    ]
+  },
   "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
     "message": "Failed to upload changes for {0}: {1}",
     "comment": [
