@@ -15,7 +15,7 @@ import { clickContextMenuItem } from "../../../__common__/shared.wdio";
 When('the user right-clicks on the jobs profile and selects "Show as Table"', async function () {
     this.workbench = await browser.getWorkbench();
 
-    await clickContextMenuItem(this.profileNode, "Show as Table");
+    await clickContextMenuItem(await this.helpers.getProfileNode(), "Show as Table");
 });
 
 Then("the table view appears in the Zowe Resources panel", async function () {

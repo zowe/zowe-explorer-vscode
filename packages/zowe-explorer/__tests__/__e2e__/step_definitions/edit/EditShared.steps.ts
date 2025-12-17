@@ -47,11 +47,11 @@ When("the user finds the child node in Favorites", async function () {
     await browser.waitUntil((): Promise<boolean> => this.profileNode.isExpanded());
     if (this.tree.toLowerCase() === "data sets") {
         // PDS member
-        await browser.waitUntil(async () => (await this.profileNode.getChildren()).length > 0);
+        await browser.waitUntil((): Promise<boolean> => this.profileNode.hasChildren());
         const pds: TreeItem = await this.profileNode.findChildItem(process.env.ZE_TEST_PDS);
         await expect(pds).toBeDefined();
         await pds.expand();
-        await browser.waitUntil(async (): Promise<boolean> => await pds.isExpanded());
+        await browser.waitUntil((): Promise<boolean> => pds.isExpanded());
         this.pdsMember = await pds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
         await expect(this.pdsMember).toBeDefined();
     } else {

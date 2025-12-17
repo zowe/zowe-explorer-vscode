@@ -10,7 +10,7 @@
  */
 
 import { Given, Then, When, IWorld } from "@cucumber/cucumber";
-import { paneDivForTree } from "../../../__common__/shared.wdio";
+import { paneDivForTree, TreeHelpers } from "../../../__common__/shared.wdio";
 import { TreeItem } from "wdio-vscode-service";
 import { Key } from "webdriverio";
 import quickPick from "../../../__pageobjects__/QuickPick";
@@ -86,14 +86,15 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
     );
 
     // Try to find the profile with retries
-    this.profileNode = null;
+    this.helpers = new TreeHelpers(this.treePane, testInfo.profileName);
     let attempts = 0;
     const maxAttempts = 3;
+    const helpers: TreeHelpers = this.helpers;
 
-    while (attempts < maxAttempts && !this.profileNode) {
+    while (attempts < maxAttempts && !helpers.mProfileNode) {
         try {
-            this.profileNode = (await this.treePane.findItem(testInfo.profileName)) as TreeItem;
-            if (this.profileNode) {
+            await helpers.getProfileNode();
+            if (helpers.mProfileNode) {
                 break;
             }
         } catch (error) {
@@ -107,7 +108,7 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
     }
 
     // Only add profile if it really doesn't exist after all attempts
-    if (!this.profileNode) {
+    if (!helpers.mProfileNode) {
         // add profile via quick pick
         await this.treePane.elem.moveTo();
         const plusIcon = await this.treePane.getAction(`Add Profile to ${tree} View`);
@@ -125,8 +126,8 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
         await browser.waitUntil(
             async () => {
                 try {
-                    this.profileNode = (await this.treePane.findItem(testInfo.profileName)) as TreeItem;
-                    return this.profileNode != null;
+                    await helpers.getProfileNode();
+                    return helpers.mProfileNode != null;
                 } catch {
                     return false;
                 }
@@ -140,22 +141,23 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
 });
 
 When("a user sets a filter search on the profile", async function () {
-    await expect(this.profileNode).toBeDefined();
-    await setFilterForProfile(this, this.profileNode, this.tree);
+    const profileNode = await this.helpers.getProfileNode();
+    await expect(profileNode).toBeDefined();
+    await setFilterForProfile(this, profileNode, this.tree);
 });
 Then("the profile node will list results of the filter search", async function () {
-    await expect(await this.profileNode.isExpanded()).toBe(true);
-    await browser.waitUntil(async () => (await this.profileNode.getChildren()).length > 0);
+    await expect(await this.helpers.mProfileNode.isExpanded()).toBe(true);
+    await browser.waitUntil(async () => (await this.helpers.getProfileNode()).hasChildren());
 });
 When("a user expands a PDS in the list", async function () {
-    this.pds = await this.profileNode.findChildItem(testInfo.pds);
+    this.pds = await (await this.helpers.getProfileNode()).findChildItem(testInfo.pds);
     await expect(this.pds).toBeDefined();
     await this.pds.expand();
     await browser.waitUntil(async () => (await this.pds.getChildren()).length > 0);
     this.children = await this.pds.getChildren();
 });
 When("a user expands a USS directory in the list", async function () {
-    this.ussDir = await this.profileNode.findChildItem(testInfo.ussDir);
+    this.ussDir = await (await this.helpers.getProfileNode()).findChildItem(testInfo.ussDir);
     await expect(this.ussDir).toBeDefined();
     await this.ussDir.expand();
     await browser.waitUntil(async () => (await this.ussDir.getChildren()).length > 0);

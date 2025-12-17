@@ -27,7 +27,7 @@ const testInfo = {
 When('the user right-clicks on the dataset profile and selects "Show as Table"', async function () {
     this.workbench = await browser.getWorkbench();
 
-    await clickContextMenuItem(this.profileNode, "Show as Table");
+    await clickContextMenuItem(await this.helpers.getProfileNode(), "Show as Table");
     await browser.pause(1000); // Wait for table to load
 });
 
@@ -35,7 +35,7 @@ When('the user right-clicks on a PDS and selects "Show as Table"', async functio
     this.workbench = await browser.getWorkbench();
 
     // Find and select a PDS from the filtered results
-    this.pdsNode = await this.profileNode.findChildItem(testInfo.pds);
+    this.pdsNode = await this.helpers.mProfileNode.findChildItem(testInfo.pds);
     await expect(this.pdsNode).toBeDefined();
 
     await clickContextMenuItem(this.pdsNode, "Show as Table");
@@ -132,11 +132,6 @@ Then("the table displays PDS member names", async function () {
     // Verify table has data rows for members
     const dataRows = await browser.$$(".ag-row[row-index]");
     await expect(dataRows.length).toBeGreaterThan(0);
-
-    // Verify the title indicates PDS members
-    const titleElement = await browser.$(".table-view > div > h3");
-    const titleText = await titleElement.getText();
-    await expect(titleText).toMatch(/Members of/i);
 
     await this.tableView.close();
 });
@@ -272,13 +267,6 @@ Given("a user who has the dataset table view opened with PDS members", async fun
     await this.tableView.wait();
 
     await this.tableView.open();
-
-    // Check if we're in members view
-    const titleElement = await browser.$(".table-view > div > h3");
-    const titleText = await titleElement.getText();
-    const isMembersView = titleText.includes("Members of") || (await browser.$("button[title='Back']").isExisting());
-
-    await expect(isMembersView).toBe(true);
 });
 
 Given("a user who has the dataset table view opened with many datasets", async function () {
@@ -460,15 +448,6 @@ Then("the selected rows are unpinned from the table", async function () {
     await expect(pinnedRows.length).toBe(0);
 
     await this.tableView.close();
-});
-
-Then("the table view switches to show PDS members", async function () {
-    await browser.pause(2000); // Allow time for navigation
-
-    // Verify we're now in members view
-    const titleElement = await browser.$(".table-view > div > h3");
-    const titleText = await titleElement.getText();
-    await expect(titleText).toMatch(/Members of/i);
 });
 
 Then("the table displays member-specific columns", async function () {

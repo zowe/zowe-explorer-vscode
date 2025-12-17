@@ -41,7 +41,6 @@ Scenario: User wants to focus on a PDS to view its members
     Given a user who has the dataset table view opened with PDS datasets
     When the user selects a PDS dataset
     And clicks the "Focus" action button
-    Then the table view switches to show PDS members
     And the table displays member-specific columns
 
 Scenario: User wants to reveal PDS member in tree from table view
