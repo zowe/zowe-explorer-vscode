@@ -1191,6 +1191,37 @@ describe("DatasetFSProvider", () => {
             expect(lookupMock).not.toHaveBeenCalled();
         });
 
+        it("should call lookupWithCache and perform remote lookup when fetchByDefault is enabled and entry is missing", async () => {
+            jest.spyOn(FeatureFlags, "get").mockImplementation((flag) => {
+                if (flag === "fetchByDefault") return true;
+                return false;
+            });
+
+            jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testEntries.ps.metadata.profile,
+            });
+
+            const lookupSpy = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockImplementation(() => {
+                throw new vscode.FileSystemError();
+            });
+
+            const remoteLookupSpy = jest.spyOn(DatasetFSProvider.instance as any, "remoteLookupForResource").mockResolvedValue(testEntries.ps);
+
+            const dataSetMock = jest.fn().mockResolvedValue({
+                success: true,
+                apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] },
+            });
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ dataSet: dataSetMock } as any);
+            const result = await DatasetFSProvider.instance.stat(testUris.ps);
+
+            expect(lookupSpy).toHaveBeenCalled();
+            expect(remoteLookupSpy).toHaveBeenCalledWith(testUris.ps);
+            expect(result).toBe(testEntries.ps);
+        });
+
         describe("error handling", () => {
             it("API response was unsuccessful for remote lookup", async () => {
                 jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.ps);
