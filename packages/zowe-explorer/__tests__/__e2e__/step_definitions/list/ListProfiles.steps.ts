@@ -10,8 +10,7 @@
  */
 
 import { Then, When } from "@cucumber/cucumber";
-import { paneDivForTree } from "../../../__common__/shared.wdio";
-import { TreeItem } from "wdio-vscode-service";
+import { paneDivForTree, TreeHelpers } from "../../../__common__/shared.wdio";
 import { Key } from "webdriverio";
 import quickPick from "../../../__pageobjects__/QuickPick";
 
@@ -19,33 +18,29 @@ When(/the user has a (.*) profile in their (.*) tree/, async function (initialSt
     const isExpanded = initialState === "expanded";
     this.tree = tree;
     this.treePane = await paneDivForTree(tree);
-    const visibleItems = ((await this.treePane.getVisibleItems()) as TreeItem[]).filter(
-        async (treeItem) => (await treeItem.getLabel()) !== "Favorites"
-    );
-    this.profileNode = visibleItems.find(
-        async (treeItem) => (await treeItem.isExpanded()) === isExpanded && (await treeItem.getLabel()) === process.env.ZE_TEST_PROFILE_NAME
-    );
-    await expect(this.profileNode).toBeDefined();
+    this.helpers = new TreeHelpers(this.treePane, process.env.ZE_TEST_PROFILE_NAME);
+    await expect(await this.helpers.getProfileNode()).toBeDefined();
+    await expect(await this.helpers.mProfileNode.isExpanded()).toBe(isExpanded);
 });
 
 Then(/a user can (.*) a profile with a filter set/, async function (action: string) {
     if (action === "collapse") {
-        await this.profileNode.collapse();
-        await browser.waitUntil(async (): Promise<boolean> => !(await this.profileNode.isExpanded()));
+        await this.helpers.mProfileNode.collapse();
+        await browser.waitUntil(async (): Promise<boolean> => !(await (await this.helpers.getProfileNode()).isExpanded()));
     } else {
-        await this.profileNode.expand();
-        await browser.waitUntil((): Promise<boolean> => this.profileNode.isExpanded());
+        await this.helpers.mProfileNode.expand();
+        await browser.waitUntil(async (): Promise<boolean> => (await this.helpers.getProfileNode()).isExpanded());
     }
 });
 
 Then("the user can set an existing filter on the profile", async function () {
-    if (await this.profileNode.isExpanded()) {
-        await this.profileNode.collapse();
+    if (await this.helpers.mProfileNode.isExpanded()) {
+        await this.helpers.mProfileNode.collapse();
     }
-    await this.profileNode.elem.moveTo();
+    await this.helpers.mProfileNode.elem.moveTo();
 
     // Locate and click on the search icon beside the profile node
-    const actionButtons = await this.profileNode.getActionButtons();
+    const actionButtons = await this.helpers.mProfileNode.getActionButtons();
     const searchButton = actionButtons[actionButtons.length - 1];
     await searchButton.elem.click();
 
@@ -77,5 +72,5 @@ Then("the user can set an existing filter on the profile", async function () {
         await browser.keys(Key.Enter);
     }
 
-    await browser.waitUntil((): Promise<boolean> => this.profileNode.isExpanded());
+    await browser.waitUntil(async (): Promise<boolean> => (await this.helpers.getProfileNode()).isExpanded());
 });

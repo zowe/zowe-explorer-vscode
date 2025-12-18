@@ -11,7 +11,6 @@
 
 import { Given, Then, When, IWorld } from "@cucumber/cucumber";
 import { paneDivForTree, TreeHelpers } from "../../../__common__/shared.wdio";
-import { TreeItem } from "wdio-vscode-service";
 import { Key } from "webdriverio";
 import quickPick from "../../../__pageobjects__/QuickPick";
 
@@ -23,9 +22,9 @@ const testInfo = {
     ussDir: process.env.ZE_TEST_USS_DIR.replace(`${process.env.ZE_TEST_USS_FILTER}/`, ""),
 };
 
-async function setFilterForProfile(world: IWorld, profileNode: TreeItem, tree: string): Promise<void> {
-    await profileNode.elem.moveTo();
-    const actionButtons = await profileNode.getActionButtons();
+async function setFilterForProfile(helpers: TreeHelpers, tree: string): Promise<void> {
+    await (await helpers.getProfileNode()).elem.moveTo();
+    const actionButtons = await helpers.mProfileNode.getActionButtons();
 
     // Locate and select the search button on the profile node
     const searchButton = actionButtons[actionButtons.length - 1];
@@ -62,7 +61,7 @@ async function setFilterForProfile(world: IWorld, profileNode: TreeItem, tree: s
         await browser.keys(Key.Enter);
     }
 
-    await browser.waitUntil(async () => profileNode.isExpanded());
+    await browser.waitUntil(async () => (await helpers.getProfileNode()).isExpanded());
 }
 
 Given(/the user has a profile in their (.*) tree/, async function (tree: string) {
@@ -141,9 +140,8 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
 });
 
 When("a user sets a filter search on the profile", async function () {
-    const profileNode = await this.helpers.getProfileNode();
-    await expect(profileNode).toBeDefined();
-    await setFilterForProfile(this, profileNode, this.tree);
+    await expect(await this.helpers.getProfileNode()).toBeDefined();
+    await setFilterForProfile(this.helpers, this.tree);
 });
 Then("the profile node will list results of the filter search", async function () {
     await expect(await this.helpers.mProfileNode.isExpanded()).toBe(true);
@@ -160,7 +158,7 @@ When("a user expands a USS directory in the list", async function () {
     this.ussDir = await (await this.helpers.getProfileNode()).findChildItem(testInfo.ussDir);
     await expect(this.ussDir).toBeDefined();
     await this.ussDir.expand();
-    await browser.waitUntil(async () => (await this.ussDir.getChildren()).length > 0);
+    await browser.waitUntil(async (): Promise<boolean> => await this.ussDir.hasChildren());
     this.children = await this.ussDir.getChildren();
 });
 Then("the node will expand and list its children", async function () {

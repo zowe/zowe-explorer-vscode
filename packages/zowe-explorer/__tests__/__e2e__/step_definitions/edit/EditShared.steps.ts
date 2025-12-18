@@ -25,12 +25,12 @@ Then("the user can right-click on the child node and add it as a favorite", asyn
     // Determine which action button to use to add the child node to favorites
     let addToFavsBtn;
     if (this.tree.toLowerCase() === "data sets") {
-        this.pds = await this.profileNode.findChildItem(process.env.ZE_TEST_PDS);
+        this.pds = await (await this.helpers.getProfileNode()).findChildItem(process.env.ZE_TEST_PDS);
         const pdsMember: TreeItem = await this.pds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
         await pdsMember.elem.moveTo();
         addToFavsBtn = (await pdsMember.getActionButtons())[0];
     } else {
-        this.ussDir = await this.profileNode.findChildItem(process.env.ZE_TEST_USS_DIR);
+        this.ussDir = await (await this.helpers.getProfileNode()).findChildItem(process.env.ZE_TEST_USS_DIR);
         const ussFile: TreeItem = await this.ussDir.findChildItem(process.env.ZE_TEST_USS_FILE);
         await expect(ussFile).toBeDefined();
         await ussFile.elem.moveTo();
@@ -47,15 +47,17 @@ When("the user finds the child node in Favorites", async function () {
     await browser.waitUntil((): Promise<boolean> => this.profileNode.isExpanded());
     if (this.tree.toLowerCase() === "data sets") {
         // PDS member
+        await this.pds.collapse();
         await browser.waitUntil((): Promise<boolean> => this.profileNode.hasChildren());
-        const pds: TreeItem = await this.profileNode.findChildItem(process.env.ZE_TEST_PDS);
-        await expect(pds).toBeDefined();
-        await pds.expand();
-        await browser.waitUntil((): Promise<boolean> => pds.isExpanded());
-        this.pdsMember = await pds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
+        this.pds = await this.profileNode.findChildItem(process.env.ZE_TEST_PDS);
+        await expect(this.pds).toBeDefined();
+        await this.pds.expand();
+        await browser.waitUntil((): Promise<boolean> => this.pds.isExpanded());
+        this.pdsMember = await this.pds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
         await expect(this.pdsMember).toBeDefined();
     } else {
         // USS file
+        await this.ussDir.collapse();
         this.ussFile = await this.profileNode.findChildItem(process.env.ZE_TEST_USS_FILE);
     }
 });

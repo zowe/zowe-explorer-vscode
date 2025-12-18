@@ -19,7 +19,7 @@ export class TreeHelpers {
     public constructor(private treePane: ViewSection, public profileName: string) {}
 
     public async getProfileNode(): Promise<TreeItem> {
-        this.mProfileNode ??= (await this.treePane.findItem(this.profileName)) as TreeItem;
+        this.mProfileNode = (await this.treePane.findItem(this.profileName)) as TreeItem;
         return this.mProfileNode;
     }
 }
