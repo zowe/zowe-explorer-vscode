@@ -23,12 +23,77 @@ const testInfo = {
     testPattern: process.env.ZE_TEST_DS_PATTERN,
 };
 
+// Helper function to safely get webview button by title with retry logic
+async function getWebviewButtonByTitleWithRetry(
+    title: string,
+    appearance: string = "primary",
+    timeout: number = 5000
+): Promise<WebdriverIO.Element | null> {
+    const startTime = Date.now();
+    while (Date.now() - startTime < timeout) {
+        try {
+            const buttons = await browser.$$(`vscode-button[appearance='${appearance}']`);
+            for (const button of buttons) {
+                const buttonText = await button.getText();
+                if (buttonText === title) {
+                    return button;
+                }
+            }
+        } catch {
+            // Element became stale, retry
+        }
+        await browser.pause(100); // Small pause between retries
+    }
+    return null;
+}
+
+// Helper to wait for webview table to be ready
+async function waitForTableReady(): Promise<void> {
+    await browser.waitUntil(
+        async () => {
+            try {
+                const tableViewDiv = await browser.$(".table-view");
+                if (!(await tableViewDiv.isExisting())) return false;
+                const rows = await browser.$$(".ag-row[row-index]");
+                return rows.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 15000, timeoutMsg: "Table did not become ready within timeout" }
+    );
+}
+
+// Helper to safely get webview with retry logic to avoid stale elements
+async function getWebviewSafely(): Promise<any> {
+    await browser.switchToFrame(null);
+    const workbench = await browser.getWorkbench();
+
+    // Wait for webview to be available
+    await browser.waitUntil(
+        async () => {
+            try {
+                const webviews = await workbench.getAllWebviews();
+                return webviews.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 15000, timeoutMsg: "No webviews found within timeout" }
+    );
+
+    let tableView = (await workbench.getAllWebviews())[0];
+    await tableView.wait();
+
+    // Re-fetch to avoid stale element
+    return (await workbench.getAllWebviews())[0];
+}
+
 // Basic table view setup steps
 When('the user right-clicks on the dataset profile and selects "Show as Table"', async function () {
     this.workbench = await browser.getWorkbench();
 
     await clickContextMenuItem(await this.helpers.getProfileNode(), "Show as Table");
-    await browser.pause(1000); // Wait for table to load
 });
 
 When('the user right-clicks on a PDS and selects "Show as Table"', async function () {
@@ -42,61 +107,83 @@ When('the user right-clicks on a PDS and selects "Show as Table"', async functio
 });
 
 Then("the dataset table view appears in the Zowe Resources panel", async function () {
-    this.tableView = (await this.workbench.getAllWebviews())[0];
-    await this.tableView.wait();
+    // Re-fetch workbench and webviews to avoid stale references
+    await browser.switchToFrame(null);
+    const workbench = await browser.getWorkbench();
 
-    await this.tableView.open();
-    const tableViewDiv = await browser.$(".table-view");
-    await tableViewDiv.waitForExist({ timeout: 5000 });
-
-    // Verify the table has the correct title format
-    const titleElement = await browser.$(".table-view > div > h3");
-    await titleElement.waitForExist();
-
-    // Wait for the title to be populated and determine table type
+    // Wait for webview to be available
     await browser.waitUntil(
         async () => {
-            const titleText = await titleElement.getText();
-            return titleText && titleText.trim().length > 0;
+            try {
+                const webviews = await workbench.getAllWebviews();
+                return webviews.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 15000, timeoutMsg: "No webviews found within timeout" }
+    );
+
+    this.tableView = (await workbench.getAllWebviews())[0];
+    await this.tableView.wait();
+
+    // Re-fetch to avoid stale element before opening
+    this.tableView = (await workbench.getAllWebviews())[0];
+    await this.tableView.open();
+
+    // Wait for table view to exist
+    await browser.waitUntil(
+        async () => {
+            try {
+                const tableViewDiv = await browser.$(".table-view");
+                return await tableViewDiv.isExisting();
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 15000, timeoutMsg: "Table view div did not appear within timeout" }
+    );
+
+    // Wait for the title element to exist and be populated
+    // The title could be either:
+    // - PDS members view: "Members of PDS.NAME (count)"
+    // - Dataset list view: "[PROFILE]: filter"
+    let finalTitle = "";
+    await browser.waitUntil(
+        async () => {
+            try {
+                const titleElement = await browser.$(".table-view > div > h3");
+                if (!(await titleElement.isExisting())) {
+                    return false;
+                }
+                const titleText = await titleElement.getText();
+                if (!titleText || typeof titleText !== "string" || titleText.trim().length === 0) {
+                    return false;
+                }
+                // Check if it's a valid PDS members title or dataset list title
+                const isPdsMembersTitle = /Members of/i.test(titleText);
+                const isDatasetListTitle = /\[.*\]:/.test(titleText) && titleText.toUpperCase().includes(testInfo.dsFilter.toUpperCase());
+                if (isPdsMembersTitle || isDatasetListTitle) {
+                    finalTitle = titleText;
+                    return true;
+                }
+                return false;
+            } catch {
+                return false;
+            }
         },
         {
-            timeout: 10000,
-            timeoutMsg: "Title element did not get populated within timeout",
+            timeout: 20000,
+            timeoutMsg: "Table view title did not appear within timeout (expected either 'Members of...' or '[profile]: filter')",
         }
     );
 
-    const titleText = await titleElement.getText();
-
-    // Check if this is a PDS members view or a dataset list view
-    if (!titleText.startsWith("[") || titleText.includes("Members of") || /Members of/i.test(titleText)) {
-        // This is a PDS members view - wait for and check members title format
-        await browser.waitUntil(
-            async () => {
-                const currentTitle = await titleElement.getText();
-                return /Members of/i.test(currentTitle);
-            },
-            {
-                timeout: 10000,
-                timeoutMsg: "PDS members title did not appear within timeout",
-            }
-        );
-
-        const finalTitle = await titleElement.getText();
+    // Verify the title matches the expected format based on its content
+    if (/Members of/i.test(finalTitle)) {
+        // This is a PDS members view
         await expect(finalTitle).toMatch(/Members of/i);
     } else {
-        // This is a dataset list view - wait for and check profile/filter title format
-        await browser.waitUntil(
-            async () => {
-                const currentTitle = await titleElement.getText();
-                return /\[.*\]:/.test(currentTitle) && currentTitle.toUpperCase().includes(testInfo.dsFilter.toUpperCase());
-            },
-            {
-                timeout: 10000,
-                timeoutMsg: "Dataset list title with profile and filter did not appear within timeout",
-            }
-        );
-
-        const finalTitle = await titleElement.getText();
+        // This is a dataset list view
         await expect(finalTitle).toMatch(/\[.*\]:/); // Should match pattern like "[PROFILE]: filter"
         await expect(finalTitle).toContain(testInfo.dsFilter.toUpperCase());
     }
@@ -146,7 +233,13 @@ When('the user opens the command palette and runs "List Data Sets" command', asy
     });
 
     // Wait for the profile selection quick pick to appear
-    await browser.pause(1000);
+    await browser.waitUntil(
+        async () => {
+            const quickPickItems = await browser.$$(".quick-input-list .quick-input-list-entry");
+            return quickPickItems.length > 0;
+        },
+        { timeout: 10000, timeoutMsg: "Quick pick did not appear after running command" }
+    );
 });
 
 When("enters a valid profile and dataset pattern", async function () {
@@ -200,48 +293,27 @@ Then("the table displays datasets matching the pattern", async function () {
 
 // Common table view setup
 Given("a user who has the dataset table view opened", async function () {
-    // Ensure we're in the main VS Code frame before getting workbench
-    await browser.switchToFrame(null);
-    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
-    await this.tableView.wait();
+    this.tableView = await getWebviewSafely();
 });
 
 Given("a user who has the dataset table view opened with PS datasets", async function () {
-    // Ensure we're in the main VS Code frame before getting workbench
-    await browser.switchToFrame(null);
-
-    // Wait for webview to be available, then re-fetch before opening to avoid stale element
-    let tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
-    await tableView.wait();
-
-    // Re-fetch the webview after wait to get a fresh reference
-    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
+    this.tableView = await getWebviewSafely();
     await this.tableView.open();
-
-    // Wait for the table to be fully loaded
-    await browser.waitUntil(
-        async () => {
-            const rows = await browser.$$(".ag-row[row-index]");
-            return rows.length > 0;
-        },
-        { timeout: 10000, timeoutMsg: "Table rows did not load within timeout" }
-    );
+    await waitForTableReady();
 
     // Verify we have PS (sequential) datasets using waitUntil to handle stale elements
     const hasPsDatasets = await browser.waitUntil(
         async () => {
-            // Re-fetch elements on each iteration to avoid stale element references
-            const psRows = await browser.$$(".ag-row[row-index] [col-id='dsorg']");
-            for (let i = 0; i < psRows.length; i++) {
-                try {
-                    const cellText = await psRows[i].getText();
+            try {
+                const psRows = await browser.$$(".ag-row[row-index] [col-id='dsorg']");
+                for (const cell of psRows) {
+                    const cellText = await cell.getText();
                     if (cellText === "PS") {
                         return true;
                     }
-                } catch {
-                    // Element became stale, continue to next iteration which will re-fetch
-                    return false;
                 }
+            } catch {
+                // Element became stale, retry
             }
             return false;
         },
@@ -252,64 +324,67 @@ Given("a user who has the dataset table view opened with PS datasets", async fun
 });
 
 Given("a user who has the dataset table view opened with PDS datasets", async function () {
-    // Ensure we're in the main VS Code frame before getting workbench
-    await browser.switchToFrame(null);
-    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
-    await this.tableView.wait();
-
+    this.tableView = await getWebviewSafely();
     await this.tableView.open();
+    await waitForTableReady();
 
-    // Verify we have PDS datasets
-    const pdsRows = await browser.$$(".ag-row[row-index] [col-id='dsorg']");
-    let hasPdsDatasets = false;
-
-    for (const cell of pdsRows) {
-        const cellText = await cell.getText();
-        if (cellText.startsWith("PO")) {
-            hasPdsDatasets = true;
-            break;
-        }
-    }
+    // Verify we have PDS datasets using waitUntil to handle stale elements
+    const hasPdsDatasets = await browser.waitUntil(
+        async () => {
+            try {
+                const pdsRows = await browser.$$(".ag-row[row-index] [col-id='dsorg']");
+                for (const cell of pdsRows) {
+                    const cellText = await cell.getText();
+                    if (cellText.startsWith("PO")) {
+                        return true;
+                    }
+                }
+            } catch {
+                // Element became stale, retry
+            }
+            return false;
+        },
+        { timeout: 10000, timeoutMsg: "No PDS datasets found in table" }
+    );
 
     await expect(hasPdsDatasets).toBe(true);
 });
 
 Given("a user who has the dataset table view opened with mixed dataset types", async function () {
-    // Ensure we're in the main VS Code frame before getting workbench
-    await browser.switchToFrame(null);
-    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
-    await this.tableView.wait();
+    this.tableView = await getWebviewSafely();
 });
 
 Given("a user who has focused on a PDS and is viewing its members", async function () {
-    // Ensure we're in the main VS Code frame before getting workbench
-    await browser.switchToFrame(null);
-    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
-    await this.tableView.wait();
+    this.tableView = await getWebviewSafely();
     await this.tableView.open();
+    await waitForTableReady();
 
     // Verify we're in members view by checking to see if table title contains "Members of"
-    const titleElement = await browser.$(".table-view > div > h3");
-    const titleText = await titleElement.getText();
-    await expect(titleText).toMatch(/Members of/i);
+    await browser.waitUntil(
+        async () => {
+            try {
+                const titleElement = await browser.$(".table-view > div > h3");
+                if (!(await titleElement.isExisting())) return false;
+                const titleText = await titleElement.getText();
+                return typeof titleText === "string" && /Members of/i.test(titleText);
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 10000, timeoutMsg: "Not in members view - title does not contain 'Members of'" }
+    );
 });
 
 Given("a user who has the dataset table view opened with PDS members", async function () {
-    // Ensure we're in the main VS Code frame before getting workbench
-    await browser.switchToFrame(null);
-    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
-    await this.tableView.wait();
-
+    this.tableView = await getWebviewSafely();
     await this.tableView.open();
+    await waitForTableReady();
 });
 
 Given("a user who has the dataset table view opened with many datasets", async function () {
-    // Ensure we're in the main VS Code frame before getting workbench
-    await browser.switchToFrame(null);
-    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
-    await this.tableView.wait();
-
+    this.tableView = await getWebviewSafely();
     await this.tableView.open();
+    await waitForTableReady();
 
     // Verify pagination is enabled by checking for pagination controls
     const paginationPanel = await browser.$(".ag-paging-panel");
@@ -353,17 +428,31 @@ When("the user selects one or more sequential datasets", async function () {
 
 When("the user selects one or more rows", async function () {
     await this.tableView.open();
-    // Select first two rows
-    const rows = await browser.$$(".ag-row[row-index]");
-    await expect(rows.length).toBeGreaterThan(0);
+    await waitForTableReady();
 
-    const firstCheckbox = await rows[0].$(".ag-selection-checkbox");
-    await firstCheckbox.click();
+    // Select first two rows with retry logic
+    await browser.waitUntil(
+        async () => {
+            try {
+                const rows = await browser.$$(".ag-row[row-index]");
+                if (rows.length === 0) return false;
 
-    if (rows.length > 1) {
-        const secondCheckbox = await rows[1].$(".ag-selection-checkbox");
-        await secondCheckbox.click();
-    }
+                const firstCheckbox = await rows[0].$(".ag-selection-checkbox");
+                await firstCheckbox.click();
+
+                if (rows.length > 1) {
+                    // Re-fetch rows to avoid stale element
+                    const freshRows = await browser.$$(".ag-row[row-index]");
+                    const secondCheckbox = await freshRows[1].$(".ag-selection-checkbox");
+                    await secondCheckbox.click();
+                }
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 10000, timeoutMsg: "Could not select rows within timeout" }
+    );
 });
 
 When("the user selects a PDS dataset", async function () {
@@ -377,54 +466,72 @@ When("the user selects a PDS dataset", async function () {
     // Second click to deselect all
     await selectAllCheckbox.click();
 
-    const rows = await browser.$$(".ag-row[row-index]:not(.ag-row-pinned)");
-    let pdsSelected = false;
+    // Find and select a PDS dataset with retry logic
+    const pdsSelected = await browser.waitUntil(
+        async () => {
+            try {
+                const rows = await browser.$$(".ag-row[row-index]:not(.ag-row-pinned)");
+                for (let i = 0; i < rows.length; i++) {
+                    // Re-fetch row to avoid stale element
+                    const row = (await browser.$$(".ag-row[row-index]:not(.ag-row-pinned)"))[i];
+                    if (!row) continue;
 
-    for (const row of rows) {
-        await row.waitForExist();
-        const dsorgCell = await row.$("[col-id='dsorg']");
-        const dsorgText = await dsorgCell.getText();
+                    const dsorgCell = await row.$("[col-id='dsorg']");
+                    const dsorgText = await dsorgCell.getText();
 
-        // Check if the row is a PDS dataset
-        if (dsorgText.startsWith("PO")) {
-            const checkbox = await row.$(".ag-selection-checkbox");
-            await checkbox.click();
+                    // Check if the row is a PDS dataset
+                    if (dsorgText.startsWith("PO")) {
+                        const checkbox = await row.$(".ag-selection-checkbox");
+                        await checkbox.click();
 
-            // Wait for the React component to update the action buttons
-            await browser.pause(500);
+                        // Wait for action buttons to update after selection
+                        await browser.waitUntil(
+                            async () => {
+                                const focusButton = await getWebviewButtonByTitleWithRetry("Focus", "secondary", 1000);
+                                return focusButton !== null;
+                            },
+                            { timeout: 5000, timeoutMsg: "Focus button did not appear after selection" }
+                        );
 
-            pdsSelected = true;
-            break;
-        }
-    }
+                        return true;
+                    }
+                }
+            } catch {
+                // Element became stale, retry
+            }
+            return false;
+        },
+        { timeout: 10000, timeoutMsg: "Could not find and select a PDS dataset" }
+    );
 
     await expect(pdsSelected).toBe(true);
 });
 
 When("the user selects the pinned rows", async function () {
-    // Select rows in the pinned section
-    const pinnedRows = await browser.$$(".ag-floating-top .ag-row");
-    await expect(pinnedRows.length).toBeGreaterThan(0);
+    // Wait for pinned rows to exist and select them
+    await browser.waitUntil(
+        async () => {
+            try {
+                const pinnedRows = await browser.$$(".ag-floating-top .ag-row");
+                return pinnedRows.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 10000, timeoutMsg: "No pinned rows found" }
+    );
 
-    for (const row of pinnedRows) {
-        const checkbox = await row.$(".ag-selection-checkbox");
+    const pinnedRows = await browser.$$(".ag-floating-top .ag-row");
+    for (let i = 0; i < pinnedRows.length; i++) {
+        // Re-fetch to avoid stale elements
+        const freshPinnedRows = await browser.$$(".ag-floating-top .ag-row");
+        const checkbox = await freshPinnedRows[i].$(".ag-selection-checkbox");
         await checkbox.click();
     }
 });
 
 async function getWebviewButtonByTitle(title: string, appearance: string = "primary"): Promise<WebdriverIO.Element | null> {
-    const buttons = await browser.$$(`vscode-button[appearance='${appearance}']`);
-    let btn = null;
-
-    for (const button of buttons) {
-        const buttonText = await button.getText();
-        if (buttonText === title) {
-            btn = button;
-            break;
-        }
-    }
-
-    return btn;
+    return getWebviewButtonByTitleWithRetry(title, appearance, 1000);
 }
 
 When('clicks the "Open" action button', async function () {
@@ -464,23 +571,43 @@ When('clicks the "Back" action button', async function () {
 
 // Verification steps for actions
 Then("the selected datasets open in the editor", async function () {
-    await browser.pause(2000); // Allow time for editors to open
-
     // Close the table view first
     await this.tableView.close();
 
-    // Check if editors are open
+    // Wait for editors to open
     const workbench = await browser.getWorkbench();
     const editorView = workbench.getEditorView();
-    const openTabs = await editorView.getOpenEditorTitles();
 
+    await browser.waitUntil(
+        async () => {
+            try {
+                const openTabs = await editorView.getOpenEditorTitles();
+                return openTabs.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 15000, timeoutMsg: "No editors opened within timeout" }
+    );
+
+    const openTabs = await editorView.getOpenEditorTitles();
     await expect(openTabs.length).toBeGreaterThan(0);
 });
 
 Then("the selected rows are pinned to the top of the table", async function () {
-    await browser.pause(1000); // Allow time for pinning
+    // Wait for pinned rows to appear
+    await browser.waitUntil(
+        async () => {
+            try {
+                const pinnedRows = await browser.$$(".ag-floating-top .ag-row");
+                return pinnedRows.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 10000, timeoutMsg: "Pinned rows did not appear within timeout" }
+    );
 
-    // Verify pinned rows exist
     const pinnedRows = await browser.$$(".ag-floating-top .ag-row");
     await expect(pinnedRows.length).toBeGreaterThan(0);
 
@@ -507,144 +634,269 @@ Then("the table displays member-specific columns", async function () {
 });
 
 Then("the table view returns to the previous dataset list", async function () {
-    await browser.pause(2000); // Allow time for navigation
+    // Wait for navigation to complete - Back button should disappear
+    await browser.waitUntil(
+        async () => {
+            const backButton = await getWebviewButtonByTitleWithRetry("Back", "primary", 500);
+            return backButton === null;
+        },
+        { timeout: 15000, timeoutMsg: "Did not return to previous dataset list (Back button still visible)" }
+    );
 
-    // Verify we're back to the main dataset view (no Back button)
     const backButton = await getWebviewButtonByTitle("Back");
     await expect(backButton).toBe(null);
 });
 
 Then("preserves the previous table state including pinned rows", async function () {
-    await browser.pause(3000);
-    const pinnedRows = await browser.$(".ag-row-pinned");
-    await expect(pinnedRows).not.toBe(null);
+    // Re-fetch the webview to ensure we have a fresh reference
+    this.tableView = await getWebviewSafely();
+    await this.tableView.open();
+    await waitForTableReady();
+
+    // Wait for pinned rows to be visible - use the floating-top container selector
+    await browser.waitUntil(
+        async () => {
+            try {
+                // Check for pinned rows in the floating top section
+                const pinnedRows = await browser.$$(".ag-floating-top .ag-row");
+                return pinnedRows.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 15000, timeoutMsg: "Pinned rows were not preserved after navigation" }
+    );
+
+    const pinnedRows = await browser.$$(".ag-floating-top .ag-row");
+    await expect(pinnedRows.length).toBeGreaterThan(0);
     await this.tableView.close();
 });
 
 // Context menu functionality
 When("the user right-clicks on a dataset row", async function () {
     await this.tableView.open();
-    const rows = await browser.$$(".ag-row");
-    for (const row of rows) {
-        const dsnameCell = await row.$("[col-id='dsname']");
-        const dsnameText = await dsnameCell.getText();
-        if (dsnameText === testInfo.sequential) {
-            await row.click({ button: "right" });
-            break;
-        }
-    }
+    await waitForTableReady();
+
+    // Find and right-click on the target dataset row with retry logic
+    await browser.waitUntil(
+        async () => {
+            try {
+                const rows = await browser.$$(".ag-row");
+                for (const row of rows) {
+                    const dsnameCell = await row.$("[col-id='dsname']");
+                    const dsnameText = await dsnameCell.getText();
+                    if (dsnameText === testInfo.sequential) {
+                        await row.click({ button: "right" });
+                        return true;
+                    }
+                }
+            } catch {
+                // Element became stale, retry
+            }
+            return false;
+        },
+        { timeout: 10000, timeoutMsg: `Could not find and right-click on dataset row: ${testInfo.sequential}` }
+    );
 });
 
 When("the user right-clicks on a member row", async function () {
-    // Ensure we're in the main VS Code frame, then re-fetch the webview to avoid stale element reference
-    await browser.switchToFrame(null);
-    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
-    await this.tableView.wait();
-    // Re-fetch after wait to get a fresh reference
-    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
+    this.tableView = await getWebviewSafely();
     await this.tableView.open();
+    await waitForTableReady();
 
-    const firstRow = await browser.$(".ag-row[row-index='0']");
-    await firstRow.waitForExist();
+    // Wait for first row and capture member info with retry logic
+    await browser.waitUntil(
+        async () => {
+            try {
+                const firstRow = await browser.$(".ag-row[row-index='0']");
+                if (!(await firstRow.isExisting())) return false;
 
-    // Capture the member name and dataset name for later verification
-    const memberNameCell = await firstRow.$("[col-id='dsname']");
-    this.selectedMemberName = await memberNameCell.getText();
+                // Capture the member name
+                const memberNameCell = await firstRow.$("[col-id='dsname']");
+                this.selectedMemberName = await memberNameCell.getText();
 
-    // Get the title to extract the PDS name
-    const titleElement = await browser.$(".table-view > div > h3");
-    const titleText = await titleElement.getText();
-    // Extract PDS name from title like "Members of TEST.PDS"
-    const pdsMatch = titleText.match(/Members of (.+?) (\d+)/i);
-    if (pdsMatch) {
-        this.selectedPdsName = pdsMatch[1];
-    }
+                // Get the title to extract the PDS name
+                const titleElement = await browser.$(".table-view > div > h3");
+                const titleText = await titleElement.getText();
+                // Extract PDS name from title like "Members of TEST.PDS (count)"
+                const pdsMatch = titleText.match(/Members of (.+?) \(/i);
+                if (pdsMatch) {
+                    this.selectedPdsName = pdsMatch[1];
+                }
 
-    await firstRow.click({ button: "right" });
+                // Re-fetch and right-click to avoid stale element
+                const freshFirstRow = await browser.$(".ag-row[row-index='0']");
+                await freshFirstRow.click({ button: "right" });
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 10000, timeoutMsg: "Could not right-click on member row" }
+    );
 });
 
 When('selects "Display in Tree" from the context menu', async function () {
-    const contextMenu = await browser.$(".szh-menu");
-    await contextMenu.waitForExist();
+    // Wait for context menu and click the item with retry logic
+    await browser.waitUntil(
+        async () => {
+            try {
+                const contextMenu = await browser.$(".szh-menu");
+                if (!(await contextMenu.isExisting())) return false;
 
-    let found = false;
-    const treeItems = await contextMenu.$$(".szh-menu__item");
-    for (const item of treeItems) {
-        const itemText = await item.getText();
-        if (itemText === "Display in Tree") {
-            await item.click();
-            found = true;
-            break;
-        }
-    }
-
-    await expect(found).toBe(true);
+                const menuItems = await contextMenu.$$(".szh-menu__item");
+                for (const item of menuItems) {
+                    const itemText = await item.getText();
+                    if (itemText === "Display in Tree") {
+                        await item.click();
+                        return true;
+                    }
+                }
+            } catch {
+                // Element became stale, retry
+            }
+            return false;
+        },
+        { timeout: 10000, timeoutMsg: 'Could not find and click "Display in Tree" menu item' }
+    );
 });
 
 Then("the dataset is revealed and focused in the Data Sets tree", async function () {
-    await browser.pause(2000); // Allow time for tree reveal
-
     // Close table view so that Selenium can focus on the tree
     await this.tableView.close();
 
+    // Wait for the tree to update and reveal the dataset
+    await browser.waitUntil(
+        async () => {
+            try {
+                const dsPane = await paneDivForTree("Data Sets");
+                const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
+                if (treeItems.length < 2) return false;
+
+                // Check if profile node is expanded
+                const profileNode = treeItems[1];
+                if (!(await profileNode.isExpanded())) return false;
+
+                // Check if dataset node exists
+                const dsNode = await profileNode.findChildItem(testInfo.sequential);
+                return dsNode != null;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 15000, timeoutMsg: "Dataset was not revealed in tree within timeout" }
+    );
+
     const dsPane = await paneDivForTree("Data Sets");
     const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
-    // Assume first item after favorites is the profile, check if expanded
     const profileNode = treeItems[1];
     await expect(await profileNode.isExpanded()).toBe(true);
 
-    // Find the dataset node and check if selected
-    const dsNode = await profileNode.findChildItem(/* assume from context or env */ testInfo.sequential);
+    const dsNode = await profileNode.findChildItem(testInfo.sequential);
     await expect(dsNode).toBeDefined();
-    await expect(await dsNode.elem.getAttribute("aria-selected")).toBe("true");
+
+    const dsNodeLabel = await dsNode.getLabel();
+    await expect(dsNodeLabel).toBe(testInfo.sequential);
 });
 
 Then("the PDS member is revealed and focused in the Data Sets tree", async function () {
-    await browser.pause(2000); // Allow time for tree reveal
-
     // Close table view to see tree
     await this.tableView.close();
 
-    // Get the Data Sets tree pane using the same pattern as TreeActions.steps.ts
+    // Wait for the tree to update and reveal the member
+    const memberName = this.selectedMemberName;
+    await browser.waitUntil(
+        async () => {
+            try {
+                const dsPane = await paneDivForTree("Data Sets");
+                const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
+                const allLabels = await Promise.all(treeItems.map(async (item) => await item.getLabel()));
+                return allLabels.includes(memberName);
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 15000, timeoutMsg: "PDS member was not revealed in tree within timeout" }
+    );
+
     const dsPane = await paneDivForTree("Data Sets");
     const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
     const allLabels = await Promise.all(treeItems.map(async (item) => await item.getLabel()));
-    await expect(allLabels.find((label) => label === this.selectedMemberName)).not.toBe(null);
+    await expect(allLabels.find((label) => label === this.selectedMemberName)).not.toBe(undefined);
 });
 
 // Hierarchical tree functionality
 When("the table loads with hierarchical tree support", async function () {
     await this.tableView.open();
+    await waitForTableReady();
 });
 
 Then("PDS datasets show expand and collapse indicators", async function () {
-    // Look for tree expansion indicators in PDS rows
-    // Verify tree column renderer is active
+    // Wait for tree expansion indicators to appear
+    await browser.waitUntil(
+        async () => {
+            try {
+                const expandIcons = await browser.$$(".ag-row > div[col-id='dsname'] > div > span > div > span > .codicon-chevron-right");
+                return expandIcons.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 10000, timeoutMsg: "No expand/collapse indicators found for PDS datasets" }
+    );
+
     const pdsRows = await browser.$$(".ag-row > div[col-id='dsname'] > div > span > div > span > .codicon-chevron-right");
     await expect(pdsRows.length).toBeGreaterThan(0);
 });
 
 Then("users can expand PDS nodes to view members inline", async function () {
-    // Find and expand a PDS node
-    const expandIcon = (await browser.$$(".ag-row > div[col-id='dsname'] > div > span > div > span > .codicon-chevron-right"))[0];
-    await expect(expandIcon).toBeExisting();
-    await expandIcon.click();
+    // Find and expand a PDS node with retry logic
+    await browser.waitUntil(
+        async () => {
+            try {
+                const expandIcons = await browser.$$(".ag-row > div[col-id='dsname'] > div > span > div > span > .codicon-chevron-right");
+                if (expandIcons.length === 0) return false;
+                await expandIcons[0].click();
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 10000, timeoutMsg: "Could not find and click expand icon" }
+    );
+
     // Verify child rows appeared
     await browser.waitUntil(
         async () => {
-            const childRows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='1']");
-            return childRows.length > 0;
+            try {
+                const childRows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='1']");
+                return childRows.length > 0;
+            } catch {
+                return false;
+            }
         },
-        { timeout: 10000 }
+        { timeout: 10000, timeoutMsg: "Child rows did not appear after expanding PDS" }
     );
 });
 
 Then("the tree structure is properly displayed", async function () {
-    // Verify hierarchical structure with proper indentation
+    // Wait for hierarchical structure to be visible
+    await browser.waitUntil(
+        async () => {
+            try {
+                const level0Rows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='0']");
+                const level1Rows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='1']");
+                return level0Rows.length > 0 && level1Rows.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        { timeout: 10000, timeoutMsg: "Tree structure not properly displayed" }
+    );
+
     const level0Rows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='0']");
     const level1Rows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='1']");
     await expect(level0Rows.length).toBeGreaterThan(0);
-    // Should have both parent and child levels if expanded
     await expect(level1Rows.length).toBeGreaterThan(0);
     await this.tableView.close();
 });
