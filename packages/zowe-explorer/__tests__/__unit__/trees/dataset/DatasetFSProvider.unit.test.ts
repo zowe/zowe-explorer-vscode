@@ -198,7 +198,7 @@ describe("DatasetFSProvider", () => {
 
                     return mockPdsEntry;
                 });
-                expect(await DatasetFSProvider.instance.readDirectory(testUris.pds)).toStrictEqual([
+                expect(await DatasetFSProvider.instance.readDirectory(testUris.pds.with({ query: "fetch=true" }))).toStrictEqual([
                     ["MEMB1", FileType.File],
                     ["MEMB2", FileType.File],
                     ["MEMB3", FileType.File],
@@ -216,10 +216,12 @@ describe("DatasetFSProvider", () => {
                     profileName: "sestest",
                     profile: testEntries.ps.metadata.profile,
                 });
-                readDirImplSpy = jest.spyOn(DatasetFSProvider.instance as any, "readDirectoryImplementation").mockResolvedValue([
-                    ["MEM1", vscode.FileType.File],
-                    ["MEM2", vscode.FileType.File],
-                ]);
+                readDirImplSpy = jest.spyOn(DatasetFSProvider.instance as any, "readDirectoryImplementation").mockResolvedValue({
+                    entries: new Map([
+                        ["MEM1", { type: FileType.File }],
+                        ["MEM2", { type: FileType.File }],
+                    ]),
+                });
                 (DatasetFSProvider.instance as any).requestCache.clear();
             });
 
@@ -1160,8 +1162,6 @@ describe("DatasetFSProvider", () => {
 
             const fakePdsMember = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pdsMember)), testEntries.pdsMember);
             testEntries.pds.entries.set("MEMBER1", fakePdsMember);
-            const lookupMock = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePdsMember);
-            const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(testEntries.pds);
             const allMembersMock = jest.fn().mockResolvedValue({
                 success: true,
                 apiResponse: {
@@ -1172,11 +1172,12 @@ describe("DatasetFSProvider", () => {
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 allMembers: allMembersMock,
             } as any);
+            const mockPdsEntry = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pds)), testEntries.pds);
+            mockPdsEntry.entries = new Map([["MEMBER1", fakePdsMember]]);
+            jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(mockPdsEntry);
             const res = await DatasetFSProvider.instance.stat(testUris.pdsMember);
-            expect(lookupMock).toHaveBeenCalledWith(testUris.pdsMember, false);
-            expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.pdsMember);
-            expect(allMembersMock).toHaveBeenCalledWith("USER.DATA.PDS", { attributes: true });
-            expect(res).toStrictEqual({ ...fakePdsMember, mtime: dayjs("2024-08-08 12:30").valueOf() });
+            expect(res.type).toBe(fakePdsMember.type);
+            expect(res.size).toBe(fakePdsMember.size);
             expect(fakePdsMember.wasAccessed).toBe(false);
         });
 
@@ -1287,7 +1288,7 @@ describe("DatasetFSProvider", () => {
                     ]),
                 };
 
-                const statSpy = jest.spyOn(DatasetFSProvider.instance as any, "statImplementation").mockResolvedValue(mockPdsEntry);
+                const statSpy = jest.spyOn(DatasetFSProvider.instance as any, "readDirectoryImplementation").mockResolvedValue(mockPdsEntry);
                 const call1 = DatasetFSProvider.instance.stat(testUriFetchTrue);
                 const call2 = DatasetFSProvider.instance.stat(testUriConflictTrue);
 
@@ -1322,36 +1323,37 @@ describe("DatasetFSProvider", () => {
             await DatasetFSProvider.instance.stat(fetchUri);
             await DatasetFSProvider.instance.stat(localUri);
 
-            expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri);
-            expect(lookupSpy).toHaveBeenCalledWith(localUri);
+            expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri.with({ path: "/sestest/USER.DATA.PDS" }));
+            expect(lookupSpy).toHaveBeenCalledWith(fetchUri.with({ path: "/sestest/USER.DATA.PDS" }), false);
         });
 
         it("should make a system call and if fetchByDefault is enabled and the entry is not in the cache", async () => {
             jest.spyOn(FeatureFlags, "get").mockReturnValue(true);
+            const allMembersMock = jest.fn().mockResolvedValue({
+                success: true,
+                apiResponse: {
+                    items: [
+                        { member: "MEM1", m4date: "2024-08-08", mtime: "12", msec: "30" },
+                        { member: "MEM2", m4date: "2024-08-08", mtime: "12", msec: "30" },
+                    ],
+                },
+                commandResponse: "",
+            });
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
-                allMembers: jest.fn().mockResolvedValue({
+                allMembers: allMembersMock,
+                dataSet: jest.fn().mockResolvedValue({
                     success: true,
-                    apiResponse: {
-                        items: [
-                            { member: "MEM1", m4date: "2024-08-08", mtime: "12", msec: "30" },
-                            { member: "MEM2", m4date: "2024-08-08", mtime: "12", msec: "30" },
-                        ],
-                    },
-                    commandResponse: "",
+                    apiResponse: { items: [{ dsname: "USER.DATA.PDS.NEW", dsorg: "PO" }] },
                 }),
             } as any);
 
             const fetchUri = Uri.from({ scheme: ZoweScheme.DS, path: "sestest/USER.DATA.PDS.NEW/MEM1" });
 
-            const cacheResourceSpy = jest.spyOn(DatasetFSProvider.instance as any, "lookupWithCache");
-            const lookupSpy = jest.spyOn(DatasetFSProvider.instance, "lookup");
             const remoteLookupForResourceSpy = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource");
 
             await DatasetFSProvider.instance.stat(fetchUri);
 
-            expect(cacheResourceSpy).toHaveBeenCalledWith(fetchUri);
-            expect(lookupSpy).toHaveBeenCalledWith(fetchUri);
-            expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri);
+            expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri.with({ path: "/sestest/USER.DATA.PDS.NEW" }));
         });
     });
 
@@ -1901,6 +1903,61 @@ describe("DatasetFSProvider", () => {
                 expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(getContentsMock).not.toHaveBeenCalled();
                 expect(result).toBeNull();
+            });
+        });
+        describe("request reuse cross-method scenarios", () => {
+            beforeEach(() => {
+                DatasetFSProvider.instance.requestCache.clear();
+                jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                    isRoot: false,
+                    slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                    profileName: "sestest",
+                    profile: testEntries.ps.metadata.profile,
+                });
+            });
+
+            it("should reuse the promise from readDirectory when a member stat is requested simultaneously", async () => {
+                const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
+                const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS/MEMBER1" });
+
+                const mockPdsEntry = {
+                    type: FileType.Directory,
+                    entries: new Map([["MEMBER1", { type: FileType.File, size: 123 }]]),
+                } as unknown as DirEntry;
+
+                const readDirImplSpy = jest.spyOn(DatasetFSProvider.instance as any, "readDirectoryImplementation").mockImplementation(async () => {
+                    await new Promise((resolve) => setTimeout(resolve, 50)); // Simulate async delay
+                    return mockPdsEntry;
+                });
+
+                const readDirPromise = DatasetFSProvider.instance.readDirectory(pdsUri);
+                const statPromise = DatasetFSProvider.instance.stat(memberUri);
+
+                const [dirResult, statResult] = await Promise.all([readDirPromise, statPromise]);
+
+                expect(readDirImplSpy).toHaveBeenCalledTimes(1);
+                expect(dirResult).toContainEqual(["MEMBER1", FileType.File]);
+                expect(statResult.size).toBe(123);
+            });
+
+            it("should NOT reuse readDirectory promise if the PDS name differs", async () => {
+                const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS1" });
+                const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS2/MEM1" });
+
+                // Provide a valid return for PDS2 so stat doesn't throw FileNotFound
+                const readDirImplSpy = jest
+                    .spyOn(DatasetFSProvider.instance as any, "readDirectoryImplementation")
+                    .mockImplementation(async (uri: vscode.Uri) => {
+                        if (uri.path.includes("PDS2")) {
+                            return {
+                                entries: new Map([["MEM1", { type: FileType.File, size: 0 }]]),
+                            } as any;
+                        }
+                        return { entries: new Map() } as any;
+                    });
+
+                await Promise.all([DatasetFSProvider.instance.readDirectory(pdsUri), DatasetFSProvider.instance.stat(memberUri)]);
+                expect(readDirImplSpy).toHaveBeenCalledTimes(2);
             });
         });
     });

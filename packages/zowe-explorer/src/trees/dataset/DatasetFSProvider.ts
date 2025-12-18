@@ -73,9 +73,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             // Check cache for resource
             const localLookup = this.lookup(uri);
+            //TODO Remove
+            console.log("fetch: false");
             if (localLookup) return localLookup;
         } catch {}
         // If resource not found, remote lookup
+        //TODO Remove
+        console.log("fetch: true");
         return this.remoteLookupForResource(uri);
     }
 
@@ -127,7 +131,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             // Locate the resource using the profile in the given URI.
             let resp;
-            const isPdsMember = !FsDatasetsUtils.isPdsEntry(entry) && (entry as DsEntry).isMember;
             const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
 
             // Wait for any ongoing authentication process to complete
@@ -142,69 +145,26 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
 
             await AuthUtils.retryRequest(uriInfo.profile, async () => {
-                if (isPdsMember) {
-                    const pds = this.lookupParentDirectory(uri);
-                    resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(pds.name, { attributes: true });
-                } else {
-                    resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(dsPath), {
-                        attributes: true,
-                    });
-                }
+                resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(dsPath), {
+                    attributes: true,
+                });
             });
 
-            let pdsEntry: PdsEntry;
             if (resp.success) {
                 const items = resp.apiResponse?.items ?? [];
-
-                if (isPdsMember) {
-                    pdsEntry = this.lookupParentDirectory(uri) as PdsEntry;
-                    const pdsMetadata = pdsEntry.metadata as DsEntryMetadata;
-                    const cleanParentPath = pdsMetadata?.path ?? uri.path.split("/").slice(0, -1).join("/");
-
-                    for (const item of items) {
-                        if (!item.member || !("m4date" in item)) continue;
-
-                        const { m4date, mtime, msec } = item;
-                        const itemTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
-
-                        const cachedMember = pdsEntry.entries.get(item.member);
-
-                        if (cachedMember) {
-                            if (cachedMember.mtime !== itemTime) {
-                                cachedMember.mtime = itemTime;
-                                cachedMember.wasAccessed = false;
-                            }
-                        } else {
-                            const newEntry = new DsEntry(item.member, true);
-
-                            newEntry.mtime = itemTime;
-                            newEntry.ctime = itemTime;
-                            newEntry.size = item.size ?? 0;
-
-                            const memberPath = `${cleanParentPath}/${item.member}`;
-                            newEntry.metadata = new DsEntryMetadata({
-                                profile: uriInfo.profile,
-                                path: memberPath,
-                            });
-
-                            pdsEntry.entries.set(item.member, newEntry);
-                        }
+                const ds = items?.[0];
+                if (ds != null && "m4date" in ds) {
+                    const { m4date, mtime, msec } = ds;
+                    const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
+                    if (entry.mtime != newTime) {
+                        entry.mtime = newTime;
+                        entry.wasAccessed = false;
                     }
-                } else {
-                    const ds = items?.[0];
-                    if (ds != null && "m4date" in ds) {
-                        const { m4date, mtime, msec } = ds;
-                        const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
-                        if (entry.mtime != newTime) {
-                            entry.mtime = newTime;
-                            entry.wasAccessed = false;
-                        }
-                    }
-                    return entry;
                 }
+                return entry;
             }
 
-            return pdsEntry;
+            return entry;
         } catch (e) {
             throw e;
         }
@@ -216,50 +176,61 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns A structure containing file type, time, size and other metrics
      */
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        const parentKey = "stat" + this.getQueryKey(uri) + "_" + uri.toString().split("/").slice(0, 3).join("/");
-
         const segments = uri.path.split("/").filter((s) => s.length > 0);
-        const isMemberRequest = segments.length === 3;
-        const memberName = isMemberRequest ? segments[2] : null;
+        const isMemberRequest = segments.length === 3; // /PROFILE/DSN/MEMBER
 
-        let pdsEntry: any;
+        if (isMemberRequest) {
+            const memberName = segments[2];
+            const parentPath = segments.slice(0, 2).join("/");
+            const parentUri = uri.with({ path: `/${parentPath}` });
+            const parentKey = "list" + this.getQueryKey(uri) + "_" + parentUri.toString();
 
-        try {
-            if (this.requestCache.has(parentKey)) {
-                pdsEntry = await this.requestCache.get(parentKey);
-            }
-        } catch (error) {
-            pdsEntry = undefined;
-        }
+            let pdsPromise = this.requestCache.get(parentKey);
 
-        if (!pdsEntry) {
-            const requestPromise = (async () => {
-                try {
-                    return await this.statImplementation(uri);
-                } finally {
-                    if (this.requestCache.get(parentKey) === requestPromise) {
-                        this.requestCache.delete(parentKey);
+            if (!pdsPromise) {
+                pdsPromise = (async () => {
+                    try {
+                        return await this.readDirectoryImplementation(parentUri);
+                    } finally {
+                        if (this.requestCache.get(parentKey) === pdsPromise) {
+                            this.requestCache.delete(parentKey);
+                        }
                     }
-                }
-            })();
-
-            this.requestCache.set(parentKey, requestPromise);
-            pdsEntry = await requestPromise;
-        }
-
-        if (!isMemberRequest) {
-            return pdsEntry;
-        }
-
-        if (pdsEntry && pdsEntry.entries && memberName) {
-            const memberStat = pdsEntry.entries.get(memberName);
-
-            if (memberStat) {
-                return memberStat;
+                })();
+                this.requestCache.set(parentKey, pdsPromise);
+            } else {
+                console.log("[stat] Valid reuse for: " + parentKey);
             }
+            // Await the PDS load
+            const pdsEntry = (await pdsPromise) as DirEntry;
+
+            if (pdsEntry && pdsEntry.entries) {
+                const memberStat = pdsEntry.entries.get(memberName);
+                if (memberStat) {
+                    return memberStat;
+                }
+            }
+            throw vscode.FileSystemError.FileNotFound(uri);
         }
 
-        throw vscode.FileSystemError.FileNotFound(uri);
+        const key = "stat" + this.getQueryKey(uri) + "_" + uri.toString().split("/").slice(0, 3).join("/");
+        if (this.requestCache.has(key)) {
+            console.log("[stat] request reuse for: " + key);
+            return await this.requestCache.get(key);
+        }
+
+        const requestPromise = (async () => {
+            try {
+                return await this.statImplementation(uri);
+            } finally {
+                if (this.requestCache.get(key) === requestPromise) {
+                    this.requestCache.delete(key);
+                }
+            }
+        })();
+
+        this.requestCache.set(key, requestPromise);
+        return await requestPromise;
     }
 
     private async fetchEntriesForProfile(uri: vscode.Uri, uriInfo: UriFsInfo, pattern: string): Promise<FilterEntry> {
@@ -470,6 +441,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<DirEntry | DsEntry> {
+        //TODO Remove
+        console.log("remoteLookupCalled: " + uri);
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: uriInfo.profileName });
         // Ensure that an entry exists for the given profile
@@ -492,16 +465,21 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
     }
 
-    public async readDirectoryImplementation(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+    public async readDirectoryImplementation(uri: vscode.Uri): Promise<DirEntry> {
+        let shouldFetch: boolean = true;
         let dsEntry: DirEntry | DsEntry = null;
         try {
-            dsEntry = this._lookupAsDirectory(uri, false);
+            const query = new URLSearchParams(uri.query);
+            shouldFetch = query.get("fetch") === "true" || query.has("pattern");
+
+            dsEntry = shouldFetch ? await this.remoteLookupForResource(uri) : this._lookupAsDirectory(uri, false);
         } catch (err) {
             if (!(err instanceof vscode.FileSystemError)) {
                 throw err;
             }
 
-            if (err.code === "FileNotFound") {
+            //TODO Feature Flag
+            if (err.code === "FileNotFound" && FeatureFlags.get("fetchByDefault")) {
                 dsEntry = await this.remoteLookupForResource(uri);
             }
         }
@@ -512,10 +490,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
-        dsEntry = (await this.remoteLookupForResource(uri)) as DirEntry;
-        return Array.from(dsEntry.entries.entries()).map(
-            (value: [string, DirEntry | FileEntry]) => [value[0], value[1].type] as [string, vscode.FileType]
-        );
+        return dsEntry;
     }
 
     /**
@@ -524,24 +499,33 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns An array of tuples containing each entry name and type
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        const key = "readDir" + this.getQueryKey(uri) + "_" + uri.toString();
+        // Build requestCache key based on uri, query, and stripping the trailing slash
+        const key = "list" + this.getQueryKey(uri) + "_" + uri.toString().replace(/\/$/, "");
 
-        if (this.requestCache.has(key)) {
-            return this.requestCache.get(key);
+        let requestPromise = this.requestCache.get(key);
+
+        if (!requestPromise) {
+            requestPromise = (async () => {
+                try {
+                    return await this.readDirectoryImplementation(uri);
+                } finally {
+                    if (this.requestCache.get(key) === requestPromise) {
+                        this.requestCache.delete(key);
+                    }
+                }
+            })();
+            this.requestCache.set(key, requestPromise);
+        } else {
+            //TODO Remove
+            console.log("[readDir] Request join for: " + key);
         }
 
-        const requestPromise = (async () => {
-            try {
-                return await this.readDirectoryImplementation(uri);
-            } finally {
-                if (this.requestCache.get(key) === requestPromise) {
-                    this.requestCache.delete(key);
-                }
-            }
-        })();
+        const dirEntry = (await requestPromise) as DirEntry;
 
-        this.requestCache.set(key, requestPromise);
-        return requestPromise;
+        // Convert the DirEntry to the array format required by vscode.FileSystemProvider
+        return Array.from(dirEntry.entries.entries()).map(
+            (value: [string, DirEntry | FileEntry]) => [value[0], value[1].type] as [string, vscode.FileType]
+        );
     }
 
     /**
@@ -741,7 +725,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns The data set's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const key = "readFile" + this.getQueryKey(uri) + "_" + uri.toString();
+        const key = "readFile" + this.getQueryKey(uri) + "_" + uri.toString().replace(/\/$/, "");
 
         if (this.requestCache.has(key)) {
             return this.requestCache.get(key);
