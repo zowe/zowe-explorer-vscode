@@ -286,13 +286,20 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     /**
      * Creates and returns new profile node, and pushes it to mFavorites
      * @param profileName Name of profile
+     * @param targetProfileType Optional profile type to filter creation
      * @returns {ZoweJobNode}
      */
-    public async createProfileNodeForFavs(profileName: string): Promise<ZoweJobNode | null> {
+    public async createProfileNodeForFavs(profileName: string, targetProfileType?: string): Promise<ZoweJobNode | null> {
         ZoweLogger.trace("JobTree.createProfileNodeForFavs called.");
         let favProfileNode: ZoweJobNode;
         try {
             const profile = Profiles.getInstance().loadNamedProfile(profileName);
+            if (targetProfileType && profile.type !== targetProfileType) {
+                return null;
+            }
+            if (!ZoweExplorerApiRegister.getInstance().registeredJesApiTypes().includes(profile.type)) {
+                return null;
+            }
             favProfileNode = new ZoweJobNode({
                 label: profileName,
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -339,7 +346,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         await this.refreshFavorites();
     }
 
-    public async refreshFavorites(): Promise<void> {
+    public async refreshFavorites(profileType?: string): Promise<void> {
         const lines: string[] = this.mPersistence.readFavorites();
         if (lines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No jobs favorites found."));
@@ -351,7 +358,8 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             // The profile node used for grouping respective favorited items.
             // Create a node if it does not already exist in the Favorites array
             const favProfileNode =
-                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? (await this.createProfileNodeForFavs(fav.profileName));
+                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ??
+                (await this.createProfileNodeForFavs(fav.profileName, profileType));
 
             if (favProfileNode == null || fav.contextValue == null || favProfileNode.children.some((child) => child.label === fav.label)) {
                 continue;
@@ -443,11 +451,11 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 }
             } catch (error) {
                 const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.
-                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.
-                          Would you like to do this now? {1}`,
+                    message: `Error: You have Zowe job favorites that refer to a non-existent profile named: {0}.
+To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n
+Would you like to do this now?`,
                     args: [profileName, SharedUtils.getAppName()],
-                    comment: ["Profile name", "Application name"],
+                    comment: ["Profile name"],
                 });
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                 ZoweLogger.error(errMessage + error.toString());

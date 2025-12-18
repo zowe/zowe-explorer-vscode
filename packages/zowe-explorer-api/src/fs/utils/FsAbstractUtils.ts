@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../../profiles/ProfilesCache";
 import { DirEntry, FileEntry, FilterEntry, IFileSystemEntry, UriFsInfo } from "../types/abstract";
 import { Gui } from "../../globals";
@@ -77,5 +78,50 @@ export class FsAbstractUtils {
 
     public static isFilterEntry(entry: IFileSystemEntry): entry is FilterEntry {
         return entry != null && "filter" in entry;
+    }
+
+    /**
+     * Executes the provided API getter and translates "missing API/type" failures
+     * into a `FileSystemError.Unavailable` error for users and extenders.
+     *
+     * @param profile The profile used to resolve the API
+     * @param apiGetter A callback that returns the API instance (or throws)
+     * @param options.apiName Optional friendly name for the API (e.g. "Common API")
+     * @param options.registeredTypes Optional list of registered types to short-circuit early
+     * @returns The value from `apiGetter` when successful
+     * @throws vscode.FileSystemError.Unavailable when the profile type is not registered or the API getter throws a "non-existing" error
+     */
+    public static getApiOrThrowUnavailable<T>(
+        profile: imperative.IProfileLoaded,
+        apiGetter: () => T,
+        options?: { apiName?: string; registeredTypes?: string[] }
+    ): T {
+        const apiName = options?.apiName ?? "API";
+        const registeredTypes = options?.registeredTypes;
+
+        if (registeredTypes && profile?.type && !registeredTypes.includes(profile.type)) {
+            throw vscode.FileSystemError.Unavailable(
+                vscode.l10n.t({
+                    message: "Profile type {0} is not registered for {1}. Verify that the contributing extension is installed.",
+                    args: [profile.type, apiName],
+                    comment: ["Profile type", "API name"],
+                })
+            );
+        }
+
+        try {
+            return apiGetter();
+        } catch (err) {
+            if (err instanceof Error && err.message.includes("non-existing")) {
+                throw vscode.FileSystemError.Unavailable(
+                    vscode.l10n.t({
+                        message: "Profile type {0} does not have a registered {1}. Verify that the contributing extension is installed.",
+                        args: [profile?.type, apiName],
+                        comment: ["Profile type", "API name"],
+                    })
+                );
+            }
+            throw err;
+        }
     }
 }
