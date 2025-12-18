@@ -43,6 +43,7 @@ import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
 
 const EXPECTED_MEMBER_LENGTH = 2; // /DATA.SET/MEMBER
+
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private static _instance: DatasetFSProvider;
     private constructor() {
