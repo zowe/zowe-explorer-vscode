@@ -15,9 +15,12 @@ import { FeatureFlags } from "../../../src";
 
 const FLAGS_FILE = "feature-flags.json";
 jest.mock("fs");
+
 describe("FeatureFlags", () => {
     let readFileSpy: jest.SpyInstance;
     let writeFileSpy: jest.SpyInstance;
+    let mkdirSpy: jest.SpyInstance;
+    let existsSyncSpy: jest.SpyInstance;
 
     beforeEach(() => {
         const currentFlags = (FeatureFlags as any).flags;
@@ -29,7 +32,8 @@ describe("FeatureFlags", () => {
 
         readFileSpy = jest.spyOn(fsPromises, "readFile").mockResolvedValue("{}");
         writeFileSpy = jest.spyOn(fsPromises, "writeFile").mockResolvedValue(undefined);
-        jest.spyOn(fs, "existsSync").mockReturnValue(true);
+        mkdirSpy = jest.spyOn(fsPromises, "mkdir").mockResolvedValue(undefined as any);
+        existsSyncSpy = jest.spyOn(fs, "existsSync").mockReturnValue(true);
     });
 
     afterEach(() => {
@@ -45,6 +49,32 @@ describe("FeatureFlags", () => {
         expect(readFileSpy).toHaveBeenCalledWith(expect.stringContaining(FLAGS_FILE), expect.anything());
         expect(FeatureFlags.get("featureA")).toBe(true);
         expect(FeatureFlags.get("limit")).toBe(10);
+    });
+
+    it("should handle missing file in loadFromDisk (return early)", async () => {
+        existsSyncSpy.mockReturnValue(false);
+
+        await FeatureFlags.init();
+
+        expect(readFileSpy).not.toHaveBeenCalled();
+        expect(FeatureFlags.get("featureA")).toBeUndefined();
+    });
+
+    it("should handle empty file content in loadFromDisk", async () => {
+        readFileSpy.mockResolvedValue("   ");
+
+        await FeatureFlags.init();
+
+        expect(readFileSpy).toHaveBeenCalled();
+        expect(FeatureFlags.get("anything")).toBeUndefined();
+    });
+
+    it("should catch errors during loadFromDisk and reset flags", async () => {
+        readFileSpy.mockRejectedValue(new Error("Disk read failure"));
+
+        await FeatureFlags.init();
+
+        expect(FeatureFlags.get("anything")).toBeUndefined();
     });
 
     it("should set and get values in memory without writing to disk by default", async () => {
@@ -64,6 +94,15 @@ describe("FeatureFlags", () => {
             expect.stringContaining('"persistedFeature": 123'),
             expect.anything()
         );
+    });
+
+    it("should create directory if it does not exist during saveToDisk", async () => {
+        existsSyncSpy.mockReturnValue(false);
+
+        await FeatureFlags.set("persistedFeature", 123, true);
+
+        expect(mkdirSpy).toHaveBeenCalledWith(expect.any(String), { recursive: true });
+        expect(writeFileSpy).toHaveBeenCalled();
     });
 
     it("should remove a flag from memory", async () => {
