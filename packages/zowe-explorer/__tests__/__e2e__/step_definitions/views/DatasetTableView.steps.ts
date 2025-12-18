@@ -737,28 +737,24 @@ When("the user right-clicks on a member row", async function () {
 });
 
 When('selects "Display in Tree" from the context menu', async function () {
-    // Wait for context menu and click the item with retry logic
-    await browser.waitUntil(
-        async () => {
-            try {
-                const contextMenu = await browser.$(".szh-menu");
-                if (!(await contextMenu.isExisting())) return false;
+    // Wait for context menu to be fully rendered with items
+    const contextMenu = await browser.$(".szh-menu");
+    await browser.waitUntil(async () => (await contextMenu.isExisting()) && (await contextMenu.$$(".szh-menu__item")).length > 0, {
+        timeout: 10000,
+        timeoutMsg: "Context menu did not appear with menu items",
+    });
 
-                const menuItems = await contextMenu.$$(".szh-menu__item");
-                for (const item of menuItems) {
-                    const itemText = await item.getText();
-                    if (itemText === "Display in Tree") {
-                        await item.click();
-                        return true;
-                    }
-                }
-            } catch {
-                // Element became stale, retry
-            }
-            return false;
-        },
-        { timeout: 10000, timeoutMsg: 'Could not find and click "Display in Tree" menu item' }
-    );
+    // Now find and click the "Display in Tree" menu item
+    const menuItems = await contextMenu.$$(".szh-menu__item");
+    for (const item of menuItems) {
+        await item.waitForClickable();
+        const itemText = await item.getText();
+        if (itemText === "Display in Tree") {
+            await item.click();
+            return;
+        }
+    }
+    throw new Error('Could not find "Display in Tree" menu item');
 });
 
 Then("the dataset is revealed and focused in the Data Sets tree", async function () {
