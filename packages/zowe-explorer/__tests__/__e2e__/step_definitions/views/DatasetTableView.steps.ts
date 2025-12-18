@@ -200,32 +200,60 @@ Then("the table displays datasets matching the pattern", async function () {
 
 // Common table view setup
 Given("a user who has the dataset table view opened", async function () {
+    // Ensure we're in the main VS Code frame before getting workbench
+    await browser.switchToFrame(null);
     this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
     await this.tableView.wait();
 });
 
 Given("a user who has the dataset table view opened with PS datasets", async function () {
-    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
-    await this.tableView.wait();
+    // Ensure we're in the main VS Code frame before getting workbench
+    await browser.switchToFrame(null);
 
+    // Wait for webview to be available, then re-fetch before opening to avoid stale element
+    let tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
+    await tableView.wait();
+
+    // Re-fetch the webview after wait to get a fresh reference
+    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
     await this.tableView.open();
 
-    // Verify we have PS (sequential) datasets
-    const psRows = await browser.$$(".ag-row[row-index] [col-id='dsorg']");
-    let hasPsDatasets = false;
+    // Wait for the table to be fully loaded
+    await browser.waitUntil(
+        async () => {
+            const rows = await browser.$$(".ag-row[row-index]");
+            return rows.length > 0;
+        },
+        { timeout: 10000, timeoutMsg: "Table rows did not load within timeout" }
+    );
 
-    for (const cell of psRows) {
-        const cellText = await cell.getText();
-        if (cellText === "PS") {
-            hasPsDatasets = true;
-            break;
-        }
-    }
+    // Verify we have PS (sequential) datasets using waitUntil to handle stale elements
+    const hasPsDatasets = await browser.waitUntil(
+        async () => {
+            // Re-fetch elements on each iteration to avoid stale element references
+            const psRows = await browser.$$(".ag-row[row-index] [col-id='dsorg']");
+            for (let i = 0; i < psRows.length; i++) {
+                try {
+                    const cellText = await psRows[i].getText();
+                    if (cellText === "PS") {
+                        return true;
+                    }
+                } catch {
+                    // Element became stale, continue to next iteration which will re-fetch
+                    return false;
+                }
+            }
+            return false;
+        },
+        { timeout: 10000, timeoutMsg: "No PS datasets found in table" }
+    );
 
     await expect(hasPsDatasets).toBe(true);
 });
 
 Given("a user who has the dataset table view opened with PDS datasets", async function () {
+    // Ensure we're in the main VS Code frame before getting workbench
+    await browser.switchToFrame(null);
     this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
     await this.tableView.wait();
 
@@ -247,11 +275,15 @@ Given("a user who has the dataset table view opened with PDS datasets", async fu
 });
 
 Given("a user who has the dataset table view opened with mixed dataset types", async function () {
+    // Ensure we're in the main VS Code frame before getting workbench
+    await browser.switchToFrame(null);
     this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
     await this.tableView.wait();
 });
 
 Given("a user who has focused on a PDS and is viewing its members", async function () {
+    // Ensure we're in the main VS Code frame before getting workbench
+    await browser.switchToFrame(null);
     this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
     await this.tableView.wait();
     await this.tableView.open();
@@ -263,6 +295,8 @@ Given("a user who has focused on a PDS and is viewing its members", async functi
 });
 
 Given("a user who has the dataset table view opened with PDS members", async function () {
+    // Ensure we're in the main VS Code frame before getting workbench
+    await browser.switchToFrame(null);
     this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
     await this.tableView.wait();
 
@@ -270,6 +304,8 @@ Given("a user who has the dataset table view opened with PDS members", async fun
 });
 
 Given("a user who has the dataset table view opened with many datasets", async function () {
+    // Ensure we're in the main VS Code frame before getting workbench
+    await browser.switchToFrame(null);
     this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
     await this.tableView.wait();
 
@@ -284,26 +320,35 @@ Given("a user who has the dataset table view opened with many datasets", async f
 
 // Row actions functionality
 When("the user selects one or more sequential datasets", async function () {
-    // Find and select PS datasets
-    const rows = await browser.$$(".ag-row[row-index]");
-    let selectedCount = 0;
+    // Find and select a PS dataset, using index-based approach to avoid stale elements
+    const selected = await browser.waitUntil(
+        async () => {
+            const rows = await browser.$$(".ag-row[row-index]");
+            for (let i = 0; i < rows.length; i++) {
+                try {
+                    // Re-fetch the row by index to get fresh reference
+                    const row = (await browser.$$(".ag-row[row-index]"))[i];
+                    if (!row) continue;
 
-    for (const row of rows) {
-        const dsorgCell = await row.$("[col-id='dsorg']");
-        const dsorgText = await dsorgCell.getText();
+                    const dsorgCell = await row.$("[col-id='dsorg']");
+                    const dsorgText = await dsorgCell.getText();
 
-        if (dsorgText === "PS" && selectedCount < 2) {
-            const checkbox = await row.$(".ag-selection-checkbox");
-            await checkbox.click();
-            selectedCount++;
-        }
+                    if (dsorgText === "PS") {
+                        const checkbox = await row.$(".ag-selection-checkbox");
+                        await checkbox.click();
+                        return true;
+                    }
+                } catch {
+                    // Element became stale, retry from the beginning
+                    return false;
+                }
+            }
+            return false;
+        },
+        { timeout: 10000, timeoutMsg: "Could not find and select a PS dataset" }
+    );
 
-        if (selectedCount === 2) {
-            break;
-        }
-    }
-
-    await expect(selectedCount).toBeGreaterThan(0);
+    await expect(selected).toBe(true);
 });
 
 When("the user selects one or more rows", async function () {
@@ -491,6 +536,14 @@ When("the user right-clicks on a dataset row", async function () {
 });
 
 When("the user right-clicks on a member row", async function () {
+    // Ensure we're in the main VS Code frame, then re-fetch the webview to avoid stale element reference
+    await browser.switchToFrame(null);
+    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
+    await this.tableView.wait();
+    // Re-fetch after wait to get a fresh reference
+    this.tableView = (await (await browser.getWorkbench()).getAllWebviews())[0];
+    await this.tableView.open();
+
     const firstRow = await browser.$(".ag-row[row-index='0']");
     await firstRow.waitForExist();
 
