@@ -221,7 +221,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
-        const key = "stat" + this.getQueryKey(uri) + "_" + uri.toString().split("/").slice(0, 3).join("/");
+        const key = "list" + this.getQueryKey(uri) + "_" + uri.toString().split("/").slice(0, 3).join("/");
         if (this.requestCache.has(key)) {
             console.log("[stat] request reuse for: " + key);
             return await this.requestCache.get(key);
