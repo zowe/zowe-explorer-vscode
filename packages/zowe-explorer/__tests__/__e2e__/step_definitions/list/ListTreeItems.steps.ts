@@ -9,7 +9,7 @@
  *
  */
 
-import { Given, Then, When, IWorld } from "@cucumber/cucumber";
+import { Given, Then, When } from "@cucumber/cucumber";
 import { paneDivForTree, TreeHelpers } from "../../../__common__/shared.wdio";
 import { Key } from "webdriverio";
 import quickPick from "../../../__pageobjects__/QuickPick";
