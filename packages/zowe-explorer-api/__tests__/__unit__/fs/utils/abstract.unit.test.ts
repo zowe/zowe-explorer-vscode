@@ -107,3 +107,51 @@ describe("isFilterEntry", () => {
         expect(FsAbstractUtils.isFilterEntry(file)).toBe(false);
     });
 });
+
+describe("getApiOrThrowUnavailable", () => {
+    const profile: imperative.IProfileLoaded = { name: "test", type: "custom", profile: {} } as imperative.IProfileLoaded;
+
+    it("returns the API when registered and getter succeeds", () => {
+        const api = FsAbstractUtils.getApiOrThrowUnavailable(
+            profile,
+            () => ({ test: true }),
+            { apiName: "Test API", registeredTypes: ["custom"] }
+        );
+        expect(api).toEqual({ test: true });
+    });
+
+    it("throws FileSystemError.Unavailable when profile type is not registered", () => {
+        expect(() =>
+            FsAbstractUtils.getApiOrThrowUnavailable(
+                profile,
+                () => ({ test: true }),
+                { apiName: "Test API", registeredTypes: [] }
+            )
+        ).toThrow(vscode.FileSystemError);
+    });
+
+    it("throws FileSystemError.Unavailable when getter throws a non-existing error", () => {
+        expect(() =>
+            FsAbstractUtils.getApiOrThrowUnavailable(
+                profile,
+                () => {
+                    throw new Error("Internal error: Tried to call a non-existing Test API");
+                },
+                { apiName: "Test API", registeredTypes: ["custom"] }
+            )
+        ).toThrow(vscode.FileSystemError);
+    });
+
+    it("rethrows other errors from the getter", () => {
+        const expected = new Error("unexpected");
+        expect(() =>
+            FsAbstractUtils.getApiOrThrowUnavailable(
+                profile,
+                () => {
+                    throw expected;
+                },
+                { apiName: "Test API", registeredTypes: ["custom"] }
+            )
+        ).toThrow(expected);
+    });
+});

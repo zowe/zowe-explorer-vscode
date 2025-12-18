@@ -1330,6 +1330,109 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
         });
     });
 
+    describe("vsam", () => {
+        it("should handle a VSAM with duplicate entries - same name", async () => {
+            const sessionNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session,
+                profile: profileOne,
+                contextOverride: Constants.DS_SESSION_CONTEXT,
+            });
+            sessionNode.pattern = "TEST.*";
+
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
+                applyPatternsToChildren: jest.fn(),
+                resetFilterForChildren: jest.fn(),
+            } as any);
+            jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+                loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
+            } as any);
+            jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "TEST.VSAM",
+                                dsorg: "VS",
+                                vol: "*VSAM*",
+                            },
+                            {
+                                dsname: "TEST.VSAM",
+                                dsorg: "VS",
+                                vol: "VOL1",
+                            },
+                        ],
+                    },
+                },
+            ]);
+            jest.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue(new DsEntry("TEST.VSAM", false));
+            jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+
+            const children = await sessionNode.getChildren();
+            expect(children).toHaveLength(1);
+            expect(children[0].contextValue).toBe(Constants.VSAM_CONTEXT);
+            expect(children[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+            expect(children[0].resourceUri).toBeDefined();
+            expect(children[0].resourceUri?.path).toBe("/sestest/TEST.VSAM");
+            expect(children[0].getStats()).toEqual(expect.objectContaining({ dsorg: "VS", vol: "*VSAM*" }));
+        });
+
+        it("should handle a VSAM with duplicate entries - DATA and INDEX", async () => {
+            const sessionNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session,
+                profile: profileOne,
+                contextOverride: Constants.DS_SESSION_CONTEXT,
+            });
+            sessionNode.pattern = "TEST.*";
+
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
+                applyPatternsToChildren: jest.fn(),
+                resetFilterForChildren: jest.fn(),
+            } as any);
+            jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+                loadNamedProfile: jest.fn().mockReturnValueOnce(profileOne),
+            } as any);
+            jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "TEST.VSAM",
+                                dsorg: "VS",
+                                vol: "*VSAM*",
+                            },
+                            {
+                                dsname: "TEST.VSAM.DATA",
+                                dsorg: "VS",
+                                vol: "VOL1",
+                            },
+                            {
+                                dsname: "TEST.VSAM.INDEX",
+                                dsorg: "VS",
+                                vol: "VOL1",
+                            },
+                        ],
+                    },
+                },
+            ]);
+            jest.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue(new DsEntry("TEST.VSAM", false));
+            jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+
+            const children = await sessionNode.getChildren();
+            expect(children).toHaveLength(1);
+            expect(children[0].contextValue).toBe(Constants.VSAM_CONTEXT);
+            expect(children[0].collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+            expect(children[0].resourceUri).toBeDefined();
+            expect(children[0].resourceUri?.path).toBe("/sestest/TEST.VSAM");
+            expect(children[0].getStats()).toEqual(expect.objectContaining({ dsorg: "VS", vol: "*VSAM*" }));
+        });
+    });
+
     it("calls error handling when list response is unsuccessful", async () => {
         const errorHandlingMock = new MockedProperty(AuthUtils, "errorHandling");
         const mockProfilesInstance = jest.spyOn(Profiles, "getInstance").mockReturnValue({

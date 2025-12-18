@@ -1144,6 +1144,7 @@ describe("DatasetFSProvider", () => {
                         return { ...createIProfile(), ISession: { type: imperative.SessConstants.AUTH_TYPE_TOKEN } };
                     },
                 }),
+                registeredApiTypes: jest.fn().mockReturnValue(["zosmf"]),
             } as any);
             try {
                 await DatasetFSProvider.instance.stat(testUris.ps.with({ query: "fetch=true" }));

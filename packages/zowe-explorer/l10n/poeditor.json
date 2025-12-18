@@ -197,6 +197,9 @@
   "uss.filterBy": {
     "Search by Directory": ""
   },
+  "uss.setUssPath": {
+    "Filter USS by Path": ""
+  },
   "uss.cd": {
     "Go Up One Level": ""
   },
@@ -758,6 +761,15 @@
   "The paste operation is not supported for this node.": "",
   "Pasting files...": "",
   "copyName was called on USS node {0}, but its fullPath is invalid.": "",
+  "No USS profiles found. Please add a profile first.": "",
+  "Select a profile": "",
+  "Enter the USS path to filter on": "",
+  "/u/username/directory": "",
+  "Failed to filter USS tree: {0}": "",
+  "USS path cannot be empty": "",
+  "USS path must start with /": "",
+  "Failed to reveal '{0}': {1}": "",
+  "'{0}' not found in directory '{1}'": "",
   "Invalid job owner": "",
   "Invalid job prefix": "",
   "Failed to parse a saved favorite. Attempted to parse: {0}": "",
@@ -954,7 +966,6 @@
   "This action is only supported for session and PDS nodes. Please select a session or PDS node.": "",
   "No profiles available.": "",
   "Select a profile to search for data sets": "",
-  "Select a profile": "",
   "Enter Data Set Pattern": "",
   "e.g., USER.*, PUBLIC.DATA.*, etc.": "",
   "Enter a dataset pattern to search for": "",
