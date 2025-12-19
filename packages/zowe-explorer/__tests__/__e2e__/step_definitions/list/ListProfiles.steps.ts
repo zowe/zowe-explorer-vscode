@@ -65,7 +65,7 @@ Then("the user can set an existing filter on the profile", async function () {
     await existingFilterSelector.click();
     if (treeLowercased === "jobs") {
         // For the Jobs tree, the "Submit this query" entry will need selected after entering filter
-        const submitEntry = await quickPick.findItemByIndex(0);
+        const submitEntry = await quickPick.findItem("$(check) Submit this query");
         await expect(submitEntry).toBeClickable();
         await submitEntry.click();
     } else {
