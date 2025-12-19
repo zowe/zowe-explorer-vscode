@@ -9,10 +9,37 @@
  *
  */
 
-import { Given, Then, When } from "@cucumber/cucumber";
+import { After, Given, Then, When } from "@cucumber/cucumber";
 import { getZoweExplorerContainer } from "../../__common__/shared.wdio";
 
+/**
+ * Ensures the browser is back in the main frame context after each scenario.
+ * This prevents issues where a webview left open by one scenario
+ * causes the next scenario to fail when trying to access the workbench.
+ */
+After(async function () {
+    try {
+        // Switch back to main frame to ensure clean state for next scenario
+        await browser.switchToFrame(null);
+
+        // If there's a table view page object, close it
+        if (this.tableViewPage) {
+            await this.tableViewPage.close();
+            this.tableViewPage = null;
+        }
+    } catch {
+        // Ignore errors during cleanup
+    }
+});
+
 Given("a user who is looking at the Zowe Explorer tree views", async () => {
+    // Ensure we're in the main frame before trying to access workbench
+    try {
+        await browser.switchToFrame(null);
+    } catch {
+        // Already in main frame
+    }
+
     const zeContainer = await getZoweExplorerContainer();
     const zeView = await zeContainer.openView();
     await expect(zeView).toBeDefined();

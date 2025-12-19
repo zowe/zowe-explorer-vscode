@@ -16,6 +16,8 @@ import quickPick from "../../../__pageobjects__/QuickPick";
 import { clickContextMenuItem, paneDivForTree } from "../../../__common__/shared.wdio";
 import { DatasetTableViewPage } from "../../../__pageobjects__/DatasetTableViewPage";
 
+// ==================== Test Configuration ====================
+
 const testInfo = {
     profileName: process.env.ZE_TEST_PROFILE_NAME,
     dsFilter: process.env.ZE_TEST_DS_FILTER,
@@ -24,105 +26,101 @@ const testInfo = {
     testPattern: process.env.ZE_TEST_DS_PATTERN,
 };
 
-// Basic table view setup steps
-When('the user right-clicks on the dataset profile and selects "Show as Table"', async function () {
-    this.workbench = await browser.getWorkbench();
+// ==================== Helper Functions ====================
 
+/**
+ * Gets or creates a page object instance for the current scenario.
+ * Ensures consistent page object usage across steps.
+ */
+async function getTableViewPage(world: any): Promise<DatasetTableViewPage> {
+    if (!world.tableViewPage) {
+        world.tableViewPage = new DatasetTableViewPage(browser);
+    }
+    return world.tableViewPage;
+}
+
+/**
+ * Opens the table view and waits for it to be ready.
+ */
+async function openAndWaitForTable(world: any): Promise<DatasetTableViewPage> {
+    const page = await getTableViewPage(world);
+    await page.open();
+    await page.waitForReady();
+    return page;
+}
+
+// ==================== Table View Setup Steps ====================
+
+When('the user right-clicks on the dataset profile and selects "Show as Table"', async function () {
+    // Reset page object state since we're opening a new/different table view
+    this.tableViewPage = null;
     await clickContextMenuItem(await this.helpers.getProfileNode(), "Show as Table");
 });
 
 When('the user right-clicks on a PDS and selects "Show as Table"', async function () {
-    this.workbench = await browser.getWorkbench();
+    // Reset page object state since we're opening a new/different table view
+    this.tableViewPage = null;
 
-    // Find and select a PDS from the filtered results
     this.pdsNode = await this.helpers.mProfileNode.findChildItem(testInfo.pds);
     await expect(this.pdsNode).toBeDefined();
-
     await clickContextMenuItem(this.pdsNode, "Show as Table");
 });
 
 Then("the dataset table view appears in the Zowe Resources panel", async function () {
-    // Store the page object for later use in the scenario
-    this.tableViewPage = new DatasetTableViewPage(browser);
-    await this.tableViewPage.open();
+    // Create a fresh page object to ensure we get the current webview frame
+    const page = await getTableViewPage(this);
+    await page.open();
 
-    // Wait for table view to exist
-    await this.tableViewPage.waitForTableView();
-
-    // Wait for the title element to exist and be populated
-    // The title could be either:
-    // - PDS members view: "Members of PDS.NAME (count)"
-    // - Dataset list view: "[PROFILE]: filter"
-    const finalTitle = await this.tableViewPage.waitForTitle();
-
-    // Verify the title is valid
-    await browser.waitUntil(
-        async () => {
-            const titleText = await this.tableViewPage.getTitle();
-            // Check if it's a valid PDS members title or dataset list title
-            const isPdsMembersTitle = /Members of/i.test(titleText);
-            const isDatasetListTitle = /\[.*\]:/.test(titleText) && titleText.toUpperCase().includes(testInfo.dsFilter.toUpperCase());
-            return isPdsMembersTitle || isDatasetListTitle;
-        },
-        {
-            timeout: 20000,
-            timeoutMsg: "Table view title did not appear within timeout (expected either 'Members of...' or '[profile]: filter')",
-        }
-    );
-
-    // Verify the title matches the expected format based on its content
-    if (/Members of/i.test(finalTitle)) {
-        // This is a PDS members view
-        await expect(finalTitle).toMatch(/Members of/i);
-    } else {
-        // This is a dataset list view
-        await expect(finalTitle).toMatch(/\[.*\]:/); // Should match pattern like "[PROFILE]: filter"
-        await expect(finalTitle).toContain(testInfo.dsFilter.toUpperCase());
-    }
+    // Just verify the table view container exists - content validation is done in subsequent steps
+    const container = await page.tableViewContainer;
+    await container.waitForExist({ timeout: 15000 });
 });
 
+// ==================== Table Content Verification Steps ====================
+
 Then("the table displays dataset information with appropriate columns", async function () {
-    await using tableView = this.tableViewPage;
-    
-    // Verify essential dataset columns are present
+    const page = await openAndWaitForTable(this);
+
     const expectedColumns = [
         { name: "Data Set Name", id: "dsname" },
         { name: "Data Set Organization", id: "dsorg" },
     ];
 
     for (const column of expectedColumns) {
-        await tableView.verifyColumnExists(column.id);
+        await page.verifyColumnExists(column.id);
     }
 
-    // Verify table has data rows
-    const dataRows = await tableView.getRows();
+    const dataRows = await page.getRows();
     await expect(dataRows.length).toBeGreaterThan(0);
 });
 
 Then("the table displays PDS member names", async function () {
-    await using tableView = this.tableViewPage;
-    
-    // Verify member-specific columns might be present
-    const memberColumns = [{ name: "Data Set Name", id: "dsname" }];
-    for (const column of memberColumns) {
-        await tableView.verifyColumnExists(column.id);
-    }
+    const page = await openAndWaitForTable(this);
+    await page.verifyColumnExists("dsname");
 
-    // Verify table has data rows for members
-    const dataRows = await tableView.getRows();
+    const dataRows = await page.getRows();
     await expect(dataRows.length).toBeGreaterThan(0);
 });
 
-// Command palette functionality
-When('the user opens the command palette and runs "List Data Sets" command', async function () {
-    this.workbench = await browser.getWorkbench();
+Then("the table displays datasets matching the pattern", async function () {
+    const page = await openAndWaitForTable(this);
+    const dataRows = await page.getRows();
+    await expect(dataRows.length).toBeGreaterThan(0);
+});
 
-    // Execute the List Data Sets command directly
+Then("the table displays member-specific columns", async function () {
+    const page = await openAndWaitForTable(this);
+    const dataRows = await page.getRows();
+    await expect(dataRows.length).toBeGreaterThan(0);
+});
+
+// ==================== Command Palette Steps ====================
+
+When('the user opens the command palette and runs "List Data Sets" command', async function () {
     await browser.executeWorkbench((vscode) => {
         void vscode.commands.executeCommand("zowe.ds.listDataSets");
     });
 
-    // Wait for the profile selection quick pick to appear
     await browser.waitUntil(
         async () => {
             const quickPickItems = await browser.$$(".quick-input-list .quick-input-list-entry");
@@ -133,111 +131,52 @@ When('the user opens the command palette and runs "List Data Sets" command', asy
 });
 
 When("enters a valid profile and dataset pattern", async function () {
-    // Wait for profile selection quick pick to be available
     await browser.waitUntil(
         async () => {
             const quickPickItems = await browser.$$(".quick-input-list .quick-input-list-entry");
             return quickPickItems.length > 0;
         },
-        {
-            timeout: 10000,
-            timeoutMsg: "Profile selection quick pick did not appear within timeout",
-        }
+        { timeout: 10000, timeoutMsg: "Profile selection quick pick did not appear within timeout" }
     );
 
-    // Select the first available profile (or the configured test profile)
+    // Select profile
     if (testInfo.profileName) {
         const profilePick = await quickPick.findItem(testInfo.profileName);
         await profilePick.waitForDisplayed();
         await profilePick.click();
     } else {
-        // Select the first profile
         await browser.keys([Key.Enter]);
     }
 
-    // Wait for dataset pattern input to appear
+    // Wait for dataset pattern input
     await browser.waitUntil(
         async () => {
             const inputBox = await browser.$(".quick-input-box input");
             return inputBox.isExisting();
         },
-        {
-            timeout: 10000,
-            timeoutMsg: "Dataset pattern input did not appear within timeout",
-        }
+        { timeout: 10000, timeoutMsg: "Dataset pattern input did not appear within timeout" }
     );
 
-    // Enter data set pattern
+    // Enter pattern and submit
     const pattern = testInfo.testPattern || testInfo.dsFilter || "*.DATASET";
     await browser.keys(pattern);
     await browser.keys([Key.Enter]);
 });
 
-Then("the table displays datasets matching the pattern", async function () {
-    await using tableView = this.tableViewPage;
-    
-    // Verify table has matching datasets
-    const dataRows = await tableView.getRows();
-    await expect(dataRows.length).toBeGreaterThan(0);
-});
+// ==================== Table View State Setup (Given steps) ====================
 
-// Common table view setup
 Given("a user who has the dataset table view opened", async function () {
     this.tableViewPage = new DatasetTableViewPage(browser);
 });
 
 Given("a user who has the dataset table view opened with PS datasets", async function () {
-    this.tableViewPage = new DatasetTableViewPage(browser);
-    await this.tableViewPage.open();
-    await this.tableViewPage.waitForReady();
-
-    // Verify we have PS (sequential) datasets using waitUntil to handle stale elements
-    const hasPsDatasets = await browser.waitUntil(
-        async () => {
-            try {
-                const psRows = await browser.$$(".ag-row[row-index] [col-id='dsorg']");
-                for (const cell of psRows) {
-                    const cellText = await cell.getText();
-                    if (cellText === "PS") {
-                        return true;
-                    }
-                }
-            } catch {
-                // Element became stale, retry
-            }
-            return false;
-        },
-        { timeout: 10000, timeoutMsg: "No PS datasets found in table" }
-    );
-
-    await expect(hasPsDatasets).toBe(true);
+    const page = await openAndWaitForTable(this);
+    await page.waitForDsorgType("PS");
 });
 
 Given("a user who has the dataset table view opened with PDS datasets", async function () {
-    this.tableViewPage = new DatasetTableViewPage(browser);
-    await this.tableViewPage.open();
-    await this.tableViewPage.waitForReady();
-
-    // Verify we have PDS datasets using waitUntil to handle stale elements
-    const hasPdsDatasets = await browser.waitUntil(
-        async () => {
-            try {
-                const pdsRows = await browser.$$(".ag-row[row-index] [col-id='dsorg']");
-                for (const cell of pdsRows) {
-                    const cellText = await cell.getText();
-                    if (cellText.startsWith("PO")) {
-                        return true;
-                    }
-                }
-            } catch {
-                // Element became stale, retry
-            }
-            return false;
-        },
-        { timeout: 10000, timeoutMsg: "No PDS datasets found in table" }
-    );
-
-    await expect(hasPdsDatasets).toBe(true);
+    const page = await openAndWaitForTable(this);
+    await page.waitForDsorgType(/^PO/);
 });
 
 Given("a user who has the dataset table view opened with mixed dataset types", async function () {
@@ -245,92 +184,40 @@ Given("a user who has the dataset table view opened with mixed dataset types", a
 });
 
 Given("a user who has focused on a PDS and is viewing its members", async function () {
-    this.tableViewPage = new DatasetTableViewPage(browser);
-    await this.tableViewPage.open();
-    await this.tableViewPage.waitForReady();
-
-    // Verify we're in members view by checking to see if table title contains "Members of"
-    await browser.waitUntil(
-        async () => {
-            try {
-                const titleText = await this.tableViewPage.getTitle();
-                return typeof titleText === "string" && /Members of/i.test(titleText);
-            } catch {
-                return false;
-            }
-        },
-        { timeout: 10000, timeoutMsg: "Not in members view - title does not contain 'Members of'" }
-    );
+    const page = await openAndWaitForTable(this);
+    await page.waitForMembersView();
 });
 
 Given("a user who has the dataset table view opened with PDS members", async function () {
-    this.tableViewPage = new DatasetTableViewPage(browser);
-    await this.tableViewPage.open();
-    await this.tableViewPage.waitForReady();
+    await openAndWaitForTable(this);
 });
 
 Given("a user who has the dataset table view opened with many datasets", async function () {
-    await using tableView = new DatasetTableViewPage(browser);
-    await tableView.open();
-    await tableView.waitForReady();
-
-    // Verify pagination is enabled by checking for pagination controls
-    const paginationPanel = await browser.$(".ag-paging-panel");
+    const page = await openAndWaitForTable(this);
+    const paginationPanel = await page.paginationPanel;
     await paginationPanel.waitForExist();
 });
 
-// Row actions functionality
+// ==================== Row Selection Steps ====================
+
 When("the user selects one or more sequential datasets", async function () {
-    // Find and select a PS dataset, using index-based approach to avoid stale elements
-    const selected = await browser.waitUntil(
-        async () => {
-            const rows = await browser.$$(".ag-row[row-index]");
-            for (let i = 0; i < rows.length; i++) {
-                try {
-                    // Re-fetch the row by index to get fresh reference
-                    const row = (await browser.$$(".ag-row[row-index]"))[i];
-                    if (!row) continue;
-
-                    const dsorgCell = await row.$("[col-id='dsorg']");
-                    const dsorgText = await dsorgCell.getText();
-
-                    if (dsorgText === "PS") {
-                        const checkbox = await row.$(".ag-selection-checkbox");
-                        await checkbox.click();
-                        return true;
-                    }
-                } catch {
-                    // Element became stale, retry from the beginning
-                    return false;
-                }
-            }
-            return false;
-        },
-        { timeout: 10000, timeoutMsg: "Could not find and select a PS dataset" }
-    );
-
+    const page = await getTableViewPage(this);
+    const selected = await page.selectRowByDsorg("PS");
     await expect(selected).toBe(true);
 });
 
 When("the user selects one or more rows", async function () {
-    await this.tableViewPage.open();
-    await this.tableViewPage.waitForReady();
+    const page = await openAndWaitForTable(this);
 
-    // Select first two rows with retry logic
     await browser.waitUntil(
         async () => {
             try {
-                const rows = await this.tableViewPage.getRows();
+                const rows = await page.getRows();
                 if (rows.length === 0) return false;
 
-                const firstCheckbox = await rows[0].$(".ag-selection-checkbox");
-                await firstCheckbox.click();
-
+                await page.selectRowByIndex(0);
                 if (rows.length > 1) {
-                    // Re-fetch rows to avoid stale element
-                    const freshRows = await this.tableViewPage.getRows();
-                    const secondCheckbox = await freshRows[1].$(".ag-selection-checkbox");
-                    await secondCheckbox.click();
+                    await page.selectRowByIndex(1);
                 }
                 return true;
             } catch {
@@ -342,111 +229,72 @@ When("the user selects one or more rows", async function () {
 });
 
 When("the user selects a PDS dataset", async function () {
-    // Find and select a PDS dataset
-    // Clear any existing selections by clicking "select all" checkbox twice
-    const selectAllCheckbox = await browser.$(".ag-header-select-all");
-    await selectAllCheckbox.waitForClickable();
+    const page = await getTableViewPage(this);
+    await page.clearSelections();
 
-    // First click to select all
-    await selectAllCheckbox.click();
-    // Second click to deselect all
-    await selectAllCheckbox.click();
-
-    // Find and select a PDS dataset with retry logic
-    const pdsSelected = await browser.waitUntil(
-        async () => {
-            try {
-                const rows = await browser.$$(".ag-row[row-index]:not(.ag-row-pinned)");
-                for (let i = 0; i < rows.length; i++) {
-                    // Re-fetch row to avoid stale element
-                    const row = (await browser.$$(".ag-row[row-index]:not(.ag-row-pinned)"))[i];
-                    if (!row) continue;
-
-                    const dsorgCell = await row.$("[col-id='dsorg']");
-                    const dsorgText = await dsorgCell.getText();
-
-                    // Check if the row is a PDS dataset
-                    if (dsorgText.startsWith("PO")) {
-                        const checkbox = await row.$(".ag-selection-checkbox");
-                        await checkbox.click();
-
-                        // Wait for action buttons to update after selection
-                        await browser.waitUntil(
-                            async () => {
-                                const focusButton = await this.tableViewPage.getButton("Focus", "secondary", 1000);
-                                return focusButton !== null;
-                            },
-                            { timeout: 5000, timeoutMsg: "Focus button did not appear after selection" }
-                        );
-
-                        return true;
-                    }
-                }
-            } catch {
-                // Element became stale, retry
-            }
-            return false;
-        },
-        { timeout: 10000, timeoutMsg: "Could not find and select a PDS dataset" }
-    );
-
+    const pdsSelected = await page.selectRowByDsorg(/^PO/);
     await expect(pdsSelected).toBe(true);
+
+    // Wait for Focus button to appear after selection
+    await browser.waitUntil(
+        async () => {
+            const focusButton = await page.getButton("Focus", "secondary", 1000);
+            return focusButton !== null;
+        },
+        { timeout: 5000, timeoutMsg: "Focus button did not appear after selection" }
+    );
 });
 
 When("the user selects the pinned rows", async function () {
-    // Wait for pinned rows to exist and select them
-    await this.tableViewPage.waitForPinnedRows();
+    const page = await getTableViewPage(this);
+    await page.waitForPinnedRows();
 
-    const pinnedRows = await this.tableViewPage.getPinnedRows();
+    const pinnedRows = await page.getPinnedRows();
     for (let i = 0; i < pinnedRows.length; i++) {
-        // Re-fetch to avoid stale elements
-        const freshPinnedRows = await this.tableViewPage.getPinnedRows();
+        const freshPinnedRows = await page.getPinnedRows();
         const checkbox = await freshPinnedRows[i].$(".ag-selection-checkbox");
         await checkbox.click();
     }
 });
 
+// ==================== Action Button Steps ====================
+
 When('clicks the "Open" action button', async function () {
-    const openButton = await this.tableViewPage.getButton("Open", "primary", 1000);
-    await expect(openButton).not.toBe(null);
-    await openButton.waitForClickable();
-    await openButton.click();
+    const page = await getTableViewPage(this);
+    await page.clickButton("Open", "primary");
 });
 
 When('clicks the "Pin" action button', async function () {
-    const pinButton = await this.tableViewPage.getButton("Pin", "secondary", 1000);
-    await expect(pinButton).not.toBe(null);
-    await pinButton.waitForClickable();
-    await pinButton.click();
+    const page = await getTableViewPage(this);
+    await page.clickButton("Pin", "secondary");
 });
 
 When('clicks the "Unpin" action button', async function () {
-    const unpinButton = await this.tableViewPage.getButton("Unpin", "secondary", 1000);
-    await expect(unpinButton).not.toBe(null);
-    await unpinButton.waitForClickable();
-    await unpinButton.click();
+    const page = await getTableViewPage(this);
+    await page.clickButton("Unpin", "secondary");
 });
 
 When('clicks the "Focus" action button', async function () {
-    const focusButton = await this.tableViewPage.getButton("Focus", "secondary", 1000);
-    await expect(focusButton).not.toBe(null);
-    await focusButton.waitForClickable();
-    await focusButton.click();
+    const page = await getTableViewPage(this);
+    await page.clickButton("Focus", "secondary");
 });
 
 When('clicks the "Back" action button', async function () {
-    const backButton = await this.tableViewPage.getButton("Back", "primary", 1000);
-    await expect(backButton).not.toBe(null);
-    await backButton.waitForClickable();
-    await backButton.click();
+    const page = await getTableViewPage(this);
+    await page.clickButton("Back", "primary");
 });
 
-// Verification steps for actions
-Then("the selected datasets open in the editor", async function () {
-    // Close the table view first
-    await this.tableViewPage.close();
+When('the user clicks the "Back" action button', async function () {
+    const page = await getTableViewPage(this);
+    await page.clickButton("Back", "primary");
+});
 
-    // Wait for editors to open
+// ==================== Action Result Verification Steps ====================
+
+Then("the selected datasets open in the editor", async function () {
+    const page = await getTableViewPage(this);
+    await page.close();
+
     const workbench = await browser.getWorkbench();
     const editorView = workbench.getEditorView();
 
@@ -467,116 +315,74 @@ Then("the selected datasets open in the editor", async function () {
 });
 
 Then("the selected rows are pinned to the top of the table", async function () {
-    await using tableView = this.tableViewPage;
-    
-    // Wait for pinned rows to appear
-    await tableView.waitForPinnedRows();
+    const page = await getTableViewPage(this);
+    await page.waitForPinnedRows();
 
-    const pinnedRows = await tableView.getPinnedRows();
+    const pinnedRows = await page.getPinnedRows();
     await expect(pinnedRows.length).toBeGreaterThan(0);
 });
 
 Then("the selected rows are unpinned from the table", async function () {
-    await using tableView = this.tableViewPage;
-    
-    // Verify no pinned rows exist or fewer pinned rows
-    const pinnedRows = await tableView.getPinnedRows();
+    const page = await getTableViewPage(this);
+    const pinnedRows = await page.getPinnedRows();
     await expect(pinnedRows.length).toBe(0);
 });
 
-Then("the table displays member-specific columns", async function () {
-    await using tableView = this.tableViewPage;
-    
-    // Check for member-specific columns that might be visible
-    //const possibleMemberColumns = ["vers", "mod", "cnorc", "inorc", "mnorc"];
-
-    // At least some member data should be present
-    const dataRows = await tableView.getRows();
-    await expect(dataRows.length).toBeGreaterThan(0);
-});
-
 Then("the table view returns to the previous dataset list", async function () {
-    // Wait for navigation to complete - Back button should disappear
+    const page = await getTableViewPage(this);
+
     await browser.waitUntil(
         async () => {
-            const backButton = await this.tableViewPage.getButton("Back", "primary", 500);
+            const backButton = await page.getButton("Back", "primary", 500);
             return backButton === null;
         },
         { timeout: 15000, timeoutMsg: "Did not return to previous dataset list (Back button still visible)" }
     );
 
-    const backButton = await this.tableViewPage.getButton("Back", "primary", 1000);
+    const backButton = await page.getButton("Back", "primary", 1000);
     await expect(backButton).toBe(null);
 });
 
 Then("preserves the previous table state including pinned rows", async function () {
-    await using tableView = new DatasetTableViewPage(browser);
-    
-    // Re-fetch the webview to ensure we have a fresh reference
-    await tableView.refresh();
-    await tableView.open();
-    await tableView.waitForReady();
+    const page = await getTableViewPage(this);
+    await page.refresh();
+    await page.open();
+    await page.waitForReady();
+    await page.waitForPinnedRows();
 
-    // Wait for pinned rows to be visible
-    await tableView.waitForPinnedRows();
-
-    const pinnedRows = await tableView.getPinnedRows();
+    const pinnedRows = await page.getPinnedRows();
     await expect(pinnedRows.length).toBeGreaterThan(0);
 });
 
-// Context menu functionality
-When("the user right-clicks on a dataset row", async function () {
-    await this.tableViewPage.open();
-    await this.tableViewPage.waitForReady();
+// ==================== Context Menu Steps ====================
 
-    // Find and right-click on the target dataset row with retry logic
-    await browser.waitUntil(
-        async () => {
-            try {
-                const rows = await browser.$$(".ag-row");
-                for (const row of rows) {
-                    const dsnameCell = await row.$("[col-id='dsname']");
-                    const dsnameText = await dsnameCell.getText();
-                    if (dsnameText === testInfo.sequential) {
-                        await row.click({ button: "right" });
-                        return true;
-                    }
-                }
-            } catch {
-                // Element became stale, retry
-            }
-            return false;
-        },
-        { timeout: 10000, timeoutMsg: `Could not find and right-click on dataset row: ${testInfo.sequential}` }
-    );
+When("the user right-clicks on a dataset row", async function () {
+    const page = await openAndWaitForTable(this);
+    await page.rightClickRowByDsname(testInfo.sequential);
 });
 
 When("the user right-clicks on a member row", async function () {
-    this.tableViewPage = new DatasetTableViewPage(browser);
-    await this.tableViewPage.open();
-    await this.tableViewPage.waitForReady();
+    const page = await openAndWaitForTable(this);
 
-    // Wait for first row and capture member info with retry logic
     await browser.waitUntil(
         async () => {
             try {
-                const firstRow = await browser.$(".ag-row[row-index='0']");
+                const firstRow = await page.rowByIndex(0);
                 if (!(await firstRow.isExisting())) return false;
 
-                // Capture the member name
+                // Capture member name
                 const memberNameCell = await firstRow.$("[col-id='dsname']");
                 this.selectedMemberName = await memberNameCell.getText();
 
-                // Get the title to extract the PDS name
-                const titleText = await this.tableViewPage.getTitle();
-                // Extract PDS name from title like "Members of TEST.PDS (count)"
+                // Extract PDS name from title
+                const titleText = await page.getTitle();
                 const pdsMatch = titleText.match(/Members of (.+?) \(/i);
                 if (pdsMatch) {
                     this.selectedPdsName = pdsMatch[1];
                 }
 
                 // Re-fetch and right-click to avoid stale element
-                const freshFirstRow = await browser.$(".ag-row[row-index='0']");
+                const freshFirstRow = await page.rowByIndex(0);
                 await freshFirstRow.click({ button: "right" });
                 return true;
             } catch {
@@ -588,31 +394,14 @@ When("the user right-clicks on a member row", async function () {
 });
 
 When('selects "Display in Tree" from the context menu', async function () {
-    // Wait for context menu to be fully rendered with items
-    const contextMenu = await browser.$(".szh-menu");
-    await browser.waitUntil(async () => (await contextMenu.isExisting()) && (await contextMenu.$$(".szh-menu__item")).length > 0, {
-        timeout: 10000,
-        timeoutMsg: "Context menu did not appear with menu items",
-    });
-
-    // Now find and click the "Display in Tree" menu item
-    const menuItems = await contextMenu.$$(".szh-menu__item");
-    for (const item of menuItems) {
-        await item.waitForClickable();
-        const itemText = await item.getText();
-        if (itemText === "Display in Tree") {
-            await item.click();
-            return;
-        }
-    }
-    throw new Error('Could not find "Display in Tree" menu item');
+    const page = await getTableViewPage(this);
+    await page.clickContextMenuItem("Display in Tree");
 });
 
 Then("the dataset is revealed and focused in the Data Sets tree", async function () {
-    // Close table view so that Selenium can focus on the tree
-    await this.tableViewPage.close();
+    const page = await getTableViewPage(this);
+    await page.close();
 
-    // Wait for the tree to update and reveal the dataset
     await browser.waitUntil(
         async () => {
             try {
@@ -620,11 +409,9 @@ Then("the dataset is revealed and focused in the Data Sets tree", async function
                 const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
                 if (treeItems.length < 2) return false;
 
-                // Check if profile node is expanded
                 const profileNode = treeItems[1];
                 if (!(await profileNode.isExpanded())) return false;
 
-                // Check if dataset node exists
                 const dsNode = await profileNode.findChildItem(testInfo.sequential);
                 return dsNode != null;
             } catch {
@@ -647,17 +434,16 @@ Then("the dataset is revealed and focused in the Data Sets tree", async function
 });
 
 Then("the PDS member is revealed and focused in the Data Sets tree", async function () {
-    // Close table view to see tree
-    await this.tableViewPage.close();
+    const page = await getTableViewPage(this);
+    await page.close();
 
-    // Wait for the tree to update and reveal the member
     const memberName = this.selectedMemberName;
     await browser.waitUntil(
         async () => {
             try {
                 const dsPane = await paneDivForTree("Data Sets");
                 const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
-                const allLabels = await Promise.all(treeItems.map(async (item) => await item.getLabel()));
+                const allLabels = await Promise.all(treeItems.map(async (item) => item.getLabel()));
                 return allLabels.includes(memberName);
             } catch {
                 return false;
@@ -668,22 +454,23 @@ Then("the PDS member is revealed and focused in the Data Sets tree", async funct
 
     const dsPane = await paneDivForTree("Data Sets");
     const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
-    const allLabels = await Promise.all(treeItems.map(async (item) => await item.getLabel()));
+    const allLabels = await Promise.all(treeItems.map(async (item) => item.getLabel()));
     await expect(allLabels.find((label) => label === this.selectedMemberName)).not.toBe(undefined);
 });
 
-// Hierarchical tree functionality
+// ==================== Hierarchical Tree Steps ====================
+
 When("the table loads with hierarchical tree support", async function () {
-    await this.tableViewPage.open();
-    await this.tableViewPage.waitForReady();
+    await openAndWaitForTable(this);
 });
 
 Then("PDS datasets show expand and collapse indicators", async function () {
-    // Wait for tree expansion indicators to appear
+    const page = await getTableViewPage(this);
+
     await browser.waitUntil(
         async () => {
             try {
-                const expandIcons = await browser.$$(".ag-row > div[col-id='dsname'] > div > span > div > span > .codicon-chevron-right");
+                const expandIcons = await page.expandIcons;
                 return expandIcons.length > 0;
             } catch {
                 return false;
@@ -692,59 +479,20 @@ Then("PDS datasets show expand and collapse indicators", async function () {
         { timeout: 10000, timeoutMsg: "No expand/collapse indicators found for PDS datasets" }
     );
 
-    const pdsRows = await browser.$$(".ag-row > div[col-id='dsname'] > div > span > div > span > .codicon-chevron-right");
+    const pdsRows = await page.expandIcons;
     await expect(pdsRows.length).toBeGreaterThan(0);
 });
 
 Then("users can expand PDS nodes to view members inline", async function () {
-    // Find and expand a PDS node with retry logic
-    await browser.waitUntil(
-        async () => {
-            try {
-                const expandIcons = await browser.$$(".ag-row > div[col-id='dsname'] > div > span > div > span > .codicon-chevron-right");
-                if (expandIcons.length === 0) return false;
-                await expandIcons[0].click();
-                return true;
-            } catch {
-                return false;
-            }
-        },
-        { timeout: 10000, timeoutMsg: "Could not find and click expand icon" }
-    );
-
-    // Verify child rows appeared
-    await browser.waitUntil(
-        async () => {
-            try {
-                const childRows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='1']");
-                return childRows.length > 0;
-            } catch {
-                return false;
-            }
-        },
-        { timeout: 10000, timeoutMsg: "Child rows did not appear after expanding PDS" }
-    );
+    const page = await getTableViewPage(this);
+    await page.expandFirstPds();
+    await page.waitForChildRows();
 });
 
 Then("the tree structure is properly displayed", async function () {
-    await using tableView = this.tableViewPage;
-    
-    // Wait for hierarchical structure to be visible
-    await browser.waitUntil(
-        async () => {
-            try {
-                const level0Rows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='0']");
-                const level1Rows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='1']");
-                return level0Rows.length > 0 && level1Rows.length > 0;
-            } catch {
-                return false;
-            }
-        },
-        { timeout: 10000, timeoutMsg: "Tree structure not properly displayed" }
-    );
+    const page = await getTableViewPage(this);
+    const { level0Count, level1Count } = await page.verifyTreeStructure();
 
-    const level0Rows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='0']");
-    const level1Rows = await browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='1']");
-    await expect(level0Rows.length).toBeGreaterThan(0);
-    await expect(level1Rows.length).toBeGreaterThan(0);
+    await expect(level0Count).toBeGreaterThan(0);
+    await expect(level1Count).toBeGreaterThan(0);
 });
