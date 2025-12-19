@@ -104,7 +104,7 @@ export const config: Options.Testrunner = {
                     "extensions.ignoreRecommendations": true,
                     "zowe.settings.displayReleaseNotes": false,
                     "chat.disableAIFeatures": true,
-                    "window.zoomLevel": -2,
+                    "window.zoomLevel": process.env.CI ? -2 : 0,
                 },
             },
         },
