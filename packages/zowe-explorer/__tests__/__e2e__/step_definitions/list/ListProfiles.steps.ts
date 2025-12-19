@@ -69,6 +69,8 @@ Then("the user can set an existing filter on the profile", async function () {
         await expect(submitEntry).toBeClickable();
         await submitEntry.click();
     } else {
+        const inputBox = await $('.input[aria-describedby="quickInput_message"]');
+        await expect(inputBox).toBeClickable();
         await browser.keys(Key.Enter);
     }
 
