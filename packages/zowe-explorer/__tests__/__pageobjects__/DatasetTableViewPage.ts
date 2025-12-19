@@ -16,11 +16,7 @@
  * Selectors are evaluated fresh each time they're accessed, avoiding stale element issues.
  */
 export class DatasetTableViewPage {
-    private browser: WebdriverIO.Browser;
-
-    constructor(browser: WebdriverIO.Browser) {
-        this.browser = browser;
-    }
+    constructor(private browser: WebdriverIO.Browser) {}
 
     // ==================== Selectors (getter-based for lazy evaluation) ====================
 

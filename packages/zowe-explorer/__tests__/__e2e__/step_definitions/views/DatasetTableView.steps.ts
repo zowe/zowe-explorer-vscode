@@ -54,14 +54,14 @@ async function openAndWaitForTable(world: any): Promise<DatasetTableViewPage> {
 When('the user right-clicks on the dataset profile and selects "Show as Table"', async function () {
     // Reset page object state since we're opening a new/different table view
     this.tableViewPage = null;
-    await clickContextMenuItem(await this.helpers.getProfileNode(), "Show as Table");
+    await clickContextMenuItem(await this.profileNode.find(), "Show as Table");
 });
 
 When('the user right-clicks on a PDS and selects "Show as Table"', async function () {
     // Reset page object state since we're opening a new/different table view
     this.tableViewPage = null;
 
-    this.pdsNode = await this.helpers.mProfileNode.findChildItem(testInfo.pds);
+    this.pdsNode = await (await this.profileNode.find()).findChildItem(testInfo.pds);
     await expect(this.pdsNode).toBeDefined();
     await clickContextMenuItem(this.pdsNode, "Show as Table");
 });
@@ -149,17 +149,18 @@ When("enters a valid profile and dataset pattern", async function () {
     }
 
     // Wait for dataset pattern input
+    let inputBox: WebdriverIO.Element;
     await browser.waitUntil(
         async () => {
-            const inputBox = await browser.$(".quick-input-box input");
-            return inputBox.isExisting();
+            inputBox = await browser.$(".quick-input-box input");
+            return inputBox.isClickable();
         },
         { timeout: 10000, timeoutMsg: "Dataset pattern input did not appear within timeout" }
     );
 
     // Enter pattern and submit
     const pattern = testInfo.testPattern || testInfo.dsFilter || "*.DATASET";
-    await browser.keys(pattern);
+    await inputBox.addValue(pattern);
     await browser.keys([Key.Enter]);
 });
 

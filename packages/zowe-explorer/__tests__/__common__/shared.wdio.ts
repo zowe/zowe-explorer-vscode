@@ -13,16 +13,6 @@ import { execFile } from "child_process";
 import { TreeItem, ViewContent, ViewControl, ViewSection } from "wdio-vscode-service";
 
 /* Helper functions */
-export class TreeHelpers {
-    public mProfileNode: TreeItem;
-
-    public constructor(private treePane: ViewSection, public profileName: string) {}
-
-    public async getProfileNode(): Promise<TreeItem> {
-        this.mProfileNode = (await this.treePane.findItem(this.profileName)) as TreeItem;
-        return this.mProfileNode;
-    }
-}
 
 export async function getZoweExplorerContainer(): Promise<ViewControl> {
     const activityBar = (await browser.getWorkbench()).getActivityBar();
