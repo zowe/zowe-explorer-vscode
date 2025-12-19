@@ -47,9 +47,7 @@ When("the user finds the child node in Favorites", async function () {
         // PDS member
         await this.pds.collapse();
         await this.profileNode.waitUntilHasChildren();
-        this.pds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
-        await this.pds.expand();
-        await browser.waitUntil((): Promise<boolean> => this.pds.isExpanded());
+        this.pds = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
         this.pdsMember = await this.pds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
         await expect(this.pdsMember).toBeDefined();
     } else {

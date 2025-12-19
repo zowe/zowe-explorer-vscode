@@ -134,15 +134,13 @@ Then("the profile node will list results of the filter search", async function (
 When("a user expands a PDS in the list", async function () {
     this.pds = await (await this.profileNode.find()).findChildItem(testInfo.pds);
     await expect(this.pds).toBeDefined();
-    await this.pds.expand();
-    await browser.waitUntil(async () => (await this.pds.getChildren()).length > 0);
+    this.pds = await this.profileNode.revealChildItem(testInfo.pds);
     this.children = await this.pds.getChildren();
 });
 When("a user expands a USS directory in the list", async function () {
     this.ussDir = await (await this.profileNode.find()).findChildItem(testInfo.ussDir);
     await expect(this.ussDir).toBeDefined();
-    await this.ussDir.expand();
-    await browser.waitUntil(async (): Promise<boolean> => await this.ussDir.hasChildren());
+    this.ussDir = await this.profileNode.revealChildItem(testInfo.ussDir);
     this.children = await this.ussDir.getChildren();
 });
 Then("the node will expand and list its children", async function () {
