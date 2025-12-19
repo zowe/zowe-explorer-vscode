@@ -281,6 +281,8 @@ When('clicks the "Unpin" action button', async function () {
 When('clicks the "Focus" action button', async function () {
     const page = await getTableViewPage(this);
     await page.clickButton("Focus", "secondary");
+    // Wait for the view to transition to members view after Focus click
+    await page.waitForMembersView();
 });
 
 When('clicks the "Back" action button', async function () {

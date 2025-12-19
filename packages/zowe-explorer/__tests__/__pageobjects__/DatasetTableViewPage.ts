@@ -515,10 +515,21 @@ export class DatasetTableViewPage {
      * Waits until the view is showing PDS members.
      */
     public async waitForMembersView(): Promise<void> {
-        await this.browser.waitUntil(async () => this.isInMembersView(), {
-            timeout: 10000,
-            timeoutMsg: "Not in members view - title does not contain 'Members of'",
-        });
+        await this.browser.waitUntil(
+            async () => {
+                try {
+                    // Re-open the webview frame to get fresh content after Focus click
+                    await this.open();
+                    return await this.isInMembersView();
+                } catch {
+                    return false;
+                }
+            },
+            {
+                timeout: 15000,
+                timeoutMsg: "Not in members view - title does not contain 'Members of'",
+            }
+        );
     }
 
     /**
