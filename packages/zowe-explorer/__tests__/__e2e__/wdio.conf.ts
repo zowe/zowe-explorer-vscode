@@ -103,6 +103,7 @@ export const config: Options.Testrunner = {
                     "editor.fontSize": 14,
                     "extensions.ignoreRecommendations": true,
                     "zowe.settings.displayReleaseNotes": false,
+                    "chat.disableAIFeatures": true,
                 },
             },
         },
