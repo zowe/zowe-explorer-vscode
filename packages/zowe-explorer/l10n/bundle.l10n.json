@@ -244,42 +244,6 @@
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Failed to move {0}/File path": {
-    "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to delete {0}/File name": {
-    "message": "Failed to delete {0}",
-    "comment": [
-      "File name"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
-  "Failed to copy {0} to {1}/Source pathDestination path": {
-    "message": "Failed to copy {0} to {1}",
-    "comment": [
-      "Source path",
-      "Destination path"
-    ]
-  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -343,6 +307,42 @@
   "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
+    ]
+  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -554,10 +554,10 @@
       "Number of active jobs"
     ]
   },
-  "Job completed {0} - {1}/Job ID with clickable linkJob status": {
-    "message": "Job completed {0} - {1}",
+  "Job {0} completed - {1}/Job name and ID with clickable linkJob status": {
+    "message": "Job {0} completed - {1}",
     "comment": [
-      "Job ID with clickable link",
+      "Job name and ID with clickable link",
       "Job status"
     ]
   },
@@ -1022,10 +1022,11 @@
   "Select the profile to use to submit the job": "Select the profile to use to submit the job",
   "No profiles available": "No profiles available",
   "Session for submitting JCL was null or undefined!": "Session for submitting JCL was null or undefined!",
-  "Job submitted {0}/Job ID and set job command": {
-    "message": "Job submitted {0}",
+  "Poll For Job Completion": "Poll For Job Completion",
+  "Job submitted: {0}/Job name and ID with set job command": {
+    "message": "Job submitted: {0}",
     "comment": [
-      "Job ID and set job command"
+      "Job name and ID with set job command"
     ]
   },
   "Job submitted {0} using profile {1}./Job IDProfile name": {
@@ -1118,6 +1119,33 @@
   "Unable to copy data set.": "Unable to copy data set.",
   "Profile {0} is no longer available. Skipping item.": "Profile {0} is no longer available. Skipping item.",
   "Unable to retrieve attributes for {0}": "Unable to retrieve attributes for {0}",
+  "Starting to poll job {0} for completion./Job display name": {
+    "message": "Starting to poll job {0} for completion.",
+    "comment": [
+      "Job display name"
+    ]
+  },
+  "Polling job: {0}.../Job display name": {
+    "message": "Polling job: {0}...",
+    "comment": [
+      "Job display name"
+    ]
+  },
+  "unknown retcode": "unknown retcode",
+  "Job {0} completed - {1}/Job ID with clickable linkJob status": {
+    "message": "Job {0} completed - {1}",
+    "comment": [
+      "Job ID with clickable link",
+      "Job status"
+    ]
+  },
+  "Error polling job {0}: {1}/Job display nameError message": {
+    "message": "Error polling job {0}: {1}",
+    "comment": [
+      "Job display name",
+      "Error message"
+    ]
+  },
   "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
     "message": "Failed to upload changes for {0}: {1}",
     "comment": [
