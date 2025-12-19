@@ -488,6 +488,30 @@ export class DatasetTableViewPage {
     }
 
     /**
+     * Ensures we're in the dataset list view (not members view).
+     * If currently in members view, clicks "Back" to return to dataset list.
+     */
+    public async ensureDatasetListView(): Promise<void> {
+        // Check if we're in members view and need to go back
+        if (await this.isInMembersView()) {
+            // Click the Back button to return to dataset list
+            await this.clickButton("Back", "primary");
+
+            // Wait for the view to switch back to dataset list (title should not contain "Members of")
+            await this.browser.waitUntil(
+                async () => {
+                    const inMembers = await this.isInMembersView();
+                    return !inMembers;
+                },
+                { timeout: 15000, timeoutMsg: "Could not return to dataset list view" }
+            );
+
+            // Re-open the webview frame after navigation
+            await this.open();
+        }
+    }
+
+    /**
      * Waits until the view is showing PDS members.
      */
     public async waitForMembersView(): Promise<void> {

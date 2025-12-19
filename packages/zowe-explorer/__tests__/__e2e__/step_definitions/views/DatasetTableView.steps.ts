@@ -171,11 +171,15 @@ Given("a user who has the dataset table view opened", async function () {
 
 Given("a user who has the dataset table view opened with PS datasets", async function () {
     const page = await openAndWaitForTable(this);
+    // Ensure we're in dataset list view (not members view from previous scenario)
+    await page.ensureDatasetListView();
     await page.waitForDsorgType("PS");
 });
 
 Given("a user who has the dataset table view opened with PDS datasets", async function () {
     const page = await openAndWaitForTable(this);
+    // Ensure we're in dataset list view (not members view from previous scenario)
+    await page.ensureDatasetListView();
     await page.waitForDsorgType(/^PO/);
 });
 
