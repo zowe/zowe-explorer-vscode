@@ -120,9 +120,9 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
 
     /**
      * refresh favorites
-     * @param favorite Adds a favorite node
+     * @param profileType Optional profile type to refresh
      */
-    refreshFavorites?(): void | Promise<void>;
+    refreshFavorites?(profileType?: string): void | Promise<void>;
 
     /**
      * Removes a favorite node

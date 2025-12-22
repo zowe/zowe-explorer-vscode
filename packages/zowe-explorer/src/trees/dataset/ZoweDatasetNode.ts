@@ -378,23 +378,20 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 } else if (item.dsorg === "VS") {
                     // Creates a ZoweDatasetNode for a VSAM file
                     let altLabel = item.dsname;
-                    let endPoint = altLabel.indexOf(".DATA");
-                    if (endPoint === -1) {
-                        endPoint = altLabel.indexOf(".INDEX");
+                    if (altLabel.endsWith(".DATA") || altLabel.endsWith(".INDEX")) {
+                        altLabel = altLabel.substring(0, altLabel.lastIndexOf("."));
                     }
-                    if (endPoint > -1) {
-                        altLabel = altLabel.substring(0, endPoint);
+                    if (elementChildren[altLabel]) {
+                        continue; // Skip creating duplicate VSAM entries in filesystem
                     }
-                    if (!elementChildren[altLabel]) {
-                        elementChildren[altLabel] = new ZoweDatasetNode({
-                            label: altLabel,
-                            collapsibleState: vscode.TreeItemCollapsibleState.None,
-                            parentNode: this,
-                            contextOverride: Constants.VSAM_CONTEXT,
-                            profile: cachedProfile,
-                        });
-                    }
-                    dsNode = elementChildren[altLabel];
+                    dsNode = new ZoweDatasetNode({
+                        label: altLabel,
+                        collapsibleState: vscode.TreeItemCollapsibleState.None,
+                        parentNode: this,
+                        contextOverride: Constants.VSAM_CONTEXT,
+                        profile: cachedProfile,
+                    });
+                    elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (SharedContext.isSession(this)) {
                     // Creates a ZoweDatasetNode for a PS
                     const cachedEncoding = this.getEncodingInMap(item.dsname);
