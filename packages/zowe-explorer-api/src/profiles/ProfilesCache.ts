@@ -13,7 +13,6 @@ import * as imperative from "@zowe/imperative";
 import type { IRegisterClient } from "../extend/IRegisterClient";
 import { FileManagement } from "../utils/FileManagement";
 import { Validation } from "./Validation";
-import { AuthHandler } from "./AuthHandler";
 import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
@@ -269,14 +268,14 @@ export class ProfilesCache {
                     const existingProfile = this.allProfiles.find((tmpProf) => tmpProf.name === prof.profName && tmpProf.type === prof.profType);
                     tmpAllProfiles.push(existingProfile ? Object.assign(existingProfile, profileFix) : profileFix);
 
-                    // Step 4: Detect profile rename and update AuthHandler state
+                    // Step 4: Detect profile rename and update auth state
                     const profLoc = Array.isArray(prof.profLoc.osLoc) ? prof.profLoc.osLoc.join("/") : prof.profLoc.osLoc;
                     if (profLoc) {
                         currentProfileLocations.add(profLoc);
                         const oldEntry = this.profileLocationMap.get(profLoc);
                         if (oldEntry && oldEntry.name !== prof.profName && oldEntry.type === prof.profType) {
-                            // Profile was renamed - update AuthHandler state
-                            AuthHandler.updateProfileName(oldEntry.name, prof.profName);
+                            // Profile was renamed - update auth state via lazy import
+                            this.updateAuthStateForRenamedProfile(oldEntry.name, prof.profName);
                         }
                         // Update the map with the current profile info for this location
                         this.profileLocationMap.set(profLoc, { name: prof.profName, type: prof.profType });
@@ -611,5 +610,18 @@ export class ProfilesCache {
                 profile.profile.password = process.env[passwordEnvVar];
             }
         }
+    }
+
+    /**
+     * Updates authentication state when a profile is renamed using lazy import to avoid circular dependency.
+     * @param oldProfileName The previous name of the profile
+     * @param newProfileName The new name of the profile
+     */
+    private updateAuthStateForRenamedProfile(oldProfileName: string, newProfileName: string): void {
+        // Use lazy require to avoid circular dependency with AuthHandler
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { AuthHandler } = require("./AuthHandler");
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        AuthHandler.updateProfileName(oldProfileName, newProfileName);
     }
 }
