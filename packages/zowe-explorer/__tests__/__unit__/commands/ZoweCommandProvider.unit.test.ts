@@ -196,6 +196,12 @@ describe("ZoweCommandProvider Unit Tests", () => {
                 const profiles = [{ name: "dev1.zosmf-backup" }, { name: "dev1.tso" }] as any;
                 expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, profiles)).toEqual({ name: "dev1.tso" });
             });
+
+            it("should not match profiles with similar but longer base names", () => {
+                const parentProfile = { name: "prod.zosmf" } as any;
+                const profiles = [{ name: "production.tso" }, { name: "prod.tso" }] as any;
+                expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, profiles)).toEqual({ name: "prod.tso" });
+            });
         });
 
         describe("function selectServiceProfile", () => {
