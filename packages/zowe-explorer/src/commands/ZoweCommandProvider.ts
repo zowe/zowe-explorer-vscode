@@ -174,6 +174,30 @@ export abstract class ZoweCommandProvider {
         }
     }
 
+    /**
+     * Try to auto-select a profile based on parent profile naming.
+     * E.g., if parent is "dev1.zosmf", look for "dev1.tso" or "dev1.ssh"
+     */
+    protected autoSelectProfile(
+        parentProfile: imperative.IProfileLoaded | undefined,
+        profiles: imperative.IProfileLoaded[]
+    ): imperative.IProfileLoaded | undefined {
+        if (!parentProfile?.name) {
+            return undefined;
+        }
+
+        const dotIndex = parentProfile.name.indexOf(".");
+        if (dotIndex === -1) {
+            return undefined;
+        }
+
+        const prefix = parentProfile.name.substring(0, dotIndex + 1);
+        const matches = profiles.filter((p) => p.name.startsWith(prefix));
+
+        // Only auto-select if there's exactly one match
+        return matches.length === 1 ? matches[0] : undefined;
+    }
+
     public async selectServiceProfile(profiles: imperative.IProfileLoaded[] = []): Promise<imperative.IProfileLoaded> {
         ZoweLogger.trace("ZoweCommandProvider.selectServiceProfile called.");
         let profile: imperative.IProfileLoaded;

@@ -145,10 +145,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<zosuss.ISshSession>(sshSessCfg, cmdArgs);
                 this.sshSession = new zosuss.SshSession(sshSessCfg);
 
-                const profileStatus = await this.profileInstance.profileValidationHelper(
-                    this.sshProfile,
-                    this.validateSshConnection.bind(this)
-                );
+                const profileStatus = await this.profileInstance.profileValidationHelper(this.sshProfile, this.validateSshConnection.bind(this));
 
                 if (!this.sshSession || profileStatus !== "active") {
                     this.nodeProfile = undefined;
@@ -207,7 +204,17 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             Gui.errorMessage(this.unixCmdMsgs.sshProfNotFoundMsg);
             return;
         }
-        this.sshProfile = await this.selectServiceProfile(profiles);
+
+        // Try auto-selecting based on parent profile name
+        const autoSelected = this.autoSelectProfile(this.nodeProfile, profiles);
+        if (autoSelected) {
+            this.sshProfile = autoSelected;
+            ZoweLogger.info(
+                vscode.l10n.t("Auto-selected SSH profile '{0}' based on parent profile '{1}'", [this.sshProfile.name, this.nodeProfile?.name ?? ""])
+            );
+        } else {
+            this.sshProfile = await this.selectServiceProfile(profiles);
+        }
         if (!this.sshProfile) {
             return;
         }

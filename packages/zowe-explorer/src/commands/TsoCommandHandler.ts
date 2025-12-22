@@ -101,7 +101,7 @@ export class TsoCommandHandler extends ZoweCommandProvider {
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
                     if (profile.type === "zosmf") {
-                        this.tsoParams = await this.getTsoParams();
+                        this.tsoParams = await this.getTsoParams(profile);
                         if (!this.tsoParams) {
                             return;
                         }
@@ -150,9 +150,10 @@ export class TsoCommandHandler extends ZoweCommandProvider {
     /**
      * Looks for list of tso profiles for user to choose from,
      * if non exist prompts user for account number.
+     * @param parentProfile - optional parent profile to try auto-selecting from
      * @returns Promise<IStartTsoParms>
      */
-    private async getTsoParams(): Promise<zostso.IStartTsoParms> {
+    private async getTsoParams(parentProfile?: imperative.IProfileLoaded): Promise<zostso.IStartTsoParms> {
         ZoweLogger.trace("TsoCommandHandler.getTsoParams called.");
         const profileInfo = await this.profileInstance.getProfileInfo();
         let tsoParms: zostso.IStartTsoParms = {};
@@ -168,7 +169,17 @@ export class TsoCommandHandler extends ZoweCommandProvider {
         } else {
             const profiles = profileInfo.getAllProfiles("tso");
             if (profiles.length > 0) {
-                tsoProfile = await this.selectServiceProfile(profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p)));
+                const profilesList = profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p));
+                // Try auto-selecting based on parent profile naming
+                const autoSelected = this.autoSelectProfile(parentProfile, profilesList);
+                if (autoSelected) {
+                    tsoProfile = autoSelected;
+                    ZoweLogger.info(
+                        vscode.l10n.t("Auto-selected TSO profile '{0}' based on parent profile '{1}'", [tsoProfile.name, parentProfile?.name ?? ""])
+                    );
+                } else {
+                    tsoProfile = await this.selectServiceProfile(profilesList);
+                }
             }
         }
         if (tsoProfile != null) {
