@@ -167,6 +167,37 @@ describe("ZoweCommandProvider Unit Tests", () => {
             });
         });
 
+        describe("function autoSelectProfile", () => {
+            it("should auto-select when exactly one match exists", () => {
+                const parentProfile = { name: "dev1.zosmf" } as any;
+                const profiles = [{ name: "dev1.tso" }, { name: "dev2.tso" }] as any;
+                expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, profiles)).toEqual({ name: "dev1.tso" });
+            });
+
+            it("should return undefined when multiple matches exist", () => {
+                const parentProfile = { name: "dev1.zosmf" } as any;
+                const profiles = [{ name: "dev1.tso" }, { name: "dev1.ssh" }] as any;
+                expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, profiles)).toBeUndefined();
+            });
+
+            it("should return undefined when no matches exist", () => {
+                const parentProfile = { name: "dev1.zosmf" } as any;
+                expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, [{ name: "dev2.tso" }] as any)).toBeUndefined();
+            });
+
+            it("should exclude parent profile from matches", () => {
+                const parentProfile = { name: "dev1.zosmf" } as any;
+                const profiles = [{ name: "dev1.zosmf" }, { name: "dev1.tso" }] as any;
+                expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, profiles)).toEqual({ name: "dev1.tso" });
+            });
+
+            it("should not match profile name variants", () => {
+                const parentProfile = { name: "dev1.zosmf" } as any;
+                const profiles = [{ name: "dev1.zosmf-backup" }, { name: "dev1.tso" }] as any;
+                expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, profiles)).toEqual({ name: "dev1.tso" });
+            });
+        });
+
         describe("function selectServiceProfile", () => {
             it("should select the specified profile", async () => {
                 const mockCmdProvider: any = {

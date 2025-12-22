@@ -192,7 +192,19 @@ export abstract class ZoweCommandProvider {
         }
 
         const prefix = parentProfile.name.substring(0, dotIndex + 1);
-        const matches = profiles.filter((p) => p.name.startsWith(prefix));
+        const parentSuffix = parentProfile.name.substring(dotIndex + 1);
+
+        const matches = profiles.filter((p) => {
+            if (!p?.name || p.name === parentProfile.name) {
+                return false;
+            }
+            if (!p.name.startsWith(prefix)) {
+                return false;
+            }
+            const suffix = p.name.substring(prefix.length);
+            // Avoid matching variants like "dev1.zosmf-backup" when parent is "dev1.zosmf"
+            return !suffix.startsWith(parentSuffix);
+        });
 
         // Only auto-select if there's exactly one match
         return matches.length === 1 ? matches[0] : undefined;

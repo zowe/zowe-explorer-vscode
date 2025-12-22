@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added auto-selection of TSO/SSH profiles based on parent profile naming convention. When issuing TSO or Unix commands from a parent profile (e.g., \"dev1.zosmf\"), the extension automatically selects the corresponding service profile (e.g., \"dev1.tso\" or \"dev1.ssh\") if exactly one match exists. [#3911](https://github.com/zowe/zowe-explorer-vscode/issues/3911)
 - Added support to delete VSAM data sets. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
 - Refactored data set pagination to use the new `getCount` API (if available) to optimize access to the total item count.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 - Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
