@@ -244,6 +244,43 @@
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
+  "Common API": "Common API",
+  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
+  "Failed to move {0}/File path": {
+    "message": "Failed to move {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Profile does not exist for this file.": "Profile does not exist for this file.",
+  "Saving USS file...": "Saving USS file...",
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to delete {0}/File name": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File name"
+    ]
+  },
+  "No error details given": "No error details given",
+  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
+    "message": "Error fetching destination {0} for paste action: {1}",
+    "comment": [
+      "USS path",
+      "Error message"
+    ]
+  },
+  "Failed to copy {0} to {1}/Source pathDestination path": {
+    "message": "Failed to copy {0} to {1}",
+    "comment": [
+      "Source path",
+      "Destination path"
+    ]
+  },
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
@@ -297,52 +334,15 @@
     ]
   },
   "You must authenticate to view favorites.": "You must authenticate to view favorites.",
-  "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.\n                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n                      Would you like to do this now? {1}/Profile nameApplication name": {
-    "message": "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.\n                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n                      Would you like to do this now? {1}",
+  "Error: You have Zowe USS favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n\nWould you like to do this now?/Profile name": {
+    "message": "Error: You have Zowe USS favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n\nWould you like to do this now?",
     "comment": [
-      "Profile name",
-      "Application name"
+      "Profile name"
     ]
   },
-  "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
+  "Remove": "Remove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
-  "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
-  "Failed to move {0}/File path": {
-    "message": "Failed to move {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
-  "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to delete {0}/File name": {
-    "message": "Failed to delete {0}",
-    "comment": [
-      "File name"
-    ]
-  },
-  "No error details given": "No error details given",
-  "Error fetching destination {0} for paste action: {1}/USS pathError message": {
-    "message": "Error fetching destination {0} for paste action: {1}",
-    "comment": [
-      "USS path",
-      "Error message"
-    ]
-  },
-  "Failed to copy {0} to {1}/Source pathDestination path": {
-    "message": "Failed to copy {0} to {1}",
-    "comment": [
-      "Source path",
-      "Destination path"
-    ]
-  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -506,14 +506,12 @@
       "Profile name"
     ]
   },
-  "Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}/Profile nameApplication name": {
-    "message": "Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}",
+  "Error: You have Zowe job favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n\nWould you like to do this now?/Profile name": {
+    "message": "Error: You have Zowe job favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n\nWould you like to do this now?",
     "comment": [
-      "Profile name",
-      "Application name"
+      "Profile name"
     ]
   },
-  "Remove": "Remove",
   "This will remove all favorited jobs items for profile {0}. Continue?/Profile name": {
     "message": "This will remove all favorited jobs items for profile {0}. Continue?",
     "comment": [
@@ -617,6 +615,7 @@
       "Job Status"
     ]
   },
+  "JES API": "JES API",
   "Fetching spool file...": "Fetching spool file...",
   "Failed to delete job {0}/Job name": {
     "message": "Failed to delete job {0}",
@@ -727,11 +726,10 @@
       "Profile name"
     ]
   },
-  "Error: You have Zowe data set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}/Profile nameApplication name": {
-    "message": "Error: You have Zowe data set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}",
+  "Error: You have Zowe data set favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n\nWould you like to do this now?/Profile name": {
+    "message": "Error: You have Zowe data set favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n\nWould you like to do this now?",
     "comment": [
-      "Profile name",
-      "Application name"
+      "Profile name"
     ]
   },
   "PDS already in favorites": "PDS already in favorites",
