@@ -226,7 +226,7 @@ export class DatasetInit {
         );
 
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.setDatasetFilter", async (session, datasetPattern) => {
+            vscode.commands.registerCommand("zowe.ds.setDataSetFilter", async (session, datasetPattern) => {
                 if (session && datasetPattern) {
                     await DatasetActions.filterDatasetTree(datasetProvider, session, datasetPattern);
                 } else {

@@ -4660,19 +4660,17 @@ describe("DatasetActions - filterDatasetTree", () => {
 
         const sessionNode = blockMocks.datasetSessionNode;
         sessionNode.children = [];
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
         blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
 
-        const getChildrenSpy = jest.spyOn(sessionNode, "getChildren").mockResolvedValue([]);
-        const nodeDataChangedSpy = jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
+        const expandNodeSpy = jest.spyOn(TreeViewUtils, "expandNode").mockResolvedValue(undefined as any);
         const revealSpy = jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
 
         await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, sessionNode.label as string, "HLQ.DATASET");
 
         expect(sessionNode.pattern).toBe("HLQ.DATASET");
-        expect(sessionNode.tooltip).toBe("HLQ.DATASET");
-        expect(sessionNode.description).toBe("HLQ.DATASET");
-        expect(getChildrenSpy).toHaveBeenCalled();
-        expect(nodeDataChangedSpy).toHaveBeenCalledWith(sessionNode);
+        expect(sessionNode.tooltip).toContain("HLQ.DATASET");
+        expect(expandNodeSpy).toHaveBeenCalledWith(sessionNode, blockMocks.testDatasetTree);
         expect(revealSpy).toHaveBeenCalledWith(sessionNode, { select: true, focus: true, expand: true });
     });
 
@@ -4684,14 +4682,14 @@ describe("DatasetActions - filterDatasetTree", () => {
         const newSessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.imperativeProfile);
         newSessionNode.label = "newProfile";
         newSessionNode.children = [];
+        newSessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
         const addSessionSpy = jest.spyOn(blockMocks.testDatasetTree, "addSession").mockImplementation(async () => {
             blockMocks.testDatasetTree.mSessionNodes.push(newSessionNode);
             return undefined as any;
         });
 
-        jest.spyOn(newSessionNode, "getChildren").mockResolvedValue([]);
-        jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
+        jest.spyOn(TreeViewUtils, "expandNode").mockResolvedValue(undefined as any);
         jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
 
         await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, "newProfile", "HLQ.DATASET");
@@ -4703,6 +4701,7 @@ describe("DatasetActions - filterDatasetTree", () => {
         const blockMocks = createBlockMocksShared();
 
         const sessionNode = blockMocks.datasetSessionNode;
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
         blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
 
         const pdsNode = new ZoweDatasetNode({
@@ -4722,15 +4721,14 @@ describe("DatasetActions - filterDatasetTree", () => {
         });
         memberNode.contextValue = "member";
 
-        jest.spyOn(sessionNode, "getChildren").mockImplementation(async () => {
-            sessionNode.children = [pdsNode];
-            return [pdsNode];
+        jest.spyOn(TreeViewUtils, "expandNode").mockImplementation(async (node: any) => {
+            if (node === sessionNode) {
+                sessionNode.children = [pdsNode];
+            } else if (node === pdsNode) {
+                pdsNode.children = [memberNode];
+            }
+            return undefined as any;
         });
-        jest.spyOn(pdsNode, "getChildren").mockImplementation(async () => {
-            pdsNode.children = [memberNode];
-            return [memberNode];
-        });
-        jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
         const revealSpy = jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
         jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
 
@@ -4748,6 +4746,7 @@ describe("DatasetActions - filterDatasetTree", () => {
         const sessionNode = blockMocks.datasetSessionNode;
         sessionNode.children = [];
         sessionNode.dirty = true;
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
         blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
 
         const pdsNode = new ZoweDatasetNode({
@@ -4759,15 +4758,14 @@ describe("DatasetActions - filterDatasetTree", () => {
         pdsNode.contextValue = "pds";
         pdsNode.children = [];
 
-        jest.spyOn(sessionNode, "getChildren").mockImplementation(async () => {
-            sessionNode.children = [pdsNode];
-            return [pdsNode];
+        jest.spyOn(TreeViewUtils, "expandNode").mockImplementation(async (node: any) => {
+            if (node === sessionNode) {
+                sessionNode.children = [pdsNode];
+            } else if (node === pdsNode) {
+                pdsNode.children = [];
+            }
+            return undefined as any;
         });
-        jest.spyOn(pdsNode, "getChildren").mockImplementation(async () => {
-            pdsNode.children = [];
-            return [];
-        });
-        jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
         jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
         jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
         const warningMessageSpy = jest.spyOn(Gui, "warningMessage");
@@ -4785,6 +4783,7 @@ describe("DatasetActions - filterDatasetTree", () => {
         const sessionNode = blockMocks.datasetSessionNode;
         sessionNode.children = [];
         sessionNode.dirty = true;
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
         blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
 
         const otherPdsNode = new ZoweDatasetNode({
@@ -4795,11 +4794,12 @@ describe("DatasetActions - filterDatasetTree", () => {
         });
         otherPdsNode.contextValue = "pds";
 
-        jest.spyOn(sessionNode, "getChildren").mockImplementation(async () => {
-            sessionNode.children = [otherPdsNode];
-            return [otherPdsNode];
+        jest.spyOn(TreeViewUtils, "expandNode").mockImplementation(async (node: any) => {
+            if (node === sessionNode) {
+                sessionNode.children = [otherPdsNode];
+            }
+            return undefined as any;
         });
-        jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
         jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
         const warningMessageSpy = jest.spyOn(Gui, "warningMessage");
 
@@ -4826,6 +4826,7 @@ describe("DatasetActions - filterDatasetTree", () => {
         const blockMocks = createBlockMocksShared();
 
         const sessionNode = blockMocks.datasetSessionNode;
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
         blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
 
         const pdsNode = new ZoweDatasetNode({
@@ -4845,15 +4846,14 @@ describe("DatasetActions - filterDatasetTree", () => {
         });
         memberNode.contextValue = "member";
 
-        jest.spyOn(sessionNode, "getChildren").mockImplementation(async () => {
-            sessionNode.children = [pdsNode];
-            return [pdsNode];
+        jest.spyOn(TreeViewUtils, "expandNode").mockImplementation(async (node: any) => {
+            if (node === sessionNode) {
+                sessionNode.children = [pdsNode];
+            } else if (node === pdsNode) {
+                pdsNode.children = [memberNode];
+            }
+            return undefined as any;
         });
-        jest.spyOn(pdsNode, "getChildren").mockImplementation(async () => {
-            pdsNode.children = [memberNode];
-            return [memberNode];
-        });
-        jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged");
 
         jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockImplementation((node: any) => {
             if (node === memberNode) {
@@ -4887,13 +4887,14 @@ describe("DatasetActions - filterDatasetTree", () => {
         expect(errorHandlingSpy).toHaveBeenCalled();
     });
 
-    it("should handle errors during getChildren and call errorHandling", async () => {
+    it("should handle errors during expandNode and call errorHandling", async () => {
         const blockMocks = createBlockMocksShared();
 
         const sessionNode = blockMocks.datasetSessionNode;
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
         blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
 
-        jest.spyOn(sessionNode, "getChildren").mockRejectedValue(new Error("Failed to get children"));
+        jest.spyOn(TreeViewUtils, "expandNode").mockRejectedValue(new Error("Failed to expand node"));
         const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockResolvedValue(undefined as any);
 
         await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, sessionNode.label as string, "HLQ.DATASET");

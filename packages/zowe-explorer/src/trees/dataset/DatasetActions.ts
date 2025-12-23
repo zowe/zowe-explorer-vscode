@@ -2584,6 +2584,7 @@ export class DatasetActions {
             
             await datasetProvider.getTreeView().reveal(sessionNode, { select: true, focus: true, expand: true });
 
+            // If a member was specified, try to find and reveal it
             if (targetMember && sessionNode.children && sessionNode.children.length > 0) {
                 const pdsNode = sessionNode.children.find((child) => child.label.toString().toUpperCase() === targetPattern) as IZoweDatasetTreeNode;
 
