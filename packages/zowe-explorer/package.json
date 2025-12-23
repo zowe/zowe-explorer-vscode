@@ -193,7 +193,7 @@
         "category": "Zowe Explorer"
       },
       {
-        "command": "zowe.ds.setDatasetFilter",
+        "command": "zowe.ds.setDataSetFilter",
         "title": "%ds.setDatasetFilter%",
         "category": "Zowe Explorer"
       },
