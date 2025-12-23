@@ -4905,6 +4905,44 @@ describe("DatasetActions - filterDatasetTree", () => {
         });
     });
 
+    it("should handle updating existing pattern in tooltip", async () => {
+        const blockMocks = createBlockMocksShared();
+        const sessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        sessionNode.pattern = "OLD.PATTERN";
+        sessionNode.tooltip = `Profile: ${sessionNode.label}\nPattern: OLD.PATTERN`;
+        sessionNode.contextValue += `_${Constants.FILTER_SEARCH}`;
+        blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
+
+        const expandNodeSpy = jest.spyOn(TreeViewUtils, "expandNode").mockResolvedValue(undefined);
+        const revealSpy = jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined);
+
+        await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, sessionNode.label as string, "HLQ.DATASET");
+
+        expect(sessionNode.pattern).toBe("HLQ.DATASET");
+        expect(sessionNode.tooltip).toContain("Pattern: HLQ.DATASET");
+        expect(expandNodeSpy).not.toHaveBeenCalled();
+        expect(revealSpy).toHaveBeenCalled();
+    });
+
+    it("should call nodeDataChanged when session node is already expanded", async () => {
+        const blockMocks = createBlockMocksShared();
+        const sessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.imperativeProfile);
+        sessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
+
+        const nodeDataChangedSpy = jest.spyOn(blockMocks.testDatasetTree, "nodeDataChanged").mockImplementation();
+        const expandNodeSpy = jest.spyOn(TreeViewUtils, "expandNode").mockResolvedValue(undefined);
+        const revealSpy = jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined);
+
+        await DatasetActions.filterDatasetTree(blockMocks.testDatasetTree, sessionNode.label as string, "HLQ.DATASET");
+
+        // The contextValue will be modified by filterDatasetTree
+        expect(sessionNode.contextValue).toContain(Constants.FILTER_SEARCH);
+        expect(nodeDataChangedSpy).toHaveBeenCalled();
+        expect(expandNodeSpy).not.toHaveBeenCalled();
+        expect(revealSpy).toHaveBeenCalled();
+    });
+
     describe("DatasetActions.validateDatasetPattern", () => {
         const EMPTY_PATTERN_ERROR = "Data set pattern cannot be empty";
         const INVALID_PATTERN_ERROR = "Invalid data set pattern. Use alphanumeric characters, $, #, @, *, %, ., -, and () for members";
