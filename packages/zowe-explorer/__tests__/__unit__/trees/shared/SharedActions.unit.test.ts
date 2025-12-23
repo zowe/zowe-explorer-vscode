@@ -917,8 +917,9 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
             refresh,
             refreshElement,
         } as any;
-        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "sestest" }],
+            checkCurrentProfile: jest.fn().mockResolvedValue(undefined),
         } as any);
         const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockReturnValueOnce(undefined);
         const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockClear().mockResolvedValueOnce(undefined);
@@ -953,9 +954,10 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
             refresh,
             refreshElement,
         } as any;
-        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [],
             profilesForValidation: [],
+            checkCurrentProfile: jest.fn().mockResolvedValue(undefined),
         } as any);
         const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockReturnValueOnce(undefined);
         const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockClear().mockResolvedValueOnce(undefined);
