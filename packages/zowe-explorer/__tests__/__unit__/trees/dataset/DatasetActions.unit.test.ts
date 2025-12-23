@@ -4481,7 +4481,7 @@ describe("DatasetActions - filterDatasetTreePrompt", () => {
 
         await DatasetActions.filterDatasetTreePrompt(blockMocks.testDatasetTree);
 
-        expect(errorMessageSpy).toHaveBeenCalledWith("No dataset profiles found. Please add a profile first.");
+        expect(errorMessageSpy).toHaveBeenCalledWith("No data set profiles found. Please add a profile first.");
     });
 
     it("should prompt for profile and dataset pattern", async () => {
@@ -4906,8 +4906,8 @@ describe("DatasetActions - filterDatasetTree", () => {
     });
 
     describe("DatasetActions.validateDatasetPattern", () => {
-        const EMPTY_PATTERN_ERROR = "Dataset pattern cannot be empty";
-        const INVALID_PATTERN_ERROR = "Invalid dataset pattern. Use alphanumeric characters, $, #, @, *, %, ., -, and () for members";
+        const EMPTY_PATTERN_ERROR = "Data set pattern cannot be empty";
+        const INVALID_PATTERN_ERROR = "Invalid data set pattern. Use alphanumeric characters, $, #, @, *, %, ., -, and () for members";
 
         it("should return undefined for valid simple dataset pattern", () => {
             const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATASET");
