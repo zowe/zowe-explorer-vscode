@@ -225,7 +225,12 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         if (!droppedItems) return;
 
         let target = targetNode;
-        if (!target) return;
+        if (!target) {
+            return;
+        } else if (SharedContext.isInformation(target)) {
+            // If node says "No data sets/members found", use its parent as target
+            target = target.getParent() as IZoweDatasetTreeNode;
+        }
 
         // check each dropped node for same-object, member collision, and structure issues
         for (const item of droppedItems.value) {
@@ -266,6 +271,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
             if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
                 Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member into a sequential dataset."));
+                return;
+            }
+            if (SharedContext.isDsMember(node) && SharedContext.isSession(target)) {
+                Gui.errorMessage(vscode.l10n.t("Cannot drop a dataset member into a profile node."));
                 return;
             }
             const parent = target.getParent();
