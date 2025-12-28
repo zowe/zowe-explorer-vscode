@@ -4955,6 +4955,24 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
         expect(statusBarMsgSpy).not.toHaveBeenCalled();
     });
 
+    it("returns early if target node is undefined", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
+        const dataTransfer = new vscode.DataTransfer();
+        jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+            value: [
+                {
+                    label: blockMocks.draggedNode.label as string,
+                    uri: blockMocks.draggedNode.resourceUri,
+                },
+            ],
+        } as any);
+        const testTree = new DatasetTree();
+        await testTree.handleDrop(undefined, dataTransfer, undefined);
+        expect(statusBarMsgSpy).not.toHaveBeenCalled();
+    });
+
     it("handle moving of pds to different profiles dropping on seq - should throw error", async () => {
         createGlobalMocks();
         const testTree = new DatasetTree();
