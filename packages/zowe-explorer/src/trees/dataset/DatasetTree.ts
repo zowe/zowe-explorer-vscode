@@ -163,7 +163,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
                 if (entry == null) {
                     if (SharedContext.isDsMember(sourceNode)) {
-                        dsname = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
+                        dsname =
+                            path.posix.dirname(destUri.path.substring(destinationInfo.slashAfterProfilePos + 1)) +
+                            "(" +
+                            (sourceNode.getLabel() as string) +
+                            ")";
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
                     } else {
                         dsname = sourceNode.getLabel() as string;
@@ -227,8 +231,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         let target = targetNode;
         if (!target) {
             return;
-        } else if (SharedContext.isInformation(target)) {
-            // If node says "No data sets/members found", use its parent as target
+        } else if (SharedContext.isDsMember(target) || SharedContext.isInformation(target)) {
+            // If node is member or says "No data sets/members found", use its parent as target
             target = target.getParent() as IZoweDatasetTreeNode;
         }
 
@@ -236,10 +240,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             if (!node) continue;
-            const srcDsn = SharedUtils.getNodeProperty(node, "label");
+            const srcDsn = (SharedContext.isDsMember(node) ? node.getParent() : node).getLabel() as string;
+            const tgtDsn = target.getLabel() as string;
 
             // 1. Same-object check
-            if (node.getProfile && target.getProfile && (await SharedUtils.isSamePhysicalDataset(node.getProfile(), target.getProfile(), srcDsn))) {
+            if (tgtDsn === srcDsn && (await SharedUtils.isSamePhysicalDataset(node.getProfile(), target.getProfile(), srcDsn))) {
                 Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
                 return;
             }
@@ -263,11 +268,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
 
             // 3. Dataset structure checks
-            if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
-                if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
-                    Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset."));
-                    return;
-                }
+            if (SharedContext.isPds(target) && (SharedContext.isPds(node) || SharedContext.isDs(node))) {
+                Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset."));
+                return;
             }
             if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
                 Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member into a sequential dataset."));
