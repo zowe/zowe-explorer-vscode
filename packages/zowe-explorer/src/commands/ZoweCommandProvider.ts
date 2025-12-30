@@ -175,47 +175,47 @@ export abstract class ZoweCommandProvider {
     }
 
     /**
-     * Try to auto-select a profile based on parent profile naming.
-     * E.g., if parent is "dev1.zosmf", look for "dev1.tso" or "dev1.ssh"
+     * Try to auto-select a profile based on shared base profile.
+     * Uses the same approach as the CICS extension to identify related profiles.
+     * E.g., if parent is "dev1.zosmf", looks for "dev1.tso" or "dev1.ssh" that share the same base profile.
+     *
+     * @param parentProfile - The profile from which the command is being issued
+     * @param profiles - List of candidate profiles to search through
+     * @returns The matching profile if exactly one is found, otherwise undefined
      */
-    protected autoSelectProfile(
+    protected async autoSelectProfile(
         parentProfile: imperative.IProfileLoaded | undefined,
         profiles: imperative.IProfileLoaded[]
-    ): imperative.IProfileLoaded | undefined {
+    ): Promise<imperative.IProfileLoaded | undefined> {
         if (!parentProfile?.name) {
             return undefined;
         }
 
-        const dotIndex = parentProfile.name.indexOf(".");
-        if (dotIndex === -1) {
+        try {
+            const profilesCache = this.profileInstance.getProfilesCache();
+            const baseForParent = await profilesCache.fetchBaseProfile(parentProfile.name);
+
+            const matches: imperative.IProfileLoaded[] = [];
+
+            for (const profile of profiles) {
+                if (!profile?.name || profile.name === parentProfile.name) {
+                    continue;
+                }
+
+                const profileBase = await profilesCache.fetchBaseProfile(profile.name);
+
+                // Check if profiles share the same base profile
+                if (baseForParent?.name && profileBase?.name === baseForParent.name) {
+                    matches.push(profile);
+                }
+            }
+
+            // Only auto-select if there's exactly one match
+            return matches.length === 1 ? matches[0] : undefined;
+        } catch (error) {
+            ZoweLogger.warn(`Failed to auto-select profile: ${error instanceof Error ? error.message : String(error)}`);
             return undefined;
         }
-
-        const parentBase = parentProfile.name.substring(0, dotIndex);
-        const parentSuffix = parentProfile.name.substring(dotIndex + 1);
-
-        const matches = profiles.filter((p) => {
-            if (!p?.name || p.name === parentProfile.name) {
-                return false;
-            }
-            const candidateDot = p.name.indexOf(".");
-            if (candidateDot === -1) {
-                return false;
-            }
-            const candidateBase = p.name.substring(0, candidateDot);
-            if (candidateBase !== parentBase) {
-                return false;
-            }
-            const candidateSuffix = p.name.substring(candidateDot + 1);
-            if (!candidateSuffix || candidateSuffix === parentSuffix) {
-                return false;
-            }
-            // Avoid matching variants like "dev1.zosmf-backup" when parent is "dev1.zosmf"
-            return !candidateSuffix.startsWith(parentSuffix);
-        });
-
-        // Only auto-select if there's exactly one match
-        return matches.length === 1 ? matches[0] : undefined;
     }
 
     public async selectServiceProfile(profiles: imperative.IProfileLoaded[] = []): Promise<imperative.IProfileLoaded> {

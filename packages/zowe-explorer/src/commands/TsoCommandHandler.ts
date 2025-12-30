@@ -170,8 +170,8 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             const profiles = profileInfo.getAllProfiles("tso");
             if (profiles.length > 0) {
                 const profilesList = profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p));
-                // Try auto-selecting based on parent profile naming
-                const autoSelected = this.autoSelectProfile(parentProfile, profilesList);
+                // Try auto-selecting based on shared base profile
+                const autoSelected = await this.autoSelectProfile(parentProfile, profilesList);
                 if (autoSelected) {
                     tsoProfile = autoSelected;
                     ZoweLogger.info(

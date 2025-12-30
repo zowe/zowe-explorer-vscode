@@ -205,8 +205,8 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             return;
         }
 
-        // Try auto-selecting based on parent profile name
-        const autoSelected = this.autoSelectProfile(this.nodeProfile, profiles);
+        // Try auto-selecting based on shared base profile
+        const autoSelected = await this.autoSelectProfile(this.nodeProfile, profiles);
         if (autoSelected) {
             this.sshProfile = autoSelected;
             ZoweLogger.info(

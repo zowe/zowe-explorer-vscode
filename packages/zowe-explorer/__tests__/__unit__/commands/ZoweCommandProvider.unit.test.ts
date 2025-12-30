@@ -20,6 +20,7 @@ import { createIJobFile } from "../../__mocks__/mockCreators/jobs";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { Constants } from "../../../src/configuration/Constants";
+import { ProfileManagement } from "../../../src/management/ProfileManagement";
 
 jest.mock("../../../src/tools/ZoweLocalStorage");
 
@@ -168,39 +169,99 @@ describe("ZoweCommandProvider Unit Tests", () => {
         });
 
         describe("function autoSelectProfile", () => {
-            it("should auto-select when exactly one match exists", () => {
+            let mockProfilesCache: any;
+            let mockProfileInstance: any;
+
+            beforeEach(() => {
+                mockProfilesCache = {
+                    fetchBaseProfile: jest.fn(),
+                };
+                mockProfileInstance = {
+                    getProfilesCache: jest.fn().mockReturnValue(mockProfilesCache),
+                };
+            });
+
+            it("should auto-select when exactly one profile shares the same base profile", async () => {
                 const parentProfile = { name: "dev1.zosmf" } as any;
                 const profiles = [{ name: "dev1.tso" }, { name: "dev2.tso" }] as any;
-                expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, profiles)).toEqual({ name: "dev1.tso" });
+                const baseProfile = { name: "dev1", type: "base" } as any;
+
+                mockProfilesCache.fetchBaseProfile.mockImplementation((profileName: string) => {
+                    if (profileName === "dev1.zosmf" || profileName === "dev1.tso") {
+                        return Promise.resolve(baseProfile);
+                    }
+                    return Promise.resolve({ name: "dev2", type: "base" });
+                });
+
+                const result = await ZoweCommandProvider.prototype.autoSelectProfile.call(
+                    { profileInstance: mockProfileInstance },
+                    parentProfile,
+                    profiles
+                );
+                expect(result).toEqual({ name: "dev1.tso" });
             });
 
-            it("should return undefined when multiple matches exist", () => {
+            it("should return undefined when multiple profiles share the same base", async () => {
                 const parentProfile = { name: "dev1.zosmf" } as any;
                 const profiles = [{ name: "dev1.tso" }, { name: "dev1.ssh" }] as any;
-                expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, profiles)).toBeUndefined();
+                const baseProfile = { name: "dev1", type: "base" } as any;
+
+                mockProfilesCache.fetchBaseProfile.mockResolvedValue(baseProfile);
+
+                const result = await ZoweCommandProvider.prototype.autoSelectProfile.call(
+                    { profileInstance: mockProfileInstance },
+                    parentProfile,
+                    profiles
+                );
+                expect(result).toBeUndefined();
             });
 
-            it("should return undefined when no matches exist", () => {
+            it("should return undefined when no profiles share the same base", async () => {
                 const parentProfile = { name: "dev1.zosmf" } as any;
-                expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, [{ name: "dev2.tso" }] as any)).toBeUndefined();
+                const profiles = [{ name: "dev2.tso" }] as any;
+
+                mockProfilesCache.fetchBaseProfile.mockImplementation((profileName: string) => {
+                    if (profileName === "dev1.zosmf") {
+                        return Promise.resolve({ name: "dev1", type: "base" });
+                    }
+                    return Promise.resolve({ name: "dev2", type: "base" });
+                });
+
+                const result = await ZoweCommandProvider.prototype.autoSelectProfile.call(
+                    { profileInstance: mockProfileInstance },
+                    parentProfile,
+                    profiles
+                );
+                expect(result).toBeUndefined();
             });
 
-            it("should exclude parent profile from matches", () => {
+            it("should exclude parent profile from matches", async () => {
                 const parentProfile = { name: "dev1.zosmf" } as any;
                 const profiles = [{ name: "dev1.zosmf" }, { name: "dev1.tso" }] as any;
-                expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, profiles)).toEqual({ name: "dev1.tso" });
+                const baseProfile = { name: "dev1", type: "base" } as any;
+
+                mockProfilesCache.fetchBaseProfile.mockResolvedValue(baseProfile);
+
+                const result = await ZoweCommandProvider.prototype.autoSelectProfile.call(
+                    { profileInstance: mockProfileInstance },
+                    parentProfile,
+                    profiles
+                );
+                expect(result).toEqual({ name: "dev1.tso" });
             });
 
-            it("should not match profile name variants", () => {
+            it("should handle errors gracefully and return undefined", async () => {
                 const parentProfile = { name: "dev1.zosmf" } as any;
-                const profiles = [{ name: "dev1.zosmf-backup" }, { name: "dev1.tso" }] as any;
-                expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, profiles)).toEqual({ name: "dev1.tso" });
-            });
+                const profiles = [{ name: "dev1.tso" }] as any;
 
-            it("should not match profiles with similar but longer base names", () => {
-                const parentProfile = { name: "prod.zosmf" } as any;
-                const profiles = [{ name: "production.tso" }, { name: "prod.tso" }] as any;
-                expect(ZoweCommandProvider.prototype.autoSelectProfile.call({}, parentProfile, profiles)).toEqual({ name: "prod.tso" });
+                mockProfilesCache.fetchBaseProfile.mockRejectedValue(new Error("Profile not found"));
+
+                const result = await ZoweCommandProvider.prototype.autoSelectProfile.call(
+                    { profileInstance: mockProfileInstance },
+                    parentProfile,
+                    profiles
+                );
+                expect(result).toBeUndefined();
             });
         });
 
