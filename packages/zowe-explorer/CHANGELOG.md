@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added support for detecting truncation based on logical record length for extenders. [#4002](https://github.com/zowe/zowe-explorer-vscode/pull/4002)
 - Added support to delete VSAM data sets. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
 - Refactored data set pagination to use the new `getCount` API (if available) to optimize access to the total item count.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 - Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
