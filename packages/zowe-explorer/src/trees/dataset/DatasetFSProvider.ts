@@ -92,11 +92,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
 
         const apiRegister = ZoweExplorerApiRegister.getInstance();
-        const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(
-            uriInfo.profile,
-            () => apiRegister.getCommonApi(uriInfo.profile),
-            { apiName: vscode.l10n.t("Common API"), registeredTypes: apiRegister.registeredApiTypes() }
-        );
+        const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
+            apiName: vscode.l10n.t("Common API"),
+            registeredTypes: apiRegister.registeredApiTypes(),
+        });
         const session = commonApi.getSession(uriInfo.profile);
         if (
             (isFetching && ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile)) ||
@@ -277,11 +276,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let uriPath: string[];
 
         const apiRegister = ZoweExplorerApiRegister.getInstance();
-        const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(
-            uriInfo.profile,
-            () => apiRegister.getCommonApi(uriInfo.profile),
-            { apiName: vscode.l10n.t("Common API"), registeredTypes: apiRegister.registeredApiTypes() }
-        );
+        const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
+            apiName: vscode.l10n.t("Common API"),
+            registeredTypes: apiRegister.registeredApiTypes(),
+        });
         const session = commonApi.getSession(uriInfo.profile);
 
         if (
@@ -566,11 +564,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
         const apiRegister = ZoweExplorerApiRegister.getInstance();
-        const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(
-            uriInfo.profile,
-            () => apiRegister.getCommonApi(uriInfo.profile),
-            { apiName: vscode.l10n.t("Common API"), registeredTypes: apiRegister.registeredApiTypes() }
-        );
+        const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
+            apiName: vscode.l10n.t("Common API"),
+            registeredTypes: apiRegister.registeredApiTypes(),
+        });
         const session = commonApi.getSession(uriInfo.profile);
         if (
             ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
@@ -651,10 +648,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // /DATA.SET/MEMBER
         const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
         const isPdsMember = uriPath.length === 2;
+        const targetPath = isPdsMember ? path.posix.dirname(uri.path) : uri.path;
 
-        let dsStats: Types.DatasetStats = entry.stats;
+        let dsStats: Types.DatasetStats = isPdsMember ? (this.lookupParentDirectory(uri) as PdsEntry).stats : entry.stats;
         if (dsStats == null) {
-            const targetPath = isPdsMember ? path.posix.dirname(uri.path) : uri.path;
             const tempEntry = await this.fetchDataset(uri.with({ path: targetPath }), uriInfo, true);
             dsStats = tempEntry.stats;
             if (isPdsMember) {
@@ -668,7 +665,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             try {
                 const document = await vscode.workspace.openTextDocument(uri);
                 for (let i = 0; i < document.lineCount; i++) {
-                    if (document.lineAt(i).text.length > (Number(dsStats.lrecl) || Number(dsStats.blksz))) {
+                    let limit = Number(dsStats.lrecl) || Number(dsStats.blksz);
+                    if (dsStats.recfm === "VB") {
+                        limit -= 4;
+                    }
+                    if (document.lineAt(i).text.length > limit) {
                         longLines[i + 1] = document.lineAt(i).text;
                     }
                 }
@@ -788,38 +789,34 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 return;
             }
             if (err instanceof imperative.ImperativeError && err.message.includes("Zowe Explorer: Unsafe upload")) {
-                const longLines = Object.keys(err.causeErrors);
+                const groupedLines: { start: number; end: number; text: string }[] = [];
+
+                const sortedEntries = Object.entries(err.causeErrors).sort((a, b) => Number(a[0]) - Number(b[0]));
+
+                for (const [lineStr, text] of sortedEntries) {
+                    const line = Number(lineStr);
+                    const lastGroup = groupedLines[groupedLines.length - 1];
+
+                    if (lastGroup && line === lastGroup.end + 1) {
+                        lastGroup.end = line;
+                        lastGroup.text += "\n" + text;
+                    } else {
+                        groupedLines.push({ start: line, end: line, text: text as string });
+                    }
+                }
+                const rangeStrings = groupedLines.map((g) => (g.start === g.end ? `${g.start}` : `${g.start}-${g.end}`));
+                const maxRanges = 5;
+                const linesToReview = rangeStrings.length > maxRanges ? rangeStrings.slice(0, maxRanges).join(", ") + "..." : rangeStrings.join(", ");
                 const dataLossMsg = vscode.l10n.t("This upload operation may result in data loss.");
-                const linesToReview = longLines.length > 5 ? longLines.slice(0, 5).join(", ") + "..." : longLines.join(", ");
                 const shortMsg = vscode.l10n.t("Please review the following lines:");
                 const newErr = new Error(`${dataLossMsg} ${shortMsg} ${linesToReview}`);
                 newErr.stack = shortMsg + "\n";
-                // group consecutive lines that are next to each other
-                const groupedLines: { lines: number[]; text: string }[] = [];
-                for (const [line, text] of Object.entries(err.causeErrors)) {
-                    if (groupedLines.length > 0) {
-                        const poppedLine = groupedLines.pop();
-                        if (poppedLine && Number(line) - 1 === Number(poppedLine.lines[poppedLine.lines.length - 1])) {
-                            poppedLine.lines.push(Number(line));
-                            poppedLine.text += ("\n" + text) as string;
-                            groupedLines.push(poppedLine);
-                        } else {
-                            groupedLines.push(poppedLine);
-                            groupedLines.push({ lines: [Number(line)], text: text as string });
-                        }
-                    } else {
-                        groupedLines.push({ lines: [Number(line)], text: text as string });
-                    }
+                for (const group of groupedLines) {
+                    const lineLabel = group.start === group.end ? `Line: ${group.start}` : `Lines: ${group.start}-${group.end}`;
+
+                    newErr.stack += `\n${lineLabel}\n${group.text}\n`;
                 }
-                for (const lines of groupedLines) {
-                    let lineRange = "";
-                    if (lines.lines.length > 1) {
-                        lineRange = `Lines: ${lines.lines[0]}-${lines.lines[lines.lines.length - 1]}`;
-                    } else {
-                        lineRange = `Line: ${lines.lines[0]}`;
-                    }
-                    newErr.stack += `\n${lineRange}\n${lines.text}\n`;
-                }
+
                 this._handleError(newErr);
                 throw newErr;
             }
