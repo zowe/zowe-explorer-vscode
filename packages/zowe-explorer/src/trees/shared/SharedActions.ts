@@ -278,7 +278,7 @@ export class SharedActions {
                 continue;
             }
 
-            const profileName = sessNode.label.toString().trim();
+            const profileName = sessNode.getProfileName();
             const profile = Profiles.getInstance().allProfiles.find((p) => p.name === profileName);
             
             if (profile) {
