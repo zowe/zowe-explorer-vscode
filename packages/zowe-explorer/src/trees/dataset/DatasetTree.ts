@@ -146,16 +146,18 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const children = await sourceNode.getChildren();
             for (const childNode of children) {
                 // move members within the folder to the destination
-                await this.crossLparMove(
-                    childNode,
-                    sourceUri.with({
-                        path: path.posix.join(sourceUri.path, childNode.getLabel() as string),
-                    }),
-                    destUri.with({
-                        path: path.posix.join(destUri.path, childNode.getLabel() as string),
-                    }),
-                    true
-                );
+                if ((childNode.getLabel() as string) !== vscode.l10n.t("No data sets found")) {
+                    await this.crossLparMove(
+                        childNode,
+                        sourceUri.with({
+                            path: path.posix.join(sourceUri.path, childNode.getLabel() as string),
+                        }),
+                        destUri.with({
+                            path: path.posix.join(destUri.path, childNode.getLabel() as string),
+                        }),
+                        true
+                    );
+                }
             }
             await vscode.workspace.fs.delete(sourceUri, { recursive: true });
         } else {
