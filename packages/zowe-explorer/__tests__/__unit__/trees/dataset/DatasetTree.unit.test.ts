@@ -5549,4 +5549,54 @@ describe("DatasetTree.crossLparMove", () => {
         );
         expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(srcUri, { recursive: true });
     });
+
+    it("should handle error when creating a new PDS if it already exists", async () => {
+        // only the root fakeNode is a PDS; its single child is a member
+        jest.spyOn(SharedContext, "isPds").mockImplementation((node) => node === fakeNode);
+        fakeNode.contextValue = Constants.DS_PDS_CONTEXT;
+
+        const childNode: Partial<IZoweDatasetTreeNode> = {
+            getLabel: () => "M1",
+            resourceUri: srcUri.with({ path: `${srcUri.path}/M1` }),
+            contextValue: Constants.DS_MEMBER_CONTEXT,
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+            getChildren: jest.fn().mockResolvedValue([]),
+        };
+
+        jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(null);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        const createDataSetSpy = jest
+            .spyOn(apiMock, "createDataSet")
+            .mockRejectedValue(new imperative.ImperativeError({ msg: "Failed to create data set", errorCode: "500" }));
+        fakeNode.getChildren = jest.fn().mockResolvedValue([childNode]);
+
+        await tree["crossLparMove"](fakeNode, srcUri, dstUri, false);
+
+        expect(apiMock.createDataSet).toHaveBeenCalled();
+        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK, dstUri.path.slice(1), {});
+        expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining("Failed to move"));
+        expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
+    });
+
+    it("should handle error when creating a new PS if it already exists", async () => {
+        const fakeNode: Partial<IZoweDatasetTreeNode> = {
+            getLabel: () => "DS1",
+            contextValue: Constants.DS_DS_CONTEXT,
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+            getChildren: jest.fn().mockResolvedValue([]),
+        };
+
+        jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(null);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        const createDataSetSpy = jest
+            .spyOn(apiMock, "createDataSet")
+            .mockRejectedValue(new imperative.ImperativeError({ msg: "Failed to create data set", errorCode: "500" }));
+
+        await tree["crossLparMove"](fakeNode, srcUri, dstUri, false);
+
+        expect(apiMock.createDataSet).toHaveBeenCalled();
+        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fakeNode.getLabel!(), {});
+        expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining("Failed to move"));
+        expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
+    });
 });
