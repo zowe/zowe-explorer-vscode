@@ -139,6 +139,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                         return;
                     }
+                    throw err;
                 }
                 // create directory entry in local
                 DatasetFSProvider.instance.createDirectory(destUri);
@@ -186,6 +187,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                     return;
                 }
+                throw err;
             }
             // read the contents from the source LPAR
             const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
