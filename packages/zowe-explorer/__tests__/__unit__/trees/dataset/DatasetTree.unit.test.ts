@@ -5567,4 +5567,31 @@ describe("DatasetTree.crossLparMove", () => {
         );
         expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(srcUri, { recursive: true });
     });
+    it("should continue moving members of PDS if the label is not 'No data sets found'", async () => {
+        jest.spyOn(SharedContext, "isPds").mockImplementation((node) => node === fakeNode);
+        fakeNode.contextValue = "ds.pds";
+
+        const childNode: Partial<IZoweDatasetTreeNode> = {
+            getLabel: () => "No data sets found",
+            resourceUri: srcUri.with({
+                path: `${srcUri.path}/${vscode.l10n.t("No data sets found")}`,
+            }),
+            contextValue: "member",
+            getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
+            getChildren: jest.fn().mockResolvedValue([]),
+        };
+
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(null);
+
+        fakeNode.getChildren = jest.fn().mockResolvedValue([childNode]);
+
+        await tree["crossLparMove"](fakeNode, srcUri, dstUri, false);
+
+        expect(apiMock.createDataSet).toHaveBeenCalled();
+        expect(DatasetFSProvider.instance.createDirectory).toHaveBeenCalledWith(dstUri);
+
+        expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
+        expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(srcUri, { recursive: true });
+    });
 });
