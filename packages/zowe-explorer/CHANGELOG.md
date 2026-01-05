@@ -37,6 +37,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated Zowe SDKs to version `8.28.0` to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. [#3848](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
 - Updated `js-yaml` dependency for technical currency. [#3937](https://github.com/zowe/zowe-explorer-vscode/pull/3937)
 - Removed a misleading password prompt when issuing Unix commands. [#3940](https://github.com/zowe/zowe-explorer-vscode/pull/3940)
+- Fixed an issue where moving a PDS member into the "No members found" placeholder of an empty PDS deleted the member without transferring its data. [#3950](https://github.com/zowe/zowe-explorer-vscode/issues/3950)
+- Fixed PDS members and USS files not being supported as drop targets when resources are drag-and-dropped. [#3999](https://github.com/zowe/zowe-explorer-vscode/pull/3999)
 
 ## `3.3.1`
 

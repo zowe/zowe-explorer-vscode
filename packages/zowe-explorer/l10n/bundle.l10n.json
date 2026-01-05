@@ -244,6 +244,7 @@
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
+  "Common API": "Common API",
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
   "Failed to move {0}/File path": {
     "message": "Failed to move {0}",
@@ -333,14 +334,13 @@
     ]
   },
   "You must authenticate to view favorites.": "You must authenticate to view favorites.",
-  "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.\n                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n                      Would you like to do this now? {1}/Profile nameApplication name": {
-    "message": "Error: You have Zowe USS favorites that refer to a non-existent CLI profile named: {0}.\n                     To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n                      Would you like to do this now? {1}",
+  "Error: You have Zowe USS favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n\nWould you like to do this now?/Profile name": {
+    "message": "Error: You have Zowe USS favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's USS view.\n\nWould you like to do this now?",
     "comment": [
-      "Profile name",
-      "Application name"
+      "Profile name"
     ]
   },
-  "initializeUSSFavorites.error.buttonRemove": "initializeUSSFavorites.error.buttonRemove",
+  "Remove": "Remove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
   "{0} location/Node type": {
@@ -480,14 +480,12 @@
       "Profile name"
     ]
   },
-  "Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}/Profile nameApplication name": {
-    "message": "Error: You have Zowe job favorites that refer to a non-existent CLI profile named: {0}.\n                         To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n                          Would you like to do this now? {1}",
+  "Error: You have Zowe job favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n\nWould you like to do this now?/Profile name": {
+    "message": "Error: You have Zowe job favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n\nWould you like to do this now?",
     "comment": [
-      "Profile name",
-      "Application name"
+      "Profile name"
     ]
   },
-  "Remove": "Remove",
   "This will remove all favorited jobs items for profile {0}. Continue?/Profile name": {
     "message": "This will remove all favorited jobs items for profile {0}. Continue?",
     "comment": [
@@ -591,6 +589,7 @@
       "Job Status"
     ]
   },
+  "JES API": "JES API",
   "Fetching spool file...": "Fetching spool file...",
   "Failed to delete job {0}/Job name": {
     "message": "Failed to delete job {0}",
@@ -685,6 +684,7 @@
   "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.": "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.",
   "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.",
   "Cannot drop a partitioned dataset or member into a sequential dataset.": "Cannot drop a partitioned dataset or member into a sequential dataset.",
+  "Cannot drop a dataset member into a profile node.": "Cannot drop a dataset member into a profile node.",
   "Moving MVS files...": "Moving MVS files...",
   "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
   "No data set favorites found.": "No data set favorites found.",
@@ -701,11 +701,10 @@
       "Profile name"
     ]
   },
-  "Error: You have Zowe data set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}/Profile nameApplication name": {
-    "message": "Error: You have Zowe data set favorites that refer to a non-existent CLI profile named: {0}.\n                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n                    Would you like to do this now? {1}",
+  "Error: You have Zowe data set favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n\nWould you like to do this now?/Profile name": {
+    "message": "Error: You have Zowe data set favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n\nWould you like to do this now?",
     "comment": [
-      "Profile name",
-      "Application name"
+      "Profile name"
     ]
   },
   "PDS already in favorites": "PDS already in favorites",
