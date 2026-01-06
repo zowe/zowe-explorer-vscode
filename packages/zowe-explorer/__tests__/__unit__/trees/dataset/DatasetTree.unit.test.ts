@@ -5651,7 +5651,7 @@ describe("DatasetTree.crossLparMove", () => {
             resourceUri: srcUri.with({
                 path: `${srcUri.path}/${vscode.l10n.t("No data sets found")}`,
             }),
-            contextValue: "member",
+            contextValue: "information",
             getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
             getChildren: jest.fn().mockResolvedValue([]),
         };
