@@ -910,6 +910,7 @@
   "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.": "",
   "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "",
   "Cannot drop a partitioned dataset or member into a sequential dataset.": "",
+  "Cannot drop a dataset member into a profile node.": "",
   "Moving MVS files...": "",
   "Initializing profiles with data set favorites.": "",
   "No data set favorites found.": "",
