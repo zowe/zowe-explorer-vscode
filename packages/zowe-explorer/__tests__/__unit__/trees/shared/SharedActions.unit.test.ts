@@ -23,7 +23,7 @@ import {
     createTreeProviders,
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
-import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
+import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
 import { FileManagement, Gui, IZoweTree, IZoweTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
@@ -1008,8 +1008,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         });
 
         it("skips Favorites folder when updating tooltips", async () => {
-            const favoritesNode = createDatasetSessionNode(createISession(), createIProfile());
-            favoritesNode.label = "Favorites";
+            const favoritesNode = createDatasetFavoritesNode();
             const sessionNode = createDatasetSessionNode(createISession(), createIProfile());
             const nodeDataChanged = jest.fn();
             const treeProvider: IZoweTree<IZoweTreeNode> = {

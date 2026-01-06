@@ -273,8 +273,7 @@ export class SharedActions {
         ZoweLogger.trace("SharedActions.updateSessionNodeTooltips called.");
 
         const updatePromises = treeProvider.mSessionNodes.map(async (sessNode) => {
-            // Use contextValue or other property instead of localized string if possible
-            const isFavoritesFolder = sessNode.label.toString() === vscode.l10n.t("Favorites");
+            const isFavoritesFolder = SharedContext.isFavoriteContext(sessNode);
             if (isFavoritesFolder) {
                 return;
             }
