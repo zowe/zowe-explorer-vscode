@@ -272,30 +272,29 @@ export class SharedActions {
     public static async updateSessionNodeTooltips(treeProvider: IZoweTree<IZoweTreeNode>): Promise<void> {
         ZoweLogger.trace("SharedActions.updateSessionNodeTooltips called.");
 
-        for (const sessNode of treeProvider.mSessionNodes) {
+        const updatePromises = treeProvider.mSessionNodes.map(async (sessNode) => {
+            // Use contextValue or other property instead of localized string if possible
             const isFavoritesFolder = sessNode.label.toString() === vscode.l10n.t("Favorites");
             if (isFavoritesFolder) {
-                continue;
+                return;
             }
 
-            const profileName = sessNode.getProfileName();
+            // Use getProfileName() instead of parsing label
+            const profileName = sessNode.getProfileName ? sessNode.getProfileName() : sessNode.label.toString().trim();
             const profile = Profiles.getInstance().allProfiles.find((p) => p.name === profileName);
-            
+
             if (profile) {
                 try {
-                    // Update auth method and user info in tooltip
                     AuthUtils.updateNodeToolTip(sessNode, profile);
-                    
-                    // Update config file, auto store, and secure credentials info in tooltip
-                    await Profiles.getInstance().checkCurrentProfile(profile, sessNode);
-                    
-                    // Notify VS Code to repaint the node with updated tooltip
+                    await Profiles.getInstance().updateProfileHoverInfo(sessNode);
                     (treeProvider as unknown as ZoweTreeProvider<IZoweTreeNode>).nodeDataChanged(sessNode);
                 } catch (error) {
-                    ZoweLogger.warn(`Failed to update tooltip for session node ${profileName}: ${error.message}`);
+                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                    ZoweLogger.warn(`Failed to update tooltip for session node ${profileName}: ${error.message || error}`);
                 }
             }
-        }
+        });
+        await Promise.all(updatePromises);
     }
 
     public static async refreshProvider(treeProvider: IZoweTree<IZoweTreeNode>, refreshProfiles?: boolean): Promise<void> {
@@ -320,10 +319,10 @@ export class SharedActions {
         for (const profType of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             await TreeViewUtils.addDefaultSession(treeProvider, profType);
         }
-        
+
         // Update tooltips for all session nodes after refresh
         await SharedActions.updateSessionNodeTooltips(treeProvider);
-        
+
         treeProvider.refresh();
     }
 
