@@ -72,8 +72,6 @@ export class FeatureFlags {
     private static async loadFromDisk(): Promise<void> {
         try {
             if (!existsSync(this.filePath)) {
-                // this.flags = {};
-                // await this.saveToDisk();
                 return;
             }
 
@@ -84,9 +82,7 @@ export class FeatureFlags {
             }
 
             this.flags = JSON.parse(data);
-        } catch (error) {
-            // TODO: Remove Comment
-            // console.error(`Failed to load feature flags from ${this.filePath}:`, error);
+        } catch {
             this.flags = {};
         }
     }

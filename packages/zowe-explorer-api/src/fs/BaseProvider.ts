@@ -496,7 +496,7 @@ export class BaseProvider {
         );
     }
 
-    // Helper funciton to parse uri query params into a string for the requestCache key
+    // Helper function to parse uri query params into a string for the requestCache key
     protected getQueryKey(uri: vscode.Uri): string {
         if (!uri.query) {
             return "";

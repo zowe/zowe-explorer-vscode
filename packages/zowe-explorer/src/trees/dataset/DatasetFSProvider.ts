@@ -92,89 +92,85 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @throws vscode.FileSystemError on failures like FileNotFound or profile unavailability.
      */
     private async statImplementation(uri: vscode.Uri): Promise<vscode.FileStat> {
-        try {
-            ZoweLogger.trace(`[DatasetFSProvider] statImplementation called with ${uri.toString()}`);
-            this.validatePath(uri);
-            let isFetching = false;
+        ZoweLogger.trace(`[DatasetFSProvider] statImplementation called with ${uri.toString()}`);
+        this.validatePath(uri);
+        let isFetching = false;
 
-            const queryParams = new URLSearchParams(uri.query);
-            if (queryParams.has("conflict")) {
-                return { ...this.lookup(uri, false), permissions: vscode.FilePermission.Readonly };
-            } else if (queryParams.has("inDiff")) {
-                return this.lookup(uri, false);
-            }
-
-            const fetchByDefault: boolean = FeatureFlags.get("fetchByDefault");
-
-            isFetching = queryParams?.has("fetch") && queryParams?.get("fetch") === "true";
-
-            const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-
-            const apiRegister = ZoweExplorerApiRegister.getInstance();
-
-            const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
-                apiName: vscode.l10n.t("Common API"),
-                registeredTypes: apiRegister.registeredApiTypes(),
-            });
-            const session = commonApi.getSession(uriInfo.profile);
-            if (
-                (isFetching && ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile)) ||
-                (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-            ) {
-                throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
-            }
-
-            const entry = isFetching
-                ? await this.remoteLookupForResource(uri)
-                : fetchByDefault
-                ? await this.lookupWithCache(uri)
-                : this.lookup(uri, false);
-            // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on PS or PDS members only
-            if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
-                return entry;
-            }
-
-            ZoweLogger.trace(`[DatasetFSProvider] stat is locating resource ${uri.toString()}`);
-
-            // Locate the resource using the profile in the given URI.
-            let resp;
-            const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
-
-            // Wait for any ongoing authentication process to complete
-            await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
-            await AuthHandler.waitForUnlock(uriInfo.profile);
-
-            // Check if the profile is locked (indicating an auth error is being handled)
-            // If it's locked, we should wait and not make additional requests
-            if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-                ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
-                return entry;
-            }
-
-            await AuthUtils.retryRequest(uriInfo.profile, async () => {
-                resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(dsPath), {
-                    attributes: true,
-                });
-            });
-
-            if (resp.success) {
-                const items = resp.apiResponse?.items ?? [];
-                const ds = items?.[0];
-                if (ds != null && "m4date" in ds) {
-                    const { m4date, mtime, msec } = ds;
-                    const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
-                    if (entry.mtime != newTime) {
-                        entry.mtime = newTime;
-                        entry.wasAccessed = false;
-                    }
-                }
-                return entry;
-            }
-
-            return entry;
-        } catch (e) {
-            throw e;
+        const queryParams = new URLSearchParams(uri.query);
+        if (queryParams.has("conflict")) {
+            return { ...this.lookup(uri, false), permissions: vscode.FilePermission.Readonly };
+        } else if (queryParams.has("inDiff")) {
+            return this.lookup(uri, false);
         }
+
+        const fetchByDefault: boolean = FeatureFlags.get("fetchByDefault");
+
+        isFetching = queryParams?.has("fetch") && queryParams?.get("fetch") === "true";
+
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+
+        const apiRegister = ZoweExplorerApiRegister.getInstance();
+
+        const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
+            apiName: vscode.l10n.t("Common API"),
+            registeredTypes: apiRegister.registeredApiTypes(),
+        });
+        const session = commonApi.getSession(uriInfo.profile);
+        if (
+            (isFetching && ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile)) ||
+            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+        ) {
+            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+        }
+
+        const entry = isFetching
+            ? await this.remoteLookupForResource(uri)
+            : fetchByDefault
+            ? await this.lookupWithCache(uri)
+            : this.lookup(uri, false);
+        // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on PS or PDS members only
+        if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
+            return entry;
+        }
+
+        ZoweLogger.trace(`[DatasetFSProvider] stat is locating resource ${uri.toString()}`);
+
+        // Locate the resource using the profile in the given URI.
+        let resp;
+        const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
+
+        // Wait for any ongoing authentication process to complete
+        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+        await AuthHandler.waitForUnlock(uriInfo.profile);
+
+        // Check if the profile is locked (indicating an auth error is being handled)
+        // If it's locked, we should wait and not make additional requests
+        if (AuthHandler.isProfileLocked(uriInfo.profile)) {
+            ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
+            return entry;
+        }
+
+        await AuthUtils.retryRequest(uriInfo.profile, async () => {
+            resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(dsPath), {
+                attributes: true,
+            });
+        });
+
+        if (resp.success) {
+            const items = resp.apiResponse?.items ?? [];
+            const ds = items?.[0];
+            if (ds != null && "m4date" in ds) {
+                const { m4date, mtime, msec } = ds;
+                const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
+                if (entry.mtime != newTime) {
+                    entry.mtime = newTime;
+                    entry.wasAccessed = false;
+                }
+            }
+            return entry;
+        }
+
+        return entry;
     }
 
     /**
@@ -1108,23 +1104,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     private validatePath(uri: vscode.Uri): void {
         const cleanedPath = uri.path.replace(/\/$/, "");
         const pathComponents = cleanedPath.split("/");
+        // When the URI includes an additional VS Code-specific segment, the member/data-set
+        // name is the second-to-last path component instead of the last one.
         const INVALID_URI_EXPECTED_LENGTH = 5;
 
-        let segmentsToCheck: string[];
-
-        if (pathComponents.length === INVALID_URI_EXPECTED_LENGTH) {
-            segmentsToCheck = [pathComponents[pathComponents.length - 2]];
-        } else {
-            segmentsToCheck = [pathComponents[pathComponents.length - 1]];
-        }
-
-        if (segmentsToCheck.length === 0 || (segmentsToCheck.length === 1 && segmentsToCheck[0] === "")) {
+        const segmentIndex = pathComponents.length === INVALID_URI_EXPECTED_LENGTH ? pathComponents.length - 2 : pathComponents.length - 1;
+        const segmentToCheck = pathComponents[segmentIndex] ?? "";
+        if (!segmentToCheck) {
             return;
         }
-
-        const hasInvalidSegment = segmentsToCheck.some((component) => component.startsWith(".") && component.length > 0);
-
-        if (hasInvalidSegment) {
+        if (segmentToCheck.startsWith(".")) {
             throw vscode.FileSystemError.FileNotFound(uri);
         }
     }
