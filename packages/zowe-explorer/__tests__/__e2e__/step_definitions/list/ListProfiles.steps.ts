@@ -42,6 +42,7 @@ Then("the user can set an existing filter on the profile", async function () {
     // Locate and click on the search icon beside the profile node
     const actionButtons = await (await this.profileNode.find()).getActionButtons();
     const searchButton = actionButtons[actionButtons.length - 1];
+    await searchButton.wait();
     await searchButton.elem.click();
 
     await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
