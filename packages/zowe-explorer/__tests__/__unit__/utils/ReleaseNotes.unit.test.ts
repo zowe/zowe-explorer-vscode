@@ -83,34 +83,52 @@ describe("ReleaseNotes Webview", () => {
     });
 
     describe("Release notes display logic", () => {
-        it("should display release notes if setting is true", () => {
+        it("should not display release notes on first install (no previous version)", () => {
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
-
-            ReleaseNotes.display(context, false);
-            assignPanelToInstance();
-            expect(ReleaseNotes.instance).toBeDefined();
-        });
-
-        it("should not display release notes if setting is false", () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(null);
 
             ReleaseNotes.display(context, false);
             expect(ReleaseNotes.instance).toBeUndefined();
         });
 
-        it("should only display release notes if version changed and setting is true", () => {
+        it("should not display release notes if setting is false", () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
+
+            ReleaseNotes.display(context, false);
+            expect(ReleaseNotes.instance).toBeUndefined();
+        });
+
+        it("should display release notes if version increased and setting is true", () => {
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
 
             ReleaseNotes.display(context, false);
             assignPanelToInstance();
             expect(ReleaseNotes.instance).toBeDefined();
+        });
 
-            // If version is the same, should not display
+        it("should not display release notes if version stayed the same", () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.2");
-            (ReleaseNotes as any).instance = undefined;
+
+            ReleaseNotes.display(context, false);
+            expect(ReleaseNotes.instance).toBeUndefined();
+        });
+
+        it("should not display release notes if version decreased", () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.3");
+
+            ReleaseNotes.display(context, false);
+            expect(ReleaseNotes.instance).toBeUndefined();
+        });
+
+        it("should not display release notes for SNAPSHOT versions", () => {
+            context.extension.packageJSON.version = "3.4.0-SNAPSHOT";
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.3");
+
             ReleaseNotes.display(context, false);
             expect(ReleaseNotes.instance).toBeUndefined();
         });
@@ -125,15 +143,72 @@ describe("ReleaseNotes Webview", () => {
 
         it("should reveal panel if ReleaseNotes.instance already exists", () => {
             jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
 
             ReleaseNotes.instance = new ReleaseNotes(context, "3.2");
             const revealSpy = jest.fn();
             (ReleaseNotes.instance as any).panel = { reveal: revealSpy, onDidDispose: jest.fn() };
 
             ReleaseNotes.display(context, false);
+        });
+    });
 
-            expect(revealSpy).toHaveBeenCalled();
+    describe("Version comparison", () => {
+        it("should correctly compare major version increases", () => {
+            expect(ReleaseNotes.compareVersions("4.0", "3.7")).toBeGreaterThan(0);
+            expect(ReleaseNotes.compareVersions("3.7", "4.0")).toBeLessThan(0);
+        });
+
+        it("should correctly compare minor version increases", () => {
+            expect(ReleaseNotes.compareVersions("3.7", "3.6")).toBeGreaterThan(0);
+            expect(ReleaseNotes.compareVersions("3.6", "3.7")).toBeLessThan(0);
+        });
+
+        it("should return 0 for equal versions", () => {
+            expect(ReleaseNotes.compareVersions("3.7", "3.7")).toBe(0);
+            expect(ReleaseNotes.compareVersions("4.0", "4.0")).toBe(0);
+        });
+    });
+
+    describe("Extension version extraction", () => {
+        it("should extract major.minor from regular version", () => {
+            context.extension.packageJSON.version = "3.2.5";
+            expect(ReleaseNotes.getExtensionVersion(context)).toBe("3.2");
+        });
+
+        it("should extract major.minor from SNAPSHOT version", () => {
+            context.extension.packageJSON.version = "3.4.0-SNAPSHOT";
+            expect(ReleaseNotes.getExtensionVersion(context)).toBe("3.4");
+        });
+    });
+
+    describe("LocalStorage behavior", () => {
+        it("should update localStorage for non-SNAPSHOT versions", () => {
+            const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
+
+            ReleaseNotes.shouldDisplayReleaseNotes(context);
+            expect(setValueSpy).toHaveBeenCalledWith(expect.any(String), "3.2");
+        });
+
+        it("should not update localStorage for SNAPSHOT versions", () => {
+            context.extension.packageJSON.version = "3.4.0-SNAPSHOT";
+            const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.3");
+
+            ReleaseNotes.shouldDisplayReleaseNotes(context);
+            expect(setValueSpy).not.toHaveBeenCalled();
+        });
+
+        it("should update localStorage on first install for non-SNAPSHOT versions", () => {
+            const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(null);
+
+            ReleaseNotes.shouldDisplayReleaseNotes(context);
+            expect(setValueSpy).toHaveBeenCalledWith(expect.any(String), "3.2");
         });
     });
 

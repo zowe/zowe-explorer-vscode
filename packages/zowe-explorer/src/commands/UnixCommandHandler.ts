@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { ICommandProviderDialogs, ZoweCommandProvider } from "./ZoweCommandProvider";
-import { Gui, IZoweTreeNode, PersistenceSchemaEnum, Validation, ZoweExplorerApiType, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, IZoweTreeNode, PersistenceSchemaEnum, Validation, ZoweExplorerApiType, ZoweVsCodeExtension, imperative } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { AuthUtils } from "../utils/AuthUtils";
@@ -96,7 +96,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         ZoweLogger.trace("UnixCommandHandler.issueUnixCommand called.");
 
         if (node) {
-            await this.checkCurrentProfile(node);
             this.nodeProfile = node.getProfile();
             this.sshCwd = node.fullPath;
         }
@@ -135,12 +134,6 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 );
             }
 
-            await this.profileInstance.checkCurrentProfile(this.nodeProfile, node);
-            if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
-                Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
-                return;
-            }
-
             if (this.isSshRequiredForProf) {
                 await this.getSshProfile();
                 if (!this.sshProfile) {
@@ -154,16 +147,19 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
                 const profileStatus = await this.profileInstance.profileValidationHelper(
                     this.sshProfile,
-                    async (prof: imperative.IProfileLoaded, type: string): Promise<string> => {
-                        if (type !== "ssh" || prof.profile.host !== this.sshSession.ISshSession.hostname) return "unverified";
-                        return (await zosuss.Shell.isConnectionValid(this.sshSession)) ? "active" : "inactive";
-                    }
+                    this.validateSshConnection.bind(this)
                 );
 
                 if (!this.sshSession || profileStatus !== "active") {
                     this.nodeProfile = undefined;
                     ZoweLogger.error(this.unixCmdMsgs.sshSessionErrorMsg);
                     Gui.errorMessage(this.unixCmdMsgs.sshSessionErrorMsg);
+                    return;
+                }
+            } else {
+                await this.profileInstance.checkCurrentProfile(this.nodeProfile, node);
+                if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
+                    Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
                     return;
                 }
             }
@@ -241,6 +237,28 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             cmdArgs[prop] = sshProfile[prop];
         }
         return cmdArgs;
+    }
+
+    private async validateSshConnection(prof: imperative.IProfileLoaded, type: string): Promise<string> {
+        if (type !== "ssh" || prof.profile.host !== this.sshSession.ISshSession.hostname) return "unverified";
+        if (this.sshSession.ISshSession.privateKey == null) {
+            const tempProfile = await ZoweVsCodeExtension.updateCredentials({ profile: this.sshProfile }, ZoweExplorerApiRegister.getInstance());
+            if (!tempProfile) {
+                return "unverified";
+            }
+            this.sshSession.ISshSession.password = tempProfile.profile.password;
+            this.sshSession.ISshSession.user = tempProfile.profile.user;
+        }
+
+        // This happens when authentication type detected is something other than basic
+        // In that scenario, the user is removed from the session object by imperative.AuthOrder
+        // Checking for the existence of of a user in the profile is a workaround to ensure that the user is set in the session object
+        if (this.sshSession.ISshSession.user == null && prof.profile.user != null) {
+            // This workaround can be removed once the following CLI issue is resolved:
+            // https://github.com/zowe/zowe-cli/issues/2646
+            this.sshSession.ISshSession.user = prof.profile.user;
+        }
+        return (await zosuss.Shell.isConnectionValid(this.sshSession)) ? "active" : "inactive";
     }
 
     public formatCommandLine(command: string, profile?: imperative.IProfileLoaded): string {

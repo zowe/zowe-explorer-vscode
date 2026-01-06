@@ -722,7 +722,7 @@ describe("ProfilesCache", () => {
                 subject: "CN=Test",
                 fingerprint256: "mockedFingerprint",
                 validFrom: "2022-01-01",
-                validTo: "2026-01-01",
+                validTo: `${new Date().getFullYear() + 1}-01-01`,
             }));
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger, __dirname);
             expect(profCache.isCertFileValid("mockedCertFilePath")).toBe(true);
