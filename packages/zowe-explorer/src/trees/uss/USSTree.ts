@@ -288,13 +288,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             const nodeLabel = SharedUtils.getNodeProperty(node, "label") || (item.label as string);
             const newUriForNode = vscode.Uri.from({
                 scheme: ZoweScheme.USS,
-                path: path.posix.join("/", resolvedTargetNode.getProfile().name, resolvedTargetNode.fullPath, nodeLabel),
+                path: path.posix.join("/", target.getProfile().name, target.fullPath, nodeLabel),
             });
             const prof = node.getProfile();
             const getUssApi = (ZoweExplorerApiRegister as any)?.getUssApi;
             const hasMoveApi = typeof getUssApi === "function" && getUssApi(prof) && getUssApi(prof).move != null;
 
-            if (resolvedTargetNode.getProfile() !== prof || !hasMoveApi) {
+            if (target.getProfile() !== prof || !hasMoveApi) {
                 await this.crossLparMove(node, node.resourceUri, newUriForNode);
             } else if (await UssFSProvider.instance.move(node.resourceUri, newUriForNode)) {
                 const oldParent = node.getParent() as IZoweUSSTreeNode;
@@ -307,7 +307,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         for (const parent of parentsToUpdate) {
             this.refreshElement(parent);
         }
-        this.refreshElement(resolvedTargetNode);
+        this.refreshElement(target);
         movingMsg.dispose();
         this.draggedNodes = {};
     }
