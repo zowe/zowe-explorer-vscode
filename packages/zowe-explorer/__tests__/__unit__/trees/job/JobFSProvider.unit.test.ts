@@ -137,7 +137,10 @@ describe("readDirectory", () => {
             slashAfterProfilePos: testUris.session.path.indexOf("/", 1),
             profileName: "sestest",
         });
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         const filterEntry: FilterEntry = { ...testEntries.session };
         filterEntry.filter["owner"] = "USER";
         filterEntry.filter["prefix"] = "JOB*";
@@ -169,7 +172,10 @@ describe("readDirectory", () => {
         };
         const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
         const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         const fakeJob = new JobEntry(testEntries.job.name);
         fakeJob.job = testEntries.job.job;
         fakeJob.metadata = {
@@ -204,7 +210,10 @@ describe("readDirectory", () => {
         const mockJesApi = {
             getSpoolFiles: jest.fn().mockRejectedValue(new Error("Failed to fetch spools")),
         };
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         const fakeJob = new JobEntry(testEntries.job.name);
         fakeJob.job = testEntries.job.job;
         const _handleErrorMock = jest.spyOn(JobFSProvider.instance as any, "_handleError").mockImplementation();
@@ -289,8 +298,11 @@ describe("JobFSProvider.supportSpoolPagination", () => {
     it("should return true when supportSpoolPagination is true and paginationEnabled", () => {
         jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce(profInfo);
 
-        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
-            supportSpoolPagination: () => true,
+        jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue({
+                supportSpoolPagination: () => true,
+            }),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
         } as any);
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
             if (key === "zowe.jobs.paginate.enabled") {
@@ -305,8 +317,11 @@ describe("JobFSProvider.supportSpoolPagination", () => {
     it("should return false when supportSpoolPagination is false and paginationEnabled is false", () => {
         jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce(profInfo);
 
-        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
-            supportSpoolPagination: () => false,
+        jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue({
+                supportSpoolPagination: () => false,
+            }),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
         } as any);
         jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
             if (key === "zowe.jobs.paginate.enabled") {
@@ -325,7 +340,10 @@ describe("JobFSProvider.supportSpoolPagination", () => {
             }
         });
 
-        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({} as any);
+        jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue({}),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
 
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
         expect(result).toBe(false);
@@ -333,9 +351,12 @@ describe("JobFSProvider.supportSpoolPagination", () => {
     it("should return false when getJesApi throws an error", () => {
         jest.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce(profInfo);
 
-        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockImplementation(() => {
-            throw new Error("Failed to get JES API");
-        });
+        jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockImplementation(() => {
+                throw new Error("Failed to get JES API");
+            }),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
 
         const result = JobFSProvider.instance.supportSpoolPagination(mockDoc);
         expect(result).toBe(false);
@@ -373,7 +394,10 @@ describe("fetchSpoolAtUri", () => {
             }),
         };
 
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
 
         const uriWithQuery = vscode.Uri.parse(testUris.spool.toString() + "?startLine=10&endLine=50");
 
@@ -410,7 +434,10 @@ describe("fetchSpoolAtUri", () => {
             }),
         };
 
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
 
         const uriWithQuery = vscode.Uri.parse(testUris.spool.toString() + "?startLine=19");
 
@@ -445,7 +472,10 @@ describe("fetchSpoolAtUri", () => {
             }),
         };
 
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
 
         const uriWithQuery = vscode.Uri.parse(testUris.spool.toString() + "?startLine=10&endLine=50");
 
@@ -484,7 +514,10 @@ describe("fetchSpoolAtUri", () => {
             supportSpoolPagination: () => true,
         };
 
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
 
         const uriWithQuery = vscode.Uri.parse(testUris.spool.toString());
 
@@ -507,7 +540,10 @@ describe("fetchSpoolAtUri", () => {
                 opts.stream.write(newData);
             }),
         };
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         const entry = await JobFSProvider.instance.fetchSpoolAtUri(testUris.spool);
         expect(mockJesApi.downloadSingleSpool).toHaveBeenCalled();
         expect(entry.data.toString()).toStrictEqual(newData.toString());
@@ -525,7 +561,10 @@ describe("fetchSpoolAtUri", () => {
                 opts.stream.write(newData);
             }),
         };
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         const entry = await JobFSProvider.instance.fetchSpoolAtUri(testUris.spool);
         expect(mockJesApi.downloadSingleSpool).toHaveBeenCalledWith(expect.objectContaining({ jobFile: testEntries.spool.spool, binary: true }));
         expect(entry.data.toString()).toStrictEqual(newData.toString());
@@ -543,7 +582,10 @@ describe("fetchSpoolAtUri", () => {
                 opts.stream.write(newData);
             }),
         };
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         const entry = await JobFSProvider.instance.fetchSpoolAtUri(testUris.spool);
         expect(mockJesApi.downloadSingleSpool).toHaveBeenCalledWith(
             expect.objectContaining({ jobFile: testEntries.spool.spool, encoding: "IBM-1147", binary: false })
@@ -564,7 +606,10 @@ describe("fetchSpoolAtUri", () => {
                 opts.stream.write(newData);
             }),
         };
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         const entry = await JobFSProvider.instance.fetchSpoolAtUri(testUris.spool);
         expect(mockJesApi.downloadSingleSpool).toHaveBeenCalledWith(
             expect.objectContaining({ jobFile: testEntries.spool.spool, encoding: "IBM-1147", binary: false })
@@ -584,7 +629,10 @@ describe("fetchSpoolAtUri", () => {
                 return "spool contents";
             }),
         };
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         const entry = await JobFSProvider.instance.fetchSpoolAtUri(testUris.spool);
         expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.spool);
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.spool);
@@ -604,7 +652,10 @@ describe("fetchSpoolAtUri", () => {
                 return "spool contents";
             }),
         };
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         const entry = await JobFSProvider.instance.fetchSpoolAtUri(testUris.spool);
         expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.spool);
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.spool);
@@ -634,7 +685,10 @@ describe("fetchSpoolAtUri", () => {
                 ),
         };
         const promptForAuthErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation();
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         await expect(JobFSProvider.instance.fetchSpoolAtUri(testUris.spool)).rejects.toThrow();
         expect(promptForAuthErrorMock).toHaveBeenCalled();
         expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.spool);
@@ -748,7 +802,10 @@ describe("delete", () => {
         const mockJesApi = {
             deleteJob: jest.fn(),
         };
-        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         const ensureAuthNotCancelledMock = jest.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
         const waitForUnlockMock = jest.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
         const fakeJob = new JobEntry(testEntries.job.name);
@@ -787,7 +844,10 @@ describe("delete", () => {
         const mockJesApi = {
             deleteJob: jest.fn().mockRejectedValue(new Error("Failed to delete job")),
         };
-        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as unknown as MainframeInteraction.IJes);
+        const jesApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         const fakeJob = new JobEntry(testEntries.job.name);
         fakeJob.job = testEntries.job.job;
         fakeJob.metadata = {
@@ -821,7 +881,10 @@ describe("delete", () => {
         const mockJesApi = {
             deleteJob: jest.fn(),
         };
-        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValueOnce(mockJesApi as any);
+        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+            getJesApi: jest.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: jest.fn().mockReturnValue(["zosmf"]),
+        } as any);
         const fakeSpool = new SpoolEntry(testEntries.spool.name);
         fakeSpool.spool = testEntries.spool.spool;
         const fakeJob = new JobEntry(testEntries.job.name);
