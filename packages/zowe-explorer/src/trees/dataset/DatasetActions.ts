@@ -102,11 +102,16 @@ export class DatasetActions {
         }
         const pattern = choice2.label;
         const showPatternOptions = async (): Promise<void> => {
+            const property = DatasetActions.newDSProperties?.find((prop) => pattern.includes(prop.label));
             const options: vscode.InputBoxOptions = {
-                value: DatasetActions.newDSProperties?.find((prop) => pattern.includes(prop.label))?.value,
-                placeHolder: DatasetActions.newDSProperties?.find((prop) => prop.label === pattern)?.placeHolder,
+                value: property?.value,
+                placeHolder: property?.placeHolder,
             };
-            DatasetActions.newDSProperties.find((prop) => pattern.includes(prop.label)).value = await Gui.showInputBox(options);
+            const newValue = await Gui.showInputBox(options);
+            // Only update the property value if the user provided a new value
+            if (newValue !== undefined && property) {
+                property.value = newValue;
+            }
         };
 
         if (pattern) {
