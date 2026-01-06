@@ -10,7 +10,7 @@
  */
 
 import { execFile } from "child_process";
-import { TreeItem, ViewContent, ViewControl, ViewSection } from "wdio-vscode-service";
+import { ElementWithContextMenu, ViewContent, ViewControl, ViewSection } from "wdio-vscode-service";
 
 /* Helper functions */
 
@@ -38,7 +38,7 @@ export async function paneDivForTree(tree: string): Promise<ViewSection> {
     }
 }
 
-export async function clickContextMenuItem(treeItem: TreeItem, cmdName: string): Promise<void> {
+export async function clickContextMenuItem(treeItem: ElementWithContextMenu<any>, cmdName: string): Promise<void> {
     if (process.platform !== "darwin") {
         const ctxMenu = await treeItem.openContextMenu();
         const menuItem = await ctxMenu.getItem(cmdName);
