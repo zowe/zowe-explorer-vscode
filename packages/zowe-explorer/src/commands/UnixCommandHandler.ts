@@ -145,10 +145,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<zosuss.ISshSession>(sshSessCfg, cmdArgs);
                 this.sshSession = new zosuss.SshSession(sshSessCfg);
 
-                const profileStatus = await this.profileInstance.profileValidationHelper(
-                    this.sshProfile,
-                    this.validateSshConnection.bind(this)
-                );
+                const profileStatus = await this.profileInstance.profileValidationHelper(this.sshProfile, this.validateSshConnection.bind(this));
 
                 if (!this.sshSession || profileStatus !== "active") {
                     this.nodeProfile = undefined;

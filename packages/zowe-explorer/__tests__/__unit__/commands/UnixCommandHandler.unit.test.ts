@@ -787,7 +787,9 @@ describe("UnixCommand Actions Unit Testing", () => {
             // This workaround can be removed once the following CLI issue is resolved:
             // https://github.com/zowe/zowe-cli/issues/2646
             const actions = getUnixActions();
-            const sampleSshSession: any = { ISshSession: { hostname: "host.com", privateKey: "someKey", tokenType: "someTokenType", tokenValue: "someTokenValue" } };
+            const sampleSshSession: any = {
+                ISshSession: { hostname: "host.com", privateKey: "someKey", tokenType: "someTokenType", tokenValue: "someTokenValue" },
+            };
             const sampleSshProfile = { profile: { host: "host.com", user: "newUser" }, type: "ssh" };
 
             actions.sshSession = sampleSshSession as any;
