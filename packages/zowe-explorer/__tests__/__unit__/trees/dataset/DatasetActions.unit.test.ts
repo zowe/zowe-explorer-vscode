@@ -3447,6 +3447,53 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         templateSpy.mockClear();
         addTempSpy.mockClear();
     });
+    it("Tests that pressing Escape when editing an attribute preserves the original value", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        blockMocks.testDatasetTree.createFilterString.mockReturnValue("NODE1,NODE.*");
+        blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
+
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const createDataSetMock = jest.spyOn(blockMocks.mvsApi, "createDataSet").mockImplementation();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.TO.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_DS_CONTEXT;
+
+        // User names DS
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.TEST.TO.NODE");
+
+        // User selects DS type
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
+
+        // User selects Edit attributes
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Edit Attributes" as any);
+
+        // Try to edit Record Length, but simulate user pressing Escape to cancel
+        const quickPickContent = createQuickPickContent("", [], "");
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        const selectedItem: vscode.QuickPickItem = { label: "Record Length" };
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(selectedItem);
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce(undefined);
+
+        mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: "Allocate Data Set" });
+
+        await DatasetActions.createFile(node, blockMocks.testDatasetTree);
+
+        // Record format value should stay as 80 (default) since user cancelled the input
+        expect(createDataSetMock).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
+            alcunit: "TRK",
+            blksize: 6160,
+            dsorg: "PS",
+            lrecl: 80,
+            primary: 1,
+            recfm: "FB",
+        });
+    });
     it("Checking dataset creation of saved template", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();

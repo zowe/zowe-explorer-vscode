@@ -23,7 +23,7 @@ import {
     createTreeProviders,
     createTreeView,
 } from "../../../__mocks__/mockCreators/shared";
-import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
+import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
 import { FileManagement, Gui, IZoweTree, IZoweTreeNode, Sorting, Types } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
@@ -861,6 +861,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         const registeredApiTypesMock = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
             registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
         } as any);
+        const updateSessionNodeTooltipsMock = jest.spyOn(SharedActions, "updateSessionNodeTooltips").mockResolvedValueOnce(undefined);
         const refresh = jest.fn().mockResolvedValueOnce(undefined);
         const treeProvider: IZoweTree<IZoweTreeNode> = {
             mSessionNodes: [],
@@ -872,6 +873,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
         expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
         expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zosmf");
+        expect(updateSessionNodeTooltipsMock).toHaveBeenCalledWith(treeProvider);
         expect(refresh).toHaveBeenCalledTimes(1);
     });
 
@@ -883,6 +885,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
             .mockReturnValueOnce({
                 registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
             } as any);
+        const updateSessionNodeTooltipsMock = jest.spyOn(SharedActions, "updateSessionNodeTooltips").mockResolvedValueOnce(undefined);
         const refresh = jest.fn().mockResolvedValueOnce(undefined);
         const treeProvider: IZoweTree<IZoweTreeNode> = {
             mSessionNodes: [],
@@ -896,6 +899,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
         expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
         expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zosmf");
+        expect(updateSessionNodeTooltipsMock).toHaveBeenCalledWith(treeProvider);
         expect(refresh).toHaveBeenCalledTimes(1);
     });
 
@@ -909,6 +913,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
                 registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
             } as any);
         const returnIconStateMock = jest.spyOn(SharedActions, "returnIconState").mockReturnValueOnce(undefined);
+        const updateSessionNodeTooltipsMock = jest.spyOn(SharedActions, "updateSessionNodeTooltips").mockResolvedValueOnce(undefined);
         const refresh = jest.fn().mockResolvedValueOnce(undefined);
         const refreshElement = jest.fn().mockResolvedValueOnce(undefined);
         const treeProvider: IZoweTree<IZoweTreeNode> = {
@@ -917,8 +922,9 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
             refresh,
             refreshElement,
         } as any;
-        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [{ name: "sestest" }],
+            checkCurrentProfile: jest.fn().mockResolvedValue(undefined),
         } as any);
         const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockReturnValueOnce(undefined);
         const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockClear().mockResolvedValueOnce(undefined);
@@ -932,6 +938,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
         expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
         expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zosmf");
+        expect(updateSessionNodeTooltipsMock).toHaveBeenCalledWith(treeProvider);
         expect(refresh).toHaveBeenCalledTimes(1);
         profilesMock.mockRestore();
     });
@@ -945,6 +952,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
             .mockReturnValueOnce({
                 registeredApiTypes: jest.fn().mockReturnValue(["zftp", "zosmf"]),
             } as any);
+        const updateSessionNodeTooltipsMock = jest.spyOn(SharedActions, "updateSessionNodeTooltips").mockResolvedValueOnce(undefined);
         const refresh = jest.fn().mockResolvedValueOnce(undefined);
         const refreshElement = jest.fn().mockResolvedValueOnce(undefined);
         const treeProvider: IZoweTree<IZoweTreeNode> = {
@@ -953,9 +961,10 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
             refresh,
             refreshElement,
         } as any;
-        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
             allProfiles: [],
             profilesForValidation: [],
+            checkCurrentProfile: jest.fn().mockResolvedValue(undefined),
         } as any);
         const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockReturnValueOnce(undefined);
         const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockClear().mockResolvedValueOnce(undefined);
@@ -969,8 +978,108 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
         expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
         expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zosmf");
+        expect(updateSessionNodeTooltipsMock).toHaveBeenCalledWith(treeProvider);
         expect(refresh).toHaveBeenCalledTimes(1);
         profilesMock.mockRestore();
+    });
+
+    describe("Shared Actions Unit Tests - Function updateSessionNodeTooltips", () => {
+        it("updates tooltips for all session nodes in the tree provider", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), createIProfile());
+            const nodeDataChanged = jest.fn();
+            const treeProvider: IZoweTree<IZoweTreeNode> = {
+                mSessionNodes: [sessionNode],
+                nodeDataChanged,
+            } as any;
+            const profile = { name: "sestest" };
+            const updateProfileHoverInfoMock = jest.fn().mockResolvedValue(undefined);
+            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                allProfiles: [profile],
+                updateProfileHoverInfo: updateProfileHoverInfoMock,
+            } as any);
+            const updateNodeToolTipMock = jest.spyOn(AuthUtils, "updateNodeToolTip").mockReturnValueOnce(undefined);
+
+            await SharedActions.updateSessionNodeTooltips(treeProvider);
+
+            expect(updateNodeToolTipMock).toHaveBeenCalledWith(sessionNode, profile);
+            expect(updateProfileHoverInfoMock).toHaveBeenCalledWith(sessionNode);
+            expect(nodeDataChanged).toHaveBeenCalledWith(sessionNode);
+            profilesMock.mockRestore();
+        });
+
+        it("skips Favorites folder when updating tooltips", async () => {
+            const favoritesNode = createDatasetFavoritesNode();
+            const sessionNode = createDatasetSessionNode(createISession(), createIProfile());
+            const nodeDataChanged = jest.fn();
+            const treeProvider: IZoweTree<IZoweTreeNode> = {
+                mSessionNodes: [favoritesNode, sessionNode],
+                nodeDataChanged,
+            } as any;
+            const profile = { name: "sestest" };
+            const updateProfileHoverInfoMock = jest.fn().mockResolvedValue(undefined);
+            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                allProfiles: [profile],
+                updateProfileHoverInfo: updateProfileHoverInfoMock,
+            } as any);
+            const updateNodeToolTipMock = jest.spyOn(AuthUtils, "updateNodeToolTip").mockClear().mockReturnValueOnce(undefined);
+
+            await SharedActions.updateSessionNodeTooltips(treeProvider);
+
+            // Should only be called once for the non-Favorites node
+            expect(updateNodeToolTipMock).toHaveBeenCalledTimes(1);
+            expect(updateNodeToolTipMock).toHaveBeenCalledWith(sessionNode, profile);
+            expect(updateProfileHoverInfoMock).toHaveBeenCalledTimes(1);
+            expect(updateProfileHoverInfoMock).toHaveBeenCalledWith(sessionNode);
+            expect(nodeDataChanged).toHaveBeenCalledTimes(1);
+            expect(nodeDataChanged).toHaveBeenCalledWith(sessionNode);
+            profilesMock.mockRestore();
+        });
+
+        it("handles errors gracefully when updating tooltips", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), createIProfile());
+            const nodeDataChanged = jest.fn();
+            const treeProvider: IZoweTree<IZoweTreeNode> = {
+                mSessionNodes: [sessionNode],
+                nodeDataChanged,
+            } as any;
+            const profile = { name: "sestest" };
+            const checkCurrentProfileMock = jest.fn().mockRejectedValue(new Error("Test error"));
+            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                allProfiles: [profile],
+                checkCurrentProfile: checkCurrentProfileMock,
+            } as any);
+            const updateNodeToolTipMock = jest.spyOn(AuthUtils, "updateNodeToolTip").mockReturnValueOnce(undefined);
+            const warnMock = jest.spyOn(ZoweLogger, "warn").mockImplementation();
+
+            await SharedActions.updateSessionNodeTooltips(treeProvider);
+
+            expect(updateNodeToolTipMock).toHaveBeenCalledWith(sessionNode, profile);
+            expect(warnMock).toHaveBeenCalledWith(expect.stringContaining("Failed to update tooltip for session node sestest"));
+            expect(nodeDataChanged).not.toHaveBeenCalled();
+            profilesMock.mockRestore();
+            warnMock.mockRestore();
+        });
+
+        it("skips session nodes without matching profiles", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), createIProfile());
+            const nodeDataChanged = jest.fn();
+            const treeProvider: IZoweTree<IZoweTreeNode> = {
+                mSessionNodes: [sessionNode],
+                nodeDataChanged,
+            } as any;
+            const checkCurrentProfileMock = jest.fn().mockResolvedValue(undefined);
+            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                allProfiles: [], // No matching profile
+                checkCurrentProfile: checkCurrentProfileMock,
+            } as any);
+            const updateNodeToolTipMock = jest.spyOn(AuthUtils, "updateNodeToolTip").mockClear();
+
+            await SharedActions.updateSessionNodeTooltips(treeProvider);
+
+            expect(updateNodeToolTipMock).not.toHaveBeenCalled();
+            expect(nodeDataChanged).not.toHaveBeenCalled();
+            profilesMock.mockRestore();
+        });
     });
 });
 
