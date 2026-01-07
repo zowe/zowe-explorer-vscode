@@ -6,6 +6,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Expose commands to drive search in the USS views. [#3933](https://github.com/zowe/zowe-explorer-vscode/issues/3933)
+- Expose commands to drive filtering in the Data Sets views [#3992](https://github.com/zowe/zowe-explorer-vscode/issues/3992)
+
 ### Bug fixes
 
 - Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. [#4049](https://github.com/zowe/zowe-explorer-vscode/pull/4049)
