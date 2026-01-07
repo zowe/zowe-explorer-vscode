@@ -15,6 +15,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue with the "Create New Data Set" feature where a data set attribute's original value was deleted after the user dismissed the input box. Now, the attribute's value is preserved when the user cancels their input. [#4003](https://github.com/zowe/zowe-explorer-vscode/issues/4003)
 - Fixed an issue where logical record length truncation detection failed for extenders. [#4002](https://github.com/zowe/zowe-explorer-vscode/pull/4002)
 - Fixed an issue where an error appeared when moving an empty PDS across LPARs. [#4001](https://github.com/zowe/zowe-explorer-vscode/pull/4001)
+- Fixed issue seen with profile hover information getting out of date or out of sync. [#3638](https://github.com/zowe/zowe-explorer-vscode/issues/3638)
 
 ## `3.4.0`
 
@@ -49,7 +50,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed release notes displaying when the Zowe Explorer version is downgraded. [#3966](https://github.com/zowe/zowe-explorer-vscode/pull/3966)
 - Fixed issue where favorited items caused a failure during initialization, specifically when the favorited item belongs to a profile type that's no longer registered or accessible. [#3962](https://github.com/zowe/zowe-explorer-vscode/pull/3962)
 - Fixed issue where the filesystem throws a vague `Unknown` FileSystemError if an API cannot be loaded for the given profile type. Now, if the API is inaccessible for the given profile type, an `Unavailable` error is thrown from the filesystem with more context. [#3962](https://github.com/zowe/zowe-explorer-vscode/pull/3962)
-- Fixed issue seen with profile hover information getting out of date or out of sync. [#3638](https://github.com/zowe/zowe-explorer-vscode/issues/3638)
 - Fixed an issue where moving a PDS member into the "No members found" placeholder of an empty PDS deleted the member without transferring its data. [#3950](https://github.com/zowe/zowe-explorer-vscode/issues/3950)
 - Fixed PDS members and USS files not being supported as drop targets when resources are drag-and-dropped. [#3999](https://github.com/zowe/zowe-explorer-vscode/pull/3999)
 
