@@ -112,22 +112,14 @@ describe("getApiOrThrowUnavailable", () => {
     const profile: imperative.IProfileLoaded = { name: "test", type: "custom", profile: {} } as imperative.IProfileLoaded;
 
     it("returns the API when registered and getter succeeds", () => {
-        const api = FsAbstractUtils.getApiOrThrowUnavailable(
-            profile,
-            () => ({ test: true }),
-            { apiName: "Test API", registeredTypes: ["custom"] }
-        );
+        const api = FsAbstractUtils.getApiOrThrowUnavailable(profile, () => ({ test: true }), { apiName: "Test API", registeredTypes: ["custom"] });
         expect(api).toEqual({ test: true });
     });
 
     it("throws FileSystemError.Unavailable when profile type is not registered", () => {
-        expect(() =>
-            FsAbstractUtils.getApiOrThrowUnavailable(
-                profile,
-                () => ({ test: true }),
-                { apiName: "Test API", registeredTypes: [] }
-            )
-        ).toThrow(vscode.FileSystemError);
+        expect(() => FsAbstractUtils.getApiOrThrowUnavailable(profile, () => ({ test: true }), { apiName: "Test API", registeredTypes: [] })).toThrow(
+            vscode.FileSystemError
+        );
     });
 
     it("throws FileSystemError.Unavailable when getter throws a non-existing error", () => {
