@@ -3434,10 +3434,10 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         // User selects Edit attributes
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Edit Attributes" as any);
 
-        // Try to edit Allocation Unit, but simulate user pressing Escape to cancel
+        // Try to edit Record Length, but simulate user pressing Escape to cancel
         const quickPickContent = createQuickPickContent("", [], "");
         mocked(vscode.window.createQuickPick).mockReturnValueOnce(quickPickContent);
-        const selectedItem: vscode.QuickPickItem = { label: "Allocation Unit" };
+        const selectedItem: vscode.QuickPickItem = { label: "Record Length" };
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(selectedItem);
         mocked(vscode.window.showInputBox).mockResolvedValueOnce(undefined);
 
@@ -3446,9 +3446,9 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         await DatasetActions.createFile(node, blockMocks.testDatasetTree);
 
-        // Original value "CYL" should be preserved since user cancelled the input
+        // Record format value should stay as 80 (default) since user cancelled the input
         expect(createDataSetMock).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
-            alcunit: "CYL",
+            alcunit: "TRK",
             blksize: 6160,
             dsorg: "PS",
             lrecl: 80,
