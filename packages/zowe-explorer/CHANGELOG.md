@@ -22,6 +22,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where the "Created Date" and "Modified Date" columns were not sortable in the data sets table view, specifically when the user's locale differs from the default value (`en (en-US)`). Now, sorting works regardless of the VS Code language setting, and dates are now formatted with the user's locale. [#4008](https://github.com/zowe/zowe-explorer-vscode/pull/4008)
 - Fixed an issue where an error appeared when moving an empty PDS across LPARs. [#4001](https://github.com/zowe/zowe-explorer-vscode/pull/4001)
 - Prevent drag-and-drop between profiles when the source and target resolve to the same physical object. The operation is now blocked and an explanatory error is shown. Users should refresh the target profile to see changes. [#3827](https://github.com/zowe/zowe-explorer-vscode/pull/3827)
 - Fixed an issue where the job spool pagination code lens was appearing even though the extender did not support pagination. [#3714](https://github.com/zowe/zowe-explorer-vscode/issues/3714)
