@@ -821,7 +821,7 @@ describe("DatasetFSProvider", () => {
                 expect(msg).toContain("This upload operation may result in data loss.");
                 expect(msg).toContain("Please review the following lines:");
                 if (multiple) {
-                    expect(msg).toContain("1, 3, 4, 5, 6...");
+                    expect(msg).toContain("1, 3-10");
                     const stack = (handleErrorMock.mock.calls[0][0] as Error).stack;
                     expect(stack).toContain("Line: 1");
                     expect(stack).toContain("Lines: 3-10");
@@ -949,6 +949,34 @@ describe("DatasetFSProvider", () => {
                 expect(mockMvsApi.uploadFromBuffer).toHaveBeenCalled();
                 expect(handleErrorMock).not.toHaveBeenCalled();
                 expect(_fireSoonMock).toHaveBeenCalled();
+            });
+
+            it("in a PS data set with RECFM=VB with one invalid line", async () => {
+                const dsResponseMock = {
+                    success: true,
+                    apiResponse: {
+                        items: [{ name: "USER.DATA.PS", recfm: "VB", lrecl: lrecl }],
+                    },
+                    commandResponse: "",
+                };
+                mockMvsApi = {
+                    uploadFromBuffer: jest.fn(),
+                    dataSet: jest.fn().mockResolvedValue(dsResponseMock),
+                };
+                handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+                const sessionEntry = { ...testEntries.session };
+                sessionEntry.entries.set("USER.DATA.PS", psEntry);
+                jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
+                jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({ lineCount: 1, lineAt } as any);
+
+                await expect(DatasetFSProvider.instance.writeFile(testUris.ps, newContents, createOptions)).rejects.toThrow();
+
+                expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+                expect(handleErrorMock).toHaveBeenCalledTimes(1);
+                const msg = (handleErrorMock.mock.calls[0][0] as Error).message;
+                expectInvalidLines(msg);
             });
         });
 
