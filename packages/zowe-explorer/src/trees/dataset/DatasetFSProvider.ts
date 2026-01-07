@@ -329,13 +329,21 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
-            const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
-            members = await mvsApi.allMembers(path.posix.basename(uri.path));
+            try {
+                const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+                members = await mvsApi.allMembers(path.posix.basename(uri.path));
+            } catch (err) {
+                if (err.message.toLocaleLowerCase().includes("status 500")) {
+                    ZoweLogger.warn(err.message);
+                } else {
+                    throw err;
+                }
+            }
         });
 
         const pdsExtension = DatasetUtils.getExtension(entry.name);
 
-        for (const ds of members.apiResponse?.items || []) {
+        for (const ds of members?.apiResponse?.items || []) {
             const fullMemberName = `${ds.member as string}${pdsExtension ?? ""}`;
             let tempEntry = entry.entries.get(fullMemberName);
             if (tempEntry == null) {
