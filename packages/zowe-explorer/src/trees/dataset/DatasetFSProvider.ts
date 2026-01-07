@@ -666,7 +666,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 const document = await vscode.workspace.openTextDocument(uri);
                 for (let i = 0; i < document.lineCount; i++) {
                     let limit = Number(dsStats.lrecl) || Number(dsStats.blksz);
-                    if (dsStats.recfm === "VB") {
+                    if (dsStats.recfm?.toUpperCase().startsWith("V")) {
                         limit -= 4;
                     }
                     if (document.lineAt(i).text.length > limit) {
