@@ -23,7 +23,7 @@ import {
     Sorting,
     PersistenceSchemaEnum,
 } from "@zowe/zowe-explorer-api";
-import { commands, Event, EventEmitter, ExtensionContext, l10n, Uri } from "vscode";
+import { commands, env, Event, EventEmitter, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
@@ -414,6 +414,9 @@ export class DatasetTableView {
         },
     };
 
+    // User locale captured at table build time for date formatting
+    private userLocale: string = "en-US";
+
     // These fields are typically included in data set metadata.
     private expectedFields = [
         {
@@ -431,7 +434,7 @@ export class DatasetTableView {
             useDateComparison: true,
             valueFormatter: (params: { value: string }): string => {
                 if (!params.value) return "";
-                return new Date(params.value).toLocaleDateString();
+                return new Date(params.value).toLocaleDateString(this.userLocale);
             },
         },
         {
@@ -440,7 +443,7 @@ export class DatasetTableView {
             useDateComparison: true,
             valueFormatter: (params: { value: string }): string => {
                 if (!params.value) return "";
-                return new Date(params.value).toLocaleString();
+                return new Date(params.value).toLocaleString(this.userLocale);
             },
         },
         { field: "lrecl", headerName: l10n.t("Record Length") },
@@ -1084,6 +1087,8 @@ export class DatasetTableView {
      */
     private async generateTable(context: ExtensionContext): Promise<Table.Instance> {
         this.context = context; // Store context for navigation actions
+        // Capture user locale at table build time for date formatting
+        this.userLocale = env.language;
         const useTreeMode = await this.currentDataSource.supportsHierarchy();
         const rows = await this.generateRows(useTreeMode);
 

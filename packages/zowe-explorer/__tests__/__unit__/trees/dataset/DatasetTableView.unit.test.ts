@@ -30,7 +30,7 @@ import { ProfileManagement } from "../../../../src/management/ProfileManagement"
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../../src/extending/ZoweExplorerExtender";
 import * as imperative from "@zowe/imperative";
-import { l10n } from "vscode";
+import { l10n, env } from "vscode";
 
 jest.mock("../../../../src/tools/ZoweLocalStorage");
 
@@ -923,7 +923,10 @@ describe("DatasetTableView", () => {
     });
 
     describe("date column valueFormatters", () => {
-        it("createdDate valueFormatter should format ISO string to locale date string", () => {
+        it("createdDate valueFormatter should format ISO string to locale date string using userLocale", () => {
+            // Set the userLocale to ensure consistent behavior
+            (datasetTableView as any).userLocale = "en";
+
             const expectedFields = (datasetTableView as any).expectedFields;
             const createdDateField = expectedFields.find((field: any) => field.field === "createdDate");
 
@@ -933,11 +936,14 @@ describe("DatasetTableView", () => {
             const isoDateString = "2025-06-15T10:00:00.000Z";
             const result = createdDateField.valueFormatter({ value: isoDateString });
 
-            // Verify the formatter returns a locale-formatted date string
-            expect(result).toBe(new Date(isoDateString).toLocaleDateString());
+            // Verify the formatter returns a locale-formatted date string using userLocale
+            expect(result).toBe(new Date(isoDateString).toLocaleDateString("en-US"));
         });
 
-        it("modifiedDate valueFormatter should format ISO string to locale date-time string", () => {
+        it("modifiedDate valueFormatter should format ISO string to locale date-time string using userLocale", () => {
+            // Set the userLocale to ensure consistent behavior
+            (datasetTableView as any).userLocale = "en-US";
+
             const expectedFields = (datasetTableView as any).expectedFields;
             const modifiedDateField = expectedFields.find((field: any) => field.field === "modifiedDate");
 
@@ -947,8 +953,8 @@ describe("DatasetTableView", () => {
             const isoDateString = "2025-07-20T15:30:00.000Z";
             const result = modifiedDateField.valueFormatter({ value: isoDateString });
 
-            // Verify the formatter returns a locale-formatted date-time string
-            expect(result).toBe(new Date(isoDateString).toLocaleString());
+            // Verify the formatter returns a locale-formatted date-time string using userLocale
+            expect(result).toBe(new Date(isoDateString).toLocaleString("en"));
         });
 
         it("valueFormatters should return empty string for null/undefined values", () => {
@@ -960,6 +966,48 @@ describe("DatasetTableView", () => {
             expect(createdDateField.valueFormatter({ value: undefined })).toBe("");
             expect(modifiedDateField.valueFormatter({ value: null })).toBe("");
             expect(modifiedDateField.valueFormatter({ value: undefined })).toBe("");
+        });
+
+        it("createdDate valueFormatter should respect non-en-US locale (de-DE)", () => {
+            // Set the userLocale to German
+            (datasetTableView as any).userLocale = "de";
+
+            const expectedFields = (datasetTableView as any).expectedFields;
+            const createdDateField = expectedFields.find((field: any) => field.field === "createdDate");
+
+            const isoDateString = "2025-06-15T10:00:00.000Z";
+            const result = createdDateField.valueFormatter({ value: isoDateString });
+
+            // Verify the formatter uses the German locale format
+            expect(result).toBe(new Date(isoDateString).toLocaleDateString("de"));
+        });
+
+        it("modifiedDate valueFormatter should respect non-en-US locale (fr-FR)", () => {
+            // Set the userLocale to French
+            (datasetTableView as any).userLocale = "fr";
+
+            const expectedFields = (datasetTableView as any).expectedFields;
+            const modifiedDateField = expectedFields.find((field: any) => field.field === "modifiedDate");
+
+            const isoDateString = "2025-07-20T15:30:00.000Z";
+            const result = modifiedDateField.valueFormatter({ value: isoDateString });
+
+            // Verify the formatter uses the French locale format
+            expect(result).toBe(new Date(isoDateString).toLocaleString("fr"));
+        });
+
+        it("createdDate valueFormatter should respect Traditional Chinese locale (zh-TW)", () => {
+            // Set the userLocale to Traditional Chinese
+            (datasetTableView as any).userLocale = "zh-TW";
+
+            const expectedFields = (datasetTableView as any).expectedFields;
+            const createdDateField = expectedFields.find((field: any) => field.field === "createdDate");
+
+            const isoDateString = "2025-06-15T10:00:00.000Z";
+            const result = createdDateField.valueFormatter({ value: isoDateString });
+
+            // Verify the formatter uses the Traditional Chinese locale format
+            expect(result).toBe(new Date(isoDateString).toLocaleDateString("zh-TW"));
         });
     });
 
@@ -1723,6 +1771,40 @@ describe("DatasetTableView", () => {
                 (datasetTableView as any).currentDataSource = errorDataSource;
 
                 await expect((datasetTableView as any).generateTable(mockContext)).rejects.toThrow("Fetch error");
+            });
+
+            it("should capture env.language as userLocale at table build time", async () => {
+                // Import env from vscode mock to modify the language
+                const originalLanguage = env.language;
+
+                // Set a non-default locale
+                (env as any).language = "fr";
+
+                await (datasetTableView as any).generateTable(mockContext);
+
+                // Verify that userLocale was captured from env.language
+                expect((datasetTableView as any).userLocale).toBe("fr");
+                (env as any).language = originalLanguage;
+            });
+
+            it("should use captured locale for date formatting in table columns", async () => {
+                const originalLanguage = env.language;
+
+                // Set German locale
+                (env as any).language = "de";
+
+                await (datasetTableView as any).generateTable(mockContext);
+
+                // Get the valueFormatter for createdDate
+                const expectedFields = (datasetTableView as any).expectedFields;
+                const createdDateField = expectedFields.find((field: any) => field.field === "createdDate");
+
+                const isoDateString = "2025-06-15T10:00:00.000Z";
+                const result = createdDateField.valueFormatter({ value: isoDateString });
+
+                // Verify the formatter uses the German locale
+                expect(result).toBe(new Date(isoDateString).toLocaleDateString("de"));
+                (env as any).language = originalLanguage;
             });
         });
 
