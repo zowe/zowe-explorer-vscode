@@ -23,7 +23,7 @@ import {
     Sorting,
     PersistenceSchemaEnum,
 } from "@zowe/zowe-explorer-api";
-import { commands, env, Event, EventEmitter, ExtensionContext, l10n, Uri } from "vscode";
+import { commands, Event, EventEmitter, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
@@ -1088,7 +1088,8 @@ export class DatasetTableView {
     private async generateTable(context: ExtensionContext): Promise<Table.Instance> {
         this.context = context; // Store context for navigation actions
         // Capture user locale at table build time for date formatting
-        this.userLocale = env.language;
+        // Use Intl API to get the system's regional locale
+        this.userLocale = new Intl.DateTimeFormat().resolvedOptions().locale;
         const useTreeMode = await this.currentDataSource.supportsHierarchy();
         const rows = await this.generateRows(useTreeMode);
 

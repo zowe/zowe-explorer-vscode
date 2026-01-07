@@ -30,7 +30,7 @@ import { ProfileManagement } from "../../../../src/management/ProfileManagement"
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../../src/extending/ZoweExplorerExtender";
 import * as imperative from "@zowe/imperative";
-import { l10n, env } from "vscode";
+import { l10n } from "vscode";
 
 jest.mock("../../../../src/tools/ZoweLocalStorage");
 
@@ -1773,25 +1773,30 @@ describe("DatasetTableView", () => {
                 await expect((datasetTableView as any).generateTable(mockContext)).rejects.toThrow("Fetch error");
             });
 
-            it("should capture env.language as userLocale at table build time", async () => {
-                // Import env from vscode mock to modify the language
-                const originalLanguage = env.language;
-
-                // Set a non-default locale
-                (env as any).language = "fr";
+            it("should capture system locale as userLocale at table build time", async () => {
+                // Mock Intl.DateTimeFormat to return a specific locale
+                const originalDateTimeFormat = Intl.DateTimeFormat;
+                const mockResolvedOptions = jest.fn().mockReturnValue({ locale: "fr-FR" });
+                (global as any).Intl.DateTimeFormat = jest.fn().mockImplementation(() => ({
+                    resolvedOptions: mockResolvedOptions,
+                }));
 
                 await (datasetTableView as any).generateTable(mockContext);
 
-                // Verify that userLocale was captured from env.language
-                expect((datasetTableView as any).userLocale).toBe("fr");
-                (env as any).language = originalLanguage;
+                // Verify that userLocale was captured from Intl.DateTimeFormat
+                expect((datasetTableView as any).userLocale).toBe("fr-FR");
+
+                // Restore original Intl.DateTimeFormat
+                (global as any).Intl.DateTimeFormat = originalDateTimeFormat;
             });
 
             it("should use captured locale for date formatting in table columns", async () => {
-                const originalLanguage = env.language;
-
-                // Set German locale
-                (env as any).language = "de";
+                // Mock Intl.DateTimeFormat to return German locale
+                const originalDateTimeFormat = Intl.DateTimeFormat;
+                const mockResolvedOptions = jest.fn().mockReturnValue({ locale: "de-DE" });
+                (global as any).Intl.DateTimeFormat = jest.fn().mockImplementation(() => ({
+                    resolvedOptions: mockResolvedOptions,
+                }));
 
                 await (datasetTableView as any).generateTable(mockContext);
 
@@ -1803,8 +1808,10 @@ describe("DatasetTableView", () => {
                 const result = createdDateField.valueFormatter({ value: isoDateString });
 
                 // Verify the formatter uses the German locale
-                expect(result).toBe(new Date(isoDateString).toLocaleDateString("de"));
-                (env as any).language = originalLanguage;
+                expect(result).toBe(new Date(isoDateString).toLocaleDateString("de-DE"));
+
+                // Restore original Intl.DateTimeFormat
+                (global as any).Intl.DateTimeFormat = originalDateTimeFormat;
             });
         });
 
