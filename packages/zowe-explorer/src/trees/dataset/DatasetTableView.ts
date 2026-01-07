@@ -429,11 +429,19 @@ export class DatasetTableView {
             field: "createdDate",
             headerName: l10n.t("Creation Date"),
             useDateComparison: true,
+            valueFormatter: (params: { value: string }): string => {
+                if (!params.value) return "";
+                return new Date(params.value).toLocaleDateString();
+            },
         },
         {
             field: "modifiedDate",
             headerName: l10n.t("Modified Date"),
             useDateComparison: true,
+            valueFormatter: (params: { value: string }): string => {
+                if (!params.value) return "";
+                return new Date(params.value).toLocaleString();
+            },
         },
         { field: "lrecl", headerName: l10n.t("Record Length") },
         { field: "migr", headerName: l10n.t("Migrated") },
@@ -897,8 +905,8 @@ export class DatasetTableView {
         return {
             dsname: info.name,
             dsorg: info.dsorg || "",
-            createdDate: info.createdDate?.toLocaleDateString(),
-            modifiedDate: info.modifiedDate?.toLocaleString(),
+            createdDate: info.createdDate?.toISOString(),
+            modifiedDate: info.modifiedDate?.toISOString(),
             lrecl: info.lrecl,
             migr: info.migr,
             recfm: info.recfm,
@@ -936,8 +944,8 @@ export class DatasetTableView {
         const baseRow = {
             dsname: info.name,
             dsorg: info.dsorg,
-            createdDate: info.createdDate?.toLocaleDateString(),
-            modifiedDate: info.modifiedDate?.toLocaleString(),
+            createdDate: info.createdDate?.toISOString(),
+            modifiedDate: info.modifiedDate?.toISOString(),
             lrecl: info.lrecl,
             migr: info.migr,
             recfm: info.recfm,

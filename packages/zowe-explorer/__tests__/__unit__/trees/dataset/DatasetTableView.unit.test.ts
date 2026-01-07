@@ -765,7 +765,7 @@ describe("DatasetTableView", () => {
     });
 
     describe("mapDatasetInfoToRow", () => {
-        it("should map dataset info to table row data", () => {
+        it("should map dataset info to table row data with ISO date strings", () => {
             const datasetInfo = {
                 name: "TEST.DATASET",
                 dsorg: "PS",
@@ -786,8 +786,8 @@ describe("DatasetTableView", () => {
             expect(result).toEqual({
                 dsname: "TEST.DATASET",
                 dsorg: "PS",
-                createdDate: datasetInfo.createdDate.toLocaleDateString(),
-                modifiedDate: datasetInfo.modifiedDate.toLocaleString(),
+                createdDate: datasetInfo.createdDate.toISOString(),
+                modifiedDate: datasetInfo.modifiedDate.toISOString(),
                 lrecl: "80",
                 migr: "NO",
                 recfm: "FB",
@@ -801,6 +801,28 @@ describe("DatasetTableView", () => {
                 sclm: undefined,
                 vers: undefined,
             });
+        });
+
+        it("should use ISO format for dates to ensure locale-independent sorting", () => {
+            const datasetInfo = {
+                name: "TEST.DATASET",
+                dsorg: "PS",
+                createdDate: new Date("2025-06-15T10:00:00Z"),
+                modifiedDate: new Date("2025-07-20T15:30:00Z"),
+                uri: "zowe-ds:/profile/TEST.DATASET",
+                isMember: false,
+                isDirectory: false,
+            };
+
+            const result = (datasetTableView as any).mapDatasetInfoToRow(datasetInfo);
+
+            // Verify dates are in ISO format (parseable by new Date())
+            expect(result.createdDate).toBe("2025-06-15T10:00:00.000Z");
+            expect(result.modifiedDate).toBe("2025-07-20T15:30:00.000Z");
+
+            // Verify ISO strings can be reliably parsed back to Date objects
+            expect(new Date(result.createdDate).getTime()).toBe(datasetInfo.createdDate.getTime());
+            expect(new Date(result.modifiedDate).getTime()).toBe(datasetInfo.modifiedDate.getTime());
         });
 
         it("should handle missing optional fields", () => {
@@ -875,6 +897,69 @@ describe("DatasetTableView", () => {
                     isExpanded: false,
                 },
             });
+        });
+
+        it("should use ISO format for dates to ensure locale-independent sorting", () => {
+            const datasetInfo = {
+                name: "TEST.PDS",
+                dsorg: "PO",
+                createdDate: new Date("2025-03-10T08:00:00Z"),
+                modifiedDate: new Date("2025-04-15T12:45:00Z"),
+                uri: "zowe-ds:/profile/TEST.PDS",
+                isMember: false,
+                isDirectory: true,
+            };
+
+            const result = (datasetTableView as any).mapDatasetInfoToRowWithTree(datasetInfo);
+
+            // Verify dates are in ISO format (parseable by new Date())
+            expect(result.createdDate).toBe("2025-03-10T08:00:00.000Z");
+            expect(result.modifiedDate).toBe("2025-04-15T12:45:00.000Z");
+
+            // Verify ISO strings can be reliably parsed back to Date objects
+            expect(new Date(result.createdDate).getTime()).toBe(datasetInfo.createdDate.getTime());
+            expect(new Date(result.modifiedDate).getTime()).toBe(datasetInfo.modifiedDate.getTime());
+        });
+    });
+
+    describe("date column valueFormatters", () => {
+        it("createdDate valueFormatter should format ISO string to locale date string", () => {
+            const expectedFields = (datasetTableView as any).expectedFields;
+            const createdDateField = expectedFields.find((field: any) => field.field === "createdDate");
+
+            expect(createdDateField).toBeDefined();
+            expect(createdDateField.valueFormatter).toBeDefined();
+
+            const isoDateString = "2025-06-15T10:00:00.000Z";
+            const result = createdDateField.valueFormatter({ value: isoDateString });
+
+            // Verify the formatter returns a locale-formatted date string
+            expect(result).toBe(new Date(isoDateString).toLocaleDateString());
+        });
+
+        it("modifiedDate valueFormatter should format ISO string to locale date-time string", () => {
+            const expectedFields = (datasetTableView as any).expectedFields;
+            const modifiedDateField = expectedFields.find((field: any) => field.field === "modifiedDate");
+
+            expect(modifiedDateField).toBeDefined();
+            expect(modifiedDateField.valueFormatter).toBeDefined();
+
+            const isoDateString = "2025-07-20T15:30:00.000Z";
+            const result = modifiedDateField.valueFormatter({ value: isoDateString });
+
+            // Verify the formatter returns a locale-formatted date-time string
+            expect(result).toBe(new Date(isoDateString).toLocaleString());
+        });
+
+        it("valueFormatters should return empty string for null/undefined values", () => {
+            const expectedFields = (datasetTableView as any).expectedFields;
+            const createdDateField = expectedFields.find((field: any) => field.field === "createdDate");
+            const modifiedDateField = expectedFields.find((field: any) => field.field === "modifiedDate");
+
+            expect(createdDateField.valueFormatter({ value: null })).toBe("");
+            expect(createdDateField.valueFormatter({ value: undefined })).toBe("");
+            expect(modifiedDateField.valueFormatter({ value: null })).toBe("");
+            expect(modifiedDateField.valueFormatter({ value: undefined })).toBe("");
         });
     });
 
