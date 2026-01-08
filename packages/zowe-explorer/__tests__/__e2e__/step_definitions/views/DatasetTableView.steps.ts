@@ -160,6 +160,8 @@ When("enters a valid profile and dataset pattern", async function () {
 
     // Enter pattern and submit
     const pattern = testInfo.testPattern || testInfo.dsFilter || "*.DATASET";
+    await browser.waitUntil((): Promise<boolean> => inputBox.isClickable());
+    await inputBox.click();
     await inputBox.addValue(pattern);
     await browser.keys([Key.Enter]);
 });
