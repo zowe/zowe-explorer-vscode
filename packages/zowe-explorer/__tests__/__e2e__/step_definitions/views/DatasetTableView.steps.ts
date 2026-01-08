@@ -46,6 +46,9 @@ async function openAndWaitForTable(world: any): Promise<DatasetTableViewPage> {
     const page = await getTableViewPage(world);
     await page.open();
     await page.waitForReady();
+
+    // Maximize the panel to ensure the table view has enough rows visible
+    await browser.executeWorkbench((vscode) => vscode.commands.executeCommand("workbench.action.toggleMaximizedPanel"));
     return page;
 }
 
