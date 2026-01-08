@@ -8,6 +8,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed an issue where non-cached extender profiles fail to update credentials [#3964](https://github.com/zowe/zowe-explorer-vscode/pull/3964)
+
 ## `3.4.0`
 
 ### New features and enhancements
