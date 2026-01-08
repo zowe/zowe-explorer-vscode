@@ -185,7 +185,11 @@ export class ProfilesCache {
     ): void {
         // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
         const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
-        this.allProfiles[profIndex].profile = profileLoaded.profile;
+        if (profIndex === -1) {
+            this.allProfiles.push(profileLoaded);
+        } else {
+            this.allProfiles[profIndex].profile = profileLoaded.profile;
+        }
         const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
         if (defaultProf != null && defaultProf.name === profileLoaded.name) {
             this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
