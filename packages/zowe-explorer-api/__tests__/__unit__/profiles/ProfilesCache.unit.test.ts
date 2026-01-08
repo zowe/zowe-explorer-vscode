@@ -360,22 +360,19 @@ describe("ProfilesCache", () => {
         expect((profCache as any).defaultProfileByType.get("zosmf").profile).toMatchObject(lpar2Profile.profile);
     });
 
-    it("updateCachedProfile should update cached profile when autoStore is false", async () => {
+    it("updateCachedProfile should update cached profile when autoStore is false", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         profCache.allProfiles = [lpar1Profile as imperative.IProfileLoaded];
         (profCache as any).defaultProfileByType = new Map([["zosmf", { ...profCache.allProfiles[0] }]]);
         expect(profCache.allProfiles[0].profile).toMatchObject(lpar1Profile.profile);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValueOnce({
-            getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: false } }),
-        } as unknown as imperative.ProfileInfo);
-        await profCache.updateCachedProfile({
+        profCache.updateCachedProfile({
             ...lpar1Profile,
             profile: lpar2Profile.profile,
         } as imperative.IProfileLoaded);
         expect(profCache.allProfiles[0].profile).toMatchObject(lpar2Profile.profile);
         expect((profCache as any).defaultProfileByType.get("zosmf").profile).toMatchObject(lpar2Profile.profile);
     });
-    it("updateCachedProfile should add a new cached profile if it doesn't exist and update a given node", async () => {
+    it("updateCachedProfile should add a new cached profile if it doesn't exist and update a given node", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         profCache.allProfiles = [];
         const extenderNode = {

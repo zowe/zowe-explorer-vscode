@@ -187,7 +187,11 @@ export class ProfilesCache {
         const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
 
         // Ensure the profile is added to the allProfiles array if it doesn't exist
-        profIndex === -1 ? this.allProfiles.push(profileLoaded) : this.allProfiles[profIndex].profile = profileLoaded.profile;
+        if (profIndex === -1) {
+            this.allProfiles.push(profileLoaded);
+        } else {
+            this.allProfiles[profIndex].profile = profileLoaded.profile;
+        }
 
         const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
         if (defaultProf != null && defaultProf.name === profileLoaded.name) {
