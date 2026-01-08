@@ -131,7 +131,24 @@ export class DatasetTableViewPage {
                     const webviews = await freshWorkbench.getAllWebviews();
                     if (webviews.length === 0) return false;
 
-                    const tableView = webviews[0];
+                    let tableView = null;
+                    for (const webview of webviews) {
+                        try {
+                            const title = await webview.getTitle();
+                            if (title === "Table View") {
+                                tableView = webview;
+                                break;
+                            }
+                        } catch {
+                            continue;
+                        }
+                    }
+
+                    // Fall back to first webview if no title match
+                    if (!tableView) {
+                        tableView = webviews[0];
+                    }
+
                     await tableView.wait();
                     await tableView.open();
 
@@ -467,6 +484,69 @@ export class DatasetTableViewPage {
     }
 
     /**
+     * Applies a filter to the dsname column using AG Grid's column filter UI.
+     * This shows only rows where the dataset name contains the filter text.
+     *
+     * @param filterText The text to filter by (e.g., exact dataset name)
+     */
+    public async setColumnFilter(filterText: string): Promise<void> {
+        // Click on the dsname column header's filter icon to open the filter popup
+        const filterIcon = await this.browser.$("[col-id='dsname'] .ag-header-cell-menu-button");
+        await filterIcon.waitForClickable({ timeout: 5000 });
+        await filterIcon.click();
+
+        // Wait for filter popup to appear and enter the filter text
+        const filterInput = await this.browser.$(".ag-filter-body input[type='text'], .ag-text-field-input");
+        await filterInput.waitForDisplayed({ timeout: 5000 });
+        await filterInput.setValue(filterText);
+
+        // Press Enter to apply the filter and close the popup
+        await this.browser.keys(["Enter"]);
+
+        // Wait for filter to be applied by checking that at least one row exists
+        await this.browser.waitUntil(
+            async () => {
+                const dataRows = await this.rows;
+                return dataRows.length > 0;
+            },
+            { timeout: 10000, timeoutMsg: "No rows appeared after applying filter" }
+        );
+    }
+
+    /**
+     * Clears any applied column filter from the dsname column.
+     */
+    public async clearColumnFilter(): Promise<void> {
+        // Click on the dsname column header's filter icon
+        const filterIcon = await this.browser.$("[col-id='dsname'] .ag-header-cell-menu-button");
+
+        // Check if filter icon exists (column may not have filtering enabled)
+        if (!(await filterIcon.isExisting())) {
+            return;
+        }
+
+        await filterIcon.waitForClickable({ timeout: 5000 });
+        await filterIcon.click();
+
+        // Wait for filter popup to appear
+        const filterInput = await this.browser.$(".ag-filter-body input[type='text'], .ag-text-field-input");
+        await filterInput.waitForDisplayed({ timeout: 5000 });
+
+        // Clear the input and apply
+        await filterInput.clearValue();
+        await this.browser.keys(["Enter"]);
+
+        // Wait for rows to be displayed after clearing filter
+        await this.browser.waitUntil(
+            async () => {
+                const dataRows = await this.rows;
+                return dataRows.length > 0;
+            },
+            { timeout: 10000, timeoutMsg: "No rows appeared after clearing filter" }
+        );
+    }
+
+    /**
      * Checks if currently viewing PDS members (title contains "Members of").
      */
     public async isInMembersView(): Promise<boolean> {
@@ -488,17 +568,28 @@ export class DatasetTableViewPage {
             // Click the Back button to return to dataset list
             await this.clickButton("Back", "primary");
 
-            // Wait for the view to switch back to dataset list (title should not contain "Members of")
+            // Wait for the view to switch back to dataset list with frame re-entry
+            // (webview frame can become stale when navigating between PDS focus and DS list views)
             await this.browser.waitUntil(
                 async () => {
-                    const inMembers = await this.isInMembersView();
-                    return !inMembers;
-                },
-                { timeout: 15000, timeoutMsg: "Could not return to dataset list view" }
-            );
+                    try {
+                        // Re-enter the webview frame to get fresh references
+                        await this.ensureMainFrame();
+                        await this.open();
 
-            // Re-open the webview frame after navigation
-            await this.open();
+                        const inMembers = await this.isInMembersView();
+                        if (inMembers) {
+                            return false;
+                        }
+
+                        const dataRows = await this.rows;
+                        return dataRows.length > 0;
+                    } catch {
+                        return false;
+                    }
+                },
+                { timeout: 30000, timeoutMsg: "Could not return to dataset list view" }
+            );
         }
     }
 

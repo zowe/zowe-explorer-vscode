@@ -41,11 +41,13 @@ async function getTableViewPage(world: any): Promise<DatasetTableViewPage> {
 
 /**
  * Opens the table view and waits for it to be ready.
+ * Clears any existing column filter to ensure a clean state.
  */
 async function openAndWaitForTable(world: any): Promise<DatasetTableViewPage> {
     const page = await getTableViewPage(world);
     await page.open();
     await page.waitForReady();
+    await page.clearColumnFilter();
 
     return page;
 }
@@ -176,6 +178,11 @@ Given("a user who has the dataset table view opened with PS datasets", async fun
     const page = await openAndWaitForTable(this);
     // Ensure we're in dataset list view (not members view from previous scenario)
     await page.ensureDatasetListView();
+    // Apply column filter to show only the target PS dataset
+    if (testInfo.sequential) {
+        await page.setColumnFilter(testInfo.sequential);
+    }
+
     await page.waitForDsorgType("PS");
 });
 
@@ -183,6 +190,11 @@ Given("a user who has the dataset table view opened with PDS datasets", async fu
     const page = await openAndWaitForTable(this);
     // Ensure we're in dataset list view (not members view from previous scenario)
     await page.ensureDatasetListView();
+    // Apply column filter to show only the target PDS dataset
+    if (testInfo.pds) {
+        await page.setColumnFilter(testInfo.pds);
+    }
+
     await page.waitForDsorgType(/^PO/);
 });
 
