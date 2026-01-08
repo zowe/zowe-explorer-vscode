@@ -207,7 +207,7 @@ Given("a user who has the dataset table view opened with many datasets", async f
 
 When("the user selects one or more sequential datasets", async function () {
     const page = await getTableViewPage(this);
-    const selected = await page.selectRowByDsorg("PS");
+    const selected = await page.selectRow(/^PS/, testInfo.sequential);
     await expect(selected).toBe(true);
 });
 
@@ -237,7 +237,7 @@ When("the user selects a PDS dataset", async function () {
     const page = await getTableViewPage(this);
     await page.clearSelections();
 
-    const pdsSelected = await page.selectRowByDsorg(/^PO/);
+    const pdsSelected = await page.selectRow(/^PO/, testInfo.pds);
     await expect(pdsSelected).toBe(true);
 
     // Wait for Focus button to appear after selection

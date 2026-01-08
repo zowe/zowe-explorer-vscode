@@ -357,7 +357,7 @@ export class DatasetTableViewPage {
      * Finds and selects a row by dataset organization type (PS, PO, etc.).
      * Returns true if a matching row was found and selected.
      */
-    public async selectRowByDsorg(dsorgPattern: string | RegExp): Promise<boolean> {
+    public async selectRow(dsorgPattern: string | RegExp, dsnamePattern?: string | RegExp): Promise<boolean> {
         return this.browser.waitUntil(
             async () => {
                 try {
@@ -367,12 +367,18 @@ export class DatasetTableViewPage {
                         const freshRows = await this.rows;
                         if (i >= freshRows.length) continue;
 
+                        const dsnameCell = await freshRows[i].$("[col-id='dsname']");
+                        const dsnameText = await dsnameCell.getText();
                         const dsorgCell = await freshRows[i].$("[col-id='dsorg']");
                         const dsorgText = await dsorgCell.getText();
 
-                        const matches = typeof dsorgPattern === "string" ? dsorgText === dsorgPattern : dsorgPattern.test(dsorgText);
-
-                        if (matches) {
+                        const patternMatches = typeof dsorgPattern === "string" ? dsorgText === dsorgPattern : dsorgPattern.test(dsorgText);
+                        const nameMatches = dsnamePattern
+                            ? typeof dsnamePattern === "string"
+                                ? dsnameText === dsnamePattern
+                                : dsnamePattern.test(dsnameText)
+                            : true;
+                        if (patternMatches && nameMatches) {
                             const checkbox = await freshRows[i].$(".ag-selection-checkbox");
                             await checkbox.click();
                             return true;
