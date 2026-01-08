@@ -464,7 +464,6 @@
     ]
   },
   "No USS profiles found. Please add a profile first.": "No USS profiles found. Please add a profile first.",
-  "Select a profile": "Select a profile",
   "Enter the USS path to filter on": "Enter the USS path to filter on",
   "/u/username/directory": "/u/username/directory",
   "Failed to filter USS tree: {0}/Error message": {

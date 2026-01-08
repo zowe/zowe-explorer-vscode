@@ -856,7 +856,6 @@
   "Pasting files...": "",
   "copyName was called on USS node {0}, but its fullPath is invalid.": "",
   "No USS profiles found. Please add a profile first.": "",
-  "Select a profile": "",
   "Enter the USS path to filter on": "",
   "/u/username/directory": "",
   "Failed to filter USS tree: {0}": "",
