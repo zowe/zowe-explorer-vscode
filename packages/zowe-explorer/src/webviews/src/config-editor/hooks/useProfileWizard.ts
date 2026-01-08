@@ -9,9 +9,16 @@
  *
  */
 
-import { useState, useEffect } from "react";
-import { parseValueByType } from "../utils";
-import { flattenProfiles } from "../utils";
+import { useEffect } from "react";
+import { parseValueByType, flattenProfiles } from "../utils";
+import { isProfileNameTaken as checkProfileNameTaken } from "../utils/wizardValidation";
+import {
+    getWizardTypeOptions as getTypeOptions,
+    getWizardPropertyOptions as getPropertyOptions,
+    getWizardPropertyDescriptions as getPropertyDescriptions,
+    getPropertyType as getSchemaPropertyType,
+} from "../utils/schemaUtils";
+import { useWizardState } from "./useWizardState";
 
 interface UseProfileWizardProps {
     selectedTab: number | null;
@@ -59,176 +66,50 @@ export function useProfileWizard({
     secureValuesAllowed,
     renames,
 }: UseProfileWizardProps) {
-    // Profile Wizard state
-    const [wizardModalOpen, setWizardModalOpen] = useState(false);
-    const [wizardRootProfile, setWizardRootProfile] = useState("root");
-    const [wizardSelectedType, setWizardSelectedType] = useState("");
-    const [wizardProfileName, setWizardProfileName] = useState("");
-    const [wizardProperties, setWizardProperties] = useState<{ key: string; value: string | boolean | number | Object; secure?: boolean }[]>([]);
-    const [wizardShowKeyDropdown, setWizardShowKeyDropdown] = useState(false);
-    const [wizardNewPropertyKey, setWizardNewPropertyKey] = useState("");
-    const [wizardNewPropertyValue, setWizardNewPropertyValue] = useState("");
-    const [wizardNewPropertySecure, setWizardNewPropertySecure] = useState(false);
-    const [wizardMergedProperties, setWizardMergedProperties] = useState<{ [key: string]: any }>({});
-    const [wizardPopulatedDefaults, setWizardPopulatedDefaults] = useState<Set<string>>(new Set());
+    // Profile Wizard state - delegated to useWizardState hook
+    const {
+        wizardModalOpen,
+        wizardRootProfile,
+        wizardSelectedType,
+        wizardProfileName,
+        wizardProperties,
+        wizardShowKeyDropdown,
+        wizardNewPropertyKey,
+        wizardNewPropertyValue,
+        wizardNewPropertySecure,
+        wizardMergedProperties,
+        wizardPopulatedDefaults,
+        setWizardModalOpen,
+        setWizardRootProfile,
+        setWizardSelectedType,
+        setWizardProfileName,
+        setWizardProperties,
+        setWizardShowKeyDropdown,
+        setWizardNewPropertyKey,
+        setWizardNewPropertyValue,
+        setWizardNewPropertySecure,
+        setWizardMergedProperties,
+        setWizardPopulatedDefaults,
+    } = useWizardState();
 
-    // Helper functions
-    const getWizardTypeOptions = () => {
-        if (selectedTab === null) return [];
-        
-        // Get types from schema
-        const schemaTypes = schemaValidations[configurations[selectedTab].configPath]?.validDefaults || [];
-        
-        // Get unique types from existing profiles
-        const config = configurations[selectedTab].properties;
-        const flatProfiles = flattenProfiles(config.profiles || {});
-        const profileTypes = new Set<string>();
-        
-        // Extract types from all profiles
-        Object.values(flatProfiles).forEach((profile: any) => {
-            if (profile?.type && typeof profile.type === 'string') {
-                profileTypes.add(profile.type);
-            }
-        });
-        
-        // Also check pending changes for types
-        const configPath = configurations[selectedTab].configPath;
-        Object.entries(pendingChanges[configPath] || {}).forEach(([key, entry]) => {
-            if (key.endsWith('.type') && typeof entry.value === 'string') {
-                profileTypes.add(entry.value);
-            }
-        });
-        
-        // Combine schema types and profile types, removing duplicates
-        const allTypes = new Set([...schemaTypes, ...Array.from(profileTypes)]);
-        
-        // Return as sorted array
-        return Array.from(allTypes).sort((a, b) => a.localeCompare(b));
-    };
-
-    const getWizardPropertyOptions = () => {
-        if (selectedTab === null) return [];
-
-        // Get all available property schemas from all profile types
-        const allPropertyOptions = new Set<string>();
-        const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema || {};
-
-        // If a specific type is selected, get properties from that type
-        if (wizardSelectedType && propertySchema[wizardSelectedType]) {
-            Object.keys(propertySchema[wizardSelectedType]).forEach((key) => allPropertyOptions.add(key));
-        } else {
-            // If no type is selected, get properties from all available types
-            Object.values(propertySchema).forEach((typeSchema: any) => {
-                if (typeSchema && typeof typeSchema === "object") {
-                    Object.keys(typeSchema).forEach((key) => allPropertyOptions.add(key));
-                }
-            });
-        }
-
-        // Filter out properties that are already added
-        const usedKeys = new Set(wizardProperties.map((prop) => prop.key));
-        return Array.from(allPropertyOptions)
-            .filter((option) => !usedKeys.has(option))
-            .sort((a, b) => a.localeCompare(b));
-    };
-
-    const getWizardPropertyDescriptions = () => {
-        if (selectedTab === null) return {};
-
-        // Get property descriptions from schema validation
-        const propertyDescriptions: { [key: string]: string } = {};
-        const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema || {};
-
-        if (wizardSelectedType && propertySchema[wizardSelectedType]) {
-            // If a specific type is selected, get descriptions from that type
-            Object.entries(propertySchema[wizardSelectedType]).forEach(([key, schema]) => {
-                if (schema && typeof schema === "object" && "description" in schema && schema.description) {
-                    propertyDescriptions[key] = schema.description as string;
-                }
-            });
-        } else {
-            // If no type is selected, get descriptions from all available types
-            Object.values(propertySchema).forEach((typeSchema: any) => {
-                if (typeSchema && typeof typeSchema === "object") {
-                    Object.entries(typeSchema).forEach(([key, schema]: [string, any]) => {
-                        if (schema && typeof schema === "object" && "description" in schema && schema.description && !propertyDescriptions[key]) {
-                            propertyDescriptions[key] = schema.description as string;
-                        }
-                    });
-                }
-            });
-        }
-
-        return propertyDescriptions;
-    };
-
-    const getPropertyType = (propertyKey: string): string | undefined => {
-        if (selectedTab === null) return undefined;
-        if (!wizardSelectedType) return undefined;
-        const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || {};
-        return propertySchema[propertyKey]?.type;
-    };
+    // Helper functions - now using extracted utilities
+    const getWizardTypeOptions = () => getTypeOptions(selectedTab, configurations, schemaValidations, pendingChanges);
+    const getWizardPropertyOptions = () => getPropertyOptions(selectedTab, configurations, schemaValidations, wizardSelectedType, wizardProperties);
+    const getWizardPropertyDescriptions = () => getPropertyDescriptions(selectedTab, configurations, schemaValidations, wizardSelectedType);
+    const getPropertyType = (propertyKey: string) => getSchemaPropertyType(propertyKey, selectedTab, configurations, schemaValidations, wizardSelectedType);
 
     const isProfileNameTaken = () => {
         if (!wizardProfileName.trim() || selectedTab === null) return false;
-
         const configPath = configurations[selectedTab].configPath;
         const config = configurations[selectedTab].properties;
-        const flatProfiles = flattenProfiles(config.profiles);
-
-        // Construct the full profile key that would be created
-        const newProfileKey = wizardRootProfile === "root" ? wizardProfileName.trim() : `${wizardRootProfile}.${wizardProfileName.trim()}`;
-
-        // Check existing profiles
-        const existingProfilesUnderRoot = Object.keys(flatProfiles).some((profileKey) => {
-            if (wizardRootProfile === "root") {
-                return profileKey === wizardProfileName.trim();
-            } else {
-                return (
-                    profileKey === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
-                    profileKey.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
-                );
-            }
-        });
-
-        const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([_, entry]) => {
-            if (entry.profile) {
-                if (wizardRootProfile === "root") {
-                    return entry.profile === wizardProfileName.trim();
-                } else {
-                    return (
-                        entry.profile === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
-                        entry.profile.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
-                    );
-                }
-            }
-            return false;
-        });
-
-        // Check if a rename is occupying this name
-        const renamesForConfig = renames[configPath] || {};
-        const renameIsOccupyingName = Object.entries(renamesForConfig).some(([, newName]) => {
-            // Check if the rename will result in a profile with the same name we're trying to create
-            if (newName === newProfileKey) {
-                return true;
-            }
-
-            // Check if the rename will result in a parent profile that would conflict
-            // e.g., if we're trying to create "tso2.child" and "tso1" is being renamed to "tso2"
-            if (newProfileKey.startsWith(newName + ".")) {
-                return true;
-            }
-
-            // Check if we're trying to create a profile that would be a parent of the renamed profile
-            // e.g., if we're trying to create "tso2" and "tso1.child" is being renamed to "tso2.child"
-            if (newName.startsWith(newProfileKey + ".")) {
-                return true;
-            }
-
-            return false;
-        });
-
-        return existingProfilesUnderRoot || pendingProfilesUnderRoot || renameIsOccupyingName;
+        return checkProfileNameTaken(
+            wizardProfileName,
+            wizardRootProfile,
+            configPath,
+            config.profiles,
+            pendingChanges,
+            renames
+        );
     };
 
     const handleWizardAddProperty = () => {

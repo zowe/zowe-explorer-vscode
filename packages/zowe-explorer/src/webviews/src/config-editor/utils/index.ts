@@ -37,7 +37,15 @@ export {
     extractPendingProfiles,
     isProfileOrParentDeleted,
     getAvailableProfilesByType,
+
     getProfileTypeFromPath,
+    getOrderedProfileKeys,
+    applyRenamesToProfileKeys,
+    mergePendingProfileKeys,
+    filterConflictingProfileKeys,
 } from "./profileUtils";
 
 export { isProfileDefault, isCurrentProfileUntyped } from "./profileHelpers";
+
+export * from "./wizardValidation";
+export * from "./schemaUtils";

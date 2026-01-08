@@ -1542,3 +1542,143 @@ export function isPropertyFromMergedProps(
         return result;
     }
 }
+
+export function applyRenamesToProfileKeys(
+    orderedProfileKeys: string[],
+    configPath: string,
+    renames: { [configPath: string]: { [originalKey: string]: string } }
+): string[] {
+    // Apply renames to the profile keys, including nested profiles
+    const renamedProfileKeys = orderedProfileKeys.map((profileKey) => {
+        return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
+    });
+
+    // Filter out any renamed profile keys that are intermediate steps in a move operation
+    const configRenames = renames[configPath] || {};
+    const finalRenamedProfileKeys = renamedProfileKeys.filter((renamedKey) => {
+        // Check if this renamed key is an intermediate step (exists as an original key in renames)
+        return !Object.keys(configRenames).includes(renamedKey);
+    });
+
+    // Add any renamed profiles that are not in the original configuration
+    const renamedOnlyProfiles = Object.keys(configRenames).filter((originalKey) => {
+        // Only include if the original key is not in the ordered profile keys
+        if (orderedProfileKeys.includes(originalKey)) {
+            return false;
+        }
+
+        // Filter out intermediate renames that are part of a chain
+        const newKey = configRenames[originalKey];
+        const isIntermediate = Object.values(configRenames).includes(originalKey) && Object.keys(configRenames).includes(newKey);
+        if (isIntermediate) {
+            return false;
+        }
+
+        return true;
+    });
+
+    // Apply renames to these renamed-only profiles
+    const renamedOnlyProfileKeys = renamedOnlyProfiles.map((profileKey) => {
+        return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
+    });
+
+    // Combine all renamed profile keys and remove duplicates
+    const allRenamedProfileKeys = [...finalRenamedProfileKeys, ...renamedOnlyProfileKeys];
+    return Array.from(new Set(allRenamedProfileKeys));
+}
+
+export function mergePendingProfileKeys(
+    pendingProfiles: any,
+    configPath: string,
+    renames: { [configPath: string]: { [originalKey: string]: string } },
+    deletions: { [configPath: string]: string[] },
+    uniqueRenamedProfileKeys: string[]
+): string[] {
+    const pendingProfileKeys = Object.keys(pendingProfiles).filter((key) => {
+        // Check if this pending profile is deleted
+        if (isProfileOrParentDeleted(key, deletions, configPath)) {
+            return false;
+        }
+        return true;
+    });
+
+    return pendingProfileKeys.map((profileKey) => {
+        let renamedKey = profileKey;
+        const configRenames = renames[configPath] || {};
+
+        // Apply renames iteratively to handle chained renames
+        let changed = true;
+        while (changed) {
+            changed = false;
+            for (const [originalKey, newKey] of Object.entries(configRenames)) {
+                if (renamedKey === originalKey) {
+                    renamedKey = newKey;
+                    changed = true;
+                    break;
+                }
+                if (renamedKey.startsWith(originalKey + ".")) {
+                    const newRenamedKey = renamedKey.replace(originalKey + ".", newKey + ".");
+                    renamedKey = newRenamedKey;
+                    changed = true;
+                    break;
+                }
+            }
+        }
+
+        // Special case: if renames object is empty and this pending profile should be moved back to root
+        if (Object.keys(configRenames).length === 0 && renamedKey.includes(".")) {
+            const rootProfileName = renamedKey.split(".").pop();
+            if (rootProfileName && uniqueRenamedProfileKeys.includes(rootProfileName)) {
+                renamedKey = rootProfileName;
+            }
+        }
+
+        return renamedKey;
+    });
+}
+
+export function filterConflictingProfileKeys(
+    uniqueRenamedProfileKeys: string[],
+    renamedPendingProfileKeys: string[],
+    pendingProfiles: any,
+    deletions: { [configPath: string]: string[] },
+    configPath: string,
+    renames: { [configPath: string]: { [originalKey: string]: string } }
+): string[] {
+    const pendingProfileKeys = Object.keys(pendingProfiles);
+    const pendingProfileKeysSet = new Set(renamedPendingProfileKeys);
+    const originalPendingProfileKeysSet = new Set(pendingProfileKeys);
+
+    return uniqueRenamedProfileKeys.filter((profileKey) => {
+        // Check if this profile is deleted
+        if (isProfileOrParentDeleted(profileKey, deletions, configPath)) {
+            return false;
+        }
+
+        // If this profile key has a pending version (either renamed or original), filter it out
+        const hasExactPendingMatch = pendingProfileKeysSet.has(profileKey) || originalPendingProfileKeysSet.has(profileKey);
+
+        // Also check if this profile key is the result of a rename that has a pending version
+        const isResultOfRenameWithPending = Object.keys(renames[configPath] || {}).some((originalKey) => {
+            const renamedKey = getRenamedProfileKeyWithNested(originalKey, configPath, renames);
+            const hasPendingOriginal = Object.keys(pendingProfiles).includes(originalKey);
+            return profileKey === renamedKey && hasPendingOriginal;
+        });
+
+        const isTargetOfPendingRename = renamedPendingProfileKeys.includes(profileKey);
+
+        const shouldRenamePendingToThisKey =
+            !isTargetOfPendingRename &&
+            Object.keys(renames[configPath] || {}).length === 0 &&
+            pendingProfileKeys.some((pendingKey) => {
+                return (
+                    pendingKey !== profileKey &&
+                    (pendingKey.endsWith("." + profileKey) ||
+                        pendingKey === profileKey + ".pending" ||
+                        pendingKey.includes("." + profileKey + "."))
+                );
+            });
+
+        return !hasExactPendingMatch && !isResultOfRenameWithPending && !isTargetOfPendingRename && !shouldRenamePendingToThisKey;
+    });
+}
