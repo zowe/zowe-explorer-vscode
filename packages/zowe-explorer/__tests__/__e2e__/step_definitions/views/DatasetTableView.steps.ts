@@ -466,6 +466,7 @@ Then("the PDS member is revealed and focused in the Data Sets tree", async funct
     const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
     const allLabels = await Promise.all(treeItems.map(async (item) => item.getLabel()));
     await expect(allLabels.find((label) => label === this.selectedMemberName)).not.toBe(undefined);
+    await ((await dsPane.findItem(testInfo.pds)) as TreeItem).collapse();
 });
 
 // ==================== Hierarchical Tree Steps ====================
