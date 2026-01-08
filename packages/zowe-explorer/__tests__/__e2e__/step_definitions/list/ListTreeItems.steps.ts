@@ -58,7 +58,7 @@ async function setFilterForProfile(profileNode: ProfileNode, tree: string): Prom
         }
         const inputBox = await $('.input[aria-describedby="quickInput_message"]');
         await expect(inputBox).toBeClickable();
-        await inputBox.addValue(isUss ? testInfo.ussFilter : testInfo.dsFilter);
+        await inputBox.setValue(isUss ? testInfo.ussFilter : testInfo.dsFilter);
         await browser.keys(Key.Enter);
     }
 
