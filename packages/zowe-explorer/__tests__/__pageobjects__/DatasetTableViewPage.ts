@@ -122,22 +122,7 @@ export class DatasetTableViewPage {
         // Always start from the main frame and re-enter the webview frame
         await this.ensureMainFrame();
 
-        const workbench = await this.browser.getWorkbench();
-
-        // Wait for webview to be available
-        await this.browser.waitUntil(
-            async () => {
-                try {
-                    const webviews = await workbench.getAllWebviews();
-                    return webviews.length > 0;
-                } catch {
-                    return false;
-                }
-            },
-            { timeout: 15000, timeoutMsg: "No webviews found within timeout" }
-        );
-
-        // Open the webview with retry logic to handle stale elements
+        // Open the webview with retry logic that verifies content is actually loaded
         await this.browser.waitUntil(
             async () => {
                 try {
@@ -149,14 +134,18 @@ export class DatasetTableViewPage {
                     const tableView = webviews[0];
                     await tableView.wait();
                     await tableView.open();
-                    return true;
+
+                    // Verify we're actually inside the webview by checking for the table-view container
+                    // This catches cases where the frame switch succeeded but content isn't rendered
+                    const container = await this.browser.$(".table-view");
+                    return await container.isExisting();
                 } catch {
-                    // Stale element or other error, retry
+                    // Stale element, frame switch failed, or content not ready - retry from main frame
                     await this.ensureMainFrame();
                     return false;
                 }
             },
-            { timeout: 15000, timeoutMsg: "Could not open webview within timeout" }
+            { timeout: 30000, timeoutMsg: "Could not open webview or .table-view container not found within timeout" }
         );
     }
 

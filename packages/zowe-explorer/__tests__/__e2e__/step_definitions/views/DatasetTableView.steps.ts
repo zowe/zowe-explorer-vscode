@@ -69,11 +69,11 @@ When('the user right-clicks on a PDS and selects "Show as Table"', async functio
 Then("the dataset table view appears in the Zowe Resources panel", async function () {
     // Create a fresh page object to ensure we get the current webview frame
     const page = await getTableViewPage(this);
-    await page.open();
 
-    // Just verify the table view container exists - content validation is done in subsequent steps
-    const container = await page.tableViewContainer;
-    await container.waitForExist();
+    // The open() method includes verification that .table-view exists and will retry
+    // until the webview is fully loaded. No additional check needed - if open() succeeds,
+    // the table view is confirmed to exist.
+    await page.open();
 });
 
 // ==================== Table Content Verification Steps ====================
@@ -214,23 +214,24 @@ When("the user selects one or more sequential datasets", async function () {
 When("the user selects one or more rows", async function () {
     const page = await openAndWaitForTable(this);
 
+    // Clear any existing selections first to ensure consistent state
+    await page.clearSelections();
+
+    // Wait for rows to be available
     await browser.waitUntil(
         async () => {
-            try {
-                const rows = await page.getRows();
-                if (rows.length === 0) return false;
-
-                await page.selectRowByIndex(0);
-                if (rows.length > 1) {
-                    await page.selectRowByIndex(1);
-                }
-                return true;
-            } catch {
-                return false;
-            }
+            const rows = await page.getRows();
+            return rows.length > 0;
         },
-        { timeout: 10000, timeoutMsg: "Could not select rows within timeout" }
+        { timeout: 10000, timeoutMsg: "No rows available to select" }
     );
+
+    // Select rows without retry loop - each selectRowByIndex has its own retry logic
+    await page.selectRowByIndex(0);
+    const rows = await page.getRows();
+    if (rows.length > 1) {
+        await page.selectRowByIndex(1);
+    }
 });
 
 When("the user selects a PDS dataset", async function () {
