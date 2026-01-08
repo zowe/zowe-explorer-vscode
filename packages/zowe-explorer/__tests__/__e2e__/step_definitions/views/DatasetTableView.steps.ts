@@ -73,7 +73,7 @@ Then("the dataset table view appears in the Zowe Resources panel", async functio
 
     // Just verify the table view container exists - content validation is done in subsequent steps
     const container = await page.tableViewContainer;
-    await container.waitForExist({ timeout: 15000 });
+    await container.waitForExist();
 });
 
 // ==================== Table Content Verification Steps ====================
