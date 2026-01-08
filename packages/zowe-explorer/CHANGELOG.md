@@ -15,6 +15,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. [#3554](https://github.com/zowe/zowe-explorer-vscode/issues/3554)
+- Fixed an issue where file system URIs with trailing slashes failed to resolve. [#3904](https://github.com/zowe/zowe-explorer-vscode/issues/3904)
 - Fixed issue seen with profile hover information getting out of date or out of sync. [#3638](https://github.com/zowe/zowe-explorer-vscode/issues/3638)
 - Fixed an issue where an error appeared when moving an empty PDS across LPARs. [#4001](https://github.com/zowe/zowe-explorer-vscode/pull/4001)
 - Fixed an issue where logical record length truncation detection failed for extenders. [#4002](https://github.com/zowe/zowe-explorer-vscode/pull/4002)
@@ -37,9 +39,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. [#3554](https://github.com/zowe/zowe-explorer-vscode/issues/3554)
-- Fixed an issue where file system URIs with trailing slashes failed to resolve. [#3904](https://github.com/zowe/zowe-explorer-vscode/issues/3904)
-- Fixed an issue where an error appeared when moving an empty PDS across LPARs. [#4001](https://github.com/zowe/zowe-explorer-vscode/pull/4001)
 - Prevent drag-and-drop between profiles when the source and target resolve to the same physical object. The operation is now blocked and an explanatory error is shown. Users should refresh the target profile to see changes. [#3827](https://github.com/zowe/zowe-explorer-vscode/pull/3827)
 - Fixed an issue where the job spool pagination code lens was appearing even though the extender did not support pagination. [#3714](https://github.com/zowe/zowe-explorer-vscode/issues/3714)
 - Fixed an issue where deleting an open PDS that is empty resulted in an error. [#3908](https://github.com/zowe/zowe-explorer-vscode/pull/3908)
