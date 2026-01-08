@@ -42,11 +42,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             const paginationEnabled = SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled");
             const apiRegister = ZoweExplorerApiRegister.getInstance();
-            const jesApi = FsAbstractUtils.getApiOrThrowUnavailable(
-                profInfo.profile,
-                () => apiRegister.getJesApi(profInfo.profile),
-                { apiName: vscode.l10n.t("JES API"), registeredTypes: apiRegister.registeredJesApiTypes() }
-            );
+            const jesApi = FsAbstractUtils.getApiOrThrowUnavailable(profInfo.profile, () => apiRegister.getJesApi(profInfo.profile), {
+                apiName: vscode.l10n.t("JES API"),
+                registeredTypes: apiRegister.registeredJesApiTypes(),
+            });
             const supportPagination = jesApi.supportSpoolPagination?.() ?? false;
             return paginationEnabled && supportPagination;
         } catch (err) {
@@ -113,11 +112,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const results: [string, vscode.FileType][] = [];
 
         const apiRegister = ZoweExplorerApiRegister.getInstance();
-        const jesApi = FsAbstractUtils.getApiOrThrowUnavailable(
-            uriInfo.profile,
-            () => apiRegister.getJesApi(uriInfo.profile),
-            { apiName: vscode.l10n.t("JES API"), registeredTypes: apiRegister.registeredJesApiTypes() }
-        );
+        const jesApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getJesApi(uriInfo.profile), {
+            apiName: vscode.l10n.t("JES API"),
+            registeredTypes: apiRegister.registeredJesApiTypes(),
+        });
 
         await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile);
@@ -377,11 +375,10 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             await AuthUtils.ensureAuthNotCancelled(profInfo.profile);
             await AuthHandler.waitForUnlock(profInfo.profile);
             const apiRegister = ZoweExplorerApiRegister.getInstance();
-            await FsAbstractUtils.getApiOrThrowUnavailable(
-                profInfo.profile,
-                () => apiRegister.getJesApi(profInfo.profile),
-                { apiName: vscode.l10n.t("JES API"), registeredTypes: apiRegister.registeredJesApiTypes() }
-            ).deleteJob(entry.job.jobname, entry.job.jobid);
+            await FsAbstractUtils.getApiOrThrowUnavailable(profInfo.profile, () => apiRegister.getJesApi(profInfo.profile), {
+                apiName: vscode.l10n.t("JES API"),
+                registeredTypes: apiRegister.registeredJesApiTypes(),
+            }).deleteJob(entry.job.jobname, entry.job.jobid);
         } catch (err) {
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({
