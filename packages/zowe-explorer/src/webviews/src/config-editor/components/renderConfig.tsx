@@ -59,7 +59,7 @@ interface RenderConfigProps {
   setPendingPropertyDeletion: (key: string | null) => void;
   handleUnlinkMergedProperty: (propertyKey: string | undefined, fullKey: string) => void;
   handleNavigateToSource: (jsonLoc: string, osLoc?: string[]) => void;
-  handleToggleSecure: (fullKey: string, displayKey: string, path: string[]) => void;
+  handleToggleSecure: (fullKey: string, displayKey: string, path: string[], value: any) => void;
   openAddProfileModalAtPath: (path: string[], key?: string, value?: string) => void;
   getWizardTypeOptions: () => string[];
 
@@ -1108,7 +1108,9 @@ export const RenderConfig = ({
                           (secureValuesAllowed ? (
                             <button
                               className="action-button"
-                              onClick={() => handleToggleSecure(fullKey, displayKey, path)}
+                              onClick={() => {
+                                handleToggleSecure(fullKey, displayKey, path, pendingValue);
+                              }}
                               title={l10n.t("Make property secure")}
                             >
                               <span className="codicon codicon-unlock"></span>

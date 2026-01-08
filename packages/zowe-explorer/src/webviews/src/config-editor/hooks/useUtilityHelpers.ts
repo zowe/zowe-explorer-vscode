@@ -95,11 +95,12 @@ export function useUtilityHelpers() {
                     selectedProfileKey
                 ),
 
-            handleToggleSecure: (fullKey: string, displayKey: string, path: string[]) => {
+            handleToggleSecure: (fullKey: string, displayKey: string, path: string[], value: any) => {
                 return handleToggleSecure(
                     fullKey,
                     displayKey,
                     path,
+                    value,
                     selectedTab,
                     configurations,
                     pendingChanges,
@@ -184,35 +185,35 @@ export function useUtilityHelpers() {
 
             getWizardTypeOptions: () => {
                 if (selectedTab === null) return [];
-                
+
                 const configPath = configurations[selectedTab]?.configPath;
                 const schemaValidation = schemaValidations[configPath];
-                
+
                 // Get types from schema
                 const schemaTypes = schemaValidation?.propertySchema ? Object.keys(schemaValidation.propertySchema) : [];
-                
+
                 // Get unique types from existing profiles
                 const config = configurations[selectedTab]?.properties;
                 const flatProfiles = flattenProfiles(config?.profiles || {});
                 const profileTypes = new Set<string>();
-                
+
                 // Extract types from all profiles
                 Object.values(flatProfiles).forEach((profile: any) => {
-                    if (profile?.type && typeof profile.type === 'string') {
+                    if (profile?.type && typeof profile.type === "string") {
                         profileTypes.add(profile.type);
                     }
                 });
-                
+
                 // Also check pending changes for types
                 Object.entries(pendingChanges[configPath] || {}).forEach(([key, entry]) => {
-                    if (key.endsWith('.type') && typeof entry.value === 'string') {
+                    if (key.endsWith(".type") && typeof entry.value === "string") {
                         profileTypes.add(entry.value);
                     }
                 });
-                
+
                 // Combine schema types and profile types, removing duplicates
                 const allTypes = new Set([...schemaTypes, ...Array.from(profileTypes)]);
-                
+
                 // Return as sorted array
                 return Array.from(allTypes).sort((a, b) => a.localeCompare(b));
             },

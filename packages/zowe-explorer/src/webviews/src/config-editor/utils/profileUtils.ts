@@ -326,9 +326,7 @@ export function getAvailableProfilesByType(
         });
 
         // Apply renames
-        const renamedProfilesOfType = profilesOfType.map((profileKey) =>
-            getRenamedProfileKeyWithNested(profileKey, config.configPath, renames)
-        );
+        const renamedProfilesOfType = profilesOfType.map((profileKey) => getRenamedProfileKeyWithNested(profileKey, config.configPath, renames));
         const renamedPendingProfiles = Array.from(pendingProfiles).map((profileKey) =>
             getRenamedProfileKeyWithNested(profileKey, config.configPath, renames)
         );
@@ -976,6 +974,7 @@ export function handleToggleSecure(
     fullKey: string,
     displayKey: string,
     path: string[],
+    value: any,
     selectedTab?: number | null,
     configurations?: Configuration[],
     pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } },
@@ -1014,7 +1013,7 @@ export function handleToggleSecure(
             ...prev[configPath],
             [fullKey]: {
                 ...currentPendingChange,
-                value: currentPendingChange?.value || "",
+                value: currentPendingChange?.value !== undefined ? currentPendingChange.value : value !== undefined ? value : "",
                 path,
                 profile: profileKey,
                 secure: newSecure,
@@ -1191,8 +1190,7 @@ export function mergeMergedProperties(
 
         // If the property is in deletions, we should add the merged property to replace it
         // For secure properties that were deleted, we still want to show the merged property in properties
-        const shouldAddMerged =
-            isAllowedBySchema && !isInPendingChanges && (isInDeletions || !combinedConfig.properties.hasOwnProperty(key));
+        const shouldAddMerged = isAllowedBySchema && !isInPendingChanges && (isInDeletions || !combinedConfig.properties.hasOwnProperty(key));
 
         if (shouldAddMerged) {
             // Only add primitive values to avoid recursion
@@ -1673,9 +1671,7 @@ export function filterConflictingProfileKeys(
             pendingProfileKeys.some((pendingKey) => {
                 return (
                     pendingKey !== profileKey &&
-                    (pendingKey.endsWith("." + profileKey) ||
-                        pendingKey === profileKey + ".pending" ||
-                        pendingKey.includes("." + profileKey + "."))
+                    (pendingKey.endsWith("." + profileKey) || pendingKey === profileKey + ".pending" || pendingKey.includes("." + profileKey + "."))
                 );
             });
 
