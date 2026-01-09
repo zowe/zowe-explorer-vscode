@@ -561,18 +561,11 @@ export class DatasetTableViewPage {
         const filterInput = await filterPopup.$("input");
         await filterInput.waitForDisplayed({ timeout: 5000 });
 
-        // Explicitly click and focus the input before clearing to prevent keystrokes (clearValue doesn't trigger filter update)
-        // from going to the editor if focus shifted away during test execution
-        await this.browser.waitUntil(async () => {
-            await filterInput.click();
-            await this.browser.pause(50);
-            return filterInput.isFocused();
-        });
-
-        await this.browser.keys([process.platform !== "darwin" ? Key.Ctrl : Key.Command, "a"]);
-
-        // Now send Backspace to delete the selected text
-        await this.browser.keys([Key.Backspace]);
+        // Use browser command to send input event (clearValue doesn't trigger filter update)
+        await this.browser.execute((el: any) => {
+            el.value = "";
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+        }, filterInput);
 
         // Verify the value was actually cleared before submitting
         await this.browser.waitUntil(
