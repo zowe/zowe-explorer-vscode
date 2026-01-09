@@ -170,13 +170,22 @@ export class TsoCommandHandler extends ZoweCommandProvider {
             const profiles = profileInfo.getAllProfiles("tso");
             if (profiles.length > 0) {
                 const profilesList = profiles.map((p) => imperative.ProfileInfo.profAttrsToProfLoaded(p));
-                // Try auto-selecting based on shared base profile
-                const autoSelected = await this.autoSelectProfile(parentProfile, profilesList);
-                if (autoSelected) {
-                    tsoProfile = autoSelected;
-                    ZoweLogger.info(
-                        vscode.l10n.t("Auto-selected TSO profile '{0}' based on parent profile '{1}'", [tsoProfile.name, parentProfile?.name ?? ""])
-                    );
+
+                // Try auto-selecting based on shared base profile (only when invoked from tree and setting is enabled)
+                const autoSelectEnabled = SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_COMMANDS_AUTO_SELECT_PROFILE);
+                if (autoSelectEnabled && parentProfile) {
+                    const autoSelected = await this.autoSelectProfile(parentProfile, profilesList);
+                    if (autoSelected) {
+                        tsoProfile = autoSelected;
+                        ZoweLogger.info(
+                            vscode.l10n.t("Auto-selected TSO profile '{0}' based on parent profile '{1}'", [
+                                tsoProfile.name,
+                                parentProfile?.name ?? "",
+                            ])
+                        );
+                    } else {
+                        tsoProfile = await this.selectServiceProfile(profilesList);
+                    }
                 } else {
                     tsoProfile = await this.selectServiceProfile(profilesList);
                 }

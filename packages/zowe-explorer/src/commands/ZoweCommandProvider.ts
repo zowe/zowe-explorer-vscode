@@ -66,11 +66,11 @@ export abstract class ZoweCommandProvider {
             if (iTerms) {
                 this.pseudoTerminal = new ZoweTerminal(
                     this.terminalName,
-                    async (command: string): Promise<string> => {
+                    async (cmd: string): Promise<string> => {
                         try {
                             // We need to await the response, otherwise we can't catch errors thrown
-                            this.history.addSearchHistory(command);
-                            return await this.runCommand(profile, command);
+                            this.history.addSearchHistory(cmd);
+                            return await this.runCommand(profile, cmd);
                         } catch (error) {
                             if (error instanceof imperative.ImperativeError) {
                                 let formattedError = "";
@@ -82,18 +82,18 @@ export abstract class ZoweCommandProvider {
                                     error.message.replace(/Rest API failure with HTTP\(S\) status \d\d\d\n/, "")
                                 );
 
-                                const responseTitle = vscode.l10n.t("Response From Service") + "\n";
+                                const responseTitle: string = vscode.l10n.t("Response From Service") + "\n";
                                 if (error.causeErrors) {
                                     try {
                                         const causeErrorsJson = JSON.parse(error.causeErrors);
-                                        formattedError += "\n" + imperative.TextUtils.chalk.bold.yellow(responseTitle);
+                                        formattedError += "\n" + String(imperative.TextUtils.chalk.bold.yellow(responseTitle));
                                         formattedError += imperative.TextUtils.prettyJson(causeErrorsJson, undefined, false, "");
                                     } catch (parseErr) {
                                         // causeErrors was not JSON.
                                         const causeErrString: string = error.causeErrors.toString();
                                         if (causeErrString.length > 0) {
                                             // output the text value of causeErrors
-                                            formattedError += "\n" + imperative.TextUtils.chalk.bold.yellow(responseTitle);
+                                            formattedError += "\n" + String(imperative.TextUtils.chalk.bold.yellow(responseTitle));
                                             formattedError += causeErrString;
                                         }
                                     }
@@ -107,7 +107,7 @@ export abstract class ZoweCommandProvider {
 
                                 return formattedError;
                             }
-                            return error.message;
+                            return String(error?.message ?? error);
                         }
                     },
                     new AbortController(),
@@ -192,8 +192,7 @@ export abstract class ZoweCommandProvider {
         }
 
         try {
-            const profilesCache = this.profileInstance.getProfilesCache();
-            const baseForParent = await profilesCache.fetchBaseProfile(parentProfile.name);
+            const baseForParent = await this.profileInstance.fetchBaseProfile(parentProfile.name);
 
             const matches: imperative.IProfileLoaded[] = [];
 
@@ -202,7 +201,7 @@ export abstract class ZoweCommandProvider {
                     continue;
                 }
 
-                const profileBase = await profilesCache.fetchBaseProfile(profile.name);
+                const profileBase = await this.profileInstance.fetchBaseProfile(profile.name);
 
                 // Check if profiles share the same base profile
                 if (baseForParent?.name && profileBase?.name === baseForParent.name) {

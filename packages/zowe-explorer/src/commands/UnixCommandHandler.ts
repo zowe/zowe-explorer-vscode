@@ -205,13 +205,21 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             return;
         }
 
-        // Try auto-selecting based on shared base profile
-        const autoSelected = await this.autoSelectProfile(this.nodeProfile, profiles);
-        if (autoSelected) {
-            this.sshProfile = autoSelected;
-            ZoweLogger.info(
-                vscode.l10n.t("Auto-selected SSH profile '{0}' based on parent profile '{1}'", [this.sshProfile.name, this.nodeProfile?.name ?? ""])
-            );
+        // Try auto-selecting based on shared base profile (only when invoked from tree and setting is enabled)
+        const autoSelectEnabled = SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_COMMANDS_AUTO_SELECT_PROFILE);
+        if (autoSelectEnabled && this.nodeProfile) {
+            const autoSelected = await this.autoSelectProfile(this.nodeProfile, profiles);
+            if (autoSelected) {
+                this.sshProfile = autoSelected;
+                ZoweLogger.info(
+                    vscode.l10n.t("Auto-selected SSH profile '{0}' based on parent profile '{1}'", [
+                        this.sshProfile.name,
+                        this.nodeProfile?.name ?? "",
+                    ])
+                );
+            } else {
+                this.sshProfile = await this.selectServiceProfile(profiles);
+            }
         } else {
             this.sshProfile = await this.selectServiceProfile(profiles);
         }

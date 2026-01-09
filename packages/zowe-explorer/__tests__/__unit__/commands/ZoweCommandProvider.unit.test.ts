@@ -20,7 +20,6 @@ import { createIJobFile } from "../../__mocks__/mockCreators/jobs";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { Constants } from "../../../src/configuration/Constants";
-import { ProfileManagement } from "../../../src/management/ProfileManagement";
 
 jest.mock("../../../src/tools/ZoweLocalStorage");
 
@@ -130,10 +129,10 @@ describe("ZoweCommandProvider Unit Tests", () => {
             it("should not create a terminal if the profile or the command is undefined", async () => {
                 const createTerminal = jest.fn().mockReturnValue({ show: jest.fn() });
                 Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal, configurable: true });
-                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, null, "test");
-                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, undefined, "test");
-                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, null);
-                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, undefined);
+                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, null as any, "test");
+                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, undefined as any, "test");
+                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, null as any);
+                await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, undefined as any);
                 expect(createTerminal).not.toHaveBeenCalled();
             });
 
@@ -169,15 +168,11 @@ describe("ZoweCommandProvider Unit Tests", () => {
         });
 
         describe("function autoSelectProfile", () => {
-            let mockProfilesCache: any;
             let mockProfileInstance: any;
 
             beforeEach(() => {
-                mockProfilesCache = {
-                    fetchBaseProfile: jest.fn(),
-                };
                 mockProfileInstance = {
-                    getProfilesCache: jest.fn().mockReturnValue(mockProfilesCache),
+                    fetchBaseProfile: jest.fn(),
                 };
             });
 
@@ -186,18 +181,15 @@ describe("ZoweCommandProvider Unit Tests", () => {
                 const profiles = [{ name: "dev1.tso" }, { name: "dev2.tso" }] as any;
                 const baseProfile = { name: "dev1", type: "base" } as any;
 
-                mockProfilesCache.fetchBaseProfile.mockImplementation((profileName: string) => {
+                mockProfileInstance.fetchBaseProfile.mockImplementation((profileName: string) => {
                     if (profileName === "dev1.zosmf" || profileName === "dev1.tso") {
                         return Promise.resolve(baseProfile);
                     }
                     return Promise.resolve({ name: "dev2", type: "base" });
                 });
 
-                const result = await ZoweCommandProvider.prototype.autoSelectProfile.call(
-                    { profileInstance: mockProfileInstance },
-                    parentProfile,
-                    profiles
-                );
+                const mockCmdProvider = { profileInstance: mockProfileInstance };
+                const result = await (ZoweCommandProvider.prototype as any).autoSelectProfile.call(mockCmdProvider, parentProfile, profiles);
                 expect(result).toEqual({ name: "dev1.tso" });
             });
 
@@ -206,13 +198,10 @@ describe("ZoweCommandProvider Unit Tests", () => {
                 const profiles = [{ name: "dev1.tso" }, { name: "dev1.ssh" }] as any;
                 const baseProfile = { name: "dev1", type: "base" } as any;
 
-                mockProfilesCache.fetchBaseProfile.mockResolvedValue(baseProfile);
+                mockProfileInstance.fetchBaseProfile.mockResolvedValue(baseProfile);
 
-                const result = await ZoweCommandProvider.prototype.autoSelectProfile.call(
-                    { profileInstance: mockProfileInstance },
-                    parentProfile,
-                    profiles
-                );
+                const mockCmdProvider = { profileInstance: mockProfileInstance };
+                const result = await (ZoweCommandProvider.prototype as any).autoSelectProfile.call(mockCmdProvider, parentProfile, profiles);
                 expect(result).toBeUndefined();
             });
 
@@ -220,18 +209,15 @@ describe("ZoweCommandProvider Unit Tests", () => {
                 const parentProfile = { name: "dev1.zosmf" } as any;
                 const profiles = [{ name: "dev2.tso" }] as any;
 
-                mockProfilesCache.fetchBaseProfile.mockImplementation((profileName: string) => {
+                mockProfileInstance.fetchBaseProfile.mockImplementation((profileName: string) => {
                     if (profileName === "dev1.zosmf") {
                         return Promise.resolve({ name: "dev1", type: "base" });
                     }
                     return Promise.resolve({ name: "dev2", type: "base" });
                 });
 
-                const result = await ZoweCommandProvider.prototype.autoSelectProfile.call(
-                    { profileInstance: mockProfileInstance },
-                    parentProfile,
-                    profiles
-                );
+                const mockCmdProvider = { profileInstance: mockProfileInstance };
+                const result = await (ZoweCommandProvider.prototype as any).autoSelectProfile.call(mockCmdProvider, parentProfile, profiles);
                 expect(result).toBeUndefined();
             });
 
@@ -240,13 +226,10 @@ describe("ZoweCommandProvider Unit Tests", () => {
                 const profiles = [{ name: "dev1.zosmf" }, { name: "dev1.tso" }] as any;
                 const baseProfile = { name: "dev1", type: "base" } as any;
 
-                mockProfilesCache.fetchBaseProfile.mockResolvedValue(baseProfile);
+                mockProfileInstance.fetchBaseProfile.mockResolvedValue(baseProfile);
 
-                const result = await ZoweCommandProvider.prototype.autoSelectProfile.call(
-                    { profileInstance: mockProfileInstance },
-                    parentProfile,
-                    profiles
-                );
+                const mockCmdProvider = { profileInstance: mockProfileInstance };
+                const result = await (ZoweCommandProvider.prototype as any).autoSelectProfile.call(mockCmdProvider, parentProfile, profiles);
                 expect(result).toEqual({ name: "dev1.tso" });
             });
 
@@ -254,13 +237,10 @@ describe("ZoweCommandProvider Unit Tests", () => {
                 const parentProfile = { name: "dev1.zosmf" } as any;
                 const profiles = [{ name: "dev1.tso" }] as any;
 
-                mockProfilesCache.fetchBaseProfile.mockRejectedValue(new Error("Profile not found"));
+                mockProfileInstance.fetchBaseProfile.mockRejectedValue(new Error("Profile not found"));
 
-                const result = await ZoweCommandProvider.prototype.autoSelectProfile.call(
-                    { profileInstance: mockProfileInstance },
-                    parentProfile,
-                    profiles
-                );
+                const mockCmdProvider = { profileInstance: mockProfileInstance };
+                const result = await (ZoweCommandProvider.prototype as any).autoSelectProfile.call(mockCmdProvider, parentProfile, profiles);
                 expect(result).toBeUndefined();
             });
         });
@@ -272,11 +252,10 @@ describe("ZoweCommandProvider Unit Tests", () => {
                 };
 
                 jest.spyOn(Gui, "showQuickPick").mockResolvedValue("prof02" as any);
-                const selected = await ZoweCommandProvider.prototype.selectServiceProfile.call(
-                    mockCmdProvider,
-                    [{ name: "prof01" }, { name: "prof02" }],
-                    "test"
-                );
+                const selected = await ZoweCommandProvider.prototype.selectServiceProfile.call(mockCmdProvider, [
+                    { name: "prof01" } as any,
+                    { name: "prof02" } as any,
+                ]);
 
                 expect(selected).toEqual({ name: "prof02" });
             });
@@ -288,11 +267,10 @@ describe("ZoweCommandProvider Unit Tests", () => {
 
                 jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
                 const spyMessage = jest.spyOn(ZoweLogger, "info").mockImplementation(jest.fn());
-                const selected = await ZoweCommandProvider.prototype.selectServiceProfile.call(
-                    mockCmdProvider,
-                    [{ name: "prof01" }, { name: "prof02" }],
-                    "test"
-                );
+                const selected = await ZoweCommandProvider.prototype.selectServiceProfile.call(mockCmdProvider, [
+                    { name: "prof01" } as any,
+                    { name: "prof02" } as any,
+                ]);
 
                 expect(spyMessage).toHaveBeenCalledWith(mockCmdProvider.operationCancelled);
                 expect(selected).toBeUndefined();
