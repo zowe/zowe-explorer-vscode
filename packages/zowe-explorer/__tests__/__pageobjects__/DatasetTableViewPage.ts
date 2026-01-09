@@ -560,7 +560,7 @@ export class DatasetTableViewPage {
         await filterInput.waitForDisplayed({ timeout: 5000 });
 
         // Use keyboard to select all and delete (clearValue doesn't trigger filter update)
-        await this.browser.keys(["Control", "a"]);
+        await this.browser.keys([process.platform !== "darwin" ? "Control" : "Command", "a"]);
         await this.browser.keys(["Backspace"]);
 
         // Verify the value was actually cleared before submitting
