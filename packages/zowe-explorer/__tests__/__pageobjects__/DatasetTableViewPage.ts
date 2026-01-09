@@ -9,6 +9,8 @@
  *
  */
 
+import { Key } from "webdriverio";
+
 /**
  * Page Object for the Dataset Table View (webview)
  *
@@ -557,18 +559,20 @@ export class DatasetTableViewPage {
         const filterPopup = await this.browser.$(".ag-filter-menu");
         await filterPopup.waitForDisplayed({ timeout: 5000 });
         const filterInput = await filterPopup.$("input");
-        await filterInput.waitForClickable({ timeout: 5000 });
+        await filterInput.waitForDisplayed({ timeout: 5000 });
 
         // Explicitly click and focus the input before clearing to prevent keystrokes (clearValue doesn't trigger filter update)
         // from going to the editor if focus shifted away during test execution
-        await filterInput.click();
+        await this.browser.waitUntil(async () => {
+            await filterInput.click();
+            await this.browser.pause(50);
+            return filterInput.isFocused();
+        });
 
-        await this.browser.pause(50);
-
-        await this.browser.keys([process.platform !== "darwin" ? "Control" : "Command", "a"]);
+        await this.browser.keys([process.platform !== "darwin" ? Key.Ctrl : Key.Command, "a"]);
 
         // Now send Backspace to delete the selected text
-        await this.browser.keys(["Backspace"]);
+        await this.browser.keys([Key.Backspace]);
 
         // Verify the value was actually cleared before submitting
         await this.browser.waitUntil(
@@ -580,7 +584,7 @@ export class DatasetTableViewPage {
         );
 
         // Press Enter to apply the cleared filter
-        await this.browser.keys(["Enter"]);
+        await this.browser.keys([Key.Enter]);
 
         // Click outside the filter popup to close it
         const tableBody = await this.browser.$(".ag-body");
