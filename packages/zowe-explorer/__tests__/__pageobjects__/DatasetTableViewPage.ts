@@ -479,7 +479,7 @@ export class DatasetTableViewPage {
      */
     public async setColumnFilter(filterText: string): Promise<void> {
         // Click on the dsname column header's filter icon to open the filter popup
-        const filterIcon = await this.browser.$("[col-id='dsname'] .ag-header-cell-menu-button");
+        const filterIcon = await this.browser.$("[col-id='dsname'] .ag-header-cell-filter-button");
         await filterIcon.waitForClickable({ timeout: 5000 });
         await filterIcon.click();
 
@@ -506,7 +506,7 @@ export class DatasetTableViewPage {
      */
     public async clearColumnFilter(): Promise<void> {
         // Click on the dsname column header's filter icon
-        const filterIcon = await this.browser.$("[col-id='dsname'] .ag-header-cell-menu-button");
+        const filterIcon = await this.browser.$("[col-id='dsname'] .ag-header-cell-filter-button");
 
         // Check if filter icon exists (column may not have filtering enabled)
         if (!(await filterIcon.isExisting())) {
