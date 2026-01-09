@@ -557,10 +557,17 @@ export class DatasetTableViewPage {
         const filterPopup = await this.browser.$(".ag-filter-menu");
         await filterPopup.waitForDisplayed({ timeout: 5000 });
         const filterInput = await filterPopup.$("input");
-        await filterInput.waitForDisplayed({ timeout: 5000 });
+        await filterInput.waitForClickable({ timeout: 5000 });
 
-        // Use keyboard to select all and delete (clearValue doesn't trigger filter update)
+        // Explicitly click and focus the input before clearing to prevent keystrokes (clearValue doesn't trigger filter update)
+        // from going to the editor if focus shifted away during test execution
+        await filterInput.click();
+
+        await this.browser.pause(50);
+
         await this.browser.keys([process.platform !== "darwin" ? "Control" : "Command", "a"]);
+
+        // Now send Backspace to delete the selected text
         await this.browser.keys(["Backspace"]);
 
         // Verify the value was actually cleared before submitting
