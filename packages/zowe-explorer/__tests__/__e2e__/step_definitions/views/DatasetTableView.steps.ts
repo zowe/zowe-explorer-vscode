@@ -250,7 +250,17 @@ When("the user selects one or more rows", async function () {
 
 When("the user selects a PDS dataset", async function () {
     const page = await getTableViewPage(this);
+
+    // Clear filter first to show all rows, then clear selections to deselect any hidden rows
+    await page.clearColumnFilter();
+    await browser.pause(500); // Wait for all rows to be visible
     await page.clearSelections();
+
+    // Reapply filter for PDS and wait for UI to settle
+    if (testInfo.pds) {
+        await page.setColumnFilter(testInfo.pds);
+    }
+    await browser.pause(300);
 
     const pdsSelected = await page.selectRow(/^PO/, testInfo.pds);
     await expect(pdsSelected).toBe(true);

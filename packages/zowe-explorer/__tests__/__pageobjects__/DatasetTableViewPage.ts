@@ -307,10 +307,27 @@ export class DatasetTableViewPage {
      * Clears all row selections using the "select all" checkbox.
      */
     public async clearSelections(): Promise<void> {
-        const checkbox = await this.selectAllCheckbox;
-        await checkbox.waitForClickable();
-        await checkbox.click(); // Select all
-        await checkbox.click(); // Deselect all
+        // Keep clicking the select-all checkbox until no rows are selected
+        await this.browser.waitUntil(
+            async () => {
+                try {
+                    const selectedRows = await this.browser.$$(".ag-row.ag-row-selected");
+                    if (selectedRows.length === 0) {
+                        return true;
+                    }
+
+                    // Still have selected rows, click the checkbox to toggle
+                    const checkbox = await this.selectAllCheckbox;
+                    await checkbox.waitForClickable({ timeout: 2000 });
+                    await checkbox.click();
+                    await this.browser.pause(200);
+                    return false;
+                } catch {
+                    return false;
+                }
+            },
+            { timeout: 10000, timeoutMsg: "Could not clear all row selections" }
+        );
     }
 
     /**
@@ -375,7 +392,10 @@ export class DatasetTableViewPage {
                         if (patternMatches && nameMatches) {
                             const checkbox = await freshRows[i].$(".ag-selection-checkbox");
                             await checkbox.click();
-                            return true;
+                            // Verify the row is actually selected before returning
+                            await this.browser.pause(100);
+                            const rowClass = await freshRows[i].getAttribute("class");
+                            return rowClass.includes("ag-row-selected");
                         }
                     }
                 } catch {
@@ -383,7 +403,7 @@ export class DatasetTableViewPage {
                 }
                 return false;
             },
-            { timeout: 10000, timeoutMsg: `Could not find and select a row with dsorg matching ${dsorgPattern}` }
+            { timeoutMsg: `Could not find and select a row with dsorg matching ${dsorgPattern}` }
         );
     }
 
@@ -479,17 +499,33 @@ export class DatasetTableViewPage {
      */
     public async setColumnFilter(filterText: string): Promise<void> {
         // Click on the dsname column header's filter icon to open the filter popup
+        // The filter input is automatically focused when the popup opens
         const filterIcon = await this.browser.$("[col-id='dsname'] .ag-header-cell-filter-button");
         await filterIcon.waitForClickable({ timeout: 5000 });
         await filterIcon.click();
 
-        // Wait for filter popup to appear and enter the filter text
-        const filterInput = await this.browser.$(".ag-filter-body input[type='text'], .ag-text-field-input");
+        // Wait for filter popup and input to be ready before typing
+        const filterPopup = await this.browser.$(".ag-filter-menu");
+        await filterPopup.waitForDisplayed({ timeout: 5000 });
+        const filterInput = await filterPopup.$("input");
         await filterInput.waitForDisplayed({ timeout: 5000 });
         await filterInput.setValue(filterText);
 
-        // Press Enter to apply the filter and close the popup
+        // Verify the value was actually set before submitting
+        await this.browser.waitUntil(
+            async () => {
+                const value = await filterInput.getValue();
+                return value === filterText;
+            },
+            { timeout: 5000, timeoutMsg: `Filter input value was not set to "${filterText}"` }
+        );
+
+        // Press Enter to apply the filter
         await this.browser.keys(["Enter"]);
+
+        // Click outside the filter popup to close it
+        const tableBody = await this.browser.$(".ag-body");
+        await tableBody.click();
 
         // Wait for filter to be applied by checking that at least one row exists
         await this.browser.waitUntil(
@@ -506,6 +542,7 @@ export class DatasetTableViewPage {
      */
     public async clearColumnFilter(): Promise<void> {
         // Click on the dsname column header's filter icon
+        // The filter input is automatically focused when the popup opens
         const filterIcon = await this.browser.$("[col-id='dsname'] .ag-header-cell-filter-button");
 
         // Check if filter icon exists (column may not have filtering enabled)
@@ -516,13 +553,31 @@ export class DatasetTableViewPage {
         await filterIcon.waitForClickable({ timeout: 5000 });
         await filterIcon.click();
 
-        // Wait for filter popup to appear
-        const filterInput = await this.browser.$(".ag-filter-body input[type='text'], .ag-text-field-input");
+        // Wait for filter popup and input to be ready before interacting
+        const filterPopup = await this.browser.$(".ag-filter-menu");
+        await filterPopup.waitForDisplayed({ timeout: 5000 });
+        const filterInput = await filterPopup.$("input");
         await filterInput.waitForDisplayed({ timeout: 5000 });
 
-        // Clear the input and apply
-        await filterInput.clearValue();
+        // Use keyboard to select all and delete (clearValue doesn't trigger filter update)
+        await this.browser.keys(["Control", "a"]);
+        await this.browser.keys(["Backspace"]);
+
+        // Verify the value was actually cleared before submitting
+        await this.browser.waitUntil(
+            async () => {
+                const value = await filterInput.getValue();
+                return value === "";
+            },
+            { timeout: 5000, timeoutMsg: "Filter input value was not cleared" }
+        );
+
+        // Press Enter to apply the cleared filter
         await this.browser.keys(["Enter"]);
+
+        // Click outside the filter popup to close it
+        const tableBody = await this.browser.$(".ag-body");
+        await tableBody.click();
 
         // Wait for rows to be displayed after clearing filter
         await this.browser.waitUntil(
@@ -589,6 +644,7 @@ export class DatasetTableViewPage {
             async () => {
                 try {
                     // Re-open the webview frame to get fresh content after Focus click
+                    await this.ensureMainFrame();
                     await this.open();
                     return await this.isInMembersView();
                 } catch {
@@ -596,7 +652,6 @@ export class DatasetTableViewPage {
                 }
             },
             {
-                timeout: 15000,
                 timeoutMsg: "Not in members view - title does not contain 'Members of'",
             }
         );
@@ -606,18 +661,33 @@ export class DatasetTableViewPage {
      * Expands the first PDS node to view members inline.
      */
     public async expandFirstPds(): Promise<void> {
+        // Find an expand icon and wait for it to be clickable
+        const icons = await this.browser.waitUntil(
+            async () => {
+                const found = await this.expandIcons;
+                return found.length > 0 ? found : null;
+            },
+            { timeout: 10000, timeoutMsg: "Could not find expand icon" }
+        );
+
+        await icons[0].waitForClickable({ timeout: 5000 });
+
+        // Small pause to ensure event listeners are attached
+        await this.browser.pause(200);
+
+        await icons[0].click();
+
+        // Wait for the expand to actually happen (chevron changes to down)
         await this.browser.waitUntil(
             async () => {
                 try {
-                    const icons = await this.expandIcons;
-                    if (icons.length === 0) return false;
-                    await icons[0].click();
-                    return true;
+                    const expandedIcons = await this.browser.$$(".ag-row .codicon-chevron-down");
+                    return expandedIcons.length > 0;
                 } catch {
                     return false;
                 }
             },
-            { timeout: 10000, timeoutMsg: "Could not find and click expand icon" }
+            { timeout: 10000, timeoutMsg: "PDS did not expand after clicking (no chevron-down found)" }
         );
     }
 
