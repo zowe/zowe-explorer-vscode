@@ -123,6 +123,7 @@ export class DatasetTableViewPage {
         await this.ensureMainFrame();
 
         // Open the webview with retry logic that verifies content is actually loaded
+        let webviewIndex = 0;
         await this.browser.waitUntil(
             async () => {
                 try {
@@ -131,23 +132,7 @@ export class DatasetTableViewPage {
                     const webviews = await freshWorkbench.getAllWebviews();
                     if (webviews.length === 0) return false;
 
-                    let tableView = null;
-                    for (const webview of webviews) {
-                        try {
-                            const title = await webview.getTitle();
-                            if (title === "Table View") {
-                                tableView = webview;
-                                break;
-                            }
-                        } catch {
-                            continue;
-                        }
-                    }
-
-                    // Fall back to first webview if no title match
-                    if (!tableView) {
-                        tableView = webviews[0];
-                    }
+                    let tableView = webviews[webviewIndex];
 
                     await tableView.wait();
                     await tableView.open();
@@ -155,7 +140,10 @@ export class DatasetTableViewPage {
                     // Verify we're actually inside the webview by checking for the table-view container
                     // This catches cases where the frame switch succeeded but content isn't rendered
                     const container = await this.browser.$(".table-view");
-                    return await container.isExisting();
+                    if (await container.isExisting()) {
+                        return true;
+                    }
+                    webviewIndex = (webviewIndex + 1) % webviews.length;
                 } catch {
                     // Stale element, frame switch failed, or content not ready - retry from main frame
                     await this.ensureMainFrame();
