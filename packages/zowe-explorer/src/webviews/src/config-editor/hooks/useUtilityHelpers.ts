@@ -19,7 +19,6 @@ import {
     getProfileType,
     getRenamedProfileKeyWithNested,
     isPropertySecure,
-    flattenProfiles,
 } from "../utils";
 import { hasPendingRename } from "../utils/renameUtils";
 import { getWizardTypeOptions } from "../utils/schemaUtils";

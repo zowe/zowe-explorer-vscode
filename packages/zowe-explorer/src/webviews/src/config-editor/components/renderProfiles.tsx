@@ -114,44 +114,38 @@ export const RenderProfiles = ({
 
       // Get profile keys in original order from the configuration
       // For natural sort order, we need to preserve the exact order from the original configuration
-        // Callback for getOrderedProfileKeys to handle deletion logic
-        const checkIsProfileOrParentDeleted = (qualifiedKey: string, deletedProfilesList: string[]) => {
-           // First check if the profile itself is deleted
-           if (isProfileOrParentDeleted(qualifiedKey, deletedProfilesList)) {
-             // But check if this profile has been renamed away from being a child of a deleted parent
-             const renamedKey = getRenamedProfileKeyWithNested(qualifiedKey, configPath, renames);
+      // Callback for getOrderedProfileKeys to handle deletion logic
+      const checkIsProfileOrParentDeleted = (qualifiedKey: string, deletedProfilesList: string[]) => {
+        // First check if the profile itself is deleted
+        if (isProfileOrParentDeleted(qualifiedKey, deletedProfilesList)) {
+          // But check if this profile has been renamed away from being a child of a deleted parent
+          const renamedKey = getRenamedProfileKeyWithNested(qualifiedKey, configPath, renames);
 
-             // If the renamed version is different and doesn't have deleted parents, don't exclude it
-             if (renamedKey !== qualifiedKey && !isProfileOrParentDeleted(renamedKey, deletedProfilesList)) {
-               return false;
-             }
-             return true;
-           }
-           return false;
-        };
+          // If the renamed version is different and doesn't have deleted parents, don't exclude it
+          if (renamedKey !== qualifiedKey && !isProfileOrParentDeleted(renamedKey, deletedProfilesList)) {
+            return false;
+          }
+          return true;
+        }
+        return false;
+      };
 
-        // Get ordered profile keys using imported utility and callback
-        const orderedProfileKeys = getOrderedProfileKeys(profilesObj, "", deletedProfiles, checkIsProfileOrParentDeleted);
+      // Get ordered profile keys using imported utility and callback
+      const orderedProfileKeys = getOrderedProfileKeys(profilesObj, "", deletedProfiles, checkIsProfileOrParentDeleted);
 
-        // Process profile keys using extracted utilities
-        const uniqueRenamedProfileKeys = applyRenamesToProfileKeys(orderedProfileKeys, configPath, renames);
+      // Process profile keys using extracted utilities
+      const uniqueRenamedProfileKeys = applyRenamesToProfileKeys(orderedProfileKeys, configPath, renames);
 
-        const renamedPendingProfileKeys = mergePendingProfileKeys(
-            pendingProfiles,
-            configPath,
-            renames,
-            deletions,
-            uniqueRenamedProfileKeys
-        );
+      const renamedPendingProfileKeys = mergePendingProfileKeys(pendingProfiles, configPath, renames, deletions, uniqueRenamedProfileKeys);
 
-        const filteredOriginalKeys = filterConflictingProfileKeys(
-            uniqueRenamedProfileKeys,
-            renamedPendingProfileKeys,
-            pendingProfiles,
-            deletions,
-            configPath,
-            renames
-        );
+      const filteredOriginalKeys = filterConflictingProfileKeys(
+        uniqueRenamedProfileKeys,
+        renamedPendingProfileKeys,
+        pendingProfiles,
+        deletions,
+        configPath,
+        renames
+      );
 
       let finalProfileKeys: string[];
 

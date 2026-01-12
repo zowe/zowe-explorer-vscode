@@ -157,10 +157,8 @@ export function ProfileWizardModal({
 
   const filteredParentProfiles = availableProfiles.filter((profile) => {
     const displayName = profile === "root" ? "/ (root)" : profile;
-    const isCurrentSelection =
-      wizardRootProfile && parentProfileSearch === (wizardRootProfile === "root" ? "/ (root)" : wizardRootProfile);
-    const matchesSearch =
-      parentProfileSearch === "" || isCurrentSelection || displayName.toLowerCase().includes(parentProfileSearch.toLowerCase());
+    const isCurrentSelection = wizardRootProfile && parentProfileSearch === (wizardRootProfile === "root" ? "/ (root)" : wizardRootProfile);
+    const matchesSearch = parentProfileSearch === "" || isCurrentSelection || displayName.toLowerCase().includes(parentProfileSearch.toLowerCase());
     const isValidParent = !isInvalidParentProfile(profile, wizardProfileName);
     return matchesSearch && isValidParent;
   });

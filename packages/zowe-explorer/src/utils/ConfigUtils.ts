@@ -69,7 +69,6 @@ export class ConfigUtils {
         for (const profileName of profileNames) {
             const profile = profiles[profileName];
 
-
             // Handle secure properties for current profile
             if (profile.secure && profile.properties) {
                 const secureKeys = profile.secure;

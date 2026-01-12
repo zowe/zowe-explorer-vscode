@@ -115,7 +115,19 @@ Then("the profile tree should contain expected profiles from zowe.config.json", 
         if (profileName) foundProfiles.push(profileName);
     }
 
-    const expectedTreeTitles = ["zosmf1", "zosmf2", "zosmf3", "base", "ssh1", "tso1", "zosmf-dev", "zosmf-prod", "test-profile", "special-chars", "nested"];
+    const expectedTreeTitles = [
+        "zosmf1",
+        "zosmf2",
+        "zosmf3",
+        "base",
+        "ssh1",
+        "tso1",
+        "zosmf-dev",
+        "zosmf-prod",
+        "test-profile",
+        "special-chars",
+        "nested",
+    ];
     for (const title of expectedTreeTitles) {
         expect(foundProfiles).toContain(title);
     }
@@ -162,7 +174,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json", 
                 expect(flatProfiles).toContain(title);
             }
             expect(flatProfiles.length).toBe(expectedFlatTitles.length);
-            
+
             await viewToggleButton.click();
             await browser.pause(50);
             await browser.waitUntil(
@@ -194,7 +206,7 @@ When("the user switches to flat view mode", async function () {
     const profileList = await browser.$("[data-testid='profile-list']");
     await profileList.waitForExist({ timeout: 1000 });
     const currentMode = await profileList.getAttribute("data-view-mode");
-    
+
     if (currentMode !== "flat") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
         await viewToggleButton.waitForExist({ timeout: 1000 });
@@ -219,7 +231,7 @@ When("the user switches to tree view mode", async function () {
     const profileList = await browser.$("[data-testid='profile-list']");
     await profileList.waitForExist({ timeout: 1000 });
     const currentMode = await profileList.getAttribute("data-view-mode");
-    
+
     if (currentMode !== "tree") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
         await viewToggleButton.waitForExist({ timeout: 1000 });

@@ -96,20 +96,14 @@ export function useProfileWizard({
     const getWizardTypeOptions = () => getTypeOptions(selectedTab, configurations, schemaValidations, pendingChanges);
     const getWizardPropertyOptions = () => getPropertyOptions(selectedTab, configurations, schemaValidations, wizardSelectedType, wizardProperties);
     const getWizardPropertyDescriptions = () => getPropertyDescriptions(selectedTab, configurations, schemaValidations, wizardSelectedType);
-    const getPropertyType = (propertyKey: string) => getSchemaPropertyType(propertyKey, selectedTab, configurations, schemaValidations, wizardSelectedType);
+    const getPropertyType = (propertyKey: string) =>
+        getSchemaPropertyType(propertyKey, selectedTab, configurations, schemaValidations, wizardSelectedType);
 
     const isProfileNameTaken = () => {
         if (!wizardProfileName.trim() || selectedTab === null) return false;
         const configPath = configurations[selectedTab].configPath;
         const config = configurations[selectedTab].properties;
-        return checkProfileNameTaken(
-            wizardProfileName,
-            wizardRootProfile,
-            configPath,
-            config.profiles,
-            pendingChanges,
-            renames
-        );
+        return checkProfileNameTaken(wizardProfileName, wizardRootProfile, configPath, config.profiles, pendingChanges, renames);
     };
 
     const handleWizardAddProperty = () => {
@@ -326,8 +320,6 @@ export function useProfileWizard({
         const propertySchema = schemaValidations[configPath]?.propertySchema[wizardSelectedType] || {};
 
         const existingKeys = new Set(wizardProperties.map((prop) => prop.key));
-
-
 
         const newProperties: { key: string; value: string | boolean | number | Object; secure?: boolean }[] = [];
         const populatedKeys = new Set<string>();

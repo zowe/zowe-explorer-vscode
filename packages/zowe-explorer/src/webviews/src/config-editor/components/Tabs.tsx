@@ -12,7 +12,8 @@ interface TabsProps {
 }
 
 export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchemaFile, onAddNewConfig, onToggleAutostore }: TabsProps) {
-  const { configurations, selectedTab, pendingChanges, autostoreChanges, renames, deletions, pendingDefaults, defaultsDeletions } = useConfigContext();
+  const { configurations, selectedTab, pendingChanges, autostoreChanges, renames, deletions, pendingDefaults, defaultsDeletions } =
+    useConfigContext();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabIndex: number } | null>(null);
 
   const getRevealText = () => {
