@@ -11,8 +11,36 @@
 
 import { extractProfileKeyFromPath, flattenProfiles } from "./configUtils";
 import { getProfileType } from "./profileUtils";
-import { PendingChange } from "./configUtils";
-import { schemaValidation, Configuration } from "./profileUtils";
+import { PendingChange, Configuration, schemaValidation } from "../types";
+
+/**
+ * Internal helper to get property type from schema based on profile type.
+ * Centralizes the common logic used by both getPropertyTypeForAddProfile and getPropertyTypeForConfigEditor.
+ */
+function getPropertyTypeFromSchema(
+    propertyKey: string,
+    profileType: string | null,
+    configPath: string,
+    schemaValidations: { [configPath: string]: schemaValidation | undefined }
+): string | undefined {
+    if (profileType) {
+        const propertySchema = schemaValidations[configPath]?.propertySchema[profileType] || {};
+        return propertySchema[propertyKey]?.type;
+    }
+
+    const schemaValidation = schemaValidations[configPath];
+    if (schemaValidation?.propertySchema) {
+        for (const type in schemaValidation.propertySchema) {
+            const propertySchema = schemaValidation.propertySchema[type];
+            if (propertySchema[propertyKey]?.type) {
+                return propertySchema[propertyKey].type;
+            }
+        }
+    }
+
+    return undefined;
+}
+
 export function getPropertyTypeForAddProfile(
     propertyKey: string,
     selectedTab: number | null,
@@ -25,24 +53,10 @@ export function getPropertyTypeForAddProfile(
 ): string | undefined {
     if (selectedTab === null) return undefined;
 
-    const currentProfileType = selectedProfileKey ? getProfileTypeFn(selectedProfileKey, selectedTab, configurations, pendingChanges, renames) : null;
-    if (currentProfileType) {
-        const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[currentProfileType] || {};
-        return propertySchema[propertyKey]?.type;
-    }
-
     const configPath = configurations[selectedTab].configPath;
-    const schemaValidation = schemaValidations[configPath];
-    if (schemaValidation?.propertySchema) {
-        for (const profileType in schemaValidation.propertySchema) {
-            const propertySchema = schemaValidation.propertySchema[profileType];
-            if (propertySchema[propertyKey]?.type) {
-                return propertySchema[propertyKey].type;
-            }
-        }
-    }
+    const currentProfileType = selectedProfileKey ? getProfileTypeFn(selectedProfileKey, selectedTab, configurations, pendingChanges, renames) : null;
 
-    return undefined;
+    return getPropertyTypeFromSchema(propertyKey, currentProfileType, configPath, schemaValidations);
 }
 
 export function getPropertyTypeForConfigEditor(
@@ -57,26 +71,11 @@ export function getPropertyTypeForConfigEditor(
 ): string | undefined {
     if (selectedTab === null) return undefined;
 
+    const configPath = configurations[selectedTab].configPath;
     const profileKey = extractProfileKeyFromPath(profilePath);
     const resolvedType = getProfileTypeFn(profileKey, selectedTab, configurations, pendingChanges, renames);
 
-    if (resolvedType) {
-        const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[resolvedType] || {};
-        return propertySchema[propertyKey]?.type;
-    }
-
-    const configPath = configurations[selectedTab].configPath;
-    const schemaValidation = schemaValidations[configPath];
-    if (schemaValidation?.propertySchema) {
-        for (const profileType in schemaValidation.propertySchema) {
-            const propertySchema = schemaValidation.propertySchema[profileType];
-            if (propertySchema[propertyKey]?.type) {
-                return propertySchema[propertyKey].type;
-            }
-        }
-    }
-
-    return undefined;
+    return getPropertyTypeFromSchema(propertyKey, resolvedType, configPath, schemaValidations);
 }
 
 export function getPropertyDescriptions(
@@ -184,15 +183,7 @@ export function fetchTypeOptions(
  * @returns true if the key represents a file path property, false otherwise
  */
 export function isFileProperty(key: string): boolean {
-    if (!key || typeof key !== "string") {
-        return false;
-    }
-
-    const filePaths = ["privateKey", "certFile", "certKeyFile"];
-    for (const path of filePaths) {
-        if (key.toLowerCase() === path.toLowerCase()) {
-            return true;
-        }
-    }
-    return false;
+    if (!key || typeof key !== "string") return false;
+    const filePaths = ["privatekey", "certfile", "certkeyfile"];
+    return filePaths.includes(key.toLowerCase());
 }

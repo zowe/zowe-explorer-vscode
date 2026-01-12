@@ -10,7 +10,7 @@
  */
 
 import { ConfigEditorProfileOperations } from "../../../../src/utils/ConfigEditorProfileOperations";
-import { ConfigMoveAPI, IConfigLayer } from "../../../../src/webviews/src/config-editor/utils/MoveUtils";
+import { ConfigMoveAPI, IConfigLayer } from "../../../../src/webviews/src/config-editor/types";
 
 // Mock console.warn to avoid noise in tests
 const originalConsoleWarn = console.warn;

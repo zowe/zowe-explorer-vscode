@@ -15,7 +15,20 @@ export * from "./propertyUtils";
 export * from "./generalUtils";
 export * from "./sortingUtils";
 
-export type { schemaValidation } from "./profileUtils";
+export type {
+    Configuration,
+    PendingChange,
+    PendingDefault,
+    PendingChanges,
+    FlattenedConfig,
+    PropertySortOrder,
+    ProfileSortOrder,
+    MergedPropertiesVisibility,
+    ConfigEditorSettings,
+    ConfigMoveAPI,
+    IConfigLayer,
+    schemaValidation,
+} from "../types";
 export {
     getProfileType,
     getRenamedProfileKey,
@@ -37,7 +50,6 @@ export {
     extractPendingProfiles,
     isProfileOrParentDeleted,
     getAvailableProfilesByType,
-
     getProfileTypeFromPath,
     getOrderedProfileKeys,
     applyRenamesToProfileKeys,

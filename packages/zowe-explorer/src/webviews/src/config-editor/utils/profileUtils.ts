@@ -10,25 +10,7 @@
  */
 
 import { flattenProfiles, extractProfileKeyFromPath, pathFromArray } from "./configUtils";
-import { PendingChange } from "./configUtils";
-export interface Configuration {
-    configPath: string;
-    properties: any;
-    secure: string[];
-    global?: boolean;
-    user?: boolean;
-    schemaPath?: string;
-}
-
-export interface PendingDefault {
-    value: string;
-    path: string[];
-}
-
-export interface schemaValidation {
-    propertySchema: { [key: string]: any };
-    validDefaults: string[];
-}
+import { Configuration, PendingChange, schemaValidation } from "../types";
 
 export function getProfileType(
     profileKey: string,

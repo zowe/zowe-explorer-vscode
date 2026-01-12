@@ -9,7 +9,7 @@
  *
  */
 
-import { ProfileSortOrder } from "./generalUtils";
+import { ProfileSortOrder } from "../types";
 
 export function sortProfilesAtLevel(profileKeys: string[], profileSortOrder: ProfileSortOrder | null): string[] {
     const currentProfileSortOrder = profileSortOrder || "natural";

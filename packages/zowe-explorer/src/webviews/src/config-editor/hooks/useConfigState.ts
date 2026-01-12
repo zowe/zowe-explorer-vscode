@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { schemaValidation } from "../../../../utils/ConfigSchemaHelpers";
-import { Configuration, PendingChange, PendingDefault, ConfigEditorSettings } from "../types";
+import { Configuration, PendingChange, PendingDefault, ConfigEditorSettings, schemaValidation } from "../types";
 
 export function useConfigState(vscodeApi: any) {
     const [configurations, setConfigurations] = useState<Configuration[]>([]);
@@ -19,7 +18,6 @@ export function useConfigState(vscodeApi: any) {
     const [selectedProfileKey, setSelectedProfileKey] = useState<string | null>(null);
     const [selectedProfilesByConfig, setSelectedProfilesByConfig] = useState<{ [configPath: string]: string | null }>({});
     const [mergedProperties, setMergedProperties] = useState<any>(null);
-
     const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
 
     const [configEditorSettings, setConfigEditorSettings] = useState<ConfigEditorSettings>({

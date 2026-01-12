@@ -6,10 +6,8 @@
  * SPDX-License-Identifier: EPL-2.0
  *
  * Copyright Contributors to the Zowe Project.
- *
  */
 
-// Types
 export type Configuration = {
     configPath: string;
     properties: any;
@@ -26,18 +24,26 @@ export type PendingChange = {
     secure?: boolean;
 };
 
+export type PendingChanges = {
+    [configPath: string]: {
+        [key: string]: PendingChange;
+    };
+};
+
 export type PendingDefault = {
     value: string;
     path: string[];
 };
 
-// Property sort order options
-export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-first";
+export interface FlattenedConfig {
+    [key: string]: { value: string; path: string[] };
+}
 
-// Profile sort order options
+export type { schemaValidation } from "../../../utils/ConfigSchemaHelpers";
+
+export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-first";
 export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
 
-// Merged properties visibility options
 export type MergedPropertiesVisibility = "show" | "hide" | "unfiltered";
 
 export interface ConfigEditorSettings {
@@ -48,4 +54,17 @@ export interface ConfigEditorSettings {
     profilesWidthPercent: number;
     defaultsCollapsed: boolean;
     profilesCollapsed: boolean;
+}
+
+export interface ConfigMoveAPI {
+    get: (path: string) => any;
+    set: (path: string, value: any) => void;
+    delete: (path: string) => void;
+}
+
+export interface IConfigLayer {
+    properties: {
+        profiles: { [key: string]: any };
+        defaults?: { [key: string]: string };
+    };
 }

@@ -9,7 +9,7 @@
  *
  */
 
-import { ConfigMoveAPI, IConfigLayer } from "../webviews/src/config-editor/utils/MoveUtils";
+import { ConfigMoveAPI, IConfigLayer } from "../webviews/src/config-editor/types";
 
 export class ConfigEditorProfileOperations {
     /**

@@ -9,22 +9,8 @@
  *
  */
 
-export interface FlattenedConfig {
-    [key: string]: { value: string; path: string[] };
-}
-
-export interface PendingChange {
-    value: string | number | boolean | Record<string, any>;
-    path: string[];
-    profile: string;
-    secure?: boolean;
-}
-
-export interface PendingChanges {
-    [configPath: string]: {
-        [key: string]: PendingChange;
-    };
-}
+import { FlattenedConfig, PendingChange, PendingChanges } from "../types";
+export type { FlattenedConfig, PendingChange, PendingChanges };
 
 export function flattenKeys(obj: { [key: string]: any }, parentKey: string = ""): FlattenedConfig {
     let result: FlattenedConfig = {};

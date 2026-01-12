@@ -10,26 +10,7 @@
  */
 
 import { flattenProfiles } from "./configUtils";
-
-interface Configuration {
-    configPath: string;
-    properties: any;
-    secure: string[];
-    global?: boolean;
-    user?: boolean;
-}
-
-interface PendingChange {
-    value: string | number | boolean | Record<string, any>;
-    path: string[];
-    profile: string;
-    secure?: boolean;
-}
-
-interface SchemaValidation {
-    propertySchema: { [key: string]: any };
-    validDefaults: string[];
-}
+import { Configuration, PendingChange, schemaValidation } from "../types";
 
 /**
  * Gets available profile type options from schema and existing profiles.
@@ -37,7 +18,7 @@ interface SchemaValidation {
 export function getWizardTypeOptions(
     selectedTab: number | null,
     configurations: Configuration[],
-    schemaValidations: { [configPath: string]: SchemaValidation | undefined },
+    schemaValidations: { [configPath: string]: schemaValidation | undefined },
     pendingChanges: { [configPath: string]: { [key: string]: PendingChange } }
 ): string[] {
     if (selectedTab === null) return [];
@@ -78,7 +59,7 @@ export function getWizardTypeOptions(
 export function getWizardPropertyOptions(
     selectedTab: number | null,
     configurations: Configuration[],
-    schemaValidations: { [configPath: string]: SchemaValidation | undefined },
+    schemaValidations: { [configPath: string]: schemaValidation | undefined },
     wizardSelectedType: string,
     wizardProperties: { key: string; value: string | boolean | number | Object; secure?: boolean }[]
 ): string[] {
@@ -113,7 +94,7 @@ export function getWizardPropertyOptions(
 export function getWizardPropertyDescriptions(
     selectedTab: number | null,
     configurations: Configuration[],
-    schemaValidations: { [configPath: string]: SchemaValidation | undefined },
+    schemaValidations: { [configPath: string]: schemaValidation | undefined },
     wizardSelectedType: string
 ): { [key: string]: string } {
     if (selectedTab === null) return {};
@@ -152,7 +133,7 @@ export function getPropertyType(
     propertyKey: string,
     selectedTab: number | null,
     configurations: Configuration[],
-    schemaValidations: { [configPath: string]: SchemaValidation | undefined },
+    schemaValidations: { [configPath: string]: schemaValidation | undefined },
     wizardSelectedType: string
 ): string | undefined {
     if (selectedTab === null) return undefined;

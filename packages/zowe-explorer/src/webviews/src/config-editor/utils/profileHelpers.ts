@@ -9,28 +9,9 @@
  *
  */
 
-import { getProfileType } from "./profileUtils";
-
-export interface Configuration {
-    configPath: string;
-    properties: any;
-    secure: string[];
-    global?: boolean;
-    user?: boolean;
-    schemaPath?: string;
-}
-
-export interface PendingChange {
-    value: string | number | boolean | Record<string, any>;
-    path: string[];
-    profile: string;
-    secure?: boolean;
-}
-
-export interface PendingDefault {
-    value: string;
-    path: string[];
-}
+import { getProfileType, getOriginalProfileKeyWithNested } from "./profileUtils";
+import { Configuration, PendingChange, PendingDefault } from "../types";
+export type { Configuration, PendingChange, PendingDefault };
 
 export function isProfileDefault(
     profileKey: string,
@@ -92,20 +73,4 @@ export function isCurrentProfileUntyped(
     if (!selectedProfileKey) return false;
     const profileType = getProfileType(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
     return !profileType || profileType.trim() === "";
-}
-
-function getOriginalProfileKeyWithNested(
-    profileKey: string,
-    configPath: string,
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): string {
-    const configRenames = renames[configPath] || {};
-
-    for (const [originalKey, newKey] of Object.entries(configRenames)) {
-        if (newKey === profileKey) {
-            return originalKey;
-        }
-    }
-
-    return profileKey;
 }

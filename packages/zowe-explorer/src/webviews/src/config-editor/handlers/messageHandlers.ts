@@ -10,15 +10,8 @@
  */
 
 import { flattenKeys } from "../utils";
-import { schemaValidation } from "../../../../utils/ConfigSchemaHelpers";
-
-// Types
-import type { Configuration, PendingChange, PendingDefault } from "../types";
-
-// LocalStorage key for config editor settings
+import type { Configuration, PendingChange, PendingDefault, schemaValidation } from "../types";
 const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
-
-// Message handler props interface
 export interface MessageHandlerProps {
     // State setters
     setConfigurations: React.Dispatch<React.SetStateAction<Configuration[]>>;
@@ -88,10 +81,7 @@ export const handleConfigurationsMessage = (data: any, props: MessageHandlerProp
     } = props;
 
     const { contents, secureValuesAllowed } = data;
-    
-    // Capture the previous configurations BEFORE updating the ref
     const previousConfigurations = configurationsRef.current;
-    
     setConfigurations(contents);
     const newSecureValuesAllowed = secureValuesAllowed !== undefined ? secureValuesAllowed : true;
     setSecureValuesAllowed(newSecureValuesAllowed);
@@ -120,16 +110,16 @@ export const handleConfigurationsMessage = (data: any, props: MessageHandlerProp
         // Check if a new configuration was added by comparing paths
         const previousLength = previousConfigurations.length;
         const newLength = contents.length;
-        
+
         setSelectedTab((prevSelectedTab) => {
             // If a new configuration was added, find and select it
             if (newLength > previousLength && newLength > 0) {
                 // Get the set of previous config paths
                 const previousPaths = new Set(previousConfigurations.map((c: any) => c.configPath));
-                
+
                 // Find the new configuration that wasn't in the previous set
                 const newConfigIndex = contents.findIndex((config: any) => !previousPaths.has(config.configPath));
-                
+
                 // If we found the new configuration, select it
                 if (newConfigIndex !== -1) {
                     return newConfigIndex;
@@ -309,18 +299,6 @@ export const handleLocalStorageValueMessage = (data: any, props: MessageHandlerP
     }
 };
 
-// Handle LOCAL_STORAGE_SET_SUCCESS message
-export const handleLocalStorageSetSuccessMessage = (_props: MessageHandlerProps) => {
-    // Handle successful localStorage value setting (optional - for debugging)
-    // Currently no action needed
-};
-
-// Handle LOCAL_STORAGE_ERROR message
-export const handleLocalStorageErrorMessage = (_props: MessageHandlerProps) => {
-    // Handle localStorage errors (optional - for debugging)
-    // Currently no action needed
-};
-
 // Handle RELOAD message
 export const handleReloadMessage = (props: MessageHandlerProps) => {
     const {
@@ -399,12 +377,6 @@ export const handleMessage = (event: MessageEvent, props: MessageHandlerProps) =
             break;
         case "LOCAL_STORAGE_VALUE":
             handleLocalStorageValueMessage(event.data, props);
-            break;
-        case "LOCAL_STORAGE_SET_SUCCESS":
-            handleLocalStorageSetSuccessMessage(props);
-            break;
-        case "LOCAL_STORAGE_ERROR":
-            handleLocalStorageErrorMessage(props);
             break;
         case "RELOAD":
             handleReloadMessage(props);

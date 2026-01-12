@@ -10,8 +10,8 @@
  */
 
 import * as l10n from "@vscode/l10n";
-export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-first";
-export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
+import { PropertySortOrder, ProfileSortOrder } from "../types";
+export type { PropertySortOrder, ProfileSortOrder };
 
 export function getSortOrderDisplayName(sortOrder: PropertySortOrder): string {
     switch (sortOrder) {

@@ -11,19 +11,7 @@
 
 // @ts-ignore
 import { get, set } from "lodash";
-
-export interface ConfigMoveAPI {
-    get: (path: string) => any;
-    set: (path: string, value: any) => void;
-    delete: (path: string) => void;
-}
-
-export interface IConfigLayer {
-    properties: {
-        profiles: { [key: string]: any };
-        defaults?: { [key: string]: string };
-    };
-}
+import { ConfigMoveAPI, IConfigLayer } from "../types";
 
 export function moveProfile(api: ConfigMoveAPI, layerActive: () => IConfigLayer, sourcePath: string, targetPath: string): void {
     const sourceProfile = api.get(sourcePath);
