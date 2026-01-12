@@ -837,6 +837,14 @@ export class DatasetActions {
             return;
         }
 
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+        if (!mvsApi.downloadAllMembers) {
+            Gui.errorMessage(
+                vscode.l10n.t("The downloadAllMembers API is not supported for this profile type. Please contact the extension developer.")
+            );
+            return;
+        }
+
         const children = await node.getChildren();
         if (!children || children.length === 0) {
             Gui.showMessage(vscode.l10n.t("The selected data set has no members to download."));
@@ -918,7 +926,7 @@ export class DatasetActions {
                     responseTimeout: profile?.profile?.responseTimeout,
                 };
 
-                const response = await ZoweExplorerApiRegister.getMvsApi(profile).downloadAllMembers(datasetName, downloadOptions);
+                const response = await mvsApi.downloadAllMembers(datasetName, downloadOptions);
                 return { response, downloadedPath: generatedFileDirectory };
             },
             vscode.l10n.t("Data set members"),

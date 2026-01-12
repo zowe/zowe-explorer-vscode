@@ -28,7 +28,6 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfileManagement } from "../../management/ProfileManagement";
 import { Definitions } from "../../configuration/Definitions";
-import { Definitions } from "../../configuration/Definitions";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
 import { USSUtils } from "./USSUtils";
 
@@ -734,6 +733,14 @@ export class USSActions {
 
         const profile = node.getProfile();
 
+        const ussApi = ZoweExplorerApiRegister.getUssApi(profile);
+        if (!ussApi.downloadDirectory) {
+            Gui.errorMessage(
+                vscode.l10n.t("The downloadDirectory API is not supported for this profile type. Please contact the extension developer.")
+            );
+            return;
+        }
+
         const downloadOptions = await USSActions.getUssDownloadOptions(node, true);
         if (!downloadOptions) {
             Gui.showMessage(vscode.l10n.t("Operation cancelled"));
@@ -835,7 +842,7 @@ export class USSActions {
                         return;
                     }
 
-                    const response = await ZoweExplorerApiRegister.getUssApi(profile).downloadDirectory(node.fullPath, options, listOptions);
+                    const response = await ussApi.downloadDirectory(node.fullPath, options, listOptions);
                     void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"), directoryPath);
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
