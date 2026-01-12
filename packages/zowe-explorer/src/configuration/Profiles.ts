@@ -243,35 +243,7 @@ export class Profiles extends ProfilesCache {
         }
 
         if (node !== undefined) {
-            const toolTipList = (node.tooltip as string)?.split("\n") ?? [];
-
-            const autoStoreValue = (await this.getProfileInfo()).getTeamConfig().properties.autoStore ?? true;
-            const autoStoreIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auto Store: ")));
-            if (autoStoreIndex === -1) {
-                toolTipList.push(`${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()}`);
-            } else {
-                toolTipList[autoStoreIndex] = `${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()}`;
-            }
-
-            const layers = await this.uniqueExistingLayers();
-            const configFileIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Config File: ")));
-            if (configFileIndex === -1) {
-                toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")}`);
-            } else {
-                toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
-                    layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
-                }`;
-            }
-
-            const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
-            const secureCredentialsIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Secure Credentials Enabled: ")));
-            if (secureCredentialsIndex === -1) {
-                toolTipList.push(`${vscode.l10n.t("Secure Credentials Enabled: ")}${isSecureCredsEnabled.toString()}`);
-            } else {
-                toolTipList[secureCredentialsIndex] = `${vscode.l10n.t("Secure Credentials Enabled: ")}${isSecureCredsEnabled.toString()}`;
-            }
-
-            node.tooltip = toolTipList.join("\n");
+            await this.updateProfileHoverInfo(node);
         }
 
         // Profile should have enough information to allow validation
@@ -292,6 +264,38 @@ export class Profiles extends ProfilesCache {
                 break;
         }
         return profileStatus;
+    }
+
+    public async updateProfileHoverInfo(node: Types.IZoweNodeType): Promise<void> {
+        const toolTipList = (node.tooltip as string)?.split("\n") ?? [];
+
+        const autoStoreValue = (await this.getProfileInfo()).getTeamConfig().properties.autoStore ?? true;
+        const autoStoreIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auto Store: ")));
+        if (autoStoreIndex === -1) {
+            toolTipList.push(`${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()}`);
+        } else {
+            toolTipList[autoStoreIndex] = `${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()}`;
+        }
+
+        const layers = await this.uniqueExistingLayers();
+        const configFileIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Config File: ")));
+        if (configFileIndex === -1) {
+            toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")}`);
+        } else {
+            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
+                layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+            }`;
+        }
+
+        const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
+        const secureCredentialsIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Secure Credentials Enabled: ")));
+        if (secureCredentialsIndex === -1) {
+            toolTipList.push(`${vscode.l10n.t("Secure Credentials Enabled: ")}${isSecureCredsEnabled.toString()}`);
+        } else {
+            toolTipList[secureCredentialsIndex] = `${vscode.l10n.t("Secure Credentials Enabled: ")}${isSecureCredsEnabled.toString()}`;
+        }
+
+        node.tooltip = toolTipList.join("\n");
     }
 
     public async getProfileSetting(theProfile: imperative.IProfileLoaded): Promise<Validation.IValidationProfile> {

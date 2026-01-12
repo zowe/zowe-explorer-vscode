@@ -66,6 +66,7 @@
   "uss.text": "Toggle Text",
   "uss.filterBy": "Search by Directory",
   "uss.setUssPath": "Filter USS by Path",
+  "ds.setDatasetFilter": "Filter Data Sets by Pattern",
   "uss.cd": "Go Up One Level",
   "jobs.search": "Search Jobs",
   "deleteJob": "Delete Job",

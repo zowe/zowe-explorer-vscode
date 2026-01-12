@@ -628,8 +628,15 @@ export class SharedUtils {
 
             const volsAreEqual = srcVols.length === dstVols.length && srcVols.every((vol: any, idx: number) => vol === dstVols[idx]);
 
-            // if both name and vols match, they're the same dataset
-            return namesAreEqual && volsAreEqual;
+            // Hostname comparison is used as a best-effort check to determine whether
+            // source and destination profiles point to the same z/OS system. In cases where
+            // one profile connects via API ML and the other connects directly to the service,
+            // the hostnames may differ even though they resolve to the same backend system.
+            // This limitation is known and accepted for this comparison.
+            const systemIsEqual = srcProfile.profile?.host === dstProfile.profile?.host;
+
+            // if name, vols and host match, they're the same dataset
+            return namesAreEqual && volsAreEqual && systemIsEqual;
         } catch (err) {
             // fallback to not being same data set
             return false;
