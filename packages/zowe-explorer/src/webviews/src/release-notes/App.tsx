@@ -28,6 +28,7 @@ export function App(): JSX.Element {
   const [dropdownOptions, setDropdownOptions] = useState<Record<string, string>>({});
   const [versionOptions, setVersionOptions] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"releaseNotes" | "changelog">("releaseNotes");
+  const [l10nReady, setL10nReady] = useState<boolean>(false);
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -36,6 +37,15 @@ export function App(): JSX.Element {
       }
 
       if (!event.data) {
+        return;
+      }
+
+      if (event.data.command === "GET_LOCALIZATION") {
+        const { contents } = event.data;
+        if (contents) {
+          l10n.config({ contents });
+        }
+        setL10nReady(true);
         return;
       }
 
@@ -60,6 +70,7 @@ export function App(): JSX.Element {
         setVersionOptions(versionOptions);
       }
     });
+    PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "GET_LOCALIZATION" });
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
   }, []);
 
@@ -78,8 +89,72 @@ export function App(): JSX.Element {
   const rewriteImageUrls = (markdown: string) =>
     markdown.replace(/!\[([^\]]*)\]\(\.\/resources\/release-notes\/([^)]+)\)/g, `![$1](${RESOURCES_BASE}/$2)`);
 
+  const cleanTextForL10n = (text: string): string => {
+    return text
+      .replace(/!\[[^\]]*\]\([^)]+\)/g, "") // Remove images
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Remove link URLs but keep text
+      .replace(/```[\s\S]*?```/g, "") // Remove code blocks
+      .replace(/`([^`]+)`/g, "$1") // Remove inline code backticks but keep content
+      .replace(/\s+/g, " ") // Normalize whitespace
+      .trim();
+  };
+
+  /**
+   * Basically does the same thing as parseReleaseNotes in generateReleaseNotesL10n.js
+   */
+  const localizeMarkdown = (markdown: string): string => {
+    if (!l10nReady) {
+      return markdown;
+    }
+
+    const lines = markdown.split("\n");
+    const result: string[] = [];
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      if (trimmed === "" || /^!\[[^\]]*\]\([^)]+\)$/.test(trimmed)) {
+        result.push(line);
+        continue;
+      }
+
+      const sectionMatch = trimmed.match(/^### (.+)$/);
+      if (sectionMatch) {
+        const originalText = sectionMatch[1];
+        const cleanedText = cleanTextForL10n(originalText);
+        const localizedText = l10n.t(cleanedText);
+        result.push(`### ${localizedText}`);
+        continue;
+      }
+
+      const listMatch = trimmed.match(/^([-*])\s+(.+)$/);
+      if (listMatch) {
+        const bullet = listMatch[1];
+        const originalText = listMatch[2];
+        const cleanedText = cleanTextForL10n(originalText);
+        const localizedText = l10n.t(cleanedText);
+        result.push(`${bullet} ${localizedText}`);
+        continue;
+      }
+
+      if (trimmed && !trimmed.startsWith("##")) {
+        const cleanedText = cleanTextForL10n(trimmed);
+        if (cleanedText) {
+          const localizedText = l10n.t(cleanedText);
+          result.push(localizedText);
+          continue;
+        }
+      }
+
+      result.push(line);
+    }
+
+    return result.join("\n");
+  };
+
   const renderMarkdown = (markdown: string) => {
-    const withResources = rewriteImageUrls(markdown);
+    const localized = localizeMarkdown(markdown);
+    const withResources = rewriteImageUrls(localized);
     // @ts-expect-error marked may return a Promise, but I know it can't be here
     const rawHtml: string = marked(withResources);
     return DOMPurify.sanitize(rawHtml);

@@ -1,250 +1,233 @@
 {
-  "Enter command here...": "Enter command here...",
-  "Page Size:": "Page Size:",
-  "Page": "Page",
-  "No": "No",
-  "items": "items",
-  "item": "item",
-  "selected": "selected",
-  "What's New in Zowe Explorer {0}": "What's New in Zowe Explorer {0}",
-  "You can find the latest updates and features here.": "You can find the latest updates and features here.",
-  "Select the version to display release notes for": "Select the version to display release notes for",
-  "Display release notes after an update": "Display release notes after an update",
-  "Release Notes": "Release Notes",
-  "Changelog": "Changelog",
-  "Loading release notes...": "Loading release notes...",
-  "Loading changelog...": "Loading changelog...",
-  "Data Sets": "Data Sets",
-  "Unix System Services (USS)": "Unix System Services (USS)",
-  "Jobs": "Jobs",
-  "Refresh": "Refresh",
-  "Search History": "Search History",
-  "Favorites": "Favorites",
-  "File History": "File History",
-  "Sessions": "Sessions",
-  "Encoding History": "Encoding History",
-  "Search Keyword History": "Search Keyword History",
-  "Delete Selected": "Delete Selected",
-  "Select an item before deleting": "Select an item before deleting",
-  "Delete": "Delete",
-  "Clear All": "Clear All",
-  "Add New History Item": "Add New History Item",
-  "Add": "Add",
-  "No records found": "No records found",
-  "Item": "Item",
-  "Select": "Select",
-  "Last refreshed:": "Last refreshed:",
-  "Manage Persistent Properties": "Manage Persistent Properties",
-  "Read": "Read",
-  "Write": "Write",
-  "Execute": "Execute",
-  "User": "User",
-  "Group": "Group",
-  "All": "All",
-  "File Properties": "File Properties",
-  "Tag": "Tag",
-  "Owner": "Owner",
-  "Apply changes": "Apply changes",
-  "The API does not support updating attributes for this": "The API does not support updating attributes for this",
-  "Waiting for data from extension...": "Waiting for data from extension...",
-  "Log in to Authentication Service": "Log in to Authentication Service",
-  "Select a certificate and certificate key in PEM format:": "Select a certificate and certificate key in PEM format:",
-  "Value": "Value",
+  "'{0}' not found in directory '{1}'/Item nameDirectory path": {
+    "message": "'{0}' not found in directory '{1}'",
+    "comment": [
+      "Item name",
+      "Directory path"
+    ]
+  },
+  "(default)": "(default)",
+  "[{0}] Members of {1}/Profile namePDS name": {
+    "message": "[{0}] Members of {1}",
+    "comment": [
+      "Profile name",
+      "PDS name"
+    ]
+  },
+  "[{0}]: {1}/Profile NameData Set Search Pattern": {
+    "message": "[{0}]: {1}",
+    "comment": [
+      "Profile Name",
+      "Data Set Search Pattern"
+    ]
+  },
+  "[{0}]: *": "[{0}]: *",
+  "{0} location/Node type": {
+    "message": "{0} location",
+    "comment": [
+      "Node type"
+    ]
+  },
+  "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
+  "{0} was created like {1}./New Data Set nameLike Data Set name": {
+    "message": "{0} was created like {1}.",
+    "comment": [
+      "New Data Set name",
+      "Like Data Set name"
+    ]
+  },
+  "**Behavior:** Each command opens a dedicated terminal panel (for example, only MVS commands in the MVS terminal).": "**Behavior:** Each command opens a dedicated terminal panel (for example, only MVS commands in the MVS terminal).",
+  "**Enable:** Go to Zowe Explorer settings and check **Use Integrated Terminals**.": "**Enable:** Go to Zowe Explorer settings and check **Use Integrated Terminals**.",
+  "**Features:**": "**Features:**",
+  "**Features:** Reorder columns, filter and sort on columns, choose visible columns, and select multiple jobs for bulk cancel, delete, or download.": "**Features:** Reorder columns, filter and sort on columns, choose visible columns, and select multiple jobs for bulk cancel, delete, or download.",
+  "**How it works:**": "**How it works:**",
+  "**Note:** Sorting is only applied within each page, while the overall member list is fetched by alphabetical, ascending order.": "**Note:** Sorting is only applied within each page, while the overall member list is fetched by alphabetical, ascending order.",
+  "**Open the table:**": "**Open the table:**",
+  "**Open the table:** Right-click a filtered jobs profile and select **Show as Table**.": "**Open the table:** Right-click a filtered jobs profile and select **Show as Table**.",
+  "**Open:** Right-click a profile in Data Sets, USS, or Jobs tree and select an **Issue x Command** option.": "**Open:** Right-click a profile in Data Sets, USS, or Jobs tree and select an **Issue x Command** option.",
+  "**Row actions:** Right-click a data set to:": "**Row actions:** Right-click a data set to:",
+  "**Row actions:** Right-click a job to:": "**Row actions:** Right-click a job to:",
+  "**Search options:**": "**Search options:**",
+  "/u/username/directory": "/u/username/directory",
+  "$(plus) Create a new Unix command": "$(plus) Create a new Unix command",
+  "A {0} already exists with this name. Please choose a different name./Node type": {
+    "message": "A {0} already exists with this name. Please choose a different name.",
+    "comment": [
+      "Node type"
+    ]
+  },
+  "A search must be set for {0} before it can be added to a workspace./Name of USS session": {
+    "message": "A search must be set for {0} before it can be added to a workspace.",
+    "comment": [
+      "Name of USS session"
+    ]
+  },
+  "Account Number": "Account Number",
+  "action is not supported for this property type.": "action is not supported for this property type.",
   "Actions": "Actions",
-  "Certificate File": "Certificate File",
-  "Browse": "Browse",
-  "Certificate Key File": "Certificate Key File",
-  "Submit": "Submit",
-  "Cancel": "Cancel",
-  "Troubleshoot Error": "Troubleshoot Error",
-  "rename": "rename",
-  "No release notes found for this version.": "No release notes found for this version.",
-  "No changelog entries found for this version.": "No changelog entries found for this version.",
-  "No {0} entries found for this version.": "No {0} entries found for this version.",
-  "Zowe Explorer profiles are being set as unsecured.": "Zowe Explorer profiles are being set as unsecured.",
-  "Zowe Explorer profiles are being set as secured.": "Zowe Explorer profiles are being set as secured.",
-  "Custom credential manager failed to activate": "Custom credential manager failed to activate",
-  "Custom credential manager {0} found, attempting to activate./Credential manager display name": {
-    "message": "Custom credential manager {0} found, attempting to activate.",
-    "comment": [
-      "Credential manager display name"
-    ]
-  },
-  "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager.": "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager.",
-  "Reload window": "Reload window",
-  "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.": "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.",
-  "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
-  "Applied credential manager options from imperative.json to default credential manager": "Applied credential manager options from imperative.json to default credential manager",
-  "Custom credential manager {0} found/Credential manager display name": {
-    "message": "Custom credential manager {0} found",
-    "comment": [
-      "Credential manager display name"
-    ]
-  },
-  "Do you wish to use this credential manager instead?": "Do you wish to use this credential manager instead?",
-  "Yes": "Yes",
-  "Don't ask again": "Don't ask again",
-  "Plugin of name '{0}' was defined for custom credential management on imperative.json file./Credential manager display name": {
-    "message": "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
-    "comment": [
-      "Credential manager display name"
-    ]
-  },
-  "Please install associated VS Code extension for custom credential manager or revert to default.": "Please install associated VS Code extension for custom credential manager or revert to default.",
-  "Use Default": "Use Default",
-  "Install": "Install",
+  "Active jobs in the **JOBS** tree can now be set to poll for job completion. Right-click on a filtered jobs profile, select **Start Polling Active Jobs**, and enter the desired poll interval. The default poll interval can be set in the Zowe Explorer settings under **Zowe > Jobs > Poll Interval**. The minimum interval is 1000ms.": "Active jobs in the **JOBS** tree can now be set to poll for job completion. Right-click on a filtered jobs profile, select **Start Polling Active Jobs**, and enter the desired poll interval. The default poll interval can be set in the Zowe Explorer settings under **Zowe > Jobs > Poll Interval**. The minimum interval is 1000ms.",
+  "Active jobs in the filtered profile automatically refresh at the specified interval and any new jobs matching the filter automatically appear. When a job completes, it shows a notification message with the job name and return code.": "Active jobs in the filtered profile automatically refresh at the specified interval and any new jobs matching the filter automatically appear. When a job completes, it shows a notification message with the job name and return code.",
+  "Add": "Add",
+  "Add Credentials": "Add Credentials",
+  "Add data sets, USS profiles, or USS directories to a VS Code workspace to group resources from different locations. Right-click a data set, USS profile, or USS directory and select **Add to workspace**.": "Add data sets, USS profiles, or USS directories to a VS Code workspace to group resources from different locations. Right-click a data set, USS profile, or USS directory and select **Add to workspace**.",
+  "Add New History Item": "Add New History Item",
+  "Add to workspace": "Add to workspace",
+  "Add username and password for basic authentication": "Add username and password for basic authentication",
+  "Adding new data set template {0}.": "Adding new data set template {0}.",
+  "Advanced data set copy and paste": "Advanced data set copy and paste",
   "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager": "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager",
-  "Reload": "Reload",
-  "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.",
-  "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.": "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
-  "Create New": "Create New",
-  "Connection Name": "Connection Name",
-  "Enter a name for the connection.": "Enter a name for the connection.",
-  "Operation cancelled": "Operation cancelled",
-  "Credentials for {0} were successfully updated/Profile name": {
-    "message": "Credentials for {0} were successfully updated",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "User: ": "User: ",
-  "Zowe home directory is located at {0}/Zowe directory path": {
-    "message": "Zowe home directory is located at {0}",
-    "comment": [
-      "Zowe directory path"
-    ]
-  },
-  "Reading imperative.json failed. Will try to create file.": "Reading imperative.json failed. Will try to create file.",
-  "Reading imperative.json credential manager.\n {0}/File content": {
-    "message": "Reading imperative.json credential manager.\n {0}",
-    "comment": [
-      "File content"
-    ]
-  },
-  "Failed to parse JSON file {0}. Will try to re-create the file./Settings file": {
-    "message": "Failed to parse JSON file {0}. Will try to re-create the file.",
-    "comment": [
-      "Settings file"
-    ]
-  },
-  "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
-    "message": "Updating imperative.json credential manager to {0}.\n{1}",
-    "comment": [
-      "Default credential override setting",
-      "New credential override setting"
-    ]
-  },
-  "Failed to initialize Zowe folder: {0}/Error message": {
-    "message": "Failed to initialize Zowe folder: {0}",
-    "comment": [
-      "Error message"
-    ]
-  },
-  "Zowe profiles initialized successfully.": "Zowe profiles initialized successfully.",
-  "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles.": "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles.",
-  "Convert existing profiles": "Convert existing profiles",
-  "Tree item is not a Zowe Explorer item.": "Tree item is not a Zowe Explorer item.",
-  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}/Error message": {
-    "message": "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
-    "comment": [
-      "Error message"
-    ]
-  },
-  "Zowe Explorer": "Zowe Explorer",
-  "Initialized logger for Zowe Explorer": "Initialized logger for Zowe Explorer",
-  "This log file can be found at {0}/Log file location": {
-    "message": "This log file can be found at {0}",
-    "comment": [
-      "Log file location"
-    ]
-  },
-  "Zowe Explorer log level: {0}/Log setting": {
-    "message": "Zowe Explorer log level: {0}",
-    "comment": [
-      "Log setting"
-    ]
-  },
-  "Update": "Update",
-  "Zowe Explorer now has a VS Code logger with a default log level of INFO.\n                \nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\n                \nWould you like Zowe Explorer to update to the the same log level?/CLI setting": {
-    "message": "Zowe Explorer now has a VS Code logger with a default log level of INFO.\n                \nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\n                \nWould you like Zowe Explorer to update to the the same log level?",
-    "comment": [
-      "CLI setting"
-    ]
-  },
+  "All": "All",
   "All Files": "All Files",
-  "User dismissed the Certificate Wizard.": "User dismissed the Certificate Wizard.",
-  "Certificate Wizard": "Certificate Wizard",
-  "Enter the path to the certificate for authenticating the connection.": "Enter the path to the certificate for authenticating the connection.",
+  "All jobs": "All jobs",
+  "all PDS members in {0}/Node label": {
+    "message": "all PDS members in {0}",
+    "comment": [
+      "Node label"
+    ]
+  },
+  "Allocate Data Set": "Allocate Data Set",
+  "Allocating data set like {0}./Like data set name": {
+    "message": "Allocating data set like {0}.",
+    "comment": [
+      "Like data set name"
+    ]
+  },
+  "Allocating new data set": "Allocating new data set",
+  "Also available for a PDS in the Favorites tree": "Also available for a PDS in the Favorites tree",
+  "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "An SSH profile will be used for issuing UNIX commands with the profile {0}.",
+  "Applied credential manager options from imperative.json to default credential manager": "Applied credential manager options from imperative.json to default credential manager",
+  "Apply changes": "Apply changes",
+  "Apply to all trees": "Apply to all trees",
+  "Apply to current tree selected": "Apply to current tree selected",
+  "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}/Job name": {
+    "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}",
+    "comment": [
+      "Job name"
+    ]
+  },
+  "Are you sure you want to search {0} data sets and members?/The number of data sets that are about to be searched": {
+    "message": "Are you sure you want to search {0} data sets and members?",
+    "comment": [
+      "The number of data sets that are about to be searched"
+    ]
+  },
+  "Are you sure you want to submit the following job?\n\n{0}/JCL name": {
+    "message": "Are you sure you want to submit the following job?\n\n{0}",
+    "comment": [
+      "JCL name"
+    ]
+  },
+  "Ascending": "Ascending",
+  "Attempting to allocate new data set": "Attempting to allocate new data set",
+  "Attributes": "Attributes",
+  "Auth Method: ": "Auth Method: ",
+  "Auto Store: ": "Auto Store: ",
+  "Auto-detect global team configuration": "Auto-detect global team configuration",
+  "Back": "Back",
+  "Basic Authentication": "Basic Authentication",
+  "Binary": "Binary",
+  "Browse": "Browse",
+  "Cancel": "Cancel",
+  "Cancelled selected jobs successfully.": "Cancelled selected jobs successfully.",
+  "Cannot delete, item invalid.": "Cannot delete, item invalid.",
+  "Cannot download, item invalid.": "Cannot download, item invalid.",
+  "Cannot drop a partitioned dataset or member into a sequential dataset.": "Cannot drop a partitioned dataset or member into a sequential dataset.",
+  "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.",
+  "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.": "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.",
+  "Cannot perform the copy operation as the data sets selected have different types": "Cannot perform the copy operation as the data sets selected have different types",
+  "Cannot submit, item invalid.": "Cannot submit, item invalid.",
+  "Cannot switch to token-based authentication for profile {0}.": "Cannot switch to token-based authentication for profile {0}.",
+  "Case Sensitive": "Case Sensitive",
+  "Case sensitive and regex searching": "Case sensitive and regex searching",
+  "Certificate Authentication": "Certificate Authentication",
+  "Certificate File": "Certificate File",
   "Certificate Files": "Certificate Files",
-  "Select Certificate": "Select Certificate",
+  "Certificate Key File": "Certificate Key File",
   "Certificate Key for Authentication.": "Certificate Key for Authentication.",
   "Certificate Keys": "Certificate Keys",
-  "Select Certificate Key": "Select Certificate Key",
-  "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
-  "Your available creds: {0}/Available credentials": {
-    "message": "Your available creds: {0}",
+  "Certificate Wizard": "Certificate Wizard",
+  "Change the Authentication Method": "Change the Authentication Method",
+  "Changelog": "Changelog",
+  "Changes in credential management detected, refreshing Zowe Explorer.": "Changes in credential management detected, refreshing Zowe Explorer.",
+  "Changes in the credential vault detected, refreshing Zowe Explorer.": "Changes in the credential vault detected, refreshing Zowe Explorer.",
+  "Changing authentication to basic was successful for profile {0}.": "Changing authentication to basic was successful for profile {0}.",
+  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
+  "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
+  "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",
+  "Choose a location to create the {0}/Node type": {
+    "message": "Choose a location to create the {0}",
     "comment": [
-      "Available credentials"
+      "Node type"
     ]
   },
-  "Your authOrder: {0}/Authentication order": {
-    "message": "Your authOrder: {0}",
+  "Choose encoding for {0}/Context label": {
+    "message": "Choose encoding for {0}",
     "comment": [
-      "Authentication order"
+      "Context label"
     ]
   },
-  "Selected auth type: {0}/Selected authentication method": {
-    "message": "Selected auth type: {0}",
+  "Choose encoding for {0}/Node label": {
+    "message": "Choose encoding for {0}",
     "comment": [
-      "Selected authentication method"
+      "Node label"
     ]
   },
-  "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Profile name": {
-    "message": "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
+  "Choose encoding for upload to {0}/Context label": {
+    "message": "Choose encoding for upload to {0}",
     "comment": [
-      "Profile name"
+      "Context label"
     ]
   },
-  "Auth Method: ": "Auth Method: ",
-  "Token-based Authentication": "Token-based Authentication",
-  "Basic Authentication": "Basic Authentication",
-  "Certificate Authentication": "Certificate Authentication",
-  "Unknown": "Unknown",
-  "Pattern: ": "Pattern: ",
-  "Path: ": "Path: ",
-  "Owner: ": "Owner: ",
-  "JobId: ": "JobId: ",
-  "Profile: ": "Profile: ",
-  "Profile Type: ": "Profile Type: ",
-  "Use the search button to list USS files": "Use the search button to list USS files",
-  "Invalid node": "Invalid node",
-  "Delete action was cancelled.": "Delete action was cancelled.",
-  "Unable to delete node: {0}/Error message": {
-    "message": "Unable to delete node: {0}",
+  "Choose the schema location(s) to update.": "Choose the schema location(s) to update.",
+  "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
+  "Class": "Class",
+  "Clear All": "Clear All",
+  "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
+  "Clear filter for PDS": "Clear filter for PDS",
+  "Clear filter for profile": "Clear filter for profile",
+  "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:": "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:",
+  "Click on parameters to change them": "Click on parameters to change them",
+  "Command response: {0}/Command response": {
+    "message": "Command response: {0}",
     "comment": [
-      "Error message"
+      "Command response"
     ]
   },
-  "The item {0} has been deleted./Label": {
-    "message": "The item {0} has been deleted.",
+  "Common API": "Common API",
+  "Config File: ": "Config File: ",
+  "Confirm": "Confirm",
+  "Connection Name": "Connection Name",
+  "Contents": "Contents",
+  "Continue": "Continue",
+  "Convert existing profiles": "Convert existing profiles",
+  "Copy job info as JSON": "Copy job info as JSON",
+  "Copying data set(s)": "Copying data set(s)",
+  "Copying data sets is not supported.": "Copying data sets is not supported.",
+  "Copying file structure...": "Copying file structure...",
+  "Copying member(s)": "Copying member(s)",
+  "copyName was called on USS node {0}, but its fullPath is invalid./USS node label": {
+    "message": "copyName was called on USS node {0}, but its fullPath is invalid.",
     "comment": [
-      "Label"
+      "USS node label"
     ]
   },
-  "openUSS() called from invalid node.": "openUSS() called from invalid node.",
-  "refreshUSS() called from invalid node.": "refreshUSS() called from invalid node.",
-  "not found": "not found",
-  "Unable to find file: {0}/Error message": {
-    "message": "Unable to find file: {0}",
+  "Create a new filter": "Create a new filter",
+  "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
+  "Create a new MVS command": "Create a new MVS command",
+  "Create a new TSO command": "Create a new TSO command",
+  "Create job search filter": "Create job search filter",
+  "Create New": "Create New",
+  "Create new...": "Create new...",
+  "Creating new data set member {0}/Data Set member name": {
+    "message": "Creating new data set member {0}",
     "comment": [
-      "Error message"
+      "Data Set member name"
     ]
   },
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.",
   "Uploading USS files...": "Uploading USS files...",
   "Error uploading files": "Error uploading files",
   "Retrieving response from USS list API": "Retrieving response from USS list API",
-  "Common API": "Common API",
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
   "Failed to move {0}/File path": {
     "message": "Failed to move {0}",
@@ -254,12 +237,6 @@
   },
   "Profile does not exist for this file.": "Profile does not exist for this file.",
   "Saving USS file...": "Saving USS file...",
-  "Failed to rename {0}/File path": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "File path"
-    ]
-  },
   "Failed to delete {0}/File name": {
     "message": "Failed to delete {0}",
     "comment": [
@@ -284,53 +261,62 @@
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
     "comment": [
-      "Download time"
+      "Profile name"
     ]
   },
-  "Encoding: {0}/Encoding name": {
-    "message": "Encoding: {0}",
+  "Current encoding is {0}/Encoding name": {
+    "message": "Current encoding is {0}",
     "comment": [
       "Encoding name"
     ]
   },
-  "Binary": "Binary",
-  "Create a new filter": "Create a new filter",
-  "Failed to move file {0}: {1}": "Failed to move file {0}: {1}",
-  "You must specify a directory before moving.": "You must specify a directory before moving.",
-  "Moving USS files...": "Moving USS files...",
-  "Enter a new name for the {0}/Node type": {
-    "message": "Enter a new name for the {0}",
+  "Current Records": "Current Records",
+  "Custom credential manager {0} found, attempting to activate./Credential manager display name": {
+    "message": "Custom credential manager {0} found, attempting to activate.",
     "comment": [
-      "Node type"
+      "Credential manager display name"
     ]
   },
-  "Unable to rename node:": "Unable to rename node:",
-  "A {0} already exists with this name. Please choose a different name./Node type": {
-    "message": "A {0} already exists with this name. Please choose a different name.",
+  "Custom credential manager {0} found/Credential manager display name": {
+    "message": "Custom credential manager {0} found",
     "comment": [
-      "Node type"
+      "Credential manager display name"
     ]
   },
-  "This will remove all favorited USS items for profile {0}. Continue?/Profile name": {
-    "message": "This will remove all favorited USS items for profile {0}. Continue?",
+  "Custom credential manager failed to activate": "Custom credential manager failed to activate",
+  "Data set {0} does not exist or cannot be opened.": "Data set {0} does not exist or cannot be opened.",
+  "Data set member {0} does not exist or cannot be opened in data set {1}.": "Data set member {0} does not exist or cannot be opened in data set {1}.",
+  "Data Set Name": "Data Set Name",
+  "Data Set Organization": "Data Set Organization",
+  "Data set searches now support case sensitivity and regular expressions. Enable these options in the Search PDS members Quick Pick dialog.": "Data set searches now support case sensitivity and regular expressions. Enable these options in the Search PDS members Quick Pick dialog.",
+  "Data Set Template Save Location": "Data Set Template Save Location",
+  "Data set tree pagination": "Data set tree pagination",
+  "Data set(s) moved successfully.": "Data set(s) moved successfully.",
+  "Data Sets": "Data Sets",
+  "Data sets and members can now be copied and pasted within or across LPARs. Drag and drop is also supported for moving items between locations. Permission and attribute edge cases are handled with clear error messages.": "Data sets and members can now be copied and pasted within or across LPARs. Drag and drop is also supported for moving items between locations. Permission and attribute edge cases are handled with clear error messages.",
+  "Data sets can now be searched for a string, similar to ISPF's SRCHFOR.": "Data sets can now be searched for a string, similar to ISPF's SRCHFOR.",
+  "Data sets can now be viewed in a table format, similar to the jobs table. The data sets table allows for easier filtering, sorting, and bulk actions on data sets and members.": "Data sets can now be viewed in a table format, similar to the jobs table. The data sets table allows for easier filtering, sorting, and bulk actions on data sets and members.",
+  "Data sets table": "Data sets table",
+  "Date Completed": "Date Completed",
+  "Date Created": "Date Created",
+  "Date Modified": "Date Modified",
+  "Date Submitted": "Date Submitted",
+  "Default encoding is {0}/Encoding name": {
+    "message": "Default encoding is {0}",
     "comment": [
-      "Profile name"
+      "Encoding name"
     ]
   },
-  "Continue": "Continue",
-  "Prompting the user to choose a member from the filtered list": "Prompting the user to choose a member from the filtered list",
-  "You are already at the root directory.": "You are already at the root directory.",
-  "Prompting the user for a USS path": "Prompting the user for a USS path",
-  "Select a filter or type to create a new one": "Select a filter or type to create a new one",
-  "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
-  "New filter": "New filter",
-  "Please enter a valid USS path.": "Please enter a valid USS path.",
-  "Initializing profiles with USS favorites.": "Initializing profiles with USS favorites.",
-  "No USS favorites found.": "No USS favorites found.",
-  "Loading profile: {0} for USS favorites/Profile name": {
-    "message": "Loading profile: {0} for USS favorites",
+  "Default sort order": "Default sort order",
+  "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.": "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions.",
+  "Delete": "Delete",
+  "Delete action was canceled.": "Delete action was canceled.",
+  "Delete action was cancelled.": "Delete action was cancelled.",
+  "Delete Selected": "Delete Selected",
+  "Deleting data set(s): {0}/Data Sets to delete": {
+    "message": "Deleting data set(s): {0}",
     "comment": [
-      "Profile name"
+      "Data Sets to delete"
     ]
   },
   "You must authenticate to view favorites.": "You must authenticate to view favorites.",
@@ -343,167 +329,40 @@
   "Remove": "Remove",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "Pulling from Mainframe...": "Pulling from Mainframe...",
-  "{0} location/Node type": {
-    "message": "{0} location",
+  "Error Details": "Error Details",
+  "Error encountered when creating data set.": "Error encountered when creating data set.",
+  "Error encountered when deleting data set. {0}/Stringified JSON error": {
+    "message": "Error encountered when deleting data set. {0}",
     "comment": [
-      "Node type"
+      "Stringified JSON error"
     ]
   },
-  "Choose a location to create the {0}/Node type": {
-    "message": "Choose a location to create the {0}",
+  "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.",
+  "Error encountered when refreshing data set view. {0}/Stringified JSON error": {
+    "message": "Error encountered when refreshing data set view. {0}",
     "comment": [
-      "Node type"
+      "Stringified JSON error"
     ]
   },
-  "Name of file or directory": "Name of file or directory",
-  "Unable to create node:": "Unable to create node:",
-  "Uploading file to USS tree": "Uploading file to USS tree",
-  "Upload action was cancelled.": "Upload action was cancelled.",
-  "This action is only supported for USS directories.": "This action is only supported for USS directories.",
-  "Uploading file...": "Uploading file...",
-  "Uploading USS file": "Uploading USS file",
-  "Uploading USS file with encoding": "Uploading USS file with encoding",
-  "Delete action was canceled.": "Delete action was canceled.",
-  "Copying file structure...": "Copying file structure...",
-  "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
-  "Pasting files...": "Pasting files...",
-  "copyName was called on USS node {0}, but its fullPath is invalid./USS node label": {
-    "message": "copyName was called on USS node {0}, but its fullPath is invalid.",
+  "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
+  "Error getting supported tokenType value for profile {0}/Service profile name": {
+    "message": "Error getting supported tokenType value for profile {0}",
     "comment": [
-      "USS node label"
+      "Service profile name"
     ]
   },
-  "No USS profiles found. Please add a profile first.": "No USS profiles found. Please add a profile first.",
-  "Select a profile": "Select a profile",
-  "Enter the USS path to filter on": "Enter the USS path to filter on",
-  "/u/username/directory": "/u/username/directory",
-  "Failed to filter USS tree: {0}/Error message": {
-    "message": "Failed to filter USS tree: {0}",
+  "Error polling job {0}: {1}/Job display nameError message": {
+    "message": "Error polling job {0}: {1}",
     "comment": [
+      "Job display name",
       "Error message"
     ]
   },
-  "USS path cannot be empty": "USS path cannot be empty",
-  "USS path must start with /": "USS path must start with /",
-  "Failed to reveal '{0}': {1}/Item nameError message": {
-    "message": "Failed to reveal '{0}': {1}",
+  "Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness.": "Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness.",
+  "Error toggling pin state for rows: {0}/Error message": {
+    "message": "Error toggling pin state for rows: {0}",
     "comment": [
-      "Item name",
       "Error message"
-    ]
-  },
-  "'{0}' not found in directory '{1}'/Item nameDirectory path": {
-    "message": "'{0}' not found in directory '{1}'",
-    "comment": [
-      "Item name",
-      "Directory path"
-    ]
-  },
-  "Invalid job owner": "Invalid job owner",
-  "Invalid job prefix": "Invalid job prefix",
-  "Failed to parse a saved favorite. Attempted to parse: {0}/Plaintext line": {
-    "message": "Failed to parse a saved favorite. Attempted to parse: {0}",
-    "comment": [
-      "Plaintext line"
-    ]
-  },
-  "EBCDIC": "EBCDIC",
-  "z/OS default codepage": "z/OS default codepage",
-  "Raw data representation": "Raw data representation",
-  "Other": "Other",
-  "Specify another codepage": "Specify another codepage",
-  "From profile {0}/Profile name": {
-    "message": "From profile {0}",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "USS file tag": "USS file tag",
-  "Choose encoding for {0}/Context label": {
-    "message": "Choose encoding for {0}",
-    "comment": [
-      "Context label"
-    ]
-  },
-  "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
-  "Choose encoding for upload to {0}/Context label": {
-    "message": "Choose encoding for upload to {0}",
-    "comment": [
-      "Context label"
-    ]
-  },
-  "Default encoding is {0}/Encoding name": {
-    "message": "Default encoding is {0}",
-    "comment": [
-      "Encoding name"
-    ]
-  },
-  "Choose encoding for {0}/Node label": {
-    "message": "Choose encoding for {0}",
-    "comment": [
-      "Node label"
-    ]
-  },
-  "Current encoding is {0}/Encoding name": {
-    "message": "Current encoding is {0}",
-    "comment": [
-      "Encoding name"
-    ]
-  },
-  "A search must be set for {0} before it can be added to a workspace./Name of USS session": {
-    "message": "A search must be set for {0} before it can be added to a workspace.",
-    "comment": [
-      "Name of USS session"
-    ]
-  },
-  "(default)": "(default)",
-  "Confirm": "Confirm",
-  "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
-  "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
-  "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
-  "Team config file updated, refreshing Zowe Explorer.": "Team config file updated, refreshing Zowe Explorer.",
-  "Changes in the credential vault detected, refreshing Zowe Explorer.": "Changes in the credential vault detected, refreshing Zowe Explorer.",
-  "Changes in credential management detected, refreshing Zowe Explorer.": "Changes in credential management detected, refreshing Zowe Explorer.",
-  "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
-  "Type the new pattern to add to history": "Type the new pattern to add to history",
-  "action is not supported for this property type.": "action is not supported for this property type.",
-  "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
-  "Enter a filter": "Enter a filter",
-  "No items are loaded in the tree.": "No items are loaded in the tree.",
-  "You must enter a pattern.": "You must enter a pattern.",
-  "Prompting the user to choose a recent member for editing": "Prompting the user to choose a recent member for editing",
-  "Select a recent member to open": "Select a recent member to open",
-  "Profile not found.": "Profile not found.",
-  "No recent members found.": "No recent members found.",
-  "Update Zowe configuration schema": "Update Zowe configuration schema",
-  "Choose the schema location(s) to update.": "Choose the schema location(s) to update.",
-  "Update Global schema only": "Update Global schema only",
-  "Update Global and Project level schemas": "Update Global and Project level schemas",
-  "Use the search button to display jobs": "Use the search button to display jobs",
-  "No spool files found": "No spool files found",
-  "No jobs found": "No jobs found",
-  "Retrieving response from JES list API": "Retrieving response from JES list API",
-  "Job ID": "Job ID",
-  "Date Submitted": "Date Submitted",
-  "Date Completed": "Date Completed",
-  "Job Name": "Job Name",
-  "Return Code": "Return Code",
-  "Sort Direction": "Sort Direction",
-  "Go to Local Filtering": "Go to Local Filtering",
-  "Clear filter for profile": "Clear filter for profile",
-  "Create new...": "Create new...",
-  "Submit this query": "Submit this query",
-  "Enter job owner ID": "Enter job owner ID",
-  "Enter job prefix": "Enter job prefix",
-  "Enter job status": "Enter job status",
-  "Create job search filter": "Create job search filter",
-  "Search by job ID": "Search by job ID",
-  "Initializing profiles with jobs favorites.": "Initializing profiles with jobs favorites.",
-  "No jobs favorites found.": "No jobs favorites found.",
-  "Loading profile: {0} for jobs favorites/Profile name": {
-    "message": "Loading profile: {0} for jobs favorites",
-    "comment": [
-      "Profile name"
     ]
   },
   "Error: You have Zowe job favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Jobs view.\n\nWould you like to do this now?/Profile name": {
@@ -512,44 +371,221 @@
       "Profile name"
     ]
   },
+  "Execute": "Execute",
+  "Failed to copy member {0}: {1}/Member nameError message": {
+    "message": "Failed to copy member {0}: {1}",
+    "comment": [
+      "Member name",
+      "Error message"
+    ]
+  },
+  "Failed to create {0}: {1}/Data set nameError message": {
+    "message": "Failed to create {0}: {1}",
+    "comment": [
+      "Data set name",
+      "Error message"
+    ]
+  },
+  "Failed to delete {0}/File path": {
+    "message": "Failed to delete {0}",
+    "comment": [
+      "File path"
+    ]
+  },
   "This will remove all favorited jobs items for profile {0}. Continue?/Profile name": {
     "message": "This will remove all favorited jobs items for profile {0}. Continue?",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Failed to initialize Zowe folder: {0}/Error message": {
+    "message": "Failed to initialize Zowe folder: {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Failed to list datasets": "Failed to list datasets",
+  "Failed to move {0}: {1}": "Failed to move {0}: {1}",
+  "Failed to move file {0}: {1}": "Failed to move file {0}: {1}",
+  "Failed to parse a saved favorite. Attempted to parse: {0}/Plaintext line": {
+    "message": "Failed to parse a saved favorite. Attempted to parse: {0}",
+    "comment": [
+      "Plaintext line"
+    ]
+  },
+  "Failed to parse JSON file {0}. Will try to re-create the file./Settings file": {
+    "message": "Failed to parse JSON file {0}. Will try to re-create the file.",
+    "comment": [
+      "Settings file"
+    ]
+  },
+  "Failed to read {0}/File path": {
+    "message": "Failed to read {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to rename {0}/Data set name": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "Data set name"
+    ]
+  },
+  "Failed to rename {0}/File path": {
+    "message": "Failed to rename {0}",
+    "comment": [
+      "File path"
+    ]
+  },
+  "Failed to reveal '{0}': {1}/Item nameError message": {
+    "message": "Failed to reveal '{0}': {1}",
+    "comment": [
+      "Item name",
+      "Error message"
+    ]
+  },
+  "Failed to save {0}/Data set name": {
+    "message": "Failed to save {0}",
+    "comment": [
+      "Data set name"
+    ]
+  },
+  "Failed to update Zowe schema: insufficient permissions or read-only file. {0}/Error message": {
+    "message": "Failed to update Zowe schema: insufficient permissions or read-only file. {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Favorites": "Favorites",
+  "Fetching data set...": "Fetching data set...",
+  "File History": "File History",
+  "File Properties": "File Properties",
+  "Filter cleared for {0}/Job label": {
+    "message": "Filter cleared for {0}",
+    "comment": [
+      "Job label"
+    ]
+  },
+  "Fetching spool file...": "Fetching spool file...",
+  "Failed to delete job {0}/Job name": {
+    "message": "Failed to delete job {0}",
+    "comment": [
+      "Node label"
+    ]
+  },
+  "Filter updated for {0}/Job label": {
+    "message": "Filter updated for {0}",
+    "comment": [
+      "Job label"
+    ]
+  },
+  "Filter updated for {0}/Node label": {
+    "message": "Filter updated for {0}",
+    "comment": [
+      "Node label"
+    ]
+  },
+  "Filter: {0}/Filter value": {
+    "message": "Filter: {0}",
+    "comment": [
+      "Filter value"
+    ]
+  },
+  "Filter: {0}/The new filter": {
+    "message": "Filter: {0}",
+    "comment": [
+      "The new filter"
+    ]
+  },
+  "Focus": "Focus",
+  "From profile {0}/Profile name": {
+    "message": "From profile {0}",
     "comment": [
       "Profile name"
     ]
   },
-  "Select a filter": "Select a filter",
-  "Enter a job ID": "Enter a job ID",
-  "Job search cancelled.": "Job search cancelled.",
-  "The polling interval must be greater than or equal to 1000ms.": "The polling interval must be greater than or equal to 1000ms.",
-  "Poll interval (in ms) for: {0}/URI path": {
-    "message": "Poll interval (in ms) for: {0}",
+  "Get JCL": "Get JCL",
+  "Getting data set templates.": "Getting data set templates.",
+  "Global": "Global",
+  "Global: in the Zowe home directory": "Global: in the Zowe home directory",
+  "Go to Local Filtering": "Go to Local Filtering",
+  "Group": "Group",
+  "Hide Profile": "Hide Profile",
+  "Hide profile name from tree view": "Hide profile name from tree view",
+  "Hovering over a data set, USS, or jobs profile now displays detailed connection information.": "Hovering over a data set, USS, or jobs profile now displays detailed connection information.",
+  "ID": "ID",
+  "If searching more than 50 members, a prompt displays to confirm or cancel.": "If searching more than 50 members, a prompt displays to confirm or cancel.",
+  "Improved USS filtering": "Improved USS filtering",
+  "Initial Records": "Initial Records",
+  "Initialized logger for Zowe Explorer": "Initialized logger for Zowe Explorer",
+  "Initializing profiles with jobs favorites.": "Initializing profiles with jobs favorites.",
+  "Initializing profiles with USS favorites.": "Initializing profiles with USS favorites.",
+  "Install": "Install",
+  "Insufficient read permissions for {0} in local storage./Local storage key": {
+    "message": "Insufficient read permissions for {0} in local storage.",
     "comment": [
-      "URI path"
+      "Local storage key"
     ]
   },
-  "Polling: {0}.../Unique spool name": {
-    "message": "Polling: {0}...",
+  "Insufficient write permissions for {0} in local storage./Local storage key": {
+    "message": "Insufficient write permissions for {0} in local storage.",
     "comment": [
-      "Unique spool name"
+      "Local storage key"
     ]
   },
-  "No active jobs found for session: {0}/Session label": {
-    "message": "No active jobs found for session: {0}",
+  "Integrated terminal": "Integrated terminal",
+  "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.": "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.",
+  "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.",
+  "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.",
+  "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.",
+  "Internal error: Tried to call a non-existing Command API in API register: {0}/Profile type": {
+    "message": "Internal error: Tried to call a non-existing Command API in API register: {0}",
     "comment": [
-      "Session label"
+      "Profile type"
     ]
   },
-  "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?/Number of active jobs": {
-    "message": "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?",
+  "Internal error: Tried to call a non-existing Common API in API register: {0}/Profile type": {
+    "message": "Internal error: Tried to call a non-existing Common API in API register: {0}",
     "comment": [
-      "Number of active jobs"
+      "Profile type"
     ]
   },
-  "Polling {0} active jobs.../Number of active jobs": {
-    "message": "Polling {0} active jobs...",
+  "Internal error: Tried to call a non-existing JES API in API register: {0}/Profile type": {
+    "message": "Internal error: Tried to call a non-existing JES API in API register: {0}",
     "comment": [
-      "Number of active jobs"
+      "Profile type"
+    ]
+  },
+  "Cannot drop a dataset member into a profile node.": "Cannot drop a dataset member into a profile node.",
+  "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
+  "Error creating data set favorite node: {0} for profile {1}./LabelProfile name": {
+    "message": "Error creating data set favorite node: {0} for profile {1}.",
+    "comment": [
+      "Profile type"
+    ]
+  },
+  "Internal error: Tried to call a non-existing USS API in API register: {0}/Profile type": {
+    "message": "Internal error: Tried to call a non-existing USS API in API register: {0}",
+    "comment": [
+      "Profile type"
+    ]
+  },
+  "Issuing UNIX commands is not supported for this profile type, {0}./Profile type": {
+    "message": "Issuing UNIX commands is not supported for this profile type, {0}.",
+    "comment": [
+      "Profile type"
+    ]
+  },
+  "item": "item",
+  "Item": "Item",
+  "Item invalid.": "Item invalid.",
+  "items": "items",
+  "JES API": "JES API",
+  "Job {0} completed - {1}/Job ID with clickable linkJob status": {
+    "message": "Job {0} completed - {1}",
+    "comment": [
+      "Job ID with clickable link",
+      "Job status"
     ]
   },
   "Job {0} completed - {1}/Job name and ID with clickable linkJob status": {
@@ -559,48 +595,42 @@
       "Job status"
     ]
   },
-  "No more active jobs for {0}. Stopping polling./Session label": {
-    "message": "No more active jobs for {0}. Stopping polling.",
+  "Job {0} was deleted./Job name": {
+    "message": "Job {0} was deleted.",
     "comment": [
-      "Session label"
+      "Job name"
     ]
   },
-  "Filter: {0}/The new filter": {
-    "message": "Filter: {0}",
-    "comment": [
-      "The new filter"
-    ]
-  },
-  "Set a filter...": "Set a filter...",
-  "Filter cleared for {0}/Job label": {
-    "message": "Filter cleared for {0}",
-    "comment": [
-      "Job label"
-    ]
-  },
-  "Enter local filter...": "Enter local filter...",
-  "Filter updated for {0}/Job label": {
-    "message": "Filter updated for {0}",
-    "comment": [
-      "Job label"
-    ]
-  },
-  "Get JCL": "Get JCL",
-  "Display in Tree": "Display in Tree",
-  "Download": "Download",
-  "Name": "Name",
-  "Class": "Class",
-  "ID": "ID",
-  "Status": "Status",
-  "Subsystem": "Subsystem",
-  "Type": "Type",
   "Job Correlator": "Job Correlator",
-  "Phase": "Phase",
-  "Phase Name": "Phase Name",
-  "Time Started": "Time Started",
-  "Time Submitted": "Time Submitted",
-  "Time Ended": "Time Ended",
-  "Error Details": "Error Details",
+  "Job ID": "Job ID",
+  "Job Name": "Job Name",
+  "Job search cancelled.": "Job search cancelled.",
+  "Job spool pagination": "Job spool pagination",
+  "Job submission failed.": "Job submission failed.",
+  "Job submitted {0} using profile {1}./Job IDProfile name": {
+    "message": "Job submitted {0} using profile {1}.",
+    "comment": [
+      "Job ID",
+      "Profile name"
+    ]
+  },
+  "Job submitted {0} using profile {1}./Job IDSession name": {
+    "message": "Job submitted {0} using profile {1}.",
+    "comment": [
+      "Job ID",
+      "Session name"
+    ]
+  },
+  "Job submitted: {0}/Job name and ID with set job command": {
+    "message": "Job submitted: {0}",
+    "comment": [
+      "Job name and ID with set job command"
+    ]
+  },
+  "jobActions.modifyCommand.apiNonExisting": "jobActions.modifyCommand.apiNonExisting",
+  "JobId: ": "JobId: ",
+  "Jobs": "Jobs",
+  "Jobs table": "Jobs table",
   "Jobs with ID: {0}/Job Search ID": {
     "message": "Jobs with ID: {0}",
     "comment": [
@@ -615,513 +645,204 @@
       "Job Status"
     ]
   },
-  "JES API": "JES API",
-  "Fetching spool file...": "Fetching spool file...",
-  "Failed to delete job {0}/Job name": {
-    "message": "Failed to delete job {0}",
-    "comment": [
-      "Job name"
-    ]
-  },
-  "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}/Job name": {
-    "message": "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}",
-    "comment": [
-      "Job name"
-    ]
-  },
-  "Job {0} was deleted./Job name": {
-    "message": "Job {0} was deleted.",
-    "comment": [
-      "Job name"
-    ]
-  },
-  "The following jobs were deleted: {0}{1}/Deleted jobs": {
-    "message": "The following jobs were deleted: {0}{1}",
-    "comment": [
-      "Deleted jobs"
-    ]
-  },
-  "Download single spool operation not implemented by extender. Please contact the extension developer(s).": "Download single spool operation not implemented by extender. Please contact the extension developer(s).",
-  "No spool files found for {0}/Spool node label": {
-    "message": "No spool files found for {0}",
-    "comment": [
-      "Spool node label"
-    ]
-  },
-  "Polling: {0}.../Document file name": {
-    "message": "Polling: {0}...",
-    "comment": [
-      "Document file name"
-    ]
-  },
-  "No document found": "No document found",
-  "Modify Command": "Modify Command",
-  "Command response: {0}/Command response": {
-    "message": "Command response: {0}",
-    "comment": [
-      "Command response"
-    ]
-  },
-  "jobActions.modifyCommand.apiNonExisting": "jobActions.modifyCommand.apiNonExisting",
-  "Not implemented yet for profile of type: {0}/Job profile type": {
-    "message": "Not implemented yet for profile of type: {0}",
-    "comment": [
-      "Job profile type"
-    ]
-  },
-  "Prefix": "Prefix",
-  "The selected jobs were already cancelled.": "The selected jobs were already cancelled.",
-  "The cancel function is not implemented in this API.": "The cancel function is not implemented in this API.",
-  "The job was not cancelled.": "The job was not cancelled.",
-  "One or more jobs failed to cancel: {0}/Failed to cancel jobs": {
-    "message": "One or more jobs failed to cancel: {0}",
-    "comment": [
-      "Failed to cancel jobs"
-    ]
-  },
-  "Cancelled selected jobs successfully.": "Cancelled selected jobs successfully.",
-  "Select a sorting option for jobs in {0}/Session label": {
-    "message": "Select a sorting option for jobs in {0}",
-    "comment": [
-      "Session label"
-    ]
-  },
-  "Select a sorting direction": "Select a sorting direction",
-  "Sorting updated for {0}/Session label": {
-    "message": "Sorting updated for {0}",
-    "comment": [
-      "Session label"
-    ]
-  },
-  "Use the search button to display data sets": "Use the search button to display data sets",
-  "The response from Zowe CLI was not successful": "The response from Zowe CLI was not successful",
-  "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
-  "No data sets found": "No data sets found",
-  "Previous page": "Previous page",
-  "Next page": "Next page",
-  "Retrieving response from MVS list API": "Retrieving response from MVS list API",
-  "Cannot download, item invalid.": "Cannot download, item invalid.",
-  "Date Created": "Date Created",
-  "Date Modified": "Date Modified",
-  "User ID": "User ID",
-  "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
-  "Failed to move {0}: {1}": "Failed to move {0}: {1}",
-  "Data set(s) moved successfully.": "Data set(s) moved successfully.",
-  "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.": "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.",
-  "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.": "Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset.",
-  "Cannot drop a partitioned dataset or member into a sequential dataset.": "Cannot drop a partitioned dataset or member into a sequential dataset.",
-  "Cannot drop a dataset member into a profile node.": "Cannot drop a dataset member into a profile node.",
-  "Moving MVS files...": "Moving MVS files...",
-  "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
-  "No data set favorites found.": "No data set favorites found.",
-  "Error creating data set favorite node: {0} for profile {1}./LabelProfile name": {
-    "message": "Error creating data set favorite node: {0} for profile {1}.",
-    "comment": [
-      "Label",
-      "Profile name"
-    ]
-  },
+  "Large job spool files now load faster by displaying a Load more… button at the bottom of the spool file to fetch additional lines as needed. For active jobs, use this button to retrieve new output without refreshing the **JOBS** tree. It is recommended to use the default keyboard shortcut Ctrl + L to quickly load more lines. The number of lines per page and the toggle for pagination can be configured in the settings under **Zowe > Jobs > Paginate**. The default is 100 lines per page.": "Large job spool files now load faster by displaying a Load more… button at the bottom of the spool file to fetch additional lines as needed. For active jobs, use this button to retrieve new output without refreshing the **JOBS** tree. It is recommended to use the default keyboard shortcut Ctrl + L to quickly load more lines. The number of lines per page and the toggle for pagination can be configured in the settings under **Zowe > Jobs > Paginate**. The default is 100 lines per page.",
+  "Last Modified By": "Last Modified By",
+  "Last refreshed:": "Last refreshed:",
+  "Loading changelog...": "Loading changelog...",
   "Loading profile: {0} for data set favorites/Profile name": {
     "message": "Loading profile: {0} for data set favorites",
     "comment": [
       "Profile name"
     ]
   },
-  "Error: You have Zowe data set favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n\nWould you like to do this now?/Profile name": {
-    "message": "Error: You have Zowe data set favorites that refer to a non-existent profile named: {0}.\nTo resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n\nWould you like to do this now?",
+  "Loading profile: {0} for jobs favorites/Profile name": {
+    "message": "Loading profile: {0} for jobs favorites",
     "comment": [
       "Profile name"
     ]
   },
-  "PDS already in favorites": "PDS already in favorites",
-  "This will remove all favorited data sets items for profile {0}. Continue?/Profile name": {
-    "message": "This will remove all favorited data sets items for profile {0}. Continue?",
+  "Loading profile: {0} for USS favorites/Profile name": {
+    "message": "Loading profile: {0} for USS favorites",
     "comment": [
       "Profile name"
     ]
   },
-  "Node does not exist. It may have been deleted.": "Node does not exist. It may have been deleted.",
-  "Prompting the user for a data set pattern": "Prompting the user for a data set pattern",
-  "Search data sets: use a comma to separate multiple patterns": "Search data sets: use a comma to separate multiple patterns",
-  "Enter valid member name": "Enter valid member name",
-  "Rename Operation cancelled.": "Rename Operation cancelled.",
-  "Renaming data set {0}/Old data set name": {
-    "message": "Renaming data set {0}",
+  "Loading release notes...": "Loading release notes...",
+  "Log in to Authentication Service": "Log in to Authentication Service",
+  "Log in to obtain a new token value": "Log in to obtain a new token value",
+  "Log out of Authentication Service": "Log out of Authentication Service",
+  "Log out to invalidate and remove stored token value": "Log out to invalidate and remove stored token value",
+  "Login to authentication service was successful for {0}./Service profile name": {
+    "message": "Login to authentication service was successful for {0}.",
     "comment": [
-      "Old data set name"
+      "Service profile name"
     ]
   },
-  "Enter a valid data set name.": "Enter a valid data set name.",
-  "all PDS members in {0}/Node label": {
-    "message": "all PDS members in {0}",
+  "Login using token-based authentication service was successful for profile {0}.": "Login using token-based authentication service was successful for profile {0}.",
+  "Logout from authentication service was successful for {0}./Service profile name": {
+    "message": "Logout from authentication service was successful for {0}.",
     "comment": [
-      "Node label"
+      "Service profile name"
     ]
   },
-  "the PDS members in {0}/Node label": {
-    "message": "the PDS members in {0}",
-    "comment": [
-      "Node label"
-    ]
-  },
-  "Select a sorting option for {0}/Specifier": {
-    "message": "Select a sorting option for {0}",
-    "comment": [
-      "Specifier"
-    ]
-  },
-  "Sorting updated for {0}/Node label": {
-    "message": "Sorting updated for {0}",
-    "comment": [
-      "Node label"
-    ]
-  },
-  "Filter: {0}/Filter value": {
-    "message": "Filter: {0}",
-    "comment": [
-      "Filter value"
-    ]
-  },
-  "Clear filter for PDS": "Clear filter for PDS",
-  "Set a filter for {0}/Specifier": {
-    "message": "Set a filter for {0}",
-    "comment": [
-      "Specifier"
-    ]
-  },
-  "Filter cleared for {0}/Node label": {
-    "message": "Filter cleared for {0}",
-    "comment": [
-      "Node label"
-    ]
-  },
-  "Invalid date format specified": "Invalid date format specified",
-  "Enter a value to filter by": "Enter a value to filter by",
-  "Invalid filter specified": "Invalid filter specified",
-  "Filter updated for {0}/Node label": {
-    "message": "Filter updated for {0}",
-    "comment": [
-      "Node label"
-    ]
-  },
-  "Getting data set templates.": "Getting data set templates.",
-  "Resetting data set templates array.": "Resetting data set templates array.",
-  "Updating data set templates.": "Updating data set templates.",
-  "Adding new data set template {0}.": "Adding new data set template {0}.",
-  "Data Set Template Save Location": "Data Set Template Save Location",
-  "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
-  "Save as User setting": "Save as User setting",
-  "Save as Workspace setting": "Save as Workspace setting",
-  "[{0}]: {1}/Profile NameData Set Search Pattern": {
-    "message": "[{0}]: {1}",
-    "comment": [
-      "Profile Name",
-      "Data Set Search Pattern"
-    ]
-  },
-  "[{0}]: *": "[{0}]: *",
-  "[{0}] Members of {1}/Profile namePDS name": {
-    "message": "[{0}] Members of {1}",
-    "comment": [
-      "Profile name",
-      "PDS name"
-    ]
-  },
-  "Data Set Name": "Data Set Name",
-  "Data Set Organization": "Data Set Organization",
-  "Creation Date": "Creation Date",
-  "Modified Date": "Modified Date",
-  "Record Length": "Record Length",
-  "Migrated": "Migrated",
-  "Record Format": "Record Format",
-  "Volumes": "Volumes",
-  "Last Modified By": "Last Modified By",
-  "Version": "Version",
-  "Modification Level": "Modification Level",
-  "Current Records": "Current Records",
-  "Initial Records": "Initial Records",
-  "Modified Records": "Modified Records",
-  "SCLM": "SCLM",
-  "Open": "Open",
-  "Focus": "Focus",
-  "Back": "Back",
-  "Pin": "Pin",
-  "Unpin": "Unpin",
-  "Error toggling pin state for rows: {0}/Error message": {
-    "message": "Error toggling pin state for rows: {0}",
-    "comment": [
-      "Error message"
-    ]
-  },
+  "Manage Persistent Properties": "Manage Persistent Properties",
   "Member Name": "Member Name",
-  "Please select a single profile or PDS.": "Please select a single profile or PDS.",
-  "This action is only supported for session and PDS nodes. Please select a session or PDS node.": "This action is only supported for session and PDS nodes. Please select a session or PDS node.",
-  "No profiles available.": "No profiles available.",
-  "Select a profile to search for data sets": "Select a profile to search for data sets",
-  "Enter Data Set Pattern": "Enter Data Set Pattern",
-  "e.g., USER.*, PUBLIC.DATA.*, etc.": "e.g., USER.*, PUBLIC.DATA.*, etc.",
-  "Enter a dataset pattern to search for": "Enter a dataset pattern to search for",
-  "Profile {0} not found./Name of the selected profile": {
-    "message": "Profile {0} not found.",
-    "comment": [
-      "Name of the selected profile"
-    ]
-  },
-  "No search pattern applied. Search for a pattern and try again.": "No search pattern applied. Search for a pattern and try again.",
-  "Searching for \"{0}\"/The string to search data sets for.": {
-    "message": "Searching for \"{0}\"",
-    "comment": [
-      "The string to search data sets for."
-    ]
-  },
-  "Search Results for \"{0}\"/The string to search data sets for.": {
-    "message": "Search Results for \"{0}\"",
-    "comment": [
-      "The string to search data sets for."
-    ]
-  },
-  "Position": "Position",
-  "Contents": "Contents",
-  "Enter the text to search for.": "Enter the text to search for.",
-  "Search Options": "Search Options",
-  "Select search options": "Select search options",
-  "Case Sensitive": "Case Sensitive",
-  "Regex": "Regex",
-  "On": "On",
-  "Off": "Off",
-  "Edit Options (Case Sensitive: {0}, Regex: {1})/Case SensitiveRegex": {
-    "message": "Edit Options (Case Sensitive: {0}, Regex: {1})",
-    "comment": [
-      "Case Sensitive",
-      "Regex"
-    ]
-  },
-  "Perform the search with case sensitivity": "Perform the search with case sensitivity",
-  "Treat the search query as a regex": "Treat the search query as a regex",
-  "Are you sure you want to search {0} data sets and members?/The number of data sets that are about to be searched": {
-    "message": "Are you sure you want to search {0} data sets and members?",
-    "comment": [
-      "The number of data sets that are about to be searched"
-    ]
-  },
-  "Failed to list datasets": "Failed to list datasets",
-  "Failed to read {0}/File path": {
-    "message": "Failed to read {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Saving data set...": "Saving data set...",
-  "This upload operation may result in data loss.": "This upload operation may result in data loss.",
-  "Please review the following lines:": "Please review the following lines:",
-  "Failed to save {0}/Data set name": {
-    "message": "Failed to save {0}",
-    "comment": [
-      "Data set name"
-    ]
-  },
-  "Failed to delete {0}/File path": {
-    "message": "Failed to delete {0}",
-    "comment": [
-      "File path"
-    ]
-  },
-  "Failed to rename {0}/Data set name": {
-    "message": "Failed to rename {0}",
-    "comment": [
-      "Data set name"
-    ]
-  },
-  "Partitioned Data Set: Binary": "Partitioned Data Set: Binary",
-  "Partitioned Data Set: C": "Partitioned Data Set: C",
-  "Partitioned Data Set: Classic": "Partitioned Data Set: Classic",
-  "Partitioned Data Set: Default": "Partitioned Data Set: Default",
-  "Partitioned Data Set: Extended": "Partitioned Data Set: Extended",
-  "Sequential Data Set": "Sequential Data Set",
-  "Copying member(s)": "Copying member(s)",
-  "Copying data set(s)": "Copying data set(s)",
-  "Profile is invalid, check connection details.": "Profile is invalid, check connection details.",
-  "Allocate Data Set": "Allocate Data Set",
-  "Edit Attributes": "Edit Attributes",
-  "Click on parameters to change them": "Click on parameters to change them",
-  "Name of Data Set": "Name of Data Set",
-  "Enter valid dataset name": "Enter valid dataset name",
-  "Template of Data Set to be Created": "Template of Data Set to be Created",
-  "Error encountered when creating data set.": "Error encountered when creating data set.",
-  "Name of Data Set Template": "Name of Data Set Template",
-  "Select the profile to which the original data set belongs": "Select the profile to which the original data set belongs",
-  "You must select a profile.": "You must select a profile.",
-  "Enter the name of the data set to copy attributes from": "Enter the name of the data set to copy attributes from",
-  "You must enter a new data set name.": "You must enter a new data set name.",
-  "Allocating data set like {0}./Like data set name": {
-    "message": "Allocating data set like {0}.",
-    "comment": [
-      "Like data set name"
-    ]
-  },
-  "Enter a name for the new data set": "Enter a name for the new data set",
-  "Unable to create data set.": "Unable to create data set.",
-  "{0} was created like {1}./New Data Set nameLike Data Set name": {
-    "message": "{0} was created like {1}.",
-    "comment": [
-      "New Data Set name",
-      "Like Data Set name"
-    ]
-  },
-  "Uploading to data set": "Uploading to data set",
-  "This action is only supported for partitioned data sets.": "This action is only supported for partitioned data sets.",
-  "Uploading to data set...": "Uploading to data set...",
-  "No data sets selected for deletion, cancelling...": "No data sets selected for deletion, cancelling...",
-  "Deleting data set(s): {0}/Data Sets to delete": {
-    "message": "Deleting data set(s): {0}",
-    "comment": [
-      "Data Sets to delete"
-    ]
-  },
-  "Deleting items": "Deleting items",
-  "The following {0} item(s) were deleted:\n{1}{2}/Data Sets deleted lengthData Sets deletedAdditional datasets count": {
-    "message": "The following {0} item(s) were deleted:\n{1}{2}",
-    "comment": [
-      "Data Sets deleted length",
-      "Data Sets deleted",
-      "Additional datasets count"
-    ]
-  },
-  "Name of member": "Name of member",
-  "Creating new data set member {0}/Data Set member name": {
-    "message": "Creating new data set member {0}",
-    "comment": [
-      "Data Set member name"
-    ]
-  },
-  "Unable to create member.": "Unable to create member.",
-  "Allocating new data set": "Allocating new data set",
-  "Attempting to allocate new data set": "Attempting to allocate new data set",
-  "Showing attributes for {0}./Label": {
-    "message": "Showing attributes for {0}.",
-    "comment": [
-      "Label"
-    ]
-  },
-  "No matching names found for query: {0}/Label": {
-    "message": "No matching names found for query: {0}",
-    "comment": [
-      "Label"
-    ]
-  },
-  "Unable to list attributes.": "Unable to list attributes.",
-  "Attributes": "Attributes",
-  "No editor with a document that could be submitted as JCL is currently open.": "No editor with a document that could be submitted as JCL is currently open.",
-  "Submitting as JCL in document {0}/Document file name": {
-    "message": "Submitting as JCL in document {0}",
-    "comment": [
-      "Document file name"
-    ]
-  },
-  "Select the profile to use to submit the job": "Select the profile to use to submit the job",
-  "No profiles available": "No profiles available",
-  "Session for submitting JCL was null or undefined!": "Session for submitting JCL was null or undefined!",
-  "Poll For Job Completion": "Poll For Job Completion",
-  "Job submitted: {0}/Job name and ID with set job command": {
-    "message": "Job submitted: {0}",
-    "comment": [
-      "Job name and ID with set job command"
-    ]
-  },
-  "Job submitted {0} using profile {1}./Job IDProfile name": {
-    "message": "Job submitted {0} using profile {1}.",
-    "comment": [
-      "Job ID",
-      "Profile name"
-    ]
-  },
-  "Job submission failed.": "Job submission failed.",
-  "No active editor open. Please open a file and select text to open a data set.": "No active editor open. Please open a file and select text to open a data set.",
-  "No selection to open.": "No selection to open.",
-  "Selection is not a valid data set member name.": "Selection is not a valid data set member name.",
-  "Selection is not a valid data set name.": "Selection is not a valid data set name.",
-  "Select the profile to use to open the data set": "Select the profile to use to open the data set",
-  "PDS {0} could not be found.": "PDS {0} could not be found.",
-  "Data set member {0} does not exist or cannot be opened in data set {1}.": "Data set member {0} does not exist or cannot be opened in data set {1}.",
-  "Data set {0} does not exist or cannot be opened.": "Data set {0} does not exist or cannot be opened.",
-  "Opening data set failed.": "Opening data set failed.",
-  "Are you sure you want to submit the following job?\n\n{0}/JCL name": {
-    "message": "Are you sure you want to submit the following job?\n\n{0}",
-    "comment": [
-      "JCL name"
-    ]
-  },
-  "Cannot submit, item invalid.": "Cannot submit, item invalid.",
-  "Job submitted {0} using profile {1}./Job IDSession name": {
-    "message": "Job submitted {0} using profile {1}.",
-    "comment": [
-      "Job ID",
-      "Session name"
-    ]
-  },
-  "Cannot delete, item invalid.": "Cannot delete, item invalid.",
-  "Error encountered when deleting data set. {0}/Stringified JSON error": {
-    "message": "Error encountered when deleting data set. {0}",
-    "comment": [
-      "Stringified JSON error"
-    ]
-  },
-  "Unable to find file {0}/Label": {
-    "message": "Unable to find file {0}",
-    "comment": [
-      "Label"
-    ]
-  },
-  "Item invalid.": "Item invalid.",
-  "Fetching data set...": "Fetching data set...",
-  "Error encountered when refreshing data set view. {0}/Stringified JSON error": {
-    "message": "Error encountered when refreshing data set view. {0}",
-    "comment": [
-      "Stringified JSON error"
-    ]
-  },
-  "Cannot perform the copy operation as the data sets selected have different types": "Cannot perform the copy operation as the data sets selected have different types",
+  "Migrated": "Migrated",
   "Migration of data set {0} requested./Data Set name": {
     "message": "Migration of data set {0} requested.",
     "comment": [
       "Data Set name"
     ]
   },
-  "Recall of data set {0} requested./Data Set name": {
-    "message": "Recall of data set {0} requested.",
-    "comment": [
-      "Data Set name"
-    ]
-  },
-  "Unable to gather more information": "Unable to gather more information",
-  "Invalid paste. Copy data set(s) first.": "Invalid paste. Copy data set(s) first.",
-  "Copying data sets is not supported.": "Copying data sets is not supported.",
+  "Modification Level": "Modification Level",
+  "Modified Date": "Modified Date",
+  "Modified Records": "Modified Records",
+  "Modify Command": "Modify Command",
+  "Moving MVS files...": "Moving MVS files...",
+  "Moving USS files...": "Moving USS files...",
+  "MVS command submitted.": "MVS command submitted.",
+  "Name": "Name",
+  "Name of Data Set": "Name of Data Set",
   "Name of data set member": "Name of data set member",
-  "Failed to create {0}: {1}/Data set nameError message": {
-    "message": "Failed to create {0}: {1}",
+  "Name of Data Set Template": "Name of Data Set Template",
+  "Name of file or directory": "Name of file or directory",
+  "Name of member": "Name of member",
+  "New filter": "New filter",
+  "Next page": "Next page",
+  "No": "No",
+  "No {0} entries found for this version.": "No {0} entries found for this version.",
+  "No active editor open. Please open a file and select text to open a data set.": "No active editor open. Please open a file and select text to open a data set.",
+  "No active jobs found for session: {0}/Session label": {
+    "message": "No active jobs found for session: {0}",
     "comment": [
-      "Data set name",
-      "Error message"
+      "Session label"
     ]
   },
-  "Failed to copy member {0}: {1}/Member nameError message": {
-    "message": "Failed to copy member {0}: {1}",
+  "No changelog entries found for this version.": "No changelog entries found for this version.",
+  "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
+  "No data set favorites found.": "No data set favorites found.",
+  "No data sets found": "No data sets found",
+  "No data sets selected for deletion, cancelling...": "No data sets selected for deletion, cancelling...",
+  "No document found": "No document found",
+  "No editor with a document that could be submitted as JCL is currently open.": "No editor with a document that could be submitted as JCL is currently open.",
+  "No items are loaded in the tree.": "No items are loaded in the tree.",
+  "No jobs favorites found.": "No jobs favorites found.",
+  "No jobs found": "No jobs found",
+  "No matching names found for query: {0}/Label": {
+    "message": "No matching names found for query: {0}",
     "comment": [
-      "Member name",
-      "Error message"
+      "Label"
     ]
   },
-  "Replace": "Replace",
-  "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
-  "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
-  "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",
-  "Unable to copy data set.": "Unable to copy data set.",
-  "Profile {0} is no longer available. Skipping item.": "Profile {0} is no longer available. Skipping item.",
-  "Unable to retrieve attributes for {0}": "Unable to retrieve attributes for {0}",
-  "Starting to poll job {0} for completion./Job display name": {
-    "message": "Starting to poll job {0} for completion.",
+  "No more active jobs for {0}. Stopping polling./Session label": {
+    "message": "No more active jobs for {0}. Stopping polling.",
     "comment": [
-      "Job display name"
+      "Session label"
+    ]
+  },
+  "No profiles available": "No profiles available",
+  "No profiles available.": "No profiles available.",
+  "No recent members found.": "No recent members found.",
+  "No records found": "No records found",
+  "No release notes found for this version.": "No release notes found for this version.",
+  "No search pattern applied. Search for a pattern and try again.": "No search pattern applied. Search for a pattern and try again.",
+  "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
+  "No selection to open.": "No selection to open.",
+  "No spool files found": "No spool files found",
+  "No spool files found for {0}/Spool node label": {
+    "message": "No spool files found for {0}",
+    "comment": [
+      "Spool node label"
+    ]
+  },
+  "No SSH profile found. Please create an SSH profile.": "No SSH profile found. Please create an SSH profile.",
+  "No USS favorites found.": "No USS favorites found.",
+  "No USS profiles found. Please add a profile first.": "No USS profiles found. Please add a profile first.",
+  "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.": "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer.",
+  "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.": "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
+  "Node does not exist. It may have been deleted.": "Node does not exist. It may have been deleted.",
+  "not found": "not found",
+  "Not implemented yet for profile of type: {0}/Job profile type": {
+    "message": "Not implemented yet for profile of type: {0}",
+    "comment": [
+      "Job profile type"
+    ]
+  },
+  "Not implemented yet for profile of type: {0}/Profile type": {
+    "message": "Not implemented yet for profile of type: {0}",
+    "comment": [
+      "Profile type"
+    ]
+  },
+  "Off": "Off",
+  "On": "On",
+  "One or more items may be overwritten from this drop operation. Confirm or cancel?": "One or more items may be overwritten from this drop operation. Confirm or cancel?",
+  "One or more jobs failed to cancel: {0}/Failed to cancel jobs": {
+    "message": "One or more jobs failed to cancel: {0}",
+    "comment": [
+      "Failed to cancel jobs"
+    ]
+  },
+  "Open": "Open",
+  "Open selected data set": "Open selected data set",
+  "Open the **Command Palette** and search for Zowe Explorer: List Data Sets, select a profile, and enter a search filter.": "Open the **Command Palette** and search for Zowe Explorer: List Data Sets, select a profile, and enter a search filter.",
+  "Open the data set": "Open the data set",
+  "Open the job in the Jobs tree": "Open the job in the Jobs tree",
+  "Opening data set failed.": "Opening data set failed.",
+  "openUSS() called from invalid node.": "openUSS() called from invalid node.",
+  "Operation cancelled": "Operation cancelled",
+  "Options": "Options",
+  "Other": "Other",
+  "Other user jobs": "Other user jobs",
+  "Owner": "Owner",
+  "Owner: ": "Owner: ",
+  "Page": "Page",
+  "Page Size:": "Page Size:",
+  "Partitioned Data Set: Binary": "Partitioned Data Set: Binary",
+  "Partitioned Data Set: C": "Partitioned Data Set: C",
+  "Partitioned Data Set: Classic": "Partitioned Data Set: Classic",
+  "Partitioned Data Set: Default": "Partitioned Data Set: Default",
+  "Partitioned Data Set: Extended": "Partitioned Data Set: Extended",
+  "Password": "Password",
+  "Pasting files...": "Pasting files...",
+  "Path: ": "Path: ",
+  "Pattern: ": "Pattern: ",
+  "PDS {0} could not be found.": "PDS {0} could not be found.",
+  "PDS already in favorites": "PDS already in favorites",
+  "Perform the search with case sensitivity": "Perform the search with case sensitivity",
+  "Phase": "Phase",
+  "Phase Name": "Phase Name",
+  "Pin": "Pin",
+  "Pin or unpin the row": "Pin or unpin the row",
+  "Pin rows to keep them visible while scrolling": "Pin rows to keep them visible while scrolling",
+  "Please enter a valid USS path.": "Please enter a valid USS path.",
+  "Please install associated VS Code extension for custom credential manager or revert to default.": "Please install associated VS Code extension for custom credential manager or revert to default.",
+  "Please review the following lines:": "Please review the following lines:",
+  "Please select a single profile or PDS.": "Please select a single profile or PDS.",
+  "Plugin of name '{0}' was defined for custom credential management on imperative.json file./Credential manager display name": {
+    "message": "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
+    "comment": [
+      "Credential manager display name"
+    ]
+  },
+  "Poll active jobs": "Poll active jobs",
+  "Poll For Job Completion": "Poll For Job Completion",
+  "Poll interval (in ms) for: {0}/URI path": {
+    "message": "Poll interval (in ms) for: {0}",
+    "comment": [
+      "URI path"
+    ]
+  },
+  "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?/Number of active jobs": {
+    "message": "Polling {0} active jobs may cause too many requests. Are you sure you want to continue?",
+    "comment": [
+      "Number of active jobs"
+    ]
+  },
+  "Polling {0} active jobs.../Number of active jobs": {
+    "message": "Polling {0} active jobs...",
+    "comment": [
+      "Number of active jobs"
     ]
   },
   "Polling job: {0}.../Job display name": {
@@ -1130,19 +851,184 @@
       "Job display name"
     ]
   },
-  "unknown retcode": "unknown retcode",
-  "Job {0} completed - {1}/Job ID with clickable linkJob status": {
-    "message": "Job {0} completed - {1}",
+  "Polling: {0}.../Document file name": {
+    "message": "Polling: {0}...",
     "comment": [
-      "Job ID with clickable link",
-      "Job status"
+      "Document file name"
     ]
   },
-  "Error polling job {0}: {1}/Job display nameError message": {
-    "message": "Error polling job {0}: {1}",
+  "Polling: {0}.../Unique spool name": {
+    "message": "Polling: {0}...",
     "comment": [
-      "Job display name",
-      "Error message"
+      "Unique spool name"
+    ]
+  },
+  "Position": "Position",
+  "Prefix": "Prefix",
+  "Previous page": "Previous page",
+  "Profile {0} doesn't specify an authentication method. Choose a profile action./Profile name": {
+    "message": "Profile {0} doesn't specify an authentication method. Choose a profile action.",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Profile {0} has an invalid SSL certificate./Profile name": {
+    "message": "Profile {0} has an invalid SSL certificate.",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
+    "message": "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Profile {0} is no longer available. Skipping item.": "Profile {0} is no longer available. Skipping item.",
+  "Profile {0} is using basic authentication. Choose a profile action./Profile name": {
+    "message": "Profile {0} is using basic authentication. Choose a profile action.",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Profile {0} is using token authentication. Choose a profile action./Profile name": {
+    "message": "Profile {0} is using token authentication. Choose a profile action.",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Profile {0} not found./Name of the selected profile": {
+    "message": "Profile {0} not found.",
+    "comment": [
+      "Name of the selected profile"
+    ]
+  },
+  "Profile info hover": "Profile info hover",
+  "Profile is invalid": "Profile is invalid",
+  "Profile is invalid, check connection details.": "Profile is invalid, check connection details.",
+  "Profile not found.": "Profile not found.",
+  "Profile selection has been cancelled.": "Profile selection has been cancelled.",
+  "Profile Type": "Profile Type",
+  "Profile Type: ": "Profile Type: ",
+  "Profile validation failed for {0}./The profile name": {
+    "message": "Profile validation failed for {0}.",
+    "comment": [
+      "The profile name"
+    ]
+  },
+  "Profile: ": "Profile: ",
+  "Progress is shown in the status bar.": "Progress is shown in the status bar.",
+  "Project": "Project",
+  "Project: in the current working directory": "Project: in the current working directory",
+  "Prompting the user for a data set pattern": "Prompting the user for a data set pattern",
+  "Prompting the user for a USS path": "Prompting the user for a USS path",
+  "Prompting the user to choose a member from the filtered list": "Prompting the user to choose a member from the filtered list",
+  "Prompting the user to choose a recent member for editing": "Prompting the user to choose a recent member for editing",
+  "Raw data representation": "Raw data representation",
+  "Read": "Read",
+  "Reading imperative.json credential manager.\n {0}/File content": {
+    "message": "Reading imperative.json credential manager.\n {0}",
+    "comment": [
+      "File content"
+    ]
+  },
+  "Reading imperative.json failed. Will try to create file.": "Reading imperative.json failed. Will try to create file.",
+  "Recall of data set {0} requested./Data Set name": {
+    "message": "Recall of data set {0} requested.",
+    "comment": [
+      "Data Set name"
+    ]
+  },
+  "Recent": "Recent",
+  "Recent Filters": "Recent Filters",
+  "Recent Searches": "Recent Searches",
+  "Record Format": "Record Format",
+  "Record Length": "Record Length",
+  "Redirecting to Home Directory": "Redirecting to Home Directory",
+  "Refresh": "Refresh",
+  "refreshUSS() called from invalid node.": "refreshUSS() called from invalid node.",
+  "Regex": "Regex",
+  "Release notes": "Release notes",
+  "Release Notes": "Release Notes",
+  "Release notes for Zowe Explorer are now available in VS Code. Release notes are displayed when Zowe Explorer updates and can also be accessed from the command palette (Ctrl + Shift + P) by searching for Zowe Explorer: Display Release Notes. Disable automatic display of release notes when updating by unticking Display release notes after an update in this window or in the Zowe Explorer settings.": "Release notes for Zowe Explorer are now available in VS Code. Release notes are displayed when Zowe Explorer updates and can also be accessed from the command palette (Ctrl + Shift + P) by searching for Zowe Explorer: Display Release Notes. Disable automatic display of release notes when updating by unticking Display release notes after an update in this window or in the Zowe Explorer settings.",
+  "Reload": "Reload",
+  "Reload window": "Reload window",
+  "Reload Window": "Reload Window",
+  "rename": "rename",
+  "Rename Operation cancelled.": "Rename Operation cancelled.",
+  "Renaming data set {0}/Old data set name": {
+    "message": "Renaming data set {0}",
+    "comment": [
+      "Old data set name"
+    ]
+  },
+  "Reorder, filter, sort, and choose visible columns": "Reorder, filter, sort, and choose visible columns",
+  "Replace": "Replace",
+  "Required parameter 'host' must not be blank.": "Required parameter 'host' must not be blank.",
+  "Resetting data set templates array.": "Resetting data set templates array.",
+  "Response From Service": "Response From Service",
+  "Results appear in the Zowe Resources panel, where files can be bulk opened.": "Results appear in the Zowe Resources panel, where files can be bulk opened.",
+  "Retrieving response from JES list API": "Retrieving response from JES list API",
+  "Retrieving response from MVS list API": "Retrieving response from MVS list API",
+  "Return Code": "Return Code",
+  "Right-click a filtered data sets profile, a data set, or a favorite, and select **Show as Table**.": "Right-click a filtered data sets profile, a data set, or a favorite, and select **Show as Table**.",
+  "Right-click a PDS: **Search PDS members**": "Right-click a PDS: **Search PDS members**",
+  "Right-click a profile: **Search filtered data sets**": "Right-click a profile: **Search filtered data sets**",
+  "Right-click on a directory or partitioned data set in the **USS** or **DATA SETS** tree and select **Upload with Encoding...** to choose a character encoding for the uploaded files.": "Right-click on a directory or partitioned data set in the **USS** or **DATA SETS** tree and select **Upload with Encoding...** to choose a character encoding for the uploaded files.",
+  "Save as User setting": "Save as User setting",
+  "Save as Workspace setting": "Save as Workspace setting",
+  "Saving data set...": "Saving data set...",
+  "SCLM": "SCLM",
+  "Search by job ID": "Search by job ID",
+  "Search data sets": "Search data sets",
+  "Search data sets: use a comma to separate multiple patterns": "Search data sets: use a comma to separate multiple patterns",
+  "Search History": "Search History",
+  "Search Keyword History": "Search Keyword History",
+  "Search Options": "Search Options",
+  "Search Results for \"{0}\"/The string to search data sets for.": {
+    "message": "Search Results for \"{0}\"",
+    "comment": [
+      "The string to search data sets for."
+    ]
+  },
+  "Searching for \"{0}\"/The string to search data sets for.": {
+    "message": "Searching for \"{0}\"",
+    "comment": [
+      "The string to search data sets for."
+    ]
+  },
+  "Secure Credentials Enabled: ": "Secure Credentials Enabled: ",
+  "Select": "Select",
+  "Select a certificate and certificate key in PEM format:": "Select a certificate and certificate key in PEM format:",
+  "Select a data set organization (DSORG)": "Select a data set organization (DSORG)",
+  "Select a filter": "Select a filter",
+  "Select a filter or type to create a new one": "Select a filter or type to create a new one",
+  "Select a profile": "Select a profile",
+  "Select a profile to search for data sets": "Select a profile to search for data sets",
+  "Select a recent member to open": "Select a recent member to open",
+  "Select a sorting direction": "Select a sorting direction",
+  "Select a sorting option for {0}/Specifier": {
+    "message": "Select a sorting option for {0}",
+    "comment": [
+      "Specifier"
+    ]
+  },
+  "Select a sorting option for jobs in {0}/Session label": {
+    "message": "Select a sorting option for jobs in {0}",
+    "comment": [
+      "Session label"
+    ]
+  },
+  "Select a TSO command to run against {0} (An option to edit will follow)/Host name": {
+    "message": "Select a TSO command to run against {0} (An option to edit will follow)",
+    "comment": [
+      "Host name"
+    ]
+  },
+  "Select a TSO command to run immediately against {0}/Host name": {
+    "message": "Select a TSO command to run immediately against {0}",
+    "comment": [
+      "Host name"
     ]
   },
   "No data set profiles found. Please add a profile first.": "No data set profiles found. Please add a profile first.",
@@ -1180,266 +1066,6 @@
   "Failed to upload changes for {0}: {1}/Build file hyperlinkError message": {
     "message": "Failed to upload changes for {0}: {1}",
     "comment": [
-      "Build file hyperlink",
-      "Error message"
-    ]
-  },
-  "Error encountered while activating and initializing logger": "Error encountered while activating and initializing logger",
-  "Insufficient read permissions for {0} in local storage./Local storage key": {
-    "message": "Insufficient read permissions for {0} in local storage.",
-    "comment": [
-      "Local storage key"
-    ]
-  },
-  "Insufficient write permissions for {0} in local storage./Local storage key": {
-    "message": "Insufficient write permissions for {0} in local storage.",
-    "comment": [
-      "Local storage key"
-    ]
-  },
-  "Add Credentials": "Add Credentials",
-  "Add username and password for basic authentication": "Add username and password for basic authentication",
-  "Update Credentials": "Update Credentials",
-  "Update stored username and password": "Update stored username and password",
-  "Disable Profile Validation": "Disable Profile Validation",
-  "Disable validation of server check for profile": "Disable validation of server check for profile",
-  "Enable Profile Validation": "Enable Profile Validation",
-  "Enable validation of server check for profile": "Enable validation of server check for profile",
-  "Edit Profile": "Edit Profile",
-  "Update profile connection information": "Update profile connection information",
-  "Hide Profile": "Hide Profile",
-  "Hide profile name from tree view": "Hide profile name from tree view",
-  "Change the Authentication Method": "Change the Authentication Method",
-  "Log in to obtain a new token value": "Log in to obtain a new token value",
-  "Log out of Authentication Service": "Log out of Authentication Service",
-  "Log out to invalidate and remove stored token value": "Log out to invalidate and remove stored token value",
-  "Profile {0} is using basic authentication. Choose a profile action./Profile name": {
-    "message": "Profile {0} is using basic authentication. Choose a profile action.",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Profile {0} is using token authentication. Choose a profile action./Profile name": {
-    "message": "Profile {0} is using token authentication. Choose a profile action.",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Profile {0} doesn't specify an authentication method. Choose a profile action./Profile name": {
-    "message": "Profile {0} doesn't specify an authentication method. Choose a profile action.",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.": "Error encountered when loading your Zowe config. Click \"Show Config\" for more details.",
-  "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid USS API.",
-  "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.": "Internal error: A Zowe Explorer extension client tried to register an invalid MVS API.",
-  "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.": "Internal error: A Zowe Explorer extension client tried to register an invalid JES API.",
-  "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.": "Internal error: A Zowe Explorer extension client tried to register an invalid Command API.",
-  "Internal error: Tried to call a non-existing USS API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing USS API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Internal error: Tried to call a non-existing MVS API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing MVS API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Internal error: Tried to call a non-existing JES API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing JES API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Internal error: Tried to call a non-existing Command API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing Command API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Internal error: Tried to call a non-existing Common API in API register: {0}/Profile type": {
-    "message": "Internal error: Tried to call a non-existing Common API in API register: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Reload Window": "Reload Window",
-  "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.",
-  "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
-  "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct./Profile name": {
-    "message": "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Profile {0} has an invalid SSL certificate./Profile name": {
-    "message": "Profile {0} has an invalid SSL certificate.",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Auto Store: ": "Auto Store: ",
-  "Config File: ": "Config File: ",
-  "Global": "Global",
-  "Project": "Project",
-  "Secure Credentials Enabled: ": "Secure Credentials Enabled: ",
-  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
-  "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
-  "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",
-  "Profile selection has been cancelled.": "Profile selection has been cancelled.",
-  "The profile {0} has been added to the {1} tree./chosen profiletree type": {
-    "message": "The profile {0} has been added to the {1} tree.",
-    "comment": [
-      "chosen profile",
-      "tree type"
-    ]
-  },
-  "Profile Type": "Profile Type",
-  "User Name": "User Name",
-  "Enter the user name for the {0} connection. Leave blank to not store./Profile name": {
-    "message": "Enter the user name for the {0} connection. Leave blank to not store.",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Password": "Password",
-  "Enter the password for the {0} connection. Leave blank to not store./Profile name": {
-    "message": "Enter the password for the {0} connection. Leave blank to not store.",
-    "comment": [
-      "Profile name"
-    ]
-  },
-  "Select the profile you want to delete": "Select the profile you want to delete",
-  "Validating {0} Profile./The profile name": {
-    "message": "Validating {0} Profile.",
-    "comment": [
-      "The profile name"
-    ]
-  },
-  "Validating {0} was cancelled./The profile name": {
-    "message": "Validating {0} was cancelled.",
-    "comment": [
-      "The profile name"
-    ]
-  },
-  "Profile validation failed for {0}./The profile name": {
-    "message": "Profile validation failed for {0}.",
-    "comment": [
-      "The profile name"
-    ]
-  },
-  "Error getting supported tokenType value for profile {0}/Service profile name": {
-    "message": "Error getting supported tokenType value for profile {0}",
-    "comment": [
-      "Service profile name"
-    ]
-  },
-  "Login to authentication service was successful for {0}./Service profile name": {
-    "message": "Login to authentication service was successful for {0}.",
-    "comment": [
-      "Service profile name"
-    ]
-  },
-  "Unable to log in with {0}. {1}/Service profile nameError message": {
-    "message": "Unable to log in with {0}. {1}",
-    "comment": [
-      "Service profile name",
-      "Error message"
-    ]
-  },
-  "To change the authentication": "To change the authentication",
-  "To continue in current authentication": "To continue in current authentication",
-  "Do you wish to change the authentication": "Do you wish to change the authentication",
-  "Cannot switch to token-based authentication for profile {0}.": "Cannot switch to token-based authentication for profile {0}.",
-  "Login using token-based authentication service was successful for profile {0}.": "Login using token-based authentication service was successful for profile {0}.",
-  "Unable to switch to token-based authentication for profile {0}.": "Unable to switch to token-based authentication for profile {0}.",
-  "Changing authentication to basic was successful for profile {0}.": "Changing authentication to basic was successful for profile {0}.",
-  "Unable to switch to basic authentication for profile {0}.": "Unable to switch to basic authentication for profile {0}.",
-  "Unable to switch authentication for profile {0}.": "Unable to switch authentication for profile {0}.",
-  "Logout from authentication service was successful for {0}./Service profile name": {
-    "message": "Logout from authentication service was successful for {0}.",
-    "comment": [
-      "Service profile name"
-    ]
-  },
-  "Unable to log out with {0}. {1}/Service profile nameError message": {
-    "message": "Unable to log out with {0}. {1}",
-    "comment": [
-      "Service profile name",
-      "Error message"
-    ]
-  },
-  "Select the location where the config file will be initialized": "Select the location where the config file will be initialized",
-  "Select the location of the config file to edit": "Select the location of the config file to edit",
-  "Global: in the Zowe home directory": "Global: in the Zowe home directory",
-  "Project: in the current working directory": "Project: in the current working directory",
-  "Do you wish to apply this for all trees?": "Do you wish to apply this for all trees?",
-  "Apply to all trees": "Apply to all trees",
-  "Apply to current tree selected": "Apply to current tree selected",
-  "Edit History": "Edit History",
-  "Enter an allocation unit": "Enter an allocation unit",
-  "Enter the average block length (if allocation unit = BLK)": "Enter the average block length (if allocation unit = BLK)",
-  "Enter a block size": "Enter a block size",
-  "Enter an SMS data class": "Enter an SMS data class",
-  "Enter a device type (unit)": "Enter a device type (unit)",
-  "Enter the number of directory blocks": "Enter the number of directory blocks",
-  "Specify the data set type (DSNTYPE)": "Specify the data set type (DSNTYPE)",
-  "Enter the SMS management class": "Enter the SMS management class",
-  "Enter a data set name": "Enter a data set name",
-  "Select a data set organization (DSORG)": "Select a data set organization (DSORG)",
-  "Enter the primary space allocation": "Enter the primary space allocation",
-  "Enter the data set's record format": "Enter the data set's record format",
-  "Enter the logical record length": "Enter the logical record length",
-  "Enter the secondary space allocation": "Enter the secondary space allocation",
-  "Enter the size of the data set": "Enter the size of the data set",
-  "Enter the SMS storage class": "Enter the SMS storage class",
-  "Enter the volume serial on which the data set should be placed": "Enter the volume serial on which the data set should be placed",
-  "Recent": "Recent",
-  "Recent Filters": "Recent Filters",
-  "Recent Searches": "Recent Searches",
-  "Options": "Options",
-  "Disabled": "Disabled",
-  "Your jobs": "Your jobs",
-  "Other user jobs": "Other user jobs",
-  "All jobs": "All jobs",
-  "Ascending": "Ascending",
-  "Descending": "Descending",
-  "Unable to perform this operation due to the following problem.": "Unable to perform this operation due to the following problem.",
-  "Response From Service": "Response From Service",
-  "Diagnostic Information": "Diagnostic Information",
-  "Welcome to the integrated terminal for: {0}/Terminal Name": {
-    "message": "Welcome to the integrated terminal for: {0}",
-    "comment": [
-      "Terminal Name"
-    ]
-  },
-  "Profile is invalid": "Profile is invalid",
-  "Issuing commands is not supported for this profile type, {0}./Profile type": {
-    "message": "Issuing commands is not supported for this profile type, {0}.",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Issuing UNIX commands is not supported for this profile type, {0}./Profile type": {
-    "message": "Issuing UNIX commands is not supported for this profile type, {0}.",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness.": "Error preparing SSH connection for issuing UNIX commands, please check SSH profile for correctness.",
-  "Redirecting to Home Directory": "Redirecting to Home Directory",
-  "SSH profile missing connection details. Please update.": "SSH profile missing connection details. Please update.",
-  "No SSH profile found. Please create an SSH profile.": "No SSH profile found. Please create an SSH profile.",
-  "Unix command submitted.": "Unix command submitted.",
-  "$(plus) Create a new Unix command": "$(plus) Create a new Unix command",
-  "Select the profile to use to submit the Unix command": "Select the profile to use to submit the Unix command",
-  "Enter or update the Unix command": "Enter or update the Unix command",
-  "Select a Unix command to run against {0} (An option to edit will follow)/Current work directory": {
-    "message": "Select a Unix command to run against {0} (An option to edit will follow)",
-    "comment": [
       "Current work directory"
     ]
   },
@@ -1449,39 +1075,7 @@
       "Current work directory"
     ]
   },
-  "Zowe Unix Command": "Zowe Unix Command",
-  "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "An SSH profile will be used for issuing UNIX commands with the profile {0}.",
-  "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.": "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.",
-  "Enter the path of the directory in order to execute the command": "Enter the path of the directory in order to execute the command",
-  "Not implemented yet for profile of type: {0}/Profile type": {
-    "message": "Not implemented yet for profile of type: {0}",
-    "comment": [
-      "Profile type"
-    ]
-  },
-  "TSO command submitted.": "TSO command submitted.",
-  "Create a new TSO command": "Create a new TSO command",
-  "Select the profile to use to submit the TSO command": "Select the profile to use to submit the TSO command",
-  "Enter or update the TSO command": "Enter or update the TSO command",
-  "Select a TSO command to run against {0} (An option to edit will follow)/Host name": {
-    "message": "Select a TSO command to run against {0} (An option to edit will follow)",
-    "comment": [
-      "Host name"
-    ]
-  },
-  "Select a TSO command to run immediately against {0}/Host name": {
-    "message": "Select a TSO command to run immediately against {0}",
-    "comment": [
-      "Host name"
-    ]
-  },
-  "Zowe TSO Command": "Zowe TSO Command",
-  "Account Number": "Account Number",
-  "Enter the account number for the TSO connection.": "Enter the account number for the TSO connection.",
-  "MVS command submitted.": "MVS command submitted.",
-  "Create a new MVS command": "Create a new MVS command",
-  "Select the profile to use to submit the MVS command": "Select the profile to use to submit the MVS command",
-  "Enter or update the MVS command": "Enter or update the MVS command",
+  "Select an item before deleting": "Select an item before deleting",
   "Select an MVS command to run against {0} (An option to edit will follow)/Host name": {
     "message": "Select an MVS command to run against {0} (An option to edit will follow)",
     "comment": [
@@ -1494,5 +1088,332 @@
       "Host name"
     ]
   },
-  "Zowe MVS Command": "Zowe MVS Command"
+  "Select Certificate": "Select Certificate",
+  "Select Certificate Key": "Select Certificate Key",
+  "Select multiple data sets or members for bulk open": "Select multiple data sets or members for bulk open",
+  "Select search options": "Select search options",
+  "Select text in the editor, right-click, and choose **Open Selected Data Set**. If the selected text is a valid data set name, it opens in a new editor tab or focus onto an existing tab if already open. If the selected text is a valid partitioned data set, it opens in the **DATA SETS** tree. This is equivalent to the ZOOM command in ISPF.": "Select text in the editor, right-click, and choose **Open Selected Data Set**. If the selected text is a valid data set name, it opens in a new editor tab or focus onto an existing tab if already open. If the selected text is a valid partitioned data set, it opens in the **DATA SETS** tree. This is equivalent to the ZOOM command in ISPF.",
+  "Select the location of the config file to edit": "Select the location of the config file to edit",
+  "Select the location where the config file will be initialized": "Select the location where the config file will be initialized",
+  "Select the profile to use to open the data set": "Select the profile to use to open the data set",
+  "Select the profile to use to submit the job": "Select the profile to use to submit the job",
+  "Select the profile to use to submit the MVS command": "Select the profile to use to submit the MVS command",
+  "Select the profile to use to submit the TSO command": "Select the profile to use to submit the TSO command",
+  "Select the profile to use to submit the Unix command": "Select the profile to use to submit the Unix command",
+  "Select the profile to which the original data set belongs": "Select the profile to which the original data set belongs",
+  "Select the profile you want to delete": "Select the profile you want to delete",
+  "Select the version to display release notes for": "Select the version to display release notes for",
+  "selected": "selected",
+  "Selected auth type: {0}/Selected authentication method": {
+    "message": "Selected auth type: {0}",
+    "comment": [
+      "Selected authentication method"
+    ]
+  },
+  "Selection is not a valid data set member name.": "Selection is not a valid data set member name.",
+  "Selection is not a valid data set name.": "Selection is not a valid data set name.",
+  "Sequential Data Set": "Sequential Data Set",
+  "Session for submitting JCL was null or undefined!": "Session for submitting JCL was null or undefined!",
+  "Sessions": "Sessions",
+  "Set a filter for {0}/Specifier": {
+    "message": "Set a filter for {0}",
+    "comment": [
+      "Specifier"
+    ]
+  },
+  "Set a filter...": "Set a filter...",
+  "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.",
+  "Showing attributes for {0}./Label": {
+    "message": "Showing attributes for {0}.",
+    "comment": [
+      "Label"
+    ]
+  },
+  "Sort Direction": "Sort Direction",
+  "Sorting updated for {0}/Node label": {
+    "message": "Sorting updated for {0}",
+    "comment": [
+      "Node label"
+    ]
+  },
+  "Sorting updated for {0}/Session label": {
+    "message": "Sorting updated for {0}",
+    "comment": [
+      "Session label"
+    ]
+  },
+  "Specify another codepage": "Specify another codepage",
+  "Specify the data set type (DSNTYPE)": "Specify the data set type (DSNTYPE)",
+  "SSH profile missing connection details. Please update.": "SSH profile missing connection details. Please update.",
+  "Starting to poll job {0} for completion./Job display name": {
+    "message": "Starting to poll job {0} for completion.",
+    "comment": [
+      "Job display name"
+    ]
+  },
+  "Status": "Status",
+  "Submit": "Submit",
+  "Submit this query": "Submit this query",
+  "Submitting as JCL in document {0}/Document file name": {
+    "message": "Submitting as JCL in document {0}",
+    "comment": [
+      "Document file name"
+    ]
+  },
+  "Subsystem": "Subsystem",
+  "Tag": "Tag",
+  "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
+  "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
+  "Team config file updated, refreshing Zowe Explorer.": "Team config file updated, refreshing Zowe Explorer.",
+  "Template of Data Set to be Created": "Template of Data Set to be Created",
+  "The **USS** tree can now be filtered by any selected directory. Right-click a directory and select Search by directory to filter. Use the Go Up One Directory button to quickly adjust the filter to the parent directory.": "The **USS** tree can now be filtered by any selected directory. Right-click a directory and select Search by directory to filter. Use the Go Up One Directory button to quickly adjust the filter to the parent directory.",
+  "The API does not support updating attributes for this": "The API does not support updating attributes for this",
+  "The cancel function is not implemented in this API.": "The cancel function is not implemented in this API.",
+  "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
+  "The Data Sets tree and any data sets with many members now display <- Previous page and -> Next page navigation buttons to page through members. Only a subset of members is loaded at a time, allowing for large filters and data sets to load members faster. The number of members per page is configurable in the settings under **Zowe > Ds > Paginate**. The default is 100 members per page.": "The Data Sets tree and any data sets with many members now display <- Previous page and -> Next page navigation buttons to page through members. Only a subset of members is loaded at a time, allowing for large filters and data sets to load members faster. The number of members per page is configurable in the settings under **Zowe > Ds > Paginate**. The default is 100 members per page.",
+  "The default sort order of every data set or job can now be changed. For example, to always open a data set to see the most recently edited members, set the default sort order to be by descending, date modified. The following settings are available:": "The default sort order of every data set or job can now be changed. For example, to always open a data set to see the most recently edited members, set the default sort order to be by descending, date modified. The following settings are available:",
+  "The following {0} item(s) were deleted:\n{1}{2}/Data Sets deleted lengthData Sets deletedAdditional datasets count": {
+    "message": "The following {0} item(s) were deleted:\n{1}{2}",
+    "comment": [
+      "Data Sets deleted length",
+      "Data Sets deleted",
+      "Additional datasets count"
+    ]
+  },
+  "The following jobs were deleted: {0}{1}/Deleted jobs": {
+    "message": "The following jobs were deleted: {0}{1}",
+    "comment": [
+      "Deleted jobs"
+    ]
+  },
+  "The integrated terminal connects to the mainframe via SSH for MVS, TSO, or USS commands. Multiple sessions are supported. Currently disabled by default as further development is actively ongoing.": "The integrated terminal connects to the mainframe via SSH for MVS, TSO, or USS commands. Multiple sessions are supported. Currently disabled by default as further development is actively ongoing.",
+  "The item {0} has been deleted./Label": {
+    "message": "The item {0} has been deleted.",
+    "comment": [
+      "Label"
+    ]
+  },
+  "The job was not cancelled.": "The job was not cancelled.",
+  "The jobs table is a panel that allows viewing filtered jobs more clearly and for performing bulk actions on jobs.": "The jobs table is a panel that allows viewing filtered jobs more clearly and for performing bulk actions on jobs.",
+  "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",
+  "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
+  "the PDS members in {0}/Node label": {
+    "message": "the PDS members in {0}",
+    "comment": [
+      "Node label"
+    ]
+  },
+  "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
+  "The polling interval must be greater than or equal to 1000ms.": "The polling interval must be greater than or equal to 1000ms.",
+  "The profile {0} has been added to the {1} tree./chosen profiletree type": {
+    "message": "The profile {0} has been added to the {1} tree.",
+    "comment": [
+      "chosen profile",
+      "tree type"
+    ]
+  },
+  "The response from Zowe CLI was not successful": "The response from Zowe CLI was not successful",
+  "The selected jobs were already cancelled.": "The selected jobs were already cancelled.",
+  "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
+  "This action is only supported for partitioned data sets.": "This action is only supported for partitioned data sets.",
+  "This action is only supported for session and PDS nodes. Please select a session or PDS node.": "This action is only supported for session and PDS nodes. Please select a session or PDS node.",
+  "This action is only supported for USS directories.": "This action is only supported for USS directories.",
+  "This log file can be found at {0}/Log file location": {
+    "message": "This log file can be found at {0}",
+    "comment": [
+      "Log file location"
+    ]
+  },
+  "This upload operation may result in data loss.": "This upload operation may result in data loss.",
+  "This will remove all favorited data sets items for profile {0}. Continue?/Profile name": {
+    "message": "This will remove all favorited data sets items for profile {0}. Continue?",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "This will remove all favorited USS items for profile {0}. Continue?/Profile name": {
+    "message": "This will remove all favorited USS items for profile {0}. Continue?",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Time Ended": "Time Ended",
+  "Time Started": "Time Started",
+  "Time Submitted": "Time Submitted",
+  "To change the authentication": "To change the authentication",
+  "To continue in current authentication": "To continue in current authentication",
+  "Token-based Authentication": "Token-based Authentication",
+  "Treat the search query as a regex": "Treat the search query as a regex",
+  "Tree item is not a Zowe Explorer item.": "Tree item is not a Zowe Explorer item.",
+  "Troubleshoot Error": "Troubleshoot Error",
+  "TSO command submitted.": "TSO command submitted.",
+  "Type": "Type",
+  "Type the new pattern to add to history": "Type the new pattern to add to history",
+  "Unable to copy data set.": "Unable to copy data set.",
+  "Unable to create data set.": "Unable to create data set.",
+  "Unable to create member.": "Unable to create member.",
+  "Unable to create node:": "Unable to create node:",
+  "Unable to delete node: {0}/Error message": {
+    "message": "Unable to delete node: {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Unable to find file {0}/Label": {
+    "message": "Unable to find file {0}",
+    "comment": [
+      "Label"
+    ]
+  },
+  "Unable to find file: {0}/Error message": {
+    "message": "Unable to find file: {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Unable to gather more information": "Unable to gather more information",
+  "Unable to list attributes.": "Unable to list attributes.",
+  "Unable to log in with {0}. {1}/Service profile nameError message": {
+    "message": "Unable to log in with {0}. {1}",
+    "comment": [
+      "Service profile name",
+      "Error message"
+    ]
+  },
+  "Unable to log out with {0}. {1}/Service profile nameError message": {
+    "message": "Unable to log out with {0}. {1}",
+    "comment": [
+      "Service profile name",
+      "Error message"
+    ]
+  },
+  "Unable to perform this operation due to the following problem.": "Unable to perform this operation due to the following problem.",
+  "Unable to rename node:": "Unable to rename node:",
+  "Unable to retrieve attributes for {0}": "Unable to retrieve attributes for {0}",
+  "Unable to switch authentication for profile {0}.": "Unable to switch authentication for profile {0}.",
+  "Unable to switch to basic authentication for profile {0}.": "Unable to switch to basic authentication for profile {0}.",
+  "Unable to switch to token-based authentication for profile {0}.": "Unable to switch to token-based authentication for profile {0}.",
+  "Unix command submitted.": "Unix command submitted.",
+  "Unix System Services (USS)": "Unix System Services (USS)",
+  "Unknown": "Unknown",
+  "unknown retcode": "unknown retcode",
+  "Unpin": "Unpin",
+  "Update": "Update",
+  "Update Credentials": "Update Credentials",
+  "Update Global and Project level schemas": "Update Global and Project level schemas",
+  "Update Global schema only": "Update Global schema only",
+  "Update profile connection information": "Update profile connection information",
+  "Update stored username and password": "Update stored username and password",
+  "Update Zowe configuration schema": "Update Zowe configuration schema",
+  "Updating data set templates.": "Updating data set templates.",
+  "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
+    "message": "Updating imperative.json credential manager to {0}.\n{1}",
+    "comment": [
+      "Default credential override setting",
+      "New credential override setting"
+    ]
+  },
+  "Upload action was cancelled.": "Upload action was cancelled.",
+  "Upload with encoding": "Upload with encoding",
+  "Uploading file to USS tree": "Uploading file to USS tree",
+  "Uploading file...": "Uploading file...",
+  "Uploading to data set": "Uploading to data set",
+  "Uploading to data set...": "Uploading to data set...",
+  "Uploading USS file": "Uploading USS file",
+  "Uploading USS file with encoding": "Uploading USS file with encoding",
+  "Use Default": "Use Default",
+  "Use the search button to display data sets": "Use the search button to display data sets",
+  "Use the search button to display jobs": "Use the search button to display jobs",
+  "Use the search button to list USS files": "Use the search button to list USS files",
+  "User": "User",
+  "User dismissed the Certificate Wizard.": "User dismissed the Certificate Wizard.",
+  "User ID": "User ID",
+  "User Name": "User Name",
+  "User: ": "User: ",
+  "USS file tag": "USS file tag",
+  "USS path cannot be empty": "USS path cannot be empty",
+  "USS path must start with /": "USS path must start with /",
+  "Validating {0} Profile./The profile name": {
+    "message": "Validating {0} Profile.",
+    "comment": [
+      "The profile name"
+    ]
+  },
+  "Validating {0} was cancelled./The profile name": {
+    "message": "Validating {0} was cancelled.",
+    "comment": [
+      "The profile name"
+    ]
+  },
+  "Value": "Value",
+  "Version": "Version",
+  "View JCL (opens as an unsaved editor file)": "View JCL (opens as an unsaved editor file)",
+  "View members of a partitioned data set": "View members of a partitioned data set",
+  "Volumes": "Volumes",
+  "Waiting for data from extension...": "Waiting for data from extension...",
+  "Welcome to the integrated terminal for: {0}/Terminal Name": {
+    "message": "Welcome to the integrated terminal for: {0}",
+    "comment": [
+      "Terminal Name"
+    ]
+  },
+  "What's New in Zowe Explorer {0}": "What's New in Zowe Explorer {0}",
+  "When all jobs have completed, polling automatically stops. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.": "When all jobs have completed, polling automatically stops. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.",
+  "Write": "Write",
+  "Yes": "Yes",
+  "You are already at the root directory.": "You are already at the root directory.",
+  "You can find the latest updates and features here.": "You can find the latest updates and features here.",
+  "You must enter a new data set name.": "You must enter a new data set name.",
+  "You must enter a pattern.": "You must enter a pattern.",
+  "You must select a profile.": "You must select a profile.",
+  "You must specify a directory before moving.": "You must specify a directory before moving.",
+  "Your authOrder: {0}/Authentication order": {
+    "message": "Your authOrder: {0}",
+    "comment": [
+      "Authentication order"
+    ]
+  },
+  "Your available creds: {0}/Available credentials": {
+    "message": "Your available creds: {0}",
+    "comment": [
+      "Available credentials"
+    ]
+  },
+  "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection./Profile name": {
+    "message": "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Your jobs": "Your jobs",
+  "z/OS default codepage": "z/OS default codepage",
+  "Zowe Explorer": "Zowe Explorer",
+  "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
+  "Zowe Explorer log level: {0}/Log setting": {
+    "message": "Zowe Explorer log level: {0}",
+    "comment": [
+      "Log setting"
+    ]
+  },
+  "Zowe Explorer now auto-detects the global team configuration, regardless of the location of the currently opened VS Code working directory.": "Zowe Explorer now auto-detects the global team configuration, regardless of the location of the currently opened VS Code working directory.",
+  "Zowe Explorer now has a VS Code logger with a default log level of INFO.\n                \nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\n                \nWould you like Zowe Explorer to update to the the same log level?/CLI setting": {
+    "message": "Zowe Explorer now has a VS Code logger with a default log level of INFO.\n                \nIt looks like the Zowe CLI's ZOWE_APP_LOG_LEVEL={0}.\n                \nWould you like Zowe Explorer to update to the the same log level?",
+    "comment": [
+      "CLI setting"
+    ]
+  },
+  "Zowe Explorer profiles are being set as secured.": "Zowe Explorer profiles are being set as secured.",
+  "Zowe Explorer profiles are being set as unsecured.": "Zowe Explorer profiles are being set as unsecured.",
+  "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager.": "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager.",
+  "Zowe home directory is located at {0}/Zowe directory path": {
+    "message": "Zowe home directory is located at {0}",
+    "comment": [
+      "Zowe directory path"
+    ]
+  },
+  "Zowe MVS Command": "Zowe MVS Command",
+  "Zowe profiles initialized successfully.": "Zowe profiles initialized successfully.",
+  "Zowe TSO Command": "Zowe TSO Command",
+  "Zowe Unix Command": "Zowe Unix Command",
+  "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles.": "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles."
 }
