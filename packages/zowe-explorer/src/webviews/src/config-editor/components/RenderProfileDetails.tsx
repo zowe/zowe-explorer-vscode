@@ -105,7 +105,18 @@ export const RenderProfileDetails = ({
     return (
       <div>
         <div className="profile-heading-container">
-          <h2 title={selectedProfileKey || profileDetailsHeader}>{selectedProfileKey || profileDetailsHeader}</h2>
+          <h2
+            title={selectedProfileKey || profileDetailsHeader}
+            style={{
+              margin: 0,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: "200px",
+            }}
+          >
+            {selectedProfileKey || profileDetailsHeader}
+          </h2>
           {selectedProfileKey && (
             <div className="profile-actions">
               <button
