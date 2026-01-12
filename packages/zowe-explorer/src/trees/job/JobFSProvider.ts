@@ -41,7 +41,12 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profInfo = this._getInfoFromUri(doc.uri);
         try {
             const paginationEnabled = SettingsConfig.getDirectValue<boolean>("zowe.jobs.paginate.enabled");
-            const supportPagination = ZoweExplorerApiRegister.getJesApi(profInfo.profile).supportSpoolPagination?.() ?? false;
+            const apiRegister = ZoweExplorerApiRegister.getInstance();
+            const jesApi = FsAbstractUtils.getApiOrThrowUnavailable(profInfo.profile, () => apiRegister.getJesApi(profInfo.profile), {
+                apiName: vscode.l10n.t("JES API"),
+                registeredTypes: apiRegister.registeredJesApiTypes(),
+            });
+            const supportPagination = jesApi.supportSpoolPagination?.() ?? false;
             return paginationEnabled && supportPagination;
         } catch (err) {
             return false;
@@ -106,9 +111,14 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const results: [string, vscode.FileType][] = [];
 
+        const apiRegister = ZoweExplorerApiRegister.getInstance();
+        const jesApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getJesApi(uriInfo.profile), {
+            apiName: vscode.l10n.t("JES API"),
+            registeredTypes: apiRegister.registeredJesApiTypes(),
+        });
+
         await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile);
-        const jesApi = ZoweExplorerApiRegister.getJesApi(uriInfo.profile);
         try {
             if (FsAbstractUtils.isFilterEntry(fsEntry)) {
                 const jobFiles = await jesApi.getJobsByParameters({
@@ -224,7 +234,12 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profile = Profiles.getInstance().loadNamedProfile(metadata.profile.name);
         const profileEncoding = spoolEntry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
-        const jesApi = ZoweExplorerApiRegister.getJesApi(spoolEntry.metadata.profile);
+        const apiRegister = ZoweExplorerApiRegister.getInstance();
+        const jesApi = FsAbstractUtils.getApiOrThrowUnavailable(
+            spoolEntry.metadata.profile,
+            () => apiRegister.getJesApi(spoolEntry.metadata.profile),
+            { apiName: vscode.l10n.t("JES API"), registeredTypes: apiRegister.registeredJesApiTypes() }
+        );
         await AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
         const query = new URLSearchParams(uri.query);
@@ -359,7 +374,11 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             await AuthUtils.ensureAuthNotCancelled(profInfo.profile);
             await AuthHandler.waitForUnlock(profInfo.profile);
-            await ZoweExplorerApiRegister.getJesApi(profInfo.profile).deleteJob(entry.job.jobname, entry.job.jobid);
+            const apiRegister = ZoweExplorerApiRegister.getInstance();
+            await FsAbstractUtils.getApiOrThrowUnavailable(profInfo.profile, () => apiRegister.getJesApi(profInfo.profile), {
+                apiName: vscode.l10n.t("JES API"),
+                registeredTypes: apiRegister.registeredJesApiTypes(),
+            }).deleteJob(entry.job.jobname, entry.job.jobid);
         } catch (err) {
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({

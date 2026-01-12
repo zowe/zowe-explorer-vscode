@@ -193,6 +193,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.setDataSetFilter",
+        "title": "%ds.setDatasetFilter%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.tableView",
         "title": "%tableView%",
         "category": "Zowe Explorer"
@@ -567,6 +572,11 @@
       {
         "command": "zowe.uss.copyRelativePath",
         "title": "%uss.copyRelativePath%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.setUssPath",
+        "title": "%uss.setUssPath%",
         "category": "Zowe Explorer"
       },
       {

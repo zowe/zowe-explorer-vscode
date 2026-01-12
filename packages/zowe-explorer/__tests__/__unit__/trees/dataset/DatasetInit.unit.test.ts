@@ -235,6 +235,16 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: jest.spyOn(DatasetTableView.getInstance(), "handlePatternSearch"), arg: [test.context] }],
             },
             {
+                name: "zowe.ds.setDataSetFilter",
+                parm: [undefined, undefined],
+                mock: [{ spy: jest.spyOn(DatasetActions, "filterDatasetTreePrompt"), arg: [dsProvider] }],
+            },
+            {
+                name: "zowe.ds.setDataSetFilter",
+                parm: ["testSession", "HLQ.DATASET"],
+                mock: [{ spy: jest.spyOn(DatasetActions, "filterDatasetTree"), arg: [dsProvider, "testSession", "HLQ.DATASET"] }],
+            },
+            {
                 name: "onDidChangeConfiguration",
                 mock: [{ spy: jest.spyOn(dsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },

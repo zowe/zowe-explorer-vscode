@@ -226,6 +226,16 @@ export class DatasetInit {
         );
 
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.setDataSetFilter", async (session, datasetPattern) => {
+                if (session && datasetPattern) {
+                    await DatasetActions.filterDatasetTree(datasetProvider, session, datasetPattern);
+                } else {
+                    await DatasetActions.filterDatasetTreePrompt(datasetProvider);
+                }
+            })
+        );
+
+        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.downloadAllMembers", async (node: IZoweDatasetTreeNode) =>
                 DatasetActions.downloadAllMembers(node)
             )

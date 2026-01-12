@@ -135,10 +135,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 try {
                     await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(dataSetTypeEnum, dsname, transformedAttrs);
                 } catch (err) {
-                    if (err.errorCode.toString() === "404" || err.errorCode.toString() === "500") {
+                    if (err.errorCode?.toString() === "404" || err.errorCode?.toString() === "500") {
                         Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                         return;
                     }
+                    throw err;
                 }
                 // create directory entry in local
                 DatasetFSProvider.instance.createDirectory(destUri);
@@ -146,6 +147,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const children = await sourceNode.getChildren();
             for (const childNode of children) {
                 // move members within the folder to the destination
+                if (SharedContext.isInformation(childNode)) {
+                    continue;
+                }
                 await this.crossLparMove(
                     childNode,
                     sourceUri.with({
@@ -163,7 +167,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
                 if (entry == null) {
                     if (SharedContext.isDsMember(sourceNode)) {
-                        dsname = destUri.path.match(/^\/[^/]+\/(.*?)\/[^/]+$/)[1] + "(" + (sourceNode.getLabel() as string) + ")";
+                        dsname =
+                            path.posix.dirname(destUri.path.substring(destinationInfo.slashAfterProfilePos + 1)) +
+                            "(" +
+                            (sourceNode.getLabel() as string) +
+                            ")";
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
                     } else {
                         dsname = sourceNode.getLabel() as string;
@@ -176,12 +184,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             } catch (err) {
                 //file might already exist. Ignore the error and try to write it to lpar
-                // only bail out on a real 404/500 – guard against undefined
-                const code = err.errorCode?.toString();
-                if (code === "404" || code === "500") {
+                if (err.errorCode?.toString() === "404" || err.errorCode?.toString() === "500") {
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
                     return;
                 }
+                throw err;
             }
             // read the contents from the source LPAR
             const contents = await DatasetFSProvider.instance.readFile(sourceNode.resourceUri);
@@ -225,16 +232,22 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         if (!droppedItems) return;
 
         let target = targetNode;
-        if (!target) return;
+        if (!target) {
+            return;
+        } else if (SharedContext.isDsMember(target) || SharedContext.isInformation(target)) {
+            // If node is member or says "No data sets/members found", use its parent as target
+            target = target.getParent() as IZoweDatasetTreeNode;
+        }
 
         // check each dropped node for same-object, member collision, and structure issues
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             if (!node) continue;
-            const srcDsn = SharedUtils.getNodeProperty(node, "label");
+            const srcDsn = (SharedContext.isDsMember(node) ? node.getParent() : node).getLabel() as string;
+            const tgtDsn = target.getLabel() as string;
 
             // 1. Same-object check
-            if (node.getProfile && target.getProfile && (await SharedUtils.isSamePhysicalDataset(node.getProfile(), target.getProfile(), srcDsn))) {
+            if (tgtDsn === srcDsn && (await SharedUtils.isSamePhysicalDataset(node.getProfile(), target.getProfile(), srcDsn))) {
                 Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
                 return;
             }
@@ -258,14 +271,16 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
 
             // 3. Dataset structure checks
-            if (SharedContext.isPds(target) || SharedContext.isDsMember(target)) {
-                if (SharedContext.isPds(node) || SharedContext.isDs(node)) {
-                    Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset."));
-                    return;
-                }
+            if (SharedContext.isPds(target) && (SharedContext.isPds(node) || SharedContext.isDs(node))) {
+                Gui.errorMessage(vscode.l10n.t("Cannot drop a sequential dataset or a partitioned dataset into another partitioned dataset."));
+                return;
             }
             if ((SharedContext.isDsMember(node) || SharedContext.isPds(node)) && SharedContext.isDs(target)) {
                 Gui.errorMessage(vscode.l10n.t("Cannot drop a partitioned dataset or member into a sequential dataset."));
+                return;
+            }
+            if (SharedContext.isDsMember(node) && SharedContext.isSession(target)) {
+                Gui.errorMessage(vscode.l10n.t("Cannot drop a dataset member into a profile node."));
                 return;
             }
             const parent = target.getParent();
@@ -417,13 +432,20 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     /**
      * Creates and returns new profile node, and pushes it to mFavorites
      * @param profileName Name of profile
+     * @param targetProfileType Optional profile type to filter creation
      * @returns {ZoweDatasetNode}
      */
-    public async createProfileNodeForFavs(profileName: string): Promise<ZoweDatasetNode | null> {
+    public async createProfileNodeForFavs(profileName: string, targetProfileType?: string): Promise<ZoweDatasetNode | null> {
         ZoweLogger.trace("DatasetTree.createProfileNodeForFavs called.");
         let favProfileNode: ZoweDatasetNode;
         try {
             const profile = Profiles.getInstance().loadNamedProfile(profileName);
+            if (targetProfileType && profile.type !== targetProfileType) {
+                return null;
+            }
+            if (!ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes().includes(profile.type)) {
+                return null;
+            }
             favProfileNode = new ZoweDatasetNode({
                 label: profileName,
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -473,7 +495,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         await this.refreshFavorites();
     }
 
-    public async refreshFavorites(): Promise<void> {
+    public async refreshFavorites(profileType?: string): Promise<void> {
         const lines: string[] = this.mPersistence.readFavorites();
         if (lines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
@@ -485,7 +507,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // The profile node used for grouping respective favorited items.
             // Create a node if it does not already exist in the Favorites array
             const favProfileNode =
-                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ?? (await this.createProfileNodeForFavs(fav.profileName));
+                this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ??
+                (await this.createProfileNodeForFavs(fav.profileName, profileType));
 
             if (favProfileNode == null || fav.contextValue == null || favProfileNode.children.some((child) => child.label === fav.label)) {
                 continue;
@@ -508,6 +531,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode): Promise<ZoweDatasetNode> {
         ZoweLogger.trace("DatasetTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
+
         let node: ZoweDatasetNode;
         if (contextValue.includes(Constants.DS_PDS_CONTEXT) || contextValue.includes(Constants.DS_DS_CONTEXT)) {
             if (contextValue.includes(Constants.DS_PDS_CONTEXT)) {
@@ -517,7 +541,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     parentNode,
                     profile,
                 });
-                if (!DatasetFSProvider.instance.exists(node.resourceUri)) {
+                if (
+                    !DatasetFSProvider.instance.exists(node.resourceUri) &&
+                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type)
+                ) {
                     await vscode.workspace.fs.createDirectory(node.resourceUri);
                 }
             } else {
@@ -528,7 +555,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     profile,
                     contextOverride: contextValue,
                 });
-                if (!DatasetFSProvider.instance.exists(node.resourceUri)) {
+                if (
+                    !DatasetFSProvider.instance.exists(node.resourceUri) &&
+                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type)
+                ) {
                     vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
                 }
             }
@@ -602,11 +632,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 }
             } catch (error) {
                 const errMessage: string = vscode.l10n.t({
-                    message: `Error: You have Zowe data set favorites that refer to a non-existent CLI profile named: {0}.
-                    To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.
-                    Would you like to do this now? {1}`,
+                    message: `Error: You have Zowe data set favorites that refer to a non-existent profile named: {0}.
+To resolve this, you can remove {0} from the Favorites section of Zowe Explorer's Data Sets view.\n
+Would you like to do this now?`,
                     args: [profileName, SharedUtils.getAppName()],
-                    comment: ["Profile name", "Application name"],
+                    comment: ["Profile name"],
                 });
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
                 ZoweLogger.error(errMessage + error.toString());
