@@ -484,10 +484,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     public async readDirectoryImplementation(uri: vscode.Uri): Promise<DirEntry> {
         let dsEntry: DirEntry | DsEntry = null;
-        try {
-            const query = new URLSearchParams(uri.query);
-            const shouldFetch = query.get("fetch") === "true" || query.has("pattern");
+        const query = new URLSearchParams(uri.query);
+        const shouldFetch = query.get("fetch") === "true" || query.has("pattern");
 
+        try {
             dsEntry = shouldFetch ? await this.remoteLookupForResource(uri) : this._lookupAsDirectory(uri, false);
         } catch (err) {
             if (!(err instanceof vscode.FileSystemError)) {
@@ -495,7 +495,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
 
             //TODO Feature Flag
-            if (err.code === "FileNotFound" && FeatureFlags.get("fetchByDefault")) {
+            if (err.code === "FileNotFound" && FeatureFlags.get("fetchByDefault") && !shouldFetch) {
                 dsEntry = await this.remoteLookupForResource(uri);
             }
         }
