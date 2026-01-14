@@ -39,7 +39,6 @@ When("a user clicks search button for the profile", async function () {
     // Locate and select the search button on the profile node
     const searchButton = actionButtons[actionButtons.length - 1];
     await searchButton.wait();
-    await expect(searchButton.elem).toBeDefined();
     await searchButton.elem.click();
 });
 Then(/the user will be prompted for (.*) credentials/, async function (authType: string) {

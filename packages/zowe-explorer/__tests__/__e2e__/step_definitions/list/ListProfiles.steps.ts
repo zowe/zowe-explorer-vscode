@@ -11,42 +11,38 @@
 
 import { Then, When } from "@cucumber/cucumber";
 import { paneDivForTree } from "../../../__common__/shared.wdio";
-import { TreeItem } from "wdio-vscode-service";
 import { Key } from "webdriverio";
 import quickPick from "../../../__pageobjects__/QuickPick";
+import { ProfileNode } from "../../../__pageobjects__/ProfileNode";
 
 When(/the user has a (.*) profile in their (.*) tree/, async function (initialState: string, tree: string) {
     const isExpanded = initialState === "expanded";
     this.tree = tree;
     this.treePane = await paneDivForTree(tree);
-    const visibleItems = ((await this.treePane.getVisibleItems()) as TreeItem[]).filter(
-        async (treeItem) => (await treeItem.getLabel()) !== "Favorites"
-    );
-    this.profileNode = visibleItems.find(
-        async (treeItem) => (await treeItem.isExpanded()) === isExpanded && (await treeItem.getLabel()) === process.env.ZE_TEST_PROFILE_NAME
-    );
-    await expect(this.profileNode).toBeDefined();
+    this.profileNode = new ProfileNode(browser, this.treePane, process.env.ZE_TEST_PROFILE_NAME);
+    await expect(await this.profileNode.find()).toBeDefined();
+    await expect(await (await this.profileNode.find()).isExpanded()).toBe(isExpanded);
 });
 
 Then(/a user can (.*) a profile with a filter set/, async function (action: string) {
     if (action === "collapse") {
-        await this.profileNode.collapse();
-        await browser.waitUntil(async (): Promise<boolean> => !(await this.profileNode.isExpanded()));
+        await (await this.profileNode.find()).collapse();
     } else {
-        await this.profileNode.expand();
-        await browser.waitUntil((): Promise<boolean> => this.profileNode.isExpanded());
+        await (await this.profileNode.find()).expand();
     }
+    await this.profileNode.waitUntilExpanded(action === "expand");
 });
 
 Then("the user can set an existing filter on the profile", async function () {
-    if (await this.profileNode.isExpanded()) {
-        await this.profileNode.collapse();
+    if (await (await this.profileNode.find()).isExpanded()) {
+        await (await this.profileNode.find()).collapse();
     }
-    await this.profileNode.elem.moveTo();
+    await (await this.profileNode.find()).elem.moveTo();
 
     // Locate and click on the search icon beside the profile node
-    const actionButtons = await this.profileNode.getActionButtons();
+    const actionButtons = await (await this.profileNode.find()).getActionButtons();
     const searchButton = actionButtons[actionButtons.length - 1];
+    await searchButton.wait();
     await searchButton.elem.click();
 
     await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
@@ -66,16 +62,18 @@ Then("the user can set an existing filter on the profile", async function () {
     const treeLowercased = this.tree.toLowerCase();
     // Add ", Recent Filters" suffix to label as it is added by VS Code in DOM
     const existingFilterSelector = await quickPick.findItem(`${getFilter(treeLowercased)}, Recent Filters`);
-    await expect(existingFilterSelector).toBeClickable();
+    await browser.waitUntil((): Promise<boolean> => existingFilterSelector.isClickable());
     await existingFilterSelector.click();
     if (treeLowercased === "jobs") {
         // For the Jobs tree, the "Submit this query" entry will need selected after entering filter
-        const submitEntry = await quickPick.findItemByIndex(0);
+        const submitEntry = await quickPick.findItem("$(check) Submit this query");
         await expect(submitEntry).toBeClickable();
         await submitEntry.click();
     } else {
+        const inputBox = await $('.input[aria-describedby="quickInput_message"]');
+        await expect(inputBox).toBeClickable();
         await browser.keys(Key.Enter);
     }
 
-    await browser.waitUntil((): Promise<boolean> => this.profileNode.isExpanded());
+    await this.profileNode.waitUntilExpanded();
 });
