@@ -24,7 +24,6 @@ const path = require("path");
 
 const RELEASE_NOTES_PATH = path.join(__dirname, "../src/webviews/dist/resources/release-notes.md");
 const L10N_BUNDLE_PATH = path.join(__dirname, "../l10n/bundle.l10n.json");
-const RELEASE_NOTES_L10N_PATH = path.join(__dirname, "../l10n/release-notes.l10n.json");
 
 function cleanMarkdownText(text) {
     return text
@@ -125,9 +124,6 @@ function main() {
     const entryCount = Object.keys(entries).length;
 
     console.log(`Extracted ${entryCount} localizable strings from release notes.`);
-
-    fs.writeFileSync(RELEASE_NOTES_L10N_PATH, JSON.stringify(entries, null, 2) + "\n");
-    console.log(`Written to: ${RELEASE_NOTES_L10N_PATH}`);
 
     let bundle = {};
     try {

@@ -101,6 +101,7 @@ export function App(): JSX.Element {
 
   /**
    * Basically does the same thing as parseReleaseNotes in generateReleaseNotesL10n.js
+   * but it just inserts the localized strings into the correct markdown content
    */
   const localizeMarkdown = (markdown: string): string => {
     if (!l10nReady) {
@@ -129,11 +130,12 @@ export function App(): JSX.Element {
 
       const listMatch = trimmed.match(/^([-*])\s+(.+)$/);
       if (listMatch) {
+        const indent = line.match(/^\s*/)?.[0] ?? "";
         const bullet = listMatch[1];
         const originalText = listMatch[2];
         const cleanedText = cleanTextForL10n(originalText);
         const localizedText = l10n.t(cleanedText);
-        result.push(`${bullet} ${localizedText}`);
+        result.push(`${indent}${bullet} ${localizedText}`);
         continue;
       }
 
