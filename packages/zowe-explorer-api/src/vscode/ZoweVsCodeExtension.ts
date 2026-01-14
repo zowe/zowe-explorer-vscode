@@ -120,8 +120,12 @@ export class ZoweVsCodeExtension {
             }
             cache.updateCachedProfile(loadProfile, undefined, apiRegister);
             imperative.AuthOrder.addCredsToSession(loadSession, ZoweExplorerZosmf.CommonApi.getCommandArgs(loadProfile));
-            ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(loadProfile);
 
+            // Only fire the onProfileUpdated event if the Zowe Explorer API is registered
+            // This is to avoid potential errors when Zowe Explorer APIs are not available
+            if (ZoweVsCodeExtension.getZoweExplorerApi() != null) {
+                ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(loadProfile);
+            }
             return loadProfile;
         }
         return undefined;

@@ -186,12 +186,13 @@ export class ProfilesCache {
         // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
         const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
 
-        // Ensure the profile is added to the allProfiles array if it doesn't exist
+        // Warn users that the profile is not cached
         if (profIndex === -1) {
-            this.allProfiles.push(profileLoaded);
-        } else {
-            this.allProfiles[profIndex].profile = profileLoaded.profile;
+            this.log.error(`Profile ${profileLoaded.name} of type ${profileLoaded.type} is not cached.`);
+            return;
         }
+
+        this.allProfiles[profIndex].profile = profileLoaded.profile;
 
         const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
         if (defaultProf != null && defaultProf.name === profileLoaded.name) {
