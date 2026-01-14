@@ -6,16 +6,17 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added a new `Poll For Job Completion` button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting `Zowe > Jobs: Poll Interval`. [#3967](https://github.com/zowe/zowe-explorer-vscode/pull/3967)
+- Enhanced "Show Attributes" feature with improved visual presentation: aligned all attribute table columns consistently across core and extender sections, added thousands separators for numeric values, and automatically appends the `%` symbol to "Used Space" values for better readability. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)
 - Expose commands to drive search in the USS views. [#3933](https://github.com/zowe/zowe-explorer-vscode/issues/3933)
+- Added a new `Poll For Job Completion` button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting `Zowe > Jobs: Poll Interval`. [#3967](https://github.com/zowe/zowe-explorer-vscode/pull/3967)
 - Expose commands to drive filtering in the Data Sets views [#3992](https://github.com/zowe/zowe-explorer-vscode/issues/3992)
 
 ### Bug fixes
 
-- Fixed an issue with the "Create New Data Set" feature where a data set attribute's original value was deleted after the user dismissed the input box. Now, the attribute's value is preserved when the user cancels their input. [#4003](https://github.com/zowe/zowe-explorer-vscode/issues/4003)
-- Fixed an issue where logical record length truncation detection failed for extenders. [#4002](https://github.com/zowe/zowe-explorer-vscode/pull/4002)
-- Fixed an issue where an error appeared when moving an empty PDS across LPARs. [#4001](https://github.com/zowe/zowe-explorer-vscode/pull/4001)
 - Fixed issue seen with profile hover information getting out of date or out of sync. [#3638](https://github.com/zowe/zowe-explorer-vscode/issues/3638)
+- Fixed an issue where an error appeared when moving an empty PDS across LPARs. [#4001](https://github.com/zowe/zowe-explorer-vscode/pull/4001)
+- Fixed an issue where logical record length truncation detection failed for extenders. [#4002](https://github.com/zowe/zowe-explorer-vscode/pull/4002)
+- Fixed an issue with the "Create New Data Set" feature where a data set attribute's original value was deleted after the user dismissed the input box. Now, the attribute's value is preserved when the user cancels their input. [#4003](https://github.com/zowe/zowe-explorer-vscode/issues/4003)
 
 ## `3.4.0`
 
