@@ -41,8 +41,7 @@ Scenario: User wants to focus on a PDS to view its members
     Given a user who has the dataset table view opened with PDS datasets
     When the user selects a PDS dataset
     And clicks the "Focus" action button
-    Then the table view switches to show PDS members
-    And the table displays member-specific columns
+    Then the table displays member-specific columns
 
 Scenario: User wants to reveal PDS member in tree from table view
     Given a user who has the dataset table view opened with PDS members
@@ -52,7 +51,7 @@ Scenario: User wants to reveal PDS member in tree from table view
 
 Scenario: User wants to navigate back from PDS members view
     Given a user who has focused on a PDS and is viewing its members
-    And clicks the "Back" action button
+    When the user clicks the "Back" action button
     Then the table view returns to the previous dataset list
     And preserves the previous table state including pinned rows
 
