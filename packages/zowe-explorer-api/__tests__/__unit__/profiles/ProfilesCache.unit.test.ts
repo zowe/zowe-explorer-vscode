@@ -372,9 +372,18 @@ describe("ProfilesCache", () => {
         expect(profCache.allProfiles[0].profile).toMatchObject(lpar2Profile.profile);
         expect((profCache as any).defaultProfileByType.get("zosmf").profile).toMatchObject(lpar2Profile.profile);
     });
-    it("updateCachedProfile should add a new cached profile if it doesn't exist and update a given node", () => {
+
+    it("updateCachedProfile should return early if the profile is not in the cache", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         profCache.allProfiles = [];
+        profCache.updateCachedProfile(lpar1Profile as imperative.IProfileLoaded);
+        expect(profCache.allProfiles.length).toBe(0);
+        expect(fakeLogger.error).toHaveBeenCalledWith(expect.stringContaining("Profile lpar1 of type zosmf is not cached."));
+    });
+
+    it("updateCachedProfile should update a cached profile and update a given node", () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+        profCache.allProfiles = [lpar1Profile as imperative.IProfileLoaded];
         const extenderNode = {
             setProfileToChoice: jest.fn(),
         } as unknown as Types.IZoweNodeType;
