@@ -557,9 +557,9 @@ export class DatasetTableViewPage {
 
         // Wait for filter popup and input to be ready before interacting
         const filterPopup = await this.browser.$(".ag-filter-menu");
-        await filterPopup.waitForDisplayed({ timeout: 5000 });
+        await filterPopup.waitForDisplayed();
         const filterInput = await filterPopup.$("input");
-        await filterInput.waitForDisplayed({ timeout: 5000 });
+        await filterInput.waitForDisplayed();
 
         // Use browser command to send input event (clearValue doesn't trigger filter update)
         await this.browser.execute((el: any) => {
