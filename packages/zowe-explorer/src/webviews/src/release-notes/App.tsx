@@ -100,7 +100,7 @@ export function App(): JSX.Element {
   };
 
   /**
-   * Basically does the same thing as parseReleaseNotes in generateReleaseNotesL10n.js
+   * Basically does the same thing as parseMarkdown in generateReleaseNotesL10n.js
    * but it just inserts the localized strings into the correct markdown content
    */
   const localizeMarkdown = (markdown: string): string => {

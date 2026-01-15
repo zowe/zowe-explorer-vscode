@@ -10,8 +10,9 @@
  */
 
 /**
- * This script extracts localizable strings from release-notes.md and generates
- * l10n entries that can be used for translation. 
+ * This script extracts localizable strings from release-notes.md and CHANGELOG.md 
+ * and generates l10n entries that can be used for translation. 
+ * Thanks to claude for making the regex
  *
  * The script parses markdown content and extracts:
  * - Section headings (### Heading)
@@ -23,6 +24,7 @@ const fs = require("fs");
 const path = require("path");
 
 const RELEASE_NOTES_PATH = path.join(__dirname, "../src/webviews/dist/resources/release-notes.md");
+const CHANGELOG_PATH = path.join(__dirname, "../CHANGELOG.md");
 const L10N_BUNDLE_PATH = path.join(__dirname, "../l10n/bundle.l10n.json");
 
 function cleanMarkdownText(text) {
@@ -45,7 +47,7 @@ function isImageOnlyLine(line) {
     return /^!\[[^\]]*\]\([^)]+\)$/.test(trimmed);
 }
 
-function parseReleaseNotes(markdown) {
+function parseMarkdown(markdown) {
     const entries = {};
     const lines= markdown.split("\n");
     let currentVersion = null;
@@ -75,7 +77,7 @@ function parseReleaseNotes(markdown) {
         if (trimmedLine.startsWith("<!--") || trimmedLine.endsWith("-->")) {
             continue;
         }
-        const versionMatch = trimmedLine.match(/^## `(\d+\.\d+)\.\d+`$/);
+        const versionMatch = trimmedLine.match(/^##\s+(.*)$/);
         if (versionMatch) {
             flushParagraph();
             currentVersion = versionMatch[1];
@@ -112,18 +114,35 @@ function parseReleaseNotes(markdown) {
 }
 function main() {
     let releaseNotesContent;
+    let changelogContent;
     try {
         releaseNotesContent = fs.readFileSync(RELEASE_NOTES_PATH, "utf-8");
     } catch (error) {
-        console.error(`Error reading release notes file: ${error.message}`);
-        console.log("Skipping release notes l10n generation.");
+        console.warn(`Error reading release notes file: ${error.message}`);
+    }
+
+    try {
+        changelogContent = fs.readFileSync(CHANGELOG_PATH, "utf-8");
+    } catch (error) {
+        console.warn(`Error reading changelog file: ${error.message}`);
+    }
+
+    if (!releaseNotesContent && !changelogContent) {
+        console.log("No content to parse. Skipping l10n generation.");
         return;
     }
 
-    const entries = parseReleaseNotes(releaseNotesContent);
+    const entries = {};
+    if (releaseNotesContent) {
+        Object.assign(entries, parseMarkdown(releaseNotesContent));
+    }
+    if (changelogContent) {
+        Object.assign(entries, parseMarkdown(changelogContent));
+    }
+
     const entryCount = Object.keys(entries).length;
 
-    console.log(`Extracted ${entryCount} localizable strings from release notes.`);
+    console.log(`Extracted ${entryCount} localizable strings from release notes and changelog.`);
 
     let bundle = {};
     try {
