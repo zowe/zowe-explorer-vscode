@@ -188,7 +188,7 @@ export class ProfilesCache {
 
         // Warn users that the profile is not cached
         if (profIndex === -1) {
-            this.log.error(`Profile ${profileLoaded.name} of type ${profileLoaded.type} is not cached.`);
+            this.log.warn(`Profile ${profileLoaded.name} of type ${profileLoaded.type} is not cached.`);
             return;
         }
 
