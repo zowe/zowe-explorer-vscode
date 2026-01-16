@@ -28,7 +28,7 @@ Added support to delete VSAM data sets via right-click action.
 
 #### Get JCL encoding
 
-Added support for `encoding` profile property when retrieving JCL with z/OSMF, i.e. `"encoding": "IBM-1147"` included in the z/OSMF profile to view JCL with "IBM-1147" encoding via the right-click `Get JCL` job option.
+Added support for `encoding` profile property when retrieving JCL with z/OSMF. For example, include `"encoding": "IBM-1147"` in the z/OSMF profile to view JCL with "IBM-1147" encoding via the right-click `Get JCL` job option.
 
 #### Submit job with encoding
 
