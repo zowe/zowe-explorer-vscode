@@ -500,6 +500,10 @@ export class DatasetTableViewPage {
      * @param filterText The text to filter by (e.g., exact dataset name)
      */
     public async setColumnFilter(filterText: string): Promise<void> {
+        // Ensure we're in the webview frame before interacting with AG Grid elements
+        // (frame context can be lost between operations)
+        await this.open();
+
         // Click on the dsname column header's filter icon to open the filter popup
         // The filter input is automatically focused when the popup opens
         const filterIcon = await this.browser.$("[col-id='dsname'] .ag-header-cell-filter-button");
@@ -543,6 +547,10 @@ export class DatasetTableViewPage {
      * Clears any applied column filter from the dsname column.
      */
     public async clearColumnFilter(): Promise<void> {
+        // Ensure we're in the webview frame before interacting with AG Grid elements
+        // (frame context can be lost between operations)
+        await this.open();
+
         // Click on the dsname column header's filter icon
         // The filter input is automatically focused when the popup opens
         const filterIcon = await this.browser.$("[col-id='dsname'] .ag-header-cell-filter-button");
