@@ -8,7 +8,7 @@ Updated minimum VS Code version from 1.79 to 1.90. We are dropping support for V
 
 #### Loading credential manager options
 
-Added support for loading credential manager options from the imperative.json file. Add a `credentialManagerOptions` object in the JSON object in `imperative.json` to specify options for the current credential manager.
+Added support for loading credential manager options from the imperative.json file. Added a `credentialManagerOptions` object in the JSON object in `imperative.json` to specify options for the current credential manager.
 
 #### Windows custom persistence levels
 
