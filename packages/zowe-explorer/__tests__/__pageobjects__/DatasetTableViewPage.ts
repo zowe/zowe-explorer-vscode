@@ -507,8 +507,8 @@ export class DatasetTableViewPage {
         await filterIcon.click();
 
         // Wait for filter popup and input to be ready before typing
-        const filterPopup = await this.browser.$(".ag-filter-menu");
-        await filterPopup.waitForDisplayed({ timeout: 5000 });
+        const filterPopup = await this.browser.$(".ag-menu.ag-filter-menu");
+        await filterPopup.waitForDisplayed();
         const filterInput = await filterPopup.$("input");
         await filterInput.waitForDisplayed({ timeout: 5000 });
         await filterInput.setValue(filterText);
@@ -556,8 +556,8 @@ export class DatasetTableViewPage {
         await filterIcon.click();
 
         // Wait for filter popup and input to be ready before interacting
-        const filterPopup = await this.browser.$(".ag-filter-menu");
-        await filterPopup.waitForDisplayed({ timeout: 5000 });
+        const filterPopup = await this.browser.$(".ag-menu.ag-filter-menu");
+        await filterPopup.waitForDisplayed();
         const filterInput = await filterPopup.$("input");
         await filterInput.waitForDisplayed({ timeout: 5000 });
 
