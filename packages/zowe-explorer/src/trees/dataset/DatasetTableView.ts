@@ -414,6 +414,9 @@ export class DatasetTableView {
         },
     };
 
+    // User locale captured at table build time for date formatting
+    private userLocale: string = "en-US";
+
     // These fields are typically included in data set metadata.
     private expectedFields = [
         {
@@ -429,11 +432,19 @@ export class DatasetTableView {
             field: "createdDate",
             headerName: l10n.t("Creation Date"),
             useDateComparison: true,
+            valueFormatter: (params: { value: string }): string => {
+                if (!params.value) return "";
+                return new Date(params.value).toLocaleDateString(this.userLocale);
+            },
         },
         {
             field: "modifiedDate",
             headerName: l10n.t("Modified Date"),
             useDateComparison: true,
+            valueFormatter: (params: { value: string }): string => {
+                if (!params.value) return "";
+                return new Date(params.value).toLocaleString(this.userLocale);
+            },
         },
         { field: "lrecl", headerName: l10n.t("Record Length") },
         { field: "migr", headerName: l10n.t("Migrated") },
@@ -897,8 +908,8 @@ export class DatasetTableView {
         return {
             dsname: info.name,
             dsorg: info.dsorg || "",
-            createdDate: info.createdDate?.toLocaleDateString(),
-            modifiedDate: info.modifiedDate?.toLocaleString(),
+            createdDate: info.createdDate?.toISOString(),
+            modifiedDate: info.modifiedDate?.toISOString(),
             lrecl: info.lrecl,
             migr: info.migr,
             recfm: info.recfm,
@@ -936,8 +947,8 @@ export class DatasetTableView {
         const baseRow = {
             dsname: info.name,
             dsorg: info.dsorg,
-            createdDate: info.createdDate?.toLocaleDateString(),
-            modifiedDate: info.modifiedDate?.toLocaleString(),
+            createdDate: info.createdDate?.toISOString(),
+            modifiedDate: info.modifiedDate?.toISOString(),
             lrecl: info.lrecl,
             migr: info.migr,
             recfm: info.recfm,
@@ -1076,6 +1087,9 @@ export class DatasetTableView {
      */
     private async generateTable(context: ExtensionContext): Promise<Table.Instance> {
         this.context = context; // Store context for navigation actions
+        // Capture user locale at table build time for date formatting
+        // Use Intl API to get the system's regional locale
+        this.userLocale = new Intl.DateTimeFormat().resolvedOptions().locale;
         const useTreeMode = await this.currentDataSource.supportsHierarchy();
         const rows = await this.generateRows(useTreeMode);
 
