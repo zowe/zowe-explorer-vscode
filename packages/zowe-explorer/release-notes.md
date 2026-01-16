@@ -32,7 +32,7 @@ Added support for `encoding` profile property when retrieving JCL with z/OSMF. F
 
 #### Submit job with encoding
 
-Added support for `jobEncoding` profile property when submitting jobs to z/OSMF, i.e. `"jobEncoding": "IBM-1147"` included in the z/OSMF profile to submit jobs with "IBM-1147" encoding.
+Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. For example, include `"jobEncoding": "IBM-1147"` in the z/OSMF profile to submit jobs with "IBM-1147" encoding.
 
 ## `3.3.0`
 
