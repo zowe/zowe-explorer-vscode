@@ -281,6 +281,10 @@ export class DatasetTableViewPage {
      * Verifies a column exists by its ID.
      */
     public async verifyColumnExists(columnId: string): Promise<void> {
+        // Ensure we're in the webview frame before interacting with AG Grid elements
+        // (frame context can be lost between operations)
+        await this.open();
+
         const header = this.columnHeader(columnId);
         await header.waitForExist({ timeout: 30000 });
     }
