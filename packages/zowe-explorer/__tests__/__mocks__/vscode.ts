@@ -1820,6 +1820,11 @@ export namespace env {
     export const appName = "Visual Studio Code";
 
     /**
+     * Represents the preferred user-language, like `de-CH`, `fr`, or `en-US`.
+     */
+    export let language = "en";
+
+    /**
      * The system clipboard.
      */
     export const clipboard: Clipboard = {
