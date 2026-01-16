@@ -39,6 +39,8 @@ export class ProfilesCache {
     protected profilesByType = new Map<string, imperative.IProfileLoaded[]>();
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected overrideWithEnv = false;
+    // Maps profile location path to profile info for rename detection
+    private profileLocationMap = new Map<string, { name: string; type: string }>();
 
     public constructor(protected log: imperative.Logger, protected cwd?: string) {
         this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
@@ -245,6 +247,8 @@ export class ProfilesCache {
         const allTypes = new Set(this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []));
         allTypes.add("ssh");
         allTypes.add("base");
+        const currentProfileLocations = new Set<string>();
+
         for (const type of allTypes) {
             const tmpAllProfiles: imperative.IProfileLoaded[] = [];
             // Step 1: Get all profiles for each registered type
@@ -263,6 +267,19 @@ export class ProfilesCache {
                     // Step 3: Update allProfiles list
                     const existingProfile = this.allProfiles.find((tmpProf) => tmpProf.name === prof.profName && tmpProf.type === prof.profType);
                     tmpAllProfiles.push(existingProfile ? Object.assign(existingProfile, profileFix) : profileFix);
+
+                    // Step 4: Detect profile rename and update auth state
+                    const profLoc = Array.isArray(prof.profLoc.osLoc) ? prof.profLoc.osLoc.join("/") : prof.profLoc.osLoc;
+                    if (profLoc) {
+                        currentProfileLocations.add(profLoc);
+                        const oldEntry = this.profileLocationMap.get(profLoc);
+                        if (oldEntry && oldEntry.name !== prof.profName && oldEntry.type === prof.profType) {
+                            // Profile was renamed - update auth state via lazy import
+                            this.updateAuthStateForRenamedProfile(oldEntry.name, prof.profName);
+                        }
+                        // Update the map with the current profile info for this location
+                        this.profileLocationMap.set(profLoc, { name: prof.profName, type: prof.profType });
+                    }
                 }
                 allProfiles.push(...tmpAllProfiles);
                 this.profilesByType.set(type, tmpAllProfiles);
@@ -273,6 +290,13 @@ export class ProfilesCache {
         for (const oldType of [...this.profilesByType.keys()].filter((type) => !allProfiles.some((prof) => prof.type === type))) {
             this.profilesByType.delete(oldType);
             this.defaultProfileByType.delete(oldType);
+        }
+
+        // Clean up stale entries from profileLocationMap (profiles that no longer exist)
+        for (const [location] of this.profileLocationMap) {
+            if (!currentProfileLocations.has(location)) {
+                this.profileLocationMap.delete(location);
+            }
         }
         this.checkForEnvVarAndUpdate();
         this.profilesForValidation = [];
@@ -586,5 +610,18 @@ export class ProfilesCache {
                 profile.profile.password = process.env[passwordEnvVar];
             }
         }
+    }
+
+    /**
+     * Updates authentication state when a profile is renamed using lazy import to avoid circular dependency.
+     * @param oldProfileName The previous name of the profile
+     * @param newProfileName The new name of the profile
+     */
+    private updateAuthStateForRenamedProfile(oldProfileName: string, newProfileName: string): void {
+        // Use lazy require to avoid circular dependency with AuthHandler
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { AuthHandler } = require("./AuthHandler");
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        AuthHandler.updateProfileName(oldProfileName, newProfileName);
     }
 }
