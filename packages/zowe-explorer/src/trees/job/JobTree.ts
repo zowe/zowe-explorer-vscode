@@ -468,7 +468,7 @@ Would you like to do this now?`,
                         await this.removeFavProfile(profileName, false);
                     }
                 });
-                return;
+                return [];
             }
         }
         profile = parentNode.getProfile();
