@@ -378,7 +378,7 @@ describe("ProfilesCache", () => {
         profCache.allProfiles = [];
         profCache.updateCachedProfile(lpar1Profile as imperative.IProfileLoaded);
         expect(profCache.allProfiles.length).toBe(0);
-        expect(fakeLogger.error).toHaveBeenCalledWith(expect.stringContaining("Profile lpar1 of type zosmf is not cached."));
+        expect(fakeLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Profile lpar1 of type zosmf is not cached."));
     });
 
     it("updateCachedProfile should update a cached profile and update a given node", () => {
