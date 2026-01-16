@@ -32,6 +32,8 @@ export class BaseProvider {
 
     protected constructor() {}
 
+    public requestCache = new Map<string, Promise<any>>();
+
     /**
      * Compares the data for 2 Uint8Arrays, byte by byte.
      * @param a The first Uint8Array to compare
@@ -492,5 +494,22 @@ export class BaseProvider {
             }),
             silent ?? false
         );
+    }
+
+    // Helper function to parse uri query params into a string for the requestCache key
+    protected getQueryKey(uri: vscode.Uri): string {
+        if (!uri.query) {
+            return "";
+        }
+        const params = new URLSearchParams(uri.query);
+        const activeParams: string[] = [];
+
+        params.forEach((value, key) => {
+            if (value === "true") {
+                activeParams.push(`${key}=${value}`);
+            }
+        });
+
+        return activeParams.length > 0 ? "_" + activeParams.sort().join("_") : "";
     }
 }
