@@ -6,6 +6,14 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Enhanced `DataSetAttributesProvider` to pass raw API response attributes to extenders via the `DsInfo` context object. Extenders can now access the `attributes` field in the context to retrieve data set information without making additional API calls. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)
+
+### Bug fixes
+
+## `3.4.0`
+
+### New features and enhancements
+
 - Introduced `getCount` API to let extenders efficiently retrieve the total number of data sets matching a filter, enabling more performant pagination. [#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 - Added support for `jobEncoding` profile property when submitting jobs with the `ZosmfJesApi` class. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
 - Added support for `encoding` profile property when retrieving JCL with the `ZosmfJesApi` class. [#3877](https://github.com/zowe/zowe-explorer-vscode/pull/3877)

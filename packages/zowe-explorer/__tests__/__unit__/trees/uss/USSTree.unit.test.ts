@@ -2740,7 +2740,6 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
         jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
         jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
-        jest.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
         jest.spyOn(UssFSProvider.instance as any, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
         jest.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue(undefined);
 
@@ -2800,7 +2799,6 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
         jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
         jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
-        jest.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
 
         jest.spyOn(UssFSProvider.instance as any, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
         jest.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue(undefined);

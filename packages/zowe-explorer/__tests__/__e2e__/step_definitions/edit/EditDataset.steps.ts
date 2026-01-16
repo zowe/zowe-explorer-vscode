@@ -34,12 +34,6 @@ Then("the user can select a PS in the list and open it", async function () {
     const psExtension = getDatasetExtension(psName);
     const psEditorTitle = `${psName}${psExtension ?? ""}`;
 
-    // collapse remaining trees to make room for tree items to render in DOM
-    const jobsPane = await paneDivForTree("jobs");
-    await jobsPane.collapse();
-    const ussPane = await paneDivForTree("uss");
-    await ussPane.collapse();
-
     this.ps = await dsPane.findItem(psName);
     await this.ps.select();
 
@@ -51,6 +45,7 @@ Then("the user can select a PS in the list and open it", async function () {
 When("the user edits the PDS member", async function () {
     await this.editorForFile.clearText();
     await this.editorForFile.setText(`Hello from a Data Set test for a ${this.editingFavorite ? "favorited " : ""}PDS member!`);
+    await this.pds.collapse();
 });
 When("the user edits the PS", async function () {
     await this.editorForFile.clearText();

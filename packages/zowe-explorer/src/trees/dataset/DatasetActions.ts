@@ -102,11 +102,16 @@ export class DatasetActions {
         }
         const pattern = choice2.label;
         const showPatternOptions = async (): Promise<void> => {
+            const property = DatasetActions.newDSProperties?.find((prop) => pattern.includes(prop.label));
             const options: vscode.InputBoxOptions = {
-                value: DatasetActions.newDSProperties?.find((prop) => pattern.includes(prop.label))?.value,
-                placeHolder: DatasetActions.newDSProperties?.find((prop) => prop.label === pattern)?.placeHolder,
+                value: property?.value,
+                placeHolder: property?.placeHolder,
             };
-            DatasetActions.newDSProperties.find((prop) => pattern.includes(prop.label)).value = await Gui.showInputBox(options);
+            const newValue = await Gui.showInputBox(options);
+            // Only update the property value if the user provided a new value
+            if (newValue !== undefined && property) {
+                property.value = newValue;
+            }
         };
 
         if (pattern) {
@@ -1090,20 +1095,73 @@ export class DatasetActions {
 
             if (dsNameForExtenders) {
                 DatasetActions.attributeInfo.push(
-                    ...(await extenderAttributes.fetchAll({ dsName: dsNameForExtenders, profile: sessionNode.getProfile() }))
+                    ...(await extenderAttributes.fetchAll({
+                        dsName: dsNameForExtenders,
+                        profile: sessionNode.getProfile(),
+                        attributes: attributeRecord,
+                    }))
                 );
             }
 
             // Check registered DataSetAttributesProvider, send dsname and profile. get results and append to `attributeInfo`
             const attributesMessage = vscode.l10n.t("Attributes");
 
+            // Helper function to format attribute values
+            const formatAttributeValue = (key: string, value: string | number | boolean, sectionTitle: string): string => {
+                // Add % character for "Used Space" attribute only from core Zowe Explorer section
+                if (key === "used" && typeof value === "number" && sectionTitle === "Zowe Explorer") {
+                    return `${value.toLocaleString()}%`;
+                }
+                // Format numbers with thousands separators
+                if (typeof value === "number") {
+                    return value.toLocaleString();
+                }
+                return String(value);
+            };
+
             const webviewHTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>${label} "${attributesMessage}"</title>
+    <style>
+        body {
+            font-family: var(--vscode-font-family);
+            padding: 1em;
+        }
+        .attributes-container {
+            display: flex;
+            flex-direction: column;
+        }
+        .attributes-section {
+            margin-bottom: 1em;
+        }
+        .attributes-table {
+            border-collapse: separate;
+            border-spacing: 2em 0.25em;
+        }
+        .attributes-table td {
+            padding: 0.15em 0;
+        }
+        .attribute-key {
+            color: var(--vscode-settings-textInputForeground);
+            font-weight: bold;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .attribute-value {
+            text-align: left;
+        }
+        .attribute-value-string {
+            color: var(--vscode-settings-textInputForeground);
+        }
+        .attribute-value-number {
+            color: var(--vscode-problemsWarningIcon-foreground);
+        }
+    </style>
 </head>
 <body>
+    <div class="attributes-container">
     ${DatasetActions.attributeInfo
         .map(({ title, reference, keys }) => {
             const linkedTitle = reference
@@ -1117,6 +1175,8 @@ export class DatasetActions {
                     if (info.value === undefined || info.value === null) {
                         return html;
                     }
+                    const formattedValue = formatAttributeValue(key, info.value, title);
+                    const isNumeric = typeof info.value === "number";
                     return html.concat(`
                         <tr ${
                             info.displayName || info.description
@@ -1125,28 +1185,27 @@ export class DatasetActions {
                                   }"`
                                 : ""
                         }>
-                            <td align="left" style="color: var(--vscode-settings-textInputForeground); font-weight: bold">
+                            <td class="attribute-key">
                                 ${info.displayName || key}:
                             </td>
-                            <td align="right" style="color: ${
-                                isNaN(info.value as any)
-                                    ? "var(--vscode-settings-textInputForeground)"
-                                    : "var(--vscode-problemsWarningIcon-foreground)"
-                            }">
-                                ${info.value as string}
+                            <td class="attribute-value ${isNumeric ? "attribute-value-number" : "attribute-value-string"}">
+                                ${formattedValue}
                             </td>
                         </tr>
                 `);
                 }, "");
 
             return `
-            ${linkedTitle}
-            <table style="margin-top: 2em; border-spacing: 2em 0">
-                ${tableRows}
-            </table>
+            <div class="attributes-section">
+                ${linkedTitle}
+                <table class="attributes-table">
+                    ${tableRows}
+                </table>
+            </div>
         `;
         })
         .join("")}
+    </div>
 </body>
 </html>`;
 
@@ -2446,7 +2505,6 @@ export class DatasetActions {
         const contents = await DatasetFSProvider.instance.readFile(sourceUri);
         await DatasetFSProvider.instance.writeFile(destUri.with({ query: "forceUpload=true" }), contents, { create: true, overwrite: true });
     }
-
     /**
      * Polls a submitted job until it completes and sends notification with link to view job in tree
      *
@@ -2518,5 +2576,204 @@ export class DatasetActions {
                 }
             },
         });
+    }
+
+    /**
+     * Prompts user for profile name and dataset pattern, then filters the tree by that pattern
+     */
+    public static async filterDatasetTreePrompt(datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
+        ZoweLogger.trace("dataset.actions.filterDatasetTreePrompt called.");
+        const profileNames = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS);
+
+        if (profileNames.length === 0) {
+            await Gui.errorMessage(vscode.l10n.t("No data set profiles found. Please add a profile first."));
+            return;
+        }
+
+        const quickPick = vscode.window.createQuickPick();
+        quickPick.placeholder = vscode.l10n.t("Select a profile");
+        quickPick.ignoreFocusOut = true;
+        quickPick.items = profileNames.map((name) => ({ label: name }));
+
+        let selectedProfile: string | undefined;
+
+        const profilePromise = new Promise<string | undefined>((resolve) => {
+            quickPick.onDidAccept(() => {
+                const selection = quickPick.activeItems[0];
+                if (selection) {
+                    selectedProfile = selection.label;
+                } else if (quickPick.value) {
+                    selectedProfile = quickPick.value;
+                }
+                quickPick.hide();
+                resolve(selectedProfile);
+            });
+
+            quickPick.onDidHide(() => {
+                resolve(undefined);
+            });
+
+            quickPick.show();
+        });
+
+        selectedProfile = (await profilePromise)?.trim();
+        quickPick.dispose();
+
+        if (!selectedProfile || selectedProfile.length === 0) {
+            return;
+        }
+
+        const datasetPattern = await Gui.showInputBox({
+            prompt: vscode.l10n.t("Enter the data set pattern to filter on"),
+            placeHolder: vscode.l10n.t("HLQ.**.DATASET or HLQ.DATASET.NAME"),
+            value: "",
+            ignoreFocusOut: true,
+            validateInput: (input) => DatasetActions.validateDatasetPattern(input),
+        });
+
+        if (!datasetPattern) {
+            return;
+        }
+        try {
+            await DatasetActions.filterDatasetTree(datasetProvider, selectedProfile, datasetPattern.trim());
+        } catch (e) {
+            if (e instanceof Error) {
+                await Gui.errorMessage(
+                    vscode.l10n.t({
+                        message: "Failed to filter dataset tree: {0}",
+                        args: [e.message],
+                        comment: ["Error message"],
+                    })
+                );
+            }
+        }
+    }
+
+    private static validateDatasetPattern(input: string): string | vscode.InputBoxValidationMessage | undefined {
+        const trimmedInput = input?.trim();
+
+        if (!trimmedInput || trimmedInput.length === 0) {
+            return vscode.l10n.t("Data set pattern cannot be empty");
+        }
+
+        // Allow member notation like HLQ.DATASET(MEMBER) or standard patterns
+        const validPattern = /^[A-Za-z0-9$#@*%][A-Za-z0-9$#@*%.\-()]*$/;
+        if (!validPattern.test(trimmedInput)) {
+            return vscode.l10n.t("Invalid data set pattern. Use alphanumeric characters, $, #, @, *, %, ., -, and () for members");
+        }
+
+        return undefined;
+    }
+
+    /**
+     * Filter the dataset tree by the specified pattern
+     * @param datasetProvider is a dataset tree
+     * @param sessionName is a profile name to use in the dataset tree
+     * @param datasetPattern is a dataset pattern to filter by
+     */
+    public static async filterDatasetTree(datasetProvider: Types.IZoweDatasetTreeType, sessionName: string, datasetPattern: string): Promise<void> {
+        ZoweLogger.trace("dataset.actions.filterDatasetTree called.");
+        let sessionNode: IZoweDatasetTreeNode | undefined = datasetProvider.mSessionNodes.find(
+            (dsNode) => dsNode.label.toString() === sessionName.trim()
+        ) as IZoweDatasetTreeNode;
+
+        if (!sessionNode) {
+            try {
+                await datasetProvider.addSession({ sessionName: sessionName.trim() });
+            } catch (error) {
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Mvs, profile: sessionName });
+                return;
+            }
+            sessionNode = datasetProvider.mSessionNodes.find((dsNode) => dsNode.label.toString() === sessionName.trim()) as IZoweDatasetTreeNode;
+        }
+
+        if (!sessionNode) {
+            await Gui.errorMessage(vscode.l10n.t("Failed to find or create session node"));
+            return;
+        }
+
+        const upperPattern = datasetPattern.toUpperCase();
+        let targetPattern = upperPattern;
+        let targetMember: string | null = null;
+
+        const memberMatch = upperPattern.match(/^(.+)\(([^)]+)\)$/);
+        if (memberMatch) {
+            targetPattern = memberMatch[1];
+            targetMember = memberMatch[2];
+            ZoweLogger.trace(`Detected member notation: PDS=${targetPattern}, Member=${targetMember}`);
+        }
+
+        try {
+            sessionNode.pattern = targetPattern;
+            const toolTipList: string[] = (sessionNode.tooltip as string).split("\n");
+            const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
+            if (patternIndex === -1) {
+                toolTipList.push(`${vscode.l10n.t("Pattern: ")}${targetPattern}`);
+            } else {
+                toolTipList[patternIndex] = `${vscode.l10n.t("Pattern: ")}${targetPattern}`;
+            }
+            sessionNode.tooltip = toolTipList.join("\n");
+
+            if (!SharedContext.isFilterFolder(sessionNode)) {
+                sessionNode.contextValue += `_${Constants.FILTER_SEARCH}`;
+            }
+            sessionNode.dirty = true;
+
+            if (sessionNode.collapsibleState !== vscode.TreeItemCollapsibleState.Expanded) {
+                await TreeViewUtils.expandNode(sessionNode, datasetProvider);
+            } else {
+                datasetProvider.nodeDataChanged(sessionNode);
+            }
+
+            await datasetProvider.getTreeView().reveal(sessionNode, { select: true, focus: true, expand: true });
+
+            if (targetMember && sessionNode.children && sessionNode.children.length > 0) {
+                const pdsNode = sessionNode.children.find((child) => child.label.toString().toUpperCase() === targetPattern) as IZoweDatasetTreeNode;
+
+                if (pdsNode && SharedContext.isPds(pdsNode)) {
+                    await TreeViewUtils.expandNode(pdsNode, datasetProvider);
+
+                    if (pdsNode.children) {
+                        const memberNode = pdsNode.children.find(
+                            (child) => child.label.toString().toUpperCase() === targetMember
+                        ) as IZoweDatasetTreeNode;
+
+                        if (memberNode) {
+                            try {
+                                await datasetProvider.getTreeView().reveal(memberNode, { select: true, focus: true });
+                            } catch (err) {
+                                ZoweLogger.trace(`Could not reveal member node: ${err}`);
+                                await Gui.warningMessage(
+                                    vscode.l10n.t({
+                                        message: "Found PDS '{0}' but could not reveal member '{1}'",
+                                        args: [targetPattern, targetMember],
+                                        comment: ["PDS name", "Member name"],
+                                    })
+                                );
+                            }
+                        } else {
+                            await Gui.warningMessage(
+                                vscode.l10n.t({
+                                    message: "Member '{0}' not found in PDS '{1}'",
+                                    args: [targetMember, targetPattern],
+                                    comment: ["Member name", "PDS name"],
+                                })
+                            );
+                        }
+                    }
+                } else if (!pdsNode) {
+                    await Gui.warningMessage(
+                        vscode.l10n.t({
+                            message: "PDS '{0}' not found",
+                            args: [targetPattern],
+                            comment: ["PDS name"],
+                        })
+                    );
+                }
+            }
+        } catch (error) {
+            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Mvs, profile: sessionName });
+            return;
+        }
     }
 }
