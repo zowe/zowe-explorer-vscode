@@ -66,11 +66,11 @@ export abstract class ZoweCommandProvider {
             if (iTerms) {
                 this.pseudoTerminal = new ZoweTerminal(
                     this.terminalName,
-                    async (command: string): Promise<string> => {
+                    async (cmd: string): Promise<string> => {
                         try {
                             // We need to await the response, otherwise we can't catch errors thrown
-                            this.history.addSearchHistory(command);
-                            return await this.runCommand(profile, command);
+                            this.history.addSearchHistory(cmd);
+                            return await this.runCommand(profile, cmd);
                         } catch (error) {
                             if (error instanceof imperative.ImperativeError) {
                                 let formattedError = "";
@@ -82,18 +82,18 @@ export abstract class ZoweCommandProvider {
                                     error.message.replace(/Rest API failure with HTTP\(S\) status \d\d\d\n/, "")
                                 );
 
-                                const responseTitle = vscode.l10n.t("Response From Service") + "\n";
+                                const responseTitle: string = vscode.l10n.t("Response From Service") + "\n";
                                 if (error.causeErrors) {
                                     try {
                                         const causeErrorsJson = JSON.parse(error.causeErrors);
-                                        formattedError += "\n" + imperative.TextUtils.chalk.bold.yellow(responseTitle);
+                                        formattedError += "\n" + String(imperative.TextUtils.chalk.bold.yellow(responseTitle));
                                         formattedError += imperative.TextUtils.prettyJson(causeErrorsJson, undefined, false, "");
                                     } catch (parseErr) {
                                         // causeErrors was not JSON.
                                         const causeErrString: string = error.causeErrors.toString();
                                         if (causeErrString.length > 0) {
                                             // output the text value of causeErrors
-                                            formattedError += "\n" + imperative.TextUtils.chalk.bold.yellow(responseTitle);
+                                            formattedError += "\n" + String(imperative.TextUtils.chalk.bold.yellow(responseTitle));
                                             formattedError += causeErrString;
                                         }
                                     }
@@ -107,7 +107,7 @@ export abstract class ZoweCommandProvider {
 
                                 return formattedError;
                             }
-                            return error.message;
+                            return String(error?.message ?? error);
                         }
                     },
                     new AbortController(),
@@ -171,6 +171,49 @@ export abstract class ZoweCommandProvider {
             return profile;
         } else {
             Gui.showMessage(vscode.l10n.t("No profiles available"));
+        }
+    }
+
+    /**
+     * Try to auto-select a profile based on shared base profile.
+     * Uses the same approach as the CICS extension to identify related profiles.
+     * E.g., if parent is "dev1.zosmf", looks for "dev1.tso" or "dev1.ssh" that share the same base profile.
+     *
+     * @param parentProfile - The profile from which the command is being issued
+     * @param profiles - List of candidate profiles to search through
+     * @returns The matching profile if exactly one is found, otherwise undefined
+     */
+    protected async autoSelectProfile(
+        parentProfile: imperative.IProfileLoaded | undefined,
+        profiles: imperative.IProfileLoaded[]
+    ): Promise<imperative.IProfileLoaded | undefined> {
+        if (!parentProfile?.name) {
+            return undefined;
+        }
+
+        try {
+            const baseForParent = await this.profileInstance.fetchBaseProfile(parentProfile.name);
+
+            const matches: imperative.IProfileLoaded[] = [];
+
+            for (const profile of profiles) {
+                if (!profile?.name || profile.name === parentProfile.name) {
+                    continue;
+                }
+
+                const profileBase = await this.profileInstance.fetchBaseProfile(profile.name);
+
+                // Check if profiles share the same base profile
+                if (baseForParent?.name && profileBase?.name === baseForParent.name) {
+                    matches.push(profile);
+                }
+            }
+
+            // Only auto-select if there's exactly one match
+            return matches.length === 1 ? matches[0] : undefined;
+        } catch (error) {
+            ZoweLogger.warn(`Failed to auto-select profile: ${error instanceof Error ? error.message : String(error)}`);
+            return undefined;
         }
     }
 
