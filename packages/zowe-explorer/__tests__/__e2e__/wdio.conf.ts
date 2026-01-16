@@ -31,11 +31,6 @@ if (process.env.ZOWE_TEST_DIR) {
 }
 
 const screenshotDir = joinPath(__dirname, "results", "screenshots");
-const isMac = process.platform === "darwin";
-const excludeFeatures = [];
-if (isMac) {
-    excludeFeatures.push("./features/views/JobTableView.feature", "./features/views/DatasetTableView.feature");
-}
 
 export const config: Options.Testrunner = {
     ...baseConfig,
@@ -70,9 +65,8 @@ export const config: Options.Testrunner = {
     specs: ["./features/**/*.feature"],
     // Patterns to exclude.
     exclude: [
-        ...excludeFeatures,
         // 'path/to/excluded/files'
-    ].filter(Boolean),
+    ],
     //
     // ============
     // Capabilities
@@ -106,8 +100,10 @@ export const config: Options.Testrunner = {
                 storagePath: dataDir,
                 // optional VS Code settings
                 userSettings: {
+                    "chat.disableAIFeatures": true,
                     "editor.fontSize": 14,
                     "extensions.ignoreRecommendations": true,
+                    "window.zoomLevel": process.env.CI ? -2 : 0,
                     "zowe.settings.displayReleaseNotes": false,
                 },
             },
@@ -189,6 +185,8 @@ export const config: Options.Testrunner = {
         timeout: 60000,
         // <boolean> Enable this config to treat undefined definitions as warnings.
         ignoreUndefinedDefinitions: false,
+        // <boolean> Treat ambiguous definitions as errors.
+        failAmbiguousDefinitions: true,
     },
 
     //
