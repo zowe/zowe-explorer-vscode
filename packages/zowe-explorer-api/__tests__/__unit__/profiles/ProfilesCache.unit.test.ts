@@ -360,20 +360,37 @@ describe("ProfilesCache", () => {
         expect((profCache as any).defaultProfileByType.get("zosmf").profile).toMatchObject(lpar2Profile.profile);
     });
 
-    it("updateCachedProfile should update cached profile when autoStore is false", async () => {
+    it("updateCachedProfile should update cached profile when autoStore is false", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         profCache.allProfiles = [lpar1Profile as imperative.IProfileLoaded];
         (profCache as any).defaultProfileByType = new Map([["zosmf", { ...profCache.allProfiles[0] }]]);
         expect(profCache.allProfiles[0].profile).toMatchObject(lpar1Profile.profile);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValueOnce({
-            getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: false } }),
-        } as unknown as imperative.ProfileInfo);
-        await profCache.updateCachedProfile({
+        profCache.updateCachedProfile({
             ...lpar1Profile,
             profile: lpar2Profile.profile,
         } as imperative.IProfileLoaded);
         expect(profCache.allProfiles[0].profile).toMatchObject(lpar2Profile.profile);
         expect((profCache as any).defaultProfileByType.get("zosmf").profile).toMatchObject(lpar2Profile.profile);
+    });
+
+    it("updateCachedProfile should return early if the profile is not in the cache", () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+        profCache.allProfiles = [];
+        profCache.updateCachedProfile(lpar1Profile as imperative.IProfileLoaded);
+        expect(profCache.allProfiles.length).toBe(0);
+        expect(fakeLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Profile lpar1 of type zosmf is not cached."));
+    });
+
+    it("updateCachedProfile should update a cached profile and update a given node", () => {
+        const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+        profCache.allProfiles = [lpar1Profile as imperative.IProfileLoaded];
+        const extenderNode = {
+            setProfileToChoice: jest.fn(),
+        } as unknown as Types.IZoweNodeType;
+        profCache.updateCachedProfile(lpar1Profile as imperative.IProfileLoaded, extenderNode);
+        expect(profCache.allProfiles.length).toBe(1);
+        expect(profCache.allProfiles[0].profile).toMatchObject(lpar1Profile.profile);
+        expect(extenderNode.setProfileToChoice).toHaveBeenCalledWith(lpar1Profile);
     });
 
     it("getDefaultProfile should find default profile given type", () => {
