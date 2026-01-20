@@ -180,33 +180,18 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         const segments = uri.path.split("/").filter((s) => s.length > 0);
-        const isMemberRequest = segments.length === 3; // /PROFILE/DSN/MEMBER
+        const isMemberRequest = segments.length === 3;
 
         if (isMemberRequest) {
             const memberName = segments[2];
             const parentPath = segments.slice(0, 2).join("/");
             const parentUri = uri.with({ path: `/${parentPath}` });
-            const parentKey = "list" + this.getQueryKey(uri) + "_" + parentUri.toString();
 
-            let pdsPromise = this.requestCache.get(parentKey);
-
-            if (!pdsPromise) {
-                pdsPromise = (async () => {
-                    try {
-                        return await this.readDirectoryImplementation(parentUri);
-                    } finally {
-                        if (this.requestCache.get(parentKey) === pdsPromise) {
-                            this.requestCache.delete(parentKey);
-                        }
-                    }
-                })();
-                this.requestCache.set(parentKey, pdsPromise);
-            } else {
-                //TODO Feature Flag
-                console.log("[stat] Valid reuse for: " + parentKey);
-            }
-            // Await the PDS load
-            const pdsEntry = (await pdsPromise) as DirEntry;
+            const pdsEntry = await this.executeWithReuse<DirEntry>(parentUri, {
+                keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
+                checkLocal: () => !!this._lookupAsDirectory(parentUri, true),
+                execute: () => this.readDirectoryImplementation(parentUri),
+            });
 
             if (pdsEntry && pdsEntry.entries) {
                 const memberStat = pdsEntry.entries.get(memberName);
@@ -217,24 +202,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
-        const key = "list" + this.getQueryKey(uri) + "_" + uri.toString().split("/").slice(0, 3).join("/");
-        if (this.requestCache.has(key)) {
-            console.log("[stat] request reuse for: " + key);
-            return await this.requestCache.get(key);
-        }
-
-        const requestPromise = (async () => {
-            try {
-                return await this.statImplementation(uri);
-            } finally {
-                if (this.requestCache.get(key) === requestPromise) {
-                    this.requestCache.delete(key);
-                }
-            }
-        })();
-
-        this.requestCache.set(key, requestPromise);
-        return await requestPromise;
+        return this.executeWithReuse<vscode.FileStat>(uri, {
+            keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().split("/").slice(0, 3).join("/"),
+            checkLocal: () => !!this.lookup(uri, true),
+            execute: () => this.statImplementation(uri),
+        });
     }
 
     private async fetchEntriesForProfile(uri: vscode.Uri, uriInfo: UriFsInfo, pattern: string): Promise<FilterEntry> {
@@ -515,30 +487,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns An array of tuples containing each entry name and type
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        // Build requestCache key based on uri, query, and stripping the trailing slash
-        const key = "list" + this.getQueryKey(uri) + "_" + uri.toString().replace(/\/$/, "");
+        const dirEntry = await this.executeWithReuse<DirEntry>(uri, {
+            keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
+            checkLocal: () => !!this._lookupAsDirectory(uri, true),
+            execute: () => this.readDirectoryImplementation(uri),
+        });
 
-        let requestPromise = this.requestCache.get(key);
-
-        if (!requestPromise) {
-            requestPromise = (async () => {
-                try {
-                    return await this.readDirectoryImplementation(uri);
-                } finally {
-                    if (this.requestCache.get(key) === requestPromise) {
-                        this.requestCache.delete(key);
-                    }
-                }
-            })();
-            this.requestCache.set(key, requestPromise);
-        } else {
-            //TODO Remove
-            console.log("[readDir] Request join for: " + key);
-        }
-
-        const dirEntry = (await requestPromise) as DirEntry;
-
-        // Convert the DirEntry to the array format required by vscode.FileSystemProvider
         return Array.from(dirEntry.entries.entries()).map(
             (value: [string, DirEntry | FileEntry]) => [value[0], value[1].type] as [string, vscode.FileType]
         );
@@ -746,24 +700,18 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @returns The data set's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const key = "readFile" + this.getQueryKey(uri) + "_" + uri.toString().replace(/\/$/, "");
-
-        if (this.requestCache.has(key)) {
-            return this.requestCache.get(key);
-        }
-
-        const requestPromise = (async () => {
-            try {
-                return await this.readFileImplementation(uri);
-            } finally {
-                if (this.requestCache.get(key) === requestPromise) {
-                    this.requestCache.delete(key);
+        return this.executeWithReuse<Uint8Array>(uri, {
+            keyGenerator: (u) => "readFile" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
+            checkLocal: () => {
+                try {
+                    const entry = this._lookupAsFile(uri, { silent: true }) as DsEntry;
+                    return entry && entry.wasAccessed;
+                } catch {
+                    return false;
                 }
-            }
-        })();
-
-        this.requestCache.set(key, requestPromise);
-        return requestPromise;
+            },
+            execute: () => this.readFileImplementation(uri),
+        });
     }
 
     public makeEmptyDsWithEncoding(uri: vscode.Uri, encoding: ZosEncoding, isMember?: boolean): void {
@@ -1125,5 +1073,71 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         if (segmentToCheck.startsWith(".")) {
             throw vscode.FileSystemError.FileNotFound(uri);
         }
+    }
+
+    private async executeWithReuse<T>(
+        uri: vscode.Uri,
+        options: {
+            keyGenerator: (uri: vscode.Uri) => string;
+            checkLocal: () => boolean;
+            execute: () => Promise<T>;
+        }
+    ): Promise<T> {
+        const queryParams = new URLSearchParams(uri.query);
+        const isExplicitFetch = queryParams.get("fetch") === "true";
+        const hasConflictOrDiff = queryParams.has("conflict") || queryParams.has("inDiff");
+        const fetchByDefault = FeatureFlags.get("fetchByDefault");
+
+        // Generate fetch key
+        const fetchQueryParams = new URLSearchParams(uri.query);
+        fetchQueryParams.set("fetch", "true");
+        const fetchUri = uri.with({ query: fetchQueryParams.toString() });
+        const fetchKey = options.keyGenerator(fetchUri);
+
+        // Generate fetch key with no fetch param
+        const actualQueryParams = new URLSearchParams(uri.query);
+        actualQueryParams.delete("fetch");
+        const actualUri = uri.with({ query: actualQueryParams.toString() });
+        const actualKey = options.keyGenerator(actualUri);
+
+        // Check local entry to see if it will fallback to a remote lookup
+        let localEntryFound = false;
+        if (!isExplicitFetch && !hasConflictOrDiff && fetchByDefault) {
+            try {
+                if (options.checkLocal()) {
+                    localEntryFound = true;
+                }
+            } catch (error) {}
+        }
+
+        const needNetwork = isExplicitFetch || (fetchByDefault && !hasConflictOrDiff && !localEntryFound);
+
+        if (needNetwork && this.requestCache.has(fetchKey)) {
+            //TODO: Remove
+            console.log(`[Reuse] Reusing explicit fetch for request: ${fetchKey}`);
+            return (await this.requestCache.get(fetchKey)) as T;
+        }
+
+        const keyToUse = needNetwork ? fetchKey : actualKey;
+
+        if (this.requestCache.has(keyToUse)) {
+            //TODO: Remove
+            console.log(`[Reuse] Request reuse for: ${keyToUse}`);
+            return (await this.requestCache.get(keyToUse)) as T;
+        }
+
+        const requestPromise = (async () => {
+            try {
+                return await options.execute();
+            } finally {
+                if (this.requestCache.get(keyToUse) === requestPromise) {
+                    this.requestCache.delete(keyToUse);
+                }
+            }
+        })();
+
+        this.requestCache.set(keyToUse, requestPromise);
+
+        return requestPromise;
     }
 }
