@@ -81,6 +81,7 @@ export const config: Options.Testrunner = {
             browserName: "vscode",
             // version can be "stable", "insiders", or a specific version e.g. "1.80.0"
             browserVersion: process.env.ZE_TEST_VSCODE_VER || "stable",
+            "wdio:enforceWebDriverClassic": true,
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
                 extensionPath: joinPath(__dirname, "..", "..", ".."),
