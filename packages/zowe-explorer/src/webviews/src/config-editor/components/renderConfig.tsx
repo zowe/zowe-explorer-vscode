@@ -891,7 +891,7 @@ export const RenderConfig = ({
           const isSecureForSorting = isSecurePropertyForSorting;
 
           const readOnlyContainer = (
-            <div className="config-item-container " data-testid="profile-property-container" style={displayKey === "type" ? { gap: "0px" } : {}}>
+            <div className="config-item-container " data-testid="profile-property-container" style={displayKey === "type" && path[path.length - 1] !== "properties" ? { gap: "0px" } : {}}>
               <span
                 className="config-label"
                 title={displayKey ? propertyDescriptions[displayKey] || "" : ""}
@@ -906,7 +906,7 @@ export const RenderConfig = ({
               >
                 {displayKey}
               </span>
-              {displayKey === "type" ? (
+              {displayKey === "type" && path[path.length - 1] !== "properties" ? (
                 <div style={{ position: "relative", width: "100%" }}>
                   <select
                     className="config-input"
@@ -1060,7 +1060,7 @@ export const RenderConfig = ({
               ) : (
                 <span>{"{...}"}</span>
               )}
-              {displayKey !== "type" &&
+              {(displayKey !== "type" || path[path.length - 1] === "properties") &&
                 displayKey &&
                 (() => {
                   const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames);

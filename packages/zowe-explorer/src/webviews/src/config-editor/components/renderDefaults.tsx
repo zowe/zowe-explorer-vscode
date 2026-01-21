@@ -30,7 +30,8 @@ export const RenderDefaults = ({ defaults, handleDefaultsChange }: RenderDefault
       const availableTypes = getWizardTypeOptions();
       const completeDefaults = { ...defaults };
       availableTypes.forEach((type: string) => {
-        if (!(type in completeDefaults)) {
+        // Filter out empty strings - empty profile types should not have defaults entries
+        if (type.trim() !== "" && !(type in completeDefaults)) {
           completeDefaults[type] = "";
         }
       });

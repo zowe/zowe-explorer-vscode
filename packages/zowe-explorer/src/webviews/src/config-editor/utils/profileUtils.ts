@@ -28,7 +28,10 @@ export function getProfileType(
         // Only match exact profile keys for type changes, not parent profiles
         if (entry.profile !== profileKey && entry.profile !== originalProfileKey) return false;
         const keyParts = key.split(".");
-        return keyParts[keyParts.length - 1] === "type";
+        // Only match profile-level type, not properties.type
+        // Profile-level type is a sibling of "properties", not inside it
+        const isProfileLevelType = keyParts[keyParts.length - 1] === "type" && !keyParts.includes("properties");
+        return isProfileLevelType;
     });
 
     if (pendingType) {
@@ -267,7 +270,8 @@ export function getAvailableProfilesByType(
         Object.entries(pendingChanges[config.configPath] || {}).forEach(([key, entry]) => {
             if (entry.profile) {
                 const keyParts = key.split(".");
-                const isTypeKey = keyParts[keyParts.length - 1] === "type";
+                // Only match profile-level type, not properties.type
+                const isTypeKey = keyParts[keyParts.length - 1] === "type" && !keyParts.includes("properties");
                 if (isTypeKey) {
                     const profilePathParts = keyParts.slice(0, -1);
                     if (profilePathParts[0] === "profiles") {
@@ -295,7 +299,8 @@ export function getAvailableProfilesByType(
         Object.entries(pendingChanges[config.configPath] || {}).forEach(([key, entry]) => {
             if (entry.profile) {
                 const keyParts = key.split(".");
-                const isTypeKey = keyParts[keyParts.length - 1] === "type";
+                // Only match profile-level type, not properties.type
+                const isTypeKey = keyParts[keyParts.length - 1] === "type" && !keyParts.includes("properties");
                 if (isTypeKey && entry.value === profileType) {
                     const profilePathParts = keyParts.slice(0, -1);
                     if (profilePathParts[0] === "profiles") {

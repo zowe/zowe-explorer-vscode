@@ -33,7 +33,7 @@ export function getWizardTypeOptions(
 
     // Extract types from all profiles
     Object.values(flatProfiles).forEach((profile: any) => {
-        if (profile?.type && typeof profile.type === "string") {
+        if (profile?.type && typeof profile.type === "string" && profile.type.trim() !== "") {
             profileTypes.add(profile.type);
         }
     });
@@ -41,7 +41,14 @@ export function getWizardTypeOptions(
     // Also check pending changes for types
     const configPath = configurations[selectedTab].configPath;
     Object.entries(pendingChanges[configPath] || {}).forEach(([key, entry]) => {
-        if (key.endsWith(".type") && typeof entry.value === "string") {
+        // Only collect profile-level type changes, not properties.type
+        const keyParts = key.split(".");
+        if (
+            keyParts[keyParts.length - 1] === "type" &&
+            !keyParts.includes("properties") &&
+            typeof entry.value === "string" &&
+            entry.value.trim() !== ""
+        ) {
             profileTypes.add(entry.value);
         }
     });

@@ -3,7 +3,6 @@ import { getOriginalProfileKeyWithNested } from "../utils/profileUtils";
 
 // Color map for profile types
 const profileTypeColorMap = new Map<string, string>();
-const availableColors = new Set<string>();
 
 export const PROFILE_TYPE_COLORS: string[] = [
   "#810D49",
@@ -37,13 +36,22 @@ export const coreTypeColors: { [key: string]: string } = {
 };
 
 export const coreColors = new Set(Object.values(coreTypeColors));
-PROFILE_TYPE_COLORS.forEach((color) => {
-  if (!coreColors.has(color)) {
-    availableColors.add(color);
-  }
-});
 
-PROFILE_TYPE_COLORS.forEach((color) => availableColors.add(color));
+// Get available colors (non-core colors) as a sorted array for deterministic selection
+const getAvailableColors = (): string[] => {
+  return PROFILE_TYPE_COLORS.filter((color) => !coreColors.has(color)).sort();
+};
+
+// Simple hash function to convert string to number deterministically
+const hashString = (str: string): number => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+};
 
 export const getColorForProfileType = (profileType: string): string => {
   // Check if it's a core type first
@@ -52,22 +60,15 @@ export const getColorForProfileType = (profileType: string): string => {
   }
 
   if (!profileTypeColorMap.has(profileType)) {
-    // If we've run out of colors, reset the available pool
-    if (availableColors.size === 0) {
-      PROFILE_TYPE_COLORS.forEach((color) => {
-        if (!coreColors.has(color)) {
-          availableColors.add(color);
-        }
-      });
-    }
-
-    // Pick a random color from available colors
-    const availableArray = Array.from(availableColors);
-    const randomIndex = Math.floor(Math.random() * availableArray.length);
-    const color = availableArray[randomIndex];
+    // Get available colors (non-core colors)
+    const availableColors = getAvailableColors();
+    
+    // Use hash of profile type to deterministically select a color
+    const hash = hashString(profileType);
+    const colorIndex = hash % availableColors.length;
+    const color = availableColors[colorIndex];
 
     profileTypeColorMap.set(profileType, color);
-    availableColors.delete(color);
   }
   return profileTypeColorMap.get(profileType)!;
 };
