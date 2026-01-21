@@ -9,9 +9,8 @@
  *
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { parseValueByType, flattenProfiles } from "../utils";
-import { isProfileNameTaken as checkProfileNameTaken } from "../utils/wizardValidation";
 import {
     getWizardTypeOptions as getTypeOptions,
     getWizardPropertyOptions as getPropertyOptions,
@@ -79,6 +78,7 @@ export function useProfileWizard({
         wizardNewPropertySecure,
         wizardMergedProperties,
         wizardPopulatedDefaults,
+        wizardProfileNameValidation,
         setWizardModalOpen,
         setWizardRootProfile,
         setWizardSelectedType,
@@ -90,7 +90,10 @@ export function useProfileWizard({
         setWizardNewPropertySecure,
         setWizardMergedProperties,
         setWizardPopulatedDefaults,
+        setWizardProfileNameValidation,
     } = useWizardState();
+
+    const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Helper functions - now using extracted utilities
     const getWizardTypeOptions = () => getTypeOptions(selectedTab, configurations, schemaValidations, pendingChanges);
@@ -99,11 +102,28 @@ export function useProfileWizard({
     const getPropertyType = (propertyKey: string) =>
         getSchemaPropertyType(propertyKey, selectedTab, configurations, schemaValidations, wizardSelectedType);
 
-    const isProfileNameTaken = () => {
-        if (!wizardProfileName.trim() || selectedTab === null) return false;
+    const validateProfileNameWithServer = useCallback(() => {
+        if (!wizardProfileName.trim() || selectedTab === null) {
+            setWizardProfileNameValidation({ isValid: true });
+            return;
+        }
+
         const configPath = configurations[selectedTab].configPath;
         const config = configurations[selectedTab].properties;
-        return checkProfileNameTaken(wizardProfileName, wizardRootProfile, configPath, config.profiles, pendingChanges, renames);
+
+        vscodeApi.postMessage({
+            command: "VALIDATE_PROFILE_NAME",
+            profileName: wizardProfileName,
+            rootProfile: wizardRootProfile,
+            configPath: configPath,
+            profiles: config.profiles,
+            pendingChanges: pendingChanges,
+            renames: renames,
+        });
+    }, [wizardProfileName, wizardRootProfile, selectedTab, configurations, pendingChanges, renames, vscodeApi]);
+
+    const isProfileNameTaken = () => {
+        return !wizardProfileNameValidation.isValid;
     };
 
     const handleWizardAddProperty = () => {
@@ -371,6 +391,23 @@ export function useProfileWizard({
         }
     }, [wizardRootProfile, wizardSelectedType, wizardModalOpen, selectedTab, pendingChanges]);
 
+    // Debounced profile name validation
+    useEffect(() => {
+        if (validationTimeoutRef.current) {
+            clearTimeout(validationTimeoutRef.current);
+        }
+
+        validationTimeoutRef.current = setTimeout(() => {
+            validateProfileNameWithServer();
+        }, 300);
+
+        return () => {
+            if (validationTimeoutRef.current) {
+                clearTimeout(validationTimeoutRef.current);
+            }
+        };
+    }, [wizardProfileName, wizardRootProfile, selectedTab, pendingChanges, renames]);
+
     return {
         // State
         wizardModalOpen,
@@ -383,6 +420,7 @@ export function useProfileWizard({
         wizardNewPropertyValue,
         wizardNewPropertySecure,
         wizardMergedProperties,
+        wizardProfileNameValidation,
 
         // Setters
         setWizardModalOpen,
@@ -395,6 +433,7 @@ export function useProfileWizard({
         setWizardNewPropertyValue,
         setWizardNewPropertySecure,
         setWizardMergedProperties,
+        setWizardProfileNameValidation,
 
         // Functions
         getWizardTypeOptions,

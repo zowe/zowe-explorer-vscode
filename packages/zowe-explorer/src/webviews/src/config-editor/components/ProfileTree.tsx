@@ -62,7 +62,6 @@ export const getColorForProfileType = (profileType: string): string => {
   if (!profileTypeColorMap.has(profileType)) {
     // Get available colors (non-core colors)
     const availableColors = getAvailableColors();
-    
     // Use hash of profile type to deterministically select a color
     const hash = hashString(profileType);
     const colorIndex = hash % availableColors.length;

@@ -39,6 +39,7 @@ export interface MessageHandlerProps {
     setAddConfigModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setIsSaving: React.Dispatch<React.SetStateAction<boolean>>;
     setPendingSaveSelection: React.Dispatch<React.SetStateAction<{ tab: number | null; profile: string | null } | null>>;
+    setWizardProfileNameValidation: React.Dispatch<React.SetStateAction<{ isValid: boolean; message?: string }>>;
 
     // Refs
     configurationsRef: React.MutableRefObject<Configuration[]>;
@@ -352,6 +353,14 @@ export const handleSaveMessage = (props: MessageHandlerProps) => {
     setSaveModalOpen(true);
 };
 
+const handleProfileNameValidationResultMessage = (data: any, props: MessageHandlerProps) => {
+    const { setWizardProfileNameValidation } = props;
+    setWizardProfileNameValidation({
+        isValid: data.isValid,
+        message: data.message,
+    });
+};
+
 // Main message handler dispatcher
 export const handleMessage = (event: MessageEvent, props: MessageHandlerProps) => {
     if (!event.data.command) return;
@@ -386,6 +395,9 @@ export const handleMessage = (event: MessageEvent, props: MessageHandlerProps) =
             break;
         case "SAVE":
             handleSaveMessage(props);
+            break;
+        case "PROFILE_NAME_VALIDATION_RESULT":
+            handleProfileNameValidationResultMessage(event.data, props);
             break;
         default:
             // Handle unknown commands if needed

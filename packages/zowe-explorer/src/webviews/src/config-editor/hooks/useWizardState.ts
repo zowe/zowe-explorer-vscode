@@ -27,6 +27,7 @@ export function useWizardState() {
     const [wizardNewPropertySecure, setWizardNewPropertySecure] = useState(false);
     const [wizardMergedProperties, setWizardMergedProperties] = useState<{ [key: string]: any }>({});
     const [wizardPopulatedDefaults, setWizardPopulatedDefaults] = useState<Set<string>>(new Set());
+    const [wizardProfileNameValidation, setWizardProfileNameValidation] = useState<{ isValid: boolean; message?: string }>({ isValid: true });
 
     return {
         // State values
@@ -41,6 +42,7 @@ export function useWizardState() {
         wizardNewPropertySecure,
         wizardMergedProperties,
         wizardPopulatedDefaults,
+        wizardProfileNameValidation,
 
         // Setters
         setWizardModalOpen,
@@ -54,5 +56,6 @@ export function useWizardState() {
         setWizardNewPropertySecure,
         setWizardMergedProperties,
         setWizardPopulatedDefaults,
+        setWizardProfileNameValidation,
     };
 }

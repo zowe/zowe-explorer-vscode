@@ -675,4 +675,110 @@ describe("ConfigUtils", () => {
             }).not.toThrow();
         });
     });
+
+    describe("flattenProfiles", () => {
+        it("should return empty object for null or undefined input", () => {
+            expect(ConfigUtils.flattenProfiles(null)).toEqual({});
+            expect(ConfigUtils.flattenProfiles(undefined)).toEqual({});
+        });
+
+        it("should flatten simple profiles", () => {
+            const profiles = {
+                profile1: {
+                    type: "zosmf",
+                    properties: { host: "localhost" },
+                },
+                profile2: {
+                    type: "tso",
+                    properties: { user: "test" },
+                },
+            };
+
+            const result = ConfigUtils.flattenProfiles(profiles);
+            expect(result).toEqual({
+                profile1: { type: "zosmf", properties: { host: "localhost" } },
+                profile2: { type: "tso", properties: { user: "test" } },
+            });
+        });
+
+        it("should flatten nested profiles with dot notation", () => {
+            const profiles = {
+                parent: {
+                    type: "zosmf",
+                    properties: { host: "localhost" },
+                    profiles: {
+                        child: {
+                            type: "tso",
+                            properties: { user: "test" },
+                        },
+                    },
+                },
+            };
+
+            const result = ConfigUtils.flattenProfiles(profiles);
+            expect(result).toEqual({
+                parent: { type: "zosmf", properties: { host: "localhost" } },
+                "parent.child": { type: "tso", properties: { user: "test" } },
+            });
+        });
+
+        it("should remove profiles property from flattened result", () => {
+            const profiles = {
+                parent: {
+                    type: "zosmf",
+                    profiles: {
+                        child: { type: "tso" },
+                    },
+                },
+            };
+
+            const result = ConfigUtils.flattenProfiles(profiles);
+            expect(result.parent.profiles).toBeUndefined();
+            expect(result["parent.child"].profiles).toBeUndefined();
+        });
+
+        it("should handle deeply nested profiles", () => {
+            const profiles = {
+                level1: {
+                    type: "zosmf",
+                    profiles: {
+                        level2: {
+                            type: "tso",
+                            profiles: {
+                                level3: {
+                                    type: "zftp",
+                                    properties: { host: "test" },
+                                },
+                            },
+                        },
+                    },
+                },
+            };
+
+            const result = ConfigUtils.flattenProfiles(profiles);
+            expect(result["level1.level2.level3"]).toEqual({
+                type: "zftp",
+                properties: { host: "test" },
+            });
+        });
+
+        it("should preserve all profile properties except profiles", () => {
+            const profiles = {
+                profile1: {
+                    type: "zosmf",
+                    properties: { host: "localhost" },
+                    secure: ["password"],
+                    custom: "value",
+                },
+            };
+
+            const result = ConfigUtils.flattenProfiles(profiles);
+            expect(result.profile1).toEqual({
+                type: "zosmf",
+                properties: { host: "localhost" },
+                secure: ["password"],
+                custom: "value",
+            });
+        });
+    });
 });

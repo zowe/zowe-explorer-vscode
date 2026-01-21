@@ -647,4 +647,124 @@ describe("ConfigEditorProfileOperations", () => {
             expect(result.username.value).toBe("user123");
         });
     });
+
+    describe("validateProfileName", () => {
+        it("should return valid for empty profile name", () => {
+            const result = profileOperations.validateProfileName("", "root", "/config.json", {}, {}, {});
+            expect(result.isValid).toBe(true);
+        });
+
+        it("should return invalid when profile name exists under root", () => {
+            const profiles = {
+                existingProfile: {
+                    type: "zosmf",
+                    properties: {},
+                },
+            };
+            const result = profileOperations.validateProfileName(
+                "existingProfile",
+                "root",
+                "/config.json",
+                profiles,
+                {},
+                {}
+            );
+            expect(result.isValid).toBe(false);
+            expect(result.message).toBe("Profile name already exists under this root");
+        });
+
+        it("should return invalid when profile name exists under nested root", () => {
+            const profiles = {
+                parent: {
+                    type: "zosmf",
+                    profiles: {
+                        child: {
+                            type: "tso",
+                            properties: {},
+                        },
+                    },
+                },
+            };
+            const result = profileOperations.validateProfileName(
+                "child",
+                "parent",
+                "/config.json",
+                profiles,
+                {},
+                {}
+            );
+            expect(result.isValid).toBe(false);
+            expect(result.message).toBe("Profile name already exists under this root");
+        });
+
+        it("should return invalid when profile name exists in pending changes", () => {
+            const pendingChanges = {
+                "/config.json": {
+                    "profiles.newProfile.type": {
+                        profile: "newProfile",
+                        value: "zosmf",
+                        path: ["profiles", "newProfile", "type"],
+                    },
+                },
+            };
+            const result = profileOperations.validateProfileName(
+                "newProfile",
+                "root",
+                "/config.json",
+                {},
+                pendingChanges,
+                {}
+            );
+            expect(result.isValid).toBe(false);
+            expect(result.message).toBe("Profile name already exists in pending changes");
+        });
+
+        it("should return invalid when profile name conflicts with renamed profile", () => {
+            const renames = {
+                "/config.json": {
+                    oldProfile: "newProfile",
+                },
+            };
+            const result = profileOperations.validateProfileName(
+                "newProfile",
+                "root",
+                "/config.json",
+                {},
+                {},
+                renames
+            );
+            expect(result.isValid).toBe(false);
+            expect(result.message).toBe("Profile name conflicts with a renamed profile");
+        });
+
+        it("should return valid when profile name is available", () => {
+            const result = profileOperations.validateProfileName(
+                "newProfile",
+                "root",
+                "/config.json",
+                {},
+                {},
+                {}
+            );
+            expect(result.isValid).toBe(true);
+        });
+
+        it("should handle nested profile name validation", () => {
+            const profiles = {
+                parent: {
+                    type: "zosmf",
+                    properties: {},
+                },
+            };
+            const result = profileOperations.validateProfileName(
+                "newChild",
+                "parent",
+                "/config.json",
+                profiles,
+                {},
+                {}
+            );
+            expect(result.isValid).toBe(true);
+        });
+    });
 });

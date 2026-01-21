@@ -10,8 +10,80 @@
  */
 
 import { ConfigMoveAPI, IConfigLayer } from "../webviews/src/config-editor/types";
+import { ConfigUtils } from "./ConfigUtils";
 
 export class ConfigEditorProfileOperations {
+    /**
+     * Validates if a profile name is available for creation
+     */
+    validateProfileName(
+        profileName: string,
+        rootProfile: string,
+        configPath: string,
+        profiles: any,
+        pendingChanges: { [configPath: string]: { [key: string]: any } },
+        renames: { [configPath: string]: { [originalKey: string]: string } }
+    ): { isValid: boolean; message?: string } {
+        if (!profileName.trim()) {
+            return { isValid: true };
+        }
+
+        const flatProfiles = ConfigUtils.flattenProfiles(profiles);
+        const newProfileKey = rootProfile === "root" ? profileName.trim() : `${rootProfile}.${profileName.trim()}`;
+
+        // Check existing profiles
+        const existingProfilesUnderRoot = Object.keys(flatProfiles).some((profileKey) => {
+            if (rootProfile === "root") {
+                return profileKey === profileName.trim();
+            } else {
+                return profileKey === `${rootProfile}.${profileName.trim()}` || profileKey.startsWith(`${rootProfile}.${profileName.trim()}.`);
+            }
+        });
+
+        if (existingProfilesUnderRoot) {
+            return { isValid: false, message: "Profile name already exists under this root" };
+        }
+
+        // Check pending changes
+        const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([_, entry]) => {
+            if (entry.profile) {
+                if (rootProfile === "root") {
+                    return entry.profile === profileName.trim();
+                } else {
+                    return (
+                        entry.profile === `${rootProfile}.${profileName.trim()}` || entry.profile.startsWith(`${rootProfile}.${profileName.trim()}.`)
+                    );
+                }
+            }
+            return false;
+        });
+
+        if (pendingProfilesUnderRoot) {
+            return { isValid: false, message: "Profile name already exists in pending changes" };
+        }
+
+        // Check renames
+        const renamesForConfig = renames[configPath] || {};
+        const renameIsOccupyingName = Object.entries(renamesForConfig).some(([, newName]) => {
+            if (newName === newProfileKey) {
+                return true;
+            }
+            if (newProfileKey.startsWith(newName + ".")) {
+                return true;
+            }
+            if (newName.startsWith(newProfileKey + ".")) {
+                return true;
+            }
+            return false;
+        });
+
+        if (renameIsOccupyingName) {
+            return { isValid: false, message: "Profile name conflicts with a renamed profile" };
+        }
+
+        return { isValid: true };
+    }
+
     /**
      * Updates rename keys to handle both parent-first and child-first rename scenarios.
      */

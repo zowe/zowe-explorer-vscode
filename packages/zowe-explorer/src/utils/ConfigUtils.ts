@@ -81,4 +81,31 @@ export class ConfigUtils {
             }
         }
     }
+
+    /**
+     * Flattens nested profiles into a single-level object with dot-notation keys
+     * @param profiles - The profiles object to flatten
+     * @param parentKey - The parent key for nested profiles (internal use)
+     * @param result - The accumulator object (internal use)
+     * @returns Flattened profiles object
+     */
+    public static flattenProfiles(profiles: any, parentKey = "", result: Record<string, any> = {}): Record<string, any> {
+        if (!profiles || typeof profiles !== "object") return result;
+
+        for (const key of Object.keys(profiles)) {
+            const profile = profiles[key];
+            const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+
+            const profileCopy = { ...profile };
+            delete profileCopy.profiles;
+
+            result[qualifiedKey] = profileCopy;
+
+            if (profile.profiles) {
+                this.flattenProfiles(profile.profiles, qualifiedKey, result);
+            }
+        }
+
+        return result;
+    }
 }

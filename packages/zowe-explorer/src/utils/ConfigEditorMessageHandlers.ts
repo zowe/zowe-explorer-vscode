@@ -15,12 +15,14 @@ import { ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
 import { Profiles } from "../configuration/Profiles";
 import { Definitions } from "../configuration/Definitions";
+import { ConfigEditorProfileOperations } from "./ConfigEditorProfileOperations";
 
 export class ConfigEditorMessageHandlers {
     constructor(
         private getLocalConfigs: () => Promise<any[]>,
         private areSecureValuesAllowed: () => Promise<boolean>,
-        private panel: { webview: { postMessage: (message: any) => Thenable<boolean> } }
+        private panel: { webview: { postMessage: (message: any) => Thenable<boolean> } },
+        private profileOperations: ConfigEditorProfileOperations
     ) {}
 
     async handleGetProfiles(): Promise<void> {
@@ -193,6 +195,34 @@ export class ConfigEditorMessageHandlers {
             await this.panel.webview.postMessage({
                 command: "ENV_VARS_ERROR",
                 error: errorMessage,
+            });
+        }
+    }
+
+    async handleValidateProfileName(message: any): Promise<void> {
+        try {
+            const { profileName, rootProfile, configPath, profiles, pendingChanges, renames } = message;
+
+            const validationResult = this.profileOperations.validateProfileName(
+                profileName,
+                rootProfile,
+                configPath,
+                profiles,
+                pendingChanges,
+                renames
+            );
+
+            await this.panel.webview.postMessage({
+                command: "PROFILE_NAME_VALIDATION_RESULT",
+                isValid: validationResult.isValid,
+                message: validationResult.message,
+            });
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            await this.panel.webview.postMessage({
+                command: "PROFILE_NAME_VALIDATION_RESULT",
+                isValid: false,
+                message: errorMessage,
             });
         }
     }

@@ -48,12 +48,13 @@ export class ConfigEditor extends WebView {
         });
 
         // Initialize helper classes
+        this.profileOperations = new ConfigEditorProfileOperations();
         this.messageHandlers = new ConfigEditorMessageHandlers(
             () => this.getLocalConfigs(),
             () => this.areSecureValuesAllowed(),
-            this.panel
+            this.panel,
+            this.profileOperations
         );
-        this.profileOperations = new ConfigEditorProfileOperations();
         this.fileOperations = new ConfigEditorFileOperations(() => this.getLocalConfigs());
 
         this.panel.reveal(vscode.ViewColumn.One, false);
@@ -324,6 +325,10 @@ export class ConfigEditor extends WebView {
             }
             case "GET_ENV_VARS": {
                 await this.messageHandlers.handleGetEnvVars(message);
+                break;
+            }
+            case "VALIDATE_PROFILE_NAME": {
+                await this.messageHandlers.handleValidateProfileName(message);
                 break;
             }
             case "INITIAL_SELECTION": {
