@@ -169,7 +169,7 @@ export class AuthHandler {
         const profileName = AuthHandler.getProfileName(profile);
         this.authCancelledProfiles.delete(profileName);
         this.authFlows.delete(profileName);
-        this.authPromptLocks.get(profileName)?.release();
+        this.releaseMutexIfLocked(this.authPromptLocks.get(profileName));
         const mutex = this.profileLocks.get(profileName);
         // If a mutex doesn't exist for this profile or the mutex is no longer locked, return
         if (mutex == null || !mutex.isLocked()) {
@@ -416,11 +416,11 @@ export class AuthHandler {
      */
     public static unlockAllProfiles(): void {
         for (const mutex of this.authPromptLocks.values()) {
-            mutex.release();
+            this.releaseMutexIfLocked(mutex);
         }
 
         for (const mutex of this.profileLocks.values()) {
-            mutex.release();
+            this.releaseMutexIfLocked(mutex);
         }
         this.authCancelledProfiles.clear();
         this.authFlows.clear();
