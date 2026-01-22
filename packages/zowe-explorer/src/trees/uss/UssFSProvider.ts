@@ -59,8 +59,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return UssFSProvider._instance;
     }
 
-    /* Public functions: File operations */
-
     protected async lookupWithCache(uri: vscode.Uri): Promise<UssDirectory | UssFile | IFileSystemEntry> {
         try {
             // Check cache for resource
@@ -166,42 +164,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns A structure containing file type, time, size and other metrics
      */
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        let cleanUri = uri.toString();
-        if (cleanUri.endsWith("/")) {
-            cleanUri = cleanUri.slice(0, -1);
-        }
-        const cacheKey = "stat_" + this.getQueryKey(uri) + cleanUri;
-        let entry: vscode.FileStat | undefined;
-
-        try {
-            if (this.requestCache.has(cacheKey)) {
-                entry = await this.requestCache.get(cacheKey);
-            }
-        } catch (error) {
-            entry = undefined;
-        }
-
-        if (!entry) {
-            const requestPromise = (async () => {
-                try {
-                    return await this.statImplementation(uri);
-                } finally {
-                    if (this.requestCache.get(cacheKey) === requestPromise) {
-                        this.requestCache.delete(cacheKey);
-                    }
-                }
-            })();
-
-            this.requestCache.set(cacheKey, requestPromise);
-            entry = await requestPromise;
-        }
-
-        if (entry) {
-            return entry;
-        }
-
-        throw vscode.FileSystemError.FileNotFound(uri);
+        return this.executeWithReuse<vscode.FileStat>(uri, {
+            keyPrefix: "stat_",
+            checkLocal: () => !!this.lookup(uri, false),
+            execute: () => this.statImplementation(uri),
+        });
     }
+
     /**
      * Moves an entry in the file system, both remotely and within the provider.
      * @param oldUri The old, source URI pointing to an entry that needs moved
@@ -368,6 +337,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<UssDirectory | UssFile> {
+        console.log("remoteLookupCalled");
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: uriInfo.profileName });
 
@@ -414,40 +384,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns An array of tuples containing each entry name and type
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        let cleanUri = uri.toString();
-        if (cleanUri.endsWith("/")) {
-            cleanUri = cleanUri.slice(0, -1);
-        }
-
-        // Use a distinct prefix (readdir_) to prevent collision with stat_ keys
-        const cacheKey = "readDir_" + this.getQueryKey(uri) + cleanUri;
-        let entries: [string, vscode.FileType][] | undefined;
-
-        try {
-            if (this.requestCache.has(cacheKey)) {
-                entries = await this.requestCache.get(cacheKey);
-            }
-        } catch (error) {
-            entries = undefined;
-        }
-
-        if (!entries) {
-            const requestPromise = (async () => {
-                try {
-                    return await this.readDirectoryImplementation(uri);
-                } finally {
-                    // Clean up the cache only if this specific promise is still the one cached
-                    if (this.requestCache.get(cacheKey) === requestPromise) {
-                        this.requestCache.delete(cacheKey);
-                    }
-                }
-            })();
-
-            this.requestCache.set(cacheKey, requestPromise);
-            entries = await requestPromise;
-        }
-
-        return entries;
+        return this.executeWithReuse<[string, vscode.FileType][]>(uri, {
+            keyPrefix: "readDir_",
+            checkLocal: () => !!this._lookupAsDirectory(uri, true),
+            execute: () => this.readDirectoryImplementation(uri),
+        });
     }
 
     /**
@@ -631,38 +572,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns The file's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        let cleanUri = uri.toString();
-        if (cleanUri.endsWith("/")) {
-            cleanUri = cleanUri.slice(0, -1);
-        }
-
-        const cacheKey = "readFile_" + this.getQueryKey(uri) + cleanUri;
-        let data: Uint8Array | undefined;
-
-        try {
-            if (this.requestCache.has(cacheKey)) {
-                data = await this.requestCache.get(cacheKey);
-            }
-        } catch (error) {
-            data = undefined;
-        }
-
-        if (!data) {
-            const requestPromise = (async () => {
+        return this.executeWithReuse<Uint8Array>(uri, {
+            keyPrefix: "readFile_",
+            checkLocal: () => {
                 try {
-                    return await this.readFileImplementation(uri);
-                } finally {
-                    if (this.requestCache.get(cacheKey) === requestPromise) {
-                        this.requestCache.delete(cacheKey);
-                    }
+                    const entry = this._lookupAsFile(uri, { silent: true }) as UssFile;
+                    return entry && entry.wasAccessed;
+                } catch {
+                    return false;
                 }
-            })();
-
-            this.requestCache.set(cacheKey, requestPromise);
-            data = await requestPromise;
-        }
-
-        return data;
+            },
+            execute: () => this.readFileImplementation(uri),
+        });
     }
 
     private async uploadEntry(
@@ -1116,5 +1037,74 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private _getInfoFromUri(uri: vscode.Uri): EntryMetadata {
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         return { profile: uriInfo.profile, path: uriInfo.isRoot ? "/" : uri.path.substring(uriInfo.slashAfterProfilePos) };
+    }
+
+    /**
+     * Helper to clean URI string for cache keys (removes trailing slash)
+     */
+    private getCleanUriString(uri: vscode.Uri): string {
+        const s = uri.toString();
+        return s.endsWith("/") ? s.slice(0, -1) : s;
+    }
+
+    private async executeWithReuse<T>(
+        uri: vscode.Uri,
+        options: {
+            keyPrefix: string;
+            checkLocal: () => boolean;
+            execute: () => Promise<T>;
+        }
+    ): Promise<T> {
+        const queryParams = new URLSearchParams(uri.query);
+        const isExplicitFetch = queryParams.get("fetch") === "true";
+        const hasConflictOrDiff = queryParams.has("conflict") || queryParams.has("inDiff");
+        const fetchByDefault = FeatureFlags.get("fetchByDefault");
+
+        const fetchQueryParams = new URLSearchParams(uri.query);
+        fetchQueryParams.set("fetch", "true");
+        const fetchUri = uri.with({ query: fetchQueryParams.toString() });
+        const fetchKey = options.keyPrefix + this.getQueryKey(fetchUri) + this.getCleanUriString(fetchUri);
+
+        const actualQueryParams = new URLSearchParams(uri.query);
+        actualQueryParams.delete("fetch");
+        const actualUri = uri.with({ query: actualQueryParams.toString() });
+        const actualKey = options.keyPrefix + this.getQueryKey(actualUri) + this.getCleanUriString(actualUri);
+
+        let localEntryFound = false;
+        if (!isExplicitFetch && !hasConflictOrDiff && fetchByDefault) {
+            try {
+                if (options.checkLocal()) {
+                    localEntryFound = true;
+                }
+            } catch (error) {}
+        }
+
+        const needNetwork = isExplicitFetch || (fetchByDefault && !hasConflictOrDiff && !localEntryFound);
+        if (needNetwork && this.requestCache.has(fetchKey)) {
+            //TODO: Remove
+            console.log(`[Reuse] Reusing explicit fetch for request: ${fetchKey}`);
+            return (await this.requestCache.get(fetchKey)) as T;
+        }
+
+        const keyToUse = needNetwork ? fetchKey : actualKey;
+
+        if (this.requestCache.has(keyToUse)) {
+            //TODO: Remove
+            console.log(`[Reuse] Request reuse for: ${keyToUse}`);
+            return (await this.requestCache.get(keyToUse)) as T;
+        }
+
+        const requestPromise = (async () => {
+            try {
+                return await options.execute();
+            } finally {
+                if (this.requestCache.get(keyToUse) === requestPromise) {
+                    this.requestCache.delete(keyToUse);
+                }
+            }
+        })();
+
+        this.requestCache.set(keyToUse, requestPromise);
+        return requestPromise;
     }
 }
