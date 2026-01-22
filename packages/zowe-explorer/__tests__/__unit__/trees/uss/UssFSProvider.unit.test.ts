@@ -785,7 +785,7 @@ describe("UssFSProvider", () => {
                 profile: null,
                 path: "/aFile.txt",
             });
-
+            jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce(null!);
             let err;
             try {
                 await UssFSProvider.instance.readFile(testUris.file);
@@ -800,7 +800,7 @@ describe("UssFSProvider", () => {
             const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
                 throw FileSystemError.FileIsADirectory(uri as Uri);
             });
-
+            jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce({ type: vscode.FileType.Directory } as UssDirectory);
             let err;
             try {
                 await UssFSProvider.instance.readFile(testUris.file);
@@ -2122,7 +2122,7 @@ describe("UssFSProvider", () => {
                 const file = new UssFile("testFile");
                 file.metadata = { profile: testProfile, path: "/testFile" };
 
-                const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(file);
+                const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValue(file);
                 const listFilesSpy = jest.spyOn(UssFSProvider.instance, "listFiles");
 
                 isProfileLockedMock.mockReturnValueOnce(true);
