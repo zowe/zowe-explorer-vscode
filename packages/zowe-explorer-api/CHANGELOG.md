@@ -11,6 +11,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### Bug fixes
 
 - Fixed an issue where updating credentials failed if the profile was not loaded into the cache. [#3964](https://github.com/zowe/zowe-explorer-vscode/pull/3964)
+- Updated Zowe SDKs to `8.29.9` for technical currency. [#4040](https://github.com/zowe/zowe-explorer-vscode/pull/4040)
 
 ## `3.4.0`
 
