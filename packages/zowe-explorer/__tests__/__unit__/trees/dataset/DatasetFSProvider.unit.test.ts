@@ -283,6 +283,44 @@ describe("DatasetFSProvider", () => {
 
                 expect(readDirImplSpy).toHaveBeenCalledTimes(2);
             });
+            describe("checkLocal logic with fetchByDefault", () => {
+                beforeEach(() => {
+                    jest.spyOn(FeatureFlags, "get").mockImplementation((flag) => flag === "fetchByDefault");
+                });
+
+                it("should coalesce with explicit fetch when local entry is missing (checkLocal returns false)", async () => {
+                    const testUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
+                    const fetchUri = testUri.with({ query: "fetch=true" });
+
+                    jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(undefined);
+
+                    const call1 = DatasetFSProvider.instance.readDirectory(testUri);
+                    const call2 = DatasetFSProvider.instance.readDirectory(fetchUri);
+
+                    const [result1, result2] = await Promise.all([call1, call2]);
+
+                    expect(readDirImplSpy).toHaveBeenCalledTimes(1);
+                    expect(result1).toStrictEqual(result2);
+                });
+
+                it("should NOT coalesce with explicit fetch when local entry exists (checkLocal returns true)", async () => {
+                    const testUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
+                    const fetchUri = testUri.with({ query: "fetch=true" });
+
+                    // Simulate local entry exists
+                    jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue({
+                        type: FileType.Directory,
+                        entries: new Map(),
+                    });
+
+                    const call1 = DatasetFSProvider.instance.readDirectory(testUri);
+                    const call2 = DatasetFSProvider.instance.readDirectory(fetchUri);
+
+                    await Promise.all([call1, call2]);
+
+                    expect(readDirImplSpy).toHaveBeenCalledTimes(2);
+                });
+            });
         });
     });
     describe("fetchDatasetAtUri", () => {
@@ -676,6 +714,46 @@ describe("DatasetFSProvider", () => {
 
                 expect(result1.toString()).toContain("MEM1");
                 expect(result2.toString()).toContain("MEM2");
+            });
+            describe("checkLocal logic with fetchByDefault", () => {
+                beforeEach(() => {
+                    jest.spyOn(FeatureFlags, "get").mockImplementation((flag) => flag === "fetchByDefault");
+                });
+
+                it("should coalesce with explicit fetch when file not accessed (checkLocal returns false)", async () => {
+                    const testUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PS" });
+                    const fetchUri = testUri.with({ query: "fetch=true" });
+
+                    jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue({
+                        ...testEntries.ps,
+                        wasAccessed: false,
+                    });
+
+                    const call1 = DatasetFSProvider.instance.readFile(testUri);
+                    const call2 = DatasetFSProvider.instance.readFile(fetchUri);
+
+                    const [result1, result2] = await Promise.all([call1, call2]);
+
+                    expect(readFileImplSpy).toHaveBeenCalledTimes(1);
+                    expect(result1).toStrictEqual(result2);
+                });
+
+                it("should NOT coalesce with explicit fetch when file already accessed (checkLocal returns true)", async () => {
+                    const testUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PS" });
+                    const fetchUri = testUri.with({ query: "fetch=true" });
+
+                    jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue({
+                        ...testEntries.ps,
+                        wasAccessed: true,
+                    });
+
+                    const call1 = DatasetFSProvider.instance.readFile(testUri);
+                    const call2 = DatasetFSProvider.instance.readFile(fetchUri);
+
+                    await Promise.all([call1, call2]);
+
+                    expect(readFileImplSpy).toHaveBeenCalledTimes(2);
+                });
             });
         });
     });
