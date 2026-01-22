@@ -630,6 +630,29 @@ describe("ZosmfMvsApi", () => {
         expect(copySpy).toHaveBeenCalled();
     });
 
+    describe("deleteDataSet with undefined options", () => {
+        it("should call Delete.dataSet and not throw TypeError when options is undefined", async () => {
+            const mvsApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
+            const deleteDataSetSpy = jest.spyOn(zosfiles.Delete, "dataSet").mockResolvedValue({ success: true });
+            const deleteVsamSpy = jest.spyOn(zosfiles.Delete, "vsam").mockResolvedValue({ success: true });
+
+            deleteDataSetSpy.mockClear();
+            deleteVsamSpy.mockClear();
+
+            expect(async () => {
+                await mvsApi.deleteDataSet("DATASET.NAME", undefined);
+            }).not.toThrow();
+
+            expect(deleteDataSetSpy).toHaveBeenCalled();
+            expect(deleteVsamSpy).not.toHaveBeenCalled();
+            expect(deleteDataSetSpy).toHaveBeenCalledWith(
+                expect.any(Object), // session
+                "DATASET.NAME",
+                expect.objectContaining({ responseTimeout: 60 })
+            );
+        });
+    });
+
     describe("MvsApi.getCount", () => {
         let mvsApi: ZoweExplorerZosmf.MvsApi;
         let dataSetsMatchingPatternSpy: jest.SpyInstance;
