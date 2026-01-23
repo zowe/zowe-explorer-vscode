@@ -196,8 +196,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const loadedProfile = Profiles.getInstance().loadNamedProfile(profile.name);
 
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
-        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
 
         let response: IZosFilesResponse;
 
@@ -481,8 +480,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
         // If the extenderProfileReady map does not contain the profile, create a deferred promise for the profile.
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
-        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         try {
             file = this._lookupAsFile(uri) as UssFile;
         } catch (err) {
