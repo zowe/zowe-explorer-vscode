@@ -397,7 +397,6 @@ export function updateDefaultsAfterRename(
 
         // Check each default entry
         Object.entries(updatedDefaults).forEach(([profileType, profileName]) => {
-            // Only process if profileName is a string
             if (typeof profileName === "string") {
                 // Check if this profile was a default
                 if (profileName === originalKey) {
@@ -409,7 +408,6 @@ export function updateDefaultsAfterRename(
                 // Check if any child profiles of the renamed profile were defaults
                 // This handles cases like: tso.zosmf is default, tso is renamed to tso1, so tso1.zosmf should remain default
                 if (profileName.startsWith(originalKey + ".")) {
-                    // This is a child profile that was a default
                     const childPath = profileName.substring(originalKey.length + 1);
                     const newChildDefault = newKey + "." + childPath;
                     updatedDefaults[profileType] = newChildDefault;
@@ -418,17 +416,14 @@ export function updateDefaultsAfterRename(
             }
         });
 
-        // If we made changes, update the layer properties
         if (hasChanges) {
             currentLayer.properties.defaults = updatedDefaults;
 
-            // If a team config update callback is provided, use it
             if (updateTeamConfig) {
                 updateTeamConfig(updatedDefaults);
             }
         }
     } catch (error) {
-        // Log error but don't fail the rename operation
         console.warn(`Failed to update defaults after profile rename: ${error}`);
     }
 }
@@ -442,23 +437,15 @@ export function simulateDefaultsUpdateAfterRename(layerActive: () => IConfigLaye
             return;
         }
 
-        // Create a copy of defaults to simulate the update
         const simulatedDefaults = { ...defaults };
 
-        // Check each default entry and simulate the update
         Object.entries(simulatedDefaults).forEach(([profileType, profileName]) => {
-            // Only process if profileName is a string
             if (typeof profileName === "string") {
-                // Check if this profile was a default
                 if (profileName === originalKey) {
-                    // Simulate updating the default to reference the new profile
                     simulatedDefaults[profileType] = newKey;
                 }
 
-                // Check if any child profiles of the renamed profile were defaults
-                // This handles cases like: tso.zosmf is default, tso is renamed to tso1, so tso1.zosmf should remain default
                 if (profileName.startsWith(originalKey + ".")) {
-                    // This is a child profile that was a default
                     const childPath = profileName.substring(originalKey.length + 1);
                     const newChildDefault = newKey + "." + childPath;
                     simulatedDefaults[profileType] = newChildDefault;
@@ -466,10 +453,8 @@ export function simulateDefaultsUpdateAfterRename(layerActive: () => IConfigLaye
             }
         });
 
-        // Update the layer properties with simulated defaults
         currentLayer.properties.defaults = simulatedDefaults;
     } catch (error) {
-        // Log error but don't fail the simulation
         console.warn(`Failed to simulate defaults update after profile rename: ${error}`);
     }
 }

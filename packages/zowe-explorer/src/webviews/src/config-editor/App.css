@@ -484,6 +484,31 @@ select:focus {
     white-space: nowrap;
 }
 
+/* Prevent disabled options from showing highlight on dropdown open */
+select option:disabled {
+    background-color: transparent !important;
+    color: var(--vscode-input-foreground) !important;
+}
+
+select option:disabled:hover {
+    background-color: transparent !important;
+}
+
+select option:disabled:checked {
+    background-color: transparent !important;
+}
+
+select option:disabled:focus {
+    background-color: transparent !important;
+}
+
+/* Override focus styles for invalid defaults to keep only the error border */
+select.invalid-default:focus {
+    outline: none !important;
+    border-color: var(--vscode-inputValidation-errorBorder, #f48771) !important;
+    box-shadow: none !important;
+}
+
 .config-section.defaults-section .config-label {
     min-width: 0;
     overflow: hidden;

@@ -47,7 +47,6 @@ export class ConfigEditor extends WebView {
             viewColumn: vscode.ViewColumn.One,
         });
 
-        // Initialize helper classes
         this.profileOperations = new ConfigEditorProfileOperations();
         this.messageHandlers = new ConfigEditorMessageHandlers(
             () => this.getLocalConfigs(),
@@ -68,7 +67,29 @@ export class ConfigEditor extends WebView {
 
     private sortRenamesByDepth(renames: any[]): any[] {
         return [...renames].sort((a, b) => {
-            // Primary sort: by newKey depth (shorter paths first)
+            const aIsParentOfB = b.originalKey.startsWith(a.originalKey + ".");
+            const bIsParentOfA = a.originalKey.startsWith(b.originalKey + ".");
+
+            if (aIsParentOfB) {
+                // B is an extraction if its new location is NOT under A's old OR new location
+                const bStaysUnderAOld = b.newKey.startsWith(a.originalKey + ".") || b.newKey === a.originalKey;
+                const bMovesToUnderANew = b.newKey.startsWith(a.newKey + ".") || b.newKey === a.newKey;
+                const bIsExtraction = !bStaysUnderAOld && !bMovesToUnderANew;
+                if (bIsExtraction) {
+                    return 1;
+                }
+            }
+
+            if (bIsParentOfA) {
+                // A is an extraction if its new location is NOT under B's old OR new location
+                const aStaysUnderBOld = a.newKey.startsWith(b.originalKey + ".") || a.newKey === b.originalKey;
+                const aMovesToUnderBNew = a.newKey.startsWith(b.newKey + ".") || a.newKey === b.newKey;
+                const aIsExtraction = !aStaysUnderBOld && !aMovesToUnderBNew;
+                if (aIsExtraction) {
+                    return -1;
+                }
+            }
+
             const depthA = a.newKey.split(".").length;
             const depthB = b.newKey.split(".").length;
 
@@ -76,7 +97,6 @@ export class ConfigEditor extends WebView {
                 return depthA - depthB;
             }
 
-            // Secondary sort: by originalKey depth when newKey depths are equal
             const originalDepthA = a.originalKey.split(".").length;
             const originalDepthB = b.originalKey.split(".").length;
             return originalDepthA - originalDepthB;
@@ -240,18 +260,15 @@ export class ConfigEditor extends WebView {
             }
             case "SAVE_CHANGES": {
                 try {
-                    // Process renames first
                     if (message.renames && Array.isArray(message.renames)) {
                         await this.handleProfileRenames(message.renames);
                     }
 
-                    // Update profile changes to use new names after renames are processed
                     let updatedMessage = message;
                     if (message.renames && Array.isArray(message.renames)) {
                         updatedMessage = await this.updateProfileChangesForRenames(message, message.renames);
                     }
 
-                    // Process changes with updated profile names
                     const parsedChanges = ConfigUtils.parseConfigChanges(updatedMessage);
                     for (const change of parsedChanges) {
                         if (change.defaultsChanges || change.defaultsDeleteKeys) {
@@ -284,11 +301,9 @@ export class ConfigEditor extends WebView {
                         command: "DISABLE_OVERLAY",
                     });
                 } catch (error) {
-                    // If a critical error occurred during save, cancel the entire operation
                     const errorMessage = error instanceof Error ? error.message : String(error);
                     console.error("Save operation failed:", errorMessage);
 
-                    // Refresh configurations to clear the saving state and show current state
                     await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
                     const configs = await this.getLocalConfigs();
                     const secureValuesAllowed = await this.areSecureValuesAllowed();
@@ -300,10 +315,13 @@ export class ConfigEditor extends WebView {
                     });
 
                     await this.panel.webview.postMessage({
-                        command: "DISABLE_OVERLAY",
+                        command: "SAVE_ERROR",
+                        error: errorMessage,
                     });
 
-                    // Don't re-throw the error to prevent unhandled promise rejection
+                    await this.panel.webview.postMessage({
+                        command: "DISABLE_OVERLAY",
+                    });
                 }
                 break;
             }
@@ -349,32 +367,44 @@ export class ConfigEditor extends WebView {
             }
 
             case "GET_MERGED_PROPERTIES": {
-                const mergedArgs = await this.getPendingMergedArgsForProfile(
-                    message.profilePath,
-                    message.configPath,
-                    message.changes,
-                    message.renames
-                );
-                await this.panel.webview.postMessage({
-                    command: "MERGED_PROPERTIES",
-                    mergedArgs,
-                });
+                try {
+                    const mergedArgs = await this.getPendingMergedArgsForProfile(
+                        message.profilePath,
+                        message.configPath,
+                        message.changes,
+                        message.renames
+                    );
+                    await this.panel.webview.postMessage({
+                        command: "MERGED_PROPERTIES",
+                        mergedArgs,
+                    });
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    console.error("Failed to get merged properties:", errorMessage);
+                    vscode.window.showErrorMessage(`Cannot show merged properties: ${errorMessage}`);
+                }
                 await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
                 break;
             }
             case "GET_WIZARD_MERGED_PROPERTIES": {
-                const mergedArgs = await this.getWizardMergedProperties(
-                    message.rootProfile,
-                    message.profileType,
-                    message.configPath,
-                    message.profileName,
-                    message.changes,
-                    message.renames
-                );
-                await this.panel.webview.postMessage({
-                    command: "WIZARD_MERGED_PROPERTIES",
-                    mergedArgs,
-                });
+                try {
+                    const mergedArgs = await this.getWizardMergedProperties(
+                        message.rootProfile,
+                        message.profileType,
+                        message.configPath,
+                        message.profileName,
+                        message.changes,
+                        message.renames
+                    );
+                    await this.panel.webview.postMessage({
+                        command: "WIZARD_MERGED_PROPERTIES",
+                        mergedArgs,
+                    });
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    console.error("Failed to get wizard merged properties:", errorMessage);
+                    vscode.window.showErrorMessage(`Cannot show merged properties: ${errorMessage}`);
+                }
                 break;
             }
 
@@ -451,7 +481,6 @@ export class ConfigEditor extends WebView {
         });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
-        // Process renames in order - sort by depth to ensure parent renames happen before child renames
         const sortedRenames = this.sortRenamesByDepth(renames);
 
         // Update rename keys to reflect parent renames that have already been processed
@@ -463,27 +492,28 @@ export class ConfigEditor extends WebView {
         // Filter out no-op renames (where originalKey === newKey)
         const filteredRenames = finalRenames.filter((rename) => rename.originalKey !== rename.newKey);
 
-        // Apply renames to configuration files
         for (const rename of filteredRenames) {
             try {
                 await this.processSingleRename(rename, profInfo);
             } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                if (this.profileOperations.isCriticalMoveError(error)) {
+                    vscode.window.showErrorMessage(`Save operation cancelled: ${errorMessage}`);
+                    throw new Error(`Critical error during profile rename: ${errorMessage}`);
+                }
                 this.handleRenameError(error, rename);
             }
         }
     }
 
     private async processSingleRename(rename: { originalKey: string; newKey: string; configPath: string }, profInfo: ProfileInfo): Promise<void> {
-        // Validate and construct paths
         const originalPath = ConfigEditorPathUtils.constructNestedProfilePath(rename.originalKey);
         const newPath = ConfigEditorPathUtils.constructNestedProfilePath(rename.newKey);
 
-        // Check for circular reference
         if (this.profileOperations.wouldCreateCircularReference(rename.originalKey, rename.newKey)) {
             throw new Error(`Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Would create circular reference`);
         }
 
-        // Get team config and target layer
         const teamConfig = profInfo.getTeamConfig();
         const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
 
@@ -499,20 +529,20 @@ export class ConfigEditor extends WebView {
             },
         });
 
-        // Validate profile existence and conflicts
-        this.validateProfileRename(teamConfig, originalPath, newPath, rename);
+        const validationResult = this.validateProfileRename(teamConfig, originalPath, newPath, rename);
+        if (validationResult.skip) {
+            // Profile doesn't exist yet (newly created) - skip rename, changes will be redirected
+            return;
+        }
 
-        // Perform the rename operation
         if (this.profileOperations.isNestedProfileCreation(rename.originalKey, rename.newKey)) {
             this.createNestedProfileStructureDirectly(teamConfig, originalPath, newPath, rename.originalKey, rename.newKey);
         } else {
             this.moveProfileDirectly(teamConfig, layerActive, originalPath, newPath);
         }
 
-        // Update defaults (non-critical operation)
         this.updateDefaultsAfterRename(teamConfig, rename);
 
-        // Save changes and refresh
         await teamConfig.save();
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
     }
@@ -535,13 +565,11 @@ export class ConfigEditor extends WebView {
             throw new Error(`Target profile already exists at path: ${targetPath}`);
         }
 
-        // Move the profile directly using teamConfig methods
         (teamConfig as any).set(targetPath, sourceProfile, { parseString: true });
         (teamConfig as any).delete(sourcePath);
     }
 
     private createNestedProfileStructureDirectly(teamConfig: any, originalPath: string, newPath: string, originalKey: string, newKey: string): void {
-        // Get the original profile data
         const originalProfile = this.getProfileFromTeamConfig(teamConfig, originalPath);
         if (!originalProfile) {
             throw new Error(`Source profile not found at path: ${originalPath}`);
@@ -559,7 +587,6 @@ export class ConfigEditor extends WebView {
         const childProfile = { ...originalProfile };
         delete childProfile.profiles;
 
-        // Set the new parent profile structure directly using teamConfig
         (teamConfig as any).set(originalPath, newParentProfile, { parseString: true });
         const childPath = `${originalPath}.profiles.${childProfileName}`;
         (teamConfig as any).set(childPath, childProfile, { parseString: true });
@@ -594,16 +621,26 @@ export class ConfigEditor extends WebView {
         return current;
     }
 
-    private validateProfileRename(teamConfig: any, originalPath: string, newPath: string, rename: { originalKey: string; newKey: string }): void {
+    private validateProfileRename(
+        teamConfig: any,
+        originalPath: string,
+        newPath: string,
+        rename: { originalKey: string; newKey: string }
+    ): { skip: boolean } {
         const originalProfile = this.getProfileFromTeamConfig(teamConfig, originalPath);
         if (!originalProfile) {
-            throw new Error(`Original profile '${rename.originalKey}' does not exist`);
+            // Profile doesn't exist in config - this is likely a newly created profile
+            // that hasn't been saved yet. Skip the rename operation; the pending changes
+            // will be redirected to the new location by updateProfileChangesForRenames.
+            return { skip: true };
         }
 
         const existingTargetProfile = this.getProfileFromTeamConfig(teamConfig, newPath);
         if (existingTargetProfile) {
             throw new Error(`Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Profile '${rename.newKey}' already exists`);
         }
+
+        return { skip: false };
     }
 
     private updateDefaultsAfterRename(teamConfig: any, rename: { originalKey: string; newKey: string }): void {
@@ -623,13 +660,11 @@ export class ConfigEditor extends WebView {
     private handleRenameError(error: any, rename: { originalKey: string; newKey: string }): void {
         const errorMessage = error instanceof Error ? error.message : String(error);
 
-        // Check if this is a critical error that should cancel the entire save operation
         if (this.profileOperations.isCriticalMoveError(error)) {
             vscode.window.showErrorMessage(`Save operation cancelled: ${errorMessage}`);
             throw new Error(`Critical error during profile rename: ${errorMessage}`);
         }
 
-        // Show error message but continue with other renames
         vscode.window.showErrorMessage(`Error renaming profile from '${rename.originalKey}' to '${rename.newKey}': ${errorMessage}`);
     }
 
@@ -646,7 +681,6 @@ export class ConfigEditor extends WebView {
             return message;
         }
 
-        // Initialize TeamConfig for profile API access
         const profInfo = new ProfileInfo("zowe", {
             overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
@@ -655,7 +689,6 @@ export class ConfigEditor extends WebView {
 
         const updatedMessage = { ...message };
 
-        // Create a map of all renames for easier lookup
         const renameMap = new Map<string, { oldKey: string; newKey: string; configPath: string }>();
         renames.forEach((rename) => {
             renameMap.set(rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath });
@@ -667,15 +700,11 @@ export class ConfigEditor extends WebView {
                 if (change.configPath) {
                     let updatedChange = { ...change };
 
-                    // Update the profile field
                     if (updatedChange.profile) {
                         updatedChange.profile = ConfigEditorPathUtils.getNewProfilePath(updatedChange.profile, change.configPath, renameMap);
                     }
 
-                    // Update the key field
                     updatedChange = ConfigEditorPathUtils.updateChangeKey(updatedChange, change.configPath, renameMap);
-
-                    // Update the path array
                     updatedChange = ConfigEditorPathUtils.updateChangePath(updatedChange, change.configPath, renameMap);
 
                     return updatedChange;
@@ -690,15 +719,11 @@ export class ConfigEditor extends WebView {
                 if (deletion.configPath) {
                     let updatedDeletion = { ...deletion };
 
-                    // Update the profile field
                     if (updatedDeletion.profile) {
                         updatedDeletion.profile = ConfigEditorPathUtils.getNewProfilePath(updatedDeletion.profile, deletion.configPath, renameMap);
                     }
 
-                    // Update the key field
                     updatedDeletion = ConfigEditorPathUtils.updateChangeKey(updatedDeletion, deletion.configPath, renameMap);
-
-                    // Update the path array
                     updatedDeletion = ConfigEditorPathUtils.updateChangePath(updatedDeletion, deletion.configPath, renameMap);
 
                     return updatedDeletion;
@@ -723,7 +748,6 @@ export class ConfigEditor extends WebView {
 
         const teamConfig = profInfo.getTeamConfig();
 
-        // Simulate profile renames FIRST, so that default changes can reference the renamed profiles
         if (renames && Array.isArray(renames)) {
             this.simulateProfileRenames(renames, teamConfig);
         }
@@ -889,7 +913,7 @@ export class ConfigEditor extends WebView {
             return;
         }
 
-        // Process renames in order - no special sorting needed since client handles consolidation
+        // Process renames in order - extractions are processed before their parents
         const sortedRenames = this.sortRenamesByDepth(renames);
 
         // Update rename keys to reflect parent renames that have already been processed
@@ -936,12 +960,10 @@ export class ConfigEditor extends WebView {
                         rename.newKey,
                         true
                     );
-                    console.warn(errorMessage);
-                    continue; // Skip this rename and continue with others
+                    throw new Error(`${errorMessage}. Cannot proceed with operation - rename state is invalid.`);
                 }
 
                 try {
-                    // Check if this is a nested profile creation (e.g., 'tso' -> 'tso.asdf')
                     if (this.profileOperations.isNestedProfileCreation(rename.originalKey, rename.newKey)) {
                         this.createNestedProfileStructureDirectly(teamConfig, originalPath, newPath, rename.originalKey, rename.newKey);
                     } else {
@@ -949,8 +971,7 @@ export class ConfigEditor extends WebView {
                     }
                 } catch (moveError) {
                     const errorMessage = this.profileOperations.handleMoveUtilsError(moveError, "simulate move profile", originalPath, newPath, true);
-                    console.warn(errorMessage);
-                    continue; // Skip this rename and continue with others
+                    throw new Error(`${errorMessage}. Cannot proceed with operation - rename state is invalid.`);
                 }
 
                 // Simulate defaults updates for this rename
@@ -965,7 +986,6 @@ export class ConfigEditor extends WebView {
                         true
                     );
                     console.warn(errorMessage);
-                    // Continue execution as this is simulation only
                 }
             } catch (error) {
                 continue;
@@ -993,9 +1013,14 @@ export class ConfigEditor extends WebView {
 
         const teamConfig = profInfo.getTeamConfig();
 
-        // Simulate profile renames FIRST, so that default changes can reference the renamed profiles
-        if (renames && Array.isArray(renames)) {
-            this.simulateProfileRenames(renames, teamConfig);
+        try {
+            if (renames && Array.isArray(renames)) {
+                this.simulateProfileRenames(renames, teamConfig);
+            }
+        } catch (simulationError) {
+            const errorMessage = simulationError instanceof Error ? simulationError.message : String(simulationError);
+            console.error("Simulation failed:", errorMessage);
+            throw simulationError;
         }
 
         if (changes) {

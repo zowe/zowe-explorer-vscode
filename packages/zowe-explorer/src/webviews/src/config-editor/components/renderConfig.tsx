@@ -891,7 +891,11 @@ export const RenderConfig = ({
           const isSecureForSorting = isSecurePropertyForSorting;
 
           const readOnlyContainer = (
-            <div className="config-item-container " data-testid="profile-property-container" style={displayKey === "type" && path[path.length - 1] !== "properties" ? { gap: "0px" } : {}}>
+            <div
+              className="config-item-container "
+              data-testid="profile-property-container"
+              style={displayKey === "type" && path[path.length - 1] !== "properties" ? { gap: "0px" } : {}}
+            >
               <span
                 className="config-label"
                 title={displayKey ? propertyDescriptions[displayKey] || "" : ""}

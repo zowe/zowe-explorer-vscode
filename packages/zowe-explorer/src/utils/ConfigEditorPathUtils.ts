@@ -33,7 +33,6 @@ export class ConfigEditorPathUtils {
             pathParts.push("profiles");
         }
 
-        // Remove the last "profiles" since we don't need it for the final path
         pathParts.pop();
         return pathParts.join(".");
     }
@@ -47,17 +46,13 @@ export class ConfigEditorPathUtils {
         renameMap: Map<string, { oldKey: string; newKey: string; configPath: string }>,
         includeProfilesSegments = false
     ): string {
-        // Split the path into parts to handle nested profiles
         const parts = profilePath.split(".");
         let newPath = parts.slice();
         let modified = false;
-
-        // Check each part and its parent combinations for renames
         for (let i = parts.length; i > 0; i--) {
             const partialPath = parts.slice(0, i).join(".");
             const rename = renameMap.get(partialPath);
             if (rename && rename.configPath === configPath) {
-                // Replace this part of the path with the new name
                 const remainingParts = parts.slice(i);
                 newPath = [...rename.newKey.split("."), ...remainingParts];
                 modified = true;
@@ -66,19 +61,13 @@ export class ConfigEditorPathUtils {
         }
 
         if (includeProfilesSegments) {
-            // Always convert profile path to include 'profiles' segments
-            // e.g., "test.lpar2" -> ["profiles", "test", "profiles", "lpar2"]
-            // or "test" -> ["profiles", "test"]
             const pathWithProfiles: string[] = [];
             const pathParts = modified ? newPath : parts;
 
-            // Always start with "profiles"
             pathWithProfiles.push("profiles");
 
-            // Add each part with "profiles" between them
             for (let i = 0; i < pathParts.length; i++) {
                 pathWithProfiles.push(pathParts[i]);
-                // Add "profiles" between parts, but not after the last one
                 if (i < pathParts.length - 1) {
                     pathWithProfiles.push("profiles");
                 }
@@ -97,13 +86,11 @@ export class ConfigEditorPathUtils {
 
         if (updatedChange.key) {
             const keyParts = updatedChange.key.split(".");
-            // Extract the profile path and property/type
             let propertyPath = "";
             let inProfile = false;
             let currentProfile = "";
             let profileEndIndex = -1;
 
-            // Find where the profile path ends
             for (let i = 0; i < keyParts.length; i++) {
                 const part = keyParts[i];
                 if (part === "profiles") {
@@ -130,16 +117,12 @@ export class ConfigEditorPathUtils {
                 }
             }
 
-            // If we didn't find properties, type, or secure, the entire path might be a profile path
             if (profileEndIndex === -1 && inProfile) {
-                // This might be a profile-only key (though this should be rare)
                 profileEndIndex = keyParts.length;
             }
 
             if (currentProfile) {
-                // Get the new profile path with 'profiles' segments included
                 const newProfilePath = this.getNewProfilePath(currentProfile, configPath, renameMap, true);
-                // Combine with property path
                 updatedChange.key = propertyPath ? `${newProfilePath}.${propertyPath}` : newProfilePath;
             }
         }
@@ -154,7 +137,6 @@ export class ConfigEditorPathUtils {
         const updatedChange = { ...change };
 
         if (updatedChange.path && Array.isArray(updatedChange.path)) {
-            // Extract the profile path from the path array
             let currentProfile = "";
             let propertyPath: string[] = [];
             let foundPropertySection = false;
@@ -179,9 +161,7 @@ export class ConfigEditorPathUtils {
             }
 
             if (currentProfile) {
-                // Get the new profile path with 'profiles' segments
                 const newProfilePath = this.getNewProfilePath(currentProfile, configPath, renameMap, true);
-                // Split into array and combine with property path
                 updatedChange.path = [...newProfilePath.split("."), ...propertyPath];
             }
         }

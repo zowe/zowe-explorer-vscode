@@ -23,25 +23,19 @@ export function getWizardTypeOptions(
 ): string[] {
     if (selectedTab === null) return [];
 
-    // Get types from schema
     const schemaTypes = schemaValidations[configurations[selectedTab].configPath]?.validDefaults || [];
-
-    // Get unique types from existing profiles
     const config = configurations[selectedTab].properties;
     const flatProfiles = flattenProfiles(config.profiles || {});
     const profileTypes = new Set<string>();
 
-    // Extract types from all profiles
     Object.values(flatProfiles).forEach((profile: any) => {
         if (profile?.type && typeof profile.type === "string" && profile.type.trim() !== "") {
             profileTypes.add(profile.type);
         }
     });
 
-    // Also check pending changes for types
     const configPath = configurations[selectedTab].configPath;
     Object.entries(pendingChanges[configPath] || {}).forEach(([key, entry]) => {
-        // Only collect profile-level type changes, not properties.type
         const keyParts = key.split(".");
         if (
             keyParts[keyParts.length - 1] === "type" &&
@@ -53,10 +47,7 @@ export function getWizardTypeOptions(
         }
     });
 
-    // Combine schema types and profile types, removing duplicates
     const allTypes = new Set([...schemaTypes, ...Array.from(profileTypes)]);
-
-    // Return as sorted array
     return Array.from(allTypes).sort((a, b) => a.localeCompare(b));
 }
 
@@ -72,15 +63,12 @@ export function getWizardPropertyOptions(
 ): string[] {
     if (selectedTab === null) return [];
 
-    // Get all available property schemas from all profile types
     const allPropertyOptions = new Set<string>();
     const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema || {};
 
-    // If a specific type is selected, get properties from that type
     if (wizardSelectedType && propertySchema[wizardSelectedType]) {
         Object.keys(propertySchema[wizardSelectedType]).forEach((key) => allPropertyOptions.add(key));
     } else {
-        // If no type is selected, get properties from all available types
         Object.values(propertySchema).forEach((typeSchema: any) => {
             if (typeSchema && typeof typeSchema === "object") {
                 Object.keys(typeSchema).forEach((key) => allPropertyOptions.add(key));
@@ -88,7 +76,6 @@ export function getWizardPropertyOptions(
         });
     }
 
-    // Filter out properties that are already added
     const usedKeys = new Set(wizardProperties.map((prop) => prop.key));
     return Array.from(allPropertyOptions)
         .filter((option) => !usedKeys.has(option))
@@ -106,19 +93,16 @@ export function getWizardPropertyDescriptions(
 ): { [key: string]: string } {
     if (selectedTab === null) return {};
 
-    // Get property descriptions from schema validation
     const propertyDescriptions: { [key: string]: string } = {};
     const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema || {};
 
     if (wizardSelectedType && propertySchema[wizardSelectedType]) {
-        // If a specific type is selected, get descriptions from that type
         Object.entries(propertySchema[wizardSelectedType]).forEach(([key, schema]) => {
             if (schema && typeof schema === "object" && "description" in schema && schema.description) {
                 propertyDescriptions[key] = schema.description as string;
             }
         });
     } else {
-        // If no type is selected, get descriptions from all available types
         Object.values(propertySchema).forEach((typeSchema: any) => {
             if (typeSchema && typeof typeSchema === "object") {
                 Object.entries(typeSchema).forEach(([key, schema]: [string, any]) => {

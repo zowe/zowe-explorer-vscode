@@ -123,7 +123,6 @@ export class ConfigEditorMessageHandlers {
     async handleGetLocalStorageValue(message: any): Promise<void> {
         try {
             const { key } = message;
-            // Map string keys to enum keys for LocalStorageAccess
             const enumKey = key as Definitions.LocalStorageKey;
             const value = LocalStorageAccess.getValue(enumKey);
             await this.panel.webview.postMessage({
@@ -177,7 +176,6 @@ export class ConfigEditorMessageHandlers {
             const query = message.query || "";
             const envVarNames: string[] = [];
 
-            // Get keys only for security
             for (const key of Object.keys(process.env)) {
                 if (key.toLowerCase().includes(query.toLowerCase())) {
                     envVarNames.push(key);

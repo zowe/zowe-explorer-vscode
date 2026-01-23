@@ -92,54 +92,35 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
         }
     }
 
-    // Update the renames state with consolidation
     setRenames((prev) => {
         const currentRenames = prev[configPath] || {};
-
-        // Check for opposite renames and remove both if they cancel out
         let updatedRenames = { ...currentRenames };
-
-        // Check if this rename would cancel out an existing rename chain
         const wouldCancelOut = checkIfRenameCancelsOut(currentRenames, originalKey, newKey);
 
         if (wouldCancelOut) {
-            // This rename cancels out the existing chain, remove all related renames
-            // Find all renames that are part of the same chain and remove them
             const renamesToRemove = new Set<string>();
-
-            // Add the current original key
             renamesToRemove.add(originalKey);
-
-            // Find all keys in the rename chain that should be removed
             let currentKey = originalKey;
             while (currentRenames[currentKey]) {
                 const targetKey = currentRenames[currentKey];
                 renamesToRemove.add(currentKey);
                 currentKey = targetKey;
             }
-
-            // Remove all renames in the chain
             for (const keyToRemove of renamesToRemove) {
                 delete updatedRenames[keyToRemove];
             }
         } else {
-            // Apply the new rename
             updatedRenames[originalKey] = newKey;
         }
 
-        // Apply consolidation to handle any other conflicts
         updatedRenames = consolidateRenames(updatedRenames, originalKey, newKey);
 
-        // Detect and remove closed loops
         const closedLoops = detectClosedLoops(updatedRenames);
         if (closedLoops.length > 0) {
-            // Remove all keys that are part of closed loops
             const keysToRemove = new Set<string>();
             closedLoops.forEach((loop) => {
                 loop.forEach((key) => keysToRemove.add(key));
             });
-
-            // Remove all keys in closed loops
             keysToRemove.forEach((key) => {
                 delete updatedRenames[key];
             });
@@ -750,6 +731,7 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
         setPendingChanges,
         setSelectedProfileKey,
         setSelectedProfilesByConfig,
+        setPendingDefaults,
         formatPendingChanges,
         getAvailableProfilesForConfig,
         vscodeApi,
@@ -805,6 +787,57 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
             });
         }
         return newState;
+    });
+
+    // Remove the deleted profile from defaults if it's set as a default
+    const config = configurations[selectedTab!].properties;
+    const defaults = config.defaults || {};
+
+    const profilesToCheck = [profileKey, effectiveProfileKey];
+
+    // Check if the deleted profile is a default for any profile type
+    setPendingDefaults((prev) => {
+        const updatedDefaults = { ...prev[configPath] };
+        let hasChanges = false;
+
+        Object.entries(updatedDefaults).forEach(([profileType, defaultEntry]) => {
+            // Check if this default matches the deleted profile or is a child of it
+            if (profilesToCheck.includes(defaultEntry.value) || profilesToCheck.some((p) => defaultEntry.value.startsWith(p + "."))) {
+                updatedDefaults[profileType] = { value: "", path: [profileType] };
+                hasChanges = true;
+            }
+        });
+
+        if (hasChanges) {
+            return {
+                ...prev,
+                [configPath]: updatedDefaults,
+            };
+        }
+        return prev;
+    });
+
+    // Check configuration defaults and set to empty string if the deleted profile is a default
+    setPendingDefaults((prev) => {
+        const updatedDefaults = { ...prev[configPath] };
+        let hasChanges = false;
+
+        Object.entries(defaults).forEach(([profileType, defaultProfileName]) => {
+            const defaultProfileNameStr = String(defaultProfileName);
+
+            if (profilesToCheck.includes(defaultProfileNameStr) || profilesToCheck.some((p) => defaultProfileNameStr.startsWith(p + "."))) {
+                updatedDefaults[profileType] = { value: "", path: [profileType] };
+                hasChanges = true;
+            }
+        });
+
+        if (hasChanges) {
+            return {
+                ...prev,
+                [configPath]: updatedDefaults,
+            };
+        }
+        return prev;
     });
 
     // If this profile is currently selected, or if the selected profile is a child of this profile, select the nearest profile

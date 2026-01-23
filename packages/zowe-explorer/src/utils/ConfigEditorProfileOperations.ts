@@ -31,7 +31,6 @@ export class ConfigEditorProfileOperations {
         const flatProfiles = ConfigUtils.flattenProfiles(profiles);
         const newProfileKey = rootProfile === "root" ? profileName.trim() : `${rootProfile}.${profileName.trim()}`;
 
-        // Check existing profiles
         const existingProfilesUnderRoot = Object.keys(flatProfiles).some((profileKey) => {
             if (rootProfile === "root") {
                 return profileKey === profileName.trim();
@@ -44,7 +43,6 @@ export class ConfigEditorProfileOperations {
             return { isValid: false, message: "Profile name already exists under this root" };
         }
 
-        // Check pending changes
         const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([_, entry]) => {
             if (entry.profile) {
                 if (rootProfile === "root") {
@@ -62,7 +60,6 @@ export class ConfigEditorProfileOperations {
             return { isValid: false, message: "Profile name already exists in pending changes" };
         }
 
-        // Check renames
         const renamesForConfig = renames[configPath] || {};
         const renameIsOccupyingName = Object.entries(renamesForConfig).some(([, newName]) => {
             if (newName === newProfileKey) {
@@ -92,7 +89,6 @@ export class ConfigEditorProfileOperations {
     ): Array<{ originalKey: string; newKey: string; configPath: string }> {
         const updatedRenames: Array<{ originalKey: string; newKey: string; configPath: string }> = [];
 
-        // Group renames by configPath to ensure consolidation only happens within the same config
         const renamesByConfigPath = new Map<string, Array<{ originalKey: string; newKey: string; configPath: string }>>();
 
         for (const rename of renames) {
@@ -102,11 +98,9 @@ export class ConfigEditorProfileOperations {
             renamesByConfigPath.get(rename.configPath)!.push(rename);
         }
 
-        // Process each configPath separately
         for (const [configPath, configRenames] of renamesByConfigPath) {
-            const processedRenames = new Map<string, string>(); // originalKey -> newKey mapping (per configPath)
+            const processedRenames = new Map<string, string>();
 
-            // First pass: collect all renames to build a complete mapping for this configPath
             const allRenames = new Map<string, string>();
             for (const rename of configRenames) {
                 allRenames.set(rename.originalKey, rename.newKey);
@@ -116,45 +110,36 @@ export class ConfigEditorProfileOperations {
                 let updatedOriginalKey = rename.originalKey;
                 let updatedNewKey = rename.newKey;
 
-                // Check if any parent of this profile has been renamed (only within the same configPath)
                 const originalParts = rename.originalKey.split(".");
                 const newParts = rename.newKey.split(".");
 
-                // Update the original key to reflect any parent renames
                 for (let i = 0; i < originalParts.length; i++) {
                     const parentPath = originalParts.slice(0, i + 1).join(".");
                     if (processedRenames.has(parentPath)) {
-                        // Replace the parent part in the original key
                         const newParentPath = processedRenames.get(parentPath)!;
                         const remainingParts = originalParts.slice(i + 1);
                         updatedOriginalKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
-                        break; // Only apply the first matching parent rename
+                        break;
                     }
                 }
 
-                // Update the new key to reflect any parent renames
                 for (let i = 0; i < newParts.length; i++) {
                     const parentPath = newParts.slice(0, i + 1).join(".");
                     if (processedRenames.has(parentPath)) {
-                        // Replace the parent part in the new key
                         const newParentPath = processedRenames.get(parentPath)!;
                         const remainingParts = newParts.slice(i + 1);
                         updatedNewKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
-                        break; // Only apply the first matching parent rename
+                        break;
                     }
                 }
 
-                // Handle child-first scenario: if this is a parent rename, update any existing child renames
                 if (originalParts.length === 1) {
-                    // This is a parent rename
                     const parentOriginalKey = rename.originalKey;
                     const parentNewKey = rename.newKey;
 
-                    // Find and update any child renames that reference this parent (only within the same configPath)
                     for (let i = 0; i < updatedRenames.length; i++) {
                         const childRename = updatedRenames[i];
 
-                        // Only process child renames from the same configPath
                         if (childRename.configPath !== configPath) {
                             continue;
                         }
@@ -162,28 +147,37 @@ export class ConfigEditorProfileOperations {
                         const childOriginalParts = childRename.originalKey.split(".");
                         const childNewParts = childRename.newKey.split(".");
 
-                        // Check if this child rename starts with the parent we're renaming
-                        // Either in the original key or the new key
+                        // Check if child is an extraction (moving OUT of the parent entirely)
+                        // Child is NOT an extraction if its newKey is under either the old OR new parent location
+                        const staysUnderOldParent =
+                            childRename.newKey.startsWith(parentOriginalKey + ".") || childRename.newKey === parentOriginalKey;
+                        const movesToUnderNewParent = childRename.newKey.startsWith(parentNewKey + ".") || childRename.newKey === parentNewKey;
+                        const isExtraction = !staysUnderOldParent && !movesToUnderNewParent;
+                        const childOriginalStartsWithParent = childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey;
+
+                        if (childOriginalStartsWithParent && isExtraction) {
+                            // For extractions, don't update the keys - the extraction is sorted first
+                            // and should be processed before the parent move. The child is being
+                            // extracted OUT of the parent, so its original location is still valid.
+                            continue;
+                        }
+
                         const childStartsWithParent =
-                            (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) ||
-                            (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey);
+                            childOriginalStartsWithParent || (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey);
 
                         if (childStartsWithParent) {
-                            // Update the child's original key to use the new parent name
                             let updatedChildOriginalKey = childRename.originalKey;
-                            if (childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey) {
+                            if (childOriginalStartsWithParent) {
                                 const childRemainingParts = childOriginalParts.slice(1);
                                 updatedChildOriginalKey = `${parentNewKey}.${childRemainingParts.join(".")}`;
                             }
 
-                            // Update the child's new key to use the new parent name if it also starts with the old parent
                             let updatedChildNewKey = childRename.newKey;
                             if (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey) {
                                 const childNewRemainingParts = childNewParts.slice(1);
                                 updatedChildNewKey = `${parentNewKey}.${childNewRemainingParts.join(".")}`;
                             }
 
-                            // Update the child rename in the array
                             updatedRenames[i] = {
                                 originalKey: updatedChildOriginalKey,
                                 newKey: updatedChildNewKey,
@@ -193,14 +187,12 @@ export class ConfigEditorProfileOperations {
                     }
                 }
 
-                // Add the updated rename
                 updatedRenames.push({
                     originalKey: updatedOriginalKey,
                     newKey: updatedNewKey,
                     configPath: rename.configPath,
                 });
 
-                // Track this rename for future reference - use the updated keys
                 processedRenames.set(updatedOriginalKey, updatedNewKey);
             }
         }
@@ -210,14 +202,12 @@ export class ConfigEditorProfileOperations {
 
     /**
      * Removes duplicate renames that target the same final key
-     * Note: This function only consolidates renames within the same configPath
      */
     removeDuplicateRenames(
         renames: Array<{ originalKey: string; newKey: string; configPath: string }>
     ): Array<{ originalKey: string; newKey: string; configPath: string }> {
         const finalRenames: Array<{ originalKey: string; newKey: string; configPath: string }> = [];
 
-        // Group renames by configPath to ensure consolidation only happens within the same config
         const renamesByConfigPath = new Map<string, Array<{ originalKey: string; newKey: string; configPath: string }>>();
 
         for (const rename of renames) {
@@ -227,12 +217,11 @@ export class ConfigEditorProfileOperations {
             renamesByConfigPath.get(rename.configPath)!.push(rename);
         }
 
-        // Process each configPath separately
         for (const [, configRenames] of renamesByConfigPath) {
             const seenTargets = new Map<string, { originalKey: string; newKey: string; configPath: string }>();
 
             for (const rename of configRenames) {
-                const targetKey = rename.newKey; // Only use newKey since we're processing within the same configPath
+                const targetKey = rename.newKey;
                 const renameTail = rename.originalKey.split(".").pop()!;
 
                 if (seenTargets.has(targetKey)) {
@@ -240,12 +229,10 @@ export class ConfigEditorProfileOperations {
                     const existingTail = existing.originalKey.split(".").pop()!;
 
                     if (renameTail === existingTail) {
-                        // Same newKey + same ending segment -> allow both
                         finalRenames.push(rename);
                         continue;
                     }
 
-                    // Otherwise, keep the one with the shorter original key path
                     if (rename.originalKey.split(".").length < existing.originalKey.split(".").length) {
                         const index = finalRenames.findIndex((r) => r === existing);
                         if (index !== -1) {
@@ -253,7 +240,6 @@ export class ConfigEditorProfileOperations {
                             seenTargets.set(targetKey, rename);
                         }
                     }
-                    // else skip
                 } else {
                     finalRenames.push(rename);
                     seenTargets.set(targetKey, rename);
@@ -268,20 +254,14 @@ export class ConfigEditorProfileOperations {
      * Checks if a profile rename would create a circular reference
      */
     wouldCreateCircularReference(originalKey: string, newKey: string): boolean {
-        // A circular reference occurs when:
-        // 1. The new key is a direct child of the original key AND
-        // 2. The original key is already a child of the new key in the existing hierarchy
-
         if (!newKey.startsWith(originalKey + ".")) {
-            return false; // Not a child relationship, so no circular reference possible
+            return false;
         }
         const childPart = newKey.substring(originalKey.length + 1);
         if (childPart.includes(originalKey)) {
             return true;
         }
 
-        // check if we're renaming a parent to be a child of itself
-        // e.g., 'parent' -> 'parent.parent' or 'parent' -> 'parent.child.parent'
         const childParts = childPart.split(".");
         for (const part of childParts) {
             if (part === originalKey) {
@@ -312,7 +292,6 @@ export class ConfigEditorProfileOperations {
         originalKey: string,
         newKey: string
     ): void {
-        // Get the original profile data
         const originalProfile = configMoveAPI.get(originalPath);
         if (!originalProfile) {
             throw new Error(`Source profile not found at path: ${originalPath}`);
@@ -333,7 +312,6 @@ export class ConfigEditorProfileOperations {
         const childPath = `${originalPath}.profiles.${childProfileName}`;
         configMoveAPI.set(childPath, childProfile);
 
-        // Move secure properties if they exist
         this.moveSecurePropertiesForNestedProfile(configMoveAPI, originalPath, childPath);
     }
 
@@ -342,18 +320,15 @@ export class ConfigEditorProfileOperations {
      */
     private moveSecurePropertiesForNestedProfile(configMoveAPI: ConfigMoveAPI, parentPath: string, childPath: string): void {
         try {
-            // Get secure properties from the original profile
             const originalProfile = configMoveAPI.get(parentPath);
             const secureProperties = originalProfile?.secure || [];
 
             if (secureProperties.length > 0) {
-                // Set secure properties on the child profile
                 const childProfile = configMoveAPI.get(childPath);
                 if (childProfile) {
                     configMoveAPI.set(`${childPath}.secure`, secureProperties);
                 }
 
-                // Remove secure properties from the parent profile
                 const parentProfile = configMoveAPI.get(parentPath);
                 if (parentProfile && parentProfile.secure) {
                     delete parentProfile.secure;
@@ -361,7 +336,6 @@ export class ConfigEditorProfileOperations {
                 }
             }
         } catch (error) {
-            // Log error but don't fail the operation
             console.warn(`Failed to move secure properties for nested profile creation: ${error}`);
         }
     }
@@ -412,7 +386,6 @@ export class ConfigEditorProfileOperations {
     isCriticalMoveError(error: any): boolean {
         const errorMessage = error instanceof Error ? error.message : String(error);
 
-        // Critical errors that should cancel the entire save operation
         const criticalErrorPatterns = [
             /Profile.*already exists/i,
             /Target profile already exists/i,

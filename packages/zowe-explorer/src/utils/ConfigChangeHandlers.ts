@@ -74,10 +74,7 @@ export class ConfigChangeHandlers {
         });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
 
-        // Check if secure values are allowed before processing changes
         const secureValuesAllowed = await areSecureValuesAllowed();
-
-        // Filter out secure changes if secure values are not allowed
         const filteredChanges = secureValuesAllowed ? changes : changes.filter((change) => !change.secure);
 
         for (const item of filteredChanges) {
@@ -114,30 +111,22 @@ export class ConfigChangeHandlers {
         for (const change of filteredChanges) {
             let profileProps: Map<string, { type: string | string[]; path: string; description?: string }> | undefined;
             try {
-                // Get the schema path for the current config layer
                 const currentLayer = profInfo.getTeamConfig().api.layers.get();
                 let schemaPath: string | undefined;
 
                 if (currentLayer.properties && currentLayer.properties.$schema) {
                     schemaPath = path.join(path.dirname(currentLayer.path), currentLayer.properties.$schema);
-
-                    // Get profile properties from the schema
                     profileProps = ConfigSchemaHelpers.getProfileProperties(schemaPath);
                 }
-                // Check if the key is a string, then we know it does not need to be parsed
                 const parseString = profileProps.has(change.key.split(".")[change.key.split(".").length - 1]);
                 profInfo.getTeamConfig().set(change.key, change.value, { parseString, secure: change.secure });
-            } catch (err) {
-                // console.log(err);
-            }
+            } catch {}
         }
 
         for (const deletion of deletions) {
             try {
                 profInfo.getTeamConfig().delete(deletion.key);
-            } catch (err) {
-                // console.log(err);
-            }
+            } catch {}
         }
         await profInfo.getTeamConfig().save();
     }
@@ -203,17 +192,13 @@ export class ConfigChangeHandlers {
         for (const change of changes) {
             try {
                 teamConfig.set(change.key, change.value, { parseString: true, secure: change.secure });
-            } catch (err) {
-                // console.log(err);
-            }
+            } catch (err) {}
         }
 
         for (const deletion of deletions) {
             try {
                 teamConfig.delete(deletion.key);
-            } catch (err) {
-                // console.log(err);
-            }
+            } catch (err) {}
         }
     }
 }

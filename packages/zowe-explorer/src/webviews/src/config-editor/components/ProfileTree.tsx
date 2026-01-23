@@ -341,36 +341,25 @@ export function ProfileTree({
       return;
     }
 
-    // Validate the drop
     if (isInvalidDrop(draggedProfile, targetProfileKey)) {
       setDraggedProfile(null);
       setDragOverProfile(null);
       return;
     }
 
-    // The drag-drop restrictions are now handled in the profile handlers
-
-    // Extract only the profile name (last part) from the dragged profile
     const draggedProfileName = draggedProfile.split(".").pop() || draggedProfile;
 
-    // Determine the new profile key
     let newProfileKey: string;
 
-    // Special case: if dragging back to the original location, just move to that location
     if (draggedProfile === targetProfileKey) {
       newProfileKey = targetProfileKey;
     } else if (draggedProfile === `${targetProfileKey}.${draggedProfileName}`) {
-      // Special case: if dragging a nested profile back to its parent, move to the parent
       newProfileKey = targetProfileKey;
     } else if (targetProfileKey === draggedProfileName) {
-      // Special case: if dragging a nested profile to a root profile with the same name, move to root
       newProfileKey = targetProfileKey;
     } else if (targetProfileKey.endsWith(`.${draggedProfileName}`)) {
-      // Special case: if dragging to a profile that ends with the same name, move to that location
-      // This handles cases like bonk.tso.help -> bonk.help
       newProfileKey = targetProfileKey;
     } else {
-      // Create the new nested profile structure
       newProfileKey = `${targetProfileKey}.${draggedProfileName}`;
     }
 
@@ -429,16 +418,12 @@ export function ProfileTree({
       }
     }
 
-    // Only call rename if the key actually changes
     if (draggedProfile !== newProfileKey) {
-      // Find the original key for the dragged profile
       const originalKey = findOriginalKey(draggedProfile);
-      const success = onProfileRename(originalKey, newProfileKey, true); // true indicates this is a drag-drop operation
+      const success = onProfileRename(originalKey, newProfileKey, true);
 
-      // If the rename failed (e.g., due to circular rename), don't clear drag state
-      // This allows the user to try again or cancel the drag operation
       if (!success) {
-        return; // Don't clear drag state, let user try again
+        return;
       }
     }
 

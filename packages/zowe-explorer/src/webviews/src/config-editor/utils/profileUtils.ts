@@ -25,11 +25,8 @@ export function getProfileType(
     const originalProfileKey = getOriginalProfileKeyWithNested(profileKey, configPath, renames);
 
     const pendingType = Object.entries(pendingChanges[configPath] ?? {}).find(([key, entry]) => {
-        // Only match exact profile keys for type changes, not parent profiles
         if (entry.profile !== profileKey && entry.profile !== originalProfileKey) return false;
         const keyParts = key.split(".");
-        // Only match profile-level type, not properties.type
-        // Profile-level type is a sibling of "properties", not inside it
         const isProfileLevelType = keyParts[keyParts.length - 1] === "type" && !keyParts.includes("properties");
         return isProfileLevelType;
     });
@@ -49,7 +46,6 @@ export function getProfileType(
     // For nested profiles, if still not found, we need to check if any parent profile was renamed
     // and reconstruct the original path
     if (!profile && profileKey.includes(".")) {
-        // Get the original key by reversing all possible renames
         const profileParts = profileKey.split(".");
         let originalPath = "";
 
@@ -145,12 +141,10 @@ export function getOriginalProfileKey(
 ): string {
     const configRenames = renames[configPath];
     if (configRenames) {
-        // Follow the chain of renames backwards to find the true original key
         const visited = new Set<string>();
         let currentKey = renamedKey;
 
         while (true) {
-            // Find if this current key is the target of any rename
             let foundOriginal = false;
             for (const [originalKey, newKey] of Object.entries(configRenames)) {
                 if (newKey === currentKey && !visited.has(originalKey)) {
@@ -177,26 +171,20 @@ export function getOriginalProfileKeyWithNested(
     renames: { [configPath: string]: { [originalKey: string]: string } }
 ): string {
     if (!renamedKey.includes(".")) {
-        // Simple profile, use the existing function
         return getOriginalProfileKey(renamedKey, configPath, renames);
     }
 
-    // First check if there's a direct reverse lookup for the complete profile path
     const directOriginal = getOriginalProfileKey(renamedKey, configPath, renames);
     if (directOriginal !== renamedKey) {
         return directOriginal;
     }
 
-    // Handle nested profiles by checking for renames at each level of nesting
     const profileParts = renamedKey.split(".");
     let originalPath = "";
 
-    // We need to reverse the rename process by checking what original keys would produce this renamed key
-    // First, try to find if any existing original key would produce this renamed key when processed through getRenamedProfileKeyWithNested
     const configRenames = renames[configPath] || {};
     for (const [origKey, _] of Object.entries(configRenames)) {
         if (origKey.includes(".")) {
-            // Check if this original key would produce our renamedKey when processed
             const wouldProduce = getRenamedProfileKeyWithNested(origKey, configPath, renames);
             if (wouldProduce === renamedKey) {
                 return origKey;
@@ -208,7 +196,6 @@ export function getOriginalProfileKeyWithNested(
     // Check if any parent profile has been renamed by working backwards
     for (let i = 0; i < profileParts.length; i++) {
         const currentPath = profileParts.slice(0, i + 1).join(".");
-
         // Check if this current path was the result of a rename
         const original = getOriginalProfileKey(currentPath, configPath, renames);
 
@@ -218,10 +205,8 @@ export function getOriginalProfileKeyWithNested(
             originalPath = original + (remainingParts.length > 0 ? "." + remainingParts.join(".") : "");
             break;
         } else if (i === 0) {
-            // First part hasn't been renamed
             originalPath = profileParts[i];
         } else {
-            // This part hasn't been renamed, add it to the path
             originalPath = originalPath + "." + profileParts[i];
         }
     }

@@ -661,14 +661,7 @@ describe("ConfigEditorProfileOperations", () => {
                     properties: {},
                 },
             };
-            const result = profileOperations.validateProfileName(
-                "existingProfile",
-                "root",
-                "/config.json",
-                profiles,
-                {},
-                {}
-            );
+            const result = profileOperations.validateProfileName("existingProfile", "root", "/config.json", profiles, {}, {});
             expect(result.isValid).toBe(false);
             expect(result.message).toBe("Profile name already exists under this root");
         });
@@ -685,14 +678,7 @@ describe("ConfigEditorProfileOperations", () => {
                     },
                 },
             };
-            const result = profileOperations.validateProfileName(
-                "child",
-                "parent",
-                "/config.json",
-                profiles,
-                {},
-                {}
-            );
+            const result = profileOperations.validateProfileName("child", "parent", "/config.json", profiles, {}, {});
             expect(result.isValid).toBe(false);
             expect(result.message).toBe("Profile name already exists under this root");
         });
@@ -707,14 +693,7 @@ describe("ConfigEditorProfileOperations", () => {
                     },
                 },
             };
-            const result = profileOperations.validateProfileName(
-                "newProfile",
-                "root",
-                "/config.json",
-                {},
-                pendingChanges,
-                {}
-            );
+            const result = profileOperations.validateProfileName("newProfile", "root", "/config.json", {}, pendingChanges, {});
             expect(result.isValid).toBe(false);
             expect(result.message).toBe("Profile name already exists in pending changes");
         });
@@ -725,27 +704,13 @@ describe("ConfigEditorProfileOperations", () => {
                     oldProfile: "newProfile",
                 },
             };
-            const result = profileOperations.validateProfileName(
-                "newProfile",
-                "root",
-                "/config.json",
-                {},
-                {},
-                renames
-            );
+            const result = profileOperations.validateProfileName("newProfile", "root", "/config.json", {}, {}, renames);
             expect(result.isValid).toBe(false);
             expect(result.message).toBe("Profile name conflicts with a renamed profile");
         });
 
         it("should return valid when profile name is available", () => {
-            const result = profileOperations.validateProfileName(
-                "newProfile",
-                "root",
-                "/config.json",
-                {},
-                {},
-                {}
-            );
+            const result = profileOperations.validateProfileName("newProfile", "root", "/config.json", {}, {}, {});
             expect(result.isValid).toBe(true);
         });
 
@@ -756,14 +721,7 @@ describe("ConfigEditorProfileOperations", () => {
                     properties: {},
                 },
             };
-            const result = profileOperations.validateProfileName(
-                "newChild",
-                "parent",
-                "/config.json",
-                profiles,
-                {},
-                {}
-            );
+            const result = profileOperations.validateProfileName("newChild", "parent", "/config.json", profiles, {}, {});
             expect(result.isValid).toBe(true);
         });
     });

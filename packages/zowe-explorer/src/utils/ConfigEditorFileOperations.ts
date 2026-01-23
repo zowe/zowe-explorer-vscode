@@ -231,7 +231,6 @@ export class ConfigEditorFileOperations {
 
             const configFilePath = path.join(rootPath, configName);
 
-            // Ensure the file is fully written to disk
             await new Promise((resolve) => setTimeout(resolve, 100));
 
             if (fs.existsSync(configFilePath)) {

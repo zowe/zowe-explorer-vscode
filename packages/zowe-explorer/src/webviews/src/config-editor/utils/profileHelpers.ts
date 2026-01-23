@@ -42,7 +42,6 @@ export function isProfileDefault(
         return true;
     }
 
-    // Only proceed with rename checks if defaultValue exists and is a string
     if (defaultValue && typeof defaultValue === "string") {
         const configRenames = renames[configPath] || {};
         for (const [originalKey, newKey] of Object.entries(configRenames)) {

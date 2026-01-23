@@ -2,6 +2,7 @@ import { useEffect, useCallback } from "react";
 import { ConfigEditorSettings } from "../types";
 
 export const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
+const DEFAULT_PROFILES_WIDTH_PERCENT = 35;
 
 interface UsePanelResizerProps {
     profilesWidthPercent: number;
@@ -126,14 +127,28 @@ export function usePanelResizer({
             }
         };
 
+        const handleDoubleClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.classList.contains("resize-divider")) {
+                e.preventDefault();
+                setConfigEditorSettings((prev) => ({ ...prev, profilesWidthPercent: DEFAULT_PROFILES_WIDTH_PERCENT }));
+                setLocalStorageValue(CONFIG_EDITOR_SETTINGS_KEY, {
+                    ...configEditorSettings,
+                    profilesWidthPercent: DEFAULT_PROFILES_WIDTH_PERCENT,
+                });
+            }
+        };
+
         document.addEventListener("mousemove", handleResize);
         document.addEventListener("mouseup", handleMouseUp);
         document.addEventListener("mousedown", handleMouseDown);
+        document.addEventListener("dblclick", handleDoubleClick);
 
         return () => {
             document.removeEventListener("mousemove", handleResize);
             document.removeEventListener("mouseup", handleMouseUp);
             document.removeEventListener("mousedown", handleMouseDown);
+            document.removeEventListener("dblclick", handleDoubleClick);
         };
     }, [configEditorSettings, setConfigEditorSettings, setLocalStorageValue]);
 

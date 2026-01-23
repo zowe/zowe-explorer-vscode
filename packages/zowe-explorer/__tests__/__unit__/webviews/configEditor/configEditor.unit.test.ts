@@ -346,6 +346,7 @@ const createGlobalMocks = () => ({
         },
         MoveUtils: {
             moveProfile: jest.fn().mockImplementation(() => {}),
+            moveProfileInPlace: jest.fn().mockImplementation(() => {}),
             simulateDefaultsUpdateAfterRename: jest.fn().mockImplementation(() => {}),
             updateDefaultsAfterRename: jest.fn().mockImplementation(() => {}),
         },
@@ -976,7 +977,78 @@ describe("configEditor", () => {
                 createMockRename("profiles.simple", "profiles.parent.renamedChild"), // Same depth as above (3)
             ];
 
-            // Mock ProfileInfo
+            // Mock ProfileInfo - profiles need to be in nested structure
+            // Create a mutable profiles object that can be updated during simulation
+            const mockProfiles = {
+                parent: {
+                    type: "zosmf",
+                    properties: {
+                        host: "test.host.com",
+                    },
+                    profiles: {
+                        child: {
+                            type: "tso",
+                            properties: {
+                                host: "test.host.com",
+                            },
+                            profiles: {
+                                grandchild: {
+                                    type: "zosmf",
+                                    properties: {
+                                        host: "test.host.com",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                simple: {
+                    type: "zosmf",
+                    properties: {
+                        host: "test.host.com",
+                    },
+                },
+                other: {
+                    type: "zosmf",
+                    properties: {
+                        host: "test.host.com",
+                    },
+                    profiles: {
+                        deep: {
+                            type: "zosmf",
+                            properties: {
+                                host: "test.host.com",
+                            },
+                            profiles: {
+                                nested: {
+                                    type: "zosmf",
+                                    properties: {
+                                        host: "test.host.com",
+                                    },
+                                    profiles: {
+                                        profile: {
+                                            type: "zosmf",
+                                            properties: {
+                                                host: "test.host.com",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            };
+
+            const mockLayerProperties = {
+                profiles: mockProfiles,
+            };
+
+            const mockTeamConfigLayersGet = jest.fn(() => ({
+                path: "/test/config/path",
+                properties: mockLayerProperties,
+            }));
+
             const mockProfileInfo = {
                 readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
                 getTeamConfig: jest.fn(() => ({
@@ -1000,21 +1072,13 @@ describe("configEditor", () => {
                     api: {
                         layers: {
                             activate: jest.fn(),
-                            get: jest.fn(() => ({
-                                properties: {
-                                    profiles: {
-                                        testProfile: {
-                                            type: "zosmf",
-                                            properties: {
-                                                host: "test.host.com",
-                                            },
-                                        },
-                                    },
-                                },
-                            })),
+                            get: mockTeamConfigLayersGet,
                             set: jest.fn(),
+                            delete: jest.fn(),
                         },
                     },
+                    set: jest.fn(),
+                    delete: jest.fn(),
                 })),
             };
 
@@ -1030,19 +1094,18 @@ describe("configEditor", () => {
             };
             (configEditor as any).profileOperations = mockProfileOperations as any;
 
-            // Mock ConfigEditorPathUtils
-            ConfigEditorPathUtils.constructNestedProfilePath = jest
-                .fn()
-                .mockReturnValueOnce("profiles.parent")
-                .mockReturnValueOnce("profiles.renamedParent")
-                .mockReturnValueOnce("profiles.parent.child")
-                .mockReturnValueOnce("profiles.parent.renamedChild")
-                .mockReturnValueOnce("profiles.other.deep.nested.profile")
-                .mockReturnValueOnce("profiles.parent.renamedChild")
-                .mockReturnValueOnce("profiles.simple")
-                .mockReturnValueOnce("profiles.parent.renamedChild")
-                .mockReturnValueOnce("profiles.parent.child.grandchild")
-                .mockReturnValueOnce("profiles.parent.child.renamedGrandchild");
+            // Mock ConfigEditorPathUtils - return a path based on the input key
+            ConfigEditorPathUtils.constructNestedProfilePath = jest.fn().mockImplementation((key: string) => {
+                // Handle undefined or empty keys
+                if (!key) {
+                    return "profiles.unknown";
+                }
+                // Convert profile key to nested path format
+                if (key.startsWith("profiles.")) {
+                    return key;
+                }
+                return `profiles.${key}`;
+            });
 
             // Mock MoveUtils using global mocks
             Object.assign(MoveUtils, mocks.mockModules.MoveUtils);
@@ -2727,17 +2790,16 @@ describe("configEditor", () => {
 
         const rename = { originalKey: "profiles.testProfile", newKey: "profiles.renamedProfile" };
 
-        expect(() => {
-            (configEditor as any).validateProfileRename(mockTeamConfig, "profiles.testProfile", "profiles.renamedProfile", rename);
-        }).not.toThrow();
+        const result = (configEditor as any).validateProfileRename(mockTeamConfig, "profiles.testProfile", "profiles.renamedProfile", rename);
 
+        expect(result).toEqual({ skip: false });
         expect(getProfileFromTeamConfigSpy).toHaveBeenCalledWith(mockTeamConfig, "profiles.testProfile");
         expect(getProfileFromTeamConfigSpy).toHaveBeenCalledWith(mockTeamConfig, "profiles.renamedProfile");
 
         getProfileFromTeamConfigSpy.mockRestore();
     });
 
-    it("should handle validateProfileRename with non-existent original profile", () => {
+    it("should handle validateProfileRename with non-existent original profile by returning skip flag", () => {
         const mocks = createGlobalMocks();
         const mockTeamConfig = {
             api: {
@@ -2755,10 +2817,9 @@ describe("configEditor", () => {
 
         const rename = { originalKey: "profiles.nonExistentProfile", newKey: "profiles.renamedProfile" };
 
-        expect(() => {
-            (configEditor as any).validateProfileRename(mockTeamConfig, "profiles.nonExistentProfile", "profiles.renamedProfile", rename);
-        }).toThrow("Original profile 'profiles.nonExistentProfile' does not exist");
+        const result = (configEditor as any).validateProfileRename(mockTeamConfig, "profiles.nonExistentProfile", "profiles.renamedProfile", rename);
 
+        expect(result).toEqual({ skip: true });
         expect(getProfileFromTeamConfigSpy).toHaveBeenCalledWith(mockTeamConfig, "profiles.nonExistentProfile");
 
         getProfileFromTeamConfigSpy.mockRestore();

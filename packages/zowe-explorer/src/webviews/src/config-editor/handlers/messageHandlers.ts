@@ -40,6 +40,7 @@ export interface MessageHandlerProps {
     setIsSaving: React.Dispatch<React.SetStateAction<boolean>>;
     setPendingSaveSelection: React.Dispatch<React.SetStateAction<{ tab: number | null; profile: string | null } | null>>;
     setWizardProfileNameValidation: React.Dispatch<React.SetStateAction<{ isValid: boolean; message?: string }>>;
+    setRenames: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [originalKey: string]: string } }>>;
 
     // Refs
     configurationsRef: React.MutableRefObject<Configuration[]>;
@@ -167,6 +168,15 @@ export const handleConfigurationsMessage = (data: any, props: MessageHandlerProp
 // Handle DISABLE_OVERLAY message
 export const handleDisableOverlayMessage = (props: MessageHandlerProps) => {
     const { setSaveModalOpen } = props;
+    setSaveModalOpen(false);
+};
+
+// Handle SAVE_ERROR message
+export const handleSaveErrorMessage = (data: any, props: MessageHandlerProps) => {
+    const { setRenames, setIsSaving, setSaveModalOpen } = props;
+    console.log("[SAVE_ERROR] Rolling back renames due to save error", JSON.stringify({ error: data.error }, null, 2));
+    setRenames({});
+    setIsSaving(false);
     setSaveModalOpen(false);
 };
 
@@ -371,6 +381,9 @@ export const handleMessage = (event: MessageEvent, props: MessageHandlerProps) =
             break;
         case "DISABLE_OVERLAY":
             handleDisableOverlayMessage(props);
+            break;
+        case "SAVE_ERROR":
+            handleSaveErrorMessage(event.data, props);
             break;
         case "MERGED_PROPERTIES":
             handleMergedPropertiesMessage(event.data, props);
