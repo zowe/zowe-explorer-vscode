@@ -785,7 +785,6 @@ describe("UssFSProvider", () => {
                 profile: null,
                 path: "/aFile.txt",
             });
-            jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce(null!);
             let err;
             try {
                 await UssFSProvider.instance.readFile(testUris.file);
@@ -797,10 +796,9 @@ describe("UssFSProvider", () => {
         });
 
         it("throws an error if an error was encountered during lookup and the code is not FileNotFound", async () => {
-            const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockImplementationOnce((uri) => {
+            const lookupAsFileMock = jest.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockImplementation((uri) => {
                 throw FileSystemError.FileIsADirectory(uri as Uri);
             });
-            jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce({ type: vscode.FileType.Directory } as UssDirectory);
             let err;
             try {
                 await UssFSProvider.instance.readFile(testUris.file);

@@ -79,7 +79,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         ZoweLogger.trace(`[UssFSProvider] statImplementation called with ${uri.toString()}`);
 
         let isFetching = false;
-        let forceLocal = false;
 
         if (uri.query) {
             const queryParams = new URLSearchParams(uri.query);
@@ -89,14 +88,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 return this.lookup(uri, false);
             }
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
-            forceLocal = queryParams.has("forceLocal") && queryParams.get("forceLocal") === "true";
         }
 
         const fetchByDefault: boolean = FeatureFlags.get("fetchByDefault");
 
-        const entry = forceLocal
-            ? this.lookup(uri)
-            : isFetching
+        const entry = isFetching
             ? await this.remoteLookupForResource(uri)
             : fetchByDefault
             ? await this.lookupWithCache(uri)
@@ -242,7 +238,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
             // If request was successful, create directories for the path if it doesn't exist
             if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
-                await vscode.workspace.fs.createDirectory(uri.with({ query: "forceLocal=true" }));
+                this._createDirectoryRecursive(uri);
             }
         });
 
@@ -253,6 +249,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 items: (response.apiResponse.items ?? []).filter(keepRelative ? Boolean : (it): boolean => !/^\.{1,3}$/.test(it.name as string)),
             },
         };
+    }
+
+    private _createDirectoryRecursive(uri: vscode.Uri): void {
+        const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
+        if (parentUri.path !== uri.path && parentUri.path !== "/" && !this.exists(parentUri)) {
+            this._createDirectoryRecursive(parentUri);
+        }
+
+        if (!this.exists(uri)) {
+            this.createDirectory(uri);
+        }
     }
 
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
