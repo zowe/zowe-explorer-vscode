@@ -23,10 +23,11 @@ import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 import { TsoCommandHandler } from "../../../../src/commands/TsoCommandHandler";
 import { MvsCommandHandler } from "../../../../src/commands/MvsCommandHandler";
 import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler";
+import { ConfigEditor } from "../../../../src/utils/ConfigEditor";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import * as certWizard from "../../../../src/utils/CertificateWizard";
-import { FsAbstractUtils, FsJobsUtils, Gui, imperative, SpoolEntry, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FsAbstractUtils, FsJobsUtils, Gui, imperative, SpoolEntry, ZoweScheme, TableViewProvider } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
@@ -36,6 +37,7 @@ import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
 jest.mock("../../../../src/utils/ReleaseNotes");
+jest.mock("../../../../src/utils/ConfigEditor");
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
@@ -345,6 +347,227 @@ describe("Test src/shared/extension", () => {
             });
             SharedInit.registerCommonCommands(test.context, test.value.providers);
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith("zowe.setupRemoteWorkspaceFolders", expect.any(Function));
+        });
+    });
+
+    describe("Config Editor Commands", () => {
+        let registeredCommands: { [key: string]: (...args: any[]) => any } = {};
+        const testContext: any = { subscriptions: [] };
+
+        beforeEach(() => {
+            registeredCommands = {};
+            testContext.subscriptions = [];
+
+            jest.spyOn(vscode.commands, "registerCommand").mockImplementation((command, callback) => {
+                registeredCommands[command] = callback;
+                return { dispose: jest.fn() } as any;
+            });
+
+            // Mock window.registerWebviewPanelSerializer
+            jest.spyOn(vscode.window, "registerWebviewPanelSerializer").mockImplementation(() => {
+                return { dispose: jest.fn() } as any;
+            });
+
+            // Mock window.registerWebviewViewProvider
+            jest.spyOn(vscode.window, "registerWebviewViewProvider").mockImplementation(() => {
+                return { dispose: jest.fn() } as any;
+            });
+
+            // Mock singletons to avoid initialization errors
+            jest.spyOn(MvsCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: jest.fn() } as any);
+            jest.spyOn(TsoCommandHandler, "getInstance").mockReturnValue({ issueTsoCommand: jest.fn() } as any);
+            jest.spyOn(UnixCommandHandler, "getInstance").mockReturnValue({ issueUnixCommand: jest.fn() } as any);
+            jest.spyOn(TableViewProvider, "getInstance").mockReturnValue({} as any);
+
+            // Mock other dependencies if needed
+            jest.spyOn(SharedHistoryView, "SharedHistoryView").mockImplementation();
+        });
+
+        afterEach(() => {
+            jest.clearAllMocks();
+        });
+
+        it("should create a new ConfigEditor if one does not exist (zowe.configEditor)", async () => {
+            // Need to call registerCommonCommands to register the commands and initialize the closure variable
+            SharedInit.registerCommonCommands(testContext, {} as any);
+
+            const cmd = registeredCommands["zowe.configEditor"];
+            expect(cmd).toBeDefined();
+
+            const mockConfigEditorInstance = {
+                panel: {
+                    onDidDispose: jest.fn(),
+                    dispose: jest.fn(),
+                    reveal: jest.fn(),
+                    visible: true,
+                },
+                userSubmission: {
+                    promise: Promise.resolve("success"),
+                },
+            };
+            (ConfigEditor as jest.Mock).mockImplementation(() => mockConfigEditorInstance);
+
+            const result = await cmd({});
+
+            expect(ConfigEditor).toHaveBeenCalled();
+            expect(result).toBe("success");
+        });
+
+        it("should reuse existing ConfigEditor if one exists (zowe.configEditor)", async () => {
+            SharedInit.registerCommonCommands(testContext, {} as any);
+            const cmd = registeredCommands["zowe.configEditor"];
+
+            const mockConfigEditorInstance = {
+                panel: {
+                    onDidDispose: jest.fn(),
+                    dispose: jest.fn(),
+                    reveal: jest.fn(),
+                    visible: true,
+                },
+                userSubmission: {
+                    promise: Promise.resolve("success"),
+                },
+            };
+            (ConfigEditor as jest.Mock).mockImplementation(() => mockConfigEditorInstance);
+
+            // First call to create it
+            cmd({});
+
+            // Second call should reuse
+            const result = await cmd({});
+
+            expect(ConfigEditor).toHaveBeenCalledTimes(1);
+            expect(mockConfigEditorInstance.panel.reveal).toHaveBeenCalled();
+            expect(result).toBe(mockConfigEditorInstance);
+        });
+
+        it("should create new ConfigEditor with initial selection (zowe.configEditorWithProfile)", async () => {
+            SharedInit.registerCommonCommands(testContext, {} as any);
+            const cmd = registeredCommands["zowe.configEditorWithProfile"];
+            expect(cmd).toBeDefined();
+
+            const mockConfigEditorInstance = {
+                panel: {
+                    onDidDispose: jest.fn(),
+                    dispose: jest.fn(),
+                    reveal: jest.fn(),
+                    webview: { postMessage: jest.fn() },
+                },
+                initialSelection: null as any,
+                userSubmission: { promise: Promise.resolve() }, // Add promise to prevent await issues if returned
+            };
+            (ConfigEditor as jest.Mock).mockImplementation(() => mockConfigEditorInstance);
+
+            const result = await cmd("prof1", "path/1", "type1");
+
+            expect(mockConfigEditorInstance.initialSelection).toEqual({
+                profileName: "prof1",
+                configPath: "path/1",
+                profileType: "type1",
+            });
+            expect(result).toBe(mockConfigEditorInstance);
+        });
+
+        it("should reuse existing ConfigEditor and update selection (zowe.configEditorWithProfile)", async () => {
+            SharedInit.registerCommonCommands(testContext, {} as any);
+            const initCmd = registeredCommands["zowe.configEditor"]; // To init existingConfigEditor
+            const cmd = registeredCommands["zowe.configEditorWithProfile"];
+
+            const mockConfigEditorInstance = {
+                panel: {
+                    onDidDispose: jest.fn(),
+                    dispose: jest.fn(),
+                    reveal: jest.fn(),
+                    webview: { postMessage: jest.fn() },
+                    visible: true,
+                },
+                initialSelection: {},
+                userSubmission: { promise: Promise.resolve("success") },
+            };
+            (ConfigEditor as jest.Mock).mockImplementation(() => mockConfigEditorInstance);
+
+            // Initialize
+            initCmd({});
+
+            const result = await cmd("prof2", "path/2", "type2");
+
+            expect(ConfigEditor).toHaveBeenCalledTimes(1);
+            expect(mockConfigEditorInstance.panel.reveal).toHaveBeenCalled();
+            expect(mockConfigEditorInstance.panel.webview.postMessage).toHaveBeenCalledWith({
+                command: "INITIAL_SELECTION",
+                profileName: "prof2",
+                configPath: "path/2",
+                profileType: "type2",
+            });
+            expect(result).toBe(mockConfigEditorInstance);
+        });
+
+        it("should send SAVE command if existingConfigEditor is visible", async () => {
+            SharedInit.registerCommonCommands(testContext, {} as any);
+            const initCmd = registeredCommands["zowe.configEditor"];
+            const saveCmd = registeredCommands["zowe.configEditor.save"];
+
+            const mockConfigEditorInstance = {
+                panel: {
+                    onDidDispose: jest.fn(),
+                    dispose: jest.fn(),
+                    reveal: jest.fn(),
+                    visible: true,
+                    webview: { postMessage: jest.fn() },
+                },
+                userSubmission: { promise: Promise.resolve() },
+            };
+            (ConfigEditor as jest.Mock).mockImplementation(() => mockConfigEditorInstance);
+
+            initCmd({});
+
+            await saveCmd();
+
+            expect(mockConfigEditorInstance.panel.webview.postMessage).toHaveBeenCalledWith({ command: "SAVE" });
+        });
+
+        it("should dispose unrelated panels when deserializing", async () => {
+            const spyRegisterWebview = jest.spyOn(vscode.window, "registerWebviewPanelSerializer");
+            SharedInit.registerCommonCommands(testContext, {} as any);
+
+            const serializer = spyRegisterWebview.mock.calls[0][1];
+            expect(serializer).toBeDefined();
+
+            const mockPanel = {
+                title: Constants.RELEASE_NOTES_PANEL_TITLE,
+                dispose: jest.fn(),
+            };
+
+            await serializer.deserializeWebviewPanel(mockPanel as any, undefined as any);
+            expect(mockPanel.dispose).toHaveBeenCalled();
+        });
+
+        it("should recreate Config Editor panel when deserializing", async () => {
+            const spyRegisterWebview = jest.spyOn(vscode.window, "registerWebviewPanelSerializer");
+            SharedInit.registerCommonCommands(testContext, {} as any);
+
+            const serializer = spyRegisterWebview.mock.calls[0][1];
+
+            const mockConfigEditorInstance = {
+                panel: {
+                    onDidDispose: jest.fn(),
+                    dispose: jest.fn(),
+                },
+            };
+            (ConfigEditor as jest.Mock).mockImplementation(() => mockConfigEditorInstance);
+
+            // Mock l10n to match the check
+            jest.spyOn(vscode.l10n, "t").mockReturnValue("Config Editor");
+
+            const mockPanel = {
+                title: "Config Editor",
+                dispose: jest.fn(),
+            };
+
+            await serializer.deserializeWebviewPanel(mockPanel as any, undefined as any);
+
+            expect(mockPanel.dispose).toHaveBeenCalled();
+            expect(ConfigEditor).toHaveBeenCalled();
         });
     });
 
