@@ -379,7 +379,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         }
 
         public deleteDataSet(dataSetName: string, options?: zosfiles.IDeleteDatasetOptions): Promise<zosfiles.IZosFilesResponse> {
-            if (options.volume == "*VSAM*") {
+            if (options?.volume === "*VSAM*") {
                 return zosfiles.Delete.vsam(this.getSession(), dataSetName, {
                     responseTimeout: this.profile?.profile?.responseTimeout,
                     ...options,
