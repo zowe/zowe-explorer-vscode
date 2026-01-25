@@ -462,15 +462,21 @@ export class SharedUtils {
         const items = SharedUtils.buildEncodingOptions(profile, undefined, true);
 
         let currentEncoding: string | undefined;
-        if (currentDirectoryEncoding === "auto-detect" || (currentDirectoryEncoding && currentDirectoryEncoding.kind === "auto-detect")) {
+        if (
+            currentDirectoryEncoding === "auto-detect" ||
+            (typeof currentDirectoryEncoding !== "string" && currentDirectoryEncoding?.kind === "auto-detect")
+        ) {
             currentEncoding = vscode.l10n.t("Auto-detect from file tags");
         } else if (currentDirectoryEncoding && typeof currentDirectoryEncoding !== "string") {
-            currentEncoding =
-                currentDirectoryEncoding.kind === "binary"
-                    ? vscode.l10n.t("Binary")
-                    : currentDirectoryEncoding.kind === "text"
-                    ? vscode.l10n.t("EBCDIC")
-                    : `${currentDirectoryEncoding.kind.toUpperCase()}-${currentDirectoryEncoding.codepage}`;
+            if (currentDirectoryEncoding.kind === "binary") {
+                currentEncoding = vscode.l10n.t("Binary");
+            } else if (currentDirectoryEncoding.kind === "text") {
+                currentEncoding = vscode.l10n.t("EBCDIC");
+            } else if (currentDirectoryEncoding.kind === "other") {
+                currentEncoding = `${currentDirectoryEncoding.kind.toUpperCase()}-${currentDirectoryEncoding.codepage}`;
+            } else {
+                currentEncoding = vscode.l10n.t("Auto-detect from file tags");
+            }
         } else {
             currentEncoding = vscode.l10n.t("Auto-detect from file tags"); // Default for directories
         }
