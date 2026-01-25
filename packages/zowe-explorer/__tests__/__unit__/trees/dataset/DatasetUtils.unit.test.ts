@@ -152,13 +152,14 @@ describe("Dataset utils unit tests - function getExtensionMap", () => {
     });
 
     it("should preserve case when preserveCase is true", async () => {
-        const mockNode = createMockNode("TEST.PDS", [{ label: "MEMBER1" }, { label: "COBOL" }]);
+        const mockNode = createMockNode("TEST.PDS", [{ label: "MEMBER1" }, { label: "COBOL" }, { label: ".f@K3" }]);
 
         const result = await DatasetUtils.getExtensionMap(mockNode, true);
 
         expect(result).toEqual({
             MEMBER1: "txt",
             COBOL: "cbl",
+            ".f@K3": "txt",
         });
     });
 
@@ -237,13 +238,14 @@ describe("Dataset utils unit tests - function getExtensionMap", () => {
     });
 
     it("should apply override extension with preserveCase", async () => {
-        const mockNode = createMockNode("TEST.PDS", [{ label: "MEMBER1" }, { label: "MEMBER2" }]);
+        const mockNode = createMockNode("TEST.PDS", [{ label: "MEMBER1" }, { label: "MEMBER2" }, { label: ".f@K3" }]);
 
         const result = await DatasetUtils.getExtensionMap(mockNode, true, "xml");
 
         expect(result).toEqual({
             MEMBER1: "xml",
             MEMBER2: "xml",
+            ".f@K3": "xml",
         });
     });
 });

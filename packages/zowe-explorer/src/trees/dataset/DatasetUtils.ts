@@ -167,7 +167,6 @@ export class DatasetUtils {
         preserveCase: boolean,
         overrideExtension?: string
     ): Promise<{ [key: string]: string }> {
-        ZoweLogger.trace("dataset.utils.getExtensionMap called.");
         const extensionMap: { [key: string]: string } = {};
         const children = await node.getChildren();
 

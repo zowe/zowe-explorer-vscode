@@ -172,30 +172,6 @@ export class SharedUtils {
         return cachedEncoding?.kind === "other" ? cachedEncoding.codepage : cachedEncoding?.kind;
     }
 
-    /**
-     * Gets the cached directory encoding preference for a profile.
-     * @param profileName The profile name to get encoding for
-     * @returns The cached directory encoding preference or undefined
-     */
-    public static getCachedDirectoryEncoding(profileName: string): "auto-detect" | ZosEncoding | undefined {
-        const encodingMap = ZoweLocalStorage.getValue<Record<string, "auto-detect" | ZosEncoding>>(
-            Definitions.LocalStorageKey.USS_DIRECTORY_ENCODING
-        );
-        return encodingMap?.[profileName];
-    }
-
-    /**
-     * Saves the directory encoding preference for a profile.
-     * @param profileName The profile name to save encoding for
-     * @param encoding The encoding preference to save
-     */
-    public static setCachedDirectoryEncoding(profileName: string, encoding: "auto-detect" | ZosEncoding): void {
-        const encodingMap =
-            ZoweLocalStorage.getValue<Record<string, "auto-detect" | ZosEncoding>>(Definitions.LocalStorageKey.USS_DIRECTORY_ENCODING) ?? {};
-        encodingMap[profileName] = encoding;
-        ZoweLocalStorage.setValue(Definitions.LocalStorageKey.USS_DIRECTORY_ENCODING, encodingMap);
-    }
-
     public static parseFavorites(lines: string[]): Definitions.FavoriteData[] {
         const invalidFavoriteWarning = (line: string): void =>
             ZoweLogger.warn(
@@ -301,10 +277,9 @@ export class SharedUtils {
      *
      * @param {string} response - The response from the user
      * @param {string} contextLabel - The context label of the node
-     * @returns {Promise<ZosEncoding | null | undefined>} The {@link ZosEncoding} object, `null` for auto-detect,
-     *   or `undefined` if the user dismisses the prompt
+     * @returns {Promise<ZosEncoding | undefined>} The {@link ZosEncoding} object or `undefined` if the user dismisses the prompt
      */
-    private static async processEncodingResponse(response: string | undefined, contextLabel: string): Promise<ZosEncoding | null | undefined> {
+    private static async processEncodingResponse(response: string | undefined, contextLabel: string): Promise<ZosEncoding | undefined> {
         if (!response) {
             return undefined;
         }
@@ -346,7 +321,7 @@ export class SharedUtils {
             default: {
                 const autoDetectLabel = vscode.l10n.t("Auto-detect from file tags");
                 if (response === autoDetectLabel) {
-                    return null;
+                    return { kind: "auto-detect" };
                 } else {
                     encoding = response === "binary" ? { kind: "binary" } : { kind: "other", codepage: response };
                 }
@@ -436,7 +411,7 @@ export class SharedUtils {
     public static async promptForEncoding(
         node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode,
         taggedEncoding?: string
-    ): Promise<ZosEncoding | null | undefined> {
+    ): Promise<ZosEncoding | undefined> {
         const profile = node.getProfile();
         const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding, false);
 
@@ -477,19 +452,19 @@ export class SharedUtils {
      * @param {imperative.IProfileLoaded} profile - The profile loaded
      * @param {string} contextLabel - The context label of the directory (e.g. USS directory path)
      * @param {"auto-detect" | ZosEncoding} currentDirectoryEncoding - Current directory encoding preference
-     * @returns {Promise<"auto-detect" | ZosEncoding | undefined>} "auto-detect" string, ZosEncoding object, or undefined if dismissed
+     * @returns {Promise<ZosEncoding | undefined>} ZosEncoding object or undefined if dismissed
      */
     public static async promptForDirectoryEncoding(
         profile: imperative.IProfileLoaded,
         contextLabel: string,
         currentDirectoryEncoding?: "auto-detect" | ZosEncoding
-    ): Promise<"auto-detect" | ZosEncoding | undefined> {
+    ): Promise<ZosEncoding | undefined> {
         const items = SharedUtils.buildEncodingOptions(profile, undefined, true);
 
         let currentEncoding: string | undefined;
-        if (currentDirectoryEncoding === "auto-detect") {
+        if (currentDirectoryEncoding === "auto-detect" || (currentDirectoryEncoding && currentDirectoryEncoding.kind === "auto-detect")) {
             currentEncoding = vscode.l10n.t("Auto-detect from file tags");
-        } else if (currentDirectoryEncoding) {
+        } else if (currentDirectoryEncoding && typeof currentDirectoryEncoding !== "string") {
             currentEncoding =
                 currentDirectoryEncoding.kind === "binary"
                     ? vscode.l10n.t("Binary")
@@ -514,11 +489,7 @@ export class SharedUtils {
             })
         );
 
-        const result = await SharedUtils.processEncodingResponse(response, contextLabel);
-        if (result === null) {
-            return "auto-detect";
-        }
-        return result;
+        return SharedUtils.processEncodingResponse(response, contextLabel);
     }
 
     public static getSessionLabel(node: IZoweTreeNode): string {
@@ -768,33 +739,34 @@ export class SharedUtils {
             }
         }
 
+        let onViewDetails: (() => void) | undefined;
         if (hasErrors) {
-            const errorMessage = vscode.l10n.t("{0}\n\nSome files may not have been downloaded.", message);
+            message = vscode.l10n.t("{0}\n\nSome files may not have been downloaded.", message);
             const correlatedError = new CorrelatedError({
-                initialError: new Error(errorMessage),
+                initialError: new Error(message),
                 correlation: {
                     summary: `${downloadType} download completed with errors`,
                 },
             });
 
-            await SharedUtils.showDownloadMessage(errorMessage, downloadedPath, true, false, () => {
+            onViewDetails = (): void => {
                 void vscode.commands.executeCommand("zowe.troubleshootError", correlatedError, detailedInfo.join("\n\n"));
-            });
+            };
         } else if (hasWarnings) {
-            const warningMessage = vscode.l10n.t("{0}\n\nSome files may have been skipped.", message);
+            message = vscode.l10n.t("{0}\n\nSome files may have been skipped.", message);
             const correlatedWarning = new CorrelatedError({
-                initialError: new Error(warningMessage),
+                initialError: new Error(message),
                 correlation: {
                     summary: `${downloadType} download completed with warnings`,
                 },
             });
 
-            await SharedUtils.showDownloadMessage(warningMessage, downloadedPath, false, true, () => {
+            onViewDetails = (): void => {
                 void vscode.commands.executeCommand("zowe.troubleshootError", correlatedWarning, detailedInfo.join("\n\n"));
-            });
-        } else {
-            await SharedUtils.showDownloadMessage(message, downloadedPath, false, false);
+            };
         }
+
+        await SharedUtils.showDownloadMessage(message, downloadedPath, hasErrors, hasWarnings, onViewDetails);
     }
 
     /**
@@ -809,8 +781,8 @@ export class SharedUtils {
     private static async showDownloadMessage(
         message: string,
         downloadedPath: string | undefined,
-        isError: boolean,
-        isWarning: boolean,
+        hasErrors: boolean,
+        hasWarnings: boolean,
         onViewDetails?: () => void
     ): Promise<void> {
         const items: string[] = [];
@@ -832,12 +804,12 @@ export class SharedUtils {
         }
 
         let selection: string | undefined;
-        if (isError) {
+        if (hasErrors) {
             selection = await Gui.errorMessage(message, {
                 items,
                 vsCodeOpts: { modal: false },
             });
-        } else if (isWarning) {
+        } else if (hasWarnings) {
             selection = await Gui.warningMessage(message, {
                 items,
                 vsCodeOpts: { modal: false },

@@ -1670,7 +1670,7 @@ describe("Shared utils unit tests - function promptForDirectoryEncoding", () => 
         const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
 
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
-        expect(result).toBe("auto-detect");
+        expect(result).toEqual({ kind: "auto-detect" });
     });
 
     it("returns text encoding when EBCDIC is selected", async () => {
