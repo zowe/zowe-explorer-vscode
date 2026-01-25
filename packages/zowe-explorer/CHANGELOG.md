@@ -10,7 +10,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Expose commands to drive search in the USS views. [#3933](https://github.com/zowe/zowe-explorer-vscode/issues/3933)
 - Added a new `Poll For Job Completion` button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting `Zowe > Jobs: Poll Interval`. [#3967](https://github.com/zowe/zowe-explorer-vscode/pull/3967)
 - Expose commands to drive filtering in the Data Sets views. [#3992](https://github.com/zowe/zowe-explorer-vscode/issues/3992)
-- Add localization support to release notes and changelogs. []()
+- Add localization support to release notes and changelogs. [#4047](https://github.com/zowe/zowe-explorer-vscode/pull/4047)
 
 ### Bug fixes
 

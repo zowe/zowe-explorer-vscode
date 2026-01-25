@@ -92,7 +92,7 @@
   "Add Credentials": "Add Credentials",
   "Add data sets, USS profiles, or USS directories to a VS Code workspace to group resources from different locations. Right-click a data set, USS profile, or USS directory and select **Add to workspace**.": "Add data sets, USS profiles, or USS directories to a VS Code workspace to group resources from different locations. Right-click a data set, USS profile, or USS directory and select **Add to workspace**.",
   "Add deprecation message to history settings explaining to users how to edit items. <a>#2303</a>": "Add deprecation message to history settings explaining to users how to edit items. <a>#2303</a>",
-  "Add localization support to release notes and changelogs. []()": "Add localization support to release notes and changelogs. []()",
+  "Add localization support to release notes and changelogs. <a>#4047</a>": "Add localization support to release notes and changelogs. <a>#4047</a>",
   "Add New History Item": "Add New History Item",
   "Add to workspace": "Add to workspace",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
