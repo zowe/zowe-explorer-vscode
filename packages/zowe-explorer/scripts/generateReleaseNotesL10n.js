@@ -18,6 +18,7 @@
  * - Section headings (### Heading)
  * - Paragraphs
  * - List items
+ * - Link texts in <a> tags
  */
 
 const fs = require("fs");
@@ -31,8 +32,8 @@ function cleanMarkdownText(text) {
     return text
         // Remove image markdown syntax
         .replace(/!\[[^\]]*\]\([^)]+\)/g, "")
-        // Remove link URLs but keep link text
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        // Replace link URLs with <a> tags to preserve placement
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "<a>$1</a>")
         // Remove code blocks
         .replace(/```[\s\S]*?```/g, "")
         // Remove inline code backticks but keep content

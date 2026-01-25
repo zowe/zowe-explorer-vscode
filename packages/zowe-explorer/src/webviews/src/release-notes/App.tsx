@@ -92,7 +92,7 @@ export function App(): JSX.Element {
   const cleanTextForL10n = (text: string): string => {
     return text
       .replace(/!\[[^\]]*\]\([^)]+\)/g, "") // Remove images
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Remove link URLs but keep text
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "<a>$1</a>") // Replace link URLs with <a> tags
       .replace(/```[\s\S]*?```/g, "") // Remove code blocks
       .replace(/`([^`]+)`/g, "$1") // Remove inline code backticks but keep content
       .replace(/\s+/g, " ") // Normalize whitespace
@@ -111,6 +111,24 @@ export function App(): JSX.Element {
     const lines = markdown.split("\n");
     const result: string[] = [];
 
+    const extractUrls = (text: string): string[] => {
+      const urls: string[] = [];
+      const regex = /\[[^\]]+\]\(([^)]+)\)/g;
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        urls.push(match[1]);
+      }
+      return urls;
+    };
+
+    const restoreUrls = (localizedText: string, urls: string[]): string => {
+      let index = 0;
+      return localizedText.replace(/<a>(.*?)<\/a>/g, (_, text) => {
+        const url = urls[index++] || "";
+        return `[${text}](${url})`;
+      });
+    };
+
     for (const line of lines) {
       const trimmed = line.trim();
 
@@ -122,9 +140,11 @@ export function App(): JSX.Element {
       const sectionMatch = trimmed.match(/^### (.+)$/);
       if (sectionMatch) {
         const originalText = sectionMatch[1];
+        const urls = extractUrls(originalText);
         const cleanedText = cleanTextForL10n(originalText);
         const localizedText = l10n.t(cleanedText);
-        result.push(`### ${localizedText}`);
+        const restoredText = restoreUrls(localizedText, urls);
+        result.push(`### ${restoredText}`);
         continue;
       }
 
@@ -133,17 +153,21 @@ export function App(): JSX.Element {
         const indent = line.match(/^\s*/)?.[0] ?? "";
         const bullet = listMatch[1];
         const originalText = listMatch[2];
+        const urls = extractUrls(originalText);
         const cleanedText = cleanTextForL10n(originalText);
         const localizedText = l10n.t(cleanedText);
-        result.push(`${indent}${bullet} ${localizedText}`);
+        const restoredText = restoreUrls(localizedText, urls);
+        result.push(`${indent}${bullet} ${restoredText}`);
         continue;
       }
 
       if (trimmed && !trimmed.startsWith("##")) {
+        const urls = extractUrls(trimmed);
         const cleanedText = cleanTextForL10n(trimmed);
         if (cleanedText) {
           const localizedText = l10n.t(cleanedText);
-          result.push(localizedText);
+          const restoredText = restoreUrls(localizedText, urls);
+          result.push(restoredText);
           continue;
         }
       }
