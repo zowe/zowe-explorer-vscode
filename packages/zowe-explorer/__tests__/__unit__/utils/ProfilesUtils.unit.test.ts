@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { AuthHandler, ErrorCorrelator, Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { AuthHandler, ErrorCorrelator, Gui, imperative, ProfilesCache, ZoweVsCodeExtension, FsAbstractUtils } from "@zowe/zowe-explorer-api";
 import {
     createAltTypeIProfile,
     createInstanceOfProfile,
@@ -1495,15 +1495,29 @@ describe("ProfilesUtils unit tests", () => {
     });
 
     describe("Profiles unit tests - function awaitExtenderType", () => {
-        it("should create deferred promise for registered profile type", () => {
+        it("should create deferred promise for registered profile type", async () => {
             const mockProfilesCache = { allProfiles: [] } as unknown as ProfilesCache;
             const extenderProfileReadyGetSpy = jest.spyOn((ProfilesUtils as any).extenderProfileReady, "get");
             const extenderProfileReadySetSpy = jest.spyOn((ProfilesUtils as any).extenderProfileReady, "set");
+
+            const getInfoSpy = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                profile: { name: "testName", type: "testType" },
+            } as any);
+            const mockApiReg = {
+                registeredApiTypes: jest.fn().mockReturnValue([]),
+            };
+            ProfilesUtils.setApiRegister(mockApiReg as any);
+
+            const uri = vscode.Uri.parse("zowe://test/file");
+
             // First time create a deferred promise, second time reuse it
-            ProfilesUtils.awaitExtenderType("test", mockProfilesCache);
-            ProfilesUtils.awaitExtenderType("test", mockProfilesCache);
+            await ProfilesUtils.awaitExtenderType(uri, mockProfilesCache);
+            await ProfilesUtils.awaitExtenderType(uri, mockProfilesCache);
+
             expect(extenderProfileReadyGetSpy).toHaveBeenCalledTimes(2);
             expect(extenderProfileReadySetSpy).toHaveBeenCalledTimes(1);
+
+            getInfoSpy.mockRestore();
         });
     });
 

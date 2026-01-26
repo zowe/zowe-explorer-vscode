@@ -22,6 +22,7 @@ import {
     ZoweVsCodeExtension,
     AuthHandler,
     FsAbstractUtils,
+    Types,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
@@ -31,12 +32,22 @@ import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { Definitions } from "../configuration/Definitions";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { IProfileLoaded, ISession, SessConstants } from "@zowe/imperative";
-import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
     private static noConfigDialogShown = false;
     private static mProfileInfo: imperative.ProfileInfo;
+
+    private static apiRegister: Types.IApiRegisterClient;
+
+    /**
+     * Sets the API Register instance to be used by ProfilesUtils.
+     * This is called by ZoweExplorerApiRegister to inject itself.
+     * @param apiRegister The API Register instance
+     */
+    public static setApiRegister(apiRegister: Types.IApiRegisterClient): void {
+        ProfilesUtils.apiRegister = apiRegister;
+    }
 
     /**
      * Check if the credential manager's vsix is installed for use
@@ -762,8 +773,9 @@ export class ProfilesUtils {
 
         const type = profile.type;
         const name = profile.name;
-        const apiRegister = ZoweExplorerApiRegister.getInstance();
-        const isApiRegistered = apiRegister.registeredApiTypes().includes(type);
+
+        const apiRegister = ProfilesUtils.apiRegister;
+        const isApiRegistered = apiRegister ? apiRegister.registeredApiTypes().includes(type) : false;
 
         if (!isApiRegistered && !ProfilesUtils.extenderProfileReady.has(name)) {
             const deferredPromise = new imperative.DeferredPromise<void>();
