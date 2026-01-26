@@ -23,6 +23,7 @@ import {
     AuthHandler,
     FsAbstractUtils,
     Types,
+    UriFsInfo,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
@@ -764,8 +765,26 @@ export class ProfilesUtils {
     private static extenderProfileReady: Map<string, imperative.DeferredPromise<void>> = new Map();
 
     public static async awaitExtenderType(uri: vscode.Uri, profCache: ProfilesCache): Promise<void> {
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri, profCache);
-        const profile = uriInfo.profile;
+        let uriInfo: UriFsInfo;
+        try {
+            // Attempt to fetch Uri info
+            uriInfo = FsAbstractUtils.getInfoForUri(uri, profCache);
+        } catch (error) {}
+
+        let profile = uriInfo?.profile;
+        if (!profile) {
+            const configProfile = await profCache.getProfileFromConfig(uriInfo.profileName);
+            if (configProfile) {
+                // Create a temporary placeholder with the correct type so we can await the extender
+                profile = {
+                    name: configProfile.profName,
+                    type: configProfile.profType,
+                    profile: {},
+                    message: "",
+                    failNotFound: false,
+                };
+            }
+        }
 
         if (!profile) {
             return;
