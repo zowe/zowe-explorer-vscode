@@ -221,6 +221,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
         const entryExists = this.exists(uri);
         const apiRegister = ZoweExplorerApiRegister.getInstance();
+
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
             apiName: vscode.l10n.t("Common API"),
             registeredTypes: apiRegister.registeredApiTypes(),
