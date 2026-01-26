@@ -16,6 +16,7 @@ import { FsAbstractUtils } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZosEncoding } from "../tree";
 import { ErrorCorrelator, ZoweExplorerApiType } from "../utils/ErrorCorrelator";
+import { FeatureFlags } from "../utils";
 
 export class BaseProvider {
     // eslint-disable-next-line no-magic-numbers
@@ -511,5 +512,76 @@ export class BaseProvider {
         });
 
         return activeParams.length > 0 ? "_" + activeParams.sort().join("_") : "";
+    }
+
+    /**
+     * Executes the given operation with reuse logic to avoid duplicate network requests.
+     * @param uri The URI of the resource being requested
+     * @param options Logic options for key generation, local checks, and execution
+     */
+    protected async executeWithReuse<T>(
+        uri: vscode.Uri,
+        options: {
+            keyGenerator: (uri: vscode.Uri) => string;
+            checkLocal: () => boolean;
+            execute: () => Promise<T>;
+        }
+    ): Promise<T> {
+        const queryParams = new URLSearchParams(uri.query);
+        const isExplicitFetch = queryParams.get("fetch") === "true";
+        const hasConflictOrDiff = queryParams.has("conflict") || queryParams.has("inDiff");
+        const fetchByDefault = FeatureFlags.get("fetchByDefault");
+
+        // Generate fetch key (simulate fetch=true)
+        const fetchQueryParams = new URLSearchParams(uri.query);
+        fetchQueryParams.set("fetch", "true");
+        const fetchUri = uri.with({ query: fetchQueryParams.toString() });
+        const fetchKey = options.keyGenerator(fetchUri);
+
+        // Generate actual key (simulate no fetch param)
+        const actualQueryParams = new URLSearchParams(uri.query);
+        actualQueryParams.delete("fetch");
+        const actualUri = uri.with({ query: actualQueryParams.toString() });
+        const actualKey = options.keyGenerator(actualUri);
+
+        // Check local entry to see if it will fallback to a remote lookup
+        let localEntryFound = false;
+        if (!isExplicitFetch && !hasConflictOrDiff && fetchByDefault) {
+            try {
+                if (options.checkLocal()) {
+                    localEntryFound = true;
+                }
+            } catch (error) {}
+        }
+
+        const needNetwork = isExplicitFetch || (fetchByDefault && !hasConflictOrDiff && !localEntryFound);
+
+        if (needNetwork && this.requestCache.has(fetchKey)) {
+            //TODO: Remove
+            console.log(`[Reuse] Reusing explicit fetch for request: ${fetchKey}`);
+            return (await this.requestCache.get(fetchKey)) as T;
+        }
+
+        const keyToUse = needNetwork ? fetchKey : actualKey;
+
+        if (this.requestCache.has(keyToUse)) {
+            //TODO: Remove
+            console.log(`[Reuse] Request reuse for: ${keyToUse}`);
+            return (await this.requestCache.get(keyToUse)) as T;
+        }
+
+        const requestPromise = (async () => {
+            try {
+                return await options.execute();
+            } finally {
+                if (this.requestCache.get(keyToUse) === requestPromise) {
+                    this.requestCache.delete(keyToUse);
+                }
+            }
+        })();
+
+        this.requestCache.set(keyToUse, requestPromise);
+
+        return requestPromise;
     }
 }

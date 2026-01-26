@@ -161,7 +161,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return this.executeWithReuse<vscode.FileStat>(uri, {
-            keyPrefix: "stat_",
+            keyGenerator: (u) => "stat_" + this.getQueryKey(u) + this.getCleanUriString(u),
             checkLocal: () => !!this.lookup(uri, false),
             execute: () => this.statImplementation(uri),
         });
@@ -392,7 +392,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         return this.executeWithReuse<[string, vscode.FileType][]>(uri, {
-            keyPrefix: "readDir_",
+            keyGenerator: (u) => "readDir_" + this.getQueryKey(u) + this.getCleanUriString(u),
             checkLocal: () => !!this._lookupAsDirectory(uri, true),
             execute: () => this.readDirectoryImplementation(uri),
         });
@@ -580,7 +580,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return this.executeWithReuse<Uint8Array>(uri, {
-            keyPrefix: "readFile_",
+            keyGenerator: (u) => "readFile_" + this.getQueryKey(u) + this.getCleanUriString(u),
             checkLocal: () => {
                 try {
                     const entry = this._lookupAsFile(uri, { silent: true }) as UssFile;
@@ -1050,68 +1050,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * Helper to clean URI string for cache keys (removes trailing slash)
      */
     private getCleanUriString(uri: vscode.Uri): string {
-        const s = uri.toString();
-        return s.endsWith("/") ? s.slice(0, -1) : s;
-    }
-
-    private async executeWithReuse<T>(
-        uri: vscode.Uri,
-        options: {
-            keyPrefix: string;
-            checkLocal: () => boolean;
-            execute: () => Promise<T>;
-        }
-    ): Promise<T> {
-        const queryParams = new URLSearchParams(uri.query);
-        const isExplicitFetch = queryParams.get("fetch") === "true";
-        const hasConflictOrDiff = queryParams.has("conflict") || queryParams.has("inDiff");
-        const fetchByDefault = FeatureFlags.get("fetchByDefault");
-
-        const fetchQueryParams = new URLSearchParams(uri.query);
-        fetchQueryParams.set("fetch", "true");
-        const fetchUri = uri.with({ query: fetchQueryParams.toString() });
-        const fetchKey = options.keyPrefix + this.getQueryKey(fetchUri) + this.getCleanUriString(fetchUri);
-
-        const actualQueryParams = new URLSearchParams(uri.query);
-        actualQueryParams.delete("fetch");
-        const actualUri = uri.with({ query: actualQueryParams.toString() });
-        const actualKey = options.keyPrefix + this.getQueryKey(actualUri) + this.getCleanUriString(actualUri);
-
-        let localEntryFound = false;
-        if (!isExplicitFetch && !hasConflictOrDiff && fetchByDefault) {
-            try {
-                if (options.checkLocal()) {
-                    localEntryFound = true;
-                }
-            } catch (error) {}
-        }
-
-        const needNetwork = isExplicitFetch || (fetchByDefault && !hasConflictOrDiff && !localEntryFound);
-        if (needNetwork && this.requestCache.has(fetchKey)) {
-            //TODO: Remove
-            console.log(`[Reuse] Reusing explicit fetch for request: ${fetchKey}`);
-            return (await this.requestCache.get(fetchKey)) as T;
-        }
-
-        const keyToUse = needNetwork ? fetchKey : actualKey;
-
-        if (this.requestCache.has(keyToUse)) {
-            //TODO: Remove
-            console.log(`[Reuse] Request reuse for: ${keyToUse}`);
-            return (await this.requestCache.get(keyToUse)) as T;
-        }
-
-        const requestPromise = (async () => {
-            try {
-                return await options.execute();
-            } finally {
-                if (this.requestCache.get(keyToUse) === requestPromise) {
-                    this.requestCache.delete(keyToUse);
-                }
-            }
-        })();
-
-        this.requestCache.set(keyToUse, requestPromise);
-        return requestPromise;
+        return uri.path.endsWith("/") ? uri.path.slice(0, -1) : uri.path;
     }
 }
