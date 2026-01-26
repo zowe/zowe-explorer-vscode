@@ -551,13 +551,14 @@ export class BaseProvider {
                 if (options.checkLocal()) {
                     localEntryFound = true;
                 }
-            } catch (error) {}
+            } catch {} // eslint-disable-line no-empty
         }
 
         const needNetwork = isExplicitFetch || (fetchByDefault && !hasConflictOrDiff && !localEntryFound);
 
         if (needNetwork && this.requestCache.has(fetchKey)) {
             //TODO: Remove
+            // eslint-disable-next-line no-console
             console.log(`[Reuse] Reusing explicit fetch for request: ${fetchKey}`);
             return (await this.requestCache.get(fetchKey)) as T;
         }
@@ -566,11 +567,12 @@ export class BaseProvider {
 
         if (this.requestCache.has(keyToUse)) {
             //TODO: Remove
+            // eslint-disable-next-line no-console
             console.log(`[Reuse] Request reuse for: ${keyToUse}`);
             return (await this.requestCache.get(keyToUse)) as T;
         }
 
-        const requestPromise = (async () => {
+        const requestPromise = (async (): Promise<T> => {
             try {
                 return await options.execute();
             } finally {
