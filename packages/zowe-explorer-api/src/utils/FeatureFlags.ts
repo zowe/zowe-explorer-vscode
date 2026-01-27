@@ -12,17 +12,30 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import { existsSync } from "fs";
+import * as vscode from "vscode";
 
 export interface FlagSchema {
     [key: string]: boolean | string | number | any;
 }
+
+export enum FlagAccessLevel {
+    None = 0,
+    Read = 1 << 0,
+    Write = 1 << 1,
+}
+
+export type FeatureFlagKey = string;
+
+type FlagACL = {
+    [key: FeatureFlagKey]: FlagAccessLevel;
+};
 
 export class FeatureFlags {
     private static filePath: string = path.join(__dirname, "../../feature-flags.json");
     private static flags: FlagSchema = {};
     private static isInitialized: boolean = false;
 
-    private constructor() {}
+    protected constructor() {}
 
     /**
      * Initializes the manager by loading existing flags from disk.
@@ -94,5 +107,86 @@ export class FeatureFlags {
         }
 
         await fs.writeFile(this.filePath, JSON.stringify(this.flags, null, 2), "utf-8");
+    }
+}
+
+export class FeatureFlagsAccess extends FeatureFlags {
+    private static accessControl: FlagACL = {
+        fetchByDefault: FlagAccessLevel.Read | FlagAccessLevel.Write,
+    };
+
+    /**
+     * Asserts that the given key is readable.
+     * @param key The feature flag key to read
+     * @throws If the key is not readable from the access facility
+     */
+    private static expectReadable(key: FeatureFlagKey): void {
+        if ((FeatureFlagsAccess.accessControl[key] & FlagAccessLevel.Read) > 0) {
+            return;
+        }
+
+        throw new Error(
+            vscode.l10n.t({
+                message: "Insufficient read permissions for {0} in feature flags.",
+                args: [key],
+                comment: "Feature flag key",
+            })
+        );
+    }
+
+    /**
+     * Asserts that the given key is writable.
+     * @param key The feature flag key to write
+     * @throws If the key is not writable from the access facility
+     */
+    private static expectWritable(key: FeatureFlagKey): void {
+        if ((FeatureFlagsAccess.accessControl[key] & FlagAccessLevel.Write) > 0) {
+            return;
+        }
+
+        throw new Error(
+            vscode.l10n.t({
+                message: "Insufficient write permissions for {0} in feature flags.",
+                args: [key],
+                comment: "Feature flag key",
+            })
+        );
+    }
+
+    /**
+     * @returns The list of readable keys from the access facility
+     */
+    public static getReadableKeys(): FeatureFlagKey[] {
+        return Object.keys(FeatureFlagsAccess.accessControl).filter((k) => FeatureFlagsAccess.accessControl[k] & FlagAccessLevel.Read);
+    }
+
+    /**
+     * @returns The list of writable keys from the access facility
+     */
+    public static getWritableKeys(): FeatureFlagKey[] {
+        return Object.keys(FeatureFlagsAccess.accessControl).filter((k) => FeatureFlagsAccess.accessControl[k] & FlagAccessLevel.Write);
+    }
+
+    /**
+     * Gets the value of a specific feature flag with ACL check.
+     * @param key The feature flag key
+     * @returns The value of the flag
+     * @throws If the extender does not have appropriate read permissions
+     */
+    public static get(key: FeatureFlagKey): any {
+        FeatureFlagsAccess.expectReadable(key);
+        return FeatureFlags.get(key);
+    }
+
+    /**
+     * Sets a flag value with ACL check and persists it to the JSON file.
+     * @param key The feature flag key
+     * @param value The value to set
+     * @param save Whether to persist to disk immediately
+     * @throws If the extender does not have appropriate write permissions
+     */
+    public static async set(key: FeatureFlagKey, value: any, save: boolean = false): Promise<void> {
+        FeatureFlagsAccess.expectWritable(key);
+        return FeatureFlags.set(key, value, save);
     }
 }

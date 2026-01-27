@@ -42,9 +42,8 @@ import { DatasetUtils } from "./DatasetUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
 
-const EXPECTED_MEMBER_LENGTH = 2; // /DATA.SET/MEMBER
-
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
+    private readonly EXPECTED_MEMBER_LENGTH = 2; // /DATA.SET/MEMBER
     private static _instance: DatasetFSProvider;
     private constructor() {
         super();
@@ -356,7 +355,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 .substring(uriInfo.slashAfterProfilePos + 1)
                 .split("/")
                 .filter(Boolean);
-            pdsMember = uriPath.length === EXPECTED_MEMBER_LENGTH;
+            pdsMember = uriPath.length === this.EXPECTED_MEMBER_LENGTH;
 
             // Wait for any ongoing authentication process to complete
             await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
@@ -575,7 +574,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         .substring(uriInfo.slashAfterProfilePos + 1)
                         .split("/")
                         .filter(Boolean);
-                    const pdsMember = uriPath.length === EXPECTED_MEMBER_LENGTH;
+                    const pdsMember = uriPath.length === this.EXPECTED_MEMBER_LENGTH;
                     this.createDirectory(uri.with({ path: path.posix.join(uri.path, "..") }));
                     const parentDir = this.lookupParentDirectory(uri);
                     const dsname = uriPath[Number(pdsMember)];
@@ -732,7 +731,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             .substring(uriInfo.slashAfterProfilePos + 1)
             .split("/")
             .filter(Boolean);
-        const isPdsMember = uriPath.length === EXPECTED_MEMBER_LENGTH;
+        const isPdsMember = uriPath.length === this.EXPECTED_MEMBER_LENGTH;
         const targetPath = isPdsMember ? path.posix.dirname(uri.path) : uri.path;
 
         let dsStats: Types.DatasetStats = isPdsMember ? (this.lookupParentDirectory(uri) as PdsEntry).stats : entry.stats;

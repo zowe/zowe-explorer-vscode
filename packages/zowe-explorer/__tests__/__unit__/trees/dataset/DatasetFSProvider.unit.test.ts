@@ -95,7 +95,7 @@ const testUris: TestUris = {
 
 describe("DatasetFSProvider", () => {
     let mockedProperty: MockedProperty;
-    beforeEach(async () => {
+    beforeEach(() => {
         jest.restoreAllMocks();
         mockedProperty = new MockedProperty(Profiles, "getInstance", {
             value: jest.fn().mockReturnValue({
@@ -1470,7 +1470,7 @@ describe("DatasetFSProvider", () => {
             expect(lookupSpy).toHaveBeenCalledWith(fetchUri.with({ path: "/sestest/USER.DATA.PDS" }), false);
         });
 
-        it("should make a system call and if fetchByDefault is enabled and the entry is not in the cache", async () => {
+        it("should make a system call if fetchByDefault is enabled and the entry is not in the cache", async () => {
             jest.spyOn(FeatureFlags, "get").mockReturnValue(true);
             const allMembersMock = jest.fn().mockResolvedValue({
                 success: true,

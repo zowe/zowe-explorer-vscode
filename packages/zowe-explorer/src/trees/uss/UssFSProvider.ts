@@ -161,7 +161,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return this.executeWithReuse<vscode.FileStat>(uri, {
-            keyGenerator: (u) => "stat_" + this.getQueryKey(u) + this.getCleanUriString(u),
+            keyGenerator: (u) => "list_" + this.getQueryKey(u) + this.getCleanUriString(u),
             checkLocal: () => !!this.lookup(uri, false),
             execute: () => this.statImplementation(uri),
         });
@@ -344,6 +344,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<UssDirectory | UssFile> {
+        // TODO: Remove
         console.log("remoteLookupCalled");
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: uriInfo.profileName });

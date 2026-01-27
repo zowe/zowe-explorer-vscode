@@ -260,16 +260,12 @@ describe("AuthUtils", () => {
                 const runSequentialMock = jest.spyOn(AuthHandler, "runSequentialIfEnabled").mockImplementation((_profile, action) => action());
                 try {
                     const statResult = await DatasetFSProvider.instance.stat(
-                        Uri.from({
-                            scheme: ZoweScheme.DS,
-                            path: "/sestest/USER.DATA.PS",
-                        }).with({
+                        testUris.ps.with({
                             query: "fetch=true",
                         })
                     );
                     const fetchResult = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
 
-                    // Assert
                     expect(statResult).toBeDefined();
                     expect(fetchResult).toBeDefined();
                     expect(promptForAuthErrorMock).toHaveBeenCalledTimes(2);

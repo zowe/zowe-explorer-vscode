@@ -847,13 +847,16 @@ describe("executeWithReuse", () => {
             checkLocalSpy.mockReturnValue(false);
             keyGenSpy.mockImplementation((u: vscode.Uri) => u.query);
 
-            await prov.executeWithReuse(testUri, {
+            const promise = prov.executeWithReuse(testUri, {
                 keyGenerator: keyGenSpy,
                 checkLocal: checkLocalSpy,
                 execute: executeSpy,
             });
 
             expect(executeSpy).toHaveBeenCalled();
+            expect(prov.requestCache.has("fetch=true")).toBe(true);
+
+            await promise;
         });
     });
 
