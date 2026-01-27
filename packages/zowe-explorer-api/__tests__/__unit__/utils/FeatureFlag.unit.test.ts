@@ -11,7 +11,7 @@
 
 import * as fs from "fs";
 import * as fsPromises from "fs/promises";
-import { FeatureFlags } from "../../../src";
+import { FeatureFlags, FeatureFlagsAccess, FlagAccessLevel } from "../../../src";
 
 const FLAGS_FILE = "feature-flags.json";
 jest.mock("fs");
@@ -112,5 +112,52 @@ describe("FeatureFlags", () => {
         FeatureFlags.remove("tempFeature");
 
         expect(FeatureFlags.get("tempFeature")).toBeUndefined();
+    });
+});
+
+describe("FeatureFlagsAccess (ACL)", () => {
+    beforeEach(async () => {
+        (FeatureFlags as any).flags = {};
+        jest.clearAllMocks();
+        (FeatureFlagsAccess as any).accessControl = {
+            goodTestKey: FlagAccessLevel.Read | FlagAccessLevel.Write,
+        };
+    });
+
+    it("should allow reading a key with Read permissions", () => {
+        const key = "goodTestKey";
+        (FeatureFlags as any).flags[key] = true;
+        expect(FeatureFlagsAccess.get(key)).toBe(true);
+    });
+
+    it("should throw error when reading a key without Read permissions", () => {
+        const restrictedKey = "unknownKey";
+        expect(() => {
+            FeatureFlagsAccess.get(restrictedKey);
+        }).toThrow("Insufficient read permissions for unknownKey in feature flags.");
+    });
+
+    it("should allow writing a key with Write permissions", async () => {
+        const key = "goodTestKey";
+        const value = false;
+        await FeatureFlagsAccess.set(key, value);
+        expect(FeatureFlags.get(key)).toBe(value);
+    });
+
+    it("should throw error when writing a key without Write permissions", async () => {
+        const restrictedKey = "readOnlyOrNoAccessKey";
+        await expect(FeatureFlagsAccess.set(restrictedKey, true)).rejects.toThrow(
+            "Insufficient write permissions for readOnlyOrNoAccessKey in feature flags."
+        );
+    });
+
+    it("should list correct readable keys", () => {
+        const readableKeys = FeatureFlagsAccess.getReadableKeys();
+        expect(readableKeys).toContain("goodTestKey");
+    });
+
+    it("should list correct writable keys", () => {
+        const writableKeys = FeatureFlagsAccess.getWritableKeys();
+        expect(writableKeys).toContain("goodTestKey");
     });
 });
