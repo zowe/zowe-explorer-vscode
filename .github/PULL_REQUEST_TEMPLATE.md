@@ -25,6 +25,8 @@ Changelog:
 
 <!-- Put an `x` in all boxes that apply. You can also fill these out after creating the PR. If you're unsure about any of them, don't hesitate to ask. We're here to help! This checklist will be used as reference for both the contributor and the reviewer. -->
 
+**All checks must pass before this pull request is reviewed by the Zowe Explorer squad.**
+
 **General**
 
 - [ ] I have read the [CONTRIBUTOR GUIDANCE](https://github.com/zowe/zowe-explorer-vscode/wiki/Best-Practices:-Contributor-Guidance) wiki
