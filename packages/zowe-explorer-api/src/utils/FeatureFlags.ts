@@ -63,8 +63,13 @@ export class FeatureFlags {
     }
 
     /**
-     * Sets a flag value and persists it to the JSON file.
-     * Updates in-memory cache immediately.
+     * Sets a flag value and persists it to the JSON file if requested.
+     * Updates the in-memory cache immediately.
+     * @param key - The feature flag key identifier.
+     * @param value - The value to assign to the flag.
+     * @param save - Whether to persist the change to disk immediately (default: `false`).
+     * If `false`, the operation only updates memory and does not need to be awaited.
+     * @returns A promise that resolves when the operation is complete.
      */
     public static async set(key: string, value: any, save: boolean = false): Promise<void> {
         this.flags[key] = value;
