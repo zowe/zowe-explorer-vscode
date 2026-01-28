@@ -4,8 +4,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
 
 - Fixed an issue seen with z/OSMF MvsApi.deleteDataset() when optional parameter options was undefined. [4039](https://github.com/zowe/zowe-explorer-vscode/issues/4039)
