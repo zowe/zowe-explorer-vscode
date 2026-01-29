@@ -6,7 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
-- Updated the `@zowe/cli` dependency to v7.29.20 for technical currency. [#4051](https://github.com/zowe/zowe-explorer-vscode/pull/4051)
+- Updated the `@zowe/cli` dependency to v7.29.21 for technical currency. [#4051](https://github.com/zowe/zowe-explorer-vscode/pull/4051)
 
 ## `2.18.3`
 
