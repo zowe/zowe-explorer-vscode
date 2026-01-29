@@ -11,6 +11,7 @@
 
 import { Gui } from "../globals";
 import { commands } from "vscode";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import Mustache = require("mustache");
 import { ImperativeError } from "@zowe/imperative";
 
@@ -67,6 +68,7 @@ export interface DisplayErrorOpts extends CorrelateErrorOpts {
     allowRetry?: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface DisplayCorrelatedErrorOpts extends Omit<DisplayErrorOpts, "profileType"> {}
 
 export interface HandledErrorInfo {

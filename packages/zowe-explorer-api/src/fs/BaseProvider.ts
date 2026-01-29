@@ -224,6 +224,7 @@ export class BaseProvider {
     private async _reopenEditorForRelocatedUri(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<void> {
         const tabGroups = vscode.window.tabGroups.all;
         const allTabs = tabGroups.reduce((acc: vscode.Tab[], group) => acc.concat(group.tabs), []);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const tabWithOldUri = allTabs.find((t) => (t.input as any)?.uri?.path === oldUri.path);
         if (tabWithOldUri) {
             const parent = tabGroups.find((g) => g.tabs.find((t) => t === tabWithOldUri));

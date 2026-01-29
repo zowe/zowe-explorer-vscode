@@ -46,7 +46,7 @@ export class FileManagement {
         if (platform() === "win32") {
             try {
                 return realpathSync.native(anyPath);
-            } catch (err) {
+            } catch (_err) {
                 // Fallback to realpathSync below
             }
         }
@@ -69,7 +69,9 @@ export class FileManagement {
 
     public static async reloadWorkspacesForProfile(profileName: string): Promise<void> {
         const foldersWithProfile = (workspace.workspaceFolders ?? []).filter(
-            (f) => (f.uri.scheme === ZoweScheme.DS || f.uri.scheme === ZoweScheme.USS) && f.uri.path.startsWith(`/${profileName}/`)
+            (f) =>
+                (f.uri.scheme === (ZoweScheme.DS as string) || f.uri.scheme === (ZoweScheme.USS as string)) &&
+                f.uri.path.startsWith(`/${profileName}/`)
         );
         for (const folder of foldersWithProfile) {
             try {

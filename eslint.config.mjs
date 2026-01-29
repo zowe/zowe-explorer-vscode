@@ -1,0 +1,152 @@
+import eslint from "@eslint/js";
+import tseslint from "typescript-eslint";
+import prettierConfig from "eslint-config-prettier";
+import zoweExplorerPlugin from "eslint-plugin-zowe-explorer";
+
+export default tseslint.config(
+  // Base ESLint recommended rules
+  eslint.configs.recommended,
+
+  // TypeScript ESLint recommended rules
+  ...tseslint.configs.recommendedTypeChecked,
+
+  // Prettier config (disables conflicting rules)
+  prettierConfig,
+
+  // Global configuration
+  {
+    languageOptions: {
+      ecmaVersion: 6,
+      sourceType: "module",
+      parserOptions: {
+        project: ["**/tsconfig.json", "**/tsconfig-tests.json"],
+      },
+    },
+    plugins: {
+      "zowe-explorer": zoweExplorerPlugin,
+    },
+    rules: {
+      "@typescript-eslint/await-thenable": "off",
+      "@typescript-eslint/consistent-type-assertions": "warn",
+      "@typescript-eslint/explicit-function-return-type": [
+        "error",
+        {
+          // We only disallow the rules that provide value (i.e. that found some errors while configuring)
+          // Documentation: https://typescript-eslint.io/rules/explicit-function-return-type
+          allowHigherOrderFunctions: false,
+          allowFunctionsWithoutTypeParameters: false,
+
+          // Disabling (i.e. setting to `false`) the following rule will force us to unnecessarily type built-in functions
+          // For example, to find the index of a profile in a profiles array we will have to go:
+          //     FROM: profiles.findIndex((profile) => profile.name === "my_profile"))
+          //     TO:   profiles.findIndex((profile): boolean => profile.name === "my_profile"))
+          allowTypedFunctionExpressions: true,
+        },
+      ],
+      "@typescript-eslint/explicit-member-accessibility": "error",
+
+      // New excluded rules to resolve errors
+      "@typescript-eslint/no-namespace": "off",
+      "@typescript-eslint/no-deprecated": "error",
+
+      // There are several errors falling under these rules; resolve
+      "@typescript-eslint/no-floating-promises": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+
+      "@typescript-eslint/no-shadow": "error",
+      "@typescript-eslint/no-unused-expressions": "error",
+      "@typescript-eslint/no-var-requires": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+      "array-callback-return": "error",
+      "constructor-super": "error",
+      curly: "warn",
+      "getter-return": "error",
+      "max-len": [
+        "warn",
+        {
+          code: 150,
+        },
+      ],
+      "no-console": "error",
+      "no-const-assign": "error",
+      "no-dupe-keys": "error",
+      "no-duplicate-case": "error",
+      "no-duplicate-imports": "error",
+      "no-extra-bind": "warn",
+      "no-extra-semi": "error",
+      "no-implicit-globals": "error",
+      "no-irregular-whitespace": "warn",
+      "no-magic-numbers": [
+        "warn",
+        {
+          ignore: [-2, -1, 0, 1, 2, 4],
+        },
+      ],
+      "no-multiple-empty-lines": "warn",
+      "no-return-await": "off",
+      "no-sequences": "warn",
+      "no-shadow": "off",
+      "no-sparse-arrays": "warn",
+      "no-unreachable": "error",
+      "no-unsafe-negation": "error",
+      "no-unused-expressions": "off",
+      "no-unused-vars": "off",
+      "prefer-object-spread": "warn",
+      "space-in-parens": "warn",
+      "zowe-explorer/no-floating-promises": "error",
+      "zowe-explorer/no-unmocked-core-modules": [
+        "error",
+        {
+          coreModuleNames: ["fs"],
+          filePathPattern: ".*\\.unit\\.test\\..*",
+        },
+      ],
+    },
+  },
+
+  // Ignore patterns
+  {
+    ignores: [
+      "**/scripts/**",
+      "**/__mocks__/**",
+      "**/lib/**",
+      "**/webpack.config.js",
+      "**/*wdio.conf.ts",
+      "**/features/**",
+      "**/samples/__integration__/**",
+      "**/out/**",
+      "**/results/**",
+      "**/src/webviews/**",
+    ],
+  },
+
+  // Override for test files
+  {
+    files: ["**/__tests__/**"],
+    rules: {
+      "no-magic-numbers": "off",
+      "@typescript-eslint/require-await": "warn",
+      "@typescript-eslint/no-misused-promises": "warn",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/restrict-plus-operands": "warn",
+      "@typescript-eslint/restrict-template-expressions": "warn",
+      "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/unbound-method": "off",
+      "zowe-explorer/no-floating-promises": "warn",
+      curly: "off",
+
+      // New excluded rules to resolve errors
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-base-to-string": "warn",
+    },
+  }
+);

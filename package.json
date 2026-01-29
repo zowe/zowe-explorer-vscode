@@ -18,12 +18,13 @@
     "disposablestack": "^1.1.4"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/jest": "^29.2.3",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.14.8",
     "@types/vscode": "^1.73.0",
-    "@typescript-eslint/eslint-plugin": "^5.53.0",
-    "@typescript-eslint/parser": "^5.53.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
     "@vscode/l10n-dev": "^0.0.35",
     "@vscode/test-electron": "^1.6.0",
     "@vscode/vsce": "^3.4.2",
@@ -32,7 +33,6 @@
     "esbuild-loader": "^4.1.0",
     "eslint": "^9.26.0",
     "eslint-config-prettier": "^8.6.0",
-    "eslint-plugin-deprecation": "^2.0.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-zowe-explorer": "workspace:./packages/eslint-plugin-zowe-explorer",
     "fancy-log": "^2.0.0",
@@ -55,6 +55,7 @@
     "ts-jest": "^29.0.3",
     "tsx": "^4.9.3",
     "typescript": "^5.3.3",
+    "typescript-eslint": "^8.54.0",
     "webpack": "^5.94.0",
     "webpack-cli": "^5.1.4"
   },

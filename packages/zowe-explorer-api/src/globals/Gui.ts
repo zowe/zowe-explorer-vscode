@@ -224,14 +224,14 @@ export namespace Gui {
 
         const msg = options?.logger ? `${options.logger.getExtensionName()}: ${message}` : message;
         if (severity < MessageSeverity.WARN) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return vscode.window.showInformationMessage(msg, options?.vsCodeOpts ?? undefined, ...((options?.items as any[]) ?? [])) as Thenable<T>;
         } else if (severity === MessageSeverity.WARN) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return vscode.window.showWarningMessage(msg, options?.vsCodeOpts ?? undefined, ...((options?.items as any[]) ?? [])) as Thenable<T>;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return vscode.window.showErrorMessage(msg, options?.vsCodeOpts ?? undefined, ...((options?.items as any[]) ?? [])) as Thenable<T>;
     }
 
@@ -287,6 +287,7 @@ export namespace Gui {
      * @param {number} index - withProgress loop array's index
      * @param {string} action - the action the progress is reported for, ie. Uploading
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     export function reportProgress(progress: any, valueLength: number, index: number, action: string): void {
         progress.report({
             message: `${action} ${index + 1} of ${valueLength}`,

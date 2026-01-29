@@ -61,6 +61,7 @@ export interface IZoweTreeNode extends vscode.TreeItem {
     /**
      * Any ongoing actions that must be awaited before continuing
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ongoingActions?: Record<ZoweTreeNodeActions.Interactions | string, Promise<any>>;
 
     /**

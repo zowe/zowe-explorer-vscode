@@ -38,7 +38,7 @@ describe("DeferredPromise.status", () => {
         setImmediate(() => deferred.reject());
         try {
             await deferred.promise;
-        } catch (err) {
+        } catch (_err) {
             errorCaught = true;
         }
         expect(deferred.status).toBe(DeferredPromiseStatus.Rejected);

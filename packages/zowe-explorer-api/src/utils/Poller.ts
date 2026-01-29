@@ -15,6 +15,7 @@ export class Poller {
     public static pollRequests: { [key: string]: Types.PollRequest } = {};
 
     private static poll(uniqueId: string, requestData: Types.PollRequest): Promise<unknown> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const pollHandler = async (resolve?: (uniqueId: string, data: any) => unknown, reject?: (typeof Promise)["reject"]): Promise<unknown> => {
             if (!Poller.pollRequests[uniqueId]) {
                 // Poll request was discarded, return

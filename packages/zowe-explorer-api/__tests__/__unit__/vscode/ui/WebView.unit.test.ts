@@ -33,7 +33,7 @@ describe("WebView unit tests", () => {
 
         try {
             new WebView("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext);
-        } catch (err) {
+        } catch (_err) {
             throw new Error("Failed to create WebView");
         }
         expect(createWebviewPanelSpy).toHaveBeenCalled();
