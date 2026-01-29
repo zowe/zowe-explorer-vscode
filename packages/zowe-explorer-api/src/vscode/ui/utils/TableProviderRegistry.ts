@@ -70,7 +70,9 @@ export class TableProviderRegistry {
             this.providers.set(tableId, []);
         }
 
-        const existingProviders = this.providers.get(tableId)!;
+        // The assertion `this.providers.get(tableId)!;` was redundant since we already checked for null above
+        const existingProviders = this.providers.get(tableId);
+
         if (!existingProviders.includes(provider)) {
             existingProviders.push(provider);
         }

@@ -96,8 +96,8 @@ export class TableViewProvider implements WebviewViewProvider {
      */
     public resolveWebviewView(
         webviewView: WebviewView,
-        context: WebviewViewResolveContext<unknown>,
-        token: CancellationToken
+        _context: WebviewViewResolveContext<unknown>,
+        _token: CancellationToken
     ): void | Thenable<void> {
         this.view = webviewView;
 

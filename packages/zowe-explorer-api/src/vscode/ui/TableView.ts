@@ -126,7 +126,7 @@ export namespace Table {
             /** The type of table being displayed */
             tableId: string;
             /** Additional properties specific to the table implementation */
-            [key: string]: any;
+            [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
         }
 
         /**
@@ -184,14 +184,14 @@ export namespace Table {
          * Type guard to check if context is a Job context
          */
         export function isJob(context: IBaseData | undefined): context is Job {
-            return context != null && context.tableId === Identifiers.JOBS;
+            return context != null && context.tableId === (Identifiers.JOBS as string);
         }
 
         /**
          * Type guard to check if context is a Search context
          */
         export function isSearch(context: IBaseData | undefined): context is Search {
-            return context != null && context.tableId === Identifiers.SEARCH_RESULTS && "searchQuery" in context;
+            return context != null && context.tableId === (Identifiers.SEARCH_RESULTS as string) && "searchQuery" in context;
         }
 
         // Helper Functions
@@ -228,19 +228,33 @@ export namespace Table {
      * Returns a date comparison function for sorting date columns.
      * @returns A function that compares two date values
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     export function getDateComparator(): (valueA: any, valueB: any, nodeA: any, nodeB: any, isDescending: boolean) => number {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (valueA: any, valueB: any, nodeA: any, nodeB: any, isDescending: boolean): number => {
-            if (valueA == null && valueB == null) return 0;
-            if (valueA == null) return isDescending ? -1 : 1;
-            if (valueB == null) return isDescending ? 1 : -1;
+            if (valueA == null && valueB == null) {
+                return 0;
+            }
+            if (valueA == null) {
+                return isDescending ? -1 : 1;
+            }
+            if (valueB == null) {
+                return isDescending ? 1 : -1;
+            }
 
             const dateA = new Date(valueA);
             const dateB = new Date(valueB);
 
             // Handle invalid dates
-            if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0;
-            if (isNaN(dateA.getTime())) return 1;
-            if (isNaN(dateB.getTime())) return -1;
+            if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) {
+                return 0;
+            }
+            if (isNaN(dateA.getTime())) {
+                return 1;
+            }
+            if (isNaN(dateB.getTime())) {
+                return -1;
+            }
 
             return dateA.getTime() - dateB.getTime();
         };
@@ -255,7 +269,7 @@ export namespace Table {
         checkboxSelection?: boolean;
         icons?: { [key: string]: string };
         suppressNavigable?: boolean;
-        context?: any;
+        context?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
         // Locking and edit variables
         hide?: boolean;
@@ -315,9 +329,10 @@ export namespace Table {
         suppressAutoSize?: boolean;
     };
     export type ColumnOpts = Omit<Column, "comparator" | "colSpan" | "rowSpan" | "valueFormatter"> & {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         comparator?: (valueA: any, valueB: any, nodeA: any, nodeB: any, isDescending: boolean) => number;
-        colSpan?: (params: any) => number;
-        rowSpan?: (params: any) => number;
+        colSpan?: (params: any) => number; // eslint-disable-line @typescript-eslint/no-explicit-any
+        rowSpan?: (params: any) => number; // eslint-disable-line @typescript-eslint/no-explicit-any
         valueFormatter?: ValueFormatter;
         useDateComparison?: boolean;
     };
@@ -485,6 +500,7 @@ export namespace Table {
         public onTableDisplayChanged: Event<RowData | RowData[]> = this.onTableDisplayChangedEmitter.event;
         public onTableDataReceived: Event<Partial<ViewOpts>> = this.onTableDataReceivedEmitter.event;
         public onTableDataEdited: Event<EditEvent> = this.onTableDataEditedEmitter.event;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         private pendingRequests: Record<string, { resolve: (value: any) => void; reject: (reason?: any) => void }> = {};
 
         private uuid: string;
@@ -541,6 +557,7 @@ export namespace Table {
             }
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         private getConditionData(payload: any): RowData[] | RowData | ContentTypes {
             if (payload.row) {
                 return payload.row as RowData;
@@ -558,6 +575,7 @@ export namespace Table {
          *
          * @param message The message received from the webview
          */
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         public async onMessageReceived(message: any): Promise<void> {
             if (!("command" in message)) {
                 return;
@@ -762,7 +780,7 @@ export namespace Table {
                             callback: option.callback,
                         })),
                     ])
-                ) as any,
+                ) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
             };
 
             const result = await (this.panel ?? this.view).webview.postMessage({
@@ -839,10 +857,13 @@ export namespace Table {
             return this.request<boolean>("set-page-size", pageSize);
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         public async getGridState(): Promise<any> {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return this.request<any>("get-grid-state");
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         public async setGridState(state: any): Promise<boolean> {
             return this.request<boolean>("set-grid-state", state);
         }
@@ -957,6 +978,7 @@ export namespace Table {
          * @param payload Optional payload to send with the request
          * @returns A promise that resolves with the response from the webview
          */
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         public request<T>(command: string, payload?: any): Promise<T> {
             const requestId = randomUUID();
 
@@ -1001,6 +1023,7 @@ export namespace Table {
          */
         public async pinRows(rows: RowData[]): Promise<boolean> {
             const config = vscode.workspace.getConfiguration("zowe");
+            // eslint-disable-next-line no-magic-numbers
             const maxPinnedRows = config.get<number>("table.maxPinnedRows", 10);
             const hideWarning = config.get<boolean>("table.hidePinnedRowsWarning", false);
 
