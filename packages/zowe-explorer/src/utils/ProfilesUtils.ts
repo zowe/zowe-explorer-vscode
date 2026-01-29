@@ -773,7 +773,9 @@ export class ProfilesUtils {
 
         let profile = uriInfo?.profile;
         if (!profile) {
-            const configProfile = await profCache.getProfileFromConfig(uriInfo.profileName);
+            const configProfile = uriInfo?.profileName
+                ? await profCache.getProfileFromConfig(uriInfo.profileName)
+                : await profCache.getProfileFromConfig(uri.path.split("/")[1]);
             if (configProfile) {
                 // Create a temporary placeholder with the correct type so we can await the extender
                 profile = {
