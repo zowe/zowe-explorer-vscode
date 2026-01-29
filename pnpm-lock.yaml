@@ -2214,7 +2214,7 @@ packages:
     engines: {node: '>=20.9.0'}
 
   '@zowe/secrets-for-zowe-sdk@8.29.4':
-    resolution: {integrity: sha512-fiRfuEuFNapwhVbN3LJIA2ZgVajNB+QNFN7O7ES/fIYGM612PKcXuvbZUJSlU69IZ8eUF8SP+9OnveK4s+GLgw==, tarball: https://usw1.packages.broadcom.com/artifactory/api/npm/msd-common-npm/@zowe/secrets-for-zowe-sdk/-/@zowe/secrets-for-zowe-sdk-8.29.4.tgz}
+    resolution: {integrity: sha512-fiRfuEuFNapwhVbN3LJIA2ZgVajNB+QNFN7O7ES/fIYGM612PKcXuvbZUJSlU69IZ8eUF8SP+9OnveK4s+GLgw==}
     engines: {node: '>=14'}
 
   '@zowe/zos-console-for-zowe-sdk@8.29.13':
@@ -2232,7 +2232,7 @@ packages:
       '@zowe/imperative': ^8.0.0
 
   '@zowe/zos-ftp-for-zowe-cli@3.0.0':
-    resolution: {integrity: sha512-lNt4t4VJMvnnjQXXusw5N5w5nVysbKZVSD+c7wvj/RJt6ceSV2aMH7QPeiyvTE0FEFErCkjCRl2AxeVtBkn82Q==, tarball: https://usw1.packages.broadcom.com/artifactory/api/npm/msd-common-npm/@zowe/zos-ftp-for-zowe-cli/-/@zowe/zos-ftp-for-zowe-cli-3.0.0.tgz}
+    resolution: {integrity: sha512-lNt4t4VJMvnnjQXXusw5N5w5nVysbKZVSD+c7wvj/RJt6ceSV2aMH7QPeiyvTE0FEFErCkjCRl2AxeVtBkn82Q==}
     peerDependencies:
       '@zowe/imperative': ^8.0.0
 

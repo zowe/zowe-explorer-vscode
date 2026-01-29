@@ -547,6 +547,7 @@ export namespace Table {
                         return defaultValue;
                     }
                 } else {
+                    // eslint-disable-next-line zowe-explorer/no-floating-promises
                     conditionResult = condition(conditionData);
                 }
 
