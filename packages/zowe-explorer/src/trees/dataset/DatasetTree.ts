@@ -1327,38 +1327,50 @@ Would you like to do this now?`,
     }
 
     private patternAppliesToChild(child: IZoweDatasetTreeNode, item: DatasetMatch): boolean {
-        const name = (child.label as string).split(".");
-        let includes = false;
-        if (!child.pattern) {
-            let index = 0;
-            for (const each of item.dsn.split(".")) {
-                includes = this.checkFilterPattern(name[index], each);
-                child.pattern = includes ? item.dsn : "";
-                index++;
+        const childNameParts = (child.label as string).split(".");
+        const patternParts = item.dsn.split(".");
+
+        // If the pattern has more parts than the child name, it can't match
+        if (patternParts.length > childNameParts.length) {
+            return false;
+        }
+
+        // Check each part of the pattern against the corresponding part of the child name
+        for (let index = 0; index < patternParts.length; index++) {
+            if (!this.checkFilterPattern(childNameParts[index], patternParts[index])) {
+                return false;
             }
         }
 
-        return includes;
+        return true;
     }
 
     public applyPatternsToChildren(children: IZoweDatasetTreeNode[], patterns: DatasetMatch[]): void {
         for (const child of children.filter((c) => !(c instanceof NavigationTreeItem) && c.label !== vscode.l10n.t("No data sets found"))) {
+            // Collect all member patterns that apply to this child
+            const memberPatterns: string[] = [];
             for (const item of patterns.filter((p) => p.member && this.patternAppliesToChild(child, p))) {
                 // Only apply to PDS that match the given patterns
                 if (SharedContext.isPds(child)) {
-                    child.memberPattern = item.member;
-                    if (!SharedContext.isFilterFolder(child)) {
-                        child.contextValue = String(child.contextValue) + Constants.FILTER_SEARCH;
-                    }
-                    let setIcon: IconUtils.IIconItem;
-                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-                        setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolder);
-                    } else if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
-                        setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen);
-                    }
-                    if (setIcon) {
-                        child.iconPath = setIcon.path;
-                    }
+                    memberPatterns.push(item.member);
+                }
+            }
+
+            // If we found matching member patterns, apply them to the child
+            if (memberPatterns.length > 0 && SharedContext.isPds(child)) {
+                // Combine all member patterns with commas (avoiding duplicates)
+                child.memberPattern = [...new Set(memberPatterns)].join(",");
+                if (!SharedContext.isFilterFolder(child)) {
+                    child.contextValue = String(child.contextValue) + Constants.FILTER_SEARCH;
+                }
+                let setIcon: IconUtils.IIconItem;
+                if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                    setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolder);
+                } else if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                    setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen);
+                }
+                if (setIcon) {
+                    child.iconPath = setIcon.path;
                 }
             }
             child.contextValue = SharedContext.withProfile(child);

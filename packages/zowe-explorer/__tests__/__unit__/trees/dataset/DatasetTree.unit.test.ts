@@ -4853,6 +4853,159 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
     });
 });
 
+describe("Dataset Tree Unit Tests - Function patternAppliesToChild", () => {
+    it("correctly matches a PDS when pattern exactly matches dataset name", () => {
+        const testTree = new DatasetTree();
+        const fakeChild = { label: "HLQ.USERID1.SOURCE", contextValue: Constants.DS_PDS_CONTEXT };
+        const pattern = { dsn: "HLQ.USERID1.SOURCE", member: "R80297O1" };
+        const result = (testTree as any).patternAppliesToChild(fakeChild, pattern);
+        expect(result).toBe(true);
+    });
+
+    it("correctly matches a PDS when pattern uses wildcard", () => {
+        const testTree = new DatasetTree();
+        const fakeChild = { label: "HLQ.USERID2.SOURCE", contextValue: Constants.DS_PDS_CONTEXT };
+        const pattern = { dsn: "HLQ.USERID2.*", member: "R80297*" };
+        const result = (testTree as any).patternAppliesToChild(fakeChild, pattern);
+        expect(result).toBe(true);
+    });
+
+    it("does NOT match a PDS when dataset names differ", () => {
+        const testTree = new DatasetTree();
+        const fakeChild = { label: "HLQ.USERID1.SOURCE", contextValue: Constants.DS_PDS_CONTEXT };
+        const pattern = { dsn: "HLQ.USERID2.SOURCE", member: "R80297*" };
+        const result = (testTree as any).patternAppliesToChild(fakeChild, pattern);
+        expect(result).toBe(false);
+    });
+
+    it("does NOT match when pattern has more parts than dataset name", () => {
+        const testTree = new DatasetTree();
+        const fakeChild = { label: "HLQ.SOURCE", contextValue: Constants.DS_PDS_CONTEXT };
+        const pattern = { dsn: "HLQ.USERID1.SOURCE.FINAL", member: "MEM*" };
+        const result = (testTree as any).patternAppliesToChild(fakeChild, pattern);
+        expect(result).toBe(false);
+    });
+
+    it("matches when pattern has fewer parts with wildcard", () => {
+        const testTree = new DatasetTree();
+        const fakeChild = { label: "HLQ.USERID1.SOURCE", contextValue: Constants.DS_PDS_CONTEXT };
+        const pattern = { dsn: "HLQ.*", member: "MEM*" };
+        const result = (testTree as any).patternAppliesToChild(fakeChild, pattern);
+        expect(result).toBe(true);
+    });
+});
+
+describe("Dataset Tree Unit Tests - Complex filter scenarios (Issue #3424)", () => {
+    it("applies correct member patterns to different PDSes in complex query", () => {
+        // Test case: HLQ.USERID2.SOURCE(R80297*),HLQ.USERID1.SOURCE(R80297O1)
+        // Expected: USERID2.SOURCE gets R80297*, USERID1.SOURCE gets R80297O1
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            { label: "HLQ.USERID2.SOURCE", contextValue: Constants.DS_PDS_CONTEXT, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed },
+            { label: "HLQ.USERID1.SOURCE", contextValue: Constants.DS_PDS_CONTEXT, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed },
+        ];
+        const patterns = [
+            { dsn: "HLQ.USERID2.SOURCE", member: "R80297*" },
+            { dsn: "HLQ.USERID1.SOURCE", member: "R80297O1" },
+        ];
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+
+        testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+        // USERID2.SOURCE should have R80297* member pattern
+        expect(fakeChildren[0].memberPattern).toBe("R80297*");
+        // USERID1.SOURCE should have R80297O1 member pattern (NOT R80297*)
+        expect(fakeChildren[1].memberPattern).toBe("R80297O1");
+
+        withProfileMock.mockRestore();
+    });
+
+    it("combines multiple member patterns for the same PDS", () => {
+        // Test case: HLQ.SOURCE(R80297B2),HLQ.SOURCE(EX1)
+        // Expected: SOURCE gets "R80297B2,EX1"
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            { label: "HLQ.SOURCE", contextValue: Constants.DS_PDS_CONTEXT, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed },
+        ];
+        const patterns = [
+            { dsn: "HLQ.SOURCE", member: "R80297B2" },
+            { dsn: "HLQ.SOURCE", member: "EX1" },
+        ];
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+
+        testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+        // SOURCE should have both member patterns combined
+        expect(fakeChildren[0].memberPattern).toBe("R80297B2,EX1");
+
+        withProfileMock.mockRestore();
+    });
+
+    it("does not apply member pattern from one PDS to a different PDS", () => {
+        // Test case: HLQ.USERID2.SOURCE(R80297B2),HLQ.USERID2.SOURCE(EX1),HLQ.USERID1.SOURCE(R80297O1)
+        // Expected: USERID2.SOURCE gets "R80297B2,EX1", USERID1.SOURCE gets "R80297O1"
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            { label: "HLQ.USERID2.SOURCE", contextValue: Constants.DS_PDS_CONTEXT, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed },
+            { label: "HLQ.USERID1.SOURCE", contextValue: Constants.DS_PDS_CONTEXT, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed },
+        ];
+        const patterns = [
+            { dsn: "HLQ.USERID2.SOURCE", member: "R80297B2" },
+            { dsn: "HLQ.USERID2.SOURCE", member: "EX1" },
+            { dsn: "HLQ.USERID1.SOURCE", member: "R80297O1" },
+        ];
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+
+        testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+        // USERID2.SOURCE should have both its member patterns
+        expect(fakeChildren[0].memberPattern).toBe("R80297B2,EX1");
+        // USERID1.SOURCE should only have its specific member pattern
+        expect(fakeChildren[1].memberPattern).toBe("R80297O1");
+
+        withProfileMock.mockRestore();
+    });
+
+    it("does not add member pattern to PDSes that don't match any pattern with members", () => {
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            { label: "HLQ.OTHER.PDS", contextValue: Constants.DS_PDS_CONTEXT, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed },
+        ];
+        const patterns = [
+            { dsn: "HLQ.USERID2.SOURCE", member: "R80297*" },
+            { dsn: "HLQ.USERID1.SOURCE", member: "R80297O1" },
+        ];
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+
+        testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+        // OTHER.PDS should NOT have any member pattern
+        expect(fakeChildren[0].memberPattern).toBeUndefined();
+
+        withProfileMock.mockRestore();
+    });
+
+    it("avoids duplicate member patterns when same pattern specified multiple times", () => {
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            { label: "HLQ.SOURCE", contextValue: Constants.DS_PDS_CONTEXT, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed },
+        ];
+        const patterns = [
+            { dsn: "HLQ.SOURCE", member: "MEM*" },
+            { dsn: "HLQ.SOURCE", member: "MEM*" }, // duplicate
+            { dsn: "HLQ.SOURCE", member: "OTHER" },
+        ];
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+
+        testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+        // Should deduplicate the MEM* pattern
+        expect(fakeChildren[0].memberPattern).toBe("MEM*,OTHER");
+
+        withProfileMock.mockRestore();
+    });
+});
+
 describe("DataSetTree Unit Tests - Function handleDrag", () => {
     function createBlockMocks() {
         const session = createISession();
