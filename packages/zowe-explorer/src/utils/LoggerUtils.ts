@@ -9,8 +9,6 @@
  *
  */
 
-/* eslint-disable @typescript-eslint/restrict-plus-operands */
-
 import * as vscode from "vscode";
 import { Gui, MessageSeverity } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";

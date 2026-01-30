@@ -288,7 +288,6 @@ export class SharedActions {
                     await Profiles.getInstance().updateProfileHoverInfo(sessNode);
                     (treeProvider as unknown as ZoweTreeProvider<IZoweTreeNode>).nodeDataChanged(sessNode);
                 } catch (error) {
-                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                     ZoweLogger.warn(`Failed to update tooltip for session node ${profileName}: ${error.message || error}`);
                 }
             }

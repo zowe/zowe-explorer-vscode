@@ -155,7 +155,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param {IZoweJobTreeNode} [element] - Optional parameter; if not passed, returns root session nodes
      * @returns {IZoweJobTreeNode[] | Promise<IZoweJobTreeNode[]>}
      */
-    public async getChildren(element?: IZoweJobTreeNode | undefined): Promise<IZoweJobTreeNode[]> {
+    public async getChildren(element?: IZoweJobTreeNode): Promise<IZoweJobTreeNode[]> {
         ZoweLogger.trace("JobTree.getChildren called.");
         if (element) {
             // solution for optional credentials. Owner is having error on initialization.
@@ -457,7 +457,7 @@ Would you like to do this now?`,
                     args: [profileName, SharedUtils.getAppName()],
                     comment: ["Profile name"],
                 });
-                // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+
                 ZoweLogger.error(errMessage + error.toString());
                 const btnLabelRemove = vscode.l10n.t("Remove");
                 Gui.errorMessage(errMessage, {
@@ -771,7 +771,7 @@ Would you like to do this now?`,
                 const value = keyValue[1]?.trim();
                 try {
                     searchCriteriaObj[key] = value;
-                } catch (e) {
+                } catch (_e) {
                     // capture and ignore errors
                 }
             });
@@ -1391,9 +1391,7 @@ Would you like to do this now?`,
             query = query.toUpperCase();
             job["children"] = actual_jobs.filter((item) =>
                 item["job"]["exec-member"]
-                    ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"] as string} - ${item["job"].retcode}`.includes(
-                          query
-                      )
+                    ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"]} - ${item["job"].retcode}`.includes(query)
                     : `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query)
             );
             SharedTreeProviders.job.refresh();

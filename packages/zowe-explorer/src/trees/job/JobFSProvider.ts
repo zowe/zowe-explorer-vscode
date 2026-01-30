@@ -48,7 +48,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             });
             const supportPagination = jesApi.supportSpoolPagination?.() ?? false;
             return paginationEnabled && supportPagination;
-        } catch (err) {
+        } catch (_err) {
             return false;
         }
     }
@@ -247,8 +247,8 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const recordsToFetch = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
 
         if (query.has("startLine")) {
-            const startLine = parseInt(query.get("startLine")!);
-            const endLine = query.has("endLine") ? parseInt(query.get("endLine")!) : startLine + (recordsToFetch - 1);
+            const startLine = parseInt(query.get("startLine"));
+            const endLine = query.has("endLine") ? parseInt(query.get("endLine")) : startLine + (recordsToFetch - 1);
             recordRange = `${startLine}-${endLine}`;
         } else {
             const defFetchSetting = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;

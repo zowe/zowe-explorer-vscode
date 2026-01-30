@@ -1082,7 +1082,7 @@ export class DatasetActions {
                             {
                                 displayName: vscode.l10n.t(displayName),
                                 description: description ? vscode.l10n.t(description) : undefined,
-                                value: getAttributeValue(key) as string | number | boolean,
+                                value: getAttributeValue(key),
                             },
                         ])
                     ),
@@ -2728,15 +2728,13 @@ export class DatasetActions {
             await datasetProvider.getTreeView().reveal(sessionNode, { select: true, focus: true, expand: true });
 
             if (targetMember && sessionNode.children && sessionNode.children.length > 0) {
-                const pdsNode = sessionNode.children.find((child) => child.label.toString().toUpperCase() === targetPattern) as IZoweDatasetTreeNode;
+                const pdsNode = sessionNode.children.find((child) => child.label.toString().toUpperCase() === targetPattern);
 
                 if (pdsNode && SharedContext.isPds(pdsNode)) {
                     await TreeViewUtils.expandNode(pdsNode, datasetProvider);
 
                     if (pdsNode.children) {
-                        const memberNode = pdsNode.children.find(
-                            (child) => child.label.toString().toUpperCase() === targetMember
-                        ) as IZoweDatasetTreeNode;
+                        const memberNode = pdsNode.children.find((child) => child.label.toString().toUpperCase() === targetMember);
 
                         if (memberNode) {
                             try {

@@ -88,7 +88,7 @@ export default tseslint.config(
       "no-magic-numbers": [
         "warn",
         {
-          ignore: [-2, -1, 0, 1, 2, 4],
+          ignore: [-2, -1, 0, 1, 2, 3, 4],
         },
       ],
       "no-multiple-empty-lines": "warn",

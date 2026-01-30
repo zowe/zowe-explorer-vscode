@@ -44,7 +44,9 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         RIGHT: "\x1b[C",
         LEFT: "\x1b[D",
         hasModKey: (key: string): boolean => {
-            if (key.startsWith("\x1b[1;") || key.startsWith("\x1b[3;")) return true;
+            if (key.startsWith("\x1b[1;") || key.startsWith("\x1b[3;")) {
+                return true;
+            }
             return false;
         },
     };
@@ -110,7 +112,9 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.writeCmd();
         if (this.charArrayCmd.length > this.cursorPosition) {
             const getPos = (char: string) => {
-                if (char === ZoweTerminal.invalidChar) return 1;
+                if (char === ZoweTerminal.invalidChar) {
+                    return 1;
+                }
                 const charBytes = Buffer.from(char).length;
                 return charBytes > 2 ? 2 : 1;
             };
@@ -132,7 +136,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private closeEmitter = new vscode.EventEmitter<void>();
     public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
 
-    public open(initialDimensions?: vscode.TerminalDimensions | undefined): void {
+    public open(initialDimensions?: vscode.TerminalDimensions): void {
         this.mCols = initialDimensions?.columns ?? 80;
 
         this.writeLine(this.chalk.dim.italic(this.mMessage));
@@ -165,11 +169,21 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
 
     private isPrintable(char: string): boolean {
         const codePoint = char.codePointAt(0);
-        if (codePoint === undefined) return false;
-        if (codePoint >= 0x20 && codePoint <= 0x7e) return true;
-        if (codePoint >= 0xa0 && codePoint <= 0xd7ff) return true; // Control characters
-        if (codePoint >= 0xe000 && codePoint <= 0xfffd) return true; // Private use area
-        if (codePoint >= 0x10000 && codePoint <= 0x10ffff) return true; // Supplemental planes
+        if (codePoint === undefined) {
+            return false;
+        }
+        if (codePoint >= 0x20 && codePoint <= 0x7e) {
+            return true;
+        }
+        if (codePoint >= 0xa0 && codePoint <= 0xd7ff) {
+            return true;
+        } // Control characters
+        if (codePoint >= 0xe000 && codePoint <= 0xfffd) {
+            return true;
+        } // Private use area
+        if (codePoint >= 0x10000 && codePoint <= 0x10ffff) {
+            return true;
+        } // Supplemental planes
         return false;
     }
 
@@ -226,7 +240,9 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                     // ---------------------------------------
                     // Note: `.call(this, ` is intentional since without it, it's possible for VSCode to not remember what `this` is
                     (isForgetCommand ? this.writeLine : this.write).call(this, this.chalk.italic.yellow("\r\nOperation completed: ") + cmd + "\r\n");
-                    if (isAsyncCommand) this.writeLine.call(this, output.trim().split("\n").join("\r\n"));
+                    if (isAsyncCommand) {
+                        this.writeLine.call(this, output.trim().split("\n").join("\r\n"));
+                    }
                     this.handleInput.call(this, currentCmd);
                     // ---------------------------------------
                 });
@@ -238,7 +254,9 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                             this.controller = new AbortController();
                             resolve(null);
                         });
-                        if (!this.isCommandRunning) resolve(null);
+                        if (!this.isCommandRunning) {
+                            resolve(null);
+                        }
                     }),
                 ]);
                 this.isCommandRunning = false;
@@ -258,15 +276,24 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     // Handle input from the terminal
     public async handleInput(data: string): Promise<void> {
         if (this.isCommandRunning) {
-            if ([ZoweTerminal.Keys.CTRL_C, ZoweTerminal.Keys.CTRL_D].includes(data)) this.controller.abort();
-            if (data === ZoweTerminal.Keys.CTRL_D) this.close();
-            else this.pressedCtrlC = true;
+            if ([ZoweTerminal.Keys.CTRL_C, ZoweTerminal.Keys.CTRL_D].includes(data)) {
+                this.controller.abort();
+            }
+            if (data === ZoweTerminal.Keys.CTRL_D) {
+                this.close();
+            } else {
+                this.pressedCtrlC = true;
+            }
             return;
         }
-        if (ZoweTerminal.Keys.hasModKey(data)) return;
+        if (ZoweTerminal.Keys.hasModKey(data)) {
+            return;
+        }
         switch (data) {
             case ZoweTerminal.Keys.CTRL_C:
-                if (this.pressedCtrlC) this.close();
+                if (this.pressedCtrlC) {
+                    this.close();
+                }
                 if (this.command.length > 0) {
                     this.command = "";
                     this.handleEnter();

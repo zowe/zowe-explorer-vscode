@@ -225,7 +225,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 if (job.retcode) {
                     nodeTitle =
                         job["exec-member"] !== undefined && job["exec-member"] !== ""
-                            ? `${job.jobname}(${job.jobid}) - ${job["exec-member"] as string} - ${job.retcode}`
+                            ? `${job.jobname}(${job.jobid}) - ${job["exec-member"]} - ${job.retcode}`
                             : `${job.jobname}(${job.jobid}) - ${job.retcode}`;
                 } else {
                     nodeTitle = `${job.jobname}(${job.jobid}) - ${job.status}`;
@@ -287,6 +287,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             let keyToSortBy = JobUtils.JOB_SORT_KEYS[sortOpts.method];
             let xCompare, yCompare;
             if (!x.job[keyToSortBy] && !y.job[keyToSortBy]) {
+                // eslint-disable-next-line no-magic-numbers
                 keyToSortBy = JobUtils.JOB_SORT_KEYS[3];
             } else if (!x.job[keyToSortBy]) {
                 return 1;
