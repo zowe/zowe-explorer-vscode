@@ -302,6 +302,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<UssDirectory | UssFile> {
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: uriInfo.profileName });
 

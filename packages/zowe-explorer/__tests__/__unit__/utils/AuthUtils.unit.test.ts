@@ -38,6 +38,7 @@ import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
+import { IProfAttrs } from "@zowe/imperative";
 
 jest.mock("../../../src/tools/ZoweLocalStorage");
 const testProfile = createIProfile();
@@ -165,12 +166,26 @@ describe("AuthUtils", () => {
 
     describe("retryRequest", () => {
         let loadNamedProfileMock;
+        let getProfileFromConfigMock;
         let mockMvsApi;
         let promptForAuthErrorMock;
-
+        let profilesCacheMock: MockedProperty;
         beforeEach(() => {
             jest.clearAllMocks();
             jest.restoreAllMocks();
+
+            profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    getProfileFromConfig: jest.fn().mockResolvedValue({
+                        profType: "zosmf",
+                        profName: "sestest",
+                    }),
+                    ssoLogin: jest.fn(),
+                    promptCredentials: jest.fn(),
+                    profileHasSecureToken: jest.fn().mockResolvedValue(false),
+                } as any,
+                configurable: true,
+            });
 
             jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
                 getCommonApi: () => ({
@@ -180,8 +195,10 @@ describe("AuthUtils", () => {
 
             // Setup common mocks
             loadNamedProfileMock = jest.fn().mockReturnValue(createIProfile());
+            getProfileFromConfigMock = jest.fn().mockReturnValue({ profType: "zosmf", profName: "test" } as IProfAttrs);
             jest.spyOn(Profiles, "getInstance").mockReturnValue({
                 loadNamedProfile: loadNamedProfileMock,
+                getProfileFromConfig: getProfileFromConfigMock,
             } as any);
 
             mockMvsApi = {
@@ -207,6 +224,9 @@ describe("AuthUtils", () => {
         });
 
         afterEach(() => {
+            if (profilesCacheMock) {
+                profilesCacheMock[Symbol.dispose]();
+            }
             jest.clearAllMocks();
         });
 
@@ -282,6 +302,7 @@ describe("AuthUtils", () => {
                     getDefaultProfile: jest.fn().mockReturnValue("sestest"),
                     shouldRemoveTokenFromProfile: jest.fn().mockReturnValue(true),
                     loadNamedProfile: jest.fn(),
+                    getProfileFromConfig: jest.fn(),
                     getPropsForProfile: jest.fn().mockReturnValue([]),
                 } as any,
                 configurable: true,

@@ -370,6 +370,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<DirEntry | DsEntry> {
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: uriInfo.profileName });
         // Ensure that an entry exists for the given profile

@@ -34,7 +34,7 @@ import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { Definitions } from "../../../src/configuration/Definitions";
 import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
-import { SessConstants } from "@zowe/imperative";
+import { IProfAttrs, SessConstants } from "@zowe/imperative";
 
 jest.mock("../../../src/tools/ZoweLogger");
 jest.mock("../../../src/tools/ZoweLocalStorage");
@@ -1496,7 +1496,12 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("Profiles unit tests - function awaitExtenderType", () => {
         it("should create deferred promise for registered profile type", async () => {
-            const mockProfilesCache = { allProfiles: [] } as unknown as ProfilesCache;
+            const mockProfilesCache = {
+                allProfiles: [],
+                getProfileFromConfig: () => {
+                    return { profName: "test", profType: "zosmf" } as IProfAttrs;
+                },
+            } as unknown as ProfilesCache;
             const extenderProfileReadyGetSpy = jest.spyOn((ProfilesUtils as any).extenderProfileReady, "get");
             const extenderProfileReadySetSpy = jest.spyOn((ProfilesUtils as any).extenderProfileReady, "set");
 
