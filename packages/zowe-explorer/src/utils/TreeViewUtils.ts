@@ -70,11 +70,11 @@ export class TreeViewUtils {
     ): void {
         const newIcon = SharedContext.isSession(node)
             ? IconGenerator.getIconById(
-                  TreeViewUtils.getIconForValidationStatus(
-                      node,
-                      Profiles.getInstance().profilesForValidation.find((p) => p.name === node.label)?.status
-                  )
-              )
+                TreeViewUtils.getIconForValidationStatus(
+                    node,
+                    Profiles.getInstance().profilesForValidation.find((p) => p.name === node.label)?.status
+                )
+            )
             : IconGenerator.getIconByNode(newCollapsibleState ? { ...node, collapsibleState: newCollapsibleState } : node);
         if (!newIcon) {
             return;
@@ -108,6 +108,7 @@ export class TreeViewUtils {
             }
         });
         // Delete from Sessions list
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const setting: any = ZoweLocalStorage.getValue(treeType);
         let sess: string[] = setting.sessions;
         let fave: string[] = setting.favorites;
@@ -154,7 +155,7 @@ export class TreeViewUtils {
             if ((doc.fileName === currentFilePath || SharedUtils.checkIfChildPath(currentFilePath, doc.fileName)) && doc.isDirty) {
                 ZoweLogger.error(
                     `TreeViewUtils.errorForUnsavedResource: detected unsaved changes in ${doc.fileName},` +
-                        `trying to ${action} node: ${node.label as string}`
+                    `trying to ${action} node: ${node.label as string}`
                 );
                 Gui.errorMessage(
                     l10n.t({

@@ -287,7 +287,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             let keyToSortBy = JobUtils.JOB_SORT_KEYS[sortOpts.method];
             let xCompare, yCompare;
             if (!x.job[keyToSortBy] && !y.job[keyToSortBy]) {
-                // eslint-disable-next-line no-magic-numbers
+                 
                 keyToSortBy = JobUtils.JOB_SORT_KEYS[3];
             } else if (!x.job[keyToSortBy]) {
                 return 1;

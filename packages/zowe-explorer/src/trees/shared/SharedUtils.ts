@@ -387,11 +387,11 @@ export class SharedUtils {
                 comment: ["Node label"],
             }),
             currentEncoding &&
-                vscode.l10n.t({
-                    message: "Current encoding is {0}",
-                    args: [currentEncoding],
-                    comment: ["Encoding name"],
-                })
+            vscode.l10n.t({
+                message: "Current encoding is {0}",
+                args: [currentEncoding],
+                comment: ["Encoding name"],
+            })
         );
 
         return SharedUtils.processEncodingResponse(response, node.label as string);
@@ -619,16 +619,16 @@ export class SharedUtils {
 
             // compare vols (could be stored across multiple vols!)
             const srcVols = srcDataset.vols
-                ? (Array.isArray(srcDataset.vols) ? srcDataset.vols : [srcDataset.vols]).map((v: any) => String(v).trim().toUpperCase())
+                ? (Array.isArray(srcDataset.vols) ? srcDataset.vols : [srcDataset.vols]).map((v: unknown) => String(v).trim().toUpperCase())
                 : [];
             const dstVols = dstDataset.vols
-                ? (Array.isArray(dstDataset.vols) ? dstDataset.vols : [dstDataset.vols]).map((v: any) => String(v).trim().toUpperCase())
+                ? (Array.isArray(dstDataset.vols) ? dstDataset.vols : [dstDataset.vols]).map((v: unknown) => String(v).trim().toUpperCase())
                 : [];
 
             srcVols.sort();
             dstVols.sort();
 
-            const volsAreEqual = srcVols.length === dstVols.length && srcVols.every((vol: any, idx: number) => vol === dstVols[idx]);
+            const volsAreEqual = srcVols.length === dstVols.length && srcVols.every((vol: unknown, idx: number) => vol === dstVols[idx]);
 
             // Hostname comparison is used as a best-effort check to determine whether
             // source and destination profiles point to the same z/OS system. In cases where
@@ -669,7 +669,7 @@ export class SharedUtils {
     /**
      * Gets a string property from a node, whether it's a string or an object with that property
      */
-    public static getNodeProperty(node: any, prop: string): string | null {
+    public static getNodeProperty(node: IZoweTreeNode, prop: string): string | null {
         if (!node || node[prop] == null) {
             return null;
         }

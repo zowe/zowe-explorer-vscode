@@ -183,8 +183,7 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
             }
             const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;
             const data = inputIsBuffer ? input.toString() : fs.readFileSync(input, { encoding: "utf8" });
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const transferOptions: Record<string, any> = {
+            const transferOptions: Record<string, unknown> = {
                 content: inputIsBuffer ? input : undefined,
                 encoding: options.encoding,
                 localFile: inputIsBuffer ? undefined : input,

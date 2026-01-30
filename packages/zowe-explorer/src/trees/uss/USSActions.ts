@@ -341,7 +341,7 @@ export class USSActions {
             selectedNodes = ussFileProvider.getTreeView().selection;
         }
         selectedNodes = selectedNodes.filter((x) => SharedContext.isDocument(x) || SharedContext.isUssDirectory(x) || SharedContext.isBinary(x));
-        const fileNames = selectedNodes.map(({ label }) => label.toString());
+        const fileNames = selectedNodes.map(({ label }) => label as string);
         const displayedFileNames = fileNames.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
         const additionalFilesCount = fileNames.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
         const message = vscode.l10n.t({
@@ -613,7 +613,7 @@ export class USSActions {
     public static async filterUssTree(ussFileProvider: Types.IZoweUSSTreeType, sessionName: string, ussPath: string): Promise<void> {
         ZoweLogger.trace("uss.actions.filterUssTree called.");
         let sessionNode: IZoweUSSTreeNode | undefined = ussFileProvider.mSessionNodes.find(
-            (ussNode) => ussNode.label.toString() === sessionName.trim()
+            (ussNode) => ussNode.label as string === sessionName.trim()
         ) as IZoweUSSTreeNode;
         if (!sessionNode) {
             try {
@@ -622,7 +622,7 @@ export class USSActions {
                 await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Uss, profile: sessionName });
                 return;
             }
-            sessionNode = ussFileProvider.mSessionNodes.find((ussNode) => ussNode.label.toString() === sessionName.trim()) as IZoweUSSTreeNode;
+            sessionNode = ussFileProvider.mSessionNodes.find((ussNode) => ussNode.label as string === sessionName.trim()) as IZoweUSSTreeNode;
         }
 
         // Clear any existing children to avoid conflicts with cached entries

@@ -80,18 +80,18 @@ export class SharedActions {
             if (SharedContext.isDs(item) || SharedContext.isPdsNotFav(item) || SharedContext.isVsam(item)) {
                 if (SharedContext.isDsMember(item)) {
                     qpItem = new FilterItem({
-                        text: `[${item.getSessionNode().label.toString()}]: ${item.getParent().label.toString()}(${item.label.toString()})`,
+                        text: `[${item.getSessionNode().label as string}]: ${item.getParent().label as string}(${item.label as string})`,
                         description: "Data Set Member",
                     });
                 } else {
                     qpItem = new FilterItem({
-                        text: `[${item.getSessionNode().label.toString()}]: ${item.label.toString()}`,
+                        text: `[${item.getSessionNode().label as string}]: ${item.label as string}`,
                         description: "Data Set",
                     });
                 }
                 qpItems.push(qpItem);
             } else if (SharedContext.isUssDirectory(item) || SharedContext.isText(item) || SharedContext.isBinary(item)) {
-                const filterItem = `[${item.getProfileName().trim()}]: ${item.getParent().fullPath}/${item.label.toString()}`;
+                const filterItem = `[${item.getProfileName().trim()}]: ${item.getParent().fullPath}/${item.label as string}`;
                 qpItem = new FilterItem({ text: filterItem, description: "USS" });
                 qpItems.push(qpItem);
             }
@@ -138,14 +138,14 @@ export class SharedActions {
             } else {
                 // Data set nodes
                 const sessions = await datasetProvider.getChildren();
-                const sessionNode = sessions.filter((session) => session.label.toString() === sessionName)[0];
+                const sessionNode = sessions.filter((session) => session.label as string === sessionName)[0];
                 let children = await datasetProvider.getChildren(sessionNode);
-                const node = children.filter((child) => child.label.toString() === nodeName)[0];
+                const node = children.filter((child) => child.label as string === nodeName)[0];
 
                 if (memberName) {
                     // Members
                     children = await datasetProvider.getChildren(node);
-                    const member = children.filter((child) => child.label.toString() === memberName)[0];
+                    const member = children.filter((child) => child.label as string === memberName)[0];
                     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                     await datasetProvider.getTreeView().reveal(member, { select: true, focus: true, expand: false });
 
@@ -198,7 +198,7 @@ export class SharedActions {
             if (pattern.indexOf("/") > -1) {
                 // USS file was selected
                 const filePath = pattern.substring(pattern.indexOf("/"));
-                const sessionNode = ussTree.mSessionNodes.find((sessNode) => sessNode.label.toString().toLowerCase() === sessionName.toLowerCase());
+                const sessionNode = ussTree.mSessionNodes.find((sessNode) => (sessNode.label as string).toLowerCase() === sessionName.toLowerCase());
                 if (!sessionNode) {
                     Gui.showMessage(vscode.l10n.t("Profile not found."));
                     return;
@@ -207,7 +207,7 @@ export class SharedActions {
             } else {
                 // Data set was selected
                 const sessionNode = datasetTree.mSessionNodes.find(
-                    (sessNode) => sessNode.label.toString().toLowerCase() === sessionName.toLowerCase()
+                    (sessNode) => (sessNode.label as string).toLowerCase() === sessionName.toLowerCase()
                 );
                 if (!sessionNode) {
                     Gui.showMessage(vscode.l10n.t("Profile not found."));
@@ -279,7 +279,7 @@ export class SharedActions {
             }
 
             // Use getProfileName() instead of parsing label
-            const profileName = sessNode.getProfileName ? sessNode.getProfileName() : sessNode.label.toString().trim();
+            const profileName = sessNode.getProfileName ? sessNode.getProfileName() : (sessNode.label as string)?.trim();
             const profile = Profiles.getInstance().allProfiles.find((p) => p.name === profileName);
 
             if (profile) {
@@ -301,8 +301,8 @@ export class SharedActions {
         }
 
         for (const sessNode of [...treeProvider.mSessionNodes, ...treeProvider.mFavorites]) {
-            const isFavoritesFolder = sessNode.label.toString() === vscode.l10n.t("Favorites");
-            if (isFavoritesFolder || Profiles.getInstance().allProfiles.some((p) => p.name === sessNode.label.toString().trim())) {
+            const isFavoritesFolder = (sessNode.label as string) === vscode.l10n.t("Favorites");
+            if (isFavoritesFolder || Profiles.getInstance().allProfiles.some((p) => p.name === (sessNode.label as string)?.trim())) {
                 sessNode.dirty = true;
                 SharedActions.returnIconState(sessNode, treeProvider);
                 if (!isFavoritesFolder) {
@@ -310,7 +310,7 @@ export class SharedActions {
                 }
                 treeProvider.refreshElement(sessNode);
             } else {
-                await TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
+                await TreeViewUtils.removeSession(treeProvider, (sessNode.label as string)?.trim());
             }
         }
 

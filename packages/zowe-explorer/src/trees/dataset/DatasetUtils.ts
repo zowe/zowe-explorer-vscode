@@ -23,7 +23,7 @@ export class DatasetUtils {
         `$(fold) ${vscode.l10n.t("Sort Direction")}`,
     ];
 
-    // eslint-disable-next-line no-magic-numbers
+     
     public static readonly DATASET_FILTER_OPTS = [this.DATASET_SORT_OPTS[2], this.DATASET_SORT_OPTS[3]];
 
     public static getProfileAndDataSetName(node: Types.IZoweNodeType): {

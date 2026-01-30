@@ -16,6 +16,7 @@ import { ProfileManagement } from "../management/ProfileManagement";
 import { Profiles } from "../configuration/Profiles";
 import { randomUUID } from "crypto";
 import { Definitions } from "../configuration/Definitions";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import Mustache = require("mustache");
 import * as fs from "fs";
 
@@ -56,7 +57,7 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
 
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-        webviewView.webview.onDidReceiveMessage(async (message: any) => {
+        webviewView.webview.onDidReceiveMessage(async (message: { command: string, text: string, profile: string }) => {
             const command = message.command;
             const text = message.text;
             const profile = message.profile;

@@ -196,9 +196,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             try {
                 const encodingInfo = await sourceNode.getEncoding();
                 // If the encoding is binary, we need to force upload it as binary
-                const queryString = `forceUpload=true${
-                    encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
-                }`;
+                const queryString = `forceUpload=true${encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
+                    }`;
                 await DatasetFSProvider.instance.writeFile(
                     destUri.with({
                         query: queryString,
@@ -698,7 +697,7 @@ Would you like to do this now?`,
         ZoweLogger.trace("DatasetTree.addSingleSession called.");
         if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
+            if (this.mSessionNodes.find((tNode) => tNode.label as string === profile.name)) {
                 return;
             }
             // If there is no API registered for the profile type, do nothing
@@ -835,7 +834,7 @@ Would you like to do this now?`,
 
     public renameNode(profileLabel: string, beforeLabel: string, afterLabel: string): void {
         ZoweLogger.trace("DatasetTree.renameNode called.");
-        const sessionNode = this.mSessionNodes.find((session) => session.label.toString() === profileLabel.trim());
+        const sessionNode = this.mSessionNodes.find((session) => session.label as string === profileLabel.trim());
         if (sessionNode) {
             const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
             if (matchingNode) {
@@ -920,7 +919,7 @@ Would you like to do this now?`,
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         return profileNodeInFavorites?.children.find(
-            (temp) => temp.label === node.getLabel().toString() && temp.contextValue.includes(node.contextValue)
+            (temp) => temp.label as string === node.getLabel() as string && temp.contextValue.includes(node.contextValue)
         );
     }
 
@@ -981,7 +980,7 @@ Would you like to do this now?`,
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((favorite) => {
                 const favoriteEntry =
-                    "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + SharedContext.getBaseContext(favorite) + "}";
+                    "[" + (profileNode.label as string) + "]: " + (favorite.label as string) + "{" + SharedContext.getBaseContext(favorite) + "}";
                 favoritesArray.push(favoriteEntry);
             });
         });
@@ -1019,9 +1018,9 @@ Would you like to do this now?`,
 
         // Remove favorited profile from UI
         this.mFavorites.forEach((favProfileNode) => {
-            const favProfileLabel = favProfileNode.label?.toString();
+            const favProfileLabel = favProfileNode.label as string;
             if (favProfileLabel === profileName) {
-                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.toString() !== favProfileLabel);
+                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label as string !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();
             }
@@ -1035,7 +1034,7 @@ Would you like to do this now?`,
         ZoweLogger.trace("DatasetTree.onDidChangeConfiguration called.");
         // Empties the persistent favorites & history arrays, if the user has set persistence to False
         if (e.affectsConfiguration(DatasetTree.persistenceSchema)) {
-            const setting: any = {
+            const setting: { persistence: boolean; favorites: string[]; history: string[] } = {
                 ...SettingsConfig.getDirectValue(DatasetTree.persistenceSchema),
             };
             if (!setting.persistence) {
@@ -1228,7 +1227,7 @@ Would you like to do this now?`,
         let children = await sessionNode.getChildren();
 
         // Find parent node in tree
-        parentNode = children.find((child) => child.label.toString() === parentName);
+        parentNode = children.find((child) => child.label as string === parentName);
         if (parentNode) {
             parentNode.label = parentNode.tooltip = parentNode.pattern = parentName;
             parentNode.dirty = true;
@@ -1242,7 +1241,7 @@ Would you like to do this now?`,
         if (itemPath.indexOf("(") > -1) {
             parentNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             children = await parentNode.getChildren();
-            memberNode = children.find((child) => child.label.toString() === memberName);
+            memberNode = children.find((child) => child.label as string === memberName);
             if (!memberNode) {
                 Gui.showMessage(vscode.l10n.t("Node does not exist. It may have been deleted."));
                 this.removeFileHistory(itemPath);
@@ -1457,8 +1456,8 @@ Would you like to do this now?`,
             pattern = node.getLabel() as string;
             const sessionName = node.getProfileName();
             await this.addSession({ sessionName });
-            const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionName);
-            if (!nonFavNode.getSession().ISession.user || !nonFavNode.getSession().ISession.password) {
+            const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.label as string === sessionName);
+            if (nonFavNode && (!nonFavNode.getSession().ISession.user || !nonFavNode.getSession().ISession.password)) {
                 nonFavNode.getSession().ISession.user = node.getSession().ISession.user;
                 nonFavNode.getSession().ISession.password = node.getSession().ISession.password;
                 nonFavNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
@@ -1589,7 +1588,7 @@ Would you like to do this now?`,
         // Try to find in session nodes
         for (const session of this.mSessionNodes) {
             const children = await session.getChildren();
-            const foundNode = children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+            const foundNode = children.find((child) => (child.label as string)?.toUpperCase() === dsName.toUpperCase());
             if (foundNode) {
                 await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
                 return true;
@@ -1599,7 +1598,7 @@ Would you like to do this now?`,
         // Try to find in favorites
         for (const favNode of this.mFavorites) {
             if (favNode.children && favNode.children.length > 0) {
-                const foundNode = favNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+                const foundNode = favNode.children.find((child) => (child.label as string)?.toUpperCase() === dsName.toUpperCase());
                 if (foundNode) {
                     // Cannot just reveal foundNode as it will not expand out fully
                     await this.getTreeView().reveal(favNode, { expand: true });
@@ -1610,7 +1609,7 @@ Would you like to do this now?`,
         }
 
         // Not found: set filter on the session node and reveal
-        const sessionNode = this.mSessionNodes.find((session) => session.label?.toString().toUpperCase() === sessProfile.name.toUpperCase());
+        const sessionNode = this.mSessionNodes.find((session) => (session.label as string)?.toUpperCase() === sessProfile.name.toUpperCase());
         if (sessionNode) {
             sessionNode.pattern = dsName.toUpperCase();
             sessionNode.dirty = true;
@@ -1619,7 +1618,7 @@ Would you like to do this now?`,
             } catch (_error) {
                 return false;
             }
-            const pdsNode = sessionNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+            const pdsNode = sessionNode.children.find((child) => (child.label as string)?.toUpperCase() === dsName.toUpperCase());
             if (pdsNode) {
                 await this.getTreeView().reveal(pdsNode, { select: true, focus: true, expand: true });
                 return true;
@@ -1811,15 +1810,15 @@ Would you like to do this now?`,
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                  message: "all PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              })
+                message: "all PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            })
             : vscode.l10n.t({
-                  message: "the PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              });
+                message: "the PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            });
         const selection = await Gui.showQuickPick(
             DatasetUtils.DATASET_SORT_OPTS.map((opt, i) => ({
                 label: sortOpts.method === i ? `${opt} $(check)` : opt,
@@ -1884,10 +1883,10 @@ Would you like to do this now?`,
         node.filter = newFilter;
         node.description = newFilter
             ? vscode.l10n.t({
-                  message: "Filter: {0}",
-                  args: [newFilter.value],
-                  comment: ["Filter value"],
-              })
+                message: "Filter: {0}",
+                args: [newFilter.value],
+                comment: ["Filter value"],
+            })
             : null;
         this.nodeDataChanged(node);
 
@@ -1948,15 +1947,15 @@ Would you like to do this now?`,
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                  message: "all PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              })
+                message: "all PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            })
             : vscode.l10n.t({
-                  message: "the PDS members in {0}",
-                  args: [node.label as string],
-                  comment: ["Node label"],
-              });
+                message: "the PDS members in {0}",
+                args: [node.label as string],
+                comment: ["Node label"],
+            });
         const clearFilter = isSession
             ? `$(clear-all) ${vscode.l10n.t("Clear filter for profile")}`
             : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;

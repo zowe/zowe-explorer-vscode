@@ -28,7 +28,7 @@ export class SharedHistoryView extends WebView {
 
     public constructor(context: ExtensionContext, treeProviders: Definitions.IZoweProviders, cmdProviders?: Definitions.IZoweCommandProviders) {
         super(Constants.SHARED_HISTORY_PANEL_TITLE, "edit-history", context, {
-            onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
+            onDidReceiveMessage: (message: { command: string }) => this.onDidReceiveMessage(message),
             retainContext: true,
         });
         this.treeProviders = treeProviders;
@@ -36,6 +36,7 @@ export class SharedHistoryView extends WebView {
         this.currentSelection = { ds: "search", uss: "search", jobs: "search", cmds: "mvs" };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected async onDidReceiveMessage(message: any): Promise<void> {
         ZoweLogger.trace("HistoryView.onDidReceiveMessage called.");
         switch (message.command) {
@@ -57,7 +58,7 @@ export class SharedHistoryView extends WebView {
                 });
                 break;
             case "show-error":
-                this.showError(message);
+                this.showError(message as { attrs: { errorMsg: string } });
                 break;
             case "update-selection":
                 await this.updateSelection(message);
@@ -127,18 +128,18 @@ export class SharedHistoryView extends WebView {
         return ZoweLocalStorage.getValue<string[]>(Definitions.LocalStorageKey.ENCODING_HISTORY) ?? [];
     }
 
-    private showError(message): void {
+    private showError(message: { attrs: { errorMsg: string } }): void {
         ZoweLogger.trace("HistoryView.showError called.");
         Gui.errorMessage(message.attrs.errorMsg);
     }
 
-    private async updateSelection(message): Promise<void> {
+    private async updateSelection(message: { attrs: { type: string; selection: string } }): Promise<void> {
         ZoweLogger.trace("HistoryView.updateSelection called.");
         this.currentSelection[message.attrs.type] = message.attrs.selection;
         await this.refreshView(message);
     }
 
-    private async addItem(message): Promise<void> {
+    private async addItem(message: { attrs: { type: string } }): Promise<void> {
         ZoweLogger.trace("HistoryView.addItem called.");
 
         const example = message.attrs.type === "ds" ? "e.g: USER.PDS.*" : "e.g: /u/user/mydir";
@@ -154,7 +155,7 @@ export class SharedHistoryView extends WebView {
         await this.refreshView(message);
     }
 
-    private async removeItem(message): Promise<void> {
+    private async removeItem(message: { attrs: { type: string; selection: string; selectedItems: { [key: string]: boolean } } }): Promise<void> {
         ZoweLogger.trace("HistoryView.removeItem called.");
         const treeProvider = this.getTreeProvider(message.attrs.type);
         switch (message.attrs.selection) {
@@ -199,7 +200,7 @@ export class SharedHistoryView extends WebView {
         await this.refreshView(message);
     }
 
-    private async clearAll(message): Promise<void> {
+    private async clearAll(message: { attrs: { type: string; selection: string } }): Promise<void> {
         ZoweLogger.trace("HistoryView.clearAll called.");
         const treeProvider = this.getTreeProvider(message.attrs.type);
         const infoMessage = vscode.l10n.t("Clear all history items for this persistent property?");
@@ -230,7 +231,7 @@ export class SharedHistoryView extends WebView {
         }
     }
 
-    private async refreshView(message): Promise<void> {
+    private async refreshView(message: { attrs: { type: string } }): Promise<void> {
         ZoweLogger.trace("HistoryView.refreshView called.");
         this.currentTab = Constants.HISTORY_VIEW_TABS[(message.attrs.type as string).toUpperCase()];
         await this.panel.webview.postMessage({

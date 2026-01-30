@@ -50,7 +50,7 @@ export class SharedTreeProviders {
         const sessions: Types.IZoweNodeType[] = [];
         for (const key of Object.keys(SharedTreeProviders.providers)) {
             const provider = SharedTreeProviders.providers[key];
-            const session = provider.mSessionNodes.find((mSessionNode: Types.IZoweNodeType) => mSessionNode.getLabel().toString() === name);
+            const session = provider.mSessionNodes.find((mSessionNode: Types.IZoweNodeType) => mSessionNode.getLabel() as string === name);
             if (session) {
                 sessions.push(session);
             }
@@ -64,14 +64,14 @@ export class SharedTreeProviders {
     }
 
     public static contextValueExistsAcrossTrees(node: Types.IZoweNodeType, contextValue: string): boolean {
-        const sessions = this.getSessionForAllTrees(node.getLabel().toString());
+        const sessions = this.getSessionForAllTrees(node.getLabel() as string);
         const sessionContextInOtherTree = sessions.find(
             (session) => session.contextValue.includes(contextValue) && SharedContext.getSessionType(session) !== SharedContext.getSessionType(node)
         );
         return sessionContextInOtherTree !== undefined;
     }
 
-    public static getProviderForNode(node: Types.IZoweNodeType): IZoweTree<any> {
+    public static getProviderForNode(node: Types.IZoweNodeType): IZoweTree<unknown> {
         if (SharedContext.isDatasetNode(node) || SharedContext.isDsSession(node)) {
             return SharedTreeProviders.ds;
         } else if (SharedContext.isUssNode(node) || SharedContext.isUssSession(node)) {

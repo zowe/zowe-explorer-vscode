@@ -76,6 +76,7 @@ export class ProfilesUtils {
      * Get the credential manager options from imperative.json
      * @returns Record<string, any> | undefined the credential manager options, or undefined if not specified
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static getCredentialManagerOptions(): Record<string, any> | undefined {
         return ProfilesCache.getCredentialManagerOptions();
     }
@@ -117,7 +118,7 @@ export class ProfilesUtils {
      * @returns Promise<imperative.ICredentialManagerConstructor> the constructor of the activated credential manager
      */
     public static async activateCredentialManagerOverride(
-        credentialManagerExtension: vscode.Extension<any>
+        credentialManagerExtension: vscode.Extension<unknown>
     ): Promise<imperative.ICredentialManagerConstructor | undefined> {
         try {
             ZoweLogger.trace("ProfilesUtils.activateCredentialManagerOverride called.");
@@ -532,6 +533,7 @@ export class ProfilesUtils {
         } catch (_error) {
             ZoweLogger.debug(vscode.l10n.t("Reading imperative.json failed. Will try to create file."));
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let settings: any;
         if (fileContent) {
             try {

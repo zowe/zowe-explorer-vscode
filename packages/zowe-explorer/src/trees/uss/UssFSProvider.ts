@@ -535,7 +535,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // only show a status message if "noStatusMsg" is not specified,
             // or if the entry does not exist and the new contents are empty (new placeholder entry)
             options?.noStatusMsg || (!entry && content.byteLength === 0)
-                ? new vscode.Disposable(() => {})
+                ? new vscode.Disposable(() => { })
                 : Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Saving USS file...")}`);
 
         // Wait for any ongoing authentication process to complete
@@ -708,7 +708,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             await AuthUtils.retryRequest(entry.metadata.profile, async () => {
                 await ZoweExplorerApiRegister.getUssApi(profile).rename(entry.metadata.path, newPath);
             });
-        } catch (err: any) {
+        } catch (err) {
             if (err instanceof vscode.FileSystemError && err.code === "FileExists") {
                 try {
                     const fileList = await this.listFiles(profile, newUri, true);
@@ -716,13 +716,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         Gui.errorMessage(err.message);
                         return;
                     }
-                } catch (err) {
-                    if (err.name === "Error" && Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
+                } catch (listFilesErr) {
+                    if (listFilesErr.name === "Error" && Number(listFilesErr.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
                         const parent = this.lookupParentDirectory(newUri);
                         parent.entries.delete(path.posix.basename(newUri.path));
                         await ZoweExplorerApiRegister.getUssApi(profile).rename(entry.metadata.path, newPath);
                     } else {
-                        throw err;
+                        throw listFilesErr;
                     }
                 }
             } else {
@@ -814,7 +814,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return this.copyTree(source, destination, { ...options, tree: sourceTree });
     }
 
-    private buildFileName(fileList: any[], fileName: string): string {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private buildFileName(fileList: any, fileName: string): string {
         // Check root path for conflicts
         if (fileList?.find((file) => file.name === fileName) != null) {
             // If file names match, build the copy suffix
@@ -948,10 +949,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const entry = new UssDirectory(basename);
         const profInfo = !uriInfo.isRoot
             ? {
-                  profile: uriInfo.profile,
-                  // we can strip profile name from path because its not involved in API calls
-                  path: path.posix.join(parent.metadata.path, basename),
-              }
+                profile: uriInfo.profile,
+                // we can strip profile name from path because its not involved in API calls
+                path: path.posix.join(parent.metadata.path, basename),
+            }
             : this._getInfoFromUri(uri);
         entry.metadata = profInfo;
 
@@ -966,7 +967,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
     public watch(_resource: vscode.Uri, _options?: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
-        return new vscode.Disposable(() => {});
+        return new vscode.Disposable(() => { });
     }
 
     /**

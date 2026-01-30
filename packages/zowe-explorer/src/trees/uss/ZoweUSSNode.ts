@@ -99,7 +99,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
         const isSession = this.getParent() == null;
         if (isSession) {
-            this.id = `uss.${this.label.toString()}`;
+            this.id = `uss.${this.label as string}`;
             this.tooltip = opts.label;
         }
         if (opts.profile) {
@@ -243,7 +243,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         const existingItems: Record<string, ZoweUSSNode> = {};
         for (const element of this.children as ZoweUSSNode[]) {
-            existingItems[`${element.parentPath}/${element.label.toString()}`] = element;
+            existingItems[`${element.parentPath}/${element.label as string}`] = element;
         }
         const responseNodes: IZoweUSSTreeNode[] = [];
         for (const item of response.apiResponse.items) {
@@ -392,7 +392,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         try {
             await vscode.workspace.fs.rename(oldUri, newUri, { overwrite: false });
-        } catch (err: any) {
+        } catch (err) {
             if (err instanceof vscode.FileSystemError && err.code === "FileExists") {
                 const parent = UssFSProvider.instance.lookupParentDirectory(newUri);
                 parent.entries.delete(path.posix.basename(newUri.path));
@@ -466,14 +466,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         Gui.showMessage(
             vscode.l10n.t({
                 message: "The item {0} has been deleted.",
-                args: [this.label.toString()],
+                args: [this.label as string],
                 comment: ["Label"],
             })
         );
 
         // Remove node from the USS Favorites tree
         await ussFileProvider.removeFavorite(this);
-        ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.parentPath}/${this.label.toString()}`);
+        ussFileProvider.removeFileHistory(`[${this.getProfileName()}]: ${this.parentPath}/${this.label as string}`);
         const parent = this.getParent();
         parent.children = parent.children.filter((c) => c !== this);
         if (ussFileProvider.nodeDataChanged) {
@@ -706,8 +706,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     SharedContext.isFavorite(this)
                         ? this.resourceUri
                         : this.resourceUri.with({
-                              path: path.posix.join(this.resourceUri.path, this.fullPath),
-                          })
+                            path: path.posix.join(this.resourceUri.path, this.fullPath),
+                        })
                 );
             } else {
                 return await UssFSProvider.instance.listFiles(profile, this.resourceUri);
