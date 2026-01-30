@@ -225,6 +225,7 @@ describe("Table.View", () => {
             const view = new Table.View(globalMocks.context as any, { title: "Stable Table of Cables" } as any);
             globalMocks.updateWebviewMock.mockResolvedValueOnce(true);
             const cols = [
+                // eslint-disable-next-line @typescript-eslint/no-base-to-string
                 { field: "apple", valueFormatter: (data: { value: Table.ContentTypes }) => `${data.value?.toString()} apples` },
                 { field: "banana", comparator: (_valueA, _valueB, _nodeA, _nodeB, _isDescending) => -1, colSpan: (_params) => 2 },
                 { field: "orange", rowSpan: (_params) => 2 },

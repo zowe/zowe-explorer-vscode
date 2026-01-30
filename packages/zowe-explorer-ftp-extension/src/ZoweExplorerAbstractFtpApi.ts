@@ -9,7 +9,6 @@
  *
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { FTPConfig, zosNodeAccessor } from "@zowe/zos-ftp-for-zowe-cli";
 import * as crypto from "crypto";
 import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
@@ -24,7 +23,7 @@ export interface ConnectionType {
 export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
     private session?: FtpSession;
 
-    public constructor(public profile?: imperative.IProfileLoaded) {}
+    public constructor(public profile?: imperative.IProfileLoaded) { }
 
     public static getProfileTypeName(): string {
         return "zftp";

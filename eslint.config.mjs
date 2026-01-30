@@ -136,6 +136,7 @@ export default tseslint.config(
       "no-magic-numbers": "off",
       "@typescript-eslint/require-await": "warn",
       "@typescript-eslint/no-misused-promises": "warn",
+
       "@typescript-eslint/no-unsafe-return": "off",
       "@typescript-eslint/restrict-plus-operands": "warn",
       "@typescript-eslint/restrict-template-expressions": "warn",
@@ -147,6 +148,8 @@ export default tseslint.config(
       // New excluded rules to resolve errors
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-base-to-string": "warn",
+      "@typescript-eslint/no-var-requires": "off",
+      "@typescript-eslint/no-require-imports": "off",
     },
   }
 );

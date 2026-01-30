@@ -9,10 +9,6 @@
  *
  */
 
-/* eslint-disable @typescript-eslint/unbound-method */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-var-requires */
-
 import { FtpJesApi } from "../../../src/ZoweExplorerFtpJesApi";
 import { DataSetUtils, JobUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import TestUtils from "../utils/TestUtils";
