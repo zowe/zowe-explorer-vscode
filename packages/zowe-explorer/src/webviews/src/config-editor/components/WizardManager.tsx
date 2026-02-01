@@ -9,92 +9,68 @@
  *
  */
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { ProfileWizardModal } from "./modals/ProfileWizardModal";
+import { useWizardContext } from "../context/WizardContext";
+import { useConfigContext } from "../context/ConfigContext";
 
-interface WizardManagerProps {
-  wizardModalOpen: boolean;
-  wizardRootProfile: string;
-  wizardSelectedType: string;
-  wizardProfileName: string;
-  wizardProperties: { key: string; value: string | boolean | number | Object; secure?: boolean }[];
-  wizardShowKeyDropdown: boolean;
-  wizardNewPropertyKey: string;
-  wizardNewPropertyValue: string;
-  wizardNewPropertySecure: boolean;
-  wizardMergedProperties: { [key: string]: any };
-  setWizardRootProfile: (profile: string) => void;
-  setWizardSelectedType: (type: string) => void;
-  setWizardProfileName: (name: string) => void;
-  setWizardShowKeyDropdown: (show: boolean) => void;
-  setWizardNewPropertyKey: (key: string) => void;
-  setWizardNewPropertyValue: (value: string) => void;
-  setWizardNewPropertySecure: (secure: boolean) => void;
-  getWizardTypeOptions: () => string[];
-  getWizardPropertyOptions: () => string[];
-  getWizardPropertyDescriptions: () => { [key: string]: string };
-  getPropertyType: (propertyKey: string) => string | undefined;
-  isProfileNameTaken: () => boolean;
-  handleWizardAddProperty: () => void;
-  handleWizardRemoveProperty: (index: number) => void;
-  handleWizardPropertyValueChange: (index: number, newValue: string) => void;
-  handleWizardPropertySecureToggle: (index: number) => void;
-  handleWizardCreateProfile: () => void;
-  handleWizardCancel: () => void;
-  requestWizardMergedProperties: () => void;
-  handleWizardPopulateDefaults: () => void;
-  selectedTab: number | null;
-  secureValuesAllowed: boolean;
-  vscodeApi: any;
-  getAvailableProfiles: () => string[];
-  canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
-  canPropertyBeSecureForWizard: (displayKey: string, profileType: string) => boolean;
-  stringifyValueByType: (value: any, type?: string) => string;
-  onWizardMergedProperties: (data: any) => void;
-  onFileSelected: (data: any) => void;
-}
+export function WizardManager() {
+  const { selectedTab } = useConfigContext();
+  const {
+    wizardModalOpen,
+    wizardRootProfile,
+    wizardSelectedType,
+    setWizardMergedProperties,
+    setWizardNewPropertyValue,
+    setWizardProperties,
+    requestWizardMergedProperties,
+  } = useWizardContext();
 
-export const WizardManager = ({
-  wizardModalOpen,
-  wizardRootProfile,
-  wizardSelectedType,
-  wizardProfileName,
-  wizardProperties,
-  wizardShowKeyDropdown,
-  wizardNewPropertyKey,
-  wizardNewPropertyValue,
-  wizardNewPropertySecure,
-  wizardMergedProperties,
-  setWizardRootProfile,
-  setWizardSelectedType,
-  setWizardProfileName,
-  setWizardShowKeyDropdown,
-  setWizardNewPropertyKey,
-  setWizardNewPropertyValue,
-  setWizardNewPropertySecure,
-  getWizardTypeOptions,
-  getWizardPropertyOptions,
-  getWizardPropertyDescriptions,
-  getPropertyType,
-  isProfileNameTaken,
-  handleWizardAddProperty,
-  handleWizardRemoveProperty,
-  handleWizardPropertyValueChange,
-  handleWizardPropertySecureToggle,
-  handleWizardCreateProfile,
-  handleWizardCancel,
-  requestWizardMergedProperties,
-  handleWizardPopulateDefaults,
-  selectedTab,
-  secureValuesAllowed,
-  vscodeApi,
-  getAvailableProfiles,
-  canPropertyBeSecure,
-  canPropertyBeSecureForWizard,
-  stringifyValueByType,
-  onWizardMergedProperties,
-  onFileSelected,
-}: WizardManagerProps) => {
+  const onWizardMergedProperties = useCallback((data: any) => {
+    const mergedPropsData: { [key: string]: any } = {};
+    if (Array.isArray(data.mergedArgs)) {
+      data.mergedArgs.forEach((item: any) => {
+        if (item.argName && item.argValue !== undefined) {
+          let correctValue = item.argValue;
+          if (item.dataType === "boolean") {
+            correctValue =
+              typeof item.argValue === "string" ? item.argValue.toLowerCase() === "true" : Boolean(item.argValue);
+          } else if (item.dataType === "number") {
+            const num = Number(item.argValue);
+            correctValue = typeof item.argValue === "string" && isNaN(num) ? item.argValue : num;
+          }
+          mergedPropsData[item.argName] = {
+            value: correctValue,
+            dataType: item.dataType,
+            secure: item.secure,
+            argLoc: item.argLoc,
+          };
+        }
+      });
+    }
+    setWizardMergedProperties(mergedPropsData);
+  }, [setWizardMergedProperties]);
+
+  const onFileSelected = useCallback(
+    (data: any) => {
+      if (data.filePath) {
+        if (data.isNewProperty && data.source === "wizard") {
+          setWizardNewPropertyValue(data.filePath);
+        } else {
+          const propertyIndex = data.propertyIndex;
+          if (propertyIndex !== undefined && propertyIndex >= 0) {
+            setWizardProperties((prev) => {
+              const updated = [...prev];
+              updated[propertyIndex] = { ...updated[propertyIndex], value: data.filePath };
+              return updated;
+            });
+          }
+        }
+      }
+    },
+    [setWizardNewPropertyValue, setWizardProperties]
+  );
+
   useEffect(() => {
     if (wizardModalOpen && selectedTab !== null && (wizardRootProfile || wizardSelectedType)) {
       const timeoutId = setTimeout(() => {
@@ -118,48 +94,5 @@ export const WizardManager = ({
     return () => window.removeEventListener("message", handleMessage);
   }, [onWizardMergedProperties, onFileSelected]);
 
-  return (
-    <ProfileWizardModal
-      key={`wizard-${wizardModalOpen}`}
-      isOpen={wizardModalOpen}
-      wizardRootProfile={wizardRootProfile}
-      wizardSelectedType={wizardSelectedType}
-      wizardProfileName={wizardProfileName}
-      wizardProperties={wizardProperties}
-      wizardShowKeyDropdown={wizardShowKeyDropdown}
-      wizardNewPropertyKey={wizardNewPropertyKey}
-      wizardNewPropertyValue={wizardNewPropertyValue}
-      wizardNewPropertySecure={wizardNewPropertySecure}
-      wizardMergedProperties={wizardMergedProperties}
-      availableProfiles={getAvailableProfiles()}
-      typeOptions={getWizardTypeOptions()}
-      propertyOptions={getWizardPropertyOptions()}
-      propertyDescriptions={getWizardPropertyDescriptions()}
-      isProfileNameTaken={isProfileNameTaken()}
-      secureValuesAllowed={secureValuesAllowed}
-      onRootProfileChange={setWizardRootProfile}
-      onSelectedTypeChange={setWizardSelectedType}
-      onProfileNameChange={setWizardProfileName}
-      onNewPropertyKeyChange={setWizardNewPropertyKey}
-      onNewPropertyValueChange={setWizardNewPropertyValue}
-      onNewPropertySecureToggle={() => {
-        if (secureValuesAllowed) {
-          setWizardNewPropertySecure(!wizardNewPropertySecure);
-        }
-      }}
-      onShowKeyDropdownChange={setWizardShowKeyDropdown}
-      onAddProperty={handleWizardAddProperty}
-      onRemoveProperty={handleWizardRemoveProperty}
-      onPropertyValueChange={handleWizardPropertyValueChange}
-      onPropertySecureToggle={handleWizardPropertySecureToggle}
-      onCreateProfile={handleWizardCreateProfile}
-      onCancel={handleWizardCancel}
-      onPopulateDefaults={handleWizardPopulateDefaults}
-      getPropertyType={getPropertyType}
-      canPropertyBeSecure={canPropertyBeSecure}
-      canPropertyBeSecureForWizard={canPropertyBeSecureForWizard}
-      stringifyValueByType={stringifyValueByType}
-      vscodeApi={vscodeApi}
-    />
-  );
-};
+  return <ProfileWizardModal key={`wizard-${wizardModalOpen}`} />;
+}

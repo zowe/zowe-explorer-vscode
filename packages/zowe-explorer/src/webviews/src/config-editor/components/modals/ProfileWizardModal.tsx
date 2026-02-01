@@ -1,84 +1,73 @@
 import * as l10n from "@vscode/l10n";
 import { useModalClickOutside, useModalFocus } from "../../hooks";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { isFileProperty } from "../../utils/propertyUtils";
+import { useWizardContext } from "../../context/WizardContext";
+import { useConfigContext } from "../../context/ConfigContext";
 
-interface ProfileWizardModalProps {
-  isOpen: boolean;
-  wizardRootProfile: string;
-  wizardSelectedType: string;
-  wizardProfileName: string;
-  wizardProperties: { key: string; value: string | boolean | number | Object; secure?: boolean }[];
-  wizardShowKeyDropdown: boolean;
-  wizardNewPropertyKey: string;
-  wizardNewPropertyValue: string;
-  wizardNewPropertySecure: boolean;
-  wizardMergedProperties: { [key: string]: any };
-  availableProfiles: string[];
-  typeOptions: string[];
-  propertyOptions: string[];
-  propertyDescriptions: { [key: string]: string };
-  isProfileNameTaken: boolean;
-  secureValuesAllowed: boolean;
-  onRootProfileChange: (value: string) => void;
-  onSelectedTypeChange: (value: string) => void;
-  onProfileNameChange: (value: string) => void;
-  onNewPropertyKeyChange: (value: string) => void;
-  onNewPropertyValueChange: (value: string) => void;
-  onNewPropertySecureToggle: () => void;
-  onShowKeyDropdownChange: (value: boolean) => void;
-  onAddProperty: () => void;
-  onRemoveProperty: (index: number) => void;
-  onPropertyValueChange: (index: number, value: string) => void;
-  onPropertySecureToggle: (index: number) => void;
-  onCreateProfile: () => void;
-  onCancel: () => void;
-  onPopulateDefaults: () => void;
-  getPropertyType: (propertyKey: string) => string | undefined;
-  canPropertyBeSecure: (propertyKey: string, path: string[]) => boolean;
-  canPropertyBeSecureForWizard: (propertyKey: string, profileType: string) => boolean;
-  stringifyValueByType: (value: string | number | boolean | Object) => string;
-  onFilePickerSelect?: (filePath: string) => void;
-  vscodeApi: any;
-}
+export function ProfileWizardModal() {
+  const { configurations, selectedTab } = useConfigContext();
+  const {
+    wizardModalOpen: isOpen,
+    wizardRootProfile,
+    wizardSelectedType,
+    wizardProfileName,
+    wizardProperties,
+    wizardShowKeyDropdown,
+    wizardNewPropertyKey,
+    wizardNewPropertyValue,
+    wizardNewPropertySecure,
+    wizardMergedProperties,
+    setWizardRootProfile: onRootProfileChange,
+    setWizardSelectedType: onSelectedTypeChange,
+    setWizardProfileName: onProfileNameChange,
+    setWizardNewPropertyKey: onNewPropertyKeyChange,
+    setWizardNewPropertyValue: onNewPropertyValueChange,
+    setWizardNewPropertySecure,
+    setWizardShowKeyDropdown: onShowKeyDropdownChange,
+    handleWizardAddProperty: onAddProperty,
+    handleWizardRemoveProperty: onRemoveProperty,
+    handleWizardPropertyValueChange: onPropertyValueChange,
+    handleWizardPropertySecureToggle: onPropertySecureToggle,
+    handleWizardCreateProfile: onCreateProfile,
+    handleWizardCancel: onCancel,
+    handleWizardPopulateDefaults: onPopulateDefaults,
+    getPropertyType,
+    getAvailableProfiles,
+    getWizardTypeOptions,
+    getWizardPropertyOptions,
+    getWizardPropertyDescriptions,
+    isProfileNameTaken,
+    secureValuesAllowed,
+    vscodeApi,
+    utilityHelpers,
+    stringifyValueByType,
+  } = useWizardContext();
 
-export function ProfileWizardModal({
-  isOpen,
-  wizardRootProfile,
-  wizardSelectedType,
-  wizardProfileName,
-  wizardProperties,
-  wizardShowKeyDropdown,
-  wizardNewPropertyKey,
-  wizardNewPropertyValue,
-  wizardNewPropertySecure,
-  wizardMergedProperties,
-  availableProfiles,
-  typeOptions,
-  propertyOptions,
-  propertyDescriptions,
-  isProfileNameTaken,
-  secureValuesAllowed,
-  onRootProfileChange,
-  onSelectedTypeChange,
-  onProfileNameChange,
-  onNewPropertyKeyChange,
-  onNewPropertyValueChange,
-  onNewPropertySecureToggle,
-  onShowKeyDropdownChange,
-  onAddProperty,
-  onRemoveProperty,
-  onPropertyValueChange,
-  onPropertySecureToggle,
-  onCreateProfile,
-  onCancel,
-  onPopulateDefaults,
-  getPropertyType,
-  canPropertyBeSecureForWizard,
-  stringifyValueByType,
-  vscodeApi,
-}: ProfileWizardModalProps) {
+  const availableProfiles = getAvailableProfiles();
+  const typeOptions = getWizardTypeOptions();
+  const propertyOptions = getWizardPropertyOptions();
+  const propertyDescriptions = getWizardPropertyDescriptions();
+  const isProfileNameTakenValue = isProfileNameTaken();
+
+  const canPropertyBeSecureForWizard = useCallback(
+    (displayKey: string, profileType: string): boolean => {
+      if (!displayKey) return false;
+      if (!profileType) return true;
+      const configPath = configurations[selectedTab ?? 0]?.configPath;
+      if (!configPath) return false;
+      const mockPath = ["profiles", "mockProfile", "properties"];
+      return utilityHelpers.canPropertyBeSecure(displayKey, mockPath);
+    },
+    [configurations, selectedTab, utilityHelpers]
+  );
+
+  const onNewPropertySecureToggle = useCallback(() => {
+    if (secureValuesAllowed) {
+      setWizardNewPropertySecure(!wizardNewPropertySecure);
+    }
+  }, [secureValuesAllowed, wizardNewPropertySecure, setWizardNewPropertySecure]);
   // State for searchable parent profile dropdown
   const [parentProfileSearch, setParentProfileSearch] = useState("");
   const [showParentProfileDropdown, setShowParentProfileDropdown] = useState(false);
@@ -155,7 +144,7 @@ export function ProfileWizardModal({
     return false;
   };
 
-  const filteredParentProfiles = availableProfiles.filter((profile) => {
+  const filteredParentProfiles = availableProfiles.filter((profile: string) => {
     const displayName = profile === "root" ? "/ (root)" : profile;
     const isCurrentSelection = wizardRootProfile && parentProfileSearch === (wizardRootProfile === "root" ? "/ (root)" : wizardRootProfile);
     const matchesSearch = parentProfileSearch === "" || isCurrentSelection || displayName.toLowerCase().includes(parentProfileSearch.toLowerCase());
@@ -224,7 +213,7 @@ export function ProfileWizardModal({
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
-      if (wizardProfileName.trim() && !isProfileNameTaken) {
+      if (wizardProfileName.trim() && !isProfileNameTakenValue) {
         onCreateProfile();
       }
     } else if (e.key === "Escape") {
@@ -275,7 +264,7 @@ export function ProfileWizardModal({
                 />
                 {showParentProfileDropdown && (
                   <ul className="dropdown-list" id="parent-profile-dropdown">
-                    {filteredParentProfiles.map((profile, index) => (
+                    {filteredParentProfiles.map((profile: string, index: number) => (
                       <li
                         key={profile}
                         id={`parent-profile-option-${index}`}
@@ -308,7 +297,7 @@ export function ProfileWizardModal({
                 onKeyDown={(e) => {
                   // Handle Enter key to create profile
                   if (e.key === "Enter") {
-                    if (wizardProfileName.trim() && !isProfileNameTaken) {
+                    if (wizardProfileName.trim() && !isProfileNameTakenValue) {
                       onCreateProfile();
                     }
                     return;
@@ -330,10 +319,10 @@ export function ProfileWizardModal({
                   e.preventDefault();
                 }}
                 onChange={(e) => onProfileNameChange((e.target as HTMLInputElement).value)}
-                className={`modal-input wizard-input ${isProfileNameTaken ? "error" : ""}`}
+                className={`modal-input wizard-input ${isProfileNameTakenValue ? "error" : ""}`}
                 placeholder={l10n.t("Enter profile name")}
               />
-              {isProfileNameTaken && (
+              {isProfileNameTakenValue && (
                 <div className="wizard-error" id="profile-name-error">
                   {l10n.t("Profile name already exists under this root")}
                 </div>
@@ -853,7 +842,7 @@ export function ProfileWizardModal({
           <button
             id="create-profile-button"
             onClick={onCreateProfile}
-            disabled={!wizardProfileName.trim() || isProfileNameTaken || isParentProfileInvalid}
+            disabled={!wizardProfileName.trim() || isProfileNameTakenValue || isParentProfileInvalid}
             className="wizard-button primary"
           >
             {l10n.t("Create Profile")}
