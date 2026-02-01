@@ -156,7 +156,7 @@ function AppContent() {
   });
 
   const { formatPendingChanges, hasPendingChanges } = useProfileUtils();
-  const { setWizardModalOpen, wizardModalOpen, setWizardProfileNameValidation, getWizardPropertyDescriptions } = useWizardContext();
+  const { setWizardModalOpen, wizardModalOpen, setWizardProfileNameValidation } = useWizardContext();
 
   useEffect(() => {
     if (selectedTab !== null && configurations[selectedTab]) {
@@ -445,7 +445,6 @@ function AppContent() {
             handleUnlinkMergedProperty={handleUnlinkMergedProperty}
             handleNavigateToSource={handleNavigateToSource}
             openAddProfileModalAtPath={openAddProfileModalAtPath}
-            propertyDescriptions={getWizardPropertyDescriptions()}
           />
         )}
         renderDefaults={(defaults) => <RenderDefaults defaults={defaults} handleDefaultsChange={handleDefaultsChange} />}

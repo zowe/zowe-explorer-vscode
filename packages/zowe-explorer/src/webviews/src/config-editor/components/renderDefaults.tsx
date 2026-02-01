@@ -122,7 +122,7 @@ export const RenderDefaults = ({ defaults, handleDefaultsChange }: RenderDefault
                       <select
                         id={`default-dropdown-${key}`}
                         className={`config-input ${!displayValue ? "placeholder-style" : ""} ${hasInvalidValue ? "invalid-default" : ""}`}
-                        value={hasInvalidValue ? "" : displayValue}
+                        value={displayValue || ""}
                         onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLSelectElement).value)}
                         style={{
                           width: "100%",
@@ -136,9 +136,12 @@ export const RenderDefaults = ({ defaults, handleDefaultsChange }: RenderDefault
                         }}
                         title={hasInvalidValue ? l10n.t("Warning: Profile '{0}' is not a valid option", displayValue) : undefined}
                       >
-                        <option value="" style={{ display: hasInvalidValue ? "none" : undefined }}>
-                          {hasInvalidValue ? displayValue : l10n.t("Select a profile")}
+                        <option value="">
+                          {l10n.t("Select a profile")}
                         </option>
+                        {hasInvalidValue ? (
+                          <option value={displayValue}>{displayValue}</option>
+                        ) : null}
                         {availableProfiles.map((profile) => (
                           <option key={profile} value={profile}>
                             {profile === "root" ? "/" : profile}

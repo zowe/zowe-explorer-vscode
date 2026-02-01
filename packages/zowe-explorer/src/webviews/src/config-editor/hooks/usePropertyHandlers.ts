@@ -13,6 +13,7 @@ import { useCallback } from "react";
 import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "./useUtilityHelpers";
 import { extractProfileKeyFromPath, getRenamedProfileKeyWithNested, getPropertyTypeForAddProfile, parseValueByType, getProfileType } from "../utils";
+import { isProfileDefault } from "../utils/profileHelpers";
 
 interface PropertyHandlersParams {
     setPendingPropertyDeletion: (key: string | null) => void;
@@ -59,6 +60,7 @@ export function usePropertyHandlers(params: PropertyHandlersParams) {
         setDefaultsDeletions,
         setHiddenItems,
         schemaValidations,
+        pendingDefaults,
     } = useConfigContext();
 
     const utilityHelpers = useUtilityHelpers();
@@ -75,6 +77,30 @@ export function usePropertyHandlers(params: PropertyHandlersParams) {
 
             if (selectedProfileKey && renames[configPath]) {
                 profileKey = getRenamedProfileKeyWithNested(selectedProfileKey, configPath, renames);
+            }
+
+            const isProfileLevelType = path[path.length - 1] === "type" && !path.includes("properties");
+            if (isProfileLevelType) {
+                const oldType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
+                const newType = value?.trim() || null;
+                const wasDefaultForOldType =
+                    oldType && oldType !== newType && isProfileDefault(profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames);
+
+                if (wasDefaultForOldType) {
+                    const config = configurations[selectedTab!].properties;
+                    const savedDefaults = config?.defaults || {};
+                    const currentDefaultForNewType = pendingDefaults[configPath]?.[newType]?.value ?? savedDefaults[newType] ?? "";
+                    const shouldSetNew = newType && !currentDefaultForNewType;
+
+                    setPendingDefaults((prev) => {
+                        const next = { ...prev[configPath] };
+                        next[oldType] = { value: "", path: [oldType] };
+                        if (shouldSetNew && newType) {
+                            next[newType] = { value: profileKey, path: [newType] };
+                        }
+                        return { ...prev, [configPath]: next };
+                    });
+                }
             }
 
             const displayKey = path[path.length - 1];
@@ -101,9 +127,12 @@ export function usePropertyHandlers(params: PropertyHandlersParams) {
             flattenedConfig,
             renames,
             deletions,
+            pendingChanges,
+            pendingDefaults,
             setPendingPropertyDeletion,
             setPendingChanges,
             setDeletions,
+            setPendingDefaults,
             utilityHelpers,
         ]
     );

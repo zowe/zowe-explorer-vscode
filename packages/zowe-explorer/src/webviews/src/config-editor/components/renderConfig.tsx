@@ -563,25 +563,10 @@ export const RenderConfig = ({
                         getDisplayName={getSortOrderDisplayName}
                       />
                       <button
-                        className="header-button"
+                        className="ce-icon-button"
                         title={l10n.t('Create new property for "{0}"', extractProfileKeyFromPath(currentPath))}
                         onClick={() => openAddProfileModalAtPath(currentPath)}
                         id="add-profile-property-button"
-                        style={{
-                          padding: "2px",
-                          width: "20px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "transparent",
-                          color: "var(--vscode-button-secondaryForeground)",
-                          borderRadius: "3px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          lineHeight: "1",
-                          border: "none",
-                          marginLeft: "0",
-                        }}
                       >
                         <span className="codicon codicon-add"></span>
                       </button>
@@ -598,24 +583,10 @@ export const RenderConfig = ({
                         getDisplayName={getSortOrderDisplayName}
                       />
                       <button
-                        className="header-button"
+                        className="ce-icon-button"
                         title={l10n.t('Create new property for "{0}"', extractProfileKeyFromPath(currentPath))}
                         onClick={() => openAddProfileModalAtPath(currentPath)}
                         id="add-profile-property-button"
-                        style={{
-                          padding: "2px",
-                          width: "20px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "transparent",
-                          color: "var(--vscode-button-secondaryForeground)",
-                          borderRadius: "3px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          lineHeight: "1",
-                          border: "none",
-                        }}
                       >
                         <span className="codicon codicon-add"></span>
                       </button>

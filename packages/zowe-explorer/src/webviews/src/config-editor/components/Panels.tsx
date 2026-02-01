@@ -94,48 +94,18 @@ export function Panels({
                     </div>
                     <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
                       <button
-                        className="header-button"
+                        className="ce-icon-button"
                         title={viewMode === "tree" ? l10n.t("Switch to flat view") : l10n.t("Switch to tree view")}
                         onClick={onViewModeToggle}
                         data-testid="view-mode-toggle"
                         data-current-view={viewMode}
-                        style={{
-                          padding: "2px",
-                          height: "20px",
-                          width: "20px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "transparent",
-                          color: "var(--vscode-editor-foreground)",
-                          borderRadius: "3px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          lineHeight: "1",
-                          border: "none",
-                        }}
                       >
                         <span className={`codicon ${viewMode === "tree" ? "codicon-list-flat" : "codicon-list-tree"}`}></span>
                       </button>
                       <button
-                        className="header-button"
+                        className="ce-icon-button"
                         title={l10n.t("Profile Wizard")}
                         onClick={onProfileWizard}
-                        style={{
-                          padding: "2px",
-                          height: "20px",
-                          width: "20px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: "transparent",
-                          color: "var(--vscode-editor-foreground)",
-                          borderRadius: "3px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          lineHeight: "1",
-                          border: "none",
-                        }}
                       >
                         <span className="codicon codicon-add"></span>
                       </button>

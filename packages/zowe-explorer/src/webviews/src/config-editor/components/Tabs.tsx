@@ -158,18 +158,7 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
               className="tab add-tab"
               id="add-config-layer-button"
               onClick={onAddNewConfig}
-              style={{
-                minWidth: "32px",
-                maxWidth: "32px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                border: "1px solid var(--vscode-tab-border)",
-                borderLeft: "none",
-                backgroundColor: "var(--vscode-tab-inactiveBackground)",
-                color: "var(--vscode-tab-inactiveForeground)",
-              }}
+              role="button"
               title={l10n.t("Add new configuration")}
             >
               <span className="codicon codicon-add" style={{ fontSize: "14px" }}></span>
@@ -177,57 +166,24 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
           )}
         </div>
 
-        {/* Help icons on the right side */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingRight: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px", paddingRight: "12px" }}>
           <a
+            className="ce-icon-button"
             href="https://docs.zowe.org/stable/user-guide/cli-using-using-team-profiles"
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "24px",
-              height: "24px",
-              cursor: "pointer",
-              color: "var(--vscode-foreground)",
-              textDecoration: "none",
-              borderRadius: "4px",
-            }}
             title={l10n.t("Team Configuration Documentation")}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--vscode-toolbar-hoverBackground)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
           >
-            <span className="codicon codicon-question" style={{ fontSize: "18px" }}></span>
+            <span className="codicon codicon-question" style={{ fontSize: "16px" }}></span>
           </a>
           <a
+            className="ce-icon-button"
             href="https://github.com/zowe/zowe-explorer-vscode/issues"
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "24px",
-              height: "24px",
-              cursor: "pointer",
-              color: "var(--vscode-foreground)",
-              textDecoration: "none",
-              borderRadius: "4px",
-            }}
             title={l10n.t("Report Issues")}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--vscode-toolbar-hoverBackground)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
           >
-            <span className="codicon codicon-bug" style={{ fontSize: "18px" }}></span>
+            <span className="codicon codicon-bug" style={{ fontSize: "16px" }}></span>
           </a>
         </div>
       </div>

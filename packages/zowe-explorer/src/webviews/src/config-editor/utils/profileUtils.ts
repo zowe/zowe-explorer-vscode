@@ -560,10 +560,22 @@ export function mergePendingChangesForProfile(
     // Check if this profile was renamed and get the original profile name (handle nested profiles)
     const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
 
+    const originalPathArray: string[] = ["profiles"];
+    originalProfileKey.split(".").forEach((part, i, parts) => {
+        originalPathArray.push(part);
+        if (i < parts.length - 1) originalPathArray.push("profiles");
+    });
+    const originalFullPath = originalPathArray.join(".");
+
     // Helper function to check if a profile key matches considering renames
     const isProfileKeyMatch = (entryProfileKey: string): boolean => {
         // Direct match with current or original profile key
         if (entryProfileKey === currentProfileKey || entryProfileKey === originalProfileKey) {
+            return true;
+        }
+
+        // Entry may be the renamed form of the current (original) profile key (e.g. current "test", entry "test2" after rename)
+        if (getRenamedProfileKeyWithNested(originalProfileKey, configPath, renames) === entryProfileKey) {
             return true;
         }
 
@@ -609,10 +621,15 @@ export function mergePendingChangesForProfile(
     };
 
     Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-        // Check if the entry belongs to the current profile considering renames
-        if (isProfileKeyMatch(entry.profile) && (key === fullPath || key.startsWith(fullPath + "."))) {
-            const keyParts = key.split(".");
-            const relativePath = keyParts.slice(path.length);
+        const keyUnderCurrentPath = key === fullPath || key.startsWith(fullPath + ".");
+        const keyUnderOriginalPath =
+            currentProfileKey !== originalProfileKey &&
+            (key === originalFullPath || key.startsWith(originalFullPath + "."));
+        if (!isProfileKeyMatch(entry.profile) || (!keyUnderCurrentPath && !keyUnderOriginalPath)) {
+            return;
+        }
+        const keyParts = key.split(".");
+        const relativePath = keyUnderCurrentPath ? keyParts.slice(path.length) : keyParts.slice(originalPathArray.length);
 
             if (relativePath.length === 1 && !entry.secure) {
                 pendingChangesAtLevel[relativePath[0]] = entry.value;
@@ -643,7 +660,6 @@ export function mergePendingChangesForProfile(
                     baseObj.secure.push(propertyName);
                 }
             }
-        }
     });
 
     const result = { ...baseObj, ...pendingChangesAtLevel };

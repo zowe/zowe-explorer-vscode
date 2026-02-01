@@ -49,6 +49,14 @@ body {
     flex-shrink: 0;
 }
 
+.footer button {
+    transition: background-color 0.2s ease;
+}
+
+.footer button:hover:not(:disabled) {
+    background-color: var(--vscode-button-secondaryHoverBackground) !important;
+}
+
 /* Ensure the main content area takes remaining space */
 .vscode-panel {
     display: flex;
@@ -163,11 +171,18 @@ div:has(> .vscode-panel) {
 .tab.add-tab {
     min-width: 32px;
     max-width: 32px;
-    padding: 0;
+    width: 32px;
+    height: 100%;
+    padding: 0 4px;
+    box-sizing: border-box;
     border-left: none;
+    border-radius: 0;
     background-color: var(--vscode-tab-inactiveBackground);
     color: var(--vscode-tab-inactiveForeground);
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tab.add-tab:hover {
@@ -534,6 +549,42 @@ select.invalid-default:focus {
 
 .action-button:hover {
     background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* Shared icon-only button: consistent 28px hit area and hover */
+.ce-icon-button {
+    min-width: 28px;
+    min-height: 28px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 4px;
+    background-color: transparent;
+    color: var(--vscode-editor-foreground);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.ce-icon-button:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.ce-icon-button:focus {
+    outline: none;
+}
+
+a.ce-icon-button {
+    text-decoration: none;
+}
+
+.tabs a.ce-icon-button,
+.tabs a.ce-icon-button:hover,
+.tabs a.ce-icon-button:visited {
+    color: var(--vscode-editor-foreground);
 }
 
 .header-button {
@@ -2085,28 +2136,39 @@ ul {
     transition: all 0.2s ease;
 }
 
-/* Profile Action Buttons */
+/* Profile Action Buttons - same size and hover as .ce-icon-button */
 .profile-actions {
     display: flex;
-    gap: 10px;
+    gap: 4px;
+    align-items: center;
 }
 
 .profile-action-button {
-    padding: 5px;
+    min-width: 28px;
+    min-height: 28px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    box-sizing: border-box;
     font-size: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     background-color: transparent;
     border: none;
+    border-radius: 4px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease;
     color: var(--vscode-editor-foreground);
+}
+
+.profile-action-button .codicon {
+    display: block;
+    line-height: 1;
 }
 
 .profile-action-button:hover {
     background-color: var(--vscode-button-secondaryHoverBackground);
-    border-radius: 4px;
 }
 
 .profile-action-button .codicon-star-full .profile-action-button .codicon-star-empty {
@@ -2154,14 +2216,20 @@ ul {
     justify-content: center;
     background-color: transparent;
     border: none;
+    border-radius: 4px;
     color: var(--vscode-editor-foreground);
     cursor: pointer;
-    padding: 4px;
-    border-radius: 3px;
-    transition: all 0.2s ease;
-    width: 20px;
-    height: 20px;
-    font-size: 12px;
+    padding: 0;
+    min-width: 28px;
+    min-height: 28px;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.sort-dropdown-trigger:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
 }
 
 .sort-dropdown-trigger:focus {

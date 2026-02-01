@@ -100,17 +100,17 @@ export function getPropertyDescriptions(
                 propertyDescriptions[key] = schema.description as string;
             }
         });
-    } else {
-        Object.values(propertySchema).forEach((typeSchema: any) => {
-            if (typeSchema && typeof typeSchema === "object") {
-                Object.entries(typeSchema).forEach(([key, schema]: [string, any]) => {
-                    if (schema && typeof schema === "object" && "description" in schema && schema.description && !propertyDescriptions[key]) {
-                        propertyDescriptions[key] = schema.description as string;
-                    }
-                });
-            }
-        });
     }
+
+    Object.values(propertySchema).forEach((typeSchema: any) => {
+        if (typeSchema && typeof typeSchema === "object") {
+            Object.entries(typeSchema).forEach(([key, schema]: [string, any]) => {
+                if (schema && typeof schema === "object" && "description" in schema && schema.description && !propertyDescriptions[key]) {
+                    propertyDescriptions[key] = schema.description as string;
+                }
+            });
+        }
+    });
 
     return propertyDescriptions;
 }
