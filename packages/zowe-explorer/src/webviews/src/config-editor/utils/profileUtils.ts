@@ -622,44 +622,39 @@ export function mergePendingChangesForProfile(
 
     Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
         const keyUnderCurrentPath = key === fullPath || key.startsWith(fullPath + ".");
-        const keyUnderOriginalPath =
-            currentProfileKey !== originalProfileKey &&
-            (key === originalFullPath || key.startsWith(originalFullPath + "."));
+        const keyUnderOriginalPath = currentProfileKey !== originalProfileKey && (key === originalFullPath || key.startsWith(originalFullPath + "."));
         if (!isProfileKeyMatch(entry.profile) || (!keyUnderCurrentPath && !keyUnderOriginalPath)) {
             return;
         }
         const keyParts = key.split(".");
         const relativePath = keyUnderCurrentPath ? keyParts.slice(path.length) : keyParts.slice(originalPathArray.length);
 
-            if (relativePath.length === 1 && !entry.secure) {
-                pendingChangesAtLevel[relativePath[0]] = entry.value;
-            } else if (relativePath.length > 1 && relativePath[0] !== "profiles" && !entry.secure) {
-                let current = baseObj;
-                for (let i = 0; i < relativePath.length - 1; i++) {
-                    if (!current[relativePath[i]]) {
-                        current[relativePath[i]] = {};
-                    }
-                    current = current[relativePath[i]];
+        if (relativePath.length === 1 && !entry.secure) {
+            pendingChangesAtLevel[relativePath[0]] = entry.value;
+        } else if (relativePath.length > 1 && relativePath[0] !== "profiles" && !entry.secure) {
+            let current = baseObj;
+            for (let i = 0; i < relativePath.length - 1; i++) {
+                if (!current[relativePath[i]]) {
+                    current[relativePath[i]] = {};
                 }
-                current[relativePath[relativePath.length - 1]] = entry.value;
-            } else if (entry.secure && path[path.length - 1] !== "properties") {
-                // Handle secure properties - they should be added to the secure array
-                // Only add to parent profile's secure array, not properties object's secure array
-                // Ensure secure array exists
-                if (!baseObj.secure) {
-                    baseObj.secure = [];
-                }
-
-                // For secure properties, the key format is typically "profiles.profileName.secure.propertyName"
-                // We need to extract the property name from the key
-                const keyParts = key.split(".");
-                const propertyName = keyParts[keyParts.length - 1];
-
-                // Add the secure property name to the secure array if not already present
-                if (!baseObj.secure.includes(propertyName)) {
-                    baseObj.secure.push(propertyName);
-                }
+                current = current[relativePath[i]];
             }
+            current[relativePath[relativePath.length - 1]] = entry.value;
+        } else if (entry.secure && path[path.length - 1] !== "properties") {
+            // Handle secure properties - they should be added to the secure array
+            if (!baseObj.secure) {
+                baseObj.secure = [];
+            }
+
+            // For secure properties, the key format is typically "profiles.profileName.secure.propertyName"
+            const keyParts = key.split(".");
+            const propertyName = keyParts[keyParts.length - 1];
+
+            // Add the secure property name to the secure array if not already present
+            if (!baseObj.secure.includes(propertyName)) {
+                baseObj.secure.push(propertyName);
+            }
+        }
     });
 
     const result = { ...baseObj, ...pendingChangesAtLevel };

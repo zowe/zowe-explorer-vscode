@@ -57,12 +57,7 @@ export class ConfigChangeHandlers {
      * @param teamConfig - Optional team configuration object. If provided, operates in simulation mode (no save).
      *                    If not provided, creates ProfileInfo and saves changes.
      */
-    public static async handleDefaultChanges(
-        changes: ChangeEntry[],
-        deletions: ChangeEntry[],
-        activeLayer: string,
-        teamConfig?: any
-    ): Promise<void> {
+    public static async handleDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string, teamConfig?: any): Promise<void> {
         const { config: configToUse, isSimulation } = await this.getConfigToUse(teamConfig);
         this.activateLayerIfNeeded(configToUse, activeLayer);
 
@@ -148,5 +143,4 @@ export class ConfigChangeHandlers {
             await configToUse.save();
         }
     }
-
 }

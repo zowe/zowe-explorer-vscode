@@ -26,30 +26,32 @@ export function WizardManager() {
     requestWizardMergedProperties,
   } = useWizardContext();
 
-  const onWizardMergedProperties = useCallback((data: any) => {
-    const mergedPropsData: { [key: string]: any } = {};
-    if (Array.isArray(data.mergedArgs)) {
-      data.mergedArgs.forEach((item: any) => {
-        if (item.argName && item.argValue !== undefined) {
-          let correctValue = item.argValue;
-          if (item.dataType === "boolean") {
-            correctValue =
-              typeof item.argValue === "string" ? item.argValue.toLowerCase() === "true" : Boolean(item.argValue);
-          } else if (item.dataType === "number") {
-            const num = Number(item.argValue);
-            correctValue = typeof item.argValue === "string" && isNaN(num) ? item.argValue : num;
+  const onWizardMergedProperties = useCallback(
+    (data: any) => {
+      const mergedPropsData: { [key: string]: any } = {};
+      if (Array.isArray(data.mergedArgs)) {
+        data.mergedArgs.forEach((item: any) => {
+          if (item.argName && item.argValue !== undefined) {
+            let correctValue = item.argValue;
+            if (item.dataType === "boolean") {
+              correctValue = typeof item.argValue === "string" ? item.argValue.toLowerCase() === "true" : Boolean(item.argValue);
+            } else if (item.dataType === "number") {
+              const num = Number(item.argValue);
+              correctValue = typeof item.argValue === "string" && isNaN(num) ? item.argValue : num;
+            }
+            mergedPropsData[item.argName] = {
+              value: correctValue,
+              dataType: item.dataType,
+              secure: item.secure,
+              argLoc: item.argLoc,
+            };
           }
-          mergedPropsData[item.argName] = {
-            value: correctValue,
-            dataType: item.dataType,
-            secure: item.secure,
-            argLoc: item.argLoc,
-          };
-        }
-      });
-    }
-    setWizardMergedProperties(mergedPropsData);
-  }, [setWizardMergedProperties]);
+        });
+      }
+      setWizardMergedProperties(mergedPropsData);
+    },
+    [setWizardMergedProperties]
+  );
 
   const onFileSelected = useCallback(
     (data: any) => {

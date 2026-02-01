@@ -12,7 +12,14 @@
 import { useCallback } from "react";
 
 import { RenderConfig } from "./renderConfig";
-import { flattenProfiles, PropertySortOrder, ensureProfileProperties, isMergedPropertySecure, getOriginalProfileKey, getPropertyDescriptions } from "../utils";
+import {
+  flattenProfiles,
+  PropertySortOrder,
+  ensureProfileProperties,
+  isMergedPropertySecure,
+  getOriginalProfileKey,
+  getPropertyDescriptions,
+} from "../utils";
 import { getProfileNameForMergedProperties } from "../utils/renameUtils";
 import * as l10n from "@vscode/l10n";
 import { useConfigContext } from "../context/ConfigContext";
@@ -230,10 +237,9 @@ export const RenderProfileDetails = ({
 
             let effectivePath: string[];
             const hasPendingChanges = Array.isArray(pendingProfiles)
-                ? pendingProfiles.includes(selectedProfileKey)
-                : Object.prototype.hasOwnProperty.call(pendingProfiles, selectedProfileKey);
-            const pathProfileKey =
-                hasPendingChanges || selectedProfileKey !== effectiveProfileKey ? selectedProfileKey : effectiveProfileKey;
+              ? pendingProfiles.includes(selectedProfileKey)
+              : Object.prototype.hasOwnProperty.call(pendingProfiles, selectedProfileKey);
+            const pathProfileKey = hasPendingChanges || selectedProfileKey !== effectiveProfileKey ? selectedProfileKey : effectiveProfileKey;
 
             const profilePathParts = pathProfileKey.split(".");
             if (profilePathParts.length === 1) {
@@ -265,15 +271,7 @@ export const RenderProfileDetails = ({
             const shouldShowMergedProperties = showMergedProperties !== "hide";
             const propertyDescriptions =
               selectedTab !== null && currentConfig
-                ? getPropertyDescriptions(
-                    effectivePath,
-                    selectedTab,
-                    configurations,
-                    schemaValidations,
-                    getProfileType,
-                    pendingChanges,
-                    renames
-                  )
+                ? getPropertyDescriptions(effectivePath, selectedTab, configurations, schemaValidations, getProfileType, pendingChanges, renames)
                 : {};
 
             return (

@@ -102,11 +102,7 @@ export function Panels({
                       >
                         <span className={`codicon ${viewMode === "tree" ? "codicon-list-flat" : "codicon-list-tree"}`}></span>
                       </button>
-                      <button
-                        className="ce-icon-button"
-                        title={l10n.t("Profile Wizard")}
-                        onClick={onProfileWizard}
-                      >
+                      <button className="ce-icon-button" title={l10n.t("Profile Wizard")} onClick={onProfileWizard}>
                         <span className="codicon codicon-add"></span>
                       </button>
                     </div>

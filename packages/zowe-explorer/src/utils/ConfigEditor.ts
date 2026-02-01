@@ -870,7 +870,6 @@ export class ConfigEditor extends WebView {
 
         for (const rename of preparedRenames) {
             try {
-
                 const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
 
                 if (!targetLayer) {

@@ -33,16 +33,8 @@ interface WizardProviderProps {
 }
 
 export function WizardProvider({ children, vscodeApi }: WizardProviderProps) {
-  const {
-    selectedTab,
-    configurations,
-    schemaValidations,
-    pendingChanges,
-    setPendingChanges,
-    setSelectedProfileKey,
-    secureValuesAllowed,
-    renames,
-  } = useConfigContext();
+  const { selectedTab, configurations, schemaValidations, pendingChanges, setPendingChanges, setSelectedProfileKey, secureValuesAllowed, renames } =
+    useConfigContext();
 
   const { formatPendingChanges, getAvailableProfiles } = useProfileUtils();
   const utilityHelpers = useUtilityHelpers();
@@ -62,9 +54,7 @@ export function WizardProvider({ children, vscodeApi }: WizardProviderProps) {
   });
 
   return (
-    <WizardContext.Provider
-      value={{ ...wizardState, utilityHelpers, stringifyValueByType, vscodeApi, getAvailableProfiles, secureValuesAllowed }}
-    >
+    <WizardContext.Provider value={{ ...wizardState, utilityHelpers, stringifyValueByType, vscodeApi, getAvailableProfiles, secureValuesAllowed }}>
       {children}
     </WizardContext.Provider>
   );

@@ -82,21 +82,24 @@ export function usePropertyHandlers(params: PropertyHandlersParams) {
             const isProfileLevelType = path[path.length - 1] === "type" && !path.includes("properties");
             if (isProfileLevelType) {
                 const oldType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
-                const newType = value?.trim() || null;
+                const newTypeStr = (value ?? "").trim();
                 const wasDefaultForOldType =
-                    oldType && oldType !== newType && isProfileDefault(profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames);
+                    oldType &&
+                    oldType !== newTypeStr &&
+                    isProfileDefault(profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames);
 
                 if (wasDefaultForOldType) {
                     const config = configurations[selectedTab!].properties;
                     const savedDefaults = config?.defaults || {};
-                    const currentDefaultForNewType = pendingDefaults[configPath]?.[newType]?.value ?? savedDefaults[newType] ?? "";
-                    const shouldSetNew = newType && !currentDefaultForNewType;
+                    const currentDefaultForNewType =
+                        pendingDefaults[configPath]?.[newTypeStr]?.value ?? savedDefaults[newTypeStr] ?? "";
+                    const shouldSetNew = newTypeStr !== "" && !currentDefaultForNewType;
 
                     setPendingDefaults((prev) => {
                         const next = { ...prev[configPath] };
                         next[oldType] = { value: "", path: [oldType] };
-                        if (shouldSetNew && newType) {
-                            next[newType] = { value: profileKey, path: [newType] };
+                        if (shouldSetNew) {
+                            next[newTypeStr] = { value: profileKey, path: [newTypeStr] };
                         }
                         return { ...prev, [configPath]: next };
                     });

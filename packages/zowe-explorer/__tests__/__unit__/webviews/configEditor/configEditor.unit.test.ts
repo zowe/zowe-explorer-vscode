@@ -85,7 +85,12 @@ const createDefaultMockProfileInfo = () => ({
     readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
     getTeamConfig: jest.fn(() => ({
         layers: [],
-        api: { layers: { activate: jest.fn(), get: jest.fn(() => ({ path: "/test/config/path" })) }, secure: { secureFields: jest.fn().mockReturnValue([]) }, set: jest.fn(), delete: jest.fn() },
+        api: {
+            layers: { activate: jest.fn(), get: jest.fn(() => ({ path: "/test/config/path" })) },
+            secure: { secureFields: jest.fn().mockReturnValue([]) },
+            set: jest.fn(),
+            delete: jest.fn(),
+        },
     })),
     getAllProfiles: jest.fn(() => []),
     mergeArgsForProfile: jest.fn(() => ({ knownArgs: [] })),
@@ -1919,9 +1924,7 @@ describe("configEditor", () => {
                 profileKey: "testProfile",
             };
 
-            const openConfigFileWithProfileSpy = jest
-                .spyOn(ZoweVsCodeExtension, "openConfigFileWithProfile")
-                .mockResolvedValue(undefined);
+            const openConfigFileWithProfileSpy = jest.spyOn(ZoweVsCodeExtension, "openConfigFileWithProfile").mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 

@@ -141,10 +141,7 @@ export class ConfigSchemaHelpers {
         }
     }
 
-    private static shouldIncludeType(
-        type: string | string[],
-        profileContext: boolean
-    ): { include: boolean; resolvedType: string | string[] } {
+    private static shouldIncludeType(type: string | string[], profileContext: boolean): { include: boolean; resolvedType: string | string[] } {
         if (typeof type === "string") {
             const include = profileContext ? type !== "string" && type !== "object" : type !== "string";
             return { include, resolvedType: type };

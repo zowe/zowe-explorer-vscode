@@ -136,12 +136,8 @@ export const RenderDefaults = ({ defaults, handleDefaultsChange }: RenderDefault
                         }}
                         title={hasInvalidValue ? l10n.t("Warning: Profile '{0}' is not a valid option", displayValue) : undefined}
                       >
-                        <option value="">
-                          {l10n.t("Select a profile")}
-                        </option>
-                        {hasInvalidValue ? (
-                          <option value={displayValue}>{displayValue}</option>
-                        ) : null}
+                        <option value="">{l10n.t("Select a profile")}</option>
+                        {hasInvalidValue ? <option value={displayValue}>{displayValue}</option> : null}
                         {availableProfiles.map((profile) => (
                           <option key={profile} value={profile}>
                             {profile === "root" ? "/" : profile}

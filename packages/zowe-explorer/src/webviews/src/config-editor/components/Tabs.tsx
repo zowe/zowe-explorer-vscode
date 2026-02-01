@@ -154,13 +154,7 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
           })}
           {/* Add new configuration button positioned like a browser tab - only show if there are existing configurations */}
           {configurations.length > 0 && (
-            <div
-              className="tab add-tab"
-              id="add-config-layer-button"
-              onClick={onAddNewConfig}
-              role="button"
-              title={l10n.t("Add new configuration")}
-            >
+            <div className="tab add-tab" id="add-config-layer-button" onClick={onAddNewConfig} role="button" title={l10n.t("Add new configuration")}>
               <span className="codicon codicon-add" style={{ fontSize: "14px" }}></span>
             </div>
           )}
