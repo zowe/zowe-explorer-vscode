@@ -81,10 +81,21 @@ jest.mock("../../../../src/utils/ConfigSchemaHelpers", () => ({
     },
 }));
 
+const createDefaultMockProfileInfo = () => ({
+    readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
+    getTeamConfig: jest.fn(() => ({
+        layers: [],
+        api: { layers: { activate: jest.fn(), get: jest.fn(() => ({ path: "/test/config/path" })) }, secure: { secureFields: jest.fn().mockReturnValue([]) }, set: jest.fn(), delete: jest.fn() },
+    })),
+    getAllProfiles: jest.fn(() => []),
+    mergeArgsForProfile: jest.fn(() => ({ knownArgs: [] })),
+});
+
 jest.mock("../../../../src/utils/ConfigUtils", () => ({
     ConfigUtils: {
         processProfilesRecursively: jest.fn(),
         parseConfigChanges: jest.fn(),
+        createProfileInfoAndLoad: jest.fn(),
     },
 }));
 
@@ -379,10 +390,7 @@ describe("configEditor", () => {
             extensionPath: "/mock/extension/path",
         } as ExtensionContext;
 
-        const mockProfileInfo = createMockProfileInfo();
-
-        const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-        (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+        ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(createDefaultMockProfileInfo());
 
         configEditor = new ConfigEditor(mockContext);
     });
@@ -453,10 +461,8 @@ describe("configEditor", () => {
                 })),
             });
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
-            // Setup mocked modules using global mocks
             Object.assign(fs, mocks.mockModules.fs);
             Object.assign(path, mocks.mockModules.path);
             Object.assign(ConfigSchemaHelpers, mocks.mockModules.ConfigSchemaHelpers);
@@ -478,19 +484,12 @@ describe("configEditor", () => {
                 user: true,
             });
 
-            expect(mockProfileInfo.readProfilesFromDisk).toHaveBeenCalled();
+            expect(ConfigUtils.createProfileInfoAndLoad).toHaveBeenCalled();
             expect(mockProfileInfo.getTeamConfig).toHaveBeenCalled();
         });
 
         it("should handle error when reading profiles from disk and return empty array", async () => {
-            const mocks = createGlobalMocks();
-            const mockProfileInfo = createMockProfileInfo({
-                readProfilesFromDisk: jest.fn().mockRejectedValue(new Error("Error reading file '/test/config.json' Line 5 Column 10")),
-                getTeamConfig: jest.fn(),
-            });
-
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockRejectedValue(new Error("Error reading file '/test/config.json' Line 5 Column 10"));
 
             const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
             const openTextDocumentSpy = jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({} as any);
@@ -512,14 +511,7 @@ describe("configEditor", () => {
         });
 
         it("should handle error when reading profiles from disk with non-Error object (lines 125-126)", async () => {
-            const mocks = createGlobalMocks();
-            const mockProfileInfo = createMockProfileInfo({
-                readProfilesFromDisk: jest.fn().mockRejectedValue("String error message"),
-                getTeamConfig: jest.fn(),
-            });
-
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockRejectedValue("String error message");
 
             const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
 
@@ -555,13 +547,12 @@ describe("configEditor", () => {
                 })),
             });
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             const result = await configEditor.getLocalConfigs();
 
             expect(result).toEqual([]);
-            expect(mockProfileInfo.readProfilesFromDisk).toHaveBeenCalled();
+            expect(ConfigUtils.createProfileInfoAndLoad).toHaveBeenCalled();
             expect(mockProfileInfo.getTeamConfig).toHaveBeenCalled();
         });
 
@@ -607,8 +598,7 @@ describe("configEditor", () => {
                 })),
             });
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             fs.readFileSync
                 .mockReturnValueOnce(JSON.stringify({ type: "object", properties: { profiles: { type: "object" } } }))
@@ -681,8 +671,7 @@ describe("configEditor", () => {
                 })),
             });
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             // Mock schema file exists and is readable
             fs.existsSync.mockReturnValue(true);
@@ -742,8 +731,7 @@ describe("configEditor", () => {
                 })),
             });
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             // Mock schema file does not exist
             fs.existsSync.mockReturnValue(false);
@@ -789,10 +777,7 @@ describe("configEditor", () => {
                 })),
             });
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
-
-            // Setup mocked modules
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             // Mock schema file exists but is invalid JSON
             fs.existsSync.mockReturnValue(true);
@@ -840,10 +825,7 @@ describe("configEditor", () => {
                 })),
             });
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
-
-            // Setup mocked modules
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             // Mock schema file exists and is valid
             fs.existsSync.mockReturnValue(true);
@@ -1081,8 +1063,7 @@ describe("configEditor", () => {
                 })),
             };
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             // Mock profileOperations methods
             const mockProfileOperations = {
@@ -1111,7 +1092,7 @@ describe("configEditor", () => {
 
             await (configEditor as any).handleProfileRenames(mockRenames);
 
-            expect(mockProfileInfo.readProfilesFromDisk).toHaveBeenCalled();
+            expect(ConfigUtils.createProfileInfoAndLoad).toHaveBeenCalled();
             expect(mockProfileInfo.getTeamConfig).toHaveBeenCalled();
 
             // Verify that updateRenameKeysForParentChanges was called with sorted renames
@@ -1138,19 +1119,11 @@ describe("configEditor", () => {
 
         it("should return early when renames array is empty", async () => {
             const mockRenames: any[] = [];
-
-            const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-                getTeamConfig: jest.fn(),
-            };
-
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockClear();
 
             await (configEditor as any).handleProfileRenames(mockRenames);
 
-            expect(mockProfileInfo.readProfilesFromDisk).not.toHaveBeenCalled();
-            expect(mockProfileInfo.getTeamConfig).not.toHaveBeenCalled();
+            expect(ConfigUtils.createProfileInfoAndLoad).not.toHaveBeenCalled();
         });
 
         it("should handle error during profile rename and continue", async () => {
@@ -1170,8 +1143,7 @@ describe("configEditor", () => {
                 })),
             });
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             const mockProfileOperations = {
                 ...mocks.mockProfileOperations,
@@ -1247,8 +1219,7 @@ describe("configEditor", () => {
                 })),
             };
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             // Mock simulateProfileRenames
             const simulateProfileRenamesSpy = jest.spyOn(configEditor as any, "simulateProfileRenames").mockImplementation(() => {});
@@ -1273,7 +1244,7 @@ describe("configEditor", () => {
 
             const result = await (configEditor as any).getPendingMergedArgsForProfile(profPath, configPath, changes, renames);
 
-            expect(mockProfileInfo.readProfilesFromDisk).toHaveBeenCalled();
+            expect(ConfigUtils.createProfileInfoAndLoad).toHaveBeenCalled();
             expect(mockProfileInfo.getTeamConfig).toHaveBeenCalled();
             expect(simulateProfileRenamesSpy).toHaveBeenCalledWith(renames, expect.any(Object));
             expect(ConfigUtils.parseConfigChanges).toHaveBeenCalledWith(changes);
@@ -1310,8 +1281,7 @@ describe("configEditor", () => {
                 getAllProfiles: jest.fn(() => []),
             };
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             // Mock ConfigUtils.parseConfigChanges
             ConfigUtils.parseConfigChanges.mockReturnValue([]);
@@ -1444,8 +1414,7 @@ describe("configEditor", () => {
                 })),
             };
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             // Mock simulateProfileRenames
             const simulateProfileRenamesSpy = jest.spyOn(configEditor as any, "simulateProfileRenames").mockImplementation(() => {});
@@ -1455,7 +1424,7 @@ describe("configEditor", () => {
 
             const result = await (configEditor as any).getWizardMergedProperties(rootProfile, profileType, configPath, profileName, changes, renames);
 
-            expect(mockProfileInfo.readProfilesFromDisk).toHaveBeenCalled();
+            expect(ConfigUtils.createProfileInfoAndLoad).toHaveBeenCalled();
             expect(mockProfileInfo.getTeamConfig).toHaveBeenCalled();
             expect(simulateProfileRenamesSpy).toHaveBeenCalledWith(renames, expect.any(Object));
             expect(mockProfileInfo.getAllProfiles).toHaveBeenCalled();
@@ -1491,8 +1460,7 @@ describe("configEditor", () => {
                 })),
             });
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             Object.assign(ConfigUtils, mocks.mockModules.ConfigUtils);
 
@@ -1714,12 +1682,11 @@ describe("configEditor", () => {
                 })),
             };
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             await (configEditor as any).handleAutostoreToggle(otherChanges);
 
-            expect(mockProfileInfo.readProfilesFromDisk).toHaveBeenCalled();
+            expect(ConfigUtils.createProfileInfoAndLoad).toHaveBeenCalled();
             expect(mockProfileInfo.getTeamConfig).toHaveBeenCalled();
             expect(mockActivate).toHaveBeenCalledWith(true, false);
             expect(mockSet).toHaveBeenCalledWith("autoStore", true, { parseString: true });
@@ -1771,12 +1738,12 @@ describe("configEditor", () => {
                 })),
             };
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockClear();
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             await (configEditor as any).handleAutostoreToggle(otherChanges);
 
-            expect(mockProfileInfo.readProfilesFromDisk).toHaveBeenCalledTimes(2);
+            expect(ConfigUtils.createProfileInfoAndLoad).toHaveBeenCalledTimes(2);
             expect(mockProfileInfo.getTeamConfig).toHaveBeenCalledTimes(2);
             expect(mockSet).toHaveBeenCalledWith("autoStore", true, { parseString: true });
             expect(mockSet).toHaveBeenCalledWith("autoStore", false, { parseString: true });
@@ -1792,19 +1759,11 @@ describe("configEditor", () => {
                 },
             ];
 
-            // Mock ProfileInfo
-            const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-                getTeamConfig: jest.fn(),
-            };
-
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockClear();
 
             await (configEditor as any).handleAutostoreToggle(otherChanges);
 
-            expect(mockProfileInfo.readProfilesFromDisk).not.toHaveBeenCalled();
-            expect(mockProfileInfo.getTeamConfig).not.toHaveBeenCalled();
+            expect(ConfigUtils.createProfileInfoAndLoad).not.toHaveBeenCalled();
         });
 
         it("should handle error when updating autostore setting", async () => {
@@ -1816,16 +1775,8 @@ describe("configEditor", () => {
                 },
             ];
 
-            // Mock ProfileInfo that throws an error
-            const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockRejectedValue(new Error("Test error")),
-                getTeamConfig: jest.fn(),
-            };
+            ConfigUtils.createProfileInfoAndLoad.mockRejectedValue(new Error("Test error"));
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
-
-            // Mock vscode.window.showErrorMessage
             const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
 
             await (configEditor as any).handleAutostoreToggle(otherChanges);
@@ -1864,12 +1815,11 @@ describe("configEditor", () => {
                 })),
             };
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             await (configEditor as any).handleAutostoreToggle(otherChanges);
 
-            expect(mockProfileInfo.readProfilesFromDisk).toHaveBeenCalled();
+            expect(ConfigUtils.createProfileInfoAndLoad).toHaveBeenCalled();
             expect(mockProfileInfo.getTeamConfig).toHaveBeenCalled();
             // Should not call set or save since layer is not found
             expect(mockProfileInfo.getTeamConfig().set).not.toHaveBeenCalled();
@@ -1994,12 +1944,6 @@ describe("configEditor", () => {
                 },
             ]);
             const postMessageSpy = jest.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
-
-            const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-            };
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -2161,8 +2105,7 @@ describe("configEditor", () => {
             const mockProfileInfo = {
                 readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
             };
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             ConfigUtils.parseConfigChanges.mockReturnValue([]);
 
@@ -2215,8 +2158,7 @@ describe("configEditor", () => {
                     layers: [],
                 })),
             };
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -2246,8 +2188,7 @@ describe("configEditor", () => {
                 readProfilesFromDisk: mocks.mockFn.resolved,
             });
 
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             const parseConfigChangesSpy = jest.spyOn(ConfigUtils, "parseConfigChanges").mockReturnValue([
                 {
@@ -2292,12 +2233,6 @@ describe("configEditor", () => {
             };
 
             const mocks = createGlobalMocks();
-            const mockProfileInfo = createMockProfileInfo({
-                readProfilesFromDisk: mocks.mockFn.resolved,
-            });
-
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
 
             // Mock ZoweVsCodeExtension.workspaceRoot
             const workspaceRootSpy = jest.spyOn(ZoweVsCodeExtension, "workspaceRoot", "get").mockReturnValue({
@@ -2324,8 +2259,7 @@ describe("configEditor", () => {
             // Verify error was logged
             expect(consoleErrorSpy).toHaveBeenCalledWith("Save operation failed:", "Parse config changes failed");
 
-            // Verify configuration refresh happened
-            expect(mockProfileInfo.readProfilesFromDisk).toHaveBeenCalledWith({ projectDir: "/test/workspace" });
+            // Verify configuration refresh happened (via refreshConfigurationsAndNotifyWebview -> getLocalConfigs)
             expect(getLocalConfigsSpy).toHaveBeenCalled();
             expect(areSecureValuesAllowedSpy).toHaveBeenCalled();
 
@@ -2365,10 +2299,7 @@ describe("configEditor", () => {
                 createMockRename("profiles.anotherOldProfile", "profiles.anotherNewProfile"),
             ];
 
-            // Mock ProfileInfo
-            const mockProfileInfo = createMockProfileInfo();
-            const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-            (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(createMockProfileInfo());
 
             // Mock ConfigEditorPathUtils methods
             ConfigEditorPathUtils.getNewProfilePath = jest
@@ -2420,7 +2351,7 @@ describe("configEditor", () => {
             const result = await (configEditor as any).updateProfileChangesForRenames(mockMessage, mockRenames);
 
             // Verify ProfileInfo was called
-            expect(mockProfileInfo.readProfilesFromDisk).toHaveBeenCalled();
+            expect(ConfigUtils.createProfileInfoAndLoad).toHaveBeenCalled();
 
             // Verify the function completed successfully and returned a result
             expect(result).toBeDefined();
@@ -2606,8 +2537,7 @@ describe("configEditor", () => {
             })),
         });
 
-        const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-        (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+        ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
         const mockProfileOperations = {
             redactSecureValues: jest.fn().mockReturnValue([
@@ -2650,8 +2580,7 @@ describe("configEditor", () => {
             })),
         });
 
-        const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-        (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+        ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
         ConfigUtils.parseConfigChanges = jest.fn().mockReturnValue([]);
 
@@ -2683,8 +2612,7 @@ describe("configEditor", () => {
             })),
         });
 
-        const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-        (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+        ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
         const mockProfileOperations = {
             redactSecureValues: jest.fn().mockReturnValue([
@@ -2719,8 +2647,7 @@ describe("configEditor", () => {
             })),
         });
 
-        const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-        (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+        ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
         ConfigUtils.parseConfigChanges = jest.fn().mockReturnValue([
             {
@@ -2752,8 +2679,7 @@ describe("configEditor", () => {
             })),
         });
 
-        const ProfileInfoMock = jest.fn().mockImplementation(() => mockProfileInfo);
-        (ProfileInfo as any).mockImplementation(ProfileInfoMock);
+        ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
         ConfigUtils.parseConfigChanges = jest.fn().mockReturnValue([]);
 

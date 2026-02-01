@@ -9,6 +9,9 @@
  *
  */
 
+import { ProfileCredentials, ProfileInfo } from "@zowe/imperative";
+import { ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Profiles } from "../configuration/Profiles";
 import { ChangeEntry } from "./ConfigChangeHandlers";
 import { schemaValidation } from "./ConfigSchemaHelpers";
 
@@ -23,6 +26,19 @@ export type LayerModifications = {
 type ArrayField = "changes" | "deletions" | "defaultsChanges" | "defaultsDeleteKeys";
 
 export class ConfigUtils {
+    /**
+     * Creates a ProfileInfo instance for Zowe and loads profiles from disk.
+     * @returns ProfileInfo after readProfilesFromDisk
+     */
+    public static async createProfileInfoAndLoad(): Promise<ProfileInfo> {
+        const profInfo = new ProfileInfo("zowe", {
+            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+        });
+        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+        return profInfo;
+    }
+
     /**
      * Parses configuration changes and groups them by config path
      * @param data - The layer modifications data

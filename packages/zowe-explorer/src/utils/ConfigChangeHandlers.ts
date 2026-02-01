@@ -9,11 +9,9 @@
  *
  */
 
-import { ProfileCredentials, ProfileInfo } from "@zowe/imperative";
-import { ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as path from "path";
 import { ConfigSchemaHelpers } from "./ConfigSchemaHelpers";
-import { Profiles } from "../configuration/Profiles";
+import { ConfigUtils } from "./ConfigUtils";
 
 export type ChangeEntry = {
     key: string;
@@ -25,6 +23,32 @@ export type ChangeEntry = {
 };
 
 export class ConfigChangeHandlers {
+    private static transformSecureKeyToProperties(keyOrPath: string): string {
+        const parts = keyOrPath.split(".");
+        if (parts.length >= 2 && parts[parts.length - 2] === "secure") {
+            parts[parts.length - 2] = "properties";
+            return parts.join(".");
+        }
+        return keyOrPath;
+    }
+
+    private static activateLayerIfNeeded(configToUse: any, layerPath: string): void {
+        if (layerPath !== configToUse.api.layers.get().path) {
+            const layer = configToUse.layers.find((prof: any) => prof.path === layerPath);
+            if (layer) {
+                configToUse.api.layers.activate(layer.user, layer.global);
+            }
+        }
+    }
+
+    private static async getConfigToUse(teamConfig?: any): Promise<{ config: any; isSimulation: boolean }> {
+        if (teamConfig) {
+            return { config: teamConfig, isSimulation: true };
+        }
+        const profInfo = await ConfigUtils.createProfileInfoAndLoad();
+        return { config: profInfo.getTeamConfig(), isSimulation: false };
+    }
+
     /**
      * Handles changes to default profile settings
      * @param changes - Array of changes to apply
@@ -39,28 +63,8 @@ export class ConfigChangeHandlers {
         activeLayer: string,
         teamConfig?: any
     ): Promise<void> {
-        let configToUse: any;
-        const isSimulation = !!teamConfig;
-
-        if (teamConfig) {
-            // Simulation mode: use provided teamConfig
-            configToUse = teamConfig;
-        } else {
-            // Normal mode: create ProfileInfo and read from disk
-            const profInfo = new ProfileInfo("zowe", {
-                overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
-                credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-            });
-            await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
-            configToUse = profInfo.getTeamConfig();
-        }
-
-        if (activeLayer !== configToUse.api.layers.get().path) {
-            const findProfile = configToUse.layers.find((prof: any) => prof.path === activeLayer);
-            if (findProfile) {
-                configToUse.api.layers.activate(findProfile.user, findProfile.global);
-            }
-        }
+        const { config: configToUse, isSimulation } = await this.getConfigToUse(teamConfig);
+        this.activateLayerIfNeeded(configToUse, activeLayer);
 
         for (const change of changes) {
             configToUse.api.profiles.defaultSet(change.key, change.value);
@@ -70,7 +74,6 @@ export class ConfigChangeHandlers {
             configToUse.delete(`defaults.${deletion.key}`);
         }
 
-        // Only save if not in simulation mode
         if (!isSimulation) {
             await configToUse.save();
         }
@@ -92,60 +95,26 @@ export class ConfigChangeHandlers {
         areSecureValuesAllowed?: () => Promise<boolean>,
         teamConfig?: any
     ): Promise<void> {
-        let configToUse: any;
-        const isSimulation = !!teamConfig;
+        const { config: configToUse, isSimulation } = await this.getConfigToUse(teamConfig);
 
-        if (teamConfig) {
-            // Simulation mode: use provided teamConfig
-            configToUse = teamConfig;
-        } else {
-            // Normal mode: create ProfileInfo and read from disk
-            const profInfo = new ProfileInfo("zowe", {
-                overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
-                credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-            });
-            await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
-            configToUse = profInfo.getTeamConfig();
-        }
-
-        // Filter secure values only in normal mode (when areSecureValuesAllowed is provided)
         let filteredChanges = changes;
         if (!isSimulation && areSecureValuesAllowed) {
             const secureValuesAllowed = await areSecureValuesAllowed();
             filteredChanges = secureValuesAllowed ? changes : changes.filter((change) => !change.secure);
         }
 
-        // Transform secure keys to properties
         for (const item of filteredChanges) {
-            const keyParts = item.key.split(".");
-            if (keyParts[keyParts.length - 2] === "secure") {
-                keyParts[keyParts.length - 2] = "properties";
-                item.key = keyParts.join(".");
-            }
-
+            item.key = this.transformSecureKeyToProperties(item.key);
             if (item.profile) {
-                const profileParts = item.profile.split(".");
-                if (profileParts[profileParts.length - 2] === "secure") {
-                    profileParts[profileParts.length - 2] = "properties";
-                    item.profile = profileParts.join(".");
-                }
+                item.profile = this.transformSecureKeyToProperties(item.profile);
             }
         }
 
         for (const item of deletions) {
-            const keyParts = item.key.split(".");
-            if (keyParts[keyParts.length - 2] === "secure") {
-                keyParts[keyParts.length - 2] = "properties";
-                item.key = keyParts.join(".");
-            }
+            item.key = this.transformSecureKeyToProperties(item.key);
         }
 
-        if (configPath !== configToUse.api.layers.get().path) {
-            const findProfile = configToUse.layers.find((prof: any) => prof.path === configPath);
-            if (findProfile) {
-                configToUse.api.layers.activate(findProfile.user, findProfile.global);
-            }
-        }
+        this.activateLayerIfNeeded(configToUse, configPath);
 
         for (const change of filteredChanges) {
             try {

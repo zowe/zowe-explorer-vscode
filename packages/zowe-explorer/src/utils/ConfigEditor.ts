@@ -9,16 +9,15 @@
  *
  */
 
-import { DeferredPromise, WebView, ZoweVsCodeExtension, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { DeferredPromise, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { ProfileInfo, ProfileCredentials } from "@zowe/imperative";
+import type { ProfileInfo } from "@zowe/imperative";
 import * as path from "path";
 import * as fs from "fs";
 import { ConfigSchemaHelpers, schemaValidation } from "./ConfigSchemaHelpers";
 import { ConfigChangeHandlers } from "./ConfigChangeHandlers";
 import { ConfigUtils } from "./ConfigUtils";
 import { updateDefaultsAfterRename, simulateDefaultsUpdateAfterRename } from "../webviews/src/config-editor/utils/MoveUtils";
-import { Profiles } from "../configuration/Profiles";
 import { ConfigEditorMessageHandlers } from "./ConfigEditorMessageHandlers";
 import { ConfigEditorProfileOperations } from "./ConfigEditorProfileOperations";
 import { ConfigEditorFileOperations } from "./ConfigEditorFileOperations";
@@ -128,12 +127,9 @@ export class ConfigEditor extends WebView {
     }
 
     public async getLocalConfigs(): Promise<any[]> {
-        const profInfo = new ProfileInfo("zowe", {
-            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
-            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-        });
+        let profInfo: ProfileInfo;
         try {
-            await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+            profInfo = await ConfigUtils.createProfileInfoAndLoad();
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             vscode.window.showErrorMessage(`Error reading profiles from disk: ${errorMessage}`);
@@ -248,11 +244,64 @@ export class ConfigEditor extends WebView {
         return allConfigs;
     }
 
-    protected async onDidReceiveMessage(message: any): Promise<void> {
-        const profInfo = new ProfileInfo("zowe", {
-            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
-            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
+    private async refreshConfigurationsAndNotifyWebview(options?: { saveError?: string }): Promise<void> {
+        const configs = await this.getLocalConfigs();
+        const secureValuesAllowed = await this.areSecureValuesAllowed();
+        await this.panel.webview.postMessage({
+            command: "CONFIGURATIONS",
+            contents: configs,
+            secureValuesAllowed,
         });
+        if (options?.saveError) {
+            await this.panel.webview.postMessage({
+                command: "SAVE_ERROR",
+                error: options.saveError,
+            });
+        }
+        await this.panel.webview.postMessage({
+            command: "DISABLE_OVERLAY",
+        });
+    }
+
+    private applySecureFieldPrecedence(teamConfig: any, knownArgs: any[]): void {
+        if (!knownArgs || !Array.isArray(knownArgs)) {
+            return;
+        }
+        knownArgs.forEach((arg) => {
+            if (!arg?.argLoc?.osLoc || !arg?.argLoc?.jsonLoc) {
+                return;
+            }
+            let isSecure = false;
+            let fieldFound = false;
+            const sortedLayers = [...teamConfig.layers].sort((a, b) => {
+                if (a.user && !b.user) return -1;
+                if (!a.user && b.user) return 1;
+                return 0;
+            });
+            for (const layer of sortedLayers) {
+                const secFields = teamConfig.api.secure.secureFields({ user: layer.user, global: layer.global });
+                if (this.layerHasField(layer, arg.argLoc.jsonLoc)) {
+                    fieldFound = true;
+                    isSecure = secFields.includes(arg.argLoc.jsonLoc);
+                    break;
+                }
+            }
+            if (!fieldFound) {
+                for (const layer of teamConfig.layers) {
+                    const secFields = teamConfig.api.secure.secureFields({ user: layer.user, global: layer.global });
+                    if (secFields.includes(arg.argLoc.jsonLoc)) {
+                        isSecure = true;
+                        break;
+                    }
+                }
+            }
+            if (isSecure) {
+                arg.secure = true;
+            }
+        });
+    }
+
+    protected async onDidReceiveMessage(message: any): Promise<void> {
         switch (message.command.toLocaleUpperCase()) {
             case "GET_PROFILES": {
                 await this.messageHandlers.handleGetProfiles();
@@ -286,42 +335,11 @@ export class ConfigEditor extends WebView {
                         await this.handleAutostoreToggle(message.otherChanges);
                     }
 
-                    await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
-
-                    const configs = await this.getLocalConfigs();
-                    const secureValuesAllowed = await this.areSecureValuesAllowed();
-
-                    await this.panel.webview.postMessage({
-                        command: "CONFIGURATIONS",
-                        contents: configs,
-                        secureValuesAllowed,
-                    });
-
-                    await this.panel.webview.postMessage({
-                        command: "DISABLE_OVERLAY",
-                    });
+                    await this.refreshConfigurationsAndNotifyWebview();
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : String(error);
                     console.error("Save operation failed:", errorMessage);
-
-                    await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
-                    const configs = await this.getLocalConfigs();
-                    const secureValuesAllowed = await this.areSecureValuesAllowed();
-
-                    await this.panel.webview.postMessage({
-                        command: "CONFIGURATIONS",
-                        contents: configs,
-                        secureValuesAllowed,
-                    });
-
-                    await this.panel.webview.postMessage({
-                        command: "SAVE_ERROR",
-                        error: errorMessage,
-                    });
-
-                    await this.panel.webview.postMessage({
-                        command: "DISABLE_OVERLAY",
-                    });
+                    await this.refreshConfigurationsAndNotifyWebview({ saveError: errorMessage });
                 }
                 break;
             }
@@ -383,7 +401,7 @@ export class ConfigEditor extends WebView {
                     console.error("Failed to get merged properties:", errorMessage);
                     vscode.window.showErrorMessage(`Cannot show merged properties: ${errorMessage}`);
                 }
-                await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+                await ConfigUtils.createProfileInfoAndLoad();
                 break;
             }
             case "GET_WIZARD_MERGED_PROPERTIES": {
@@ -448,11 +466,7 @@ export class ConfigEditor extends WebView {
         for (const change of otherChanges) {
             if (change.type === "autostore") {
                 try {
-                    const profInfo = new ProfileInfo("zowe", {
-                        overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
-                        credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-                    });
-                    await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+                    const profInfo = await ConfigUtils.createProfileInfoAndLoad();
                     const teamConfig = profInfo.getTeamConfig();
 
                     const targetLayer = teamConfig.layers.find((layer: any) => layer.path === change.configPath);
@@ -475,11 +489,7 @@ export class ConfigEditor extends WebView {
             return;
         }
 
-        const profInfo = new ProfileInfo("zowe", {
-            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
-            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-        });
-        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+        const profInfo = await ConfigUtils.createProfileInfoAndLoad();
 
         const sortedRenames = this.sortRenamesByDepth(renames);
 
@@ -681,11 +691,7 @@ export class ConfigEditor extends WebView {
             return message;
         }
 
-        const profInfo = new ProfileInfo("zowe", {
-            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
-            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-        });
-        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+        await ConfigUtils.createProfileInfoAndLoad();
 
         const updatedMessage = { ...message };
 
@@ -740,12 +746,7 @@ export class ConfigEditor extends WebView {
         changes: any,
         renames?: Array<{ originalKey: string; newKey: string; configPath: string }>
     ): Promise<any> {
-        const profInfo = new ProfileInfo("zowe", {
-            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
-            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-        });
-        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
-
+        const profInfo = await ConfigUtils.createProfileInfoAndLoad();
         const teamConfig = profInfo.getTeamConfig();
 
         if (renames && Array.isArray(renames)) {
@@ -823,50 +824,7 @@ export class ConfigEditor extends WebView {
         }
 
         if (mergedArgs.knownArgs) {
-            mergedArgs.knownArgs.forEach((arg) => {
-                if (arg.argLoc && arg.argLoc.osLoc && arg.argLoc.jsonLoc) {
-                    let isSecure = false;
-                    let fieldFound = false;
-
-                    // Sort layers by precedence (user layers override global layers)
-                    const sortedLayers = [...teamConfig.layers].sort((a, b) => {
-                        // User layers have higher precedence than global layers
-                        if (a.user && !b.user) return -1;
-                        if (!a.user && b.user) return 1;
-                        // If both are same type, maintain original order
-                        return 0;
-                    });
-
-                    for (const layer of sortedLayers) {
-                        const secFields = teamConfig.api.secure.secureFields({ user: layer.user, global: layer.global });
-
-                        // Check if this layer has the field defined (either as secure or insecure)
-                        const layerHasField = this.layerHasField(layer, arg.argLoc.jsonLoc);
-
-                        if (layerHasField) {
-                            fieldFound = true;
-                            // If the field is in the secure array, it's secure
-                            isSecure = secFields.includes(arg.argLoc.jsonLoc);
-                            break; // Use the first layer that has this field
-                        }
-                    }
-
-                    // If no layer explicitly defines this field, check if it's secure in any layer
-                    if (!fieldFound) {
-                        for (const layer of teamConfig.layers) {
-                            const secFields = teamConfig.api.secure.secureFields({ user: layer.user, global: layer.global });
-                            if (secFields.includes(arg.argLoc.jsonLoc)) {
-                                isSecure = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (isSecure) {
-                        arg.secure = true;
-                    }
-                }
-            });
+            this.applySecureFieldPrecedence(teamConfig, mergedArgs.knownArgs);
         }
         const redacted = this.profileOperations.redactSecureValues(mergedArgs.knownArgs);
         return redacted;
@@ -1005,11 +963,7 @@ export class ConfigEditor extends WebView {
             return [];
         }
 
-        const profInfo = new ProfileInfo("zowe", {
-            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
-            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-        });
-        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+        const profInfo = await ConfigUtils.createProfileInfoAndLoad();
 
         const teamConfig = profInfo.getTeamConfig();
 
@@ -1090,54 +1044,8 @@ export class ConfigEditor extends WebView {
 
             const mergedArgs = profInfo.mergeArgsForProfile(tempProfile, { getSecureVals: true });
 
-            // Apply the same secure field precedence logic as in getPendingMergedArgsForProfile
             if (mergedArgs.knownArgs) {
-                mergedArgs.knownArgs.forEach((arg) => {
-                    if (arg.argLoc && arg.argLoc.osLoc && arg.argLoc.jsonLoc) {
-                        // Check if this specific field path is secure, respecting layer precedence
-                        let isSecure = false;
-                        let fieldFound = false;
-
-                        // Sort layers by precedence (user layers override global layers)
-                        const sortedLayers = [...teamConfig.layers].sort((a, b) => {
-                            // User layers have higher precedence than global layers
-                            if (a.user && !b.user) return -1;
-                            if (!a.user && b.user) return 1;
-                            // If both are same type, maintain original order
-                            return 0;
-                        });
-
-                        for (const layer of sortedLayers) {
-                            const secFields = teamConfig.api.secure.secureFields({ user: layer.user, global: layer.global });
-
-                            // Check if this layer has the field defined (either as secure or insecure)
-                            // We need to check if the field exists in this layer's properties
-                            const layerHasField = this.layerHasField(layer, arg.argLoc.jsonLoc);
-
-                            if (layerHasField) {
-                                fieldFound = true;
-                                // If the field is in the secure array, it's secure
-                                isSecure = secFields.includes(arg.argLoc.jsonLoc);
-                                break; // Use the first layer that has this field
-                            }
-                        }
-
-                        // If no layer explicitly defines this field, check if it's secure in any layer
-                        if (!fieldFound) {
-                            for (const layer of teamConfig.layers) {
-                                const secFields = teamConfig.api.secure.secureFields({ user: layer.user, global: layer.global });
-                                if (secFields.includes(arg.argLoc.jsonLoc)) {
-                                    isSecure = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (isSecure) {
-                            arg.secure = true;
-                        }
-                    }
-                });
+                this.applySecureFieldPrecedence(teamConfig, mergedArgs.knownArgs);
             }
 
             const redacted = this.profileOperations.redactSecureValues(mergedArgs.knownArgs);

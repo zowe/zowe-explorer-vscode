@@ -148,7 +148,6 @@ export class ConfigEditorProfileOperations {
                         const childNewParts = childRename.newKey.split(".");
 
                         // Check if child is an extraction (moving OUT of the parent entirely)
-                        // Child is NOT an extraction if its newKey is under either the old OR new parent location
                         const staysUnderOldParent =
                             childRename.newKey.startsWith(parentOriginalKey + ".") || childRename.newKey === parentOriginalKey;
                         const movesToUnderNewParent = childRename.newKey.startsWith(parentNewKey + ".") || childRename.newKey === parentNewKey;
@@ -157,8 +156,6 @@ export class ConfigEditorProfileOperations {
 
                         if (childOriginalStartsWithParent && isExtraction) {
                             // For extractions, don't update the keys - the extraction is sorted first
-                            // and should be processed before the parent move. The child is being
-                            // extracted OUT of the parent, so its original location is still valid.
                             continue;
                         }
 

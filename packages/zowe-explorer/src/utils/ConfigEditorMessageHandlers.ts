@@ -10,12 +10,11 @@
  */
 
 import * as vscode from "vscode";
-import { ProfileCredentials, ProfileInfo } from "@zowe/imperative";
-import { ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
-import { Profiles } from "../configuration/Profiles";
 import { Definitions } from "../configuration/Definitions";
 import { ConfigEditorProfileOperations } from "./ConfigEditorProfileOperations";
+import { ConfigUtils } from "./ConfigUtils";
 
 export class ConfigEditorMessageHandlers {
     constructor(
@@ -26,12 +25,8 @@ export class ConfigEditorMessageHandlers {
     ) {}
 
     async handleGetProfiles(): Promise<void> {
-        const profInfo = new ProfileInfo("zowe", {
-            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
-            credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-        });
         try {
-            await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+            await ConfigUtils.createProfileInfoAndLoad();
         } catch (err) {}
 
         const configurations = await this.getLocalConfigs();
@@ -186,7 +181,7 @@ export class ConfigEditorMessageHandlers {
 
             await this.panel.webview.postMessage({
                 command: "ENV_VARS_RESPONSE",
-                envVars: envVarNames.slice(0, 200),
+                envVars: envVarNames,
             });
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
