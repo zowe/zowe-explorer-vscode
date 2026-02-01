@@ -323,7 +323,6 @@ const createGlobalMocks = () => ({
 
     mockFileOperations: {
         createNewConfig: jest.fn().mockResolvedValue([]),
-        openConfigFileWithProfile: jest.fn().mockResolvedValue(undefined),
     },
 
     // Common mock modules
@@ -1966,17 +1965,17 @@ describe("configEditor", () => {
         it("should handle OPEN_CONFIG_FILE_WITH_PROFILE command", async () => {
             const mockMessage = {
                 command: "OPEN_CONFIG_FILE_WITH_PROFILE",
-                profileName: "testProfile",
-                configPath: "/test/config/path",
+                filePath: "/test/config/path",
+                profileKey: "testProfile",
             };
 
             const openConfigFileWithProfileSpy = jest
-                .spyOn((configEditor as any).fileOperations, "openConfigFileWithProfile")
+                .spyOn(ZoweVsCodeExtension, "openConfigFileWithProfile")
                 .mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
-            expect(openConfigFileWithProfileSpy).toHaveBeenCalledWith(mockMessage);
+            expect(openConfigFileWithProfileSpy).toHaveBeenCalledWith(mockMessage.filePath, mockMessage.profileKey);
         });
 
         it("should handle GET_MERGED_PROPERTIES command", async () => {

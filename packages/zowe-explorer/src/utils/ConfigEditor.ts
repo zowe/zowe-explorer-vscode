@@ -362,7 +362,7 @@ export class ConfigEditor extends WebView {
                 break;
             }
             case "OPEN_CONFIG_FILE_WITH_PROFILE": {
-                await this.fileOperations.openConfigFileWithProfile(message);
+                await ZoweVsCodeExtension.openConfigFileWithProfile(message.filePath, message.profileKey);
                 break;
             }
 
@@ -755,11 +755,11 @@ export class ConfigEditor extends WebView {
         const parsedChanges = ConfigUtils.parseConfigChanges(changes);
         for (const change of parsedChanges) {
             if (change.defaultsChanges || change.defaultsDeleteKeys) {
-                ConfigChangeHandlers.simulateDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
+                await ConfigChangeHandlers.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
             }
 
             if (change.changes || change.deletions) {
-                ConfigChangeHandlers.simulateProfileChanges(change.changes, change.deletions, change.configPath, teamConfig);
+                await ConfigChangeHandlers.handleProfileChanges(change.changes, change.deletions, change.configPath, undefined, teamConfig);
             }
         }
 
@@ -1027,10 +1027,10 @@ export class ConfigEditor extends WebView {
             const parsedChanges = ConfigUtils.parseConfigChanges(changes);
             for (const change of parsedChanges) {
                 if (change.defaultsChanges || change.defaultsDeleteKeys) {
-                    ConfigChangeHandlers.simulateDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
+                    await ConfigChangeHandlers.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
                 }
                 if (change.changes || change.deletions) {
-                    ConfigChangeHandlers.simulateProfileChanges(change.changes, change.deletions, change.configPath, teamConfig);
+                    await ConfigChangeHandlers.handleProfileChanges(change.changes, change.deletions, change.configPath, undefined, teamConfig);
                 }
             }
         }

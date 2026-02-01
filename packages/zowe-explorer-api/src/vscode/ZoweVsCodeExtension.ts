@@ -463,6 +463,129 @@ export class ZoweVsCodeExtension {
         await Gui.showTextDocument(document, { preview: false });
     }
 
+    /**
+     * Opens a config file and navigates to a specific profile, highlighting it in the editor
+     * @param filePath - Path to the configuration file
+     * @param profileKey - Dot-separated profile key (e.g., "base.prod" for nested profiles)
+     */
+    public static async openConfigFileWithProfile(filePath: string, profileKey: string): Promise<void> {
+        try {
+            const document = await vscode.workspace.openTextDocument(filePath);
+            const editor = await Gui.showTextDocument(document, { preview: false });
+
+            const text = document.getText();
+            const lines = text.split("\n");
+
+            const profileParts = profileKey.split(".");
+            let currentLine = -1;
+            let currentColumn = 0;
+            let foundProfile = false;
+            let globalBraceCount = 0;
+            let inProfilesSection = false;
+            let profileDepth = 0;
+            let inTargetProfile = false;
+            let targetProfileBraceCount = 0;
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const trimmedLine = line.trim();
+
+                for (const char of line) {
+                    if (char === "{") {
+                        globalBraceCount++;
+                    }
+                    if (char === "}") {
+                        globalBraceCount--;
+                    }
+                }
+
+                if (trimmedLine.includes('"profiles"')) {
+                    if (!inTargetProfile) {
+                        inProfilesSection = true;
+                        profileDepth = 0;
+                        inTargetProfile = false;
+                        targetProfileBraceCount = 0;
+                    } else {
+                        profileDepth++;
+                        inTargetProfile = false;
+                        targetProfileBraceCount = 0;
+                    }
+                    continue;
+                }
+
+                if (inProfilesSection) {
+                    if (inTargetProfile) {
+                        for (const char of line) {
+                            if (char === "{") {
+                                targetProfileBraceCount++;
+                            }
+                            if (char === "}") {
+                                targetProfileBraceCount--;
+                            }
+                        }
+
+                        const profileMatch = trimmedLine.match(/"([^"]+)":\s*\{/);
+                        if (profileMatch) {
+                            const foundProfileName = profileMatch[1];
+
+                            if (profileParts[profileDepth] === foundProfileName) {
+                                if (profileDepth === profileParts.length - 1) {
+                                    // This is the final profile we're looking for
+                                    foundProfile = true;
+                                    currentLine = i;
+                                    // Find the column position at the end of the profile name
+                                    const profileNameIndex = line.indexOf(`"${foundProfileName}"`);
+                                    currentColumn = profileNameIndex >= 0 ? profileNameIndex + foundProfileName.length + 2 : 0;
+                                    break;
+                                }
+                            }
+                        }
+                        if (targetProfileBraceCount === 0) {
+                            inTargetProfile = false;
+                            profileDepth = 0;
+                        }
+                    } else {
+                        const profileMatch = trimmedLine.match(/"([^"]+)":\s*\{/);
+                        if (profileMatch) {
+                            const foundProfileName = profileMatch[1];
+
+                            if (profileParts[profileDepth] === foundProfileName) {
+                                if (profileDepth === profileParts.length - 1) {
+                                    foundProfile = true;
+                                    currentLine = i;
+                                    const profileNameIndex = line.indexOf(`"${foundProfileName}"`);
+                                    currentColumn = profileNameIndex >= 0 ? profileNameIndex + foundProfileName.length + 2 : 0;
+                                    break;
+                                } else {
+                                    inTargetProfile = true;
+                                    targetProfileBraceCount = 1;
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                    if (globalBraceCount === 0) {
+                        inProfilesSection = false;
+                        profileDepth = 0;
+                        inTargetProfile = false;
+                        targetProfileBraceCount = 0;
+                    }
+                }
+            }
+
+            if (foundProfile && currentLine !== -1) {
+                const position = new vscode.Position(currentLine, currentColumn);
+                editor.selection = new vscode.Selection(position, position);
+                editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
+            } else {
+                Gui.infoMessage(`Profile "${profileKey}" not found in the config file.`);
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            Gui.errorMessage(`Error opening file: ${filePath}: ${errorMessage}`);
+        }
+    }
+
     public static async getConfigLayers(): Promise<imperative.IConfigLayer[]> {
         const existingLayers: imperative.IConfigLayer[] = [];
         const config = await imperative.Config.load("zowe", {
@@ -576,7 +699,7 @@ export class ZoweVsCodeExtension {
         options.session.certKey = response.certKey;
     }
 
-    private static async checkExistingConfig(filePath: string, openInEditor: boolean = false): Promise<string | false> {
+        private static async checkExistingConfig(filePath: string, openInEditor: boolean = false): Promise<string | false> {
         const existingLayers = await this.getConfigLayers();
         const foundLayer = existingLayers.find((layer) => layer.path.includes(filePath));
         if (foundLayer == null) {

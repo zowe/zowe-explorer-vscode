@@ -533,8 +533,8 @@ describe("ConfigChangeHandlers", () => {
         });
     });
 
-    describe("simulateDefaultChanges", () => {
-        it("should simulate default changes without affecting original config", () => {
+    describe("handleDefaultChanges (simulation mode)", () => {
+        it("should simulate default changes without affecting original config", async () => {
             const changes: ChangeEntry[] = [
                 {
                     key: "ssh",
@@ -570,13 +570,13 @@ describe("ConfigChangeHandlers", () => {
                 delete: jest.fn(),
             };
 
-            ConfigChangeHandlers.simulateDefaultChanges(changes, deletions, activeLayer, teamConfig);
+            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer, teamConfig);
 
             expect(teamConfig.api.profiles.defaultSet).toHaveBeenCalledWith("ssh", "test-ssh");
             expect(teamConfig.delete).toHaveBeenCalledWith("defaults.base");
         });
 
-        it("should activate different layer when activeLayer differs from current", () => {
+        it("should activate different layer when activeLayer differs from current", async () => {
             const changes: ChangeEntry[] = [];
             const deletions: ChangeEntry[] = [];
             const activeLayer = "/different/config.json";
@@ -601,12 +601,12 @@ describe("ConfigChangeHandlers", () => {
                 delete: jest.fn(),
             };
 
-            ConfigChangeHandlers.simulateDefaultChanges(changes, deletions, activeLayer, teamConfig);
+            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer, teamConfig);
 
             expect(teamConfig.api.layers.activate).toHaveBeenCalledWith(true, false);
         });
 
-        it("should handle multiple changes and deletions", () => {
+        it("should handle multiple changes and deletions", async () => {
             const changes: ChangeEntry[] = [
                 {
                     key: "ssh",
@@ -648,7 +648,7 @@ describe("ConfigChangeHandlers", () => {
                 delete: jest.fn(),
             };
 
-            ConfigChangeHandlers.simulateDefaultChanges(changes, deletions, "/mock/config.json", teamConfig);
+            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, "/mock/config.json", teamConfig);
 
             expect(teamConfig.api.profiles.defaultSet).toHaveBeenCalledTimes(2);
             expect(teamConfig.api.profiles.defaultSet).toHaveBeenCalledWith("ssh", "ssh1");
@@ -657,8 +657,8 @@ describe("ConfigChangeHandlers", () => {
         });
     });
 
-    describe("simulateProfileChanges", () => {
-        it("should simulate profile changes without affecting original config", () => {
+    describe("handleProfileChanges (simulation mode)", () => {
+        it("should simulate profile changes without affecting original config", async () => {
             const changes: ChangeEntry[] = [
                 {
                     key: "profiles.test.host",
@@ -692,7 +692,7 @@ describe("ConfigChangeHandlers", () => {
                 delete: jest.fn(),
             };
 
-            ConfigChangeHandlers.simulateProfileChanges(changes, deletions, configPath, teamConfig);
+            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, undefined, teamConfig);
 
             expect(teamConfig.set).toHaveBeenCalledWith("profiles.test.host", "test-host", {
                 parseString: true,
@@ -701,7 +701,7 @@ describe("ConfigChangeHandlers", () => {
             expect(teamConfig.delete).toHaveBeenCalledWith("profiles.test.port");
         });
 
-        it("should transform secure keys to properties in changes", () => {
+        it("should transform secure keys to properties in changes", async () => {
             const changes: ChangeEntry[] = [
                 {
                     key: "profiles.test.secure.password",
@@ -726,7 +726,7 @@ describe("ConfigChangeHandlers", () => {
                 delete: jest.fn(),
             };
 
-            ConfigChangeHandlers.simulateProfileChanges(changes, deletions, "/mock/config.json", teamConfig);
+            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
 
             expect(teamConfig.set).toHaveBeenCalledWith("profiles.test.properties.password", "secret", {
                 parseString: true,
@@ -734,7 +734,7 @@ describe("ConfigChangeHandlers", () => {
             });
         });
 
-        it("should transform secure keys to properties in profile field", () => {
+        it("should transform secure keys to properties in profile field", async () => {
             const changes: ChangeEntry[] = [
                 {
                     key: "profiles.test.host",
@@ -760,7 +760,7 @@ describe("ConfigChangeHandlers", () => {
                 delete: jest.fn(),
             };
 
-            ConfigChangeHandlers.simulateProfileChanges(changes, deletions, "/mock/config.json", teamConfig);
+            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
 
             expect(teamConfig.set).toHaveBeenCalledWith("profiles.test.host", "test-host", {
                 parseString: true,
@@ -768,7 +768,7 @@ describe("ConfigChangeHandlers", () => {
             });
         });
 
-        it("should transform secure keys to properties in deletions", () => {
+        it("should transform secure keys to properties in deletions", async () => {
             const changes: ChangeEntry[] = [];
             const deletions: ChangeEntry[] = [
                 {
@@ -792,12 +792,12 @@ describe("ConfigChangeHandlers", () => {
                 delete: jest.fn(),
             };
 
-            ConfigChangeHandlers.simulateProfileChanges(changes, deletions, "/mock/config.json", teamConfig);
+            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
 
             expect(teamConfig.delete).toHaveBeenCalledWith("profiles.test.properties.password");
         });
 
-        it("should activate different layer when configPath differs from current", () => {
+        it("should activate different layer when configPath differs from current", async () => {
             const changes: ChangeEntry[] = [];
             const deletions: ChangeEntry[] = [];
             const configPath = "/different/config.json";
@@ -820,12 +820,12 @@ describe("ConfigChangeHandlers", () => {
                 delete: jest.fn(),
             };
 
-            ConfigChangeHandlers.simulateProfileChanges(changes, deletions, configPath, teamConfig);
+            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, undefined, teamConfig);
 
             expect(teamConfig.api.layers.activate).toHaveBeenCalledWith(false, true);
         });
 
-        it("should handle errors in set operation gracefully", () => {
+        it("should handle errors in set operation gracefully", async () => {
             const changes: ChangeEntry[] = [
                 {
                     key: "profiles.test.host",
@@ -852,15 +852,12 @@ describe("ConfigChangeHandlers", () => {
                 delete: jest.fn(),
             };
 
-            // Should not throw
-            expect(() => {
-                ConfigChangeHandlers.simulateProfileChanges(changes, deletions, "/mock/config.json", teamConfig);
-            }).not.toThrow();
+            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
 
             expect(teamConfig.set).toHaveBeenCalled();
         });
 
-        it("should handle errors in delete operation gracefully", () => {
+        it("should handle errors in delete operation gracefully", async () => {
             const changes: ChangeEntry[] = [];
             const deletions: ChangeEntry[] = [
                 {
@@ -886,15 +883,12 @@ describe("ConfigChangeHandlers", () => {
                 }),
             };
 
-            // Should not throw
-            expect(() => {
-                ConfigChangeHandlers.simulateProfileChanges(changes, deletions, "/mock/config.json", teamConfig);
-            }).not.toThrow();
+            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
 
             expect(teamConfig.delete).toHaveBeenCalled();
         });
 
-        it("should handle empty changes and deletions arrays", () => {
+        it("should handle empty changes and deletions arrays", async () => {
             const changes: ChangeEntry[] = [];
             const deletions: ChangeEntry[] = [];
 
@@ -910,13 +904,13 @@ describe("ConfigChangeHandlers", () => {
                 delete: jest.fn(),
             };
 
-            ConfigChangeHandlers.simulateProfileChanges(changes, deletions, "/mock/config.json", teamConfig);
+            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
 
             expect(teamConfig.set).not.toHaveBeenCalled();
             expect(teamConfig.delete).not.toHaveBeenCalled();
         });
 
-        it("should handle multiple changes and deletions", () => {
+        it("should handle multiple changes and deletions", async () => {
             const changes: ChangeEntry[] = [
                 {
                     key: "profiles.test1.host",
@@ -963,7 +957,7 @@ describe("ConfigChangeHandlers", () => {
                 delete: jest.fn(),
             };
 
-            ConfigChangeHandlers.simulateProfileChanges(changes, deletions, "/mock/config.json", teamConfig);
+            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
 
             expect(teamConfig.set).toHaveBeenCalledTimes(2);
             expect(teamConfig.set).toHaveBeenCalledWith("profiles.test1.host", "host1", {
