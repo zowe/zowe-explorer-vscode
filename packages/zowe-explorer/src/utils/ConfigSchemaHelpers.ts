@@ -69,9 +69,11 @@ export class ConfigSchemaHelpers {
             const schemaContent = fs.readFileSync(schemaPath, "utf8");
             const schema = JSON.parse(schemaContent);
 
-            // Only process profile properties, not top-level properties
             if (schema.properties && schema.properties.profiles) {
-                this.processProfileProperties(schema.properties.profiles, "", result);
+                this.processSchemaRecursive(schema.properties.profiles, "", result, {
+                    profileContext: true,
+                    processItems: false,
+                });
             }
 
             return result;
@@ -81,161 +83,83 @@ export class ConfigSchemaHelpers {
         }
     }
 
-    /**
-     * Recursively processes profile properties to find non-string types
-     * Only processes properties inside profile definitions, not top-level properties
-     */
-    private static processProfileProperties(
+    private static processSchemaRecursive(
         schema: any,
         currentPath: string,
-        result: Map<string, { type: string | string[]; path: string; description?: string }>
+        result: Map<string, { type: string | string[]; path: string; description?: string }>,
+        options: { profileContext: boolean; processItems: boolean }
     ): void {
-        // Handle pattern properties (for profile definitions like "^\\S*$")
-        if (schema.patternProperties) {
-            for (const [pattern, propSchema] of Object.entries(schema.patternProperties)) {
-                // For pattern properties, we'll use the pattern as the key
-                const propPath = currentPath ? `${currentPath}[${pattern}]` : `[${pattern}]`;
-                this.processProfileProperty(pattern, propSchema as any, propPath, result);
-            }
-        }
-
-        // Handle allOf conditions (common in JSON Schema for profile type definitions)
-        if (schema.allOf) {
-            for (const condition of schema.allOf) {
-                if (condition.then) {
-                    this.processProfileProperties(condition.then, currentPath, result);
-                }
-            }
-        }
-
-        // Handle properties directly (for when we're inside the then.properties.properties path)
         if (schema.properties) {
             for (const [propName, propSchema] of Object.entries(schema.properties)) {
                 const propPath = currentPath ? `${currentPath}.${propName}` : propName;
-                this.processProfileProperty(propName, propSchema as any, propPath, result);
+                this.processProperty(propName, propSchema as any, propPath, result, options);
             }
+        }
+
+        if (schema.patternProperties) {
+            for (const [pattern, propSchema] of Object.entries(schema.patternProperties)) {
+                const propPath = currentPath ? `${currentPath}[${pattern}]` : `[${pattern}]`;
+                this.processProperty(pattern, propSchema as any, propPath, result, options);
+            }
+        }
+
+        if (schema.allOf) {
+            for (const condition of schema.allOf) {
+                if (condition.then) {
+                    this.processSchemaRecursive(condition.then, currentPath, result, options);
+                }
+            }
+        }
+
+        if (options.processItems && schema.items) {
+            this.processSchemaRecursive(schema.items, `${currentPath}[]`, result, options);
         }
     }
 
-    /**
-     * Processes a single profile property to check its type
-     * Focuses only on properties inside profile definitions
-     */
-    private static processProfileProperty(
+    private static processProperty(
         propName: string,
         propSchema: any,
         propPath: string,
-        result: Map<string, { type: string | string[]; path: string; description?: string }>
+        result: Map<string, { type: string | string[]; path: string; description?: string }>,
+        options: { profileContext: boolean; processItems: boolean }
     ): void {
-        // Check if the property has a type
         if (propSchema.type) {
             const type = propSchema.type;
+            const { include, resolvedType } = this.shouldIncludeType(type, options.profileContext);
 
-            // Only include non-string and non-object properties
-            if (typeof type === "string") {
-                if (type !== "string" && type !== "object") {
-                    result.set(propName, {
-                        type,
-                        path: propPath,
-                        description: propSchema.description,
-                    });
-                }
-            } else if (Array.isArray(type)) {
-                // Handle union types (array of types) - only include if array doesn't include "string"modify
-                if (!type.includes("string")) {
-                    result.set(propName, {
-                        type,
-                        path: propPath,
-                        description: propSchema.description,
-                    });
-                }
+            if (include) {
+                result.set(propName, {
+                    type: resolvedType,
+                    path: propPath,
+                    description: propSchema.description,
+                });
             }
         }
 
-        // Recursively process nested properties, but only within profile context
         if (propSchema.properties || propSchema.patternProperties || propSchema.allOf || propSchema.items) {
-            this.processProfileProperties(propSchema, propPath, result);
+            this.processSchemaRecursive(propSchema, propPath, result, options);
         }
     }
 
-    /**
-     * Recursively processes schema properties to find non-string types
-     */
+    private static shouldIncludeType(
+        type: string | string[],
+        profileContext: boolean
+    ): { include: boolean; resolvedType: string | string[] } {
+        if (typeof type === "string") {
+            const include = profileContext ? type !== "string" && type !== "object" : type !== "string";
+            return { include, resolvedType: type };
+        }
+        const nonStringTypes = type.filter((t: string) => t !== "string");
+        const include = profileContext ? !type.includes("string") : nonStringTypes.length > 0;
+        const resolvedType = profileContext ? type : nonStringTypes;
+        return { include, resolvedType };
+    }
+
     public static processSchemaProperties(
         schema: any,
         currentPath: string,
         result: Map<string, { type: string | string[]; path: string; description?: string }>
     ): void {
-        // Handle properties
-        if (schema.properties) {
-            for (const [propName, propSchema] of Object.entries(schema.properties)) {
-                const propPath = currentPath ? `${currentPath}.${propName}` : propName;
-                this.processProperty(propName, propSchema as any, propPath, result);
-            }
-        }
-
-        // Handle pattern properties
-        if (schema.patternProperties) {
-            for (const [pattern, propSchema] of Object.entries(schema.patternProperties)) {
-                // For pattern properties, we'll use the pattern as the key
-                const propPath = currentPath ? `${currentPath}[${pattern}]` : `[${pattern}]`;
-                this.processProperty(pattern, propSchema as any, propPath, result);
-            }
-        }
-
-        // Handle allOf conditions (common in JSON Schema)
-        if (schema.allOf) {
-            for (const condition of schema.allOf) {
-                if (condition.then) {
-                    this.processSchemaProperties(condition.then, currentPath, result);
-                }
-            }
-        }
-
-        // Handle items in arrays
-        if (schema.items) {
-            this.processSchemaProperties(schema.items, `${currentPath}[]`, result);
-        }
-    }
-
-    /**
-     * Processes a single property to check if it's non-string
-     */
-    private static processProperty(
-        propName: string,
-        propSchema: any,
-        propPath: string,
-        result: Map<string, { type: string | string[]; path: string; description?: string }>
-    ): void {
-        // Check if the property has a type and it's not a string
-        if (propSchema.type) {
-            const type = propSchema.type;
-
-            // Check if it's not a string type
-            if (typeof type === "string") {
-                if (type !== "string") {
-                    result.set(propName, {
-                        type,
-                        path: propPath,
-                        description: propSchema.description,
-                    });
-                }
-            } else if (Array.isArray(type)) {
-                // Handle union types (array of types)
-                const nonStringTypes = type.filter((t: string) => t !== "string");
-                if (nonStringTypes.length > 0) {
-                    result.set(propName, {
-                        type: nonStringTypes,
-                        path: propPath,
-                        description: propSchema.description,
-                    });
-                }
-            }
-        }
-
-        // Recursively process nested properties
-        if (propSchema.properties || propSchema.patternProperties || propSchema.allOf || propSchema.items) {
-            this.processSchemaProperties(propSchema, propPath, result);
-        }
+        this.processSchemaRecursive(schema, currentPath, result, { profileContext: false, processItems: true });
     }
 }

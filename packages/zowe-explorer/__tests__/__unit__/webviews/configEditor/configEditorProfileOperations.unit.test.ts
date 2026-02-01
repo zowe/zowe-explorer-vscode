@@ -650,7 +650,14 @@ describe("ConfigEditorProfileOperations", () => {
 
     describe("validateProfileName", () => {
         it("should return valid for empty profile name", () => {
-            const result = profileOperations.validateProfileName("", "root", "/config.json", {}, {}, {});
+            const result = profileOperations.validateProfileName({
+                profileName: "",
+                rootProfile: "root",
+                configPath: "/config.json",
+                profiles: {},
+                pendingChanges: {},
+                renames: {},
+            });
             expect(result.isValid).toBe(true);
         });
 
@@ -661,7 +668,14 @@ describe("ConfigEditorProfileOperations", () => {
                     properties: {},
                 },
             };
-            const result = profileOperations.validateProfileName("existingProfile", "root", "/config.json", profiles, {}, {});
+            const result = profileOperations.validateProfileName({
+                profileName: "existingProfile",
+                rootProfile: "root",
+                configPath: "/config.json",
+                profiles,
+                pendingChanges: {},
+                renames: {},
+            });
             expect(result.isValid).toBe(false);
             expect(result.message).toBe("Profile name already exists under this root");
         });
@@ -678,7 +692,14 @@ describe("ConfigEditorProfileOperations", () => {
                     },
                 },
             };
-            const result = profileOperations.validateProfileName("child", "parent", "/config.json", profiles, {}, {});
+            const result = profileOperations.validateProfileName({
+                profileName: "child",
+                rootProfile: "parent",
+                configPath: "/config.json",
+                profiles,
+                pendingChanges: {},
+                renames: {},
+            });
             expect(result.isValid).toBe(false);
             expect(result.message).toBe("Profile name already exists under this root");
         });
@@ -693,7 +714,14 @@ describe("ConfigEditorProfileOperations", () => {
                     },
                 },
             };
-            const result = profileOperations.validateProfileName("newProfile", "root", "/config.json", {}, pendingChanges, {});
+            const result = profileOperations.validateProfileName({
+                profileName: "newProfile",
+                rootProfile: "root",
+                configPath: "/config.json",
+                profiles: {},
+                pendingChanges,
+                renames: {},
+            });
             expect(result.isValid).toBe(false);
             expect(result.message).toBe("Profile name already exists in pending changes");
         });
@@ -704,13 +732,27 @@ describe("ConfigEditorProfileOperations", () => {
                     oldProfile: "newProfile",
                 },
             };
-            const result = profileOperations.validateProfileName("newProfile", "root", "/config.json", {}, {}, renames);
+            const result = profileOperations.validateProfileName({
+                profileName: "newProfile",
+                rootProfile: "root",
+                configPath: "/config.json",
+                profiles: {},
+                pendingChanges: {},
+                renames,
+            });
             expect(result.isValid).toBe(false);
             expect(result.message).toBe("Profile name conflicts with a renamed profile");
         });
 
         it("should return valid when profile name is available", () => {
-            const result = profileOperations.validateProfileName("newProfile", "root", "/config.json", {}, {}, {});
+            const result = profileOperations.validateProfileName({
+                profileName: "newProfile",
+                rootProfile: "root",
+                configPath: "/config.json",
+                profiles: {},
+                pendingChanges: {},
+                renames: {},
+            });
             expect(result.isValid).toBe(true);
         });
 
@@ -721,7 +763,14 @@ describe("ConfigEditorProfileOperations", () => {
                     properties: {},
                 },
             };
-            const result = profileOperations.validateProfileName("newChild", "parent", "/config.json", profiles, {}, {});
+            const result = profileOperations.validateProfileName({
+                profileName: "newChild",
+                rootProfile: "parent",
+                configPath: "/config.json",
+                profiles,
+                pendingChanges: {},
+                renames: {},
+            });
             expect(result.isValid).toBe(true);
         });
     });

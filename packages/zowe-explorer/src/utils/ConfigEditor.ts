@@ -22,6 +22,7 @@ import { ConfigEditorMessageHandlers } from "./ConfigEditorMessageHandlers";
 import { ConfigEditorProfileOperations } from "./ConfigEditorProfileOperations";
 import { ConfigEditorFileOperations } from "./ConfigEditorFileOperations";
 import { ConfigEditorPathUtils } from "./ConfigEditorPathUtils";
+import { ConfigMoveAPI } from "../webviews/src/config-editor/types";
 
 export class ConfigEditor extends WebView {
     public userSubmission: DeferredPromise<{
@@ -100,6 +101,15 @@ export class ConfigEditor extends WebView {
             const originalDepthB = b.originalKey.split(".").length;
             return originalDepthA - originalDepthB;
         });
+    }
+
+    private prepareRenamesForProcessing(
+        renames: Array<{ originalKey: string; newKey: string; configPath: string }>
+    ): Array<{ originalKey: string; newKey: string; configPath: string }> {
+        const sortedRenames = this.sortRenamesByDepth(renames);
+        const updatedRenames = this.profileOperations.updateRenameKeysForParentChanges(sortedRenames);
+        const finalRenames = this.profileOperations.removeDuplicateRenames(updatedRenames);
+        return finalRenames.filter((rename) => rename.originalKey !== rename.newKey);
     }
 
     private async initializeWebview(): Promise<void> {
@@ -490,19 +500,9 @@ export class ConfigEditor extends WebView {
         }
 
         const profInfo = await ConfigUtils.createProfileInfoAndLoad();
+        const preparedRenames = this.prepareRenamesForProcessing(renames);
 
-        const sortedRenames = this.sortRenamesByDepth(renames);
-
-        // Update rename keys to reflect parent renames that have already been processed
-        const updatedRenames = this.profileOperations.updateRenameKeysForParentChanges(sortedRenames);
-
-        // Remove duplicate renames that target the same final key
-        const finalRenames = this.profileOperations.removeDuplicateRenames(updatedRenames);
-
-        // Filter out no-op renames (where originalKey === newKey)
-        const filteredRenames = finalRenames.filter((rename) => rename.originalKey !== rename.newKey);
-
-        for (const rename of filteredRenames) {
+        for (const rename of preparedRenames) {
             try {
                 await this.processSingleRename(rename, profInfo);
             } catch (error) {
@@ -579,27 +579,22 @@ export class ConfigEditor extends WebView {
         (teamConfig as any).delete(sourcePath);
     }
 
-    private createNestedProfileStructureDirectly(teamConfig: any, originalPath: string, newPath: string, originalKey: string, newKey: string): void {
-        const originalProfile = this.getProfileFromTeamConfig(teamConfig, originalPath);
-        if (!originalProfile) {
-            throw new Error(`Source profile not found at path: ${originalPath}`);
-        }
-
-        const childProfileName = newKey.substring(originalKey.length + 1);
-
-        const newParentProfile = {
-            ...originalProfile,
-            profiles: {
-                [childProfileName]: originalProfile,
-            },
+    private createTeamConfigAdapter(teamConfig: any): ConfigMoveAPI {
+        return {
+            get: (path: string) => this.getProfileFromTeamConfig(teamConfig, path),
+            set: (path: string, value: any) => teamConfig.set(path, value, { parseString: true }),
+            delete: (path: string) => teamConfig.delete(path),
         };
+    }
 
-        const childProfile = { ...originalProfile };
-        delete childProfile.profiles;
-
-        (teamConfig as any).set(originalPath, newParentProfile, { parseString: true });
-        const childPath = `${originalPath}.profiles.${childProfileName}`;
-        (teamConfig as any).set(childPath, childProfile, { parseString: true });
+    private createNestedProfileStructureDirectly(teamConfig: any, originalPath: string, newPath: string, originalKey: string, newKey: string): void {
+        const configAdapter = this.createTeamConfigAdapter(teamConfig);
+        const layerActive = () => ({
+            properties: {
+                profiles: teamConfig.api.layers.get().properties.profiles,
+            },
+        });
+        this.profileOperations.createNestedProfileStructure(configAdapter, layerActive, originalPath, newPath, originalKey, newKey);
     }
 
     private findNestedProfile(key: string, profilesObj: any): any {
@@ -871,24 +866,10 @@ export class ConfigEditor extends WebView {
             return;
         }
 
-        // Process renames in order - extractions are processed before their parents
-        const sortedRenames = this.sortRenamesByDepth(renames);
+        const preparedRenames = this.prepareRenamesForProcessing(renames);
 
-        // Update rename keys to reflect parent renames that have already been processed
-        const updatedRenames = this.profileOperations.updateRenameKeysForParentChanges(sortedRenames);
-
-        // Remove duplicate renames that target the same final key
-        const finalRenames = this.profileOperations.removeDuplicateRenames(updatedRenames);
-
-        // Filter out no-op renames (where originalKey === newKey)
-        const filteredRenames = finalRenames.filter((rename) => rename.originalKey !== rename.newKey);
-
-        for (const rename of filteredRenames) {
+        for (const rename of preparedRenames) {
             try {
-                // Skip if the original and new keys are the same (no-op rename)
-                if (rename.originalKey === rename.newKey) {
-                    continue;
-                }
 
                 const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
 

@@ -12,18 +12,21 @@
 import { ConfigMoveAPI, IConfigLayer } from "../webviews/src/config-editor/types";
 import { ConfigUtils } from "./ConfigUtils";
 
+export type ValidateProfileNameOptions = {
+    profileName: string;
+    rootProfile: string;
+    configPath: string;
+    profiles: any;
+    pendingChanges: { [configPath: string]: { [key: string]: any } };
+    renames: { [configPath: string]: { [originalKey: string]: string } };
+};
+
 export class ConfigEditorProfileOperations {
     /**
      * Validates if a profile name is available for creation
      */
-    validateProfileName(
-        profileName: string,
-        rootProfile: string,
-        configPath: string,
-        profiles: any,
-        pendingChanges: { [configPath: string]: { [key: string]: any } },
-        renames: { [configPath: string]: { [originalKey: string]: string } }
-    ): { isValid: boolean; message?: string } {
+    validateProfileName(options: ValidateProfileNameOptions): { isValid: boolean; message?: string } {
+        const { profileName, rootProfile, configPath, profiles, pendingChanges, renames } = options;
         if (!profileName.trim()) {
             return { isValid: true };
         }

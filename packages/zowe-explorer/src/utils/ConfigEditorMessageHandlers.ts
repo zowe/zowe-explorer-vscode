@@ -196,14 +196,14 @@ export class ConfigEditorMessageHandlers {
         try {
             const { profileName, rootProfile, configPath, profiles, pendingChanges, renames } = message;
 
-            const validationResult = this.profileOperations.validateProfileName(
+            const validationResult = this.profileOperations.validateProfileName({
                 profileName,
                 rootProfile,
                 configPath,
                 profiles,
                 pendingChanges,
-                renames
-            );
+                renames,
+            });
 
             await this.panel.webview.postMessage({
                 command: "PROFILE_NAME_VALIDATION_RESULT",
