@@ -222,11 +222,16 @@ export const RenderConfig = ({
         const configPath = configurations[selectedTab!]?.configPath;
         const deletionsList = deletions[configPath] ?? [];
 
-        // Remove deleted properties from the combined config
+        // Remove deleted properties from the combined config.
+        // Exception: when a property is deleted but exists in mergedProps (lower-priority layer),
         Object.keys(filteredCombinedConfig).forEach((key) => {
           const propertyFullKey = [...path, key].join(".");
           if (deletionsList.includes(propertyFullKey)) {
-            delete filteredCombinedConfig[key];
+            const hasMergedReplacement =
+              showMergedProperties !== "hide" && mergedProps?.[key] !== undefined;
+            if (!hasMergedReplacement) {
+              delete filteredCombinedConfig[key];
+            }
           }
         });
 
@@ -287,23 +292,19 @@ export const RenderConfig = ({
           const allowedProperties = Object.keys(propertySchema);
 
           Object.entries(mergedProps).forEach(([propertyName, propData]: [string, any]) => {
-            // Only add if:
-            // 1. Not already in the entries
-            // 2. Not in the original properties
-            // 3. Property is allowed by the schema (only if profile has a type)
-            // 4. Property is not in deletions
             const isAllowedBySchema = !profileType || allowedProperties.includes(propertyName);
+            const propertyFullKey = [...path, propertyName].join(".");
+            const isInDeletions = deletionsList.includes(propertyFullKey);
+            const alreadyInEntries = entriesForSorting.some(([existingKey]) => existingKey === propertyName);
+            const wasInOriginal = originalProperties?.hasOwnProperty(propertyName);
 
-            // Check if the local property is in deletions (we want to show merged properties even when local is deleted)
+            // Add when not already in entries
+            const shouldAdd =
+              !alreadyInEntries &&
+              isAllowedBySchema &&
+              (!wasInOriginal || (isInDeletions && typeof propData?.value !== "object"));
 
-            if (
-              !entriesForSorting.some(([existingKey]) => existingKey === propertyName) &&
-              !originalProperties?.hasOwnProperty(propertyName) &&
-              isAllowedBySchema
-              // Note: We intentionally don't check isLocalPropertyInDeletions here because
-              // we want to show merged properties even when the local property is deleted
-            ) {
-              // Add merged property with a special flag to identify it as merged
+            if (shouldAdd) {
               entriesForSorting.push([
                 propertyName,
                 {
@@ -369,18 +370,20 @@ export const RenderConfig = ({
           return false;
         })();
 
-        // Check if this is a merged property that should be shown even if the original was deleted
-        const isMergedProperty = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath);
+        const hasMergedReplacement =
+          showMergedProperties !== "hide" && displayKey != null && mergedProps?.[displayKey] !== undefined;
 
-        if (isInDeletions && !isMergedProperty) {
+        // When deleted: hide only if there is no merged value to show (truly removed)
+        // When deleted with merged replacement: show it (override removed; lower-priority value shows through)
+        if (isInDeletions && !hasMergedReplacement) {
           return null;
         }
 
-        // If showMergedProperties is "unfiltered", do NOT hide deleted merged properties
-        // If showMergedProperties is "show" (default), hide deleted merged properties (standard behavior)
-        if (isInDeletions && isMergedProperty && showMergedProperties !== "unfiltered") {
-          return null;
-        }
+        // When showing a deleted property with merged replacement, treat it as a merged property for UI
+        // (disabled input, overwrite button) since we're displaying the inherited value
+        const isFromMergedProps =
+          isPropertyFromMergedProps(displayKey, path, mergedProps, configPath) || (isInDeletions && hasMergedReplacement);
+        const isDeletedMergedProperty = isFromMergedProps && isInDeletions && !hasMergedReplacement;
 
         // Filter secure properties from properties object
         if (key === "properties") {
@@ -421,10 +424,7 @@ export const RenderConfig = ({
           !isMergedPropertyForSorting &&
           !shouldRenderAsSimpleProperty;
         const isArray = Array.isArray(value);
-        // Check if this property is from merged properties and should use the merged value
-        const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath);
         const mergedPropData = displayKey ? mergedProps?.[displayKey] : undefined;
-        const isDeletedMergedProperty = isFromMergedProps && isInDeletions;
 
         const pendingValue =
           (pendingChanges[configPath] ?? {})[fullKey]?.value ??
@@ -770,7 +770,6 @@ export const RenderConfig = ({
 
             if (!shouldShowAsMerged) {
               // This property was added for sorting but shouldn't be displayed as merged
-              // Skip rendering it
               return null;
             }
 

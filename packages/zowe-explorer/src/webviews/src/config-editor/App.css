@@ -2165,6 +2165,7 @@ ul {
 .profile-action-button .codicon {
     display: block;
     line-height: 1;
+    margin: 0 !important;
 }
 
 .profile-action-button:hover {
