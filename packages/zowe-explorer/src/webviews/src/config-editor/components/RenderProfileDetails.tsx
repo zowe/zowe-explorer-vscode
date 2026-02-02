@@ -254,8 +254,10 @@ export const RenderProfileDetails = ({
               }
             }
 
+            const flatProfilesRecord = flatProfiles as Record<string, any>;
+            const pendingProfilesRecord = pendingProfiles as Record<string, any>;
             const effectiveProfile =
-              flatProfiles[effectiveProfileKey] || pendingProfiles[effectiveProfileKey] || pendingProfiles[selectedProfileKey] || {};
+              flatProfilesRecord[effectiveProfileKey] || pendingProfilesRecord[effectiveProfileKey] || pendingProfilesRecord[selectedProfileKey] || {};
 
             Object.values(renames[currentConfigPath] || {}).some((newKey) => {
               if (newKey === selectedProfileKey) return true;
