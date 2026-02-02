@@ -91,8 +91,7 @@ export function usePropertyHandlers(params: PropertyHandlersParams) {
                 if (wasDefaultForOldType) {
                     const config = configurations[selectedTab!].properties;
                     const savedDefaults = config?.defaults || {};
-                    const currentDefaultForNewType =
-                        pendingDefaults[configPath]?.[newTypeStr]?.value ?? savedDefaults[newTypeStr] ?? "";
+                    const currentDefaultForNewType = pendingDefaults[configPath]?.[newTypeStr]?.value ?? savedDefaults[newTypeStr] ?? "";
                     const shouldSetNew = newTypeStr !== "" && !currentDefaultForNewType;
 
                     setPendingDefaults((prev) => {

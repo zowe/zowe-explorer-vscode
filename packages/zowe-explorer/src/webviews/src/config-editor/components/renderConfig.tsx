@@ -227,8 +227,7 @@ export const RenderConfig = ({
         Object.keys(filteredCombinedConfig).forEach((key) => {
           const propertyFullKey = [...path, key].join(".");
           if (deletionsList.includes(propertyFullKey)) {
-            const hasMergedReplacement =
-              showMergedProperties !== "hide" && mergedProps?.[key] !== undefined;
+            const hasMergedReplacement = showMergedProperties !== "hide" && mergedProps?.[key] !== undefined;
             if (!hasMergedReplacement) {
               delete filteredCombinedConfig[key];
             }
@@ -299,10 +298,7 @@ export const RenderConfig = ({
             const wasInOriginal = originalProperties?.hasOwnProperty(propertyName);
 
             // Add when not already in entries
-            const shouldAdd =
-              !alreadyInEntries &&
-              isAllowedBySchema &&
-              (!wasInOriginal || (isInDeletions && typeof propData?.value !== "object"));
+            const shouldAdd = !alreadyInEntries && isAllowedBySchema && (!wasInOriginal || (isInDeletions && typeof propData?.value !== "object"));
 
             if (shouldAdd) {
               entriesForSorting.push([
@@ -370,8 +366,7 @@ export const RenderConfig = ({
           return false;
         })();
 
-        const hasMergedReplacement =
-          showMergedProperties !== "hide" && displayKey != null && mergedProps?.[displayKey] !== undefined;
+        const hasMergedReplacement = showMergedProperties !== "hide" && displayKey != null && mergedProps?.[displayKey] !== undefined;
 
         // When deleted: hide only if there is no merged value to show (truly removed)
         // When deleted with merged replacement: show it (override removed; lower-priority value shows through)
@@ -381,8 +376,7 @@ export const RenderConfig = ({
 
         // When showing a deleted property with merged replacement, treat it as a merged property for UI
         // (disabled input, overwrite button) since we're displaying the inherited value
-        const isFromMergedProps =
-          isPropertyFromMergedProps(displayKey, path, mergedProps, configPath) || (isInDeletions && hasMergedReplacement);
+        const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath) || (isInDeletions && hasMergedReplacement);
         const isDeletedMergedProperty = isFromMergedProps && isInDeletions && !hasMergedReplacement;
 
         // Filter secure properties from properties object
