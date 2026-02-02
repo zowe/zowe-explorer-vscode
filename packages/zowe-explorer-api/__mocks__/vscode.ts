@@ -1110,6 +1110,29 @@ export enum ConfigurationTarget {
     WorkspaceFolder = 3,
 }
 
+export class Position {
+    constructor(public line: number, public character: number) {}
+}
+
+export class Range {
+    constructor(
+        public start: Position,
+        public end: Position
+    ) {}
+}
+
+export class Selection extends Range {
+    constructor(anchor: Position, active: Position) {
+        super(anchor, active);
+    }
+}
+
+export enum TextEditorRevealType {
+    Default = 0,
+    InCenter = 1,
+    InCenterIfOutsideViewport = 2,
+}
+
 /**
  * Namespace for dealing with the current workspace. A workspace is the representation
  * of the folder that has been opened. There is no workspace when just a file but not a
@@ -1132,6 +1155,10 @@ export namespace workspace {
             },
             get: () => {},
         };
+    }
+
+    export function openTextDocument(_path: string): Thenable<TextDocument> {
+        return Promise.resolve({} as TextDocument);
     }
 
     export function createFileSystemWatcher(): { onDidCreate: () => void; onDidChange: () => void; onDidDelete: () => void } {

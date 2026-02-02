@@ -1014,4 +1014,146 @@ describe("ZoweVsCodeExtension", () => {
             ).toEqual(true);
         });
     });
+
+    describe("openConfigFileWithProfile", () => {
+        const configWithSimpleProfile = `{
+  "profiles": {
+    "base": {
+      "type": "base",
+      "properties": {}
+    }
+  }
+}`;
+
+        const configWithNestedProfile = `{
+  "profiles": {
+    "lpar1": {
+      "profiles": {
+        "zosmf": {
+          "type": "zosmf",
+          "properties": {}
+        }
+      }
+    }
+  }
+}`;
+
+        const configWithMultipleProfiles = `{
+  "profiles": {
+    "base": {
+      "type": "base",
+      "properties": {}
+    },
+    "zosmf": {
+      "type": "zosmf",
+      "properties": {
+        "host": "example.com"
+      }
+    }
+  }
+}`;
+
+        const mockEditor = {
+            selection: {} as vscode.Selection,
+            revealRange: jest.fn(),
+        };
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        it("should open config file and highlight a simple top-level profile", async () => {
+            const filePath = "/test/zowe.config.json";
+            const mockDocument = {
+                getText: () => configWithSimpleProfile,
+            };
+            const revealRangeSpy = jest.fn();
+            const editorWithSpy = { selection: {} as vscode.Selection, revealRange: revealRangeSpy };
+            jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
+            jest.spyOn(Gui, "showTextDocument").mockResolvedValue(editorWithSpy as any);
+            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+
+            await ZoweVsCodeExtension.openConfigFileWithProfile(filePath, "base");
+
+            expect(vscode.workspace.openTextDocument).toHaveBeenCalledWith(filePath);
+            expect(Gui.showTextDocument).toHaveBeenCalledWith(mockDocument, { preview: false });
+            expect(revealRangeSpy).toHaveBeenCalled();
+            expect(infoMessageSpy).not.toHaveBeenCalled();
+        });
+
+        it("should open config file and highlight a nested profile", async () => {
+            const filePath = "/test/zowe.config.json";
+            const mockDocument = {
+                getText: () => configWithNestedProfile,
+            };
+            const revealRangeSpy = jest.fn();
+            const editorWithSpy = { selection: {} as vscode.Selection, revealRange: revealRangeSpy };
+            jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
+            jest.spyOn(Gui, "showTextDocument").mockResolvedValue(editorWithSpy as any);
+            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+
+            await ZoweVsCodeExtension.openConfigFileWithProfile(filePath, "lpar1.zosmf");
+
+            expect(vscode.workspace.openTextDocument).toHaveBeenCalledWith(filePath);
+            expect(revealRangeSpy).toHaveBeenCalled();
+            expect(infoMessageSpy).not.toHaveBeenCalled();
+        });
+
+        it("should open config file and highlight profile when multiple profiles exist", async () => {
+            const filePath = "/test/zowe.config.json";
+            const mockDocument = {
+                getText: () => configWithMultipleProfiles,
+            };
+            const revealRangeSpy = jest.fn();
+            const editorWithSpy = { selection: {} as vscode.Selection, revealRange: revealRangeSpy };
+            jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
+            jest.spyOn(Gui, "showTextDocument").mockResolvedValue(editorWithSpy as any);
+            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+
+            await ZoweVsCodeExtension.openConfigFileWithProfile(filePath, "zosmf");
+
+            expect(revealRangeSpy).toHaveBeenCalled();
+            expect(infoMessageSpy).not.toHaveBeenCalled();
+        });
+
+        it("should show info message when profile is not found", async () => {
+            const filePath = "/test/zowe.config.json";
+            const mockDocument = {
+                getText: () => configWithSimpleProfile,
+            };
+            jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
+            jest.spyOn(Gui, "showTextDocument").mockResolvedValue(mockEditor as any);
+            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+
+            await ZoweVsCodeExtension.openConfigFileWithProfile(filePath, "nonexistent");
+
+            expect(infoMessageSpy).toHaveBeenCalledWith('Profile "nonexistent" not found in the config file.');
+            expect(mockEditor.revealRange).not.toHaveBeenCalled();
+        });
+
+        it("should show info message when nested profile is not found", async () => {
+            const filePath = "/test/zowe.config.json";
+            const mockDocument = {
+                getText: () => configWithNestedProfile,
+            };
+            jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
+            jest.spyOn(Gui, "showTextDocument").mockResolvedValue(mockEditor as any);
+            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+
+            await ZoweVsCodeExtension.openConfigFileWithProfile(filePath, "lpar1.nonexistent");
+
+            expect(infoMessageSpy).toHaveBeenCalledWith('Profile "lpar1.nonexistent" not found in the config file.');
+        });
+
+        it("should show error message when file cannot be opened", async () => {
+            const filePath = "/test/missing.config.json";
+            const openError = new Error("File not found");
+            jest.spyOn(vscode.workspace, "openTextDocument").mockRejectedValue(openError);
+            const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+
+            await ZoweVsCodeExtension.openConfigFileWithProfile(filePath, "base");
+
+            expect(errorMessageSpy).toHaveBeenCalledWith(`Error opening file: ${filePath}: File not found`);
+        });
+    });
 });
