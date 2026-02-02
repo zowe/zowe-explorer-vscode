@@ -12,7 +12,7 @@
 import { ProfileCredentials, ProfileInfo } from "@zowe/imperative";
 import { ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../configuration/Profiles";
-import { ChangeEntry } from "./ConfigChangeHandlers";
+import type { ChangeEntry } from "./ConfigTypes";
 import { schemaValidation } from "./ConfigSchemaHelpers";
 
 export type LayerModifications = {

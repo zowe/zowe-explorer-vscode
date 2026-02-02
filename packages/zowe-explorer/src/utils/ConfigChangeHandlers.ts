@@ -12,15 +12,9 @@
 import * as path from "path";
 import { ConfigSchemaHelpers } from "./ConfigSchemaHelpers";
 import { ConfigUtils } from "./ConfigUtils";
+import type { ChangeEntry } from "./ConfigTypes";
 
-export type ChangeEntry = {
-    key: string;
-    value: string;
-    path: string[];
-    profile?: string;
-    configPath: string;
-    secure: boolean;
-};
+export type { ChangeEntry } from "./ConfigTypes";
 
 export class ConfigChangeHandlers {
     private static transformSecureKeyToProperties(keyOrPath: string): string {
