@@ -50,7 +50,7 @@ export class SharedTreeProviders {
         const sessions: Types.IZoweNodeType[] = [];
         for (const key of Object.keys(SharedTreeProviders.providers)) {
             const provider = SharedTreeProviders.providers[key];
-            const session = provider.mSessionNodes.find((mSessionNode: Types.IZoweNodeType) => mSessionNode.getLabel() as string === name);
+            const session = provider.mSessionNodes.find((mSessionNode: Types.IZoweNodeType) => (mSessionNode.getLabel() as string) === name);
             if (session) {
                 sessions.push(session);
             }

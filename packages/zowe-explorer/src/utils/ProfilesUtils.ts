@@ -391,9 +391,10 @@ export class ProfilesUtils {
             const layers = profInfo.getTeamConfig().layers || [];
             const layerSummary = layers.map(
                 (config: imperative.IConfigLayer) =>
-                    `Path: ${config.path}, ${config.exists
-                        ? "Found with the following defaults: " + JSON.stringify(config.properties?.defaults || "Undefined default")
-                        : "Not available"
+                    `Path: ${config.path}, ${
+                        config.exists
+                            ? "Found with the following defaults: " + JSON.stringify(config.properties?.defaults || "Undefined default")
+                            : "Not available"
                     } `
             );
             ZoweLogger.debug(["Summary of team configuration files considered for Zowe Explorer:", ...layerSummary].join("\t\n"));

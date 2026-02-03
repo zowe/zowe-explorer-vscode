@@ -40,7 +40,7 @@ import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
  * Tree-based data source that uses existing tree nodes
  */
 export class TreeDataSource implements IDataSetSource {
-    public constructor(public treeNode: IZoweDatasetTreeNode) {}
+    public constructor(public treeNode: IZoweDatasetTreeNode) { }
 
     /**
      * Fetches dataset information based on the cached children tree nodes.
@@ -342,7 +342,7 @@ export class PDSMembersDataSource implements IDataSetSource {
         public pdsName: string,
         private pdsUri: string,
         private profile: imperative.IProfileLoaded
-    ) {}
+    ) { }
 
     public async fetchDataSets(): Promise<IDataSetInfo[]> {
         if (this.parentDataSource?.loadChildren && this.parentDataSource instanceof PatternDataSource) {
@@ -807,7 +807,7 @@ export class DatasetTableView {
             const [profileName, datasetName, memberName] = uriParts;
 
             // First, try to find in session nodes
-            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => (node.label as string).toString() === profileName) as IZoweDatasetTreeNode;
             let foundInSession = false;
 
             if (profileNode) {
@@ -815,14 +815,14 @@ export class DatasetTableView {
                 await profileNode.getChildren(false);
 
                 // Find the PDS node
-                const pdsNode = profileNode.children?.find((child) => child.label.toString() === datasetName);
+                const pdsNode = profileNode.children?.find((child) => (child.label as string).toString() === datasetName);
 
                 if (pdsNode) {
                     // Load PDS members if not already loaded
                     await pdsNode.getChildren(false);
 
                     // Find the member node
-                    const memberNode = pdsNode.children?.find((child) => child.label.toString() === memberName);
+                    const memberNode = pdsNode.children?.find((child) => (child.label as string).toString() === memberName);
 
                     if (memberNode) {
                         await SharedTreeProviders.ds.getTreeView().reveal(memberNode, { focus: true });
@@ -834,18 +834,18 @@ export class DatasetTableView {
             // If not found in session nodes, search in favorites
             if (!foundInSession) {
                 for (const favProfileNode of SharedTreeProviders.ds.mFavorites) {
-                    if (favProfileNode.label.toString() === profileName) {
+                    if ((favProfileNode.label as string).toString() === profileName) {
                         await favProfileNode.getChildren(false);
 
                         // Look for the PDS in favorites
-                        const favPdsNode = favProfileNode.children?.find((child) => child.label.toString() === datasetName);
+                        const favPdsNode = favProfileNode.children?.find((child) => (child.label as string).toString() === datasetName);
 
                         if (favPdsNode) {
                             // Load PDS members if not already loaded
                             await favPdsNode.getChildren(false);
 
                             // Find the member node
-                            const favMemberNode = favPdsNode.children?.find((child) => child.label.toString() === memberName);
+                            const favMemberNode = favPdsNode.children?.find((child) => (child.label as string).toString() === memberName);
 
                             if (favMemberNode) {
                                 await SharedTreeProviders.ds.getTreeView().reveal(favMemberNode, { focus: true });
@@ -862,12 +862,12 @@ export class DatasetTableView {
             const [profileName, datasetName] = uriParts;
 
             // First, try to find in session nodes
-            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => (node.label as string).toString() === profileName) as IZoweDatasetTreeNode;
             let foundInSession = false;
 
             if (profileNode) {
                 await profileNode.getChildren(false);
-                const dsNode = profileNode.children?.find((child) => child.label.toString() === datasetName);
+                const dsNode = profileNode.children?.find((child) => (child.label as string).toString() === datasetName);
 
                 if (dsNode) {
                     await SharedTreeProviders.ds.getTreeView().reveal(dsNode, { expand: true });
@@ -878,11 +878,11 @@ export class DatasetTableView {
             // If not found in session nodes, search in favorites
             if (!foundInSession) {
                 for (const favProfileNode of SharedTreeProviders.ds.mFavorites) {
-                    if (favProfileNode.label.toString() === profileName) {
+                    if ((favProfileNode.label as string).toString() === profileName) {
                         await favProfileNode.getChildren(false);
 
                         // Look for the dataset in favorites
-                        const favDsNode = favProfileNode.children?.find((child) => child.label.toString() === datasetName);
+                        const favDsNode = favProfileNode.children?.find((child) => (child.label as string).toString() === datasetName);
 
                         if (favDsNode) {
                             await SharedTreeProviders.ds.getTreeView().reveal(favDsNode, { expand: true });
@@ -1110,8 +1110,8 @@ export class DatasetTableView {
             // Set the tree column for dataset name when using tree mode
             ...(useTreeMode && field.field === "dsname"
                 ? {
-                      cellRenderer: "TreeCellRenderer",
-                  }
+                    cellRenderer: "TreeCellRenderer",
+                }
                 : {}),
         }));
 
@@ -1132,10 +1132,10 @@ export class DatasetTableView {
             // Enable custom tree mode when needed
             ...(useTreeMode
                 ? {
-                      customTreeMode: true,
-                      customTreeColumnField: "dsname",
-                      customTreeInitialExpansionDepth: 0, // Start with all PDS collapsed
-                  }
+                    customTreeMode: true,
+                    customTreeColumnField: "dsname",
+                    customTreeInitialExpansionDepth: 0, // Start with all PDS collapsed
+                }
                 : {}),
         };
 
@@ -1194,7 +1194,7 @@ export class DatasetTableView {
         // Set up message handler for lazy loading if using tree mode
         if (useTreeMode) {
             // Subscribe to the onDidReceiveMessage event to handle "external" lazy loading command
-            this.table.onDidReceiveMessage((e) => this.onDidReceiveMessage(e));
+            this.table.onDidReceiveMessage((e: Record<string, unknown>) => this.onDidReceiveMessage(e));
         }
 
         return this.table;
@@ -1226,21 +1226,21 @@ export class DatasetTableView {
         return context;
     }
 
-    private async onDidReceiveMessage(message: Record<string, any>): Promise<any> {
+    private async onDidReceiveMessage(message: Record<string, unknown>): Promise<void> {
         const { command, requestId } = message;
         if (!command) {
             return;
         }
         // Handle custom lazy loading of PDS members
         if (message.command === "loadTreeChildren") {
-            const { nodeId } = message.payload;
+            const { nodeId } = message.payload as { nodeId: string };
 
             if (this.currentDataSource.loadChildren) {
                 const memberRows = await this.currentDataSource.loadChildren(nodeId);
                 const tableRows = memberRows.map((info) => this.mapDatasetInfoToRowWithTree(info));
 
                 // Send the loaded children back to the webview
-                await ((this.table as any).panel ?? (this.table as any).view).webview.postMessage({
+                await (this.table.panel ?? this.table.view).webview.postMessage({
                     command: "treeChildrenLoaded",
                     requestId,
                     data: {

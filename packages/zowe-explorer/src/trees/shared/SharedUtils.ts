@@ -387,11 +387,11 @@ export class SharedUtils {
                 comment: ["Node label"],
             }),
             currentEncoding &&
-            vscode.l10n.t({
-                message: "Current encoding is {0}",
-                args: [currentEncoding],
-                comment: ["Encoding name"],
-            })
+                vscode.l10n.t({
+                    message: "Current encoding is {0}",
+                    args: [currentEncoding],
+                    comment: ["Encoding name"],
+                })
         );
 
         return SharedUtils.processEncodingResponse(response, node.label as string);
@@ -618,11 +618,11 @@ export class SharedUtils {
             const namesAreEqual = srcDataset.dsname === dstDataset.dsname;
 
             // compare vols (could be stored across multiple vols!)
-            const srcVols = srcDataset.vols
-                ? (Array.isArray(srcDataset.vols) ? srcDataset.vols : [srcDataset.vols]).map((v: unknown) => String(v).trim().toUpperCase())
+            const srcVols: string[] = srcDataset.vols
+                ? (Array.isArray(srcDataset.vols) ? srcDataset.vols : [srcDataset.vols]).map((v: string) => v.trim().toUpperCase())
                 : [];
-            const dstVols = dstDataset.vols
-                ? (Array.isArray(dstDataset.vols) ? dstDataset.vols : [dstDataset.vols]).map((v: unknown) => String(v).trim().toUpperCase())
+            const dstVols: string[] = dstDataset.vols
+                ? (Array.isArray(dstDataset.vols) ? dstDataset.vols : [dstDataset.vols]).map((v: string) => v.trim().toUpperCase())
                 : [];
 
             srcVols.sort();
@@ -652,13 +652,9 @@ export class SharedUtils {
      * @param sourceNode - source USS tree node being moved
      * @param targetParent - target USS tree node parent receiving the drop
      * @param droppedLabel - name of the dropped item
-     * @returns Promise resolves to true if the normalized paths match and the target path exists. false otherwise
+     * @returns true if the normalized paths match and the target path exists. false otherwise
      */
-    public static async isLikelySameUssObjectByUris(
-        sourceNode: IZoweUSSTreeNode,
-        targetParent: IZoweUSSTreeNode,
-        droppedLabel: string
-    ): Promise<boolean> {
+    public static isLikelySameUssObjectByUris(sourceNode: IZoweUSSTreeNode, targetParent: IZoweUSSTreeNode, droppedLabel: string): boolean {
         //normalize paths
         const equal =
             path.posix.normalize(sourceNode.fullPath.replace(/\\/g, "/")) ===
@@ -678,7 +674,7 @@ export class SharedUtils {
             return value;
         }
         if (typeof value === "object" && value !== null && typeof value[prop] === "string") {
-            return value[prop];
+            return value[prop] as string;
         }
         return null;
     }

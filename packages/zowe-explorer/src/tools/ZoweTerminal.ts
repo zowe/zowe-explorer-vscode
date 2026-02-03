@@ -80,15 +80,15 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private mCols = -1;
 
     private writeEmitter = new vscode.EventEmitter<string>();
-    protected write(text: string) {
+    protected write(text: string): void {
         this.writeEmitter.fire(text);
     }
-    protected writeLine(text: string) {
+    protected writeLine(text: string): void {
         this.write(text);
         this.write(ZoweTerminal.Keys.NEW_LINE);
         this.writeCmd();
     }
-    protected clearLine(lines = 1) {
+    protected clearLine(lines = 1): void {
         while (lines--) {
             this.write(ZoweTerminal.Keys.CLEAR_LINE);
             if (lines > 0) {
@@ -99,10 +99,10 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private getLine(cmd?: string): string {
         return this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command;
     }
-    protected writeCmd(cmd?: string) {
+    protected writeCmd(cmd?: string): void {
         this.write(this.getLine(cmd));
     }
-    protected refreshCmd(lineOffset = 0) {
+    protected refreshCmd(lineOffset = 0): void {
         this.command = this.sanitizeInput(this.command);
         this.pressedCtrlC = false;
         if (!this.charArrayCmd.length || this.charArrayCmd.join("") !== this.command) {
@@ -122,7 +122,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             [...Array(offset)].map(() => this.write(ZoweTerminal.Keys.LEFT));
         }
     }
-    protected clear() {
+    protected clear(): void {
         this.write(ZoweTerminal.Keys.CLEAR_ALL);
         this.writeLine(this.chalk.dim.italic(this.mMessage));
     }
@@ -137,6 +137,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     public onDidClose?: vscode.Event<void> = this.closeEmitter.event;
 
     public open(initialDimensions?: vscode.TerminalDimensions): void {
+        // eslint-disable-next-line no-magic-numbers
         this.mCols = initialDimensions?.columns ?? 80;
 
         this.writeLine(this.chalk.dim.italic(this.mMessage));
@@ -172,15 +173,19 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         if (codePoint === undefined) {
             return false;
         }
+        // eslint-disable-next-line no-magic-numbers
         if (codePoint >= 0x20 && codePoint <= 0x7e) {
             return true;
         }
+        // eslint-disable-next-line no-magic-numbers
         if (codePoint >= 0xa0 && codePoint <= 0xd7ff) {
             return true;
         } // Control characters
+        // eslint-disable-next-line no-magic-numbers
         if (codePoint >= 0xe000 && codePoint <= 0xfffd) {
             return true;
         } // Private use area
+        // eslint-disable-next-line no-magic-numbers
         if (codePoint >= 0x10000 && codePoint <= 0x10ffff) {
             return true;
         } // Supplemental planes
@@ -210,7 +215,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         }
     }
 
-    private async handleEnter() {
+    private async handleEnter(): Promise<void> {
         this.write(ZoweTerminal.Keys.NEW_LINE);
         const isAsyncCommand = this.command.startsWith(":async");
         const isForgetCommand = this.command.startsWith(":forget");
@@ -233,7 +238,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             if (isForgetCommand || isAsyncCommand) {
                 this.writeLine(this.chalk.italic.yellow(`Output ${isAsyncCommand ? "deferred!" : "forgotten!"}`));
                 this.isCommandRunning = false;
-                this.processCmd(cmd).then((output: string) => {
+                void this.processCmd(cmd).then((output: string) => {
                     const currentCmd = this.command;
                     this.command = "";
                     this.charArrayCmd = [];
@@ -249,7 +254,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             } else {
                 const output = await Promise.race([
                     this.processCmd(cmd),
-                    new Promise<null>((resolve, _reject) => {
+                    new Promise<null>((resolve) => {
                         this.controller.signal.addEventListener("abort", () => {
                             this.controller = new AbortController();
                             resolve(null);

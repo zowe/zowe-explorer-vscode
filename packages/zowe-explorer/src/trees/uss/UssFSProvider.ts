@@ -535,7 +535,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // only show a status message if "noStatusMsg" is not specified,
             // or if the entry does not exist and the new contents are empty (new placeholder entry)
             options?.noStatusMsg || (!entry && content.byteLength === 0)
-                ? new vscode.Disposable(() => { })
+                ? new vscode.Disposable(() => {})
                 : Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Saving USS file...")}`);
 
         // Wait for any ongoing authentication process to complete
@@ -949,10 +949,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const entry = new UssDirectory(basename);
         const profInfo = !uriInfo.isRoot
             ? {
-                profile: uriInfo.profile,
-                // we can strip profile name from path because its not involved in API calls
-                path: path.posix.join(parent.metadata.path, basename),
-            }
+                  profile: uriInfo.profile,
+                  // we can strip profile name from path because its not involved in API calls
+                  path: path.posix.join(parent.metadata.path, basename),
+              }
             : this._getInfoFromUri(uri);
         entry.metadata = profInfo;
 
@@ -967,7 +967,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
     public watch(_resource: vscode.Uri, _options?: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
-        return new vscode.Disposable(() => { });
+        return new vscode.Disposable(() => {});
     }
 
     /**

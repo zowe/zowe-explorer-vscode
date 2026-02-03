@@ -57,7 +57,7 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
 
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-        webviewView.webview.onDidReceiveMessage(async (message: { command: string, text: string, profile: string }) => {
+        webviewView.webview.onDidReceiveMessage(async (message: { command: string; text: string; profile: string }) => {
             const command = message.command;
             const text = message.text;
             const profile = message.profile;

@@ -138,7 +138,9 @@ export class JobActions {
      */
     public static async focusOnJob(jobsProvider: Types.IZoweJobTreeType, sessionName: string, jobId: string): Promise<void> {
         ZoweLogger.trace("job.actions.focusOnJob called.");
-        let sessionNode: IZoweJobTreeNode | undefined = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString() === sessionName.trim());
+        let sessionNode: IZoweJobTreeNode | undefined = jobsProvider.mSessionNodes.find(
+            (jobNode) => (jobNode.label as string).toString() === sessionName.trim()
+        );
         if (!sessionNode) {
             try {
                 await jobsProvider.addSession({ sessionName: sessionName.trim() });
@@ -146,7 +148,7 @@ export class JobActions {
                 await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Jes, profile: sessionName });
                 return;
             }
-            sessionNode = jobsProvider.mSessionNodes.find((jobNode) => jobNode.label.toString().trim() === sessionName.trim());
+            sessionNode = jobsProvider.mSessionNodes.find((jobNode) => (jobNode.label as string).toString().trim() === sessionName.trim());
         }
         try {
             jobsProvider.refreshElement(sessionNode);

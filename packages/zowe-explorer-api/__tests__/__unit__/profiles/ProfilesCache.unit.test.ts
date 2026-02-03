@@ -491,7 +491,7 @@ describe("ProfilesCache", () => {
             const fakeError = "Profile IO Error";
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             jest.spyOn(profCache, "getProfileInfo").mockImplementation(() => {
-                throw new Error(fakeError);
+                throw fakeError as any;
             });
             await expect(profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient)).rejects.toBe(fakeError);
             expect(profCache.allProfiles.length).toEqual(0);

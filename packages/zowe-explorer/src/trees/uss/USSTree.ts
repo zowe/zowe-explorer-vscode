@@ -285,7 +285,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
 
             // Check for same-object by comparing normalized USS paths (ignoring profile)
-            if (await SharedUtils.isLikelySameUssObjectByUris(node, resolvedTargetNode, nodeLabel)) {
+            if (SharedUtils.isLikelySameUssObjectByUris(node, resolvedTargetNode, nodeLabel)) {
                 Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
                 this.draggedNodes = {};
                 return;
@@ -553,7 +553,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         ZoweLogger.trace("USSTree.addSingleSession called.");
         if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tNode) => tNode.label as string === profile.name)) {
+            if (this.mSessionNodes.find((tNode) => (tNode.label as string) === profile.name)) {
                 return;
             }
             // If there is no API registered for the profile type, do nothing
@@ -744,7 +744,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         this.mFavorites.forEach((favProfileNode) => {
             const favProfileLabel = favProfileNode.label as string;
             if (favProfileLabel === profileName) {
-                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode?.label as string !== favProfileLabel);
+                this.mFavorites = this.mFavorites.filter((tempNode) => (tempNode?.label as string) !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();
             }

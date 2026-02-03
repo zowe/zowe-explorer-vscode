@@ -146,7 +146,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent): Promise<void> {
         ZoweLogger.trace("ZoweTreeProvider.onDidChangeConfiguration called.");
         if (e.affectsConfiguration(this.persistenceSchema)) {
-            const setting: any = {
+            const setting: Record<string, unknown> = {
                 ...SettingsConfig.getDirectValue(this.persistenceSchema),
             };
             if (!setting.persistence) {
@@ -174,20 +174,20 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         }
     }
 
-    public findNonFavoritedNode(_element: IZoweTreeNode): any {
+    public findNonFavoritedNode(_element: IZoweTreeNode): undefined {
         ZoweLogger.trace("ZoweTreeProvider.findNonFavoritedNode called.");
         return undefined;
     }
 
-    public findFavoritedNode(_element: IZoweTreeNode): any {
+    public findFavoritedNode(_element: IZoweTreeNode): undefined {
         ZoweLogger.trace("ZoweTreeProvider.findFavoritedNode called.");
         return undefined;
     }
-    public renameFavorite(_node: IZoweTreeNode, _newLabel: string): any {
+    public renameFavorite(_node: IZoweTreeNode, _newLabel: string): undefined {
         ZoweLogger.trace("ZoweTreeProvider.renameFavorite called.");
         return undefined;
     }
-    public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string): any {
+    public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string): undefined {
         ZoweLogger.trace("ZoweTreeProvider.renameNode called.");
         return undefined;
     }
@@ -365,7 +365,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         let tokenType: string;
         try {
             tokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(loadedProfile).getTokenTypeName();
-        } catch (err) {
+        } catch (_err) {
             // The API doesn't support tokens, so no expiration check needed
             return JwtCheckResult.TokenUnusedOrUnsupported;
         }
@@ -416,7 +416,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             ? await Profiles.getInstance().fetchAllProfilesByType(profileType)
             : await Profiles.getInstance().fetchAllProfiles();
         for (const profile of profiles) {
-            const existingSessionNode = treeProvider.mSessionNodes.find((node) => node.label.toString().trim() === profile.name);
+            const existingSessionNode = treeProvider.mSessionNodes.find((node) => (node.label as string).toString().trim() === profile.name);
             const sessionInHistory = treeProvider.getSessions().some((session) => session?.trim() === profile.name);
             if (!existingSessionNode && sessionInHistory) {
                 await treeProvider.addSingleSession(profile);

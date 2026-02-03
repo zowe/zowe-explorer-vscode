@@ -1615,11 +1615,11 @@ describe("SharedUtils helpers", () => {
         expect(SharedUtils.hasNameCollision(src2, dst2)).toBe(false);
     });
 
-    it("isLikelySameUssObjectByUris normalizes and compares paths", async () => {
+    it("isLikelySameUssObjectByUris normalizes and compares paths", () => {
         const srcNode = { fullPath: "/u/foo/bar" } as any;
         const targetParent = { fullPath: "/u/foo" } as any;
         const label = "bar";
-        expect(await SharedUtils.isLikelySameUssObjectByUris(srcNode, targetParent, label)).toBe(true);
-        expect(await SharedUtils.isLikelySameUssObjectByUris({ fullPath: "/u/other" } as any, targetParent, "bar")).toBe(false);
+        expect(SharedUtils.isLikelySameUssObjectByUris(srcNode, targetParent, label)).toBe(true);
+        expect(SharedUtils.isLikelySameUssObjectByUris({ fullPath: "/u/other" } as any, targetParent, "bar")).toBe(false);
     });
 });

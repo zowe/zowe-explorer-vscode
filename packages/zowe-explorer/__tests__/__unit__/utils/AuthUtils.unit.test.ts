@@ -1169,9 +1169,9 @@ describe("AuthUtils", () => {
             expect(handleProfileAuthOnErrorMock).not.toHaveBeenCalled();
         });
 
-        it("should throw auth cancelled error if user just cancelled auth prompt", async () => {
+        it("should throw auth cancelled error if user just cancelled auth prompt", () => {
             wasAuthCancelledMock.mockReturnValue(true);
-            await expect(AuthUtils.ensureAuthNotCancelled(profile)).rejects.toThrow("User cancelled previous authentication");
+            expect(() => AuthUtils.ensureAuthNotCancelled(profile)).toThrow("User cancelled previous authentication");
         });
     });
 

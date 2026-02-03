@@ -138,14 +138,14 @@ export class SharedActions {
             } else {
                 // Data set nodes
                 const sessions = await datasetProvider.getChildren();
-                const sessionNode = sessions.filter((session) => session.label as string === sessionName)[0];
+                const sessionNode = sessions.filter((session) => (session.label as string) === sessionName)[0];
                 let children = await datasetProvider.getChildren(sessionNode);
-                const node = children.filter((child) => child.label as string === nodeName)[0];
+                const node = children.filter((child) => (child.label as string) === nodeName)[0];
 
                 if (memberName) {
                     // Members
                     children = await datasetProvider.getChildren(node);
-                    const member = children.filter((child) => child.label as string === memberName)[0];
+                    const member = children.filter((child) => (child.label as string) === memberName)[0];
                     node.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
                     await datasetProvider.getTreeView().reveal(member, { select: true, focus: true, expand: false });
 

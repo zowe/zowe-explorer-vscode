@@ -121,7 +121,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     attributes: true,
                     responseTimeout: sourceInfo.profile?.profile?.responseTimeout,
                 });
-                const { dsname: dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
+                const { dsname: _dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
                 // need to transform labels
                 const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
                 const dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
@@ -196,8 +196,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             try {
                 const encodingInfo = await sourceNode.getEncoding();
                 // If the encoding is binary, we need to force upload it as binary
-                const queryString = `forceUpload=true${encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
-                    }`;
+                const queryString = `forceUpload=true${
+                    encodingInfo?.kind === "binary" ? "&encoding=binary" : encodingInfo?.kind === "other" ? "&encoding=" + encodingInfo?.codepage : ""
+                }`;
                 await DatasetFSProvider.instance.writeFile(
                     destUri.with({
                         query: queryString,
@@ -697,7 +698,7 @@ Would you like to do this now?`,
         ZoweLogger.trace("DatasetTree.addSingleSession called.");
         if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tNode) => tNode.label as string === profile.name)) {
+            if (this.mSessionNodes.find((tNode) => (tNode.label as string) === profile.name)) {
                 return;
             }
             // If there is no API registered for the profile type, do nothing
@@ -834,7 +835,7 @@ Would you like to do this now?`,
 
     public renameNode(profileLabel: string, beforeLabel: string, afterLabel: string): void {
         ZoweLogger.trace("DatasetTree.renameNode called.");
-        const sessionNode = this.mSessionNodes.find((session) => session.label as string === profileLabel.trim());
+        const sessionNode = this.mSessionNodes.find((session) => (session.label as string) === profileLabel.trim());
         if (sessionNode) {
             const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
             if (matchingNode) {
@@ -919,7 +920,7 @@ Would you like to do this now?`,
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         return profileNodeInFavorites?.children.find(
-            (temp) => temp.label as string === node.getLabel() as string && temp.contextValue.includes(node.contextValue)
+            (temp) => (temp.label as string) === (node.getLabel() as string) && temp.contextValue.includes(node.contextValue)
         );
     }
 
@@ -932,7 +933,7 @@ Would you like to do this now?`,
     public findNonFavoritedNode(node: IZoweDatasetTreeNode): IZoweTreeNode {
         ZoweLogger.trace("DatasetTree.findNonFavoritedNode called.");
         const profileName = node.getProfileName();
-        const sessionNode = this.mSessionNodes.find((session) => session.label.toString().trim() === profileName);
+        const sessionNode = this.mSessionNodes.find((session) => (session.label as string).toString().trim() === profileName);
         return sessionNode?.children.find((temp) => temp.label === node.label);
     }
 
@@ -1020,7 +1021,7 @@ Would you like to do this now?`,
         this.mFavorites.forEach((favProfileNode) => {
             const favProfileLabel = favProfileNode.label as string;
             if (favProfileLabel === profileName) {
-                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label as string !== favProfileLabel);
+                this.mFavorites = this.mFavorites.filter((tempNode) => (tempNode.label as string) !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();
             }
@@ -1227,7 +1228,7 @@ Would you like to do this now?`,
         let children = await sessionNode.getChildren();
 
         // Find parent node in tree
-        parentNode = children.find((child) => child.label as string === parentName);
+        parentNode = children.find((child) => (child.label as string) === parentName);
         if (parentNode) {
             parentNode.label = parentNode.tooltip = parentNode.pattern = parentName;
             parentNode.dirty = true;
@@ -1241,7 +1242,7 @@ Would you like to do this now?`,
         if (itemPath.indexOf("(") > -1) {
             parentNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             children = await parentNode.getChildren();
-            memberNode = children.find((child) => child.label as string === memberName);
+            memberNode = children.find((child) => (child.label as string) === memberName);
             if (!memberNode) {
                 Gui.showMessage(vscode.l10n.t("Node does not exist. It may have been deleted."));
                 this.removeFileHistory(itemPath);
@@ -1456,7 +1457,7 @@ Would you like to do this now?`,
             pattern = node.getLabel() as string;
             const sessionName = node.getProfileName();
             await this.addSession({ sessionName });
-            const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.label as string === sessionName);
+            const nonFavNode = this.mSessionNodes.find((tempNode) => (tempNode.label as string) === sessionName);
             if (nonFavNode && (!nonFavNode.getSession().ISession.user || !nonFavNode.getSession().ISession.password)) {
                 nonFavNode.getSession().ISession.user = node.getSession().ISession.user;
                 nonFavNode.getSession().ISession.password = node.getSession().ISession.password;
@@ -1810,15 +1811,15 @@ Would you like to do this now?`,
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                message: "all PDS members in {0}",
-                args: [node.label as string],
-                comment: ["Node label"],
-            })
+                  message: "all PDS members in {0}",
+                  args: [node.label as string],
+                  comment: ["Node label"],
+              })
             : vscode.l10n.t({
-                message: "the PDS members in {0}",
-                args: [node.label as string],
-                comment: ["Node label"],
-            });
+                  message: "the PDS members in {0}",
+                  args: [node.label as string],
+                  comment: ["Node label"],
+              });
         const selection = await Gui.showQuickPick(
             DatasetUtils.DATASET_SORT_OPTS.map((opt, i) => ({
                 label: sortOpts.method === i ? `${opt} $(check)` : opt,
@@ -1883,10 +1884,10 @@ Would you like to do this now?`,
         node.filter = newFilter;
         node.description = newFilter
             ? vscode.l10n.t({
-                message: "Filter: {0}",
-                args: [newFilter.value],
-                comment: ["Filter value"],
-            })
+                  message: "Filter: {0}",
+                  args: [newFilter.value],
+                  comment: ["Filter value"],
+              })
             : null;
         this.nodeDataChanged(node);
 
@@ -1947,15 +1948,15 @@ Would you like to do this now?`,
         // Adapt menus to user based on the node that was interacted with
         const specifier = isSession
             ? vscode.l10n.t({
-                message: "all PDS members in {0}",
-                args: [node.label as string],
-                comment: ["Node label"],
-            })
+                  message: "all PDS members in {0}",
+                  args: [node.label as string],
+                  comment: ["Node label"],
+              })
             : vscode.l10n.t({
-                message: "the PDS members in {0}",
-                args: [node.label as string],
-                comment: ["Node label"],
-            });
+                  message: "the PDS members in {0}",
+                  args: [node.label as string],
+                  comment: ["Node label"],
+              });
         const clearFilter = isSession
             ? `$(clear-all) ${vscode.l10n.t("Clear filter for profile")}`
             : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;

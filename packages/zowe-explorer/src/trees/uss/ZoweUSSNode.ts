@@ -706,8 +706,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     SharedContext.isFavorite(this)
                         ? this.resourceUri
                         : this.resourceUri.with({
-                            path: path.posix.join(this.resourceUri.path, this.fullPath),
-                        })
+                              path: path.posix.join(this.resourceUri.path, this.fullPath),
+                          })
                 );
             } else {
                 return await UssFSProvider.instance.listFiles(profile, this.resourceUri);

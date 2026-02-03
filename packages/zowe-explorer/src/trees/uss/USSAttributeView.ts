@@ -25,7 +25,7 @@ export class USSAttributeView extends WebView {
     public constructor(context: ExtensionContext, treeProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode) {
         const label = node.label ? `Edit Attributes: ${node.label as string}` : "Edit Attributes";
         super(label, "edit-attributes", context, {
-            onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
+            onDidReceiveMessage: (message: Record<string, unknown>) => this.onDidReceiveMessage(message),
         });
         this.treeProvider = treeProvider;
         this.ussNode = node;
@@ -39,7 +39,7 @@ export class USSAttributeView extends WebView {
         }
     }
 
-    protected async onDidReceiveMessage(message: any): Promise<void> {
+    protected async onDidReceiveMessage(message: Record<string, unknown>): Promise<void> {
         switch (message.command) {
             case "refresh":
                 if (this.canUpdate) {
@@ -92,7 +92,7 @@ export class USSAttributeView extends WebView {
         }
     }
 
-    private async updateAttributes(message: any): Promise<void> {
+    private async updateAttributes(message: Record<string, unknown>): Promise<void> {
         if (!this.ussApi.updateAttributes || !("attrs" in message)) {
             // Block the webview from making update requests if the API doesn't exist or if "attrs" is not present in the message object.
             return;
@@ -101,7 +101,7 @@ export class USSAttributeView extends WebView {
         try {
             if (Object.keys(message?.attrs).length > 0) {
                 const oldAttrs = await this.ussNode.getAttributes();
-                const attrs = message.attrs;
+                const attrs = message.attrs as Types.FileAttributes;
                 const newAttrs: Partial<Types.FileAttributes> = {};
                 if (!isNaN(parseInt(attrs.owner))) {
                     const uid = parseInt(attrs.owner);

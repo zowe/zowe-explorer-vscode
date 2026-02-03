@@ -191,7 +191,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         ZoweLogger.trace("JobTree.addSingleSession called.");
         if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tNode) => tNode.label as string === profile.name)) {
+            if (this.mSessionNodes.find((tNode) => (tNode.label as string) === profile.name)) {
                 return;
             }
             // If there is no API registered for the profile type, do nothing
@@ -259,7 +259,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         ZoweLogger.trace("JobTree.findFavoritedNode called.");
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, node.getProfileName());
         return profileNodeInFavorites?.children.find(
-            (temp) => temp.label as string === node.getLabel() as string && temp.contextValue.includes(node.contextValue)
+            (temp) => (temp.label as string) === (node.getLabel() as string) && temp.contextValue.includes(node.contextValue)
         );
     }
 
@@ -582,9 +582,9 @@ Would you like to do this now?`,
             profileNode.children.forEach((fav) => {
                 const favoriteEntry =
                     "[" +
-                    profileNode.label as string +
+                    (profileNode.label as string) +
                     "]: " +
-                    fav.label as string +
+                    (fav.label as string) +
                     "{" +
                     (SharedContext.isFavoriteJob(fav) ? Constants.JOBS_JOB_CONTEXT : Constants.JOBS_SESSION_CONTEXT) +
                     "}";
@@ -626,7 +626,7 @@ Would you like to do this now?`,
         this.mFavorites.forEach((favProfileNode) => {
             const favProfileLabel = favProfileNode.label as string;
             if (favProfileLabel === profileName) {
-                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label as string !== favProfileLabel);
+                this.mFavorites = this.mFavorites.filter((tempNode) => (tempNode.label as string) !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();
             }
@@ -803,7 +803,7 @@ Would you like to do this now?`,
         const session = node.getProfileName();
         const faveNode = node;
         await this.addSession({ sessionName: session });
-        node = this.mSessionNodes.find((tempNode) => tempNode.label as string === session);
+        node = this.mSessionNodes.find((tempNode) => (tempNode.label as string) === session);
         if (node && (!node.getSession().ISession.user || !node.getSession().ISession.password)) {
             node.getSession().ISession.user = faveNode.getSession().ISession.user;
             node.getSession().ISession.password = faveNode.getSession().ISession.password;
@@ -893,7 +893,7 @@ Would you like to do this now?`,
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent): Promise<void> {
         ZoweLogger.trace("JobTree.onDidChangeConfiguration called.");
         if (e.affectsConfiguration(JobTree.persistenceSchema)) {
-            const setting: any = {
+            const setting: Record<string, unknown> = {
                 ...SettingsConfig.getDirectValue(JobTree.persistenceSchema),
             };
             if (!setting.persistence) {
@@ -1340,10 +1340,10 @@ Would you like to do this now?`,
         job.filter = newFilter;
         job.description = newFilter
             ? vscode.l10n.t({
-                message: "Filter: {0}",
-                args: [newFilter],
-                comment: ["The new filter"],
-            })
+                  message: "Filter: {0}",
+                  args: [newFilter],
+                  comment: ["The new filter"],
+              })
             : null;
         this.nodeDataChanged(job);
         if (newFilter === null) {

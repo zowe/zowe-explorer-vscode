@@ -233,7 +233,7 @@ export class SharedHistoryView extends WebView {
 
     private async refreshView(message: { attrs: { type: string } }): Promise<void> {
         ZoweLogger.trace("HistoryView.refreshView called.");
-        this.currentTab = Constants.HISTORY_VIEW_TABS[(message.attrs.type as string).toUpperCase()];
+        this.currentTab = Constants.HISTORY_VIEW_TABS[message.attrs.type.toUpperCase()];
         await this.panel.webview.postMessage({
             ds: this.getHistoryData("ds"),
             uss: this.getHistoryData("uss"),

@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { DS_EXTENSION_MAP, Types } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import dayjs = require("dayjs");
 export class DatasetUtils {
     public static DATASET_SORT_OPTS = [
@@ -23,7 +24,6 @@ export class DatasetUtils {
         `$(fold) ${vscode.l10n.t("Sort Direction")}`,
     ];
 
-     
     public static readonly DATASET_FILTER_OPTS = [this.DATASET_SORT_OPTS[2], this.DATASET_SORT_OPTS[3]];
 
     public static getProfileAndDataSetName(node: Types.IZoweNodeType): {
