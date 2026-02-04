@@ -986,7 +986,7 @@ export class DatasetActions {
                     comment: ["Label"],
                 })
             );
-            let attributes: any[];
+            let attributes: Array<Record<string, unknown>>;
             let parentDsName: string | undefined;
             const isMemberNode = SharedContext.isDsMember(node);
             try {
@@ -1008,7 +1008,7 @@ export class DatasetActions {
                 attributes = attrResponse.apiResponse.items;
                 if (SharedContext.isDs(node)) {
                     attributes = attributes.filter((dataSet) => {
-                        return dataSet.dsname.toUpperCase() === label.toUpperCase();
+                        return (dataSet.dsname as string).toUpperCase() === label.toUpperCase();
                     });
                 }
                 if (attributes.length === 0) {
@@ -2116,13 +2116,13 @@ export class DatasetActions {
      * @param {ZoweDatasetNode} node - The node to which content is pasted
      * @param clipboardContent - Copied clipboard content
      */
-    public static async copyPartitionedDatasets(clipboardContent, node: ZoweDatasetNode): Promise<void> {
+    public static async copyPartitionedDatasets(clipboardContent: ClipboardItem[], node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.copyPartitionedDatasets called.");
 
-        const clipboardItems = clipboardContent as ClipboardItem[];
+        const clipboardItems = clipboardContent;
         const groupedContent = clipboardItems.reduce((result, current) => {
             const { dataSetName, memberName, profileName, ...rest } = current;
-            let group = result.find((item: any) => item.dataSetName === dataSetName && item.profileName === profileName);
+            let group = result.find((item: ClipboardItem) => item.dataSetName === dataSetName && item.profileName === profileName);
             if (!group) {
                 group = { ...rest, dataSetName, profileName, members: [] };
                 result.push(group);
@@ -2135,42 +2135,46 @@ export class DatasetActions {
             return result;
         }, []);
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
-        const sameProfileGroups: ClipboardItem[] = groupedContent.filter((group: any) => group.profileName === node.getProfile().name);
+        const sameProfileGroups: ClipboardItem[] = groupedContent.filter((group: ClipboardItem) => group.profileName === node.getProfile().name);
         if (sameProfileGroups.length > 0) {
-            await DatasetActions.copyProcessor(sameProfileGroups, "po", async (content: any, dsname: string, replace: Definitions.ShouldReplace) => {
-                const lbl = content.dataSetName;
+            await DatasetActions.copyProcessor(
+                sameProfileGroups,
+                "po",
+                async (content: ClipboardItem, dsname: string, replace: Definitions.ShouldReplace) => {
+                    const lbl = content.dataSetName;
 
-                const uploadOptions: zosfiles.IUploadOptions = {
-                    etag: node.getEtag(),
-                    returnEtag: true,
-                };
+                    const uploadOptions: zosfiles.IUploadOptions = {
+                        etag: node.getEtag(),
+                        returnEtag: true,
+                    };
 
-                const prof = node.getProfile();
-                if (prof.profile.encoding) {
-                    uploadOptions.encoding = prof.profile.encoding;
-                }
-                await Gui.withProgress(
-                    {
-                        location: vscode.ProgressLocation.Notification,
-                        title: DatasetActions.localizedStrings.copyingDatasets,
-                        cancellable: true,
-                    },
-                    () => {
-                        return Promise.all(
-                            content.members.map((child) =>
-                                ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
-                                    { dsn: lbl, member: child },
-                                    { dsn: dsname, member: child },
-                                    { replace: replace === "replace" }
-                                )
-                            )
-                        );
+                    const prof = node.getProfile();
+                    if (prof.profile.encoding) {
+                        uploadOptions.encoding = prof.profile.encoding;
                     }
-                );
-            });
+                    await Gui.withProgress(
+                        {
+                            location: vscode.ProgressLocation.Notification,
+                            title: DatasetActions.localizedStrings.copyingDatasets,
+                            cancellable: true,
+                        },
+                        () => {
+                            return Promise.all(
+                                content.members.map((child) =>
+                                    ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
+                                        { dsn: lbl, member: child },
+                                        { dsn: dsname, member: child },
+                                        { replace: replace === "replace" }
+                                    )
+                                )
+                            );
+                        }
+                    );
+                }
+            );
         }
 
-        const crossProfileGroups = groupedContent.filter((group: any) => group.profileName !== node.getProfile().name);
+        const crossProfileGroups = groupedContent.filter((group: ClipboardItem) => group.profileName !== node.getProfile().name);
         if (crossProfileGroups.length === 0) {
             return;
         }
@@ -2490,7 +2494,13 @@ export class DatasetActions {
             throw new Error(vscode.l10n.t("Unable to retrieve attributes for {0}", sourceDataSet));
         }
         const { dsname: _omit, ...rest } = sourceItem;
+
+        // ------------------------------------------------------------
+        // TODO: Make function public in the ZosFiles SDK and remove this eslint disable once we have the fix
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
+        // ------------------------------------------------------------
+
         DatasetActions.normalizePrimaryForCylinders(transformedAttrs);
         if (transformedAttrs.dsorg === "PO-E") {
             transformedAttrs.dsorg = "PO";

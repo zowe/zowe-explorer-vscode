@@ -57,12 +57,12 @@ export default defineConfig(
       ],
       "@typescript-eslint/explicit-member-accessibility": "error",
 
-      // New excluded rules to resolve errors
+      // New rules after eslint 9.x upgrade
       "@typescript-eslint/no-namespace": "off",
       "@typescript-eslint/no-deprecated": "error",
+      "@typescript-eslint/no-floating-promises": "error",
 
       // There are several errors falling under these rules; resolve
-      "@typescript-eslint/no-floating-promises": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-call": "off",
@@ -115,7 +115,8 @@ export default defineConfig(
       "no-unused-vars": "off",
       "prefer-object-spread": "warn",
       "space-in-parens": "warn",
-      "zowe-explorer/no-floating-promises": "error",
+      // TODO: Enable eslint rule once we have a better solution for this
+      // "zowe-explorer/no-floating-promises": "error",
       "zowe-explorer/no-unmocked-core-modules": [
         "error",
         {
@@ -151,7 +152,9 @@ export default defineConfig(
       "@typescript-eslint/restrict-template-expressions": "warn",
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/unbound-method": "off",
-      "zowe-explorer/no-floating-promises": "warn",
+      "@typescript-eslint/no-floating-promises": "warn",
+      // TODO: Enable eslint rule once we have a better solution for this
+      // "zowe-explorer/no-floating-promises": "warn",
       curly: "off",
 
       // New excluded rules to resolve errors

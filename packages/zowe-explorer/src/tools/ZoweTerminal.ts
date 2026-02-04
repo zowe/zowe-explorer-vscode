@@ -281,7 +281,8 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.cursorPosition = 0;
     }
 
-    // Handle input from the terminal
+    // Handle input from the terminal asynchronously
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     public async handleInput(data: string): Promise<void> {
         if (this.isCommandRunning) {
             if ([ZoweTerminal.Keys.CTRL_C, ZoweTerminal.Keys.CTRL_D].includes(data)) {
@@ -304,7 +305,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                 }
                 if (this.command.length > 0) {
                     this.command = "";
-                    this.handleEnter();
+                    await this.handleEnter();
                 } else {
                     this.writeLine(this.chalk.italic("(To exit, press Ctrl+C again or Ctrl+D or type :exit)"));
                     this.pressedCtrlC = true;

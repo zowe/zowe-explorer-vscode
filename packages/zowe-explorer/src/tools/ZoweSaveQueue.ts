@@ -28,7 +28,6 @@ export class ZoweSaveQueue {
     public static push(request: Definitions.SaveRequest): void {
         ZoweLogger.trace("ZoweSaveQueue.push called.");
         this.savingQueue.push(request);
-        // eslint-disable-next-line zowe-explorer/no-floating-promises
         this.ongoingSave = this.all().then(this.processNext.bind(this));
     }
 

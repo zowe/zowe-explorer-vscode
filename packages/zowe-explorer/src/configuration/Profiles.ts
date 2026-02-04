@@ -1045,7 +1045,7 @@ export class Profiles extends ProfilesCache {
         }
         dsNode.description &&= "";
         dsNode.pattern &&= "";
-        SharedTreeProviders.ds.flipState(dsNode, false);
+        void SharedTreeProviders.ds.onCollapsibleStateChange(dsNode, vscode.TreeItemCollapsibleState.Collapsed);
         SharedTreeProviders.ds.refreshElement(dsNode);
     }
 
@@ -1061,7 +1061,7 @@ export class Profiles extends ProfilesCache {
         }
         ussNode.description &&= "";
         ussNode.fullPath &&= "";
-        SharedTreeProviders.uss.flipState(ussNode, false);
+        void SharedTreeProviders.uss.onCollapsibleStateChange(ussNode, vscode.TreeItemCollapsibleState.Collapsed);
         SharedTreeProviders.uss.refreshElement(ussNode);
     }
 
@@ -1081,7 +1081,7 @@ export class Profiles extends ProfilesCache {
         jobNode.status &&= "";
         jobNode.filtered &&= false;
         jobNode.children &&= [];
-        SharedTreeProviders.job.flipState(jobNode, false);
+        void SharedTreeProviders.job.onCollapsibleStateChange(jobNode, vscode.TreeItemCollapsibleState.Collapsed);
         SharedTreeProviders.job.refreshElement(jobNode);
     }
 
