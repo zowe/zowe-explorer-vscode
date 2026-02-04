@@ -980,7 +980,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await DatasetActions.submitMember(dataset);
                 expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
-                    "Are you sure you want to submit the following job?\n\n" + (dataset.getLabel() as string),
+                    "Are you sure you want to submit the following job?\n\n" + (dataset.getLabel() as string).toString(),
                     {
                         items: [{ title: "Submit" }],
                         vsCodeOpts: { modal: true },
@@ -994,7 +994,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await DatasetActions.submitMember(dataset);
                 expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
-                    "Are you sure you want to submit the following job?\n\n" + (dataset.getLabel() as string),
+                    "Are you sure you want to submit the following job?\n\n" + (dataset.getLabel() as string).toString(),
                     {
                         items: [{ title: "Submit" }],
                         vsCodeOpts: { modal: true },
@@ -1008,7 +1008,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         mocked(Gui.warningMessage).mockReturnValueOnce(undefined as any);
         await DatasetActions.submitMember(dataset);
         expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
-            "Are you sure you want to submit the following job?\n\n" + (dataset.getLabel() as string),
+            "Are you sure you want to submit the following job?\n\n" + (dataset.getLabel() as string).toString(),
             {
                 items: [{ title: "Submit" }],
                 vsCodeOpts: { modal: true },

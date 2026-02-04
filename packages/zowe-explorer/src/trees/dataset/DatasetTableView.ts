@@ -40,7 +40,7 @@ import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
  * Tree-based data source that uses existing tree nodes
  */
 export class TreeDataSource implements IDataSetSource {
-    public constructor(public treeNode: IZoweDatasetTreeNode) { }
+    public constructor(public treeNode: IZoweDatasetTreeNode) {}
 
     /**
      * Fetches dataset information based on the cached children tree nodes.
@@ -65,7 +65,7 @@ export class TreeDataSource implements IDataSetSource {
      */
     public getTitle(): string {
         if (SharedContext.isPds(this.treeNode)) {
-            return `[${this.treeNode.getProfileName()}]: ${this.treeNode.label?.toString()}`;
+            return `[${this.treeNode.getProfileName()}]: ${this.treeNode.label as string}`;
         }
         if (this.treeNode.pattern) {
             return l10n.t({
@@ -110,11 +110,11 @@ export class TreeDataSource implements IDataSetSource {
         });
 
         if (pdsNode) {
-            const children = await pdsNode.getChildren(false);
+            const mChildren: IZoweDatasetTreeNode[] = await pdsNode.getChildren(false);
             return (
-                children
-                    ?.filter((memberNode) => !SharedContext.isInformation(memberNode))
-                    .map((memberNode) => this.mapNodeToInfo(memberNode, parentId)) ?? []
+                mChildren
+                    ?.filter((memberNode: IZoweDatasetTreeNode) => !SharedContext.isInformation(memberNode))
+                    .map((memberNode: IZoweDatasetTreeNode) => this.mapNodeToInfo(memberNode, parentId)) ?? []
             );
         }
 
@@ -161,7 +161,7 @@ export class TreeDataSource implements IDataSetSource {
         const migr = isMigrated ? "YES" : dsStats?.["migr"];
 
         return {
-            name: dsNode.label?.toString(),
+            name: dsNode.label as string,
             dsorg: dsStats?.["dsorg"],
             createdDate: dsStats?.createdDate,
             modifiedDate: dsStats?.modifiedDate,
@@ -181,6 +181,7 @@ export class TreeDataSource implements IDataSetSource {
 /**
  * Helper function to build member information from API response
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
     // Parse c4date and m4date with mtime if available
     let createdDate: Date | undefined;
@@ -342,7 +343,7 @@ export class PDSMembersDataSource implements IDataSetSource {
         public pdsName: string,
         private pdsUri: string,
         private profile: imperative.IProfileLoaded
-    ) { }
+    ) {}
 
     public async fetchDataSets(): Promise<IDataSetInfo[]> {
         if (this.parentDataSource?.loadChildren && this.parentDataSource instanceof PatternDataSource) {
@@ -499,6 +500,7 @@ export class DatasetTableView {
             callback: { fn: this.focusOnPDS.bind(this), typ: "single-row" },
             condition: (elem: { index: number; row: Table.RowData[] }): boolean => {
                 const dsorg = elem.row?.["dsorg"] as string;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const hasTreeData = (elem.row as any)._tree as Table.TreeNodeData;
                 const isMember = hasTreeData?.parentId != null;
 
@@ -524,7 +526,7 @@ export class DatasetTableView {
         return rows.every((r) => {
             // Check if it's a sequential dataset (PS) or a PDS member
             const dsorg = r["dsorg"] as string;
-            const hasTreeData = (r as any)._tree as Table.TreeNodeData;
+            const hasTreeData = (r as Record<string, unknown>)._tree as Table.TreeNodeData;
             const isMember = hasTreeData?.parentId != null;
 
             // Allow opening for PS data sets or PDS members, whether in focused mode or as tree view
@@ -563,6 +565,8 @@ export class DatasetTableView {
         try {
             pinnedRows = await this.table.getPinnedRows();
         } catch (error) {
+            // TODO: Use ZoweLogger
+            // eslint-disable-next-line no-console
             console.warn("Failed to get pinned rows:", error);
         }
 
@@ -635,6 +639,8 @@ export class DatasetTableView {
                 try {
                     await this.table.setPinnedRows(this.previousTableData.pinnedRows);
                 } catch (error) {
+                    // TODO: Use ZoweLogger
+                    // eslint-disable-next-line no-console
                     console.warn("Failed to restore pinned rows:", error);
                 }
             }
@@ -664,7 +670,7 @@ export class DatasetTableView {
             );
 
             return allRowsPinned ? l10n.t("Unpin") : l10n.t("Pin");
-        } catch (error) {
+        } catch (_error) {
             // Fallback to "Pin" if we can't determine the state
             return l10n.t("Pin");
         }
@@ -766,7 +772,7 @@ export class DatasetTableView {
         tableType: DataSetTableType;
         shouldShow: Record<string, boolean>;
         table: Table.Instance;
-        gridState: any;
+        gridState?: Record<string, unknown>;
         pinnedRows: Table.RowData[];
         originalPattern?: string;
     } = null;
@@ -797,7 +803,7 @@ export class DatasetTableView {
         const datasetTable = DatasetTableView.getInstance();
 
         // Check if this is a tree node with parent-child relationship
-        const treeData = (data.row as any)._tree as Table.TreeNodeData;
+        const treeData = (data.row as Record<string, unknown>)._tree as Table.TreeNodeData;
         const isDsMember = datasetTable.isDsMemberUri(data.row.uri as string) || treeData?.parentId != null;
 
         if (isDsMember) {
@@ -807,7 +813,9 @@ export class DatasetTableView {
             const [profileName, datasetName, memberName] = uriParts;
 
             // First, try to find in session nodes
-            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => (node.label as string).toString() === profileName) as IZoweDatasetTreeNode;
+            const profileNode = SharedTreeProviders.ds.mSessionNodes.find(
+                (node) => (node.label as string).toString() === profileName
+            ) as IZoweDatasetTreeNode;
             let foundInSession = false;
 
             if (profileNode) {
@@ -862,7 +870,9 @@ export class DatasetTableView {
             const [profileName, datasetName] = uriParts;
 
             // First, try to find in session nodes
-            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => (node.label as string).toString() === profileName) as IZoweDatasetTreeNode;
+            const profileNode = SharedTreeProviders.ds.mSessionNodes.find(
+                (node) => (node.label as string).toString() === profileName
+            ) as IZoweDatasetTreeNode;
             let foundInSession = false;
 
             if (profileNode) {
@@ -897,13 +907,13 @@ export class DatasetTableView {
     private mapDatasetInfoToRow(info: IDataSetInfo): Table.RowData {
         const fieldsToCheck = ["createdDate", "dsorg", "modifiedDate", "lrecl", "migr", "recfm", "user"];
         fieldsToCheck.forEach((field) => {
-            this.shouldShow[field] ||= (info as any)[field] != null;
+            this.shouldShow[field] ||= info[field] != null;
         });
 
         // Member-specific fields
         const memberFieldsToCheck = ["vers", "mod", "cnorc", "inorc", "mnorc", "sclm"];
         memberFieldsToCheck.forEach((field) => {
-            this.shouldShow[field] ||= (info as any)[field] != null;
+            this.shouldShow[field] ||= info[field] != null;
         });
 
         this.shouldShow["volumes"] ||= info.volumes != null;
@@ -935,12 +945,12 @@ export class DatasetTableView {
     private mapDatasetInfoToRowWithTree(info: IDataSetInfo): Table.RowData {
         const fieldsToCheck = ["createdDate", "dsorg", "modifiedDate", "lrecl", "migr", "recfm", "user"];
         fieldsToCheck.forEach((field) => {
-            this.shouldShow[field] ||= (info as any)[field] != null;
+            this.shouldShow[field] ||= info[field] != null;
         });
 
         const memberFieldsToCheck = ["vers", "mod", "cnorc", "inorc", "mnorc", "sclm"];
         memberFieldsToCheck.forEach((field) => {
-            this.shouldShow[field] ||= (info as any)[field] != null;
+            this.shouldShow[field] ||= info[field] != null;
         });
 
         this.shouldShow["volumes"] ||= info.volumes != null;
@@ -1039,7 +1049,7 @@ export class DatasetTableView {
                 const treeNode = parentDataSource.treeNode;
                 if (treeNode && treeNode.children) {
                     const pdsName = this.currentDataSource.pdsName;
-                    const pdsNode = treeNode.children.find((child) => child.label?.toString() === pdsName);
+                    const pdsNode = treeNode.children.find((child) => (child.label as string).toString() === pdsName);
                     return pdsNode;
                 }
             }
@@ -1061,7 +1071,7 @@ export class DatasetTableView {
     /**
      * Applies tree node sorting to column definitions
      */
-    private applyTreeSortToColumns(columnDefs: any[], treeNode?: IZoweDatasetTreeNode): any[] {
+    private applyTreeSortToColumns(columnDefs: Table.Column[], treeNode?: IZoweDatasetTreeNode): Table.Column[] {
         if (!treeNode) {
             return columnDefs;
         }
@@ -1110,8 +1120,8 @@ export class DatasetTableView {
             // Set the tree column for dataset name when using tree mode
             ...(useTreeMode && field.field === "dsname"
                 ? {
-                    cellRenderer: "TreeCellRenderer",
-                }
+                      cellRenderer: "TreeCellRenderer",
+                  }
                 : {}),
         }));
 
@@ -1132,10 +1142,10 @@ export class DatasetTableView {
             // Enable custom tree mode when needed
             ...(useTreeMode
                 ? {
-                    customTreeMode: true,
-                    customTreeColumnField: "dsname",
-                    customTreeInitialExpansionDepth: 0, // Start with all PDS collapsed
-                }
+                      customTreeMode: true,
+                      customTreeColumnField: "dsname",
+                      customTreeInitialExpansionDepth: 0, // Start with all PDS collapsed
+                  }
                 : {}),
         };
 
@@ -1175,7 +1185,7 @@ export class DatasetTableView {
 
         this.table = tableBuilder.build();
 
-        this.table.onDisposed((e) => {
+        this.table.onDisposed((_e) => {
             this.dispose();
 
             this.onDataSetTableChangedEmitter.fire({
@@ -1354,10 +1364,10 @@ export class DatasetTableView {
         }
 
         const profile = Profiles.getInstance().loadNamedProfile(resp);
-        let profileNode = SharedTreeProviders.ds.mSessionNodes.find((s) => s.label.toString() === resp) as IZoweDatasetTreeNode;
+        let profileNode = SharedTreeProviders.ds.mSessionNodes.find((s) => (s.label as string).toString() === resp) as IZoweDatasetTreeNode;
         if (!profileNode) {
             await SharedTreeProviders.ds.addSingleSession(profile);
-            profileNode = SharedTreeProviders.ds.mSessionNodes.find((s) => s.label.toString() === resp) as IZoweDatasetTreeNode;
+            profileNode = SharedTreeProviders.ds.mSessionNodes.find((s) => (s.label as string).toString() === resp) as IZoweDatasetTreeNode;
         }
 
         await profileNode.getChildren(false);
@@ -1380,7 +1390,7 @@ export class DatasetTableView {
 
             this.currentDataSource = new PDSMembersDataSource(
                 new TreeDataSource(sessionNode),
-                selectedNode.label.toString(),
+                (selectedNode.label as string).toString(),
                 uri.toString(),
                 profile
             );

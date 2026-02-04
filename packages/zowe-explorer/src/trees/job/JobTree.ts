@@ -259,7 +259,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         ZoweLogger.trace("JobTree.findFavoritedNode called.");
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, node.getProfileName());
         return profileNodeInFavorites?.children.find(
-            (temp) => (temp.label as string) === (node.getLabel() as string) && temp.contextValue.includes(node.contextValue)
+            (temp) => (temp.label as string) === (node.getLabel() as string).toString() && temp.contextValue.includes(node.contextValue)
         );
     }
 
@@ -270,8 +270,8 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     public findNonFavoritedNode(node: IZoweJobTreeNode): IZoweJobTreeNode {
         ZoweLogger.trace("JobTree.findNonFavoritedNode called.");
         const profileName = node.getProfileName();
-        const sessionNode = this.mSessionNodes.find((session) => (session.label as string).trim() === profileName);
-        return sessionNode?.children.find((temp) => temp.label === node.label);
+        const sessionNode = this.mSessionNodes.find((session) => (session.label as string).toString().trim() === profileName);
+        return sessionNode?.children.find((temp) => temp.label === (node.getLabel() as string).toString());
     }
 
     /**

@@ -108,8 +108,8 @@ export class Profiles extends ProfilesCache {
         const teamConfig = (await this.getProfileInfo()).getTeamConfig();
         const profName = teamConfig.api.profiles.getProfilePathFromName(theProfile.name);
 
-        const getCumulativePaths = (profName: string): string[] => {
-            const parts = profName.split(".profiles.");
+        const getCumulativePaths = (mProfName: string): string[] => {
+            const parts = mProfName.split(".profiles.");
             return parts.slice(1).reduce(
                 (acc, part) => {
                     const previousPath = acc.length > 0 ? acc[acc.length - 1] : parts[0];
@@ -125,8 +125,8 @@ export class Profiles extends ProfilesCache {
 
         // Add all intermediate paths by working backwards
         const allPaths: string[] = [];
-        for (const path of paths) {
-            const segments = path.split(".profiles.");
+        for (const aPath of paths) {
+            const segments = aPath.split(".profiles.");
             for (let j = 1; j <= segments.length; j++) {
                 const subPath = segments.slice(0, j).join(".profiles.");
                 if (!allPaths.includes(subPath)) {
@@ -143,7 +143,7 @@ export class Profiles extends ProfilesCache {
             allPaths.push(profName);
         }
 
-        return allPaths.some((path) => teamConfig.api.secure.secureFields().includes(path + ".properties.tokenValue"));
+        return allPaths.some((aPath) => teamConfig.api.secure.secureFields().includes(aPath + ".properties.tokenValue"));
     }
 
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
@@ -178,7 +178,9 @@ export class Profiles extends ProfilesCache {
         let tokenType: string;
         try {
             tokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile).getTokenTypeName();
-        } catch {}
+        } catch (_error) {
+            // Unable to get token type, so we will not use token auth
+        }
 
         if (usingTokenAuth || ((await this.profileHasSecureToken(theProfile)) && tokenType)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
@@ -333,7 +335,7 @@ export class Profiles extends ProfilesCache {
 
     public disableValidation(node: Types.IZoweNodeType): Types.IZoweNodeType {
         ZoweLogger.trace("Profiles.disableValidation called.");
-        const treeNodes = SharedTreeProviders.getSessionForAllTrees(node.getLabel().toString());
+        const treeNodes = SharedTreeProviders.getSessionForAllTrees((node.getLabel() as string).toString());
         treeNodes.forEach((treeNode) => {
             if (treeNode) {
                 this.disableValidationContext(treeNode);
@@ -358,7 +360,7 @@ export class Profiles extends ProfilesCache {
 
     public enableValidation(node: Types.IZoweNodeType): Types.IZoweNodeType {
         ZoweLogger.trace("Profiles.enableValidation called.");
-        const treeNodes = SharedTreeProviders.getSessionForAllTrees(node.getLabel().toString());
+        const treeNodes = SharedTreeProviders.getSessionForAllTrees((node.getLabel() as string).toString());
         treeNodes.forEach((treeNode) => {
             if (treeNode) {
                 this.enableValidationContext(treeNode);
@@ -946,7 +948,7 @@ export class Profiles extends ProfilesCache {
         }
 
         let loginTokenType: string;
-        const serviceProfile = node.getProfile() ?? this.loadNamedProfile(node.label.toString().trim());
+        const serviceProfile = node.getProfile() ?? this.loadNamedProfile((node.getLabel() as string).toString().trim());
         const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {
             loginTokenType = await zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
@@ -1019,7 +1021,7 @@ export class Profiles extends ProfilesCache {
                         Gui.errorMessage(vscode.l10n.t("Unable to switch to basic authentication for profile {0}.", serviceProfile.name));
                         return;
                     }
-                } catch (err) {
+                } catch (_err) {
                     Gui.errorMessage(vscode.l10n.t("Unable to switch to basic authentication for profile {0}.", serviceProfile.name));
                     return;
                 }

@@ -123,6 +123,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 });
                 const { dsname: _dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
                 // need to transform labels
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
                 const dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
                 // if alcunit is cyl, divide primary by 15 to get the number of cylinders
@@ -153,10 +154,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 await this.crossLparMove(
                     childNode,
                     sourceUri.with({
-                        path: path.posix.join(sourceUri.path, childNode.getLabel() as string),
+                        path: path.posix.join(sourceUri.path, (childNode.getLabel() as string).toString()),
                     }),
                     destUri.with({
-                        path: path.posix.join(destUri.path, childNode.getLabel() as string),
+                        path: path.posix.join(destUri.path, (childNode.getLabel() as string).toString()),
                     }),
                     true
                 );
@@ -170,11 +171,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         dsname =
                             path.posix.dirname(destUri.path.substring(destinationInfo.slashAfterProfilePos + 1)) +
                             "(" +
-                            (sourceNode.getLabel() as string) +
+                            (sourceNode.getLabel() as string).toString() +
                             ")";
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
                     } else {
-                        dsname = sourceNode.getLabel() as string;
+                        dsname = (sourceNode.getLabel() as string).toString();
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
                             zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
                             dsname,
@@ -247,8 +248,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (!node) {
                 continue;
             }
-            const srcDsn = (SharedContext.isDsMember(node) ? node.getParent() : node).getLabel() as string;
-            const tgtDsn = target.getLabel() as string;
+            const srcDsn = ((SharedContext.isDsMember(node) ? node.getParent() : node).getLabel() as string).toString();
+            const tgtDsn = (target.getLabel() as string).toString();
 
             // 1. Same-object check
             if (tgtDsn === srcDsn && (await SharedUtils.isSamePhysicalDataset(node.getProfile(), target.getProfile(), srcDsn))) {
@@ -259,10 +260,12 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // 2. PDS member collision check (only if both are PDS)
             if (SharedContext.isPds(node) && SharedContext.isPds(target)) {
                 const srcMembersResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(srcDsn, { attributes: true });
-                const tgtMembersResp = await ZoweExplorerApiRegister.getMvsApi(target.getProfile()).allMembers(srcDsn, { attributes: true }); //using the same dsn, but checking against target
 
-                const srcNames = (srcMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
-                const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
+                //using the same dsn, but checking against target
+                const tgtMembersResp = await ZoweExplorerApiRegister.getMvsApi(target.getProfile()).allMembers(srcDsn, { attributes: true });
+
+                const srcNames = (srcMembersResp.apiResponse?.items ?? []).map((m: { name: string }) => m.name).filter(Boolean);
+                const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map((m: { name: string }) => m.name).filter(Boolean);
 
                 if (SharedUtils.hasNameCollision(srcNames, tgtNames)) {
                     Gui.errorMessage(
@@ -920,7 +923,7 @@ Would you like to do this now?`,
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         return profileNodeInFavorites?.children.find(
-            (temp) => (temp.label as string) === (node.getLabel() as string) && temp.contextValue.includes(node.contextValue)
+            (temp) => (temp.label as string) === (node.getLabel() as string).toString() && temp.contextValue.includes(node.contextValue)
         );
     }
 
@@ -934,7 +937,7 @@ Would you like to do this now?`,
         ZoweLogger.trace("DatasetTree.findNonFavoritedNode called.");
         const profileName = node.getProfileName();
         const sessionNode = this.mSessionNodes.find((session) => (session.label as string).toString().trim() === profileName);
-        return sessionNode?.children.find((temp) => temp.label === node.label);
+        return sessionNode?.children.find((temp) => temp.label === (node.getLabel() as string).toString());
     }
 
     /**
@@ -1454,7 +1457,7 @@ Would you like to do this now?`,
             }
         } else {
             // executing search from saved search in favorites
-            pattern = node.getLabel() as string;
+            pattern = (node.getLabel() as string).toString();
             const sessionName = node.getProfileName();
             await this.addSession({ sessionName });
             const nonFavNode = this.mSessionNodes.find((tempNode) => (tempNode.label as string) === sessionName);
@@ -1822,7 +1825,7 @@ Would you like to do this now?`,
               });
         const selection = await Gui.showQuickPick(
             DatasetUtils.DATASET_SORT_OPTS.map((opt, i) => ({
-                label: sortOpts.method === i ? `${opt} $(check)` : opt,
+                label: (sortOpts.method as number) === i ? `${opt} $(check)` : opt,
                 description: i === DatasetUtils.DATASET_SORT_OPTS.length - 1 ? Constants.SORT_DIRS[sortOpts.direction] : null,
             })),
             {
@@ -1962,7 +1965,12 @@ Would you like to do this now?`,
             : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;
         const selection = (
             await Gui.showQuickPick(
-                [...DatasetUtils.DATASET_FILTER_OPTS.map((sortOpt, i) => (node.filter?.method === i ? `${sortOpt} $(check)` : sortOpt)), clearFilter],
+                [
+                    ...DatasetUtils.DATASET_FILTER_OPTS.map((sortOpt, i) =>
+                        (node.filter?.method as number) === i ? `${sortOpt} $(check)` : sortOpt
+                    ),
+                    clearFilter,
+                ],
                 {
                     placeHolder: vscode.l10n.t({
                         message: "Set a filter for {0}",
@@ -1991,7 +1999,7 @@ Would you like to do this now?`,
             return;
         }
 
-        const dateValidation = (value): string => {
+        const dateValidation = (value: string): string => {
             return dayjs(value).isValid() ? null : vscode.l10n.t("Invalid date format specified");
         };
 
@@ -1999,9 +2007,9 @@ Would you like to do this now?`,
             title: vscode.l10n.t("Enter a value to filter by"),
             placeHolder: "",
             validateInput:
-                filterMethod === Sorting.DatasetFilterOpts.LastModified
+                filterMethod === (Sorting.DatasetFilterOpts.LastModified as number)
                     ? dateValidation
-                    : (val): string => (val.length > 0 ? null : vscode.l10n.t("Invalid filter specified")),
+                    : (val: string): string => (val.length > 0 ? null : vscode.l10n.t("Invalid filter specified")),
         });
 
         // User dismissed filter entry, go back to filter selection

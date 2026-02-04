@@ -213,7 +213,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             treeProvider.mSessionNodes = treeProvider.mSessionNodes.filter(
                 (mSessionNode: IZoweTreeNode) => mSessionNode.getLabel() !== node.getLabel()
             );
-            treeProvider.removeSession(node.getLabel() as string);
+            treeProvider.removeSession((node.getLabel() as string).toString());
             treeProvider.refresh();
         }
     }

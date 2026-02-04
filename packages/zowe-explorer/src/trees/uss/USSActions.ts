@@ -379,8 +379,8 @@ export class USSActions {
             const directory: USSFileStructure.UssFileTree = {
                 localUri: node.resourceUri,
                 ussPath: node.fullPath,
-                baseName: node.getLabel() as string,
-                sessionName: node.getSessionNode().getLabel() as string,
+                baseName: (node.getLabel() as string).toString(),
+                sessionName: (node.getSessionNode().getLabel() as string).toString(),
                 type: USSFileStructure.UssFileType.Directory,
                 children: [],
             };
@@ -401,8 +401,8 @@ export class USSActions {
             binary: (await node.getEncoding())?.kind === "binary",
             localUri: node.resourceUri,
             ussPath: node.fullPath,
-            baseName: node.getLabel() as string,
-            sessionName: node.getSessionNode().getLabel() as string,
+            baseName: (node.getLabel() as string).toString(),
+            sessionName: (node.getSessionNode().getLabel() as string).toString(),
             type: USSFileStructure.UssFileType.File,
         };
     }

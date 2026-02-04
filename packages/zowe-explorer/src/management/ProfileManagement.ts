@@ -255,7 +255,7 @@ export class ProfileManagement {
     }
 
     private static async handleHideProfiles(node: IZoweTreeNode): Promise<void> {
-        const shouldHideFromAllTrees = await Profiles.handleChangeForAllTrees(node.getLabel().toString(), false);
+        const shouldHideFromAllTrees = await Profiles.handleChangeForAllTrees((node.getLabel() as string).toString(), false);
         if (shouldHideFromAllTrees === undefined) {
             Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
             return;

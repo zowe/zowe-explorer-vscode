@@ -34,9 +34,9 @@ import { Definitions } from "../../configuration/Definitions";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 
-export const isDataTransfer = (o: any): o is { get: (m: string) => any } => !!o && typeof o.get === "function";
+export const isDataTransfer = (o: Record<string, unknown>): o is { get: (m: string) => unknown } => !!o && typeof o.get === "function";
 
-export const isPayload = (o: any): o is { value: any[] } => !!o && Array.isArray(o.value);
+export const isPayload = (o: Record<string, unknown>): o is { value: unknown[] } => !!o && Array.isArray(o.value);
 export class SharedUtils {
     public static ERROR_SAME_OBJECT_DROP =
         "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
@@ -93,7 +93,7 @@ export class SharedUtils {
         favorites.sort((a, b) => {
             if (a.contextValue === specificContext) {
                 if (b.contextValue === specificContext) {
-                    return a.label.toString().toUpperCase() > b.label.toString().toUpperCase() ? 1 : -1;
+                    return (a.label as string).toString().toUpperCase() > (b.label as string).toString().toUpperCase() ? 1 : -1;
                 }
 
                 return -1;
@@ -103,7 +103,7 @@ export class SharedUtils {
                 return 1;
             }
 
-            return a.label.toString().toUpperCase() > b.label.toString().toUpperCase() ? 1 : -1;
+            return (a.label as string).toString().toUpperCase() > (b.label as string).toString().toUpperCase() ? 1 : -1;
         });
     }
 
@@ -287,7 +287,7 @@ export class SharedUtils {
             case binaryLabel:
                 encoding = { kind: "binary" };
                 break;
-            case otherLabel:
+            case otherLabel: {
                 const customResponse = await Gui.showInputBox({
                     title: vscode.l10n.t({
                         message: "Choose encoding for {0}",
@@ -305,6 +305,7 @@ export class SharedUtils {
                     return undefined;
                 }
                 break;
+            }
             default:
                 encoding = response === "binary" ? { kind: "binary" } : { kind: "other", codepage: response };
                 break;
@@ -452,7 +453,7 @@ export class SharedUtils {
      * @param callback Event handler callback
      * @param delay Number of milliseconds to delay
      */
-    public static debounce<T extends (...args: any[]) => void>(callback: T, delay: number): (...args: Parameters<T>) => void {
+    public static debounce<T extends (...args: unknown[]) => void>(callback: T, delay: number): (...args: Parameters<T>) => void {
         let timeoutId: ReturnType<typeof setTimeout>;
         return (...args: Parameters<T>): void => {
             if (timeoutId) {
@@ -467,7 +468,7 @@ export class SharedUtils {
      * @param callback Async event callback
      * @param delay Number of milliseconds to delay
      */
-    public static debounceAsync<T extends (...args: any[]) => Promise<any>>(
+    public static debounceAsync<T extends (...args: unknown[]) => Promise<unknown>>(
         callback: T,
         delay: number
     ): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {

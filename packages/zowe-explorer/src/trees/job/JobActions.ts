@@ -515,7 +515,7 @@ export class JobActions {
     public static async sortJobs(session: IZoweJobTreeNode, jobsProvider: JobTree): Promise<void> {
         const selection = await Gui.showQuickPick(
             JobUtils.JOB_SORT_OPTS.map((sortOpt, i) => ({
-                label: i === session.sort.method ? `${sortOpt} $(check)` : sortOpt,
+                label: i === (session.sort.method as number) ? `${sortOpt} $(check)` : sortOpt,
                 description: i === JobUtils.JOB_SORT_OPTS.length - 1 ? Constants.SORT_DIRS[session.sort.direction] : null,
             })),
             {

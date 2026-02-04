@@ -10,16 +10,17 @@
  */
 
 import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
+import { defineConfig, globalIgnores } from "eslint/config";
+import { configs as tseslintConfigs } from "typescript-eslint";
 import prettierConfig from "eslint-config-prettier";
 import zoweExplorerPlugin from "eslint-plugin-zowe-explorer";
 
-export default tseslint.config(
+export default defineConfig(
   // Base ESLint recommended rules
   eslint.configs.recommended,
 
   // TypeScript ESLint recommended rules
-  ...tseslint.configs.recommendedTypeChecked,
+  tseslintConfigs.recommendedTypeChecked,
 
   // Prettier config (disables conflicting rules)
   prettierConfig,
@@ -75,6 +76,7 @@ export default tseslint.config(
         {
           argsIgnorePattern: "^_",
           caughtErrorsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
         },
       ],
       "array-callback-return": "error",
@@ -123,22 +125,18 @@ export default tseslint.config(
       ],
     },
   },
-
-  // Ignore patterns
-  {
-    ignores: [
-      "**/scripts/**",
-      "**/__mocks__/**",
-      "**/lib/**",
-      "**/webpack.config.js",
-      "**/*wdio.conf.ts",
-      "**/features/**",
-      "**/samples/__integration__/**",
-      "**/out/**",
-      "**/results/**",
-      "**/src/webviews/**",
-    ],
-  },
+  globalIgnores([
+    "**/scripts/**",
+    "**/__mocks__/**",
+    "**/lib/**",
+    "**/webpack.config.js",
+    "**/*wdio.conf.ts",
+    "**/features/**",
+    "**/samples/__integration__/**",
+    "**/out/**",
+    "**/results/**",
+    "**/src/webviews/**/*.ts", // TODO: Remove this once we are ready to fix webviews linting errors
+  ]),
 
   // Override for test files
   {

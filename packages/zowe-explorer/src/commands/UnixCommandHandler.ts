@@ -45,13 +45,13 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private static instance: UnixCommandHandler;
     private nodeProfile: imperative.IProfileLoaded = undefined;
     private unixCmdMsgs = {
-        issueCmdNotSupportedMsg: (profileType: string) =>
+        issueCmdNotSupportedMsg: (profileType: string): string =>
             vscode.l10n.t({
                 message: "Issuing commands is not supported for this profile type, {0}.",
                 args: [profileType],
                 comment: ["Profile type"],
             }),
-        issueUnixCmdNotSupportedMsg: (profileType: string) =>
+        issueUnixCmdNotSupportedMsg: (profileType: string): string =>
             vscode.l10n.t({
                 message: "Issuing UNIX commands is not supported for this profile type, {0}.",
                 args: [profileType],
@@ -124,7 +124,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 ZoweLogger.info(
                     vscode.l10n.t("An SSH profile will be used for issuing UNIX commands with the profile {0}.", [this.nodeProfile?.name])
                 );
-            } catch (e) {
+            } catch (_e) {
                 // error would be due to missing API, assuming SSH profile not required
                 ZoweLogger.warn(
                     vscode.l10n.t(

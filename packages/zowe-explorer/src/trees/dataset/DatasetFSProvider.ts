@@ -539,7 +539,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 await this._updateResourceInEditor(uri);
             }
             return dsEntry;
-        } catch (error) {
+        } catch (_error) {
             return null;
         }
     }
@@ -673,7 +673,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         longLines[i + 1] = document.lineAt(i).text;
                     }
                 }
-            } catch (err) {
+            } catch (_err) {
                 // do nothing since we may be trying to create an entry in the FS that doesn't exist yet
             }
             if (Object.keys(longLines).length > 0) {
@@ -694,8 +694,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
-            const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            const profileEncoding = entry.encoding ? null : profile.profile?.encoding;
+            const mProfile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+            const profileEncoding = entry.encoding ? null : mProfile.profile?.encoding;
 
             const binary = encoding === "binary" || entry.encoding?.kind === "binary";
 
@@ -799,7 +799,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
                     if (lastGroup && line === lastGroup.end + 1) {
                         lastGroup.end = line;
-                        lastGroup.text += "\n" + text;
+                        lastGroup.text += "\n" + (text as string);
                     } else {
                         groupedLines.push({ start: line, end: line, text: text as string });
                     }

@@ -855,9 +855,9 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         const blockMocks = createBlockMocks(globalMocks);
         const rootTree: USSFileStructure.UssFileTree = {
             children: [],
-            baseName: blockMocks.ussNodes[1].getLabel() as string,
+            baseName: (blockMocks.ussNodes[1].getLabel() as string).toString(),
             ussPath: "/",
-            sessionName: blockMocks.ussNode.getLabel() as string,
+            sessionName: (blockMocks.ussNode.getLabel() as string).toString(),
             type: USSFileStructure.UssFileType.Directory,
             localUri: blockMocks.ussNodes[1].resourceUri,
         };
@@ -872,9 +872,9 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         const blockMocks = createBlockMocks(globalMocks);
         const rootTree: USSFileStructure.UssFileTree = {
             children: [],
-            baseName: blockMocks.ussNodes[1].getLabel() as string,
+            baseName: (blockMocks.ussNodes[1].getLabel() as string).toString(),
             ussPath: "/",
-            sessionName: blockMocks.ussNode.getLabel() as string,
+            sessionName: (blockMocks.ussNode.getLabel() as string).toString(),
             type: USSFileStructure.UssFileType.Directory,
         };
 

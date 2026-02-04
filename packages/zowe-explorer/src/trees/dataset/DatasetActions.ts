@@ -257,7 +257,7 @@ export class DatasetActions {
         node: IZoweDatasetTreeNode,
         dsName: string,
         datasetProvider: Types.IZoweDatasetTreeType,
-        dsPropsForAPI: Record<string, unknown> = {},
+        dsPropsForAPI: Record<string, unknown> = {}
     ): Promise<void> {
         const profile = node.getProfile();
         try {
@@ -286,7 +286,7 @@ export class DatasetActions {
         node: IZoweDatasetTreeNode,
         dsName: string,
         datasetProvider: Types.IZoweDatasetTreeType,
-        theFilter: any
+        theFilter: string
     ): Promise<void> {
         node.pattern = theFilter.toUpperCase();
         const toolTipList: string[] = (node.tooltip as string).split("\n");
@@ -304,14 +304,14 @@ export class DatasetActions {
         }
         node.dirty = true;
 
-        const newNode = await node.getChildren().then((children) => children.find((child) => child.label === dsName));
+        const newNode = await node.getChildren().then((children) => children.find((child) => (child.getLabel() as string).toString() === dsName));
         datasetProvider
             .getTreeView()
             .reveal(node, { select: true, focus: true })
             .then(() => datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true }));
     }
 
-    private static async saveDsTemplate(datasetProvider: Types.IZoweDatasetTreeType, dsPropsForAPI: any): Promise<void> {
+    private static async saveDsTemplate(datasetProvider: Types.IZoweDatasetTreeType, dsPropsForAPI: unknown): Promise<void> {
         // newDSProperties
         await Gui.infoMessage("Would you like to save these attributes as a template for future data set creation?", {
             items: ["Save"],
@@ -329,7 +329,7 @@ export class DatasetActions {
                     return;
                 }
                 const newTemplate: Types.DataSetAllocTemplate = {
-                    [templateName]: dsPropsForAPI,
+                    [templateName]: dsPropsForAPI as zosfiles.ICreateDataSetOptions,
                 };
                 await datasetProvider.addDsTemplate(newTemplate);
             }
@@ -354,8 +354,8 @@ export class DatasetActions {
             quickpick.ignoreFocusOut = true;
 
             for (const thisSession of datasetProvider.mSessionNodes) {
-                if (!thisSession.label.toString().includes(vscode.l10n.t("Favorites"))) {
-                    qpItems.push(new FilterItem({ text: thisSession.label as string }));
+                if (!(thisSession.getLabel() as string).toString().includes(vscode.l10n.t("Favorites"))) {
+                    qpItems.push(new FilterItem({ text: (thisSession.getLabel() as string).toString() }));
                 }
             }
             quickpick.items = [...qpItems];
@@ -366,18 +366,23 @@ export class DatasetActions {
                 Gui.showMessage(vscode.l10n.t("You must select a profile."));
                 return;
             } else {
-                ZoweLogger.trace(`${selection?.toString()} was profile chosen to allocate a data set.`);
-                currSession = datasetProvider.mSessionNodes.find((thisSession) => thisSession.label === selection.label) as IZoweDatasetTreeNode;
+                ZoweLogger.trace(`${selection.label} was profile chosen to allocate a data set.`);
+                currSession = datasetProvider.mSessionNodes.find(
+                    (thisSession) => (thisSession.getLabel() as string).toString() === selection.label
+                ) as IZoweDatasetTreeNode;
                 profile = currSession.getProfile();
             }
             quickpick.dispose();
 
             // The user must enter the name of a data set to copy
-            const currSelection = datasetProvider.getTreeView().selection.length > 0 ? datasetProvider.getTreeView().selection[0].label : null;
+            const currSelection =
+                datasetProvider.getTreeView().selection.length > 0
+                    ? (datasetProvider.getTreeView().selection[0].getLabel() as string).toString()
+                    : null;
             const inputBoxOptions: vscode.InputBoxOptions = {
                 ignoreFocusOut: true,
                 placeHolder: vscode.l10n.t("Enter the name of the data set to copy attributes from"),
-                value: currSelection as string,
+                value: currSelection,
                 validateInput: (text) => {
                     return DatasetUtils.validateDataSetName(text) === true ? null : vscode.l10n.t("Enter a valid data set name.");
                 },
@@ -391,7 +396,7 @@ export class DatasetActions {
         } else {
             // User called allocateLike by right-clicking a node
             profile = node.getProfile();
-            likeDSName = node.label.toString().replace(/\[.*\]: /g, "");
+            likeDSName = (node.getLabel() as string).toString().replace(/\[.*\]: /g, "");
         }
         ZoweLogger.info(
             vscode.l10n.t({
@@ -434,7 +439,7 @@ export class DatasetActions {
         // Refresh tree and open new node, if applicable
         if (!currSession) {
             currSession = datasetProvider.mSessionNodes.find(
-                (thisSession) => thisSession.label.toString().trim() === profile.name
+                (thisSession) => (thisSession.getLabel() as string).toString().trim() === profile.name
             ) as IZoweDatasetTreeNode;
         }
 
@@ -443,7 +448,7 @@ export class DatasetActions {
         datasetProvider.refresh();
         currSession.dirty = true;
         datasetProvider.refreshElement(currSession);
-        const newNode = (await currSession.getChildren()).find((child) => child.label.toString() === newDSName.toUpperCase());
+        const newNode = (await currSession.getChildren()).find((child) => (child.getLabel() as string).toString() === newDSName.toUpperCase());
         await datasetProvider.getTreeView().reveal(currSession, { select: true, focus: true });
         datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
         ZoweLogger.info(
@@ -526,7 +531,7 @@ export class DatasetActions {
         }
 
         const profile = node.getProfile();
-        const encoding = await SharedUtils.promptForUploadEncoding(profile, node.label as string);
+        const encoding = await SharedUtils.promptForUploadEncoding(profile, (node.getLabel() as string).toString());
 
         if (!encoding) {
             return;
@@ -588,7 +593,7 @@ export class DatasetActions {
     public static async uploadFile(node: ZoweDatasetNode, docPath: string): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("dataset.actions.uploadFile called.");
         try {
-            const datasetName = node.label as string;
+            const datasetName = (node.getLabel() as string).toString();
             const prof = node.getProfile();
 
             return await ZoweExplorerApiRegister.getMvsApi(prof).putContents(docPath, datasetName, {
@@ -603,10 +608,10 @@ export class DatasetActions {
     public static async uploadFileWithEncoding(node: ZoweDatasetNode, docPath: string, encoding: ZosEncoding): Promise<zosfiles.IZosFilesResponse> {
         ZoweLogger.trace("dataset.actions.uploadFileWithEncoding called.");
         try {
-            const datasetName = node.label as string;
+            const datasetName = (node.getLabel() as string).toString();
             const prof = node.getProfile();
 
-            const options: any = {
+            const options: zosfiles.IUploadOptions = {
                 responseTimeout: prof.profile?.responseTimeout,
                 binary: encoding.kind === "binary",
             };
@@ -671,10 +676,10 @@ export class DatasetActions {
         }
 
         // The names of the nodes that should be deleted
-        const deleteItemName = (node: IZoweDatasetTreeNode) =>
-            SharedContext.isDsMember(node)
-                ? ` ${node.getParent().getLabel().toString()}(${node.getLabel().toString()})`
-                : ` ${node.getLabel().toString()}`;
+        const deleteItemName = (dNode: IZoweDatasetTreeNode): string =>
+            SharedContext.isDsMember(dNode)
+                ? ` ${(dNode.getParent().getLabel() as string).toString()}(${(dNode.getLabel() as string).toString()})`
+                : ` ${(dNode.getLabel() as string).toString()}`;
         const namesToDelete: string[] = nodes.map(deleteItemName).sort((a, b) => a.localeCompare(b));
 
         // The member parent nodes that should be refreshed individually
@@ -682,7 +687,11 @@ export class DatasetActions {
         for (const deletedNode of nodes) {
             if (SharedContext.isDsMember(deletedNode)) {
                 const parent = deletedNode.getParent();
-                if (memberParents.filter((alreadyAddedParent) => alreadyAddedParent.label.toString() === parent.label.toString()).length === 0) {
+                if (
+                    memberParents.filter(
+                        (alreadyAddedParent) => (alreadyAddedParent.getLabel() as string).toString() === (parent.getLabel() as string).toString()
+                    ).length === 0
+                ) {
                     memberParents.push(parent as IZoweDatasetTreeNode);
                 }
             }
@@ -814,7 +823,7 @@ export class DatasetActions {
             parent.dirty = true;
             datasetProvider.refreshElement(parent);
 
-            const newNode = await parent.getChildren().then((children) => children.find((ds) => ds.label === name));
+            const newNode = await parent.getChildren().then((children) => children.find((ds) => (ds.getLabel() as string).toString() === name));
             datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
 
             // Refresh corresponding tree parent to reflect addition
@@ -977,25 +986,26 @@ export class DatasetActions {
                     comment: ["Label"],
                 })
             );
-            let attributes: any;
+            let attributes: any[];
             let parentDsName: string | undefined;
             const isMemberNode = SharedContext.isDsMember(node);
             try {
+                let attrResponse: zosfiles.IZosFilesResponse;
                 const nodeProfile = node.getProfile();
                 if (isMemberNode) {
-                    parentDsName = node.getParent().getLabel() as string;
-                    attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).allMembers(parentDsName.toUpperCase(), {
+                    parentDsName = (node.getParent().getLabel() as string).toString();
+                    attrResponse = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).allMembers(parentDsName.toUpperCase(), {
                         attributes: true,
                         pattern: label.toUpperCase(),
                         responseTimeout: nodeProfile?.profile?.responseTimeout,
                     });
                 } else {
-                    attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).dataSet(label, {
+                    attrResponse = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).dataSet(label, {
                         attributes: true,
                         responseTimeout: nodeProfile?.profile?.responseTimeout,
                     });
                 }
-                attributes = attributes.apiResponse.items;
+                attributes = attrResponse.apiResponse.items;
                 if (SharedContext.isDs(node)) {
                     attributes = attributes.filter((dataSet) => {
                         return dataSet.dsname.toUpperCase() === label.toUpperCase();
@@ -1163,26 +1173,28 @@ export class DatasetActions {
 <body>
     <div class="attributes-container">
     ${DatasetActions.attributeInfo
-                    .map(({ title, reference, keys }) => {
-                        const linkedTitle = reference
-                            ? `<a href="${reference}" target="_blank" style="text-decoration: none;">
+        .map(({ title, reference, keys }) => {
+            const linkedTitle = reference
+                ? `<a href="${reference}" target="_blank" style="text-decoration: none;">
                     <h2 style="color: var(--vscode-textLink-foreground)">${title}</h2>
                 </a>`
-                            : `<h2>${title}</h2>`;
-                        const tableRows = Array.from(keys.entries())
-                            .filter(([key], _, all) => !(key === "vol" && all.some(([k]) => k === "vols")))
-                            .reduce((html, [key, info]) => {
-                                if (info.value === undefined || info.value === null) {
-                                    return html;
-                                }
-                                const formattedValue = formatAttributeValue(key, info.value, title);
-                                const isNumeric = typeof info.value === "number";
-                                return html.concat(`
-                        <tr ${info.displayName || info.description
-                                        ? `title="${info.displayName ? `(${key})` : ""}${info.description ? (info.displayName ? " " : "") + info.description : ""
-                                        }"`
-                                        : ""
-                                    }>
+                : `<h2>${title}</h2>`;
+            const tableRows = Array.from(keys.entries())
+                .filter(([key], _, all) => !(key === "vol" && all.some(([k]) => k === "vols")))
+                .reduce((html, [key, info]) => {
+                    if (info.value === undefined || info.value === null) {
+                        return html;
+                    }
+                    const formattedValue = formatAttributeValue(key, info.value, title);
+                    const isNumeric = typeof info.value === "number";
+                    return html.concat(`
+                        <tr ${
+                            info.displayName || info.description
+                                ? `title="${info.displayName ? `(${key})` : ""}${
+                                      info.description ? (info.displayName ? " " : "") + info.description : ""
+                                  }"`
+                                : ""
+                        }>
                             <td class="attribute-key">
                                 ${info.displayName || key}:
                             </td>
@@ -1191,9 +1203,9 @@ export class DatasetActions {
                             </td>
                         </tr>
                 `);
-                            }, "");
+                }, "");
 
-                        return `
+            return `
             <div class="attributes-section">
                 ${linkedTitle}
                 <table class="attributes-table">
@@ -1201,8 +1213,8 @@ export class DatasetActions {
                 </table>
             </div>
         `;
-                    })
-                    .join("")}
+        })
+        .join("")}
     </div>
 </body>
 </html>`;
@@ -1255,7 +1267,7 @@ export class DatasetActions {
         // get session name
         const profiles = Profiles.getInstance();
         let sessProfileName;
-        if (doc.uri.scheme !== ZoweScheme.DS && doc.uri.scheme !== ZoweScheme.USS) {
+        if (doc.uri.scheme !== (ZoweScheme.DS as string) && doc.uri.scheme !== (ZoweScheme.USS as string)) {
             const profileNamesList = ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES);
             if (profileNamesList.length > 1) {
                 const quickPickOptions: vscode.QuickPickOptions = {
@@ -1280,7 +1292,7 @@ export class DatasetActions {
 
         // get profile from session name
         let sessProfile: imperative.IProfileLoaded;
-        const sesNode = (await datasetProvider.getChildren()).find((child) => child.label.toString() === sessProfileName);
+        const sesNode = (await datasetProvider.getChildren()).find((child) => (child.getLabel() as string).toString() === sessProfileName);
         if (sesNode) {
             sessProfile = sesNode.getProfile();
         } else {
@@ -1451,7 +1463,7 @@ export class DatasetActions {
     public static async confirmJobSubmission(nodeOrFileName: IZoweDatasetTreeNode | string, ownsJob: boolean): Promise<boolean> {
         ZoweLogger.trace("dataset.actions.confirmJobSubmission called.");
 
-        const jclName = typeof nodeOrFileName === "string" ? path.basename(nodeOrFileName) : nodeOrFileName.getLabel().toString();
+        const jclName = typeof nodeOrFileName === "string" ? path.basename(nodeOrFileName) : (nodeOrFileName.getLabel() as string).toString();
 
         const showConfirmationDialog = async (): Promise<boolean> => {
             const selection = await Gui.warningMessage(
@@ -1471,22 +1483,22 @@ export class DatasetActions {
         const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
 
         switch (Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
-            case Definitions.JobSubmitDialogOpts.OtherUserJobs:
+            case Definitions.JobSubmitDialogOpts.OtherUserJobs as number:
                 if (!ownsJob && !(await showConfirmationDialog())) {
                     return false;
                 }
                 break;
-            case Definitions.JobSubmitDialogOpts.YourJobs:
+            case Definitions.JobSubmitDialogOpts.YourJobs as number:
                 if (ownsJob && !(await showConfirmationDialog())) {
                     return false;
                 }
                 break;
-            case Definitions.JobSubmitDialogOpts.AllJobs:
+            case Definitions.JobSubmitDialogOpts.AllJobs as number:
                 if (!(await showConfirmationDialog())) {
                     return false;
                 }
                 break;
-            case Definitions.JobSubmitDialogOpts.Disabled:
+            case Definitions.JobSubmitDialogOpts.Disabled as number:
             default:
                 break;
         }
@@ -1508,7 +1520,9 @@ export class DatasetActions {
         const nodeProfile = node.getProfile();
         await profiles.checkCurrentProfile(nodeProfile, node);
 
-        const datasetName = SharedContext.isDsMember(node) ? node.getParent().getLabel().toString() : node.getLabel().toString();
+        const datasetName = SharedContext.isDsMember(node)
+            ? (node.getParent().getLabel() as string).toString()
+            : (node.getLabel() as string).toString();
         const ownsJob = datasetName.split(".")[0] === nodeProfile.profile?.user?.toUpperCase();
 
         if (!(await DatasetActions.confirmJobSubmission(node, ownsJob))) {
@@ -1521,15 +1535,15 @@ export class DatasetActions {
                 // For favorited or non-favorited sequential DS:
                 case SharedContext.isFavorite(node):
                 case SharedContext.isSessionNotFav(node.getParent()):
-                    sesName = node.getParent().getLabel() as string;
-                    label = node.label as string;
+                    sesName = (node.getParent().getLabel() as string).toString();
+                    label = (node.getLabel() as string).toString();
                     sessProfile = node.getProfile();
                     break;
                 // For favorited or non-favorited data set members:
                 case SharedContext.isFavoritePds(node.getParent()):
                 case SharedContext.isPdsNotFav(node.getParent()):
-                    sesName = node.getParent().getParent().getLabel() as string;
-                    label = node.getParent().getLabel().toString() + "(" + node.label.toString() + ")";
+                    sesName = (node.getParent().getParent().getLabel() as string).toString();
+                    label = (node.getParent().getLabel() as string).toString() + "(" + (node.getLabel() as string).toString() + ")";
                     sessProfile = node.getProfile();
                     break;
                 default:
@@ -1587,15 +1601,15 @@ export class DatasetActions {
         try {
             const parentContext = parent.contextValue;
             if (parentContext.includes(Constants.FAV_SUFFIX)) {
-                label = node.getLabel() as string;
+                label = (node.getLabel() as string).toString();
                 fav = true;
                 if (parentContext.includes(Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX)) {
-                    label = parent.getLabel().toString() + "(" + node.getLabel().toString() + ")";
+                    label = (parent.getLabel() as string).toString() + "(" + (node.getLabel() as string).toString() + ")";
                 }
             } else if (parentContext.includes(Constants.DS_SESSION_CONTEXT)) {
-                label = node.getLabel() as string;
+                label = (node.getLabel() as string).toString();
             } else if (parentContext.includes(Constants.DS_PDS_CONTEXT)) {
-                label = parent.getLabel().toString() + "(" + node.getLabel().toString() + ")";
+                label = (parent.getLabel() as string).toString() + "(" + (node.getLabel() as string).toString() + ")";
             } else {
                 throw Error(vscode.l10n.t("Cannot delete, item invalid."));
             }
@@ -1630,7 +1644,7 @@ export class DatasetActions {
         // remove node from tree
         if (fav) {
             datasetProvider.mSessionNodes.forEach((ses) => {
-                if (node.getProfileName() === ses.label.toString()) {
+                if (node.getProfileName() === (ses.label as string).toString()) {
                     ses.dirty = true;
                 }
             });
@@ -1669,12 +1683,12 @@ export class DatasetActions {
                 case SharedContext.isFavorite(node):
                 case SharedContext.isSessionNotFav(node.getParent()):
                 case SharedContext.isDs(node):
-                    label = node.label as string;
+                    label = (node.getLabel() as string).toString();
                     break;
                 // For favorited or non-favorited data set members:
                 case SharedContext.isFavoritePds(node.getParent()):
                 case SharedContext.isPdsNotFav(node.getParent()):
-                    label = node.getParent().getLabel().toString() + "(" + node.getLabel().toString() + ")";
+                    label = (node.getParent().getLabel() as string).toString() + "(" + (node.getLabel() as string).toString() + ")";
                     break;
                 default:
                     throw Error(vscode.l10n.t("Item invalid."));
@@ -1864,7 +1878,7 @@ export class DatasetActions {
         let clipboardContent;
         try {
             clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
-        } catch (err) {
+        } catch (_err) {
             Gui.errorMessage(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
             return;
         }
@@ -2032,7 +2046,7 @@ export class DatasetActions {
                         }
                         const replace = await DatasetActions.determineReplacement(
                             node.getProfile(),
-                            `${node.getLabel() as string}(${memberName})`,
+                            `${(node.getLabel() as string).toString()}(${memberName})`,
                             "mem"
                         );
                         if (replace === "cancel") {
@@ -2046,7 +2060,7 @@ export class DatasetActions {
                             if (node.getProfile().name === profileName) {
                                 await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).copyDataSetMember(
                                     { dsn: content.dataSetName, member: content.memberName },
-                                    { dsn: node.getLabel().toString(), member: memberName },
+                                    { dsn: (node.getLabel() as string).toString(), member: memberName },
                                     { replace: replace === "replace" }
                                 );
                             } else if (mvsApi?.copyDataSetCrossLpar != null) {
@@ -2055,7 +2069,7 @@ export class DatasetActions {
                                     responseTimeout: node.getProfile()?.profile?.responseTimeout,
                                     replace: replace === "replace",
                                 };
-                                await mvsApi.copyDataSetCrossLpar(node.getLabel() as string, memberName, options, sourceProfile);
+                                await mvsApi.copyDataSetCrossLpar((node.getLabel() as string).toString(), memberName, options, sourceProfile);
                             } else {
                                 const sourceUri = vscode.Uri.from({
                                     scheme: ZoweScheme.DS,
@@ -2064,14 +2078,14 @@ export class DatasetActions {
 
                                 const destUri = vscode.Uri.from({
                                     scheme: ZoweScheme.DS,
-                                    path: path.posix.join("/", node.getProfile().name, node.getLabel().toString(), memberName),
+                                    path: path.posix.join("/", node.getProfile().name, (node.getLabel() as string).toString(), memberName),
                                 });
 
                                 const contents = await DatasetFSProvider.instance.readFile(sourceUri);
 
                                 if (replace === "notFound") {
                                     await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).createDataSetMember(
-                                        `${node.getLabel().toString()}(${memberName})`,
+                                        `${(node.getLabel() as string).toString()}(${memberName})`,
                                         {
                                             responseTimeout: node.getProfile()?.profile?.responseTimeout,
                                         }
@@ -2121,7 +2135,7 @@ export class DatasetActions {
             return result;
         }, []);
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
-        const sameProfileGroups = groupedContent.filter((group: any) => group.profileName === node.getProfile().name);
+        const sameProfileGroups: ClipboardItem[] = groupedContent.filter((group: any) => group.profileName === node.getProfile().name);
         if (sameProfileGroups.length > 0) {
             await DatasetActions.copyProcessor(sameProfileGroups, "po", async (content: any, dsname: string, replace: Definitions.ShouldReplace) => {
                 const lbl = content.dataSetName;
@@ -2269,7 +2283,8 @@ export class DatasetActions {
                                         })
                                     );
                                     // TODO: This should break in the event of an auth error.
-                                    // Send notification w/ retry option and show auth prompt? Or show auth prompt and retry if successful/fail otherwise?
+                                    //      Send notification w/ retry option and show auth prompt?
+                                    //      Or show auth prompt and retry if successful/fail otherwise?
                                 }
 
                                 await DatasetFSProvider.instance.writeFile(destMemberUri.with({ query: "forceUpload=true" }), contents, {
@@ -2352,9 +2367,9 @@ export class DatasetActions {
      * @returns void - Please don't expect a return value from this method
      */
     public static async copyProcessor(
-        nodes: any[],
+        nodes: ClipboardItem[],
         type: Definitions.ReplaceDSType,
-        action: (_node: any, _dsname: string, _shouldReplace: Definitions.ShouldReplace) => Promise<void>
+        action: (_node: ClipboardItem, _dsname: string, _shouldReplace: Definitions.ShouldReplace) => Promise<void>
     ): Promise<void> {
         ZoweLogger.trace("dataset.actions._copyProcessor called.");
         for (const node of nodes) {
@@ -2389,7 +2404,12 @@ export class DatasetActions {
                 }
             } catch (error) {
                 if (error instanceof Error) {
-                    const nodelabels = await DatasetUtils.getNodeLabels(node);
+                    const nodelabels: Array<{
+                        memberName: string;
+                        contextValue: string;
+                        profileName: string;
+                        dataSetName: string;
+                    }> = await DatasetUtils.getNodeLabels(node as unknown as Types.IZoweNodeType);
                     await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         dsName: nodelabels[0].dataSetName,
@@ -2402,9 +2422,9 @@ export class DatasetActions {
 
     public static async copyName(node: IZoweDatasetTreeNode): Promise<void> {
         if (SharedContext.isDsMember(node) && node.getParent()) {
-            await vscode.env.clipboard.writeText(`${node.getParent().label as string}(${node.label as string})`);
+            await vscode.env.clipboard.writeText(`${(node.getParent().getLabel() as string).toString()}(${(node.getLabel() as string).toString()})`);
         } else if (SharedContext.isDs(node) || SharedContext.isPds(node) || SharedContext.isMigrated(node) || SharedContext.isVsam(node)) {
-            await vscode.env.clipboard.writeText(node.label as string);
+            await vscode.env.clipboard.writeText((node.getLabel() as string).toString());
         }
     }
 
@@ -2672,7 +2692,7 @@ export class DatasetActions {
     public static async filterDatasetTree(datasetProvider: Types.IZoweDatasetTreeType, sessionName: string, datasetPattern: string): Promise<void> {
         ZoweLogger.trace("dataset.actions.filterDatasetTree called.");
         let sessionNode: IZoweDatasetTreeNode | undefined = datasetProvider.mSessionNodes.find(
-            (dsNode) => dsNode.label.toString() === sessionName.trim()
+            (dsNode) => (dsNode.label as string).toString() === sessionName.trim()
         ) as IZoweDatasetTreeNode;
 
         if (!sessionNode) {
@@ -2682,7 +2702,9 @@ export class DatasetActions {
                 await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Mvs, profile: sessionName });
                 return;
             }
-            sessionNode = datasetProvider.mSessionNodes.find((dsNode) => dsNode.label.toString() === sessionName.trim()) as IZoweDatasetTreeNode;
+            sessionNode = datasetProvider.mSessionNodes.find(
+                (dsNode) => (dsNode.label as string).toString() === sessionName.trim()
+            ) as IZoweDatasetTreeNode;
         }
 
         if (!sessionNode) {
@@ -2726,13 +2748,13 @@ export class DatasetActions {
             await datasetProvider.getTreeView().reveal(sessionNode, { select: true, focus: true, expand: true });
 
             if (targetMember && sessionNode.children && sessionNode.children.length > 0) {
-                const pdsNode = sessionNode.children.find((child) => child.label.toString().toUpperCase() === targetPattern);
+                const pdsNode = sessionNode.children.find((child) => (child.label as string).toString().toUpperCase() === targetPattern);
 
                 if (pdsNode && SharedContext.isPds(pdsNode)) {
                     await TreeViewUtils.expandNode(pdsNode, datasetProvider);
 
                     if (pdsNode.children) {
-                        const memberNode = pdsNode.children.find((child) => child.label.toString().toUpperCase() === targetMember);
+                        const memberNode = pdsNode.children.find((child) => (child.label as string).toString().toUpperCase() === targetMember);
 
                         if (memberNode) {
                             try {

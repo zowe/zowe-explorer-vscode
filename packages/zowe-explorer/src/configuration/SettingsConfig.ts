@@ -35,10 +35,14 @@ export class SettingsConfig {
      *  SettingsConfig.setDirectValue("zowe.commands.alwaysEdit", true);
      * }</pre>
      * @param {string} key - The config property that needs updating
-     * @param {any} value - The value to assign for the config property
+     * @param {unknown} value - The value to assign for the config property
      * @param target - VS Code configuration target (global or workspace)
      */
-    public static setDirectValue(key: string, value: any, target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Thenable<void> {
+    public static setDirectValue(
+        key: string,
+        value: unknown,
+        target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global
+    ): Thenable<void> {
         const [first, ...rest] = key.split(".");
         return vscode.workspace.getConfiguration(first).update(rest.join("."), value, target);
     }
@@ -124,7 +128,8 @@ export class SettingsConfig {
         // Prompt user to reload VS Code window
         const reloadButton = vscode.l10n.t("Reload Window");
         const infoMsg = vscode.l10n.t(
-            "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window."
+            "Settings have been successfully migrated for Zowe Explorer version 2 and above. " +
+                "To apply these settings, please reload your VS Code window."
         );
         await Gui.showMessage(infoMsg, { items: [reloadButton] })?.then(async (selection) => {
             if (selection === reloadButton) {
@@ -233,7 +238,7 @@ export class SettingsConfig {
     }
 
     public static async setMigratedDsTemplates(): Promise<void> {
-        const settings: any = this.getDirectValue(PersistenceSchemaEnum.Dataset);
+        const settings: Record<string, unknown> = this.getDirectValue(PersistenceSchemaEnum.Dataset);
         for (const key in settings) {
             if (key === "templates") {
                 const templateSetting = settings[key];

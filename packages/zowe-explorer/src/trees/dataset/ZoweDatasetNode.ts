@@ -363,7 +363,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         profile: cachedProfile,
                     });
                     elementChildren[(dsNode.label as string).toString()] = dsNode;
-                } else if ((item as any).error instanceof imperative.ImperativeError) {
+                } else if ((item as unknown as { error: imperative.ImperativeError }).error instanceof imperative.ImperativeError) {
                     // Creates a ZoweDatasetNode for a dataset with imperative errors
                     dsNode = new ZoweDatasetNode({
                         label: item.dsname,
@@ -373,7 +373,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         profile: cachedProfile,
                     });
                     dsNode.command = { command: "zowe.placeholderCommand", title: "" };
-                    dsNode.errorDetails = (item as any).error; // Save imperative error to avoid extra z/OS requests
+
+                    // Save imperative error to avoid extra z/OS requests
+                    dsNode.errorDetails = (item as unknown as { error: imperative.ImperativeError }).error;
+
                     elementChildren[(dsNode.label as string).toString()] = dsNode;
                 } else if (item.dsorg === "VS") {
                     // Creates a ZoweDatasetNode for a VSAM file
@@ -541,8 +544,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 nextPage.description = `${pageNum + 1}/${this.paginator.getPageCount()}`;
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            return [prevPage as any, ...this.children, nextPage as any];
+            return [prevPage as unknown as ZoweDatasetNode, ...this.children, nextPage as unknown as ZoweDatasetNode];
         }
 
         return this.children;

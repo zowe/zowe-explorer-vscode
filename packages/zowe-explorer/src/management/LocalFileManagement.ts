@@ -38,7 +38,7 @@ export class LocalFileManagement {
         }
         LocalFileManagement.filesToCompare.push(node);
         LocalFileManagement.setCompareSelection(true);
-        ZoweLogger.trace(`${String(LocalFileManagement.filesToCompare[0].label)} selected for compare.`);
+        ZoweLogger.trace(`${String(LocalFileManagement.filesToCompare[0].getLabel() as string).toString()} selected for compare.`);
     }
 
     /**

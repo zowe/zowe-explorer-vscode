@@ -64,7 +64,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.command = options?.startup ?? "";
         this.charArrayCmd = [];
         this.cursorPosition = this.charArrayCmd.length;
-        this.formatCommandLine = options?.formatCommandLine ?? ((cmd: string) => `${ZoweTerminal.Keys.EMPTY_LINE}${cmd}`);
+        this.formatCommandLine = options?.formatCommandLine ?? ((cmd: string): string => `${ZoweTerminal.Keys.EMPTY_LINE}${cmd}`);
         this.chalk = imperative.TextUtils.chalk;
     }
 
@@ -111,7 +111,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.clearLine(Math.ceil((this.getLine(this.command).length + lineOffset) / this.mCols));
         this.writeCmd();
         if (this.charArrayCmd.length > this.cursorPosition) {
-            const getPos = (char: string) => {
+            const getPos = (char: string): number => {
                 if (char === ZoweTerminal.invalidChar) {
                     return 1;
                 }
@@ -219,6 +219,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.write(ZoweTerminal.Keys.NEW_LINE);
         const isAsyncCommand = this.command.startsWith(":async");
         const isForgetCommand = this.command.startsWith(":forget");
+        // eslint-disable-next-line no-magic-numbers
         const cmd = this.command.substring(isAsyncCommand || isForgetCommand ? 6 + Number(isForgetCommand) : 0).trim();
         this.command = "";
         this.charArrayCmd = [];
@@ -243,7 +244,9 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                     this.command = "";
                     this.charArrayCmd = [];
                     // ---------------------------------------
+                    // TODO: Enable eslint rule once we have a better solution for this
                     // Note: `.call(this, ` is intentional since without it, it's possible for VSCode to not remember what `this` is
+                    // eslint-disable-next-line @typescript-eslint/unbound-method
                     (isForgetCommand ? this.writeLine : this.write).call(this, this.chalk.italic.yellow("\r\nOperation completed: ") + cmd + "\r\n");
                     if (isAsyncCommand) {
                         this.writeLine.call(this, output.trim().split("\n").join("\r\n"));
