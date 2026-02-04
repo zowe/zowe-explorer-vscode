@@ -35,6 +35,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
+import dayjs = require("dayjs");
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
@@ -137,8 +138,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (fileResp.success) {
                 // Regardless of the resource type, it will be the first item in a successful response.
                 // When listing a folder, the folder's stats will be represented as the "." entry.
-                const newTime = (fileResp.apiResponse?.items ?? [])?.[0]?.mtime ?? entry.mtime;
-
+                const newTime = dayjs((fileResp.apiResponse?.items ?? [])?.[0]?.mtime ?? entry.mtime).valueOf();
                 if (entry.mtime != newTime) {
                     entry.mtime = newTime;
                     // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched

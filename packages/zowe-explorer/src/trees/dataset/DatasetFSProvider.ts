@@ -301,7 +301,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
-            members = await mvsApi.allMembers(path.posix.basename(uri.path));
+            members = await mvsApi.allMembers(path.posix.basename(uri.path), { attributes: true });
         });
 
         const pdsExtension = DatasetUtils.getExtension(entry.name);
@@ -312,8 +312,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             if (tempEntry == null) {
                 tempEntry = new DsEntry(fullMemberName, true);
                 tempEntry.metadata = new DsEntryMetadata({ ...entry.metadata, path: path.posix.join(entry.metadata.path, fullMemberName) });
-                entry.entries.set(fullMemberName, tempEntry);
             }
+            const { m4date, mtime, msec } = ds;
+            const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
+            tempEntry.mtime = newTime;
+            entry.entries.set(fullMemberName, tempEntry);
         }
     }
 
