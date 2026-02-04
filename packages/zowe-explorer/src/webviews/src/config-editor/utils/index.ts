@@ -52,6 +52,7 @@ export {
     getAvailableProfilesByType,
     getProfileTypeFromPath,
     getOrderedProfileKeys,
+    getReplacementProfileAfterDelete,
     applyRenamesToProfileKeys,
     mergePendingProfileKeys,
     filterConflictingProfileKeys,

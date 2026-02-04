@@ -16,7 +16,7 @@ import {
     detectClosedLoops,
     getProfileNameForMergedProperties,
 } from "../utils/renameUtils";
-import { getRenamedProfileKeyWithNested } from "../utils/profileUtils";
+import { getRenamedProfileKeyWithNested, getReplacementProfileAfterDelete } from "../utils/profileUtils";
 import { flattenProfiles } from "../utils";
 
 // Types
@@ -840,64 +840,10 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
         return prev;
     });
 
-    // If this profile is currently selected, or if the selected profile is a child of this profile, select the nearest profile
+    // If this profile is currently selected, or if the selected profile is a child of this profile, select the replacement profile
     if (selectedProfileKey === profileKey || (selectedProfileKey && selectedProfileKey.startsWith(profileKey + "."))) {
-        // Create a custom replacement profile finder that excludes the deleted profile and its children
-        const findReplacementExcludingDeleted = (deletedProfileKey: string, configPath: string): string | null => {
-            const allAvailableProfiles = getAvailableProfilesForConfig(configPath);
-
-            // Filter out the deleted profile and all its children
-            const filteredProfiles = allAvailableProfiles.filter((profile) => {
-                return profile !== deletedProfileKey && !profile.startsWith(deletedProfileKey + ".");
-            });
-
-            if (filteredProfiles.length === 0) {
-                return null;
-            }
-
-            // Strategy 1: If deleting a nested profile, prefer its parent (if not being deleted)
-            if (deletedProfileKey.includes(".")) {
-                const parentKey = deletedProfileKey.split(".").slice(0, -1).join(".");
-                if (filteredProfiles.includes(parentKey)) {
-                    return parentKey;
-                }
-            }
-
-            // Strategy 2: Find siblings (profiles at the same level) that aren't being deleted
-            const deletedParts = deletedProfileKey.split(".");
-            if (deletedParts.length > 1) {
-                const parentKey = deletedParts.slice(0, -1).join(".");
-                const siblings = filteredProfiles.filter((profile) => profile.startsWith(parentKey + ".") && profile !== deletedProfileKey);
-                if (siblings.length > 0) {
-                    return siblings[0];
-                }
-            }
-
-            // Strategy 3: Find the next profile in the list (maintains user's workflow)
-            const currentIndex = filteredProfiles.indexOf(deletedProfileKey);
-            if (currentIndex !== -1) {
-                // Try next profile first (user was likely working down the list)
-                for (let i = currentIndex + 1; i < filteredProfiles.length; i++) {
-                    const candidate = filteredProfiles[i];
-                    if (candidate !== deletedProfileKey) {
-                        return candidate;
-                    }
-                }
-
-                // If no next profile, try previous profile
-                for (let i = currentIndex - 1; i >= 0; i--) {
-                    const candidate = filteredProfiles[i];
-                    if (candidate !== deletedProfileKey) {
-                        return candidate;
-                    }
-                }
-            }
-
-            // Strategy 4: Fallback to first available profile
-            return filteredProfiles[0] || null;
-        };
-
-        const nearestProfileKey = findReplacementExcludingDeleted(profileKey, configPath);
+        const orderedProfiles = getAvailableProfilesForConfig(configPath);
+        const nearestProfileKey = getReplacementProfileAfterDelete(orderedProfiles, profileKey);
 
         // Set the nearest profile as selected, or null if no profile available
         setSelectedProfileKey(nearestProfileKey);

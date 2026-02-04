@@ -192,58 +192,11 @@ export function useProfileUtils() {
         );
     }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, autostoreChanges, renames, dragDroppedProfiles]);
 
-    const findOptimalReplacementProfile = useCallback(
-        (deletedProfileKey: string, configPath: string): string | null => {
-            const allAvailableProfiles = getAvailableProfilesForConfig(configPath);
-
-            if (allAvailableProfiles.length === 0) {
-                return null;
-            }
-
-            if (deletedProfileKey.includes(".")) {
-                const parentKey = deletedProfileKey.split(".").slice(0, -1).join(".");
-                if (allAvailableProfiles.includes(parentKey)) {
-                    return parentKey;
-                }
-            }
-
-            const deletedParts = deletedProfileKey.split(".");
-            if (deletedParts.length > 1) {
-                const parentKey = deletedParts.slice(0, -1).join(".");
-                const siblings = allAvailableProfiles.filter((profile) => profile.startsWith(parentKey + ".") && profile !== deletedProfileKey);
-                if (siblings.length > 0) {
-                    return siblings[0];
-                }
-            }
-
-            const currentIndex = allAvailableProfiles.indexOf(deletedProfileKey);
-            if (currentIndex !== -1) {
-                for (let i = currentIndex + 1; i < allAvailableProfiles.length; i++) {
-                    const candidate = allAvailableProfiles[i];
-                    if (candidate !== deletedProfileKey) {
-                        return candidate;
-                    }
-                }
-
-                for (let i = currentIndex - 1; i >= 0; i--) {
-                    const candidate = allAvailableProfiles[i];
-                    if (candidate !== deletedProfileKey) {
-                        return candidate;
-                    }
-                }
-            }
-
-            return allAvailableProfiles[0] || null;
-        },
-        [getAvailableProfilesForConfig]
-    );
-
     return {
         formatPendingChanges,
         getAvailableProfiles,
         getAvailableProfilesForConfig,
         doesProfileExist,
         hasPendingChanges,
-        findOptimalReplacementProfile,
     };
 }

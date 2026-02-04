@@ -18,6 +18,7 @@ import {
     getAvailableProfilesByType,
     getOrderedProfileKeys,
     getAllProfileKeys,
+    getReplacementProfileAfterDelete,
     isPropertyActuallyInherited,
     isMergedPropertySecure,
     getProfileTypeFromPath,
@@ -242,6 +243,72 @@ describe("profileUtils", () => {
         it("includes nested keys", () => {
             const profiles = { parent: { type: "zowe", profiles: { child: { type: "zowe" } } } };
             expect(getOrderedProfileKeys(profiles)).toEqual(["parent", "parent.child"]);
+        });
+    });
+
+    describe("getReplacementProfileAfterDelete", () => {
+        it("returns null when list is empty or only deleted profile", () => {
+            expect(getReplacementProfileAfterDelete([], "p1")).toBeNull();
+            expect(getReplacementProfileAfterDelete(["p1"], "p1")).toBeNull();
+        });
+
+        it("returns null when all remaining are children of deleted", () => {
+            expect(getReplacementProfileAfterDelete(["parent", "parent.child"], "parent")).toBeNull();
+        });
+
+        it("selects next sibling at same level for top-level profiles", () => {
+            const list = ["a", "b", "c"];
+            expect(getReplacementProfileAfterDelete(list, "a")).toBe("b");
+            expect(getReplacementProfileAfterDelete(list, "b")).toBe("c");
+        });
+
+        it("selects previous sibling when deleted is last at same level", () => {
+            const list = ["a", "b", "c"];
+            expect(getReplacementProfileAfterDelete(list, "c")).toBe("b");
+        });
+
+        it("selects next sibling at same level for nested profiles", () => {
+            const list = ["parent", "parent.a", "parent.b", "parent.c"];
+            expect(getReplacementProfileAfterDelete(list, "parent.a")).toBe("parent.b");
+            expect(getReplacementProfileAfterDelete(list, "parent.b")).toBe("parent.c");
+        });
+
+        it("selects previous sibling when deleted is last nested sibling", () => {
+            const list = ["parent", "parent.a", "parent.b", "parent.c"];
+            expect(getReplacementProfileAfterDelete(list, "parent.c")).toBe("parent.b");
+        });
+
+        it("selects parent when deleted is only child at that level", () => {
+            const list = ["parent", "parent.child"];
+            expect(getReplacementProfileAfterDelete(list, "parent.child")).toBe("parent");
+        });
+
+        it("selects parent when deleted is only nested child, next sibling when sibling exists", () => {
+            const list = ["p", "p.a", "p.a.x", "p.b"];
+            expect(getReplacementProfileAfterDelete(list, "p.a.x")).toBe("p.a");
+            expect(getReplacementProfileAfterDelete(list, "p.a")).toBe("p.b");
+        });
+
+        it("selects next in list then previous when no siblings or parent", () => {
+            const list = ["a", "b", "c"];
+            expect(getReplacementProfileAfterDelete(list, "b")).toBe("c");
+            const list2 = ["only"];
+            expect(getReplacementProfileAfterDelete(list2, "other")).toBe("only");
+        });
+
+        it("returns last sibling when deleted not in list and all are siblings (closest)", () => {
+            const list = ["x", "y", "z"];
+            expect(getReplacementProfileAfterDelete(list, "missing")).toBe("z");
+        });
+
+        it("when deleted not in list but siblings exist, selects sibling not parent", () => {
+            const list = ["base", "parent", "parent.mid", "parent.mid.sibling"];
+            expect(getReplacementProfileAfterDelete(list, "parent.mid.deleted")).toBe("parent.mid.sibling");
+        });
+
+        it("when deleted not in list and multiple top-level siblings, selects last in list (closest)", () => {
+            const list = ["base", "parent", "parent.child", "parent.child.grandchild"];
+            expect(getReplacementProfileAfterDelete(list, "deletedTopLevel")).toBe("parent");
         });
     });
 

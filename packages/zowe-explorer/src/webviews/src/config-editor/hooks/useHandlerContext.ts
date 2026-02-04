@@ -30,7 +30,6 @@ export interface HandlerContext {
     // Functions
     formatPendingChanges: () => any;
     extractPendingProfiles: (configPath: string) => { [key: string]: any };
-    findOptimalReplacementProfile: (profileKey: string, configPath: string) => string | null;
     getAvailableProfilesForConfig: (configPath: string) => string[];
     vscodeApi: any;
 }
@@ -58,7 +57,7 @@ export function useHandlerContext(vscodeApi: any): HandlerContext {
         pendingMergedPropertiesRequest,
     } = useConfigContext();
 
-    const { formatPendingChanges, findOptimalReplacementProfile, getAvailableProfilesForConfig } = useProfileUtils();
+    const { formatPendingChanges, getAvailableProfilesForConfig } = useProfileUtils();
 
     const { extractPendingProfiles } = useUtilityHelpers();
 
@@ -84,7 +83,6 @@ export function useHandlerContext(vscodeApi: any): HandlerContext {
         pendingMergedPropertiesRequest,
         formatPendingChanges,
         extractPendingProfiles,
-        findOptimalReplacementProfile,
         getAvailableProfilesForConfig,
         vscodeApi,
     };

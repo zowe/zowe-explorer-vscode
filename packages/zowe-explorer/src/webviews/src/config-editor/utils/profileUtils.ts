@@ -386,6 +386,62 @@ export function getAllProfileKeys(profiles: any, parentKey = ""): string[] {
     return keys;
 }
 
+/**
+ * Returns the profile key to select after deleting a profile. Order: next sibling at same level,
+ * previous sibling, parent (if nested), next in list, previous in list, first available.
+ * When the deleted profile is not in orderedList (e.g. already excluded by state), sibling/parent
+ * logic is still applied using the filtered list so the same level is preferred over the parent.
+ */
+export function getReplacementProfileAfterDelete(orderedList: string[], deletedProfileKey: string): string | null {
+    const filteredSet = new Set(
+        orderedList.filter((p) => p !== deletedProfileKey && !p.startsWith(deletedProfileKey + "."))
+    );
+    if (filteredSet.size === 0) return null;
+
+    const deletedIndex = orderedList.indexOf(deletedProfileKey);
+    const parentKey = deletedProfileKey.includes(".") ? deletedProfileKey.split(".").slice(0, -1).join(".") : null;
+
+    const isSibling = (p: string): boolean => {
+        if (p === deletedProfileKey) return false;
+        if (parentKey === null) return !p.includes(".");
+        const afterParent = parentKey.length + 1;
+        return p.startsWith(parentKey + ".") && !p.substring(afterParent).includes(".");
+    };
+
+    if (deletedIndex >= 0) {
+        for (let i = deletedIndex + 1; i < orderedList.length; i++) {
+            const p = orderedList[i];
+            if (filteredSet.has(p) && isSibling(p)) return p;
+        }
+        for (let i = deletedIndex - 1; i >= 0; i--) {
+            const p = orderedList[i];
+            if (filteredSet.has(p) && isSibling(p)) return p;
+        }
+    } else {
+        const siblings = orderedList.filter((p) => filteredSet.has(p) && isSibling(p));
+        if (siblings.length > 0) {
+            const lastIndex = Math.max(...siblings.map((p) => orderedList.indexOf(p)));
+            return orderedList[lastIndex];
+        }
+    }
+
+    if (parentKey !== null && filteredSet.has(parentKey)) return parentKey;
+
+    if (deletedIndex >= 0) {
+        for (let i = deletedIndex + 1; i < orderedList.length; i++) {
+            const p = orderedList[i];
+            if (filteredSet.has(p)) return p;
+        }
+        for (let i = deletedIndex - 1; i >= 0; i--) {
+            const p = orderedList[i];
+            if (filteredSet.has(p)) return p;
+        }
+    }
+
+    const first = orderedList.find((p) => filteredSet.has(p));
+    return first ?? null;
+}
+
 export function isPropertyActuallyInherited(
     profilePath: string,
     currentProfileKey: string | null,
