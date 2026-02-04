@@ -15,7 +15,7 @@ const rule = require("../../../lib/rules/no-unmocked-core-modules"),
   RuleTester = require("eslint").RuleTester;
 
 const ruleTester = new RuleTester({
-  parserOptions: {
+  languageOptions: {
     ecmaVersion: 2015,
     sourceType: "module",
   },
