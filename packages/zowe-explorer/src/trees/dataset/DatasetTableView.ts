@@ -40,7 +40,7 @@ import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
  * Tree-based data source that uses existing tree nodes
  */
 export class TreeDataSource implements IDataSetSource {
-    public constructor(public treeNode: IZoweDatasetTreeNode) {}
+    public constructor(public treeNode: IZoweDatasetTreeNode) { }
 
     /**
      * Fetches dataset information based on the cached children tree nodes.
@@ -343,7 +343,7 @@ export class PDSMembersDataSource implements IDataSetSource {
         public pdsName: string,
         private pdsUri: string,
         private profile: imperative.IProfileLoaded
-    ) {}
+    ) { }
 
     public async fetchDataSets(): Promise<IDataSetInfo[]> {
         if (this.parentDataSource?.loadChildren && this.parentDataSource instanceof PatternDataSource) {
@@ -419,12 +419,12 @@ export class DatasetTableView {
     private userLocale: string = "en-US";
 
     // These fields are typically included in data set metadata.
-    private expectedFields = [
+    private expectedFields: Partial<Table.Column | Table.ColumnOpts>[] = [
         {
             field: "dsname",
             headerName: l10n.t("Data Set Name"),
             initialSort: "asc",
-        } as Table.ColumnOpts,
+        },
         {
             field: "dsorg",
             headerName: l10n.t("Data Set Organization"),
@@ -1111,7 +1111,7 @@ export class DatasetTableView {
         const relevantFields = this.currentTableType === "members" ? this.memberFields : this.datasetFields;
         const filteredFields = this.expectedFields.filter((field) => relevantFields.includes(field.field));
 
-        let columnDefs = filteredFields.map((field) => ({
+        let columnDefs: Partial<Table.Column | Table.ColumnOpts>[] = filteredFields.map((field) => ({
             filter: true,
             ...field,
             // Update header name for dsname when showing members
@@ -1120,15 +1120,15 @@ export class DatasetTableView {
             // Set the tree column for dataset name when using tree mode
             ...(useTreeMode && field.field === "dsname"
                 ? {
-                      cellRenderer: "TreeCellRenderer",
-                  }
+                    cellRenderer: "TreeCellRenderer",
+                }
                 : {}),
         }));
 
         // Apply tree node sorting to columns if this table is created from tree view
         const treeNode = this.getTreeNodeForSortContext();
         if (treeNode) {
-            columnDefs = this.applyTreeSortToColumns(columnDefs, treeNode);
+            columnDefs = this.applyTreeSortToColumns(columnDefs as Table.Column[], treeNode);
         }
 
         const tableOptions: Table.GridProperties = {
@@ -1142,10 +1142,10 @@ export class DatasetTableView {
             // Enable custom tree mode when needed
             ...(useTreeMode
                 ? {
-                      customTreeMode: true,
-                      customTreeColumnField: "dsname",
-                      customTreeInitialExpansionDepth: 0, // Start with all PDS collapsed
-                  }
+                    customTreeMode: true,
+                    customTreeColumnField: "dsname",
+                    customTreeInitialExpansionDepth: 0, // Start with all PDS collapsed
+                }
                 : {}),
         };
 
@@ -1165,7 +1165,7 @@ export class DatasetTableView {
             .isView()
             .title(this.currentDataSource.getTitle())
             .addRows(rows)
-            .columns(...[...columnDefs, { field: "actions", hide: true }])
+            .columns(...[...columnDefs as Table.ColumnOpts[], { field: "actions", hide: true }])
             .addContextOption("all", this.contextOptions.displayInTree)
             .addContextOption("all", this.contextOptions.pinRow)
             .addRowAction("all", this.rowActions.openInEditor)

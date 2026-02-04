@@ -150,6 +150,7 @@ export class USSInit {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.copyUssFile", async (node: IZoweUSSTreeNode, nodeList: IZoweUSSTreeNode[]) => {
+                // eslint-disable-next-line zowe-explorer/no-floating-promises
                 ussFileProvider.copying = USSActions.copyUssFiles(node, nodeList, ussFileProvider);
                 await ussFileProvider.copying;
             })

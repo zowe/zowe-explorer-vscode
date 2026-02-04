@@ -174,22 +174,18 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         }
     }
 
-    public findNonFavoritedNode(_element: IZoweTreeNode): undefined {
+    public findNonFavoritedNode(_element: IZoweTreeNode): void {
         ZoweLogger.trace("ZoweTreeProvider.findNonFavoritedNode called.");
-        return undefined;
     }
 
-    public findFavoritedNode(_element: IZoweTreeNode): undefined {
+    public findFavoritedNode(_element: IZoweTreeNode): void {
         ZoweLogger.trace("ZoweTreeProvider.findFavoritedNode called.");
-        return undefined;
     }
-    public renameFavorite(_node: IZoweTreeNode, _newLabel: string): undefined {
+    public renameFavorite(_node: IZoweTreeNode, _newLabel: string): void {
         ZoweLogger.trace("ZoweTreeProvider.renameFavorite called.");
-        return undefined;
     }
-    public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string): undefined {
+    public renameNode(_profile: string, _beforeDataSetName: string, _afterDataSetName: string): void {
         ZoweLogger.trace("ZoweTreeProvider.renameNode called.");
-        return undefined;
     }
 
     public async addSession(opts: Types.AddSessionOpts = {}): Promise<void> {

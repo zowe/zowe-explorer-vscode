@@ -34,9 +34,11 @@ import { Definitions } from "../../configuration/Definitions";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 
-export const isDataTransfer = (o: Record<string, unknown>): o is { get: (m: string) => unknown } => !!o && typeof o.get === "function";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isDataTransfer = (o: any): o is { get: (m: string) => unknown } => !!o && typeof o.get === "function";
 
-export const isPayload = (o: Record<string, unknown>): o is { value: unknown[] } => !!o && Array.isArray(o.value);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isPayload = (o: any): o is { value: unknown[] } => !!o && Array.isArray(o.value);
 export class SharedUtils {
     public static ERROR_SAME_OBJECT_DROP =
         "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
@@ -388,11 +390,11 @@ export class SharedUtils {
                 comment: ["Node label"],
             }),
             currentEncoding &&
-                vscode.l10n.t({
-                    message: "Current encoding is {0}",
-                    args: [currentEncoding],
-                    comment: ["Encoding name"],
-                })
+            vscode.l10n.t({
+                message: "Current encoding is {0}",
+                args: [currentEncoding],
+                comment: ["Encoding name"],
+            })
         );
 
         return SharedUtils.processEncodingResponse(response, node.label as string);

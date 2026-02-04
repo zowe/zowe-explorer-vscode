@@ -61,6 +61,7 @@ export default defineConfig(
       "@typescript-eslint/no-namespace": "off",
       "@typescript-eslint/no-deprecated": "error",
       "@typescript-eslint/no-floating-promises": "error",
+      // "zowe-explorer/no-floating-promises": "error", // TODO: Enable eslint rule once we have a better solution for this
 
       // There are several errors falling under these rules; resolve
       "@typescript-eslint/no-unsafe-assignment": "off",
@@ -151,6 +152,7 @@ export default defineConfig(
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/unbound-method": "off",
       "@typescript-eslint/no-floating-promises": "warn",
+      // "zowe-explorer/no-floating-promises": "warn", // TODO: Enable eslint rule once we have a better solution for this
       curly: "off",
 
       // New excluded rules to resolve errors
