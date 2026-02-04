@@ -1115,10 +1115,7 @@ export class Position {
 }
 
 export class Range {
-    constructor(
-        public start: Position,
-        public end: Position
-    ) {}
+    constructor(public start: Position, public end: Position) {}
 }
 
 export class Selection extends Range {

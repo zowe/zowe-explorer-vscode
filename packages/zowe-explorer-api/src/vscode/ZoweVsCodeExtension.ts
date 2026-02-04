@@ -699,7 +699,7 @@ export class ZoweVsCodeExtension {
         options.session.certKey = response.certKey;
     }
 
-        private static async checkExistingConfig(filePath: string, openInEditor: boolean = false): Promise<string | false> {
+    private static async checkExistingConfig(filePath: string, openInEditor: boolean = false): Promise<string | false> {
         const existingLayers = await this.getConfigLayers();
         const foundLayer = existingLayers.find((layer) => layer.path.includes(filePath));
         if (foundLayer == null) {

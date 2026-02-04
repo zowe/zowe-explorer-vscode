@@ -10,6 +10,7 @@
     "__tests__/__unit__",
     "__tests__/__integration__/bdd/step_definitions/**/*.ts",
     // Needed for integration tests to work:
-    "__tests__/__integration__/tdd"
+    "__tests__/__integration__/tdd",
+    "src/webviews/src/config-editor/utils/**/*.ts"
   ]
 }

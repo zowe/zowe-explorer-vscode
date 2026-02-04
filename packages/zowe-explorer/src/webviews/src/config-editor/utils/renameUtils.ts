@@ -226,10 +226,13 @@ export const getProfileNameForMergedProperties = (
         const sortedRenames = Object.entries(configRenames).sort(([, a], [, b]) => b.length - a.length);
 
         let changed = true;
+        let iterations = 0;
+        const maxIterations = 20;
 
-        // Keep applying reverse renames until no more changes
-        while (changed) {
+        // Keep applying reverse renames until no more changes (guard against cyclic renames)
+        while (changed && iterations < maxIterations) {
             changed = false;
+            iterations++;
 
             // Process renames from longest to shortest to handle nested cases
             for (const [originalKey, newKey] of sortedRenames) {
@@ -451,12 +454,18 @@ export const consolidateConflictingRenames = (renames: { [originalKey: string]: 
                 let finalTarget = newKey;
                 let currentTarget = newKey;
 
-                // Follow the chain to find the final target
+                // Follow the chain to find the final target (with guard against cycles / multiple keys → same value)
+                const seenTargets = new Set<string>([currentTarget]);
                 while (Object.keys(consolidated).some((k) => k !== originalKey && consolidated[k] === currentTarget)) {
                     const nextTarget = Object.entries(consolidated).find(([k, v]) => v === currentTarget && k !== originalKey);
                     if (nextTarget) {
-                        finalTarget = nextTarget[1];
-                        currentTarget = finalTarget;
+                        const nextValue = nextTarget[1];
+                        if (nextValue === currentTarget || seenTargets.has(nextValue)) {
+                            break;
+                        }
+                        seenTargets.add(nextValue);
+                        finalTarget = nextValue;
+                        currentTarget = nextValue;
                     } else {
                         break;
                     }
@@ -613,7 +622,7 @@ export const detectClosedLoops = (renames: { [originalKey: string]: string }): s
         if (visited.has(originalKey)) continue;
 
         const loop: string[] = [];
-        let currentKey = originalKey;
+        let currentKey: string | undefined = originalKey;
         const currentVisited = new Set<string>();
 
         // Follow the rename chain to detect loops
@@ -622,13 +631,19 @@ export const detectClosedLoops = (renames: { [originalKey: string]: string }): s
             loop.push(currentKey);
 
             if (renames[currentKey]) {
-                currentKey = renames[currentKey];
+                const nextKey: string = renames[currentKey];
+                if (currentVisited.has(nextKey)) {
+                    currentKey = nextKey;
+                    break;
+                }
+                currentKey = nextKey;
             } else {
+                currentKey = undefined;
                 break;
             }
         }
 
-        // If we found a loop (currentKey is in currentVisited), it's a closed loop
+        // If we found a loop (currentKey re-visited in this chain), it's a closed loop
         if (currentKey && currentVisited.has(currentKey)) {
             // Find the start of the loop
             const loopStartIndex = loop.indexOf(currentKey);

@@ -1251,12 +1251,13 @@ export function mergePendingSecureProperties(
     pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
     renames?: { [configPath: string]: { [originalKey: string]: string } }
 ): any[] {
+    const expectedSecurePath = pathFromArray(path.concat(["secure"]));
+
     const pendingSecureProps: string[] = Object.entries(pendingChanges[configPath] ?? {})
-        .filter(([, entry]) => {
+        .filter(([key, entry]) => {
             if (!entry.secure) return false;
 
-            const expectedSecurePath = pathFromArray(path.concat(["secure"]));
-            const actualPath = path.join(".");
+            const keyUnderSecurePath = key === expectedSecurePath || key.startsWith(expectedSecurePath + ".");
 
             let currentProfileName: string;
             if (path.length >= 2 && path[0] === "profiles") {
@@ -1307,7 +1308,7 @@ export function mergePendingSecureProperties(
                 }
             }
 
-            return actualPath === expectedSecurePath && (entryProfileMatches || renamedProfileMatches);
+            return keyUnderSecurePath && (entryProfileMatches || renamedProfileMatches);
         })
         .map(([, entry]) => String(entry.path[entry.path.length - 1]));
 
