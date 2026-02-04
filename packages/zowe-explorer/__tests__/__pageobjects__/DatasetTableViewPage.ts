@@ -134,7 +134,7 @@ export class DatasetTableViewPage {
                     const webviews = await freshWorkbench.getAllWebviews();
                     if (webviews.length === 0) return false;
 
-                    let tableView = webviews[webviewIndex];
+                    const tableView = webviews[webviewIndex];
 
                     await tableView.wait();
                     await tableView.open();

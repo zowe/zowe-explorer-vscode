@@ -105,7 +105,7 @@ describe("CertificateWizard", () => {
         expect(traceMock).toHaveBeenCalledWith("User dismissed the Certificate Wizard.");
     });
 
-    it("handles the get_localization message", async () => {
+    it("handles the get_localization message", () => {
         const spyReadFile = jest.fn((path, encoding, callback) => {
             callback(null, "file contents");
         });
@@ -122,7 +122,7 @@ describe("CertificateWizard", () => {
         expect(postMessageMock).toHaveBeenCalledWith({ command: "GET_LOCALIZATION", contents: (certWizard as any).data });
     });
 
-    it("if this.panel doesn't exist in GET_LOCALIZATION", async () => {
+    it("if this.panel doesn't exist in GET_LOCALIZATION", () => {
         const spyReadFile = jest.fn((path, encoding, callback) => {
             callback(null, "file contents");
         });
@@ -138,7 +138,7 @@ describe("CertificateWizard", () => {
         expect(certWizard.panel).toBeUndefined();
     });
 
-    it("if read file throwing an error in GET_LOCALIZATION", async () => {
+    it("if read file throwing an error in GET_LOCALIZATION", () => {
         const spyReadFile = jest.fn((path, encoding, callback) => {
             callback("error", "file contents");
         });

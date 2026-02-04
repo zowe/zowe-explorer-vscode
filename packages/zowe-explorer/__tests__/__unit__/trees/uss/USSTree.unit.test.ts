@@ -2278,7 +2278,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         srcNode.fullPath = "/u/source/file2.txt";
 
         const dragged = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         // Create a DataTransfer-like object whose get throws to simulate a malformed DT implementation
@@ -2300,12 +2300,12 @@ describe("USSTree.handleDrop - blocking behavior", () => {
 
         // Call handleDrop with a DT whose get throws; the code should catch and set droppedItems = null, then return
         // @ts-ignore token intentionally undefined
-        await ussTree.handleDrop(throwingDT as any, resolvedTarget as any, undefined);
+        await ussTree.handleDrop(throwingDT, resolvedTarget, undefined);
 
         // No Gui error and no changes to draggedNodes
         expect(errorSpy).not.toHaveBeenCalled();
         expect((ussTree as any).draggedNodes).toEqual({
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         // Ensure the DT.get was invoked (proves the try/catch path executed)
@@ -2344,7 +2344,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         targetNode.fullPath = "/u/foo/bar";
 
         new MockedProperty(ussTree as any, "draggedNodes", undefined, {
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         const payload = { value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }] };
@@ -2354,7 +2354,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP = "cannot drop into descendant";
 
         // @ts-ignore
-        await ussTree.handleDrop(dataTransfer as any, targetNode as any, undefined);
+        await ussTree.handleDrop(dataTransfer, targetNode as any, undefined);
 
         expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("cannot drop into descendant"));
     });
@@ -2376,7 +2376,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
 
         // Put the dragged node into ussTree.draggedNodes using MockedProperty helper pattern
         const draggedMock = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         // Build a DataTransfer-like object that will be passed in the targetNode slot (swapped args)
@@ -2406,7 +2406,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
 
         // Act: call handleDrop with DataTransfer passed as first arg (normalized in implementation)
         // @ts-ignore token intentionally undefined
-        await ussTree.handleDrop(fakeDataTransfer as any, fakeTargetNode as any, undefined);
+        await ussTree.handleDrop(fakeDataTransfer, fakeTargetNode, undefined);
 
         // Assert: error message was shown and draggedNodes cleared
         expect(errorSpy).toHaveBeenCalled();
@@ -2464,7 +2464,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
 
         // Call handleDrop - should find the node by endsWith logic and call UssFSProvider.move
         // @ts-ignore
-        await ussTree.handleDrop(dataTransfer as any, target as any, undefined);
+        await ussTree.handleDrop(dataTransfer, target as any, undefined);
 
         expect(moveSpy).toHaveBeenCalled();
         moveSpy.mockRestore();
@@ -2500,7 +2500,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         targetNode.fullPath = "/u/foo";
 
         const draggedNodeMock = new MockedProperty(ussTree, "draggedNodes", undefined, {
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         const payload = {
@@ -2516,7 +2516,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
         // @ts-ignore
-        await ussTree.handleDrop(dataTransfer as any, targetNode, undefined);
+        await ussTree.handleDrop(dataTransfer, targetNode, undefined);
 
         expect((SharedUtils as any).isLikelySameUssObjectByUris).toHaveBeenCalled();
         expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Cannot move:"));
@@ -2548,7 +2548,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         target.children = [child];
 
         new MockedProperty(ussTree, "draggedNodes", undefined, {
-            [child.resourceUri!.path]: child,
+            [child.resourceUri.path]: child,
         });
 
         const payload = { value: [{ label: child.label as string, uri: child.resourceUri }] };
@@ -2558,7 +2558,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
 
         // child.getParent() === target, so should be skipped and move not called
         // @ts-ignore
-        await ussTree.handleDrop(target as any, dataTransfer as any, undefined);
+        await ussTree.handleDrop(target as any, dataTransfer, undefined);
 
         expect(moveSpy).not.toHaveBeenCalled();
         moveSpy.mockRestore();
@@ -2619,14 +2619,14 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
         // Create a DataTransfer-like object using the fake payload
         const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
-        expect(typeof (dataTransfer as any).get).toBe("function");
+        expect(typeof dataTransfer.get).toBe("function");
 
         (SharedUtils as any).hasNameCollision = jest.fn().mockReturnValue(true);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
             "Cannot move: The source and the target are the same. You are using a different profile to view the target. Refresh to view changes.";
 
         // @ts-ignore token intentionally undefined
-        await ussTree.handleDrop(dataTransfer as any, targetFolder, undefined);
+        await ussTree.handleDrop(dataTransfer, targetFolder, undefined);
     });
 
     describe("USSTree Unit Tests - Function crossLparMove", () => {
@@ -2711,7 +2711,7 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         srcNode.fullPath = "/u/source/file.txt";
 
         const dragged = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         const targetNodeArg = new ZoweUSSNode({
@@ -2746,7 +2746,7 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         const statusBarSpy = jest.spyOn(Gui, "setStatusBarMessage");
 
         // @ts-ignore
-        await ussTree.handleDrop(targetNodeArg as any, targetArgAsPayload as any, undefined);
+        await ussTree.handleDrop(targetNodeArg as any, targetArgAsPayload, undefined);
 
         // check handleDrop normalized the args and proceeded (observed via status bar call and cleared draggedNodes)
         expect(statusBarSpy).toHaveBeenCalled();
@@ -2771,7 +2771,7 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         srcNode.fullPath = "/u/source/file2.txt";
 
         const dragged = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         const payload = { value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }] };
@@ -2806,7 +2806,7 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         const statusBarSpy = jest.spyOn(Gui, "setStatusBarMessage");
 
         // @ts-ignore
-        await ussTree.handleDrop(dataTransferAsPayload as any, targetNode as any, undefined);
+        await ussTree.handleDrop(dataTransferAsPayload, targetNode as any, undefined);
 
         // check status bar was used and draggedNodes cleared
         expect(statusBarSpy).toHaveBeenCalled();

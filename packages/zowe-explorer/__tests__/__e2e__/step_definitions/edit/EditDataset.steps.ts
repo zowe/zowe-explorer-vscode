@@ -15,8 +15,8 @@ import { getDatasetExtension } from "../utils/datasetExtensions";
 
 Then("the user can select a PDS member in the list and open it", async function () {
     await expect(this.children.length).not.toBe(0);
-    const pdsName = process.env.ZE_TEST_PDS as string;
-    const pdsMemberName = process.env.ZE_TEST_PDS_MEMBER as string;
+    const pdsName = process.env.ZE_TEST_PDS;
+    const pdsMemberName = process.env.ZE_TEST_PDS_MEMBER;
     const pdsExtension = getDatasetExtension(pdsName);
     const memberEditorTitle = `${pdsMemberName}${pdsExtension ?? ""}`;
 
@@ -30,7 +30,7 @@ Then("the user can select a PDS member in the list and open it", async function 
 });
 Then("the user can select a PS in the list and open it", async function () {
     const dsPane = await paneDivForTree("data sets");
-    const psName = process.env.ZE_TEST_PS as string;
+    const psName = process.env.ZE_TEST_PS;
     const psExtension = getDatasetExtension(psName);
     const psEditorTitle = `${psName}${psExtension ?? ""}`;
 

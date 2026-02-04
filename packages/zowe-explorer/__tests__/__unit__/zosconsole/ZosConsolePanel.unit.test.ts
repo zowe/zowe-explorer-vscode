@@ -54,7 +54,7 @@ describe("ZosConsoleViewProvider", () => {
             myconsole.resolveWebviewView(globalMocks.testWebView, {} as any, { isCancellationRequested: false } as any);
             expect(globalMocks.testWebView.webview.onDidReceiveMessage).toHaveBeenCalled();
         });
-        it("handles the get_localization message", async () => {
+        it("handles the get_localization message", () => {
             const globalMocks = createGlobalMocks();
             const myconsole = new ZosConsoleViewProvider({} as any);
             const postMessageMock = jest.spyOn(globalMocks.testWebView.webview, "postMessage").mockImplementation();
@@ -68,7 +68,7 @@ describe("ZosConsoleViewProvider", () => {
             expect(onDidReceiveMessageCallback).toHaveBeenCalled();
             expect(postMessageMock).toHaveBeenCalledWith({ type: "GET_LOCALIZATION", contents: (myconsole as any).data });
         });
-        it("handles the get_localization message", async () => {
+        it("handles the get_localization message", () => {
             const globalMocks = createGlobalMocks();
             const spyReadFile = jest.fn((path, encoding, callback) => {
                 callback("error", "file contents");

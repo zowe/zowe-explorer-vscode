@@ -252,8 +252,8 @@ describe("AuthUtils", () => {
 
                 // Mock sequence: fail twice, then succeed
                 jest.spyOn(ZoweExplorerApiRegister, "getMvsApi")
-                    .mockReturnValueOnce(mockMvsApi as any)
-                    .mockReturnValueOnce(mockMvsApi as any)
+                    .mockReturnValueOnce(mockMvsApi)
+                    .mockReturnValueOnce(mockMvsApi)
                     .mockReturnValue(successfulMvsApi as any);
 
                 // Act

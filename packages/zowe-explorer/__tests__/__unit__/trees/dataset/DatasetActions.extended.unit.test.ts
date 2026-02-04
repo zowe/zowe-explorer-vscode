@@ -282,7 +282,7 @@ describe("Dataset Actions - upload with encoding", () => {
         globalMocks.showOpenDialog.mockReturnValue([fileUri]);
         const uploadWithEncSpy = jest.spyOn(DatasetActions, "uploadFileWithEncoding").mockResolvedValue({ success: true } as any);
 
-        await DatasetActions.uploadDialogWithEncoding(node as any, dsTree as any);
+        await DatasetActions.uploadDialogWithEncoding(node as any, dsTree);
 
         expect(SharedUtils.promptForUploadEncoding).toHaveBeenCalled();
         expect(uploadWithEncSpy).toHaveBeenCalledWith(node, fileUri.fsPath, { kind: "other", codepage: "IBM-1047" });

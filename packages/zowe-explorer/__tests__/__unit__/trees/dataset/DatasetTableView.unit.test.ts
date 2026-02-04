@@ -9,7 +9,7 @@
  *
  */
 
-import { TreeItemCollapsibleState, commands, Uri, ExtensionContext } from "vscode";
+import { TreeItemCollapsibleState, commands, Uri, ExtensionContext, l10n } from "vscode";
 import {
     DatasetTableView,
     PatternDataSource,
@@ -30,7 +30,6 @@ import { ProfileManagement } from "../../../../src/management/ProfileManagement"
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../../src/extending/ZoweExplorerExtender";
 import * as imperative from "@zowe/imperative";
-import { l10n } from "vscode";
 
 jest.mock("../../../../src/tools/ZoweLocalStorage");
 
@@ -300,7 +299,7 @@ describe("TreeDataSource", () => {
                 parentNode: pdsNode,
             });
             const newChildren = [pdsMember];
-            const getStatsMock = jest.spyOn(pdsMember, "getStats").mockReturnValue({
+            jest.spyOn(pdsMember, "getStats").mockReturnValue({
                 migr: "NO",
                 user: "USER1",
                 createdDate: new Date(),
@@ -1916,7 +1915,7 @@ describe("DatasetTableView", () => {
                 table.onDisposed = onDisposedCallback;
 
                 // Call the onDisposed callback that was registered
-                const onDisposedCalls = (table as any).onDisposed.mock.calls;
+                const onDisposedCalls = table.onDisposed.mock.calls;
                 if (onDisposedCalls.length > 0) {
                     const callback = onDisposedCalls[0][0];
                     callback();

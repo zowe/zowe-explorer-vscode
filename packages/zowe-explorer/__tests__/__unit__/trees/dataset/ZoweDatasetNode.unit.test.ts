@@ -1929,7 +1929,7 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
                     },
                     commandResponse: "2 data set(s) were listed successfully",
                 });
-                actualResponses.push(responses.at(-1)!);
+                actualResponses.push(responses.at(-1));
             });
         expect(await (pdsNode as any).listMembersInRange(undefined, 2)).toStrictEqual({
             items: actualResponses,

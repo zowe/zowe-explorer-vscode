@@ -24,7 +24,7 @@ describe("Test src/uss/extension", () => {
         let onDidChangeConfiguration;
         let spyCreateUssTree;
         const test: ITestContext = {
-            context: { subscriptions: new Array() },
+            context: { subscriptions: [] },
             value: { test: "uss", refreshUSS: jest.fn(), openUSS: jest.fn(), deleteUSSNode: jest.fn(), getUSSDocumentFilePath: jest.fn() },
             _: { _: "_" },
             statusMsg: { dispose: jest.fn() },

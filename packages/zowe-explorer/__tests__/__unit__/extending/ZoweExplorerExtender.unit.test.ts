@@ -253,7 +253,6 @@ describe("ZoweExplorerExtender unit tests", () => {
     });
 
     describe("Add to Schema functionality", () => {
-        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
         const updateSchema = async (
             addProfileTypeToSchemaMock: (
                 profileType: string,
@@ -265,7 +264,6 @@ describe("ZoweExplorerExtender unit tests", () => {
             jest.spyOn(ZoweLogger, "trace").mockImplementation();
             jest.spyOn(ZoweLogger, "info").mockImplementation();
             const profInfo = new imperative.ProfileInfo("zowe", {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
             });
             const addProfTypeToSchema = jest
@@ -298,7 +296,6 @@ describe("ZoweExplorerExtender unit tests", () => {
 
         it("should log a message if addProfileTypeToSchema returns a warning", async () => {
             const profInfo = new imperative.ProfileInfo("zowe", {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
             });
             const addProfTypeToSchema = jest.spyOn(imperative.ProfileInfo.prototype, "addProfileTypeToSchema").mockReturnValue({

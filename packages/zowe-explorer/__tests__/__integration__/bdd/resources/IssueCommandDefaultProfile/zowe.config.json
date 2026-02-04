@@ -1,42 +1,42 @@
 {
-    "$schema": "./zowe.schema.json",
-    "profiles": {
-      "zosmf_basic": {
-        "type": "zosmf",
-        "properties": {
-            "user": "user",
-            "password": "password"
-        }
-      },
-      "base": {
-        "type": "base",
-        "properties": {
-          "host": "localhost",
-          "rejectUnauthorized": false
-        },
-        "secure": []
-      },
-      "tso": {
-        "type": "tso",
-        "properties": {
-          "account": "IZUACCT",
-          "codePage": "1047",
-          "logonProcedure": "IZUFPROC"
-        }
-      },
-      "tso2": {
-        "type": "tso",
-        "properties": {
-          "account": "IZUACCT",
-          "codePage": "1047",
-          "logonProcedure": "IZUFPROC"
-        }
+  "$schema": "./zowe.schema.json",
+  "profiles": {
+    "zosmf_basic": {
+      "type": "zosmf",
+      "properties": {
+        "user": "user",
+        "password": "password"
       }
     },
-    "defaults": {
-      "zosmf": "zosmf_basic",
-      "base": "base",
-      "tso": "tso"
+    "base": {
+      "type": "base",
+      "properties": {
+        "host": "localhost",
+        "rejectUnauthorized": false
+      },
+      "secure": []
     },
-    "autoStore": true
-  }
+    "tso": {
+      "type": "tso",
+      "properties": {
+        "account": "IZUACCT",
+        "codePage": "1047",
+        "logonProcedure": "IZUFPROC"
+      }
+    },
+    "tso2": {
+      "type": "tso",
+      "properties": {
+        "account": "IZUACCT",
+        "codePage": "1047",
+        "logonProcedure": "IZUFPROC"
+      }
+    }
+  },
+  "defaults": {
+    "zosmf": "zosmf_basic",
+    "base": "base",
+    "tso": "tso"
+  },
+  "autoStore": true
+}

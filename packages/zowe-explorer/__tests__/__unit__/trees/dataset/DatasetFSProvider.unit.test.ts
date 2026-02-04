@@ -686,7 +686,7 @@ describe("DatasetFSProvider", () => {
                     dataSet: jest.fn().mockResolvedValue(dsResponseMock),
                 };
                 handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
-                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi);
             });
 
             it("in a PS data set with one invalid line", async () => {
@@ -755,7 +755,7 @@ describe("DatasetFSProvider", () => {
                     dataSet: jest.fn().mockResolvedValue(dsResponseMock),
                 };
                 handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
-                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi);
 
                 const sessionEntry = { ...testEntries.session };
                 sessionEntry.entries.set("USER.DATA.PS", psEntry);
@@ -787,7 +787,7 @@ describe("DatasetFSProvider", () => {
                 };
                 handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
                 const _fireSoonMock = jest.spyOn(DatasetFSProvider.instance as any, "_fireSoon").mockImplementation();
-                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi);
 
                 const sessionEntry = { ...testEntries.session };
                 sessionEntry.entries.set("USER.DATA.PS", psEntry);
@@ -814,7 +814,7 @@ describe("DatasetFSProvider", () => {
                     dataSet: jest.fn().mockResolvedValue(dsResponseMock),
                 };
                 handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
-                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi);
 
                 const sessionEntry = { ...testEntries.session };
                 sessionEntry.entries.set("USER.DATA.PS", psEntry);
@@ -875,7 +875,7 @@ describe("DatasetFSProvider", () => {
             await DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: false, overwrite: true });
 
             expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.ps);
-            const psEntry = session.entries.get(testEntries.ps.name)!;
+            const psEntry = session.entries.get(testEntries.ps.name);
             expect(psEntry.data?.length).toBe(0);
         });
 
@@ -890,7 +890,7 @@ describe("DatasetFSProvider", () => {
             await DatasetFSProvider.instance.writeFile(testUriWithDiffQuery, newContents, { create: false, overwrite: true });
 
             expect(lookupParentDirMock).toHaveBeenCalledWith(testUriWithDiffQuery);
-            const psEntry = session.entries.get("USER.DATA.PS")!;
+            const psEntry = session.entries.get("USER.DATA.PS");
             expect(psEntry.data?.length).toBe(0);
             expect(psEntry.inDiffView).toBe(true);
         });

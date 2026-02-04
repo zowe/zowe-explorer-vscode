@@ -115,8 +115,6 @@ export default defineConfig(
       "no-unused-vars": "off",
       "prefer-object-spread": "warn",
       "space-in-parens": "warn",
-      // TODO: Enable eslint rule once we have a better solution for this
-      // "zowe-explorer/no-floating-promises": "error",
       "zowe-explorer/no-unmocked-core-modules": [
         "error",
         {
@@ -153,13 +151,12 @@ export default defineConfig(
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/unbound-method": "off",
       "@typescript-eslint/no-floating-promises": "warn",
-      // TODO: Enable eslint rule once we have a better solution for this
-      // "zowe-explorer/no-floating-promises": "warn",
       curly: "off",
 
       // New excluded rules to resolve errors
+      "@typescript-eslint/no-deprecated": "off",
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-base-to-string": "warn",
+      "@typescript-eslint/no-base-to-string": "off",
       "@typescript-eslint/no-var-requires": "off",
       "@typescript-eslint/no-require-imports": "off",
     },

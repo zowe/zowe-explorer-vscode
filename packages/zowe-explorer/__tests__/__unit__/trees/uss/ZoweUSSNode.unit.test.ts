@@ -756,7 +756,7 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
 
         try {
             await blockMocks.ussNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
-        } catch (err) {
+        } catch (_err) {
             // Prevent exception from failing test
         }
 
@@ -925,7 +925,6 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         blockMocks.rootNode.label = "";
         blockMocks.rootNode.dirty = true;
 
-        // eslint-disable-next-line zowe-explorer/no-floating-promises
         expect(blockMocks.rootNode.getChildren()).rejects.toEqual(Error("Invalid node"));
     });
 

@@ -746,7 +746,7 @@ describe("writeFile", () => {
         JobFSProvider.instance.writeFile(testUris.spool, newContents, { create: false, overwrite: true });
 
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.spool);
-        const spoolEntry = jobEntry.entries.get("JES2.JESMSGLG.2")!;
+        const spoolEntry = jobEntry.entries.get("JES2.JESMSGLG.2");
         expect(spoolEntry.data).toBe(newContents);
     });
 
@@ -760,7 +760,7 @@ describe("writeFile", () => {
         JobFSProvider.instance.writeFile(testUris.spool, newContents, { create: false, overwrite: true });
 
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.spool);
-        const spoolEntry = jobEntry.entries.get("JES2.JESMSGLG.2")!;
+        const spoolEntry = jobEntry.entries.get("JES2.JESMSGLG.2");
         expect(spoolEntry.data.length).toBe(0);
     });
 

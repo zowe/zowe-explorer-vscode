@@ -139,7 +139,7 @@ describe("ProfilesUtils unit tests", () => {
             });
             const scenario = "Task failed successfully";
             await AuthUtils.errorHandling(errorDetails, { scenario });
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+
             expect(Gui.errorMessage).toHaveBeenCalledWith(errorDetails.message, { items: ["Show log", "Troubleshoot"] });
             expect(ZoweLogger.error).toHaveBeenCalledWith(
                 `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, ...{ scenario, profile: undefined } }, { depth: null })
@@ -1225,7 +1225,7 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should call executeCommand with zowe.ds.addSession if the migration status is CreateConfigSelected", async () => {
             const blockMocks = getBlockMocks();
-            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+            jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
             blockMocks.getValueMock.mockReturnValueOnce(Definitions.V1MigrationStatus.JustMigrated);
             blockMocks.setValueMock.mockImplementation();
             Object.defineProperty(ProfilesUtils, "mProfileInfo", {
@@ -1500,8 +1500,8 @@ describe("ProfilesUtils unit tests", () => {
             const extenderProfileReadyGetSpy = jest.spyOn((ProfilesUtils as any).extenderProfileReady, "get");
             const extenderProfileReadySetSpy = jest.spyOn((ProfilesUtils as any).extenderProfileReady, "set");
             // First time create a deferred promise, second time reuse it
-            ProfilesUtils.awaitExtenderType("test", mockProfilesCache);
-            ProfilesUtils.awaitExtenderType("test", mockProfilesCache);
+            void ProfilesUtils.awaitExtenderType("test", mockProfilesCache);
+            void ProfilesUtils.awaitExtenderType("test", mockProfilesCache);
             expect(extenderProfileReadyGetSpy).toHaveBeenCalledTimes(2);
             expect(extenderProfileReadySetSpy).toHaveBeenCalledTimes(1);
         });
@@ -1518,7 +1518,7 @@ describe("ProfilesUtils unit tests", () => {
             } as unknown as ProfilesCache;
             (ProfilesUtils as any).extenderProfileReady.set("test1", { resolve: mockResolve });
             (ProfilesUtils as any).extenderProfileReady.set("test2", { resolve: mockResolve });
-            ProfilesUtils.resolveTypePromise("zftp", mockProfilesCache);
+            void ProfilesUtils.resolveTypePromise("zftp", mockProfilesCache);
             expect(mockResolve).toHaveBeenCalledTimes(2);
         });
 
@@ -1526,7 +1526,7 @@ describe("ProfilesUtils unit tests", () => {
             const mockResolve = jest.spyOn(imperative.DeferredPromise.prototype, "resolve").mockReturnValueOnce();
             const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
             const mockProfilesCache = { getProfiles: jest.fn(() => []) } as unknown as ProfilesCache;
-            ProfilesUtils.resolveTypePromise("test", mockProfilesCache);
+            void ProfilesUtils.resolveTypePromise("test", mockProfilesCache);
             expect(mockResolve).not.toHaveBeenCalled();
             expect(executeCommandMock).toHaveBeenCalledWith("zowe.setupRemoteWorkspaceFolders", "test");
         });

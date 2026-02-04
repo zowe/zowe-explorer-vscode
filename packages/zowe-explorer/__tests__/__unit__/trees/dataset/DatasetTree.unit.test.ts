@@ -175,7 +175,7 @@ function createGlobalMocks() {
     Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
     Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
     Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", { value: jest.fn().mockReturnValue(createISession()), configurable: true });
-    jest.spyOn(ZoweTreeProvider.prototype, "checkCurrentProfile").mockResolvedValue({ status: "active", name: createIProfile().name! });
+    jest.spyOn(ZoweTreeProvider.prototype, "checkCurrentProfile").mockResolvedValue({ status: "active", name: createIProfile().name });
     return globalMocks;
 }
 
@@ -5619,7 +5619,7 @@ describe("DatasetTree.crossLparMove", () => {
         await tree["crossLparMove"](fakeNode, srcUri, dstUri, false);
 
         expect(apiMock.createDataSet).toHaveBeenCalled();
-        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fakeNode.getLabel!(), {});
+        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fakeNode.getLabel(), {});
         expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining("Failed to move"));
         expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
     });
@@ -5638,7 +5638,7 @@ describe("DatasetTree.crossLparMove", () => {
 
         await expect(tree["crossLparMove"](fakeNode, srcUri, dstUri, false)).rejects.toThrow("Failed to create data set");
         expect(apiMock.createDataSet).toHaveBeenCalled();
-        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fakeNode.getLabel!(), {});
+        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fakeNode.getLabel(), {});
         expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
     });
 

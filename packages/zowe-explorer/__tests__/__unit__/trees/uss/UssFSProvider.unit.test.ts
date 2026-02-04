@@ -904,7 +904,7 @@ describe("UssFSProvider", () => {
                 etag: testEntries.file.etag,
                 returnEtag: true,
             });
-            const fileEntry = folder.entries.get("aFile.txt")!;
+            const fileEntry = folder.entries.get("aFile.txt");
             expect(fileEntry.etag).toBe("NEWETAG");
             expect(fileEntry.data).toBe(newContents);
             ussApiMock.mockRestore();
@@ -1018,7 +1018,7 @@ describe("UssFSProvider", () => {
             await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true });
 
             expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
-            const fileEntry = folder.entries.get("aFile.txt")!;
+            const fileEntry = folder.entries.get("aFile.txt");
             expect(fileEntry.data?.length).toBe(0);
             ussApiMock.mockRestore();
         });
@@ -1040,7 +1040,7 @@ describe("UssFSProvider", () => {
             );
 
             expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
-            const fileEntry = folder.entries.get("aFile.txt")!;
+            const fileEntry = folder.entries.get("aFile.txt");
             expect(fileEntry.data?.length).toBe(0);
             expect(fileEntry.inDiffView).toBe(true);
             expect(ussApiMock).not.toHaveBeenCalled();
@@ -1114,7 +1114,7 @@ describe("UssFSProvider", () => {
                 entries: new Map([[testEntries.file.name, fileEntry]]),
             };
             (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
-            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((_uri: any) => {
                 return sessionEntry.entries.get("aFile.txt");
             });
             const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
@@ -1140,7 +1140,7 @@ describe("UssFSProvider", () => {
                 entries: new Map([[testEntries.folder.name, folderEntry]]),
             };
             (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
-            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((_uri: any) => {
                 return sessionEntry.entries.get("aFolder");
             });
             const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
@@ -1170,7 +1170,7 @@ describe("UssFSProvider", () => {
                 entries: new Map([[testEntries.folder.name, folderEntry]]),
             };
             (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
-            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((_uri: any) => {
                 return sessionEntry.entries.get("aFolder");
             });
             const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
@@ -1258,7 +1258,7 @@ describe("UssFSProvider", () => {
 
             (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
 
-            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((_uri: any) => {
                 return sessionEntry.entries.get("aFolder");
             });
 
@@ -1440,11 +1440,11 @@ describe("UssFSProvider", () => {
             const ussApi = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(
                 hasCopy
                     ? {
-                          fileList,
-                          copy,
-                          create,
-                          uploadFromBuffer,
-                      }
+                        fileList,
+                        copy,
+                        create,
+                        uploadFromBuffer,
+                    }
                     : ({ fileList, create, uploadFromBuffer } as any)
             );
             const getInfoFromUri = jest.spyOn(UssFSProvider.instance as any, "_getInfoFromUri");

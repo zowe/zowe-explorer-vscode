@@ -32,5 +32,4 @@ async function main(): Promise<void> {
     }
 }
 
-// eslint-disable-next-line zowe-explorer/no-floating-promises
 main();
