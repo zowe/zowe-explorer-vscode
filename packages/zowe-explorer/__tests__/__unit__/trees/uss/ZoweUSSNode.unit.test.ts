@@ -1537,20 +1537,25 @@ describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
     it("fetches the attributes for a file from host", async () => {
         const globalMocks = createGlobalMocks();
         const fileEntry = new UssFile("testFile");
+        fileEntry.type = vscode.FileType.File;
         fileEntry.attributes = attrs1;
-        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
-        const node = new ZoweUSSNode({
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValue(fileEntry);
+
+        const uss_node = new ZoweUSSNode({
             label: "testFile",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentPath: "/",
             profile: globalMocks.profileOne,
         });
-        jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+
+        jest.spyOn(uss_node as any, "getUssFiles").mockResolvedValueOnce({
             success: true,
             apiResponse: { items: fileAttrs },
             commandResponse: "",
         });
-        jest.spyOn(node, "setAttributes").mockImplementation();
-        expect(await node.fetchAttributes()).toStrictEqual(attrs2);
+
+        jest.spyOn(uss_node, "setAttributes").mockImplementation();
+        expect(await uss_node.fetchAttributes()).toStrictEqual(attrs2);
         lookupMock.mockRestore();
     });
     it("returns undefined if no entry is found", async () => {

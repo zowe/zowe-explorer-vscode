@@ -17,6 +17,7 @@ import type { ZoweUSSNode } from "./ZoweUSSNode";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
+import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 
 export class USSUtils {
     /**
@@ -108,5 +109,19 @@ export class USSUtils {
             case "text":
                 return null;
         }
+    }
+
+    /**
+     * Removes hidden files from the given list of USS nodes
+     * @returns {void}
+     */
+    public static filterHiddenFiles(nodes: zosfiles.IZosFilesResponse): Promise<zosfiles.IZosFilesResponse> {
+        // Filtering out the filename starting with '.' to hide hidden files
+        const filter_list = nodes.apiResponse?.items.filter((node: any) => {
+            return !node.name.startsWith(".");
+        });
+        return new Promise((resolve) => {
+            resolve({ ...nodes, apiResponse: { ...nodes.apiResponse, items: filter_list } });
+        });
     }
 }
