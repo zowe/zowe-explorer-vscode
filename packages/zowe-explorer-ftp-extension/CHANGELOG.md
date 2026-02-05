@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Fixed an issue where the `zftp` session type is set to `none` on VS Code reload. [#4049](https://github.com/zowe/zowe-explorer-vscode/pull/4049)
+
 ## `3.4.1`
 
 ### Bug fixes
