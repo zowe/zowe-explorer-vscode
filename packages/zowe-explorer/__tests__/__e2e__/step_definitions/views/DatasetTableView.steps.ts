@@ -170,7 +170,7 @@ When("enters a valid profile and dataset pattern", async function () {
 
 // ==================== Table View State Setup (Given steps) ====================
 
-Given("a user who has the dataset table view opened", async function () {
+Given("a user who has the dataset table view opened", function () {
     this.tableViewPage = new DatasetTableViewPage(browser);
 });
 
@@ -198,7 +198,7 @@ Given("a user who has the dataset table view opened with PDS datasets", async fu
     await page.waitForDsorgType(/^PO/);
 });
 
-Given("a user who has the dataset table view opened with mixed dataset types", async function () {
+Given("a user who has the dataset table view opened with mixed dataset types", function () {
     this.tableViewPage = new DatasetTableViewPage(browser);
 });
 

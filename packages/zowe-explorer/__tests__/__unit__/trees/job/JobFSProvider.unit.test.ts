@@ -10,18 +10,7 @@
  */
 
 import { Disposable, FilePermission, FileType, Uri, window } from "vscode";
-import {
-    FsJobsUtils,
-    FilterEntry,
-    Gui,
-    JobEntry,
-    SpoolEntry,
-    ZoweScheme,
-    AuthHandler,
-    FsAbstractUtils,
-    imperative,
-    MainframeInteraction,
-} from "@zowe/zowe-explorer-api";
+import { FsJobsUtils, FilterEntry, Gui, JobEntry, SpoolEntry, ZoweScheme, AuthHandler, FsAbstractUtils, imperative } from "@zowe/zowe-explorer-api";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { createIJobFile, createIJobObject } from "../../../__mocks__/mockCreators/jobs";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -625,7 +614,7 @@ describe("fetchSpoolAtUri", () => {
             .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
         const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce({ ...testEntries.job });
         const mockJesApi = {
-            getSpoolContentById: jest.fn((opts) => {
+            getSpoolContentById: jest.fn((_opts) => {
                 return "spool contents";
             }),
         };
@@ -648,7 +637,7 @@ describe("fetchSpoolAtUri", () => {
             .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array(), encoding: { kind: "other", codepage: "IBM-1147" } });
         const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce({ ...testEntries.job });
         const mockJesApi = {
-            getSpoolContentById: jest.fn((opts) => {
+            getSpoolContentById: jest.fn((_opts) => {
                 return "spool contents";
             }),
         };

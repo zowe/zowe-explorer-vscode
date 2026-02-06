@@ -95,7 +95,7 @@ describe("ZoweLogger", () => {
             expect(getAppLoggerSpy).toHaveBeenCalledTimes(1);
         });
 
-        it("should return the logger in imperativeLogger", async () => {
+        it("should return the logger in imperativeLogger", () => {
             (ZoweLogger as any).initializeImperativeLogger("fakePath");
             expect(getLogSettingSpy).toHaveBeenCalledTimes(1);
             expect(initLoggerSpy).toHaveBeenCalledTimes(1);

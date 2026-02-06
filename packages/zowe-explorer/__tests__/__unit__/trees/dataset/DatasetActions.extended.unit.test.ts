@@ -24,7 +24,7 @@ import { ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 
 jest.mock("../../../../src/tools/ZoweLocalStorage");
 
-async function createGlobalMocks() {
+function createGlobalMocks() {
     const newMocks = {
         mockRefresh: jest.fn(),
         showOpenDialog: jest.fn(),

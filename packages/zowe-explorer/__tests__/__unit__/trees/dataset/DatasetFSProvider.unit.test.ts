@@ -27,7 +27,6 @@ import {
     Types,
     ZoweExplorerApiType,
     ZoweScheme,
-    ZoweVsCodeExtension,
 } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
@@ -189,13 +188,13 @@ describe("DatasetFSProvider", () => {
             it("calls allMembers to fetch the members of a PDS", async () => {
                 const mockPdsEntry = { ...testEntries.pds, metadata: { ...testEntries.pds.metadata } };
                 jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(mockPdsEntry);
-                jest.spyOn(DatasetFSProvider.instance as any, "fetchDataset").mockImplementation(async () => {
+                jest.spyOn(DatasetFSProvider.instance as any, "fetchDataset").mockImplementation(() => {
                     mockPdsEntry.entries.set("MEMB1", new DsEntry("MEMB1", true));
                     mockPdsEntry.entries.set("MEMB2", new DsEntry("MEMB2", true));
                     mockPdsEntry.entries.set("MEMB3", new DsEntry("MEMB3", true));
                     mockPdsEntry.entries.set("MEMB4", new DsEntry("MEMB4", true));
 
-                    return mockPdsEntry;
+                    return Promise.resolve(mockPdsEntry);
                 });
                 expect(await DatasetFSProvider.instance.readDirectory(testUris.pds)).toStrictEqual([
                     ["MEMB1", FileType.File],
@@ -364,7 +363,7 @@ describe("DatasetFSProvider", () => {
         });
 
         it("calls _handleError and throws error if an unknown error occurred during lookup", async () => {
-            const _lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockImplementation((uri) => {
+            const _lookupAsFileMock = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockImplementation((_uri) => {
                 throw Error("unknown fs error");
             });
             const _handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
@@ -743,7 +742,7 @@ describe("DatasetFSProvider", () => {
             });
 
             it("in a PS data set with RECFM=U with one invalid line", async () => {
-                const dsResponseMock = {
+                const xDsResponseMock = {
                     success: true,
                     apiResponse: {
                         items: [{ name: "USER.DATA.PS", recfm: "U", blksz: 10 }],
@@ -752,7 +751,7 @@ describe("DatasetFSProvider", () => {
                 };
                 mockMvsApi = {
                     uploadFromBuffer: jest.fn(),
-                    dataSet: jest.fn().mockResolvedValue(dsResponseMock),
+                    dataSet: jest.fn().mockResolvedValue(xDsResponseMock),
                 };
                 handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
                 jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi);
@@ -770,7 +769,7 @@ describe("DatasetFSProvider", () => {
                 expectInvalidLines(msg);
             });
             it("but not if lrecl or blksz are not set", async () => {
-                const dsResponseMock = {
+                const xDsResponseMock = {
                     success: true,
                     apiResponse: {
                         items: [{ name: "USER.DATA.PS" }],
@@ -783,7 +782,7 @@ describe("DatasetFSProvider", () => {
                             etag: "NEWETAG",
                         },
                     }),
-                    dataSet: jest.fn().mockResolvedValue(dsResponseMock),
+                    dataSet: jest.fn().mockResolvedValue(xDsResponseMock),
                 };
                 handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
                 const _fireSoonMock = jest.spyOn(DatasetFSProvider.instance as any, "_fireSoon").mockImplementation();
@@ -802,7 +801,7 @@ describe("DatasetFSProvider", () => {
             });
 
             it("in a PS data set with RECFM=VB with one invalid line", async () => {
-                const dsResponseMock = {
+                const xDsResponseMock = {
                     success: true,
                     apiResponse: {
                         items: [{ name: "USER.DATA.PS", recfm: "VB", lrecl: lrecl }],
@@ -811,7 +810,7 @@ describe("DatasetFSProvider", () => {
                 };
                 mockMvsApi = {
                     uploadFromBuffer: jest.fn(),
-                    dataSet: jest.fn().mockResolvedValue(dsResponseMock),
+                    dataSet: jest.fn().mockResolvedValue(xDsResponseMock),
                 };
                 handleErrorMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation();
                 jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi);
@@ -1130,8 +1129,8 @@ describe("DatasetFSProvider", () => {
             } as any);
             jest.spyOn(AuthHandler, "lockProfile").mockImplementation();
 
-            const handleProfileAuthOnErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation(async () => {
-                throw vscode.FileSystemError.Unavailable("User cancelled SSO authentication");
+            const handleProfileAuthOnErrorMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation(() => {
+                return Promise.reject(vscode.FileSystemError.Unavailable("User cancelled SSO authentication"));
             });
             const fakePds = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pds)), testEntries.pds);
             await expect(

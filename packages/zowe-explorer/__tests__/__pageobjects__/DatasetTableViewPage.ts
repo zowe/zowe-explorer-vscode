@@ -18,84 +18,84 @@ import { Key } from "webdriverio";
  * Selectors are evaluated fresh each time they're accessed, avoiding stale element issues.
  */
 export class DatasetTableViewPage {
-    constructor(private browser: WebdriverIO.Browser) {}
+    public constructor(private browser: WebdriverIO.Browser) {}
 
     // ==================== Selectors (getter-based for lazy evaluation) ====================
 
     /** The main table view container */
-    get tableViewContainer() {
+    public get tableViewContainer() {
         return this.browser.$(".table-view");
     }
 
     /** The table title element */
-    get title() {
+    public get title() {
         return this.browser.$(".table-view > div > h3");
     }
 
     /** All data rows in the table (excludes pinned rows) */
-    get rows() {
+    public get rows() {
         return this.browser.$$(".ag-row[row-index]:not(.ag-row-pinned)");
     }
 
     /** All pinned rows at the top of the table */
-    get pinnedRows() {
+    public get pinnedRows() {
         return this.browser.$$(".ag-floating-top .ag-row");
     }
 
     /** The "select all" checkbox in the header */
-    get selectAllCheckbox() {
+    public get selectAllCheckbox() {
         return this.browser.$(".ag-header-select-all");
     }
 
     /** Pagination panel (if present) */
-    get paginationPanel() {
+    public get paginationPanel() {
         return this.browser.$(".ag-paging-panel");
     }
 
     /** Context menu container */
-    get contextMenu() {
+    public get contextMenu() {
         return this.browser.$(".szh-menu");
     }
 
     /** Context menu items */
-    get contextMenuItems() {
+    public get contextMenuItems() {
         return this.browser.$$(".szh-menu .szh-menu__item");
     }
 
     /** Expand/collapse icons for PDS datasets */
-    get expandIcons() {
+    public get expandIcons() {
         return this.browser.$$(".ag-row > div[col-id='dsname'] > div > span > div > span > .codicon-chevron-right");
     }
 
     /** Level 0 (parent) rows in hierarchical view */
-    get level0Rows() {
+    public get level0Rows() {
         return this.browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='0']");
     }
 
     /** Level 1 (child) rows in hierarchical view */
-    get level1Rows() {
+    public get level1Rows() {
         return this.browser.$$(".ag-cell[col-id='dsname'] > div div[aria-level='1']");
     }
 
     // ==================== Dynamic Selectors ====================
 
     /** Get a column header by its ID */
-    columnHeader(columnId: string) {
+    public columnHeader(columnId: string) {
         return this.browser.$(`[col-id="${columnId}"]`);
     }
 
     /** Get a row by its index */
-    rowByIndex(index: number) {
+    public rowByIndex(index: number) {
         return this.browser.$(`.ag-row[row-index='${index}']`);
     }
 
     /** Get a cell by column ID within a row */
-    cellInRow(row: WebdriverIO.Element, columnId: string) {
+    public cellInRow(row: WebdriverIO.Element, columnId: string) {
         return row.$(`[col-id='${columnId}']`);
     }
 
     /** Get a button by title and appearance */
-    buttonSelector(title: string, appearance: string = "primary") {
+    public buttonSelector(title: string, appearance: string = "primary") {
         return this.browser.$$(`vscode-button[appearance='${appearance}']`);
     }
 

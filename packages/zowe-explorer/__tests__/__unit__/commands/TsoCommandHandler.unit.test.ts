@@ -715,7 +715,7 @@ describe("TsoCommandHandler unit testing", () => {
     });
 
     it("getTsoParams: does not use default tso profile if not present", async () => {
-        const getTsoActions = () => {
+        const xGetTsoActions = () => {
             const tsoActions = TsoCommandHandler.getInstance();
             return tsoActions;
         };
@@ -750,7 +750,7 @@ describe("TsoCommandHandler unit testing", () => {
                 };
             }),
         });
-        const handler = getTsoActions();
+        const handler = xGetTsoActions();
 
         const mockProfileInfo = {
             getDefaultProfile: jest.fn().mockReturnValue(undefined),

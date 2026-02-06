@@ -505,6 +505,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
      * @param node
      */
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     public async renameFavorite(node: IZoweUSSTreeNode, newNamePath: string): Promise<void> {
         ZoweLogger.trace("USSTree.renameFavorite called.");
         const matchingNode: IZoweUSSTreeNode = this.findFavoritedNode(node);

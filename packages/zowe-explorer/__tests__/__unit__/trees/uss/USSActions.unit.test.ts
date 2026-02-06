@@ -364,8 +364,8 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling");
 
         // Simulate unsuccessful api call
-        const createMock = jest.spyOn(blockMocks.ussApi, "create").mockImplementationOnce(async (ussPath, type, mode) => {
-            throw new Error();
+        const createMock = jest.spyOn(blockMocks.ussApi, "create").mockImplementationOnce((_ussPath, _type, _mode) => {
+            return Promise.reject(new Error());
         });
 
         await expect(USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "folder")).rejects.toThrow();
@@ -549,7 +549,7 @@ describe("USS Action Unit Tests - Functions uploadDialog & uploadFile", () => {
 
         try {
             await USSActions.uploadDialog(blockMocks.ussNode, blockMocks.testUSSTree, false);
-        } catch (err) {
+        } catch (_err) {
             // prevent exception from failing test
         }
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
@@ -1307,8 +1307,9 @@ describe("USS Action Unit Tests - function filterUssTree", () => {
         const newNode = createUSSNode(globalMocks.testSession, createIProfile());
         newNode.label = "newProfile";
 
-        const addSessionSpy = jest.spyOn(blockMocks.testUSSTree, "addSession").mockImplementation(async () => {
+        const addSessionSpy = jest.spyOn(blockMocks.testUSSTree, "addSession").mockImplementation(() => {
             blockMocks.testUSSTree.mSessionNodes.push(newNode);
+            return Promise.resolve();
         });
 
         const getChildrenSpy = jest.spyOn(newNode, "getChildren").mockResolvedValue([]);
@@ -1617,13 +1618,13 @@ describe("USS Action Unit Tests - function filterUssTree", () => {
         } as any);
 
         // Mock getChildren to return the file node and also populate children array
-        const getChildrenSpy = jest.spyOn(blockMocks.ussNode, "getChildren").mockImplementation(async () => {
+        const getChildrenSpy = jest.spyOn(blockMocks.ussNode, "getChildren").mockImplementation(() => {
             blockMocks.ussNode.children = [fileNode];
-            return [fileNode];
+            return Promise.resolve([fileNode]);
         });
 
         const revealError = new Error("Failed to reveal node");
-        const revealSpy = jest.spyOn(blockMocks.testTreeView, "reveal").mockImplementation((node: any, options: any) => {
+        const revealSpy = jest.spyOn(blockMocks.testTreeView, "reveal").mockImplementation((node: any, _options: any) => {
             // First call is for session node - succeeds
             if (node === blockMocks.ussNode) {
                 return Promise.resolve();

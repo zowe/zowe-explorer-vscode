@@ -136,6 +136,7 @@ export default defineConfig(
     "**/out/**",
     "**/results/**",
     "**/src/webviews/**/*.ts", // TODO: Remove this once we are ready to fix webviews linting errors
+    "**/.wdio-vscode-service/**",
   ]),
 
   // Override for test files

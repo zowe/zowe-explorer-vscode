@@ -25,11 +25,12 @@ async function main(): Promise<void> {
 
         // Download VS Code, unzip it and run the integration test
         await runTests({ extensionDevelopmentPath, extensionTestsPath });
-    } catch (err) {
+    } catch (_err) {
         // eslint-disable-next-line no-console
         console.error("Failed to run tests");
         process.exit(1);
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, zowe-explorer/no-floating-promises
 main();

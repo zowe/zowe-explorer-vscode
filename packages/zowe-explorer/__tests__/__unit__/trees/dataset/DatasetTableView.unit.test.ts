@@ -1297,7 +1297,7 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle case when profile not found in session nodes or favorites", async () => {
-            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+            jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
 
             // Mock empty favorites
             jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
@@ -1623,12 +1623,12 @@ describe("DatasetTableView", () => {
     });
 
     describe("DatasetTableView", () => {
-        let datasetTableView: DatasetTableView;
+        let xDatasetTableView: DatasetTableView;
 
         beforeEach(() => {
             // Reset the singleton instance
             (DatasetTableView as any)._instance = undefined;
-            datasetTableView = DatasetTableView.getInstance();
+            xDatasetTableView = DatasetTableView.getInstance();
         });
 
         // ... existing tests
@@ -1637,7 +1637,6 @@ describe("DatasetTableView", () => {
             let mockContext: ExtensionContext;
             let mockDataSource: any;
             let mockExtender: any;
-            let mockTableBuilder: any;
             let mockTableInstance: jest.Mocked<Table.Instance>;
 
             beforeEach(() => {
@@ -1678,17 +1677,6 @@ describe("DatasetTableView", () => {
                     buildTable: jest.fn(),
                 };
 
-                mockTableBuilder = {
-                    options: jest.fn().mockReturnThis(),
-                    isView: jest.fn().mockReturnThis(),
-                    title: jest.fn().mockReturnThis(),
-                    addRows: jest.fn().mockReturnThis(),
-                    columns: jest.fn().mockReturnThis(),
-                    addContextOption: jest.fn().mockReturnThis(),
-                    addRowAction: jest.fn().mockReturnThis(),
-                    build: jest.fn().mockReturnValue(mockTableInstance),
-                };
-
                 mockExtender = {
                     getTableProviderRegistry: jest.fn().mockReturnValue({
                         getActions: jest.fn().mockResolvedValue([]),
@@ -1722,11 +1710,11 @@ describe("DatasetTableView", () => {
                 });
                 jest.spyOn(TableBuilder.prototype, "build").mockImplementation(() => mockTableInstance);
 
-                (datasetTableView as any).currentDataSource = mockDataSource;
+                (xDatasetTableView as any).currentDataSource = mockDataSource;
             });
 
             it("should always generate a new table", async () => {
-                const result = await (datasetTableView as any).generateTable(mockContext);
+                const result = await (xDatasetTableView as any).generateTable(mockContext);
 
                 expect(result).toBeDefined();
                 expect(mockDataSource.fetchDataSets).toHaveBeenCalled();
@@ -1738,14 +1726,14 @@ describe("DatasetTableView", () => {
             it("should add both displayInTree and pinRow context options", async () => {
                 const addContextOptionSpy = jest.spyOn(TableBuilder.prototype, "addContextOption");
 
-                await (datasetTableView as any).generateTable(mockContext);
+                await (xDatasetTableView as any).generateTable(mockContext);
 
                 // Verify that addContextOption was called with the correct parameters
                 const calls = addContextOptionSpy.mock.calls;
                 expect(calls).toEqual(
                     expect.arrayContaining([
-                        ["all", (datasetTableView as any).contextOptions.displayInTree],
-                        ["all", (datasetTableView as any).contextOptions.pinRow],
+                        ["all", (xDatasetTableView as any).contextOptions.displayInTree],
+                        ["all", (xDatasetTableView as any).contextOptions.pinRow],
                     ])
                 );
             });
@@ -1754,7 +1742,7 @@ describe("DatasetTableView", () => {
                 mockDataSource.supportsHierarchy.mockReturnValue(true);
                 mockDataSource.loadChildren = jest.fn().mockResolvedValue([]);
 
-                const result = await (datasetTableView as any).generateTable(mockContext);
+                const result = await (xDatasetTableView as any).generateTable(mockContext);
 
                 expect(result).toBeDefined();
                 expect(mockDataSource.supportsHierarchy).toHaveBeenCalled();
@@ -1767,9 +1755,9 @@ describe("DatasetTableView", () => {
                     supportsHierarchy: jest.fn().mockReturnValue(false),
                 };
 
-                (datasetTableView as any).currentDataSource = errorDataSource;
+                (xDatasetTableView as any).currentDataSource = errorDataSource;
 
-                await expect((datasetTableView as any).generateTable(mockContext)).rejects.toThrow("Fetch error");
+                await expect((xDatasetTableView as any).generateTable(mockContext)).rejects.toThrow("Fetch error");
             });
 
             it("should capture system locale as userLocale at table build time", async () => {
@@ -1780,10 +1768,10 @@ describe("DatasetTableView", () => {
                     resolvedOptions: mockResolvedOptions,
                 }));
 
-                await (datasetTableView as any).generateTable(mockContext);
+                await (xDatasetTableView as any).generateTable(mockContext);
 
                 // Verify that userLocale was captured from Intl.DateTimeFormat
-                expect((datasetTableView as any).userLocale).toBe("fr-FR");
+                expect((xDatasetTableView as any).userLocale).toBe("fr-FR");
 
                 // Restore original Intl.DateTimeFormat
                 (global as any).Intl.DateTimeFormat = originalDateTimeFormat;
@@ -1797,10 +1785,10 @@ describe("DatasetTableView", () => {
                     resolvedOptions: mockResolvedOptions,
                 }));
 
-                await (datasetTableView as any).generateTable(mockContext);
+                await (xDatasetTableView as any).generateTable(mockContext);
 
                 // Get the valueFormatter for createdDate
-                const expectedFields = (datasetTableView as any).expectedFields;
+                const expectedFields = (xDatasetTableView as any).expectedFields;
                 const createdDateField = expectedFields.find((field: any) => field.field === "createdDate");
 
                 const isoDateString = "2025-06-15T10:00:00.000Z";
@@ -1853,7 +1841,7 @@ describe("DatasetTableView", () => {
                 const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
                     loadNamedProfile: jest.fn().mockResolvedValue(createIProfile()),
                 } as any);
-                await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
+                await (xDatasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
 
                 expect(mockTableViewProvider.setTableView).toHaveBeenCalled();
                 expect(commands.executeCommand).toHaveBeenCalledWith("zowe-resources.focus");
@@ -1869,7 +1857,7 @@ describe("DatasetTableView", () => {
 
                 const filterPromptSpy = jest.spyOn(SharedTreeProviders.ds, "filterPrompt");
 
-                await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
+                await (xDatasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
 
                 expect(filterPromptSpy).toHaveBeenCalledWith(mockNode);
             });
@@ -1880,7 +1868,7 @@ describe("DatasetTableView", () => {
                 jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
                 jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
 
-                await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
+                await (xDatasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
 
                 expect(mockTableViewProvider.setTableView).toHaveBeenCalled();
                 expect(commands.executeCommand).toHaveBeenCalledWith("zowe-resources.focus");
@@ -1890,7 +1878,7 @@ describe("DatasetTableView", () => {
         describe("event emitter", () => {
             it("should emit events when table is created and disposed", async () => {
                 const eventSpy = jest.fn();
-                datasetTableView.onDataSetTableChanged(eventSpy);
+                xDatasetTableView.onDataSetTableChanged(eventSpy);
 
                 const mockContext = {
                     extensionPath: "/mock/extension/path",
@@ -1901,8 +1889,8 @@ describe("DatasetTableView", () => {
                     supportsHierarchy: jest.fn().mockReturnValue(false),
                 };
 
-                (datasetTableView as any).currentDataSource = mockDataSource;
-                const table = await (datasetTableView as any).generateTable(mockContext);
+                (xDatasetTableView as any).currentDataSource = mockDataSource;
+                const table = await (xDatasetTableView as any).generateTable(mockContext);
 
                 expect(eventSpy).toHaveBeenCalledWith({
                     source: mockDataSource,
@@ -1930,7 +1918,7 @@ describe("DatasetTableView", () => {
                     { dsorg: "PS-L", uri: "zowe-ds:/profile/TEST.PS2" },
                 ];
 
-                const result = (datasetTableView as any).canOpenInEditor(rows);
+                const result = (xDatasetTableView as any).canOpenInEditor(rows);
                 expect(result).toBe(true);
             });
 
@@ -1946,7 +1934,7 @@ describe("DatasetTableView", () => {
                     },
                 ];
 
-                const result = (datasetTableView as any).canOpenInEditor(rows);
+                const result = (xDatasetTableView as any).canOpenInEditor(rows);
                 expect(result).toBe(true);
             });
 
@@ -1959,14 +1947,14 @@ describe("DatasetTableView", () => {
                     },
                 ];
 
-                const result = (datasetTableView as any).canOpenInEditor(rows);
+                const result = (xDatasetTableView as any).canOpenInEditor(rows);
                 expect(result).toBe(true);
             });
 
             it("should return false for PO (PDS) datasets without member context", () => {
                 const rows: Table.RowData[] = [{ dsorg: "PO", uri: "zowe-ds:/profile/TEST.PDS" }];
 
-                const result = (datasetTableView as any).canOpenInEditor(rows);
+                const result = (xDatasetTableView as any).canOpenInEditor(rows);
                 expect(result).toBe(false);
             });
 
@@ -1976,14 +1964,14 @@ describe("DatasetTableView", () => {
                     { dsorg: "PO", uri: "zowe-ds:/profile/TEST.PDS" }, // This one fails the condition
                 ];
 
-                const result = (datasetTableView as any).canOpenInEditor(rows);
+                const result = (xDatasetTableView as any).canOpenInEditor(rows);
                 expect(result).toBe(false);
             });
 
             it("should return false for VSAM datasets", () => {
                 const rows: Table.RowData[] = [{ dsorg: "VS", uri: "zowe-ds:/profile/TEST.VSAM" }];
 
-                const result = (datasetTableView as any).canOpenInEditor(rows);
+                const result = (xDatasetTableView as any).canOpenInEditor(rows);
                 expect(result).toBe(false);
             });
 
@@ -1992,14 +1980,14 @@ describe("DatasetTableView", () => {
                     { uri: "zowe-ds:/profile/TEST.UNKNOWN" }, // No dsorg property
                 ];
 
-                const result = (datasetTableView as any).canOpenInEditor(rows);
+                const result = (xDatasetTableView as any).canOpenInEditor(rows);
                 expect(result).toBe(false);
             });
 
             it("should handle empty rows array", () => {
                 const rows: Table.RowData[] = [];
 
-                const result = (datasetTableView as any).canOpenInEditor(rows);
+                const result = (xDatasetTableView as any).canOpenInEditor(rows);
                 expect(result).toBe(false); // can't open in editor if no rows
             });
 
@@ -2012,7 +2000,7 @@ describe("DatasetTableView", () => {
                     },
                 ];
 
-                const result = (datasetTableView as any).canOpenInEditor(rows);
+                const result = (xDatasetTableView as any).canOpenInEditor(rows);
                 expect(result).toBe(true);
             });
         });
@@ -2021,7 +2009,7 @@ describe("DatasetTableView", () => {
             let mockContext: ExtensionContext;
             let mockNode: ZoweDatasetNode;
             let mockTableViewProvider: any;
-            let datasetTableView: DatasetTableView;
+            let yDatasetTableView: DatasetTableView;
 
             beforeEach(() => {
                 mockContext = {
@@ -2047,7 +2035,7 @@ describe("DatasetTableView", () => {
                 } as any);
                 jest.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
                 (DatasetTableView as any)._instance = undefined; // Reset the singleton instance
-                datasetTableView = DatasetTableView.getInstance();
+                yDatasetTableView = DatasetTableView.getInstance();
             });
 
             it("should handle 'loadTreeChildren' command", async () => {
@@ -2080,12 +2068,12 @@ describe("DatasetTableView", () => {
                     ]),
                 };
 
-                (datasetTableView as any).currentDataSource = mockDataSource;
+                (yDatasetTableView as any).currentDataSource = mockDataSource;
 
                 // Mock the table instance and its webview
                 const mockWebview = { postMessage: jest.fn() };
                 const mockPanel = { webview: mockWebview };
-                (datasetTableView as any).table = { panel: mockPanel };
+                (yDatasetTableView as any).table = { panel: mockPanel };
 
                 const message = {
                     command: "loadTreeChildren",
@@ -2094,7 +2082,7 @@ describe("DatasetTableView", () => {
                     },
                 };
 
-                await datasetTableView["onDidReceiveMessage"](message);
+                await yDatasetTableView["onDidReceiveMessage"](message);
 
                 expect(mockDataSource.loadChildren).toHaveBeenCalledWith(message.payload.nodeId);
                 expect(mockWebview.postMessage).toHaveBeenCalledWith({
@@ -2155,12 +2143,12 @@ describe("DatasetTableView", () => {
                     loadChildren: jest.fn(),
                 };
 
-                (datasetTableView as any).currentDataSource = mockDataSource;
+                (yDatasetTableView as any).currentDataSource = mockDataSource;
 
                 // Mock the table instance and its webview
                 const mockWebview = { postMessage: jest.fn() };
                 const mockPanel = { webview: mockWebview };
-                (datasetTableView as any).table = { panel: mockPanel };
+                (yDatasetTableView as any).table = { panel: mockPanel };
 
                 const message = {
                     command: "someOtherCommand",
@@ -2169,7 +2157,7 @@ describe("DatasetTableView", () => {
                     },
                 };
 
-                await datasetTableView["onDidReceiveMessage"](message);
+                await yDatasetTableView["onDidReceiveMessage"](message);
 
                 expect(mockDataSource.loadChildren).not.toHaveBeenCalled();
                 expect(mockWebview.postMessage).not.toHaveBeenCalled();
@@ -2180,12 +2168,12 @@ describe("DatasetTableView", () => {
                     // No loadChildren method
                 };
 
-                (datasetTableView as any).currentDataSource = mockDataSource;
+                (yDatasetTableView as any).currentDataSource = mockDataSource;
 
                 // Mock the table instance and its webview
                 const mockWebview = { postMessage: jest.fn() };
                 const mockPanel = { webview: mockWebview };
-                (datasetTableView as any).table = { panel: mockPanel };
+                (yDatasetTableView as any).table = { panel: mockPanel };
 
                 const message = {
                     command: "loadTreeChildren",
@@ -2194,7 +2182,7 @@ describe("DatasetTableView", () => {
                     },
                 };
 
-                await datasetTableView["onDidReceiveMessage"](message);
+                await yDatasetTableView["onDidReceiveMessage"](message);
 
                 expect(mockWebview.postMessage).not.toHaveBeenCalled();
             });

@@ -3251,7 +3251,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Sequential Data Set" as any);
         try {
             await DatasetActions.createFile(node, blockMocks.testDatasetTree);
-        } catch (err) {
+        } catch (_err) {
             // do nothing
         }
 
@@ -3799,7 +3799,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
 
         try {
             await DatasetActions.allocateLike(blockMocks.testDatasetTree);
-        } catch (err) {
+        } catch (_err) {
             // do nothing
         }
 
@@ -4768,9 +4768,9 @@ describe("DatasetActions - filterDatasetTree", () => {
         newSessionNode.children = [];
         newSessionNode.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
 
-        const addSessionSpy = jest.spyOn(blockMocks.testDatasetTree, "addSession").mockImplementation(async () => {
+        const addSessionSpy = jest.spyOn(blockMocks.testDatasetTree, "addSession").mockImplementation(() => {
             blockMocks.testDatasetTree.mSessionNodes.push(newSessionNode);
-            return undefined as any;
+            return Promise.resolve();
         });
 
         jest.spyOn(TreeViewUtils, "expandNode").mockResolvedValue(undefined as any);
@@ -4805,13 +4805,13 @@ describe("DatasetActions - filterDatasetTree", () => {
         });
         memberNode.contextValue = "member";
 
-        jest.spyOn(TreeViewUtils, "expandNode").mockImplementation(async (node: any) => {
+        jest.spyOn(TreeViewUtils, "expandNode").mockImplementation((node: any) => {
             if (node === sessionNode) {
                 sessionNode.children = [pdsNode];
             } else if (node === pdsNode) {
                 pdsNode.children = [memberNode];
             }
-            return undefined as any;
+            return Promise.resolve();
         });
         const revealSpy = jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
         jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
@@ -4842,13 +4842,13 @@ describe("DatasetActions - filterDatasetTree", () => {
         pdsNode.contextValue = "pds";
         pdsNode.children = [];
 
-        jest.spyOn(TreeViewUtils, "expandNode").mockImplementation(async (node: any) => {
+        jest.spyOn(TreeViewUtils, "expandNode").mockImplementation((node: any) => {
             if (node === sessionNode) {
                 sessionNode.children = [pdsNode];
             } else if (node === pdsNode) {
                 pdsNode.children = [];
             }
-            return undefined as any;
+            return Promise.resolve();
         });
         jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
         jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
@@ -4878,11 +4878,11 @@ describe("DatasetActions - filterDatasetTree", () => {
         });
         otherPdsNode.contextValue = "pds";
 
-        jest.spyOn(TreeViewUtils, "expandNode").mockImplementation(async (node: any) => {
+        jest.spyOn(TreeViewUtils, "expandNode").mockImplementation((node: any) => {
             if (node === sessionNode) {
                 sessionNode.children = [otherPdsNode];
             }
-            return undefined as any;
+            return Promise.resolve();
         });
         jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockResolvedValue(undefined as any);
         const warningMessageSpy = jest.spyOn(Gui, "warningMessage");
@@ -4930,13 +4930,13 @@ describe("DatasetActions - filterDatasetTree", () => {
         });
         memberNode.contextValue = "member";
 
-        jest.spyOn(TreeViewUtils, "expandNode").mockImplementation(async (node: any) => {
+        jest.spyOn(TreeViewUtils, "expandNode").mockImplementation((node: any) => {
             if (node === sessionNode) {
                 sessionNode.children = [pdsNode];
             } else if (node === pdsNode) {
                 pdsNode.children = [memberNode];
             }
-            return undefined as any;
+            return Promise.resolve();
         });
 
         jest.spyOn(blockMocks.testDatasetTree.getTreeView(), "reveal").mockImplementation((node: any) => {
@@ -4993,7 +4993,7 @@ describe("DatasetActions - filterDatasetTree", () => {
         const blockMocks = createBlockMocksShared();
         const sessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.imperativeProfile);
         sessionNode.pattern = "OLD.PATTERN";
-        sessionNode.tooltip = `Profile: ${sessionNode.label}\nPattern: OLD.PATTERN`;
+        sessionNode.tooltip = `Profile: ${sessionNode.label as string}\nPattern: OLD.PATTERN`;
         sessionNode.contextValue += `_${Constants.FILTER_SEARCH}`;
         blockMocks.testDatasetTree.mSessionNodes = [sessionNode];
 

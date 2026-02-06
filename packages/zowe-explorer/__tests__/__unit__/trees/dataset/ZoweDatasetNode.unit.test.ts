@@ -664,7 +664,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         try {
             await node.openDs(false, true, blockMocks.testDatasetTree);
-        } catch (err) {
+        } catch (_err) {
             // do nothing
         }
 
@@ -771,7 +771,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
 
         try {
             await node.openDs(false, true, blockMocks.testDatasetTree);
-        } catch (err) {
+        } catch (_err) {
             // Do nothing
         }
 
@@ -1775,7 +1775,7 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
         });
         const listDatasetsMock = jest
             .spyOn(sessionNode, "listDatasets")
-            .mockImplementationOnce(async (responses) => {
+            .mockImplementationOnce((responses) => {
                 responses.push({
                     success: true,
                     apiResponse: {
@@ -1784,8 +1784,9 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
                     },
                     commandResponse: "4 data set(s) were listed successfully",
                 });
+                return Promise.resolve();
             })
-            .mockImplementationOnce(async (responses) => {
+            .mockImplementationOnce((responses) => {
                 responses.push({
                     success: true,
                     apiResponse: {
@@ -1797,6 +1798,7 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
                     },
                     commandResponse: "2 data set(s) were listed successfully",
                 });
+                return Promise.resolve();
             });
         await (sessionNode as any).listDatasetsInRange(undefined, 2);
         expect(listDatasetsMock).toHaveBeenCalledTimes(2);
@@ -1812,8 +1814,8 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
             profile: createIProfile(),
             session: createISession(),
         });
-        jest.spyOn(sessionNode, "listDatasets").mockImplementationOnce(async () => {
-            throw new Error("Simulated error");
+        jest.spyOn(sessionNode, "listDatasets").mockImplementationOnce(() => {
+            return Promise.reject(new Error("Simulated error"));
         });
         const result = await (sessionNode as any).listDatasetsInRange(undefined, 2);
         expect(result).toStrictEqual({ items: [] });
@@ -1834,7 +1836,7 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
             lastItemName: "PDS.EXAMPLE4",
         };
         const actualResponses: zosfiles.IZosFilesResponse[] = [];
-        const listDatasetsMock = jest.spyOn(sessionNode, "listDatasets").mockImplementationOnce(async (responses) => {
+        const listDatasetsMock = jest.spyOn(sessionNode, "listDatasets").mockImplementationOnce((responses) => {
             const resp = {
                 success: true,
                 apiResponse: {
@@ -1848,6 +1850,7 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
             };
             responses.push(resp);
             actualResponses.push(resp);
+            return Promise.resolve();
         });
 
         expect(await (sessionNode as any).listDatasetsInRange("PDS.EXAMPLE2", 2)).toStrictEqual({
@@ -1870,7 +1873,7 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
         });
         sessionNode.dirty = true;
         const actualResponses: zosfiles.IZosFilesResponse[] = [];
-        const listDatasetsMock = jest.spyOn(sessionNode, "listDatasets").mockImplementation(async (responses) => {
+        const listDatasetsMock = jest.spyOn(sessionNode, "listDatasets").mockImplementation((responses) => {
             const resp = {
                 success: true,
                 apiResponse: {
@@ -1884,6 +1887,7 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
             };
             responses.push(resp, resp);
             actualResponses.push(resp);
+            return Promise.resolve();
         });
 
         expect(await (sessionNode as any).listDatasetsInRange("PDS.EXAMPLE2", 2)).toStrictEqual({
@@ -1907,7 +1911,7 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         const actualResponses: zosfiles.IZosFilesResponse[] = [];
         const listMembersMock = jest
             .spyOn(pdsNode, "listMembers")
-            .mockImplementationOnce(async (responses) => {
+            .mockImplementationOnce((responses) => {
                 responses.push({
                     success: true,
                     apiResponse: {
@@ -1916,8 +1920,9 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
                     },
                     commandResponse: "4 data set(s) were listed successfully",
                 });
+                return Promise.resolve();
             })
-            .mockImplementationOnce(async (responses) => {
+            .mockImplementationOnce((responses) => {
                 responses.push({
                     success: true,
                     apiResponse: {
@@ -1930,6 +1935,7 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
                     commandResponse: "2 data set(s) were listed successfully",
                 });
                 actualResponses.push(responses.at(-1));
+                return Promise.resolve();
             });
         expect(await (pdsNode as any).listMembersInRange(undefined, 2)).toStrictEqual({
             items: actualResponses,
@@ -1947,8 +1953,8 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
             contextOverride: Constants.DS_PDS_CONTEXT,
         });
-        jest.spyOn(pdsNode, "listMembers").mockImplementationOnce(async () => {
-            throw new Error("Simulated error");
+        jest.spyOn(pdsNode, "listMembers").mockImplementationOnce(() => {
+            return Promise.reject(new Error("Simulated error"));
         });
         const result = await (pdsNode as any).listMembersInRange(undefined, 2);
         expect(result).toStrictEqual({ items: [] });
@@ -1968,7 +1974,7 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
             lastItemName: "EX4",
         };
         const actualResponses: zosfiles.IZosFilesResponse[] = [];
-        const listMembersMock = jest.spyOn(pdsNode, "listMembers").mockImplementationOnce(async (responses) => {
+        const listMembersMock = jest.spyOn(pdsNode, "listMembers").mockImplementationOnce((responses) => {
             const resp = {
                 success: true,
                 apiResponse: {
@@ -1982,6 +1988,7 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
             };
             responses.push(resp);
             actualResponses.push(resp);
+            return Promise.resolve();
         });
 
         expect(await (pdsNode as any).listMembersInRange("EX2", 2)).toStrictEqual({

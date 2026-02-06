@@ -22,7 +22,7 @@ describe("PollProvider - unit tests", () => {
         const forEachSpy = jest.spyOn((PollProvider as any).disposables, "forEach");
         try {
             PollProvider.dispose();
-        } catch (err) {
+        } catch (_err) {
             fail("PollDecorator.dispose should not throw an error.");
         }
         expect(forEachSpy).toHaveBeenCalled();
@@ -43,7 +43,7 @@ describe("PollProvider - unit tests", () => {
         };
         try {
             PollProvider.updateIcon(mockUri);
-        } catch (err) {
+        } catch (_err) {
             fail("PollDecorator.updateIcon should not throw an error for a new icon.");
         }
 

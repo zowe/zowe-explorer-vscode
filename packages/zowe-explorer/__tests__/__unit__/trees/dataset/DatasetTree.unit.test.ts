@@ -2375,7 +2375,6 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
 
             // User cancels input box
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
-            const showMessageSpy = jest.spyOn(Gui, "showMessage");
 
             const testTree = new DatasetTree();
             testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -3531,7 +3530,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
         const renameDataSetSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSet");
 
-        mocked(Gui.showInputBox).mockImplementation((options) => {
+        mocked(Gui.showInputBox).mockImplementation((_options) => {
             return Promise.resolve("HLQ.TEST.NEWNAME.NODE");
         });
         const fav_node = new ZoweDatasetNode({
@@ -3734,37 +3733,41 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         await testValidDsName("INVALID-DATASET-NAME");
     });
 
-    it("To check if rename of favorited seq ds is performed correctly when the rename operation is performed on the seq ds from the ds tree view ", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-        const node = new ZoweDatasetNode({
-            label: "HLQ.TEST.RENAME.NODE",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: testTree.mSessionNodes[1],
-            session: blockMocks.session,
-            profile: testTree.mSessionNodes[1].getProfile(),
-        });
-        const fav_node = new ZoweDatasetNode({
-            label: "HLQ.TEST.RENAME.NODE",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: testTree.mSessionNodes[1],
-            session: blockMocks.session,
-            profile: testTree.mSessionNodes[1].getProfile(),
-        });
-        fav_node.contextValue = Constants.DS_FAV_CONTEXT;
-        jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
-        await testTree.rename(node);
-        expect(blockMocks.rename).toHaveBeenLastCalledWith(
-            { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
-            { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },
-            { overwrite: false }
-        );
-    });
+    it(
+        "To check if rename of favorited seq ds is performed correctly when the rename " +
+            "operation is performed on the seq ds from the ds tree view ",
+        async () => {
+            createGlobalMocks();
+            const blockMocks = createBlockMocks();
+            mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+            mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.NODE.NEW");
+            mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+            const node = new ZoweDatasetNode({
+                label: "HLQ.TEST.RENAME.NODE",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testTree.mSessionNodes[1],
+                session: blockMocks.session,
+                profile: testTree.mSessionNodes[1].getProfile(),
+            });
+            const fav_node = new ZoweDatasetNode({
+                label: "HLQ.TEST.RENAME.NODE",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testTree.mSessionNodes[1],
+                session: blockMocks.session,
+                profile: testTree.mSessionNodes[1].getProfile(),
+            });
+            fav_node.contextValue = Constants.DS_FAV_CONTEXT;
+            jest.spyOn(testTree, "findFavoritedNode").mockReturnValue(fav_node);
+            await testTree.rename(node);
+            expect(blockMocks.rename).toHaveBeenLastCalledWith(
+                { path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS },
+                { path: "/sestest/HLQ.TEST.RENAME.NODE.NEW", scheme: ZoweScheme.DS },
+                { overwrite: false }
+            );
+        }
+    );
 
     it("Checking rename functionality with favorited PDS ", async () => {
         createGlobalMocks();
@@ -3797,7 +3800,7 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
 
         const renameDataSetSpy = jest.spyOn((DatasetTree as any).prototype, "renameDataSet");
 
-        mocked(Gui.showInputBox).mockImplementation((options) => {
+        mocked(Gui.showInputBox).mockImplementation((_options) => {
             return Promise.resolve("HLQ.TEST.NEWNAME.NODE");
         });
         jest.spyOn(SharedContext, "isFavorite").mockReturnValue(true);
@@ -5603,7 +5606,7 @@ describe("DatasetTree.crossLparMove", () => {
     });
 
     it("should handle error when creating a new PS if it already exists", async () => {
-        const fakeNode: Partial<IZoweDatasetTreeNode> = {
+        const xFakeNode: Partial<IZoweDatasetTreeNode> = {
             getLabel: () => "DS1",
             contextValue: Constants.DS_DS_CONTEXT,
             getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
@@ -5616,16 +5619,16 @@ describe("DatasetTree.crossLparMove", () => {
             .spyOn(apiMock, "createDataSet")
             .mockRejectedValue(new imperative.ImperativeError({ msg: "Failed to create data set", errorCode: "500" }));
 
-        await tree["crossLparMove"](fakeNode, srcUri, dstUri, false);
+        await tree["crossLparMove"](xFakeNode, srcUri, dstUri, false);
 
         expect(apiMock.createDataSet).toHaveBeenCalled();
-        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fakeNode.getLabel(), {});
+        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, xFakeNode.getLabel(), {});
         expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining("Failed to move"));
         expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
     });
 
     it("should handle unknown error when creating a new PS", async () => {
-        const fakeNode: Partial<IZoweDatasetTreeNode> = {
+        const xFakeNode: Partial<IZoweDatasetTreeNode> = {
             getLabel: () => "DS1",
             contextValue: Constants.DS_DS_CONTEXT,
             getEncoding: jest.fn().mockResolvedValue({ kind: "text" }),
@@ -5636,9 +5639,9 @@ describe("DatasetTree.crossLparMove", () => {
         jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         const createDataSetSpy = jest.spyOn(apiMock, "createDataSet").mockRejectedValue(new Error("Failed to create data set"));
 
-        await expect(tree["crossLparMove"](fakeNode, srcUri, dstUri, false)).rejects.toThrow("Failed to create data set");
+        await expect(tree["crossLparMove"](xFakeNode, srcUri, dstUri, false)).rejects.toThrow("Failed to create data set");
         expect(apiMock.createDataSet).toHaveBeenCalled();
-        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, fakeNode.getLabel(), {});
+        expect(createDataSetSpy).toHaveBeenCalledWith(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, xFakeNode.getLabel(), {});
         expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
     });
 

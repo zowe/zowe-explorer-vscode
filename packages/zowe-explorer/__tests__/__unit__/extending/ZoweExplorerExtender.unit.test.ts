@@ -253,7 +253,7 @@ describe("ZoweExplorerExtender unit tests", () => {
     });
 
     describe("Add to Schema functionality", () => {
-        const updateSchema = async (
+        const updateSchema = (
             addProfileTypeToSchemaMock: (
                 profileType: string,
                 typeInfo: { sourceApp: string; schema: any; version?: string | undefined }
@@ -278,13 +278,13 @@ describe("ZoweExplorerExtender unit tests", () => {
             expect(addProfTypeToSchema).toHaveBeenCalled();
         };
 
-        it("should update the schema when an extender calls initForZowe", async () => {
-            await updateSchema();
+        it("should update the schema when an extender calls initForZowe", () => {
+            updateSchema();
         });
 
-        it("should throw an error if the schema is read-only", async () => {
+        it("should throw an error if the schema is read-only", () => {
             const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
-            await updateSchema((_filepath, _contents) => {
+            updateSchema((_filepath, _contents) => {
                 const err = new Error("test error");
                 Object.defineProperty(err, "code", {
                     value: "EACCES",
@@ -294,7 +294,7 @@ describe("ZoweExplorerExtender unit tests", () => {
             expect(errorMessageSpy).toHaveBeenCalledWith("Failed to update Zowe schema: insufficient permissions or read-only file. test error");
         });
 
-        it("should log a message if addProfileTypeToSchema returns a warning", async () => {
+        it("should log a message if addProfileTypeToSchema returns a warning", () => {
             const profInfo = new imperative.ProfileInfo("zowe", {
                 credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
             });

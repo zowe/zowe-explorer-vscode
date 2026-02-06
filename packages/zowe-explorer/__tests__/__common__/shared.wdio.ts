@@ -79,7 +79,7 @@ export async function clickContextMenuItem(treeItem: ElementWithContextMenu<any>
             `;
             execFile("osascript", ["-e", keyboardScript], async (err) => {
                 if (err) {
-                    reject(err);
+                    reject(new Error(err));
                 } else {
                     await browser.pause(100); // Give time for the menu to load
                     resolve();

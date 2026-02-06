@@ -17,7 +17,12 @@ import { TreeItem, ViewSection } from "wdio-vscode-service";
 export class ProfileNode {
     private mFavoritesNode: TreeItem;
 
-    constructor(private browser: WebdriverIO.Browser, private treePane: ViewSection, private profileName: string, private isFavorite = false) {}
+    public constructor(
+        private browser: WebdriverIO.Browser,
+        private treePane: ViewSection,
+        private profileName: string,
+        private isFavorite = false
+    ) {}
 
     /**
      * Checks if the profile node exists in the tree pane

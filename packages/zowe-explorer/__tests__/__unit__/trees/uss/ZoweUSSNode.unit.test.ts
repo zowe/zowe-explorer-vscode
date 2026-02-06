@@ -176,7 +176,7 @@ function createGlobalMocks() {
 }
 
 describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
-    it("Checks that the ZoweUSSNode structure matches the snapshot", async () => {
+    it("Checks that the ZoweUSSNode structure matches the snapshot", () => {
         const globalMocks = createGlobalMocks();
 
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
@@ -215,7 +215,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
         expect(testFile).toMatchSnapshot();
     });
 
-    it("Tests that creating a new USS node initializes all methods and properties", async () => {
+    it("Tests that creating a new USS node initializes all methods and properties", () => {
         const globalMocks = createGlobalMocks();
 
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
@@ -236,7 +236,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
         expect(testNode.getSession()).toBeDefined();
     });
 
-    it("Tests that creating a new binary USS node initializes all methods and properties", async () => {
+    it("Tests that creating a new binary USS node initializes all methods and properties", () => {
         const globalMocks = createGlobalMocks();
 
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
@@ -259,7 +259,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getSession()", () => {
-    it("Tests that node.getSession() returns the proper globalMocks.session", async () => {
+    it("Tests that node.getSession() returns the proper globalMocks.session", () => {
         const globalMocks = createGlobalMocks();
 
         // Creating a rootNode
@@ -407,7 +407,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getEtag()", () => {
-    it("Tests that getEtag() returns a value", async () => {
+    it("Tests that getEtag() returns a value", () => {
         const globalMocks = createGlobalMocks();
 
         const rootNode = new ZoweUSSNode({
@@ -918,14 +918,14 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         setAttrsMock.mockRestore();
     });
 
-    it("Tests that error is thrown when node label is blank", () => {
+    it("Tests that error is thrown when node label is blank", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
         blockMocks.rootNode.label = "";
         blockMocks.rootNode.dirty = true;
 
-        expect(blockMocks.rootNode.getChildren()).rejects.toEqual(Error("Invalid node"));
+        await expect(blockMocks.rootNode.getChildren()).rejects.toEqual(Error("Invalid node"));
     });
 
     it("Tests that when List.fileList throws an error, node.getChildren() throws an error and the catch block is reached", async () => {
@@ -1124,7 +1124,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         try {
             await child.openUSS(false, true, blockMocks.testUSSTree);
-        } catch (err) {
+        } catch (_err) {
             // Prevent exception from failing test
         }
         expect(globalMocks.loggerError).toHaveBeenCalled();
@@ -1239,7 +1239,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 
         try {
             await brat.openUSS(false, true, blockMocks.testUSSTree);
-        } catch (err) {
+        } catch (_err) {
             // Prevent exception from failing test
         }
 
@@ -1250,7 +1250,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.openedDocumentInstance()", () => {
-    it("Tests that node.openedDocumentInstance() returns the document if it is open", async () => {
+    it("Tests that node.openedDocumentInstance() returns the document if it is open", () => {
         const globalMocks = createGlobalMocks();
 
         // Creating a test node
@@ -1277,7 +1277,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openedDocumentInstance()", () =
         expect(returnedDoc).toEqual(globalMocks.mockTextDocument);
     });
 
-    it("Tests that node.openedDocumentInstance() returns undefined if the file is not open", async () => {
+    it("Tests that node.openedDocumentInstance() returns undefined if the file is not open", () => {
         const globalMocks = createGlobalMocks();
 
         globalMocks.textDocumentsArray.pop();

@@ -168,12 +168,12 @@ describe("UssFSProvider", () => {
         });
 
         it("looks up the resource before loading profile which may fail", async () => {
-            const lookupMock = jest.spyOn((UssFSProvider as any).prototype, "lookup").mockReturnValueOnce(testEntries.file);
+            const xLookupMock = jest.spyOn((UssFSProvider as any).prototype, "lookup").mockReturnValueOnce(testEntries.file);
             jest.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementationOnce(() => {
                 throw new Error("invalid profile");
             });
             await expect(UssFSProvider.instance.stat(testUris.file)).rejects.toThrow("invalid profile");
-            expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
+            expect(xLookupMock).toHaveBeenCalledWith(testUris.file, false);
         });
     });
 
@@ -364,11 +364,11 @@ describe("UssFSProvider", () => {
     describe("readDirectory", () => {
         it("returns the correct list of entries inside a folder", async () => {
             const lookupAsDirMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsDirectory").mockReturnValueOnce(testEntries.folder);
-            const remoteLookupForResourceMock = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockImplementation(async () => {
+            const remoteLookupForResourceMock = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockImplementation(() => {
                 testEntries.folder.entries.set("test.txt", new FileEntry("test.txt"));
                 testEntries.folder.entries.set("innerFolder", new DirEntry("innerFolder"));
 
-                return testEntries.folder as UssDirectory;
+                return Promise.resolve(testEntries.folder as UssDirectory);
             });
 
             expect(await UssFSProvider.instance.readDirectory(testUris.folder)).toStrictEqual([
@@ -1210,7 +1210,7 @@ describe("UssFSProvider", () => {
             };
             (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
 
-            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+            const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((_uri: any) => {
                 return sessionEntry.entries.get("aFolder");
             });
             const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
