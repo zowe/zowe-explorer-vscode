@@ -80,7 +80,7 @@ export async function clickContextMenuItem(treeItem: ElementWithContextMenu<any>
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             execFile("osascript", ["-e", keyboardScript], async (err) => {
                 if (err) {
-                    reject(new Error(err));
+                    reject(err as unknown as Error);
                 } else {
                     await browser.pause(100); // Give time for the menu to load
                     resolve();

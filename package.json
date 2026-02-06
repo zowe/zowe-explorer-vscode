@@ -25,6 +25,7 @@
     "@types/vscode": "^1.73.0",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
+    "@typescript-eslint/rule-tester": "^8.54.0",
     "@vscode/l10n-dev": "^0.0.35",
     "@vscode/test-electron": "^1.6.0",
     "@vscode/vsce": "^3.4.2",

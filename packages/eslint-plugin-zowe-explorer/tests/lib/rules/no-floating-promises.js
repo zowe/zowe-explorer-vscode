@@ -12,16 +12,14 @@
 "use strict";
 
 const rule = require("../../../lib/rules/no-floating-promises");
-const RuleTester = require("eslint").RuleTester;
+const { RuleTester } = require("@typescript-eslint/rule-tester");
 const path = require("path");
 
 const ruleTester = new RuleTester({
   languageOptions: {
     parser: require("@typescript-eslint/parser"),
     parserOptions: {
-      projectService: {
-        allowDefaultProject: ['*.ts*', '*.js*'],
-      },
+      projectService: true,
       tsconfigRootDir: path.resolve(__dirname, "..")
     },
     ecmaVersion: 2015,
