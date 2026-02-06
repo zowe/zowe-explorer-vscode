@@ -1440,11 +1440,11 @@ describe("UssFSProvider", () => {
             const ussApi = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(
                 hasCopy
                     ? {
-                        fileList,
-                        copy,
-                        create,
-                        uploadFromBuffer,
-                    }
+                          fileList,
+                          copy,
+                          create,
+                          uploadFromBuffer,
+                      }
                     : ({ fileList, create, uploadFromBuffer } as any)
             );
             const getInfoFromUri = jest.spyOn(UssFSProvider.instance as any, "_getInfoFromUri");

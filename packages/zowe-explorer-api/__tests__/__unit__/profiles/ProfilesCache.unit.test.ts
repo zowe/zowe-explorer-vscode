@@ -292,7 +292,6 @@ describe("ProfilesCache", () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         profileMetadata.push(profileMetadata[0]);
         profCache.addToConfigArray(profileMetadata);
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(profCache.profileTypeConfigurations).toEqual(profileMetadata.filter((a, index) => index == 0));
     });
 
@@ -351,7 +350,6 @@ describe("ProfilesCache", () => {
         profCache.allProfiles = [lpar1Profile as imperative.IProfileLoaded];
         (profCache as any).defaultProfileByType = new Map([["zosmf", { ...profCache.allProfiles[0] }]]);
         expect(profCache.allProfiles[0].profile).toMatchObject(lpar1Profile.profile);
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
         profCache.updateProfilesArrays({
             ...lpar1Profile,
             profile: lpar2Profile.profile,

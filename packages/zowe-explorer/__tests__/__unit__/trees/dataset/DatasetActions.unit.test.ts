@@ -206,7 +206,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             },
         });
         jest.spyOn(blockMocks.mvsApi, "allMembers").mockImplementation(jest.fn());
-        jest.spyOn(parent as any, "getChildren").mockImplementationOnce(() => Promise.resolve(parent.children = [newMember]));
+        jest.spyOn(parent as any, "getChildren").mockImplementationOnce(() => Promise.resolve((parent.children = [newMember])));
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
@@ -290,7 +290,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
                 etag: "123",
             },
         });
-        jest.spyOn(parent as any, "getChildren").mockImplementationOnce(() => Promise.resolve(parent.children = [newMember]));
+        jest.spyOn(parent as any, "getChildren").mockImplementationOnce(() => Promise.resolve((parent.children = [newMember])));
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
@@ -561,7 +561,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 1 item(s) were deleted:\n ` +
-            `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
+                `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
         );
         expect(blockMocks.fixMultiSelectMock).toHaveBeenCalledWith(blockMocks.testDatasetTree, blockMocks.testMemberNode.getParent());
     });
@@ -611,7 +611,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 2 item(s) were deleted:\n ` +
-            `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testVsamNode.getLabel().toString()}`
+                `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testVsamNode.getLabel().toString()}`
         );
     });
 
@@ -644,7 +644,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
             `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
-            `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}`,
+                `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
     });
@@ -662,7 +662,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
             `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
-            `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}(${blockMocks.testFavMemberNode.getLabel().toString()})`,
+                `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}(${blockMocks.testFavMemberNode.getLabel().toString()})`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
     });
@@ -694,7 +694,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 2 item(s) were deleted:\n ` +
-            `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testFavoritedNode.getLabel().toString()}`
+                `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testFavoritedNode.getLabel().toString()}`
         );
     });
 
@@ -721,7 +721,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree, blockMocks.testMemberNode);
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 1 item(s) were deleted:\n ` +
-            `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
+                `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
         );
     });
 
@@ -3823,9 +3823,9 @@ describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
         createBlockMocks();
         jest.spyOn(vscode.workspace, "getConfiguration").mockImplementation(
             () =>
-            ({
-                get: () => Constants.JOB_SUBMIT_DIALOG_OPTS[1],
-            } as any)
+                ({
+                    get: () => Constants.JOB_SUBMIT_DIALOG_OPTS[1],
+                } as any)
         );
         jest.spyOn(Gui, "warningMessage").mockResolvedValue({
             title: "Submit",

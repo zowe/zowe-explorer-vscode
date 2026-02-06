@@ -141,7 +141,6 @@ describe("TableBuilder", () => {
             const globalMocks = createGlobalMocks();
             const builder = new TableBuilder(globalMocks.context as any);
             const newCols: Table.ColumnOpts[] = [
-                // eslint-disable-next-line @typescript-eslint/no-base-to-string
                 { field: "cat", valueFormatter: (data: { value: Table.ContentTypes }) => `val: ${data.value?.toString()}` },
                 { field: "doge", filter: true, comparator: (_valueA, _valueB, _nodeA, _nodeB, _isDescending) => -1, colSpan: (_params) => 2 },
                 { field: "parrot", sort: "asc", rowSpan: (_params) => 2 },

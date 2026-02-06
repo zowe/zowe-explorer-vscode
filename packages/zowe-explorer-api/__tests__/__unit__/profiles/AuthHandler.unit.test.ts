@@ -638,37 +638,31 @@ describe("AuthHandler", () => {
     describe("isUsingTokenAuth", () => {
         it("should return true when profileProps contains tokenValue and not user/password", () => {
             const profileProps = ["tokenValue", "host", "port"];
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
             expect(AuthHandler.isUsingTokenAuth(profileProps)).toBe(true);
         });
 
         it("should return false when profileProps contains tokenValue and user/password", () => {
             const profileProps = ["tokenValue", "user", "password"];
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
             expect(AuthHandler.isUsingTokenAuth(profileProps)).toBe(false);
         });
 
         it("should return true when baseProfileProps contains tokenValue and profileProps does not have user/password", () => {
             const profileProps = ["host", "port"];
             const baseProfileProps = ["tokenValue"];
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
             expect(AuthHandler.isUsingTokenAuth(profileProps, baseProfileProps)).toBe(true);
         });
 
         it("should return false when profileProps has user/password and tokenValue", () => {
             const profileProps = ["user", "password", "tokenValue"];
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
             expect(AuthHandler.isUsingTokenAuth(profileProps)).toBe(false);
         });
 
         it("should return false when baseProfileProps is not provided and profileProps lacks tokenValue", () => {
             const profileProps = ["user", "password"];
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
             expect(AuthHandler.isUsingTokenAuth(profileProps)).toBe(false);
         });
 
         it("should return false for empty properties", () => {
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
             expect(AuthHandler.isUsingTokenAuth([], [])).toBe(false);
         });
     });

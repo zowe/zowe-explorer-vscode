@@ -390,11 +390,11 @@ export class SharedUtils {
                 comment: ["Node label"],
             }),
             currentEncoding &&
-            vscode.l10n.t({
-                message: "Current encoding is {0}",
-                args: [currentEncoding],
-                comment: ["Encoding name"],
-            })
+                vscode.l10n.t({
+                    message: "Current encoding is {0}",
+                    args: [currentEncoding],
+                    comment: ["Encoding name"],
+                })
         );
 
         return SharedUtils.processEncodingResponse(response, node.label as string);
