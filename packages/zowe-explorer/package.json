@@ -2014,6 +2014,12 @@
           "description": "%zowe.commands.alwaysEdit%",
           "scope": "window"
         },
+        "zowe.commands.autoSelectProfile": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.commands.autoSelectProfile%",
+          "scope": "window"
+        },
         "zowe.commands.mvs.history": {
           "default": {
             "persistence": true,

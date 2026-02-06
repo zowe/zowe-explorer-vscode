@@ -78,6 +78,7 @@ export class Constants {
     public static readonly SETTINGS_JOBS_DEFAULT_SORT = "zowe.jobs.default.sort";
     public static readonly SETTINGS_COMMANDS_INTEGRATED_TERMINALS = "zowe.commands.useIntegratedTerminals";
     public static readonly SETTINGS_COMMANDS_ALWAYS_EDIT = "zowe.commands.alwaysEdit";
+    public static readonly SETTINGS_COMMANDS_AUTO_SELECT_PROFILE = "zowe.commands.autoSelectProfile";
     public static readonly SETTINGS_AUTOMATIC_PROFILE_VALIDATION = "zowe.automaticProfileValidation";
     public static readonly SETTINGS_SECURE_CREDENTIALS_ENABLED = "zowe.security.secureCredentialsEnabled";
     public static readonly SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS = "zowe.security.checkForCustomCredentialManagers";
