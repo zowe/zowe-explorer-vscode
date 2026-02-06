@@ -792,7 +792,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             };
             const sampleSshProfile = { profile: { host: "host.com", user: "newUser" }, type: "ssh" };
 
-            actions.sshSession = sampleSshSession as any;
+            actions.sshSession = sampleSshSession;
             actions.sshProfile = sampleSshProfile as any;
 
             (Shell.isConnectionValid as jest.Mock).mockResolvedValue(true);

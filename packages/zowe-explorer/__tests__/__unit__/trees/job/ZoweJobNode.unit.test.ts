@@ -297,7 +297,7 @@ describe("ZoweJobNode unit tests - Function delete", () => {
         const getJesApiMock = jest.fn();
         getJesApiMock.mockReturnValue(mockJesApi);
         apiRegisterInstance.getJesApi = getJesApiMock.bind(apiRegisterInstance);
-        jest.spyOn(mockJesApi, "deleteJob").mockImplementationOnce(() => Promise.reject("test error"));
+        jest.spyOn(mockJesApi, "deleteJob").mockImplementationOnce(() => Promise.reject(new Error("test error")));
         await expect(globalMocks.testJobsProvider.delete(badJobNode.job.jobname, badJobNode.job.jobid)).rejects.toThrow();
     });
 });

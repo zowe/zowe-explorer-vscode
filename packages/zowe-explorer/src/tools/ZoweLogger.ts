@@ -9,8 +9,6 @@
  *
  */
 
-/* eslint-disable @typescript-eslint/restrict-plus-operands */
-
 import * as vscode from "vscode";
 import * as loggerConfig from "../../log4jsconfig.json";
 import * as path from "path";

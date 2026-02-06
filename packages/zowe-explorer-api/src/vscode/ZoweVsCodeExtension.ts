@@ -204,7 +204,7 @@ export class ZoweVsCodeExtension {
         } else if (response === qpItems[1]) {
             try {
                 await ZoweVsCodeExtension.promptCertificate({ profile: serviceProfile, session: updSession.ISession, rePrompt: true });
-            } catch (err) {
+            } catch (_err) {
                 return false;
             }
             updSession.ISession.storeCookie = true;
@@ -422,6 +422,7 @@ export class ZoweVsCodeExtension {
 
         // Note: IConfigBuilderOpts not exported
         // const opts: IConfigBuilderOpts = {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const opts: any = {
             // getSecureValue: this.promptForProp.bind(this),
             populateProperties: true,

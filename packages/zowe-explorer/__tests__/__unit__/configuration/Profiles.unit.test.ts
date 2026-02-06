@@ -263,6 +263,7 @@ describe("Profiles Unit Tests - Function getProfileInfo", () => {
     });
 
     it("should load profiles from both home directory and current directory", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-shadow
         const { ProfilesCache, ...zeApi } = await import("@zowe/zowe-explorer-api");
         Object.defineProperty(zeApi.imperative.ProfileCredentials.prototype, "isSecured", { get: () => false });
         const profilesCache = new ProfilesCache(imperative.Logger.getAppLogger(), __dirname);
@@ -275,6 +276,7 @@ describe("Profiles Unit Tests - Function getProfileInfo", () => {
     });
 
     it("should not load project profiles from same directory as global profiles", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-shadow
         const { ProfilesCache, ...zeApi } = await import("@zowe/zowe-explorer-api");
         Object.defineProperty(zeApi.imperative.ProfileCredentials.prototype, "isSecured", { get: () => false });
         const profilesCache = new ProfilesCache(imperative.Logger.getAppLogger(), zoweDir);
@@ -316,7 +318,6 @@ describe("Profiles Unit Test - Function createInstance", () => {
     it("should create instance when there is no workspace", async () => {
         mockWorkspaceFolders.mockClear().mockReturnValue([]);
 
-        /* eslint-disable-next-line @typescript-eslint/no-var-requires */
         const { Profiles: testProfiles } = require("../../../src/configuration/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
@@ -327,7 +328,6 @@ describe("Profiles Unit Test - Function createInstance", () => {
     it("should create instance when there is empty workspace", async () => {
         mockWorkspaceFolders.mockClear().mockReturnValue([]);
 
-        /* eslint-disable-next-line @typescript-eslint/no-var-requires */
         const { Profiles: testProfiles } = require("../../../src/configuration/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
@@ -342,7 +342,6 @@ describe("Profiles Unit Test - Function createInstance", () => {
             },
         ]);
 
-        /* eslint-disable-next-line @typescript-eslint/no-var-requires */
         const { Profiles: testProfiles } = require("../../../src/configuration/Profiles");
         jest.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
@@ -857,9 +856,9 @@ describe("Profiles Unit Tests - function deleteProfile", () => {
 describe("Profiles Unit Tests - function profileHasSecureToken", () => {
     const globalMocks = createGlobalMocks();
 
-    const environmentSetup = (globalMocks): void => {
-        globalMocks.testProfile.profile.password = null;
-        globalMocks.testProfile.profile.tokenType = "";
+    const environmentSetup = (xGlobalMocks): void => {
+        xGlobalMocks.testProfile.profile.password = null;
+        xGlobalMocks.testProfile.profile.tokenType = "";
         Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
             value: [
                 {
@@ -888,7 +887,7 @@ describe("Profiles Unit Tests - function profileHasSecureToken", () => {
         environmentSetup(globalMocks);
     });
 
-    it("should extract parent profiles", async () => {
+    it("should extract parent profiles", () => {
         Object.defineProperty(Constants, "PROFILES_CACHE", { value: "test4" });
         jest.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
             getTeamConfig: () => ({
@@ -2315,7 +2314,7 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
     it("should logout successfully and refresh zowe explorer", async () => {
         const mockTreeProvider = {
             mSessionNodes: [testNode],
-            flipState: jest.fn(),
+            onCollapsibleStateChange: jest.fn(),
             refreshElement: jest.fn(),
         } as any;
         jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);

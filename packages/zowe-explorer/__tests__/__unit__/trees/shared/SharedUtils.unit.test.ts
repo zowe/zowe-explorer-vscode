@@ -74,7 +74,7 @@ beforeEach(() => {
 });
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
-    it("Checks that concatChildNodes returns the proper array of children", async () => {
+    it("Checks that concatChildNodes returns the proper array of children", () => {
         const globalMocks = createGlobalMocks();
         const rootNode = new ZoweUSSNode({
             label: "root",
@@ -1445,7 +1445,7 @@ describe("Shared utils unit tests - function debounceAsync", () => {
         jest.useRealTimers();
     });
 
-    it("executes a function twice when time between calls is long", async () => {
+    it("executes a function twice when time between calls is long", () => {
         const mockEventHandler = jest.fn().mockResolvedValue(undefined);
         const debouncedFn = SharedUtils.debounceAsync(mockEventHandler, 100);
         void debouncedFn();
@@ -1455,7 +1455,7 @@ describe("Shared utils unit tests - function debounceAsync", () => {
         expect(mockEventHandler).toHaveBeenCalledTimes(2);
     });
 
-    it("executes a function only once when time between calls is short", async () => {
+    it("executes a function only once when time between calls is short", () => {
         const mockEventHandler = jest.fn().mockResolvedValue(undefined);
         const debouncedFn = SharedUtils.debounceAsync(mockEventHandler, 100);
         void debouncedFn();
@@ -1615,11 +1615,11 @@ describe("SharedUtils helpers", () => {
         expect(SharedUtils.hasNameCollision(src2, dst2)).toBe(false);
     });
 
-    it("isLikelySameUssObjectByUris normalizes and compares paths", async () => {
+    it("isLikelySameUssObjectByUris normalizes and compares paths", () => {
         const srcNode = { fullPath: "/u/foo/bar" } as any;
         const targetParent = { fullPath: "/u/foo" } as any;
         const label = "bar";
-        expect(await SharedUtils.isLikelySameUssObjectByUris(srcNode, targetParent, label)).toBe(true);
-        expect(await SharedUtils.isLikelySameUssObjectByUris({ fullPath: "/u/other" } as any, targetParent, "bar")).toBe(false);
+        expect(SharedUtils.isLikelySameUssObjectByUris(srcNode, targetParent, label)).toBe(true);
+        expect(SharedUtils.isLikelySameUssObjectByUris({ fullPath: "/u/other" } as any, targetParent, "bar")).toBe(false);
     });
 });

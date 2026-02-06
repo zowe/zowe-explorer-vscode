@@ -54,12 +54,17 @@ export namespace Types {
         dispose?: boolean;
         decoration?: FileDecoration;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         reject?<T = never>(reason?: any): Promise<T>;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         resolve?: (uniqueId: string, data: any) => any;
-        request: () => unknown | Promise<unknown>;
+
+        // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+        request: () => unknown | Promise<unknown>; // Technically, this union is redundant since `unknown` supersedes `Promise<unknown>`
+        // request: () => unknown; // This should be equivalent to the above line
 
         // Indexable for storing custom items
-        [key: string]: any;
+        [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     };
 
     export type DatasetStats = {
@@ -69,7 +74,7 @@ export namespace Types {
         // built from "m4date", "mtime" and "msec" variables from z/OSMF API response
         modifiedDate: Date;
         // Indexable for storing custom items
-        [key: string]: any;
+        [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     };
 
     export type KeytarModule = {

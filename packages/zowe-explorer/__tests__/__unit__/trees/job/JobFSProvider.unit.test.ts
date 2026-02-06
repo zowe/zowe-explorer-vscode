@@ -10,18 +10,7 @@
  */
 
 import { Disposable, FilePermission, FileType, Uri, window } from "vscode";
-import {
-    FsJobsUtils,
-    FilterEntry,
-    Gui,
-    JobEntry,
-    SpoolEntry,
-    ZoweScheme,
-    AuthHandler,
-    FsAbstractUtils,
-    imperative,
-    MainframeInteraction,
-} from "@zowe/zowe-explorer-api";
+import { FsJobsUtils, FilterEntry, Gui, JobEntry, SpoolEntry, ZoweScheme, AuthHandler, FsAbstractUtils, imperative } from "@zowe/zowe-explorer-api";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { createIJobFile, createIJobObject } from "../../../__mocks__/mockCreators/jobs";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
@@ -625,7 +614,7 @@ describe("fetchSpoolAtUri", () => {
             .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array() });
         const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce({ ...testEntries.job });
         const mockJesApi = {
-            getSpoolContentById: jest.fn((opts) => {
+            getSpoolContentById: jest.fn((_opts) => {
                 return "spool contents";
             }),
         };
@@ -648,7 +637,7 @@ describe("fetchSpoolAtUri", () => {
             .mockReturnValueOnce({ ...testEntries.spool, data: new Uint8Array(), encoding: { kind: "other", codepage: "IBM-1147" } });
         const lookupParentDirMock = jest.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce({ ...testEntries.job });
         const mockJesApi = {
-            getSpoolContentById: jest.fn((opts) => {
+            getSpoolContentById: jest.fn((_opts) => {
                 return "spool contents";
             }),
         };
@@ -746,7 +735,7 @@ describe("writeFile", () => {
         JobFSProvider.instance.writeFile(testUris.spool, newContents, { create: false, overwrite: true });
 
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.spool);
-        const spoolEntry = jobEntry.entries.get("JES2.JESMSGLG.2")!;
+        const spoolEntry = jobEntry.entries.get("JES2.JESMSGLG.2");
         expect(spoolEntry.data).toBe(newContents);
     });
 
@@ -760,7 +749,7 @@ describe("writeFile", () => {
         JobFSProvider.instance.writeFile(testUris.spool, newContents, { create: false, overwrite: true });
 
         expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.spool);
-        const spoolEntry = jobEntry.entries.get("JES2.JESMSGLG.2")!;
+        const spoolEntry = jobEntry.entries.get("JES2.JESMSGLG.2");
         expect(spoolEntry.data.length).toBe(0);
     });
 

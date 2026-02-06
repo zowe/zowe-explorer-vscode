@@ -29,9 +29,11 @@ export class DeferredPromise<T> {
 
     public promise: Promise<T>;
     public resolve: (value: T | PromiseLike<T>) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public reject: (reason?: any) => void;
 
     public constructor() {
+        // eslint-disable-next-line zowe-explorer/no-floating-promises
         this.promise = new Promise<T>((resolve, reject) => {
             this.resolve = (value): void => {
                 this.mStatus = DeferredPromiseStatus.Resolved;
@@ -39,6 +41,7 @@ export class DeferredPromise<T> {
             };
             this.reject = (err): void => {
                 this.mStatus = DeferredPromiseStatus.Rejected;
+                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
                 reject(err);
             };
         });

@@ -34,9 +34,11 @@ import { Definitions } from "../../configuration/Definitions";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 
-export const isDataTransfer = (o: any): o is { get: (m: string) => any } => !!o && typeof o.get === "function";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isDataTransfer = (o: any): o is { get: (m: string) => unknown } => !!o && typeof o.get === "function";
 
-export const isPayload = (o: any): o is { value: any[] } => !!o && Array.isArray(o.value);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isPayload = (o: any): o is { value: unknown[] } => !!o && Array.isArray(o.value);
 export class SharedUtils {
     public static ERROR_SAME_OBJECT_DROP =
         "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
@@ -93,7 +95,7 @@ export class SharedUtils {
         favorites.sort((a, b) => {
             if (a.contextValue === specificContext) {
                 if (b.contextValue === specificContext) {
-                    return a.label.toString().toUpperCase() > b.label.toString().toUpperCase() ? 1 : -1;
+                    return (a.label as string).toString().toUpperCase() > (b.label as string).toString().toUpperCase() ? 1 : -1;
                 }
 
                 return -1;
@@ -103,7 +105,7 @@ export class SharedUtils {
                 return 1;
             }
 
-            return a.label.toString().toUpperCase() > b.label.toString().toUpperCase() ? 1 : -1;
+            return (a.label as string).toString().toUpperCase() > (b.label as string).toString().toUpperCase() ? 1 : -1;
         });
     }
 
@@ -287,7 +289,7 @@ export class SharedUtils {
             case binaryLabel:
                 encoding = { kind: "binary" };
                 break;
-            case otherLabel:
+            case otherLabel: {
                 const customResponse = await Gui.showInputBox({
                     title: vscode.l10n.t({
                         message: "Choose encoding for {0}",
@@ -305,6 +307,7 @@ export class SharedUtils {
                     return undefined;
                 }
                 break;
+            }
             default:
                 encoding = response === "binary" ? { kind: "binary" } : { kind: "other", codepage: response };
                 break;
@@ -452,7 +455,7 @@ export class SharedUtils {
      * @param callback Event handler callback
      * @param delay Number of milliseconds to delay
      */
-    public static debounce<T extends (...args: any[]) => void>(callback: T, delay: number): (...args: Parameters<T>) => void {
+    public static debounce<T extends (...args: unknown[]) => void>(callback: T, delay: number): (...args: Parameters<T>) => void {
         let timeoutId: ReturnType<typeof setTimeout>;
         return (...args: Parameters<T>): void => {
             if (timeoutId) {
@@ -467,7 +470,7 @@ export class SharedUtils {
      * @param callback Async event callback
      * @param delay Number of milliseconds to delay
      */
-    public static debounceAsync<T extends (...args: any[]) => Promise<any>>(
+    public static debounceAsync<T extends (...args: unknown[]) => Promise<unknown>>(
         callback: T,
         delay: number
     ): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
@@ -610,23 +613,25 @@ export class SharedUtils {
             const dstDataset = dstAttr?.apiResponse?.items?.[0];
 
             // if dstDataset dataset doesn't exist, it's not the same.
-            if (!dstDataset || !srcDataset) return false;
+            if (!dstDataset || !srcDataset) {
+                return false;
+            }
 
             // compare names
             const namesAreEqual = srcDataset.dsname === dstDataset.dsname;
 
             // compare vols (could be stored across multiple vols!)
-            const srcVols = srcDataset.vols
-                ? (Array.isArray(srcDataset.vols) ? srcDataset.vols : [srcDataset.vols]).map((v: any) => String(v).trim().toUpperCase())
+            const srcVols: string[] = srcDataset.vols
+                ? (Array.isArray(srcDataset.vols) ? srcDataset.vols : [srcDataset.vols]).map((v: string) => v.trim().toUpperCase())
                 : [];
-            const dstVols = dstDataset.vols
-                ? (Array.isArray(dstDataset.vols) ? dstDataset.vols : [dstDataset.vols]).map((v: any) => String(v).trim().toUpperCase())
+            const dstVols: string[] = dstDataset.vols
+                ? (Array.isArray(dstDataset.vols) ? dstDataset.vols : [dstDataset.vols]).map((v: string) => v.trim().toUpperCase())
                 : [];
 
             srcVols.sort();
             dstVols.sort();
 
-            const volsAreEqual = srcVols.length === dstVols.length && srcVols.every((vol: any, idx: number) => vol === dstVols[idx]);
+            const volsAreEqual = srcVols.length === dstVols.length && srcVols.every((vol: unknown, idx: number) => vol === dstVols[idx]);
 
             // Hostname comparison is used as a best-effort check to determine whether
             // source and destination profiles point to the same z/OS system. In cases where
@@ -637,7 +642,7 @@ export class SharedUtils {
 
             // if name, vols and host match, they're the same dataset
             return namesAreEqual && volsAreEqual && systemIsEqual;
-        } catch (err) {
+        } catch (_err) {
             // fallback to not being same data set
             return false;
         }
@@ -650,13 +655,9 @@ export class SharedUtils {
      * @param sourceNode - source USS tree node being moved
      * @param targetParent - target USS tree node parent receiving the drop
      * @param droppedLabel - name of the dropped item
-     * @returns Promise resolves to true if the normalized paths match and the target path exists. false otherwise
+     * @returns true if the normalized paths match and the target path exists. false otherwise
      */
-    public static async isLikelySameUssObjectByUris(
-        sourceNode: IZoweUSSTreeNode,
-        targetParent: IZoweUSSTreeNode,
-        droppedLabel: string
-    ): Promise<boolean> {
+    public static isLikelySameUssObjectByUris(sourceNode: IZoweUSSTreeNode, targetParent: IZoweUSSTreeNode, droppedLabel: string): boolean {
         //normalize paths
         const equal =
             path.posix.normalize(sourceNode.fullPath.replace(/\\/g, "/")) ===
@@ -667,12 +668,16 @@ export class SharedUtils {
     /**
      * Gets a string property from a node, whether it's a string or an object with that property
      */
-    public static getNodeProperty(node: any, prop: string): string | null {
-        if (!node || node[prop] == null) return null;
+    public static getNodeProperty(node: IZoweTreeNode, prop: string): string | null {
+        if (!node || node[prop] == null) {
+            return null;
+        }
         const value = node[prop];
-        if (typeof value === "string") return value;
+        if (typeof value === "string") {
+            return value;
+        }
         if (typeof value === "object" && value !== null && typeof value[prop] === "string") {
-            return value[prop];
+            return value[prop] as string;
         }
         return null;
     }

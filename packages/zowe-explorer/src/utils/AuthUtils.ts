@@ -33,6 +33,7 @@ interface ErrorContext {
     apiType?: ZoweExplorerApiType;
     profile?: string | imperative.IProfileLoaded;
     scenario?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 
@@ -43,7 +44,7 @@ export class AuthUtils {
      * @param profile The profile to check.
      * @throws {AuthCancelledError} If the user has an unresolved authentication cancellation.
      */
-    public static async ensureAuthNotCancelled(profile: imperative.IProfileLoaded): Promise<void> {
+    public static ensureAuthNotCancelled(profile: imperative.IProfileLoaded): void {
         if (AuthHandler.wasAuthCancelled(profile)) {
             throw new AuthCancelledError(profile.name, "User cancelled previous authentication");
         }
@@ -95,7 +96,7 @@ export class AuthUtils {
             while (true) {
                 try {
                     await AuthHandler.waitForUnlock(profile);
-                    await AuthUtils.ensureAuthNotCancelled(profile);
+                    AuthUtils.ensureAuthNotCancelled(profile);
                     const callbackValue = await callback();
                     AuthHandler.disableSequentialRequests(profile);
                     return callbackValue;
@@ -150,7 +151,7 @@ export class AuthUtils {
      *************************************************************************************************************/
     public static async errorHandling(errorDetails: Error | string, moreInfo?: ErrorContext): Promise<boolean> {
         // Use util.inspect instead of JSON.stringify to handle circular references
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+
         ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, ...{ ...moreInfo, profile: undefined } }, { depth: null }));
 
         const profile = typeof moreInfo?.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo?.profile;
@@ -446,6 +447,7 @@ export class AuthUtils {
         const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
         const props = await Constants.PROFILES_CACHE.getPropsForProfile(profileName, false);
         const baseProps = await Constants.PROFILES_CACHE.getPropsForProfile(baseProfile?.name, false);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         return AuthHandler.isUsingTokenAuth(props, baseProps);
     }
 }

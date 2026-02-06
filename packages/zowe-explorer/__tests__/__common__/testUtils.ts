@@ -10,7 +10,7 @@
  */
 
 export interface ITestContext {
-    context: { subscriptions: any[] } | any;
+    context: { subscriptions: any[] } | Record<string, unknown>;
     value: any;
     _: any;
     [key: string]: any;

@@ -155,7 +155,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
      * @param {IZoweJobTreeNode} [element] - Optional parameter; if not passed, returns root session nodes
      * @returns {IZoweJobTreeNode[] | Promise<IZoweJobTreeNode[]>}
      */
-    public async getChildren(element?: IZoweJobTreeNode | undefined): Promise<IZoweJobTreeNode[]> {
+    public async getChildren(element?: IZoweJobTreeNode): Promise<IZoweJobTreeNode[]> {
         ZoweLogger.trace("JobTree.getChildren called.");
         if (element) {
             // solution for optional credentials. Owner is having error on initialization.
@@ -191,7 +191,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         ZoweLogger.trace("JobTree.addSingleSession called.");
         if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
+            if (this.mSessionNodes.find((tNode) => (tNode.label as string) === profile.name)) {
                 return;
             }
             // If there is no API registered for the profile type, do nothing
@@ -259,7 +259,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         ZoweLogger.trace("JobTree.findFavoritedNode called.");
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, node.getProfileName());
         return profileNodeInFavorites?.children.find(
-            (temp) => temp.label === node.getLabel().toString() && temp.contextValue.includes(node.contextValue)
+            (temp) => (temp.label as string) === (node.getLabel() as string).toString() && temp.contextValue.includes(node.contextValue)
         );
     }
 
@@ -270,8 +270,8 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
     public findNonFavoritedNode(node: IZoweJobTreeNode): IZoweJobTreeNode {
         ZoweLogger.trace("JobTree.findNonFavoritedNode called.");
         const profileName = node.getProfileName();
-        const sessionNode = this.mSessionNodes.find((session) => session.label.toString().trim() === profileName);
-        return sessionNode?.children.find((temp) => temp.label === node.label);
+        const sessionNode = this.mSessionNodes.find((session) => (session.label as string).toString().trim() === profileName);
+        return sessionNode?.children.find((temp) => temp.label === (node.getLabel() as string).toString());
     }
 
     /**
@@ -457,7 +457,7 @@ Would you like to do this now?`,
                     args: [profileName, SharedUtils.getAppName()],
                     comment: ["Profile name"],
                 });
-                // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+
                 ZoweLogger.error(errMessage + error.toString());
                 const btnLabelRemove = vscode.l10n.t("Remove");
                 Gui.errorMessage(errMessage, {
@@ -582,9 +582,9 @@ Would you like to do this now?`,
             profileNode.children.forEach((fav) => {
                 const favoriteEntry =
                     "[" +
-                    profileNode.label.toString() +
+                    (profileNode.label as string) +
                     "]: " +
-                    fav.label.toString() +
+                    (fav.label as string) +
                     "{" +
                     (SharedContext.isFavoriteJob(fav) ? Constants.JOBS_JOB_CONTEXT : Constants.JOBS_SESSION_CONTEXT) +
                     "}";
@@ -624,9 +624,9 @@ Would you like to do this now?`,
 
         // Remove favorited profile from UI
         this.mFavorites.forEach((favProfileNode) => {
-            const favProfileLabel = favProfileNode.label?.toString();
+            const favProfileLabel = favProfileNode.label as string;
             if (favProfileLabel === profileName) {
-                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.toString() !== favProfileLabel);
+                this.mFavorites = this.mFavorites.filter((tempNode) => (tempNode.label as string) !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();
             }
@@ -771,7 +771,7 @@ Would you like to do this now?`,
                 const value = keyValue[1]?.trim();
                 try {
                     searchCriteriaObj[key] = value;
-                } catch (e) {
+                } catch (_e) {
                     // capture and ignore errors
                 }
             });
@@ -803,8 +803,8 @@ Would you like to do this now?`,
         const session = node.getProfileName();
         const faveNode = node;
         await this.addSession({ sessionName: session });
-        node = this.mSessionNodes.find((tempNode) => tempNode.label?.toString() === session);
-        if (!node.getSession().ISession.user || !node.getSession().ISession.password) {
+        node = this.mSessionNodes.find((tempNode) => (tempNode.label as string) === session);
+        if (node && (!node.getSession().ISession.user || !node.getSession().ISession.password)) {
             node.getSession().ISession.user = faveNode.getSession().ISession.user;
             node.getSession().ISession.password = faveNode.getSession().ISession.password;
             node.getSession().ISession.base64EncodedAuth = faveNode.getSession().ISession.base64EncodedAuth;
@@ -893,7 +893,7 @@ Would you like to do this now?`,
     public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent): Promise<void> {
         ZoweLogger.trace("JobTree.onDidChangeConfiguration called.");
         if (e.affectsConfiguration(JobTree.persistenceSchema)) {
-            const setting: any = {
+            const setting: Record<string, unknown> = {
                 ...SettingsConfig.getDirectValue(JobTree.persistenceSchema),
             };
             if (!setting.persistence) {
@@ -1054,7 +1054,7 @@ Would you like to do this now?`,
 
     private relabelFavoritedJob(node: IZoweJobTreeNode): IZoweJobTreeNode {
         ZoweLogger.trace("JobTree.relabelFavoritedJob called.");
-        node.label = node.label.toString().substring(0, node.label.toString().lastIndexOf(")") + 1);
+        node.label = (node.label as string).substring(0, (node.label as string).lastIndexOf(")") + 1);
         return node;
     }
 
@@ -1391,9 +1391,7 @@ Would you like to do this now?`,
             query = query.toUpperCase();
             job["children"] = actual_jobs.filter((item) =>
                 item["job"]["exec-member"]
-                    ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"] as string} - ${item["job"].retcode}`.includes(
-                          query
-                      )
+                    ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"]} - ${item["job"].retcode}`.includes(query)
                     : `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query)
             );
             SharedTreeProviders.job.refresh();

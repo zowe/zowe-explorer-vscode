@@ -443,10 +443,10 @@ describe("Test src/shared/extension", () => {
             expect(spyRefreshAll).toHaveBeenCalled();
         });
 
-        it("should handle errors when watching for vault or credMgr changes", async () => {
+        it("should handle errors when watching for vault or credMgr changes", () => {
             const testError = "__TEST_ERROR__";
             const spyWatcher = jest.spyOn(imperative.EventOperator, "getWatcher").mockImplementation(() => {
-                throw testError;
+                throw testError as unknown as Error;
             });
             const spyGuiError = jest.spyOn(Gui, "errorMessage");
 

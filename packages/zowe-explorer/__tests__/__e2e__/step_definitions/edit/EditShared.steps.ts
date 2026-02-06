@@ -61,8 +61,8 @@ Then("the user can select the favorite in the list and open it", async function 
     this.editingFavorite = true;
     this.editorView = (await browser.getWorkbench()).getEditorView();
     if (this.tree.toLowerCase() === "data sets") {
-        const pdsName = process.env.ZE_TEST_PDS as string;
-        const pdsMemberName = process.env.ZE_TEST_PDS_MEMBER as string;
+        const pdsName = process.env.ZE_TEST_PDS;
+        const pdsMemberName = process.env.ZE_TEST_PDS_MEMBER;
         const pdsExtension = getDatasetExtension(pdsName);
         const memberEditorTitle = `${pdsMemberName}${pdsExtension ?? ""}`;
         await expect(this.pdsMember).toBeDefined();

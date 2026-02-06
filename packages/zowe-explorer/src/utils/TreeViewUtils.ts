@@ -108,6 +108,7 @@ export class TreeViewUtils {
             }
         });
         // Delete from Sessions list
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const setting: any = ZoweLocalStorage.getValue(treeType);
         let sess: string[] = setting.sessions;
         let fave: string[] = setting.favorites;

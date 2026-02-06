@@ -500,7 +500,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                 return zostso.IssueTso.issueTsoCmd(this.getSession(), command, { addressSpaceOptions: parms });
             }
 
-            // eslint-disable-next-line deprecation/deprecation
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
             return zostso.IssueTso.issueTsoCommand(this.getSession(), parms.account, command, parms);
         }
 

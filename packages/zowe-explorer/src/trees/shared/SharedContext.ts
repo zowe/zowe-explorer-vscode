@@ -482,15 +482,15 @@ export class SharedContext {
      * Type guard which determines whether the node is part of the USS tree view
      * @param node The node to check
      */
-    public static isUssNode(node: any): node is IZoweUSSTreeNode {
-        return node.getAttributes !== undefined;
+    public static isUssNode(node: IZoweTreeNode): node is IZoweUSSTreeNode {
+        return (node as IZoweUSSTreeNode).getAttributes !== undefined;
     }
 
     /**
      * Type guard which determines whether the node is part of the Data Sets tree view
      * @param node The node to check
      */
-    public static isDatasetNode(node: any): node is IZoweDatasetTreeNode {
-        return node.getStats !== undefined;
+    public static isDatasetNode(node: IZoweTreeNode): node is IZoweDatasetTreeNode {
+        return (node as IZoweDatasetTreeNode).getStats !== undefined;
     }
 }

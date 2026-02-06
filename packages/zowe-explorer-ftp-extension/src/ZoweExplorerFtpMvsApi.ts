@@ -20,10 +20,6 @@ import { CoreUtils, DataSetUtils } from "@zowe/zos-ftp-for-zowe-cli";
 import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import { LOGGER } from "./globals";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
-// The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IMvs {
     public async dataSet(filter: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
@@ -187,7 +183,7 @@ export class FtpMvsApi extends AbstractFtpApi implements MainframeInteraction.IM
             }
             const lrecl: number = dsAtrribute.apiResponse.items[0].lrecl;
             const data = inputIsBuffer ? input.toString() : fs.readFileSync(input, { encoding: "utf8" });
-            const transferOptions: Record<string, any> = {
+            const transferOptions: Record<string, unknown> = {
                 content: inputIsBuffer ? input : undefined,
                 encoding: options.encoding,
                 localFile: inputIsBuffer ? undefined : input,

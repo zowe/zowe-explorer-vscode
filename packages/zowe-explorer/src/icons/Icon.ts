@@ -37,6 +37,8 @@ export class Icon {
         type: IconUtils.IconHierarchyType.derived,
         path: Icon.getIconPathInResources("document-binary-downloaded.svg"),
         check: (node) => {
+            // Here we need to do check for potentially derived class, that's why any is required
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const generalizedNode = node as any;
             if (typeof generalizedNode.downloaded !== "undefined") {
                 const parentCheck = Icon.documentBinary.check(generalizedNode);
@@ -52,6 +54,7 @@ export class Icon {
         path: Icon.getIconPathInResources("document-downloaded.svg"),
         check: (node) => {
             // Here we need to do check for potentially derived class, that's why any is required
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const generalizedNode = node as any;
             if (typeof generalizedNode.downloaded !== "undefined") {
                 const parentCheck = Icon.document.check(generalizedNode);

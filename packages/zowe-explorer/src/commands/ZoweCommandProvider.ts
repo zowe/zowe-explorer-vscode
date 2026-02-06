@@ -66,11 +66,11 @@ export abstract class ZoweCommandProvider {
             if (iTerms) {
                 this.pseudoTerminal = new ZoweTerminal(
                     this.terminalName,
-                    async (command: string): Promise<string> => {
+                    async (mCommand: string): Promise<string> => {
                         try {
                             // We need to await the response, otherwise we can't catch errors thrown
-                            this.history.addSearchHistory(command);
-                            return await this.runCommand(profile, command);
+                            this.history.addSearchHistory(mCommand);
+                            return await this.runCommand(profile, mCommand);
                         } catch (error) {
                             if (error instanceof imperative.ImperativeError) {
                                 let formattedError = "";
@@ -88,7 +88,7 @@ export abstract class ZoweCommandProvider {
                                         const causeErrorsJson = JSON.parse(error.causeErrors);
                                         formattedError += "\n" + imperative.TextUtils.chalk.bold.yellow(responseTitle);
                                         formattedError += imperative.TextUtils.prettyJson(causeErrorsJson, undefined, false, "");
-                                    } catch (parseErr) {
+                                    } catch (_parseErr) {
                                         // causeErrors was not JSON.
                                         const causeErrString: string = error.causeErrors.toString();
                                         if (causeErrString.length > 0) {
@@ -107,7 +107,7 @@ export abstract class ZoweCommandProvider {
 
                                 return formattedError;
                             }
-                            return error.message;
+                            return error.message as string;
                         }
                     },
                     new AbortController(),
@@ -119,7 +119,7 @@ export abstract class ZoweCommandProvider {
                         }),
                         history: [...this.history.getSearchHistory()].reverse(),
                         startup: command,
-                        formatCommandLine: (cmd: string) => this.formatCommandLine(cmd, profile),
+                        formatCommandLine: (cmd: string): string => this.formatCommandLine(cmd, profile),
                     }
                 );
                 this.terminal = vscode.window.createTerminal({ name: `(${profile.name}) ${this.terminalName}`, pty: this.pseudoTerminal });

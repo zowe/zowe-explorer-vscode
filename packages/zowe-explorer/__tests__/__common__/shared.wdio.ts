@@ -77,10 +77,12 @@ export async function clickContextMenuItem(treeItem: ElementWithContextMenu<any>
                     return "success"
                 end tell
             `;
-            execFile("osascript", ["-e", keyboardScript], (err) => {
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            execFile("osascript", ["-e", keyboardScript], async (err) => {
                 if (err) {
-                    reject(err);
+                    reject(err as unknown as Error);
                 } else {
+                    await browser.pause(100); // Give time for the menu to load
                     resolve();
                 }
             });

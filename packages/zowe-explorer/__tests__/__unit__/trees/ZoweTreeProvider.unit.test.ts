@@ -581,7 +581,7 @@ describe("Tree Provider Unit Tests - function ssoLogout", () => {
 describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", () => {
     it("should load all profiles for a tree provider", async () => {
         const globalMocks = await createGlobalMocks();
-        globalMocks.testDSTree = DatasetInit.createDatasetTree(imperative.Logger.getAppLogger());
+        globalMocks.testDSTree = await DatasetInit.createDatasetTree(imperative.Logger.getAppLogger());
         globalMocks.testDSTree.mSessionNodes = [
             { label: "sestest", getProfileName: (): string => "profile1" },
             { label: "sestest", getProfileName: (): string => "profile2" },
@@ -603,7 +603,7 @@ describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", ()
 
     it("should load all profiles of a given type for a tree provider", async () => {
         const globalMocks = await createGlobalMocks();
-        globalMocks.testDSTree = DatasetInit.createDatasetTree(imperative.Logger.getAppLogger());
+        globalMocks.testDSTree = await DatasetInit.createDatasetTree(imperative.Logger.getAppLogger());
         globalMocks.testDSTree.mSessionNodes = [
             { label: "sestest", getProfileName: (): string => "profile1" },
             { label: "sestest", getProfileName: (): string => "profile2" },
@@ -623,7 +623,7 @@ describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", ()
 
     it("should reset validation settings and warn the user of an error when loading default", async () => {
         const globalMocks = await createGlobalMocks();
-        globalMocks.testDSTree = DatasetInit.createDatasetTree(imperative.Logger.getAppLogger());
+        globalMocks.testDSTree = await DatasetInit.createDatasetTree(imperative.Logger.getAppLogger());
         globalMocks.testDSTree.mSessionNodes = [{ label: "sestest", getProfileName: (): string => "profile1" }];
         globalMocks.testDSTree.getSessions = (): string[] => ["profile1"];
         globalMocks.testDSTree.addSingleSession = jest.fn().mockImplementationOnce(() => Promise.resolve());

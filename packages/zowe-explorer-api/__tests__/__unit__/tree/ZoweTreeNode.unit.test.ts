@@ -29,8 +29,8 @@ describe("ZoweTreeNode", () => {
         name: string,
         collapseState: vscode.TreeItemCollapsibleState,
         parent: IZoweTreeNode | ZoweTreeNode | undefined,
-        session?: imperative.Session | string | undefined,
-        profile?: imperative.IProfileLoaded | string | any
+        session?: imperative.Session | string,
+        profile?: imperative.IProfileLoaded | string
     ): ZoweTreeNode => {
         const node = new ZoweTreeNode(
             name,

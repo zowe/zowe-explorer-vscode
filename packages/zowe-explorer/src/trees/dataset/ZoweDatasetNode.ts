@@ -64,7 +64,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public dirty = true;
     public children: ZoweDatasetNode[] = [];
     public errorDetails: imperative.ImperativeError;
-    public ongoingActions: Record<ZoweTreeNodeActions.Interactions | string, Promise<any>> = {};
+    public ongoingActions: Record<ZoweTreeNodeActions.Interactions | string, Promise<unknown>> = {};
     public wasDoubleClicked: boolean = false;
     public sort?: Sorting.NodeSort;
     public filter?: Sorting.DatasetFilter;
@@ -171,8 +171,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
     }
 
-    public updateStats(item: any): void {
-        this.setStats(DatasetUtils.getDataSetStats(item));
+    public updateStats(item: unknown): void {
+        this.setStats(DatasetUtils.getDataSetStats(item as Record<string, unknown>));
     }
 
     public getEncodingInMap(uriPath: string): ZosEncoding {
@@ -330,12 +330,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // Loops through all the returned dataset members and creates nodes for them
             const existingItems: Record<string, ZoweDatasetNode> = {};
             for (const element of this.children) {
-                existingItems[element.label.toString()] = element;
+                existingItems[(element.label as string).toString()] = element;
             }
             for (const item of (response.apiResponse.items ?? response.apiResponse) as IZosmfListResponse[]) {
                 let dsNode = existingItems[item.dsname ?? item.member];
                 if (dsNode != null) {
-                    elementChildren[dsNode.label.toString()] = dsNode;
+                    elementChildren[(dsNode.label as string).toString()] = dsNode;
                     if (item.migr) {
                         const migrationStatus = item.migr.toUpperCase();
                         if (SharedContext.isMigrated(dsNode) && migrationStatus !== "YES") {
@@ -353,7 +353,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
                         profile: cachedProfile,
                     });
-                    elementChildren[dsNode.label.toString()] = dsNode;
+                    elementChildren[(dsNode.label as string).toString()] = dsNode;
                 } else if (item.dsorg?.startsWith("PO")) {
                     // Creates a ZoweDatasetNode for a PDS
                     dsNode = new ZoweDatasetNode({
@@ -362,8 +362,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         parentNode: this,
                         profile: cachedProfile,
                     });
-                    elementChildren[dsNode.label.toString()] = dsNode;
-                } else if ((item as any).error instanceof imperative.ImperativeError) {
+                    elementChildren[(dsNode.label as string).toString()] = dsNode;
+                } else if ((item as unknown as { error: imperative.ImperativeError }).error instanceof imperative.ImperativeError) {
                     // Creates a ZoweDatasetNode for a dataset with imperative errors
                     dsNode = new ZoweDatasetNode({
                         label: item.dsname,
@@ -373,8 +373,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         profile: cachedProfile,
                     });
                     dsNode.command = { command: "zowe.placeholderCommand", title: "" };
-                    dsNode.errorDetails = (item as any).error; // Save imperative error to avoid extra z/OS requests
-                    elementChildren[dsNode.label.toString()] = dsNode;
+
+                    // Save imperative error to avoid extra z/OS requests
+                    dsNode.errorDetails = (item as unknown as { error: imperative.ImperativeError }).error;
+
+                    elementChildren[(dsNode.label as string).toString()] = dsNode;
                 } else if (item.dsorg === "VS") {
                     // Creates a ZoweDatasetNode for a VSAM file
                     let altLabel = item.dsname;
@@ -391,7 +394,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         contextOverride: Constants.VSAM_CONTEXT,
                         profile: cachedProfile,
                     });
-                    elementChildren[dsNode.label.toString()] = dsNode;
+                    elementChildren[(dsNode.label as string).toString()] = dsNode;
                 } else if (SharedContext.isSession(this)) {
                     // Creates a ZoweDatasetNode for a PS
                     const cachedEncoding = this.getEncodingInMap(item.dsname);
@@ -403,7 +406,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         profile: cachedProfile,
                         contextOverride: cachedEncoding?.kind === "binary" ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT,
                     });
-                    elementChildren[dsNode.label.toString()] = dsNode;
+                    elementChildren[(dsNode.label as string).toString()] = dsNode;
                 } else if (item.member) {
                     // Creates a ZoweDatasetNode for a PDS member
                     const cachedEncoding = this.getEncodingInMap(`${item.dsname}(${item.member})`);
@@ -416,7 +419,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     });
 
                     // get user and last modified date for sorting, if available
-                    elementChildren[dsNode.label.toString()] = dsNode;
+                    elementChildren[(dsNode.label as string).toString()] = dsNode;
                 }
 
                 if (dsNode?.resourceUri != null) {
@@ -452,7 +455,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 dsNode.errorDetails = new imperative.ImperativeError({
                     msg: vscode.l10n.t("{0} members failed to load due to invalid name errors for {1}", invalidMemberCount, this.label as string),
                 });
-                elementChildren[dsNode.label.toString()] = dsNode;
+                elementChildren[(dsNode.label as string).toString()] = dsNode;
             }
         }
 
@@ -541,8 +544,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 nextPage.description = `${pageNum + 1}/${this.paginator.getPageCount()}`;
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            return [prevPage as any, ...this.children, nextPage as any];
+            return [prevPage as unknown as ZoweDatasetNode, ...this.children, nextPage as unknown as ZoweDatasetNode];
         }
 
         return this.children;

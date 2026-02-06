@@ -121,10 +121,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     attributes: true,
                     responseTimeout: sourceInfo.profile?.profile?.responseTimeout,
                 });
-                const { dsname: dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
+                const { dsname: _dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
                 // need to transform labels
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
-                let dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
+                const dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
                 // if alcunit is cyl, divide primary by 15 to get the number of cylinders
                 const TRACKS_PER_CYLINDER = 15;
                 const primary = Number(transformedAttrs.primary);
@@ -153,10 +154,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 await this.crossLparMove(
                     childNode,
                     sourceUri.with({
-                        path: path.posix.join(sourceUri.path, childNode.getLabel() as string),
+                        path: path.posix.join(sourceUri.path, (childNode.getLabel() as string).toString()),
                     }),
                     destUri.with({
-                        path: path.posix.join(destUri.path, childNode.getLabel() as string),
+                        path: path.posix.join(destUri.path, (childNode.getLabel() as string).toString()),
                     }),
                     true
                 );
@@ -170,11 +171,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         dsname =
                             path.posix.dirname(destUri.path.substring(destinationInfo.slashAfterProfilePos + 1)) +
                             "(" +
-                            (sourceNode.getLabel() as string) +
+                            (sourceNode.getLabel() as string).toString() +
                             ")";
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSetMember(dsname, {});
                     } else {
-                        dsname = sourceNode.getLabel() as string;
+                        dsname = (sourceNode.getLabel() as string).toString();
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
                             zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
                             dsname,
@@ -229,7 +230,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         _token: vscode.CancellationToken
     ): Promise<void> {
         const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.ds.explorer");
-        if (!droppedItems) return;
+        if (!droppedItems) {
+            return;
+        }
 
         let target = targetNode;
         if (!target) {
@@ -242,9 +245,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // check each dropped node for same-object, member collision, and structure issues
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
-            if (!node) continue;
-            const srcDsn = (SharedContext.isDsMember(node) ? node.getParent() : node).getLabel() as string;
-            const tgtDsn = target.getLabel() as string;
+            if (!node) {
+                continue;
+            }
+            const srcDsn = ((SharedContext.isDsMember(node) ? node.getParent() : node).getLabel() as string).toString();
+            const tgtDsn = (target.getLabel() as string).toString();
 
             // 1. Same-object check
             if (tgtDsn === srcDsn && (await SharedUtils.isSamePhysicalDataset(node.getProfile(), target.getProfile(), srcDsn))) {
@@ -255,10 +260,12 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             // 2. PDS member collision check (only if both are PDS)
             if (SharedContext.isPds(node) && SharedContext.isPds(target)) {
                 const srcMembersResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(srcDsn, { attributes: true });
-                const tgtMembersResp = await ZoweExplorerApiRegister.getMvsApi(target.getProfile()).allMembers(srcDsn, { attributes: true }); //using the same dsn, but checking against target
 
-                const srcNames = (srcMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
-                const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
+                //using the same dsn, but checking against target
+                const tgtMembersResp = await ZoweExplorerApiRegister.getMvsApi(target.getProfile()).allMembers(srcDsn, { attributes: true });
+
+                const srcNames = (srcMembersResp.apiResponse?.items ?? []).map((m: { name: string }) => m.name).filter(Boolean);
+                const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map((m: { name: string }) => m.name).filter(Boolean);
 
                 if (SharedUtils.hasNameCollision(srcNames, tgtNames)) {
                     Gui.errorMessage(
@@ -295,7 +302,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         // 4. Overwrite prompt (name collision only)
         const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
-        if (!overwrite) return;
+        if (!overwrite) {
+            return;
+        }
 
         // 5. Move logic
         const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving MVS files...")}`);
@@ -305,7 +314,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             const nodeParent = node.getParent();
-            if (!node || nodeParent === target) continue;
+            if (!node || nodeParent === target) {
+                continue;
+            }
 
             const nodeLabel = SharedUtils.getNodeProperty(node, "label");
             const newUriForNode = vscode.Uri.from({
@@ -382,7 +393,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      * @param [element] - Optional parameter; if not passed, returns root session nodes
      * @returns {IZoweDatasetTreeNode[] | Promise<IZoweDatasetTreeNode[]>}
      */
-    public async getChildren(element?: IZoweDatasetTreeNode | undefined): Promise<IZoweDatasetTreeNode[]> {
+    public async getChildren(element?: IZoweDatasetTreeNode): Promise<IZoweDatasetTreeNode[]> {
         ZoweLogger.trace("DatasetTree.getChildren called.");
         if (element) {
             if (SharedContext.isFavoriteContext(element)) {
@@ -638,7 +649,7 @@ Would you like to do this now?`,
                     args: [profileName, SharedUtils.getAppName()],
                     comment: ["Profile name"],
                 });
-                // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+
                 ZoweLogger.error(errMessage + error.toString());
                 const btnLabelRemove = vscode.l10n.t("Remove");
                 Gui.errorMessage(errMessage, {
@@ -690,7 +701,7 @@ Would you like to do this now?`,
         ZoweLogger.trace("DatasetTree.addSingleSession called.");
         if (profile) {
             // If session is already added, do nothing
-            if (this.mSessionNodes.find((tNode) => tNode.label.toString() === profile.name)) {
+            if (this.mSessionNodes.find((tNode) => (tNode.label as string) === profile.name)) {
                 return;
             }
             // If there is no API registered for the profile type, do nothing
@@ -827,7 +838,7 @@ Would you like to do this now?`,
 
     public renameNode(profileLabel: string, beforeLabel: string, afterLabel: string): void {
         ZoweLogger.trace("DatasetTree.renameNode called.");
-        const sessionNode = this.mSessionNodes.find((session) => session.label.toString() === profileLabel.trim());
+        const sessionNode = this.mSessionNodes.find((session) => (session.label as string) === profileLabel.trim());
         if (sessionNode) {
             const matchingNode = sessionNode.children.find((node) => node.label === beforeLabel);
             if (matchingNode) {
@@ -912,7 +923,7 @@ Would you like to do this now?`,
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         return profileNodeInFavorites?.children.find(
-            (temp) => temp.label === node.getLabel().toString() && temp.contextValue.includes(node.contextValue)
+            (temp) => (temp.label as string) === (node.getLabel() as string).toString() && temp.contextValue.includes(node.contextValue)
         );
     }
 
@@ -925,8 +936,8 @@ Would you like to do this now?`,
     public findNonFavoritedNode(node: IZoweDatasetTreeNode): IZoweTreeNode {
         ZoweLogger.trace("DatasetTree.findNonFavoritedNode called.");
         const profileName = node.getProfileName();
-        const sessionNode = this.mSessionNodes.find((session) => session.label.toString().trim() === profileName);
-        return sessionNode?.children.find((temp) => temp.label === node.label);
+        const sessionNode = this.mSessionNodes.find((session) => (session.label as string).toString().trim() === profileName);
+        return sessionNode?.children.find((temp) => temp.label === (node.getLabel() as string).toString());
     }
 
     /**
@@ -973,7 +984,7 @@ Would you like to do this now?`,
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((favorite) => {
                 const favoriteEntry =
-                    "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + SharedContext.getBaseContext(favorite) + "}";
+                    "[" + (profileNode.label as string) + "]: " + (favorite.label as string) + "{" + SharedContext.getBaseContext(favorite) + "}";
                 favoritesArray.push(favoriteEntry);
             });
         });
@@ -1011,9 +1022,9 @@ Would you like to do this now?`,
 
         // Remove favorited profile from UI
         this.mFavorites.forEach((favProfileNode) => {
-            const favProfileLabel = favProfileNode.label?.toString();
+            const favProfileLabel = favProfileNode.label as string;
             if (favProfileLabel === profileName) {
-                this.mFavorites = this.mFavorites.filter((tempNode) => tempNode.label.toString() !== favProfileLabel);
+                this.mFavorites = this.mFavorites.filter((tempNode) => (tempNode.label as string) !== favProfileLabel);
                 favProfileNode.dirty = true;
                 this.refresh();
             }
@@ -1027,7 +1038,7 @@ Would you like to do this now?`,
         ZoweLogger.trace("DatasetTree.onDidChangeConfiguration called.");
         // Empties the persistent favorites & history arrays, if the user has set persistence to False
         if (e.affectsConfiguration(DatasetTree.persistenceSchema)) {
-            const setting: any = {
+            const setting: { persistence: boolean; favorites: string[]; history: string[] } = {
                 ...SettingsConfig.getDirectValue(DatasetTree.persistenceSchema),
             };
             if (!setting.persistence) {
@@ -1220,7 +1231,7 @@ Would you like to do this now?`,
         let children = await sessionNode.getChildren();
 
         // Find parent node in tree
-        parentNode = children.find((child) => child.label.toString() === parentName);
+        parentNode = children.find((child) => (child.label as string) === parentName);
         if (parentNode) {
             parentNode.label = parentNode.tooltip = parentNode.pattern = parentName;
             parentNode.dirty = true;
@@ -1234,7 +1245,7 @@ Would you like to do this now?`,
         if (itemPath.indexOf("(") > -1) {
             parentNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
             children = await parentNode.getChildren();
-            memberNode = children.find((child) => child.label.toString() === memberName);
+            memberNode = children.find((child) => (child.label as string) === memberName);
             if (!memberNode) {
                 Gui.showMessage(vscode.l10n.t("Node does not exist. It may have been deleted."));
                 this.removeFileHistory(itemPath);
@@ -1446,11 +1457,11 @@ Would you like to do this now?`,
             }
         } else {
             // executing search from saved search in favorites
-            pattern = node.getLabel() as string;
+            pattern = (node.getLabel() as string).toString();
             const sessionName = node.getProfileName();
             await this.addSession({ sessionName });
-            const nonFavNode = this.mSessionNodes.find((tempNode) => tempNode.label.toString() === sessionName);
-            if (!nonFavNode.getSession().ISession.user || !nonFavNode.getSession().ISession.password) {
+            const nonFavNode = this.mSessionNodes.find((tempNode) => (tempNode.label as string) === sessionName);
+            if (nonFavNode && (!nonFavNode.getSession().ISession.user || !nonFavNode.getSession().ISession.password)) {
                 nonFavNode.getSession().ISession.user = node.getSession().ISession.user;
                 nonFavNode.getSession().ISession.password = node.getSession().ISession.password;
                 nonFavNode.getSession().ISession.base64EncodedAuth = node.getSession().ISession.base64EncodedAuth;
@@ -1581,7 +1592,7 @@ Would you like to do this now?`,
         // Try to find in session nodes
         for (const session of this.mSessionNodes) {
             const children = await session.getChildren();
-            const foundNode = children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+            const foundNode = children.find((child) => (child.label as string)?.toUpperCase() === dsName.toUpperCase());
             if (foundNode) {
                 await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
                 return true;
@@ -1591,7 +1602,7 @@ Would you like to do this now?`,
         // Try to find in favorites
         for (const favNode of this.mFavorites) {
             if (favNode.children && favNode.children.length > 0) {
-                const foundNode = favNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+                const foundNode = favNode.children.find((child) => (child.label as string)?.toUpperCase() === dsName.toUpperCase());
                 if (foundNode) {
                     // Cannot just reveal foundNode as it will not expand out fully
                     await this.getTreeView().reveal(favNode, { expand: true });
@@ -1602,16 +1613,16 @@ Would you like to do this now?`,
         }
 
         // Not found: set filter on the session node and reveal
-        const sessionNode = this.mSessionNodes.find((session) => session.label?.toString().toUpperCase() === sessProfile.name.toUpperCase());
+        const sessionNode = this.mSessionNodes.find((session) => (session.label as string)?.toUpperCase() === sessProfile.name.toUpperCase());
         if (sessionNode) {
             sessionNode.pattern = dsName.toUpperCase();
             sessionNode.dirty = true;
             try {
                 await this.filterTreeByPattern(sessionNode, sessProfile, dsName);
-            } catch (error) {
+            } catch (_error) {
                 return false;
             }
-            const pdsNode = sessionNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+            const pdsNode = sessionNode.children.find((child) => (child.label as string)?.toUpperCase() === dsName.toUpperCase());
             if (pdsNode) {
                 await this.getTreeView().reveal(pdsNode, { select: true, focus: true, expand: true });
                 return true;
@@ -1814,7 +1825,7 @@ Would you like to do this now?`,
               });
         const selection = await Gui.showQuickPick(
             DatasetUtils.DATASET_SORT_OPTS.map((opt, i) => ({
-                label: sortOpts.method === i ? `${opt} $(check)` : opt,
+                label: (sortOpts.method as number) === i ? `${opt} $(check)` : opt,
                 description: i === DatasetUtils.DATASET_SORT_OPTS.length - 1 ? Constants.SORT_DIRS[sortOpts.direction] : null,
             })),
             {
@@ -1954,7 +1965,12 @@ Would you like to do this now?`,
             : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;
         const selection = (
             await Gui.showQuickPick(
-                [...DatasetUtils.DATASET_FILTER_OPTS.map((sortOpt, i) => (node.filter?.method === i ? `${sortOpt} $(check)` : sortOpt)), clearFilter],
+                [
+                    ...DatasetUtils.DATASET_FILTER_OPTS.map((sortOpt, i) =>
+                        (node.filter?.method as number) === i ? `${sortOpt} $(check)` : sortOpt
+                    ),
+                    clearFilter,
+                ],
                 {
                     placeHolder: vscode.l10n.t({
                         message: "Set a filter for {0}",
@@ -1983,7 +1999,7 @@ Would you like to do this now?`,
             return;
         }
 
-        const dateValidation = (value): string => {
+        const dateValidation = (value: string): string => {
             return dayjs(value).isValid() ? null : vscode.l10n.t("Invalid date format specified");
         };
 
@@ -1991,9 +2007,9 @@ Would you like to do this now?`,
             title: vscode.l10n.t("Enter a value to filter by"),
             placeHolder: "",
             validateInput:
-                filterMethod === Sorting.DatasetFilterOpts.LastModified
+                filterMethod === (Sorting.DatasetFilterOpts.LastModified as number)
                     ? dateValidation
-                    : (val): string => (val.length > 0 ? null : vscode.l10n.t("Invalid filter specified")),
+                    : (val: string): string => (val.length > 0 ? null : vscode.l10n.t("Invalid filter specified")),
         });
 
         // User dismissed filter entry, go back to filter selection
