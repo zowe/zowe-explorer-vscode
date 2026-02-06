@@ -32,7 +32,7 @@ const testInfo = {
  * Gets or creates a page object instance for the current scenario.
  * Ensures consistent page object usage across steps.
  */
-async function getTableViewPage(world: any): Promise<DatasetTableViewPage> {
+function getTableViewPage(world: any): DatasetTableViewPage {
     if (!world.tableViewPage) {
         world.tableViewPage = new DatasetTableViewPage(browser);
     }
@@ -44,7 +44,7 @@ async function getTableViewPage(world: any): Promise<DatasetTableViewPage> {
  * Clears any existing column filter to ensure a clean state.
  */
 async function openAndWaitForTable(world: any): Promise<DatasetTableViewPage> {
-    const page = await getTableViewPage(world);
+    const page = getTableViewPage(world);
     await page.open();
     await page.waitForReady();
     await page.clearColumnFilter();
@@ -71,7 +71,7 @@ When('the user right-clicks on a PDS and selects "Show as Table"', async functio
 
 Then("the dataset table view appears in the Zowe Resources panel", async function () {
     // Create a fresh page object to ensure we get the current webview frame
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
 
     // The open() method includes verification that .table-view exists and will retry
     // until the webview is fully loaded. No additional check needed - if open() succeeds,
@@ -220,7 +220,7 @@ Given("a user who has the dataset table view opened with many datasets", async f
 // ==================== Row Selection Steps ====================
 
 When("the user selects one or more sequential datasets", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     const selected = await page.selectRow(/^PS/, testInfo.sequential);
     await expect(selected).toBe(true);
 });
@@ -249,7 +249,7 @@ When("the user selects one or more rows", async function () {
 });
 
 When("the user selects a PDS dataset", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
 
     // Clear filter first to show all rows, then clear selections to deselect any hidden rows
     await page.clearColumnFilter();
@@ -276,7 +276,7 @@ When("the user selects a PDS dataset", async function () {
 });
 
 When("the user selects the pinned rows", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.waitForPinnedRows();
 
     const pinnedRows = await page.getPinnedRows();
@@ -290,41 +290,41 @@ When("the user selects the pinned rows", async function () {
 // ==================== Action Button Steps ====================
 
 When('clicks the "Open" action button', async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.clickButton("Open", "primary");
 });
 
 When('clicks the "Pin" action button', async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.clickButton("Pin", "secondary");
 });
 
 When('clicks the "Unpin" action button', async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.clickButton("Unpin", "secondary");
 });
 
 When('clicks the "Focus" action button', async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.clickButton("Focus", "secondary");
     // Wait for the view to transition to members view after Focus click
     await page.waitForMembersView();
 });
 
 When('clicks the "Back" action button', async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.clickButton("Back", "primary");
 });
 
 When('the user clicks the "Back" action button', async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.clickButton("Back", "primary");
 });
 
 // ==================== Action Result Verification Steps ====================
 
 Then("the selected datasets open in the editor", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.close();
 
     const workbench = await browser.getWorkbench();
@@ -347,7 +347,7 @@ Then("the selected datasets open in the editor", async function () {
 });
 
 Then("the selected rows are pinned to the top of the table", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.waitForPinnedRows();
 
     const pinnedRows = await page.getPinnedRows();
@@ -355,13 +355,13 @@ Then("the selected rows are pinned to the top of the table", async function () {
 });
 
 Then("the selected rows are unpinned from the table", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     const pinnedRows = await page.getPinnedRows();
     await expect(pinnedRows.length).toBe(0);
 });
 
 Then("the table view returns to the previous dataset list", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
 
     await browser.waitUntil(
         async () => {
@@ -376,7 +376,7 @@ Then("the table view returns to the previous dataset list", async function () {
 });
 
 Then("preserves the previous table state including pinned rows", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.refresh();
     await page.open();
     await page.waitForReady();
@@ -426,12 +426,12 @@ When("the user right-clicks on a member row", async function () {
 });
 
 When('selects "Display in Tree" from the context menu', async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.clickContextMenuItem("Display in Tree");
 });
 
 Then("the dataset is revealed and focused in the Data Sets tree", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.close();
 
     await browser.waitUntil(
@@ -466,7 +466,7 @@ Then("the dataset is revealed and focused in the Data Sets tree", async function
 });
 
 Then("the PDS member is revealed and focused in the Data Sets tree", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.close();
 
     const memberName = this.selectedMemberName;
@@ -498,7 +498,7 @@ When("the table loads with hierarchical tree support", async function () {
 });
 
 Then("PDS datasets show expand and collapse indicators", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
 
     await browser.waitUntil(
         async () => {
@@ -517,13 +517,13 @@ Then("PDS datasets show expand and collapse indicators", async function () {
 });
 
 Then("users can expand PDS nodes to view members inline", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     await page.expandFirstPds();
     await page.waitForChildRows();
 });
 
 Then("the tree structure is properly displayed", async function () {
-    const page = await getTableViewPage(this);
+    const page = getTableViewPage(this);
     const { level0Count, level1Count } = await page.verifyTreeStructure();
 
     await expect(level0Count).toBeGreaterThan(0);

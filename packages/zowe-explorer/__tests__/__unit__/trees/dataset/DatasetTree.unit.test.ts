@@ -4867,7 +4867,7 @@ describe("DataSetTree Unit Tests - Function handleDrag", () => {
             datasetSessionNode,
         };
     }
-    it("adds a DataTransferItem containing info about the dragged Data node", async () => {
+    it("adds a DataTransferItem containing info about the dragged Data node", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const datasetNode = new ZoweDatasetNode({
@@ -4878,6 +4878,7 @@ describe("DataSetTree Unit Tests - Function handleDrag", () => {
         });
         const dataTransferSetMock = jest.fn();
         const testTree = new DatasetTree();
+        // @ts-expect-error token intentionally undefined
         testTree.handleDrag([datasetNode], { set: dataTransferSetMock } as any, undefined);
         expect(dataTransferSetMock).toHaveBeenCalledWith(
             "application/vnd.code.tree.zowe.ds.explorer",

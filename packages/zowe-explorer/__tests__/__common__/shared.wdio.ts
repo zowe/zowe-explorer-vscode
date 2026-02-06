@@ -77,6 +77,7 @@ export async function clickContextMenuItem(treeItem: ElementWithContextMenu<any>
                     return "success"
                 end tell
             `;
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             execFile("osascript", ["-e", keyboardScript], async (err) => {
                 if (err) {
                     reject(new Error(err));

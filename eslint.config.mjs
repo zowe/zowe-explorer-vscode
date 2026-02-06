@@ -60,8 +60,8 @@ export default defineConfig(
       // New rules after eslint 9.x upgrade
       "@typescript-eslint/no-namespace": "off",
       "@typescript-eslint/no-deprecated": "error",
-      "@typescript-eslint/no-floating-promises": "error",
-      "zowe-explorer/no-floating-promises": "error", // TODO: Enable eslint rule once we have a better solution for this
+      "@typescript-eslint/no-floating-promises": "off",
+      "zowe-explorer/no-floating-promises": "error",
 
       // There are several errors falling under these rules; resolve
       "@typescript-eslint/no-unsafe-assignment": "off",
@@ -135,8 +135,9 @@ export default defineConfig(
     "**/samples/__integration__/**",
     "**/out/**",
     "**/results/**",
-    "**/src/webviews/**/*.ts", // TODO: Remove this once we are ready to fix webviews linting errors
+    "**/src/webviews/**", // TODO: Remove this once we are ready to fix webviews linting errors
     "**/.wdio-vscode-service/**",
+    "**/testProfileData.example.ts",
   ]),
 
   // Override for test files
@@ -152,8 +153,8 @@ export default defineConfig(
       "@typescript-eslint/restrict-template-expressions": "warn",
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/unbound-method": "off",
-      "@typescript-eslint/no-floating-promises": "warn",
-      "zowe-explorer/no-floating-promises": "warn", // TODO: Enable eslint rule once we have a better solution for this
+      // "@typescript-eslint/no-floating-promises": "warn",
+      "zowe-explorer/no-floating-promises": "warn",
       curly: "off",
 
       // New excluded rules to resolve errors

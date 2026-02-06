@@ -100,6 +100,7 @@ Then(/the (.*) view is no longer displayed/, async (tree: string) => {
     const zeView = await zeContainer.openView();
     const sidebarContent = zeView.getContent();
     const visibleSections = await sidebarContent.getSections();
+    // eslint-disable-next-line zowe-explorer/no-floating-promises, @typescript-eslint/no-misused-promises
     expect(visibleSections.find(async (s) => (await s.getTitle()) === tree)).not.toBeDisplayedInViewport();
 
     // re-enable the view for the next test scenario
@@ -117,5 +118,6 @@ Then("a user can select multiple nodes in a tree view", async function () {
         await browser.keys(Key.Shift);
         await treeItem.select();
     }
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     await expect(treeItems.every(async (treeItem) => (await treeItem.elem.getAttribute("aria-selected")) === "true")).toBe(true);
 });

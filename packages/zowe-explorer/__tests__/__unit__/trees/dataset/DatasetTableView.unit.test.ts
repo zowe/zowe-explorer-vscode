@@ -2006,15 +2006,11 @@ describe("DatasetTableView", () => {
         });
 
         describe("onDidReceiveMessage", () => {
-            let mockContext: ExtensionContext;
             let mockNode: ZoweDatasetNode;
             let mockTableViewProvider: any;
             let yDatasetTableView: DatasetTableView;
 
             beforeEach(() => {
-                mockContext = {
-                    extensionPath: "/mock/extension/path",
-                } as ExtensionContext;
                 const profile = createIProfile();
                 mockNode = new ZoweDatasetNode({
                     label: "sestest",

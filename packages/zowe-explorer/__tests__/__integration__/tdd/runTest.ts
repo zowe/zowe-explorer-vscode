@@ -32,5 +32,5 @@ async function main(): Promise<void> {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-floating-promises, zowe-explorer/no-floating-promises
+// eslint-disable-next-line zowe-explorer/no-floating-promises
 main();
