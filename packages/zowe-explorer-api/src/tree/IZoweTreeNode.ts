@@ -30,7 +30,11 @@ interface OtherEncoding {
     codepage: string;
 }
 
-export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding;
+interface AutoDetectEncoding {
+    kind: "auto-detect";
+}
+
+export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding | AutoDetectEncoding;
 
 export type EncodingMap = Record<string, ZosEncoding>;
 

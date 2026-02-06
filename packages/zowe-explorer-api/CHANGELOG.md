@@ -24,6 +24,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added support for loading credential manager options from the `imperative.json` file. Added a `credentialManagerOptions` object in the JSON object in `imperative.json` to specify options for the current credential manager. [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
 - Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, see the "Troubleshooting Zowe CLI credentials" on [Zowe Docs](https://docs.zowe.org/stable/troubleshoot/cli/troubleshoot-cli-credentials/#secrets-sdk-persistence-level-for-windows). [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
 - Added a new filesystem helper function named `getApiOrThrowUnavailable` for generalized error handling with API access. When the given API getter fails due to a non-existing profile, an `Unavailable` FileSystemError is thrown with additional context on the encountered error. [#3962](https://github.com/zowe/zowe-explorer-vscode/pull/3962)
+- Added support for `downloadDirectory` to the `MainframeInteraction` namespace. `downloadDirectory` is for downloading the contents of a USS directory based on a number of options and filters. [#3843](https://github.com/zowe/zowe-explorer-vscode/pull/3843)
+- Added support for `downloadAllMembers` to the `MainframeInteraction` namespace. `downloadAllMembers` is for downloading all members of a PDS based on a number of options. [#3843](https://github.com/zowe/zowe-explorer-vscode/pull/3843)
+- Added support for calling `UssApi.fileList` with the `zosfiles.IUSSListOptions` interface, which provides filters for listing USS files. [#3843](https://github.com/zowe/zowe-explorer-vscode/pull/3843)
 
 ### Bug fixes
 
