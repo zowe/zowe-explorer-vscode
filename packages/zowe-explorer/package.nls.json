@@ -68,6 +68,8 @@
   "uss.setUssPath": "Filter USS by Path",
   "ds.setDatasetFilter": "Filter Data Sets by Pattern",
   "uss.cd": "Go Up One Level",
+  "uss.back": "Back",
+  "uss.forward": "Forward",
   "jobs.search": "Search Jobs",
   "deleteJob": "Delete Job",
   "runModifyCommand": "Issue Modify Command",
