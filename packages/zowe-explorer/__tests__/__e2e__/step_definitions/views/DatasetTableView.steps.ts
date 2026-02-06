@@ -98,6 +98,7 @@ Then("the table displays dataset information with appropriate columns", async fu
 });
 
 Then("the table displays PDS member names", async function () {
+    await browser.pause(100); // Kind of random, but just wait for the table to be ready
     const page = await openAndWaitForTable(this);
     await page.verifyColumnExists("dsname");
 
