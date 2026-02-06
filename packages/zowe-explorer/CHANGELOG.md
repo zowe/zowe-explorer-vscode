@@ -17,6 +17,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 - Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. [#3554](https://github.com/zowe/zowe-explorer-vscode/issues/3554)
 - Fixed an issue where file system URIs with trailing slashes failed to resolve. [#3904](https://github.com/zowe/zowe-explorer-vscode/issues/3904)
+- Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. [#4049](https://github.com/zowe/zowe-explorer-vscode/pull/4049)
 - Fixed an issue where the "Created Date" and "Modified Date" columns were not sortable in the data sets table view, specifically when the user's locale differs from the default value (`en (en-US)`). Now, sorting works regardless of the VS Code language setting, and dates are now formatted with the user's locale. [#4008](https://github.com/zowe/zowe-explorer-vscode/pull/4008)
 - Fixed issue seen with profile hover information getting out of date or out of sync. [#3638](https://github.com/zowe/zowe-explorer-vscode/issues/3638)
 - Fixed an issue where an error appeared when moving an empty PDS across LPARs. [#4001](https://github.com/zowe/zowe-explorer-vscode/pull/4001)
