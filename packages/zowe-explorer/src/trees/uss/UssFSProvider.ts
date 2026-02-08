@@ -114,7 +114,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on USS files only
-        if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
+        if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry) || !isFetching) {
             return entry;
         }
 
@@ -160,11 +160,41 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns A structure containing file type, time, size and other metrics
      */
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        return this.executeWithReuse<vscode.FileStat>(uri, {
-            keyGenerator: (u) => "list_" + this.getQueryKey(u) + this.getCleanUriString(u),
+        const result = await this.executeWithReuse<vscode.FileStat>(uri, {
+            keyGenerator: (u) => {
+                const queryKey = this.getQueryKey(u);
+                const cleanUri = this.getCleanUriString(u);
+                const selfKey = "list_" + queryKey + cleanUri;
+
+                const parentPath = path.posix.dirname(cleanUri);
+                if (parentPath && parentPath !== cleanUri && parentPath !== "/") {
+                    const parentKey = "list_" + queryKey + parentPath;
+                    if (this.requestCache.has(parentKey)) {
+                        return parentKey;
+                    }
+                }
+
+                return selfKey;
+            },
             checkLocal: () => !!this.lookup(uri, false),
             execute: () => this.statImplementation(uri),
         });
+
+        const entry = result as UssDirectory | UssFile;
+
+        if (!entry || !entry.metadata || !entry.metadata.path) {
+            return result;
+        }
+
+        const uriInfo = this._getInfoFromUri(uri);
+
+        const entryPath = entry.metadata.path.replace(/\/+/g, "/");
+        const reqPath = uriInfo.path.replace(/\/+/g, "/");
+        if (entryPath !== reqPath) {
+            return this.lookup(uri, false);
+        }
+
+        return result;
     }
 
     /**
@@ -311,12 +341,19 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (parentDir == null) {
                 const parentPath = path.posix.join(uri.path, "..");
                 const parentUri = uri.with({ path: parentPath, query: "" });
-                await vscode.workspace.fs.createDirectory(parentUri);
+                this._createDirectoryRecursive(parentUri);
                 parentDir = this.lookupParentDirectory(uri, false);
                 parentDir.metadata = this._getInfoFromUri(parentUri);
             }
             const filename = path.posix.basename(uri.path);
             const file = new UssFile(filename);
+
+            if (resp.apiResponse.items && resp.apiResponse.items.length > 0) {
+                const item = resp.apiResponse.items[0];
+                if (item.mtime) file.mtime = dayjs(item.mtime).valueOf();
+                if (item.size) file.size = item.size;
+            }
+
             file.metadata = { profile: uriInfo.profile, path: path.posix.join(parentDir.metadata.path, filename) };
             parentDir.entries.set(filename, file);
             return parentDir.entries.get(filename) as UssFile;
@@ -331,6 +368,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // skip over existing entries if they are the same type
             const existingEntry = entry.entries.get(itemName);
             if (existingEntry && existingEntry.type === newEntryType) {
+                if (item.mtime) existingEntry.mtime = dayjs(item.mtime).valueOf();
+                if (item.size) existingEntry.size = item.size;
                 continue;
             }
 
@@ -338,6 +377,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             const UssType = item.mode?.startsWith("d") ? UssDirectory : UssFile;
             const newEntry = new UssType(itemName);
             newEntry.metadata = { ...entry.metadata, path: path.posix.join(entry.metadata.path, itemName) };
+
+            if (item.mtime) {
+                newEntry.mtime = dayjs(item.mtime).valueOf();
+            }
+            if (item.size) {
+                newEntry.size = item.size;
+            }
+
             entry.entries.set(itemName, newEntry);
         }
 
