@@ -1762,7 +1762,6 @@ describe("ZoweUSSNode Unit Tests - Function getUssFiles() with showHidden settin
 
         jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce(mockResponse);
         const filterHiddenFilesSpy = jest.spyOn(USSUtils, "filterHiddenFiles").mockResolvedValue(filteredResponse);
-        const children = await blockMocks.rootNode.getChildren();
 
         blockMocks.rootNode.dirty = true;
 
