@@ -570,7 +570,9 @@ describe("UssFSProvider", () => {
 
     describe("readDirectory", () => {
         it("returns the correct list of entries inside a folder", async () => {
-            const lookupAsDirMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsDirectory").mockReturnValueOnce(testEntries.folder);
+            const lookupAsDirMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsDirectory").mockImplementation(() => {
+                throw vscode.FileSystemError.FileNotFound();
+            });
             const remoteLookupForResourceMock = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockImplementation(async () => {
                 testEntries.folder.entries.set("test.txt", new FileEntry("test.txt"));
                 testEntries.folder.entries.set("innerFolder", new DirEntry("innerFolder"));
