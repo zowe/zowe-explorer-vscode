@@ -22,6 +22,7 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { ZoweLogger } from "../tools/ZoweLogger";
+import { ProfilesUtils } from "../utils/ProfilesUtils";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -121,6 +122,8 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
      * It automatically registers the zosmf implementation as it is the default for Zowe Explorer.
      */
     private constructor() {
+        ProfilesUtils.setApiRegister(this);
+
         this.registerUssApi(new ZoweExplorerZosmf.UssApi());
         this.registerMvsApi(new ZoweExplorerZosmf.MvsApi());
         this.registerJesApi(new ZoweExplorerZosmf.JesApi());

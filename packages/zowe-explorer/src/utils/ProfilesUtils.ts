@@ -21,6 +21,8 @@ import {
     imperative,
     ZoweVsCodeExtension,
     AuthHandler,
+    FsAbstractUtils,
+    Types,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
@@ -35,6 +37,17 @@ export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
     private static noConfigDialogShown = false;
     private static mProfileInfo: imperative.ProfileInfo;
+
+    private static apiRegister: Types.IApiRegisterClient;
+
+    /**
+     * Sets the API Register instance to be used by ProfilesUtils.
+     * This is called by ZoweExplorerApiRegister to inject itself.
+     * @param apiRegister The API Register instance
+     */
+    public static setApiRegister(apiRegister: Types.IApiRegisterClient): void {
+        ProfilesUtils.apiRegister = apiRegister;
+    }
 
     /**
      * Check if the credential manager's vsix is installed for use
@@ -750,18 +763,30 @@ export class ProfilesUtils {
 
     private static extenderProfileReady: Map<string, imperative.DeferredPromise<void>> = new Map();
 
-    public static async awaitExtenderType(profileName: string, profCache: ProfilesCache): Promise<void> {
-        const profLoaded = profCache.allProfiles.find((prof) => prof.name === profileName);
-        if (!profLoaded && !ProfilesUtils.extenderProfileReady.has(profileName)) {
-            const deferredPromise = new imperative.DeferredPromise<void>();
-            ProfilesUtils.extenderProfileReady.set(profileName, deferredPromise);
+    public static async awaitExtenderType(uri: vscode.Uri, profCache: ProfilesCache): Promise<void> {
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
+        const configProfile = await profCache.getProfileFromConfig(uriInfo.profileName);
+        if (!configProfile) {
+            return;
         }
-        const profilePromise = ProfilesUtils.extenderProfileReady.get(profileName);
+        const type = configProfile.profType;
+        const name = configProfile.profName;
+
+        const apiRegister = ProfilesUtils.apiRegister;
+        const isApiRegistered = apiRegister ? apiRegister.registeredApiTypes().includes(type) : false;
+
+        if (!isApiRegistered && !ProfilesUtils.extenderProfileReady.has(name)) {
+            const deferredPromise = new imperative.DeferredPromise<void>();
+            ProfilesUtils.extenderProfileReady.set(name, deferredPromise);
+        }
+
+        const profilePromise = ProfilesUtils.extenderProfileReady.get(name);
         const promiseTimeout = 10000;
-        if (profilePromise) {
+
+        if (profilePromise && !isApiRegistered) {
             let timeoutHandle: NodeJS.Timeout;
             const timeoutPromise = new Promise<void>((_, reject) => {
-                timeoutHandle = setTimeout(() => reject(new Error("Timeout waiting for profile")), promiseTimeout);
+                timeoutHandle = setTimeout(() => reject(new Error(`Timeout waiting profile type: ${type}`)), promiseTimeout);
             });
             await Promise.race([profilePromise.promise.finally(() => clearTimeout(timeoutHandle)), timeoutPromise]);
         }

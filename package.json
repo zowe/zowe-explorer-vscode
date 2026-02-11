@@ -61,7 +61,10 @@
   "pnpm": {
     "neverBuiltDependencies": [],
     "overrides": {
-      "diff": "^8.0.3",
+      "diff@5": "^5.2.2",
+      "diff@>5": "^8.0.3",
+      "fast-xml-parser": "^5.3.4",
+      "fastify": "^5.7.3",
       "js-yaml": "^4.1.1",
       "tar-fs@3": "^3.1.1",
       "tmp": "^0.2.4",
