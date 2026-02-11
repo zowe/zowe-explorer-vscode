@@ -415,7 +415,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return this.fetchEntries(uri, uriInfo);
     }
 
-    private async readDirectoryImplementation(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+    private async readDirectoryImplementation(uri: vscode.Uri): Promise<UssDirectory> {
         /**
          * TODOs:
          * - Look into pre-fetching a directory level below the one given
@@ -424,9 +424,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         let dir: UssDirectory;
         try {
             dir = this._lookupAsDirectory(uri, false) as UssDirectory;
-            return Array.from(dir.entries.entries()).map((e: [string, UssDirectory | UssFile]) => [e[0], e[1].type]);
+            return dir;
         } catch (err) {
-            // Errors unrelated to the filesystem cannot be handled here
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
                 throw err;
             }
@@ -435,7 +434,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // check to see if contents have updated on the remote system before returning its children.
         dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
 
-        return Array.from(dir.entries.entries()).map((e: [string, UssDirectory | UssFile]) => [e[0], e[1].type]);
+        return dir;
     }
 
     /**
@@ -444,11 +443,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns An array of tuples containing each entry name and type
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        return this.executeWithReuse<[string, vscode.FileType][]>(uri, {
-            keyGenerator: (u) => "readDir_" + this.getQueryKey(u) + this.getCleanUriString(u),
+        const dir = await this.executeWithReuse<UssDirectory>(uri, {
+            keyGenerator: (u) => "list_" + this.getQueryKey(u) + this.getCleanUriString(u),
             checkLocal: () => !!this._lookupAsDirectory(uri, true),
             execute: () => this.readDirectoryImplementation(uri),
         });
+
+        return Array.from(dir.entries.entries()).map((e) => [e[0], e[1].type]);
     }
 
     /**

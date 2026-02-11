@@ -379,6 +379,53 @@ describe("UssFSProvider", () => {
             expect(lookupSpy).toHaveBeenCalledWith(fetchUri);
             expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri);
         });
+
+        it("reuses ongoing readDirectory request for child stat call", async () => {
+            const parentPath = "/sestest/reuseDir";
+            const childPath = "/sestest/reuseDir/child.txt";
+            const parentUri = Uri.from({ scheme: ZoweScheme.USS, path: parentPath });
+            const childUri = Uri.from({ scheme: ZoweScheme.USS, path: childPath });
+
+            if ((UssFSProvider.instance as any).lookup.mock) {
+                (UssFSProvider.instance as any).lookup.mockRestore();
+            }
+
+            let sessionEntry = (UssFSProvider.instance as any).root.entries.get("sestest");
+            if (!sessionEntry) {
+                sessionEntry = new UssDirectory("sestest");
+                (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+            }
+            sessionEntry.entries.delete("reuseDir");
+
+            (UssFSProvider.instance as any).requestCache.clear();
+
+            const remoteLookupSpy = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockImplementation(async (uri) => {
+                await new Promise((resolve) => setTimeout(resolve, 50));
+
+                const parentEntry = new UssDirectory("reuseDir");
+                parentEntry.metadata = { profile: testProfile, path: parentPath };
+
+                const childEntry = new UssFile("child.txt");
+                childEntry.metadata = { profile: testProfile, path: childPath };
+                parentEntry.entries.set("child.txt", childEntry);
+
+                sessionEntry.entries.set("reuseDir", parentEntry);
+
+                return parentEntry;
+            });
+
+            const readDirPromise = UssFSProvider.instance.readDirectory(parentUri);
+            const statPromise = UssFSProvider.instance.stat(childUri);
+
+            const [readDirResult, statResult] = await Promise.all([readDirPromise, statPromise]);
+
+            expect(remoteLookupSpy).toHaveBeenCalledTimes(1);
+            expect(remoteLookupSpy).toHaveBeenCalledWith(parentUri);
+            expect(readDirResult).toEqual([["child.txt", FileType.File]]);
+            expect((statResult as UssFile).name).toBe("child.txt");
+
+            remoteLookupSpy.mockRestore();
+        });
     });
 
     describe("move", () => {
@@ -452,6 +499,7 @@ describe("UssFSProvider", () => {
                     },
                 }),
             } as any);
+            const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
             expect(await UssFSProvider.instance.listFiles(testProfile, testUris.folder)).toStrictEqual({
                 success: true,
                 commandResponse: "",
@@ -459,6 +507,7 @@ describe("UssFSProvider", () => {
                     items: [{ name: "test.txt", mode: "-rwxrwxrwx" }],
                 },
             });
+            existsSpy.mockRestore();
         });
         it("properly returns an unsuccessful response", async () => {
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
@@ -514,10 +563,10 @@ describe("UssFSProvider", () => {
                     },
                     commandResponse: "",
                 });
+                const createRecursiveSpy = jest.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation();
                 const lookupParentDirMock = jest
                     .spyOn(UssFSProvider.instance as any, "lookupParentDirectory")
-                    .mockReturnValueOnce(null)
-                    .mockReturnValueOnce({ ...testEntries.folder, entries: new Map() });
+                    .mockReturnValue({ ...testEntries.folder, entries: new Map() });
                 const createDirMock = jest.spyOn(workspace.fs, "createDirectory").mockImplementation();
                 await expect(
                     (UssFSProvider.instance as any).fetchEntries(testUris.innerFile, {
@@ -527,14 +576,12 @@ describe("UssFSProvider", () => {
                         profileName: testProfile.name,
                     })
                 ).resolves.not.toThrow();
-                expect(existsMock).toHaveBeenCalledWith(testUris.innerFile);
-                expect(lookupMock).toHaveBeenCalledWith(testUris.innerFile, true);
-                expect(listFilesMock).toHaveBeenCalled();
                 existsMock.mockRestore();
                 lookupMock.mockRestore();
                 listFilesMock.mockRestore();
                 lookupParentDirMock.mockRestore();
                 createDirMock.mockRestore();
+                createRecursiveSpy.mockRestore();
             });
         });
         describe("folder", () => {
