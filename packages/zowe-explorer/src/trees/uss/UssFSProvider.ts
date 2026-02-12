@@ -423,8 +423,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
          */
         let dir: UssDirectory;
         try {
-            dir = this._lookupAsDirectory(uri, false) as UssDirectory;
-            return dir;
+            this._lookupAsDirectory(uri, false) as UssDirectory;
         } catch (err) {
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
                 throw err;
