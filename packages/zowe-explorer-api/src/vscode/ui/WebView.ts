@@ -10,6 +10,7 @@
  */
 
 import * as fs from "fs";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import Mustache = require("mustache");
 import HTMLTemplate from "./utils/HTMLTemplate";
 import { Types } from "../../Types";

@@ -162,7 +162,7 @@ export class JobInit {
         );
         context.subscriptions.push(
             vscode.workspace.onDidOpenTextDocument((doc) => {
-                if (doc.uri.scheme !== ZoweScheme.Jobs) {
+                if (doc.uri.scheme !== (ZoweScheme.Jobs as string)) {
                     return;
                 }
 

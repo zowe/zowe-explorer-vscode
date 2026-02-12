@@ -42,7 +42,7 @@ jest.mock("fs-extra");
 jest.mock("util");
 jest.mock("isbinaryfile");
 
-async function createGlobalMocks() {
+function createGlobalMocks() {
     const mockReadProfilesFromDisk = jest.fn().mockReturnValue(Promise.resolve());
     const globalMocks = {
         mockLoadNamedProfile: jest.fn(),

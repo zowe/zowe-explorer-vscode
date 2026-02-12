@@ -79,9 +79,9 @@ export async function clickContextMenuItem(treeItem: ElementWithContextMenu<any>
             `;
             execFile("osascript", ["-e", keyboardScript], (err) => {
                 if (err) {
-                    reject(err);
+                    reject(err as unknown as Error);
                 } else {
-                    resolve();
+                    setTimeout(() => resolve(), 100);
                 }
             });
         });

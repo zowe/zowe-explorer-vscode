@@ -22,10 +22,6 @@ import { AbstractFtpApi } from "./ZoweExplorerAbstractFtpApi";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
 import { LOGGER } from "./globals";
 
-// The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IUss {
     public async fileList(ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
         const result = this.getDefaultResponse();
@@ -61,7 +57,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await, require-await
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async isFileTagBinOrAscii(_ussFilePath: string): Promise<boolean> {
         return false; // TODO: needs to be implemented checking file type
     }

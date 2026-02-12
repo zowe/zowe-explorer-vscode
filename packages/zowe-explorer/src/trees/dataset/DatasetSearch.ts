@@ -344,6 +344,7 @@ export class DatasetSearch {
         return resp === vscode.l10n.t("Continue");
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private static async performSearch(progress: any, token: vscode.CancellationToken, options: ISearchOptions): Promise<zosfiles.ISearchResponse> {
         const profile = options.node.getProfile();
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
@@ -410,17 +411,17 @@ export class DatasetSearch {
 
     private static getSearchMatches(
         node: IZoweDatasetTreeNode,
-        response: any,
+        response: zosfiles.ISearchResponse,
         generateFullUri: boolean,
         searchString: string
-    ): Record<string, any>[] {
+    ): Record<string, unknown>[] {
         const matches = response.apiResponse;
-        const newMatches: object[] = [];
+        const newMatches: Record<string, unknown>[] = [];
 
         // Take in the API response, and iterate through the list of matched data sets and members
         for (const ds of matches) {
-            const dsn = ds.dsn as string;
-            const member = ds.member as string;
+            const dsn = ds.dsn;
+            const member = ds.member;
             const extension = DatasetUtils.getExtension(ds.dsn);
 
             let name: string = dsn;
@@ -439,9 +440,9 @@ export class DatasetSearch {
             for (const match of ds.matchList) {
                 newMatches.push({
                     name,
-                    line: match.line as number,
-                    column: match.column as number,
-                    position: (match.line as number).toString() + ":" + (match.column as number).toString(),
+                    line: match.line,
+                    column: match.column,
+                    position: match.line.toString() + ":" + match.column.toString(),
                     contents: match.contents,
                     uri,
                     searchString,

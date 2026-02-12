@@ -29,11 +29,11 @@ export class ZoweUriHandler implements UriHandler {
 
     public handleUri(uri: Uri): ProviderResult<void> {
         const parsedUri = Uri.parse(uri.query);
-        if (uri.scheme === ZoweScheme.Jobs || !Object.values(ZoweScheme).some((scheme) => scheme === parsedUri.scheme)) {
+        if (uri.scheme === (ZoweScheme.Jobs as string) || !Object.values(ZoweScheme).some((scheme) => (scheme as string) === parsedUri.scheme)) {
             return;
         }
 
-        const fsProvider = parsedUri.scheme === ZoweScheme.DS ? DatasetFSProvider.instance : UssFSProvider.instance;
+        const fsProvider = parsedUri.scheme === (ZoweScheme.DS as string) ? DatasetFSProvider.instance : UssFSProvider.instance;
         return fsProvider
             .remoteLookupForResource(parsedUri)
             .then(async (_entry) => {

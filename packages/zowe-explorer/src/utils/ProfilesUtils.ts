@@ -46,7 +46,7 @@ export class ProfilesUtils {
         try {
             const plugin = imperative.CredentialManagerOverride.getCredMgrInfoByDisplayName(credentialManager);
             return vscode.extensions.getExtension(plugin?.credMgrZEName) !== undefined;
-        } catch (err) {
+        } catch (_err) {
             return false;
         }
     }
@@ -66,7 +66,7 @@ export class ProfilesUtils {
                 return credentialManagerOverride;
             }
             return imperative.CredentialManagerOverride.DEFAULT_CRED_MGR_NAME;
-        } catch (err) {
+        } catch (_err) {
             ZoweLogger.info("imperative.json does not exist, returning the default override of @zowe/cli");
             return imperative.CredentialManagerOverride.DEFAULT_CRED_MGR_NAME;
         }
@@ -76,6 +76,7 @@ export class ProfilesUtils {
      * Get the credential manager options from imperative.json
      * @returns Record<string, any> | undefined the credential manager options, or undefined if not specified
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static getCredentialManagerOptions(): Record<string, any> | undefined {
         return ProfilesCache.getCredentialManagerOptions();
     }
@@ -117,7 +118,7 @@ export class ProfilesUtils {
      * @returns Promise<imperative.ICredentialManagerConstructor> the constructor of the activated credential manager
      */
     public static async activateCredentialManagerOverride(
-        credentialManagerExtension: vscode.Extension<any>
+        credentialManagerExtension: vscode.Extension<unknown>
     ): Promise<imperative.ICredentialManagerConstructor | undefined> {
         try {
             ZoweLogger.trace("ProfilesUtils.activateCredentialManagerOverride called.");
@@ -126,7 +127,7 @@ export class ProfilesUtils {
                 return credentialManagerExtension.exports as imperative.ICredentialManagerConstructor;
             }
             return undefined;
-        } catch (err) {
+        } catch (_err) {
             throw new Error(vscode.l10n.t("Custom credential manager failed to activate"));
         }
     }
@@ -174,6 +175,7 @@ export class ProfilesUtils {
             await SettingsConfig.setDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED, false, vscode.ConfigurationTarget.Global);
             await Gui.infoMessage(
                 vscode.l10n.t(
+                    // eslint-disable-next-line max-len
                     "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager."
                 ),
                 {
@@ -190,6 +192,7 @@ export class ProfilesUtils {
         } catch (_error) {
             ZoweLogger.info(
                 vscode.l10n.t(
+                    // eslint-disable-next-line max-len
                     "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions."
                 )
             );
@@ -248,7 +251,7 @@ export class ProfilesUtils {
         const credentialManager = knownCredentialManagers.find((knownCredentialManager) => {
             try {
                 return vscode.extensions.getExtension(knownCredentialManager.credMgrZEName);
-            } catch (err) {
+            } catch (_err) {
                 return false;
             }
         });
@@ -309,6 +312,7 @@ export class ProfilesUtils {
                     );
                     if (await vscode.env.openExternal(credentialManagerInstallURL)) {
                         const refreshMessage = vscode.l10n.t(
+                            // eslint-disable-next-line max-len
                             "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager"
                         );
                         const reloadButton = vscode.l10n.t("Reload");
@@ -527,9 +531,10 @@ export class ProfilesUtils {
         let fileContent: string;
         try {
             fileContent = fs.readFileSync(settingsFile, { encoding: "utf-8" });
-        } catch (error) {
+        } catch (_error) {
             ZoweLogger.debug(vscode.l10n.t("Reading imperative.json failed. Will try to create file."));
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let settings: any;
         if (fileContent) {
             try {
@@ -611,6 +616,7 @@ export class ProfilesUtils {
 
     private static async v1ProfileOptions(): Promise<void> {
         const v1ProfileErrorMsg = vscode.l10n.t(
+            // eslint-disable-next-line max-len
             "Zowe V1 profiles in use.\nZowe Explorer no longer supports V1 profiles. Choose to convert existing profiles to a team configuration or create new profiles."
         );
         ZoweLogger.warn(v1ProfileErrorMsg);

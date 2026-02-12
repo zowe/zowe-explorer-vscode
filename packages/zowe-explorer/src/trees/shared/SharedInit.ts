@@ -364,7 +364,7 @@ export class SharedInit {
         );
     }
 
-    public static isDocumentASpool(uri: vscode.Uri): Boolean {
+    public static isDocumentASpool(uri: vscode.Uri): boolean {
         const entry = JobFSProvider.instance.lookup(uri, false);
         return FsJobsUtils.isSpoolEntry(entry);
     }
@@ -452,13 +452,13 @@ export class SharedInit {
     public static async setupRemoteWorkspaceFolders(e?: vscode.WorkspaceFoldersChangeEvent, profileType?: string): Promise<void> {
         const profInfo = Profiles.getInstance();
 
-        let uriMap = new Map<string, UriFsInfo>();
+        const uriMap = new Map<string, UriFsInfo>();
 
         const profileNames = new Set<string>(profInfo.getProfiles(profileType).map((prof) => prof.name));
 
         // Perform remote lookup for workspace folders that fit the `zowe-ds` or `zowe-uss` schemes.
         const newWorkspaces = (e?.added ?? vscode.workspace.workspaceFolders ?? [])
-            .filter((f) => f.uri.scheme === ZoweScheme.DS || f.uri.scheme === ZoweScheme.USS)
+            .filter((f) => f.uri.scheme === (ZoweScheme.DS as string) || f.uri.scheme === (ZoweScheme.USS as string))
             .filter((f) => {
                 const uriInfo = FsAbstractUtils.getInfoForUri(f.uri, profInfo);
                 uriMap[f.uri.path] = uriInfo;
@@ -528,11 +528,14 @@ export class SharedInit {
     }
 
     /**
-     *
-     * @param context @deprecated
+     * Register the ZosConsoleViewProvider
+     * @param context The extension context
+     * @deprecated This function is no longer used and will be removed in a future major version.
      */
     public static registerZosConsoleView(context: vscode.ExtensionContext): void {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const provider = new ZosConsoleViewProvider(context.extensionUri);
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         context.subscriptions.push(vscode.window.registerWebviewViewProvider(ZosConsoleViewProvider.viewType, provider));
     }
 

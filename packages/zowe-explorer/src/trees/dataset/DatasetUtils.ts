@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { DS_EXTENSION_MAP, Types } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import dayjs = require("dayjs");
 export class DatasetUtils {
     public static DATASET_SORT_OPTS = [
@@ -23,7 +24,6 @@ export class DatasetUtils {
         `$(fold) ${vscode.l10n.t("Sort Direction")}`,
     ];
 
-    // eslint-disable-next-line no-magic-numbers
     public static readonly DATASET_FILTER_OPTS = [this.DATASET_SORT_OPTS[2], this.DATASET_SORT_OPTS[3]];
 
     public static getProfileAndDataSetName(node: Types.IZoweNodeType): {
@@ -31,7 +31,7 @@ export class DatasetUtils {
         dataSetName: string;
     } {
         ZoweLogger.trace("dataset.utils.getProfileAndDataSetName called.");
-        return { profileName: node.getParent().getLabel() as string, dataSetName: node.label as string };
+        return { profileName: (node.getParent().getLabel() as string).toString(), dataSetName: (node.label as string).toString() };
     }
 
     public static async getNodeLabels(node: Types.IZoweNodeType): Promise<
@@ -47,7 +47,7 @@ export class DatasetUtils {
             return [
                 {
                     ...DatasetUtils.getProfileAndDataSetName(node.getParent()),
-                    memberName: node.getLabel() as string,
+                    memberName: (node.getLabel() as string).toString(),
                     contextValue: node.contextValue,
                 },
             ];
@@ -61,9 +61,9 @@ export class DatasetUtils {
             const children = await node.getChildren();
             for (const item of children) {
                 arr.push({
-                    profileName: node.getParent().label as string,
-                    dataSetName: node.label as string,
-                    memberName: item.getLabel() as string,
+                    profileName: (node.getParent().getLabel() as string).toString(),
+                    dataSetName: (node.getLabel() as string).toString(),
+                    memberName: (item.getLabel() as string).toString(),
                     contextValue: node.contextValue,
                 });
             }
@@ -113,12 +113,16 @@ export class DatasetUtils {
      * @param item - The item to get the stats for.
      * @returns The stats for the data set or data set member.
      */
-    public static getDataSetStats(item: any): Partial<Types.DatasetStats> {
+    public static getDataSetStats(item: Record<string, unknown>): Partial<Types.DatasetStats> {
         const dsStats: Partial<Types.DatasetStats> = {};
-        dsStats.user = item.user ?? item.id;
+        dsStats.user = (item.user as string) ?? (item.id as string);
         if ("c4date" in item && "m4date" in item) {
-            const { m4date, mtime, msec }: { m4date: string; mtime?: string; msec?: string } = item;
-            dsStats.createdDate = dayjs(item.c4date).toDate();
+            const { m4date, mtime, msec }: { m4date: string; mtime?: string; msec?: string } = item as {
+                m4date: string;
+                mtime?: string;
+                msec?: string;
+            };
+            dsStats.createdDate = dayjs(item.c4date as string).toDate();
             if (mtime) {
                 const [hours, minutes] = mtime.split(":");
                 dsStats.modifiedDate = dayjs(`${m4date} ${hours}:${minutes}`).toDate();

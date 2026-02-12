@@ -41,6 +41,7 @@ export class BufferBuilder extends Duplex {
         this.chunks = [];
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public _write(chunk: any, _encoding: BufferEncoding, callback: (error?: Error) => void): void {
         this.chunks.push(chunk);
         callback();
@@ -151,8 +152,11 @@ export type UriFsInfo = {
 
 export interface HandleErrorOpts {
     retry?: {
-        fn: (...args: any[]) => any | PromiseLike<any>;
-        args?: any[];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-redundant-type-constituents
+        fn: (...args: any[]) => any | PromiseLike<any>; // Technically, this union is redundant since `any` supersedes `Promise<any>`
+        // fn: (...args: any[]) => any; // This should be equivalent to the above line
+
+        args?: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
     };
     profileType?: string;
     apiType?: ZoweExplorerApiType;

@@ -40,6 +40,7 @@ export class CertificateWizard extends WebView {
         });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected async onDidReceiveMessage(message: any): Promise<void> {
         switch (message.command) {
             case "promptCert":

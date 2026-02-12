@@ -45,7 +45,7 @@ export class ProfilesCache {
     }
 
     public static requireKeyring(this: void): NodeJS.Module {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-var-requires
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
         return require("@zowe/secrets-for-zowe-sdk").keyring;
     }
 
@@ -63,10 +63,10 @@ export class ProfilesCache {
         extendermetadata?.forEach((item) => {
             const index = ProfilesCache.sessionProfileTypeConfigurations.findIndex((ele) => ele.type == item.type);
             if (index !== -1) {
-                // eslint-disable-next-line deprecation/deprecation
+                // eslint-disable-next-line @typescript-eslint/no-deprecated
                 ProfilesCache.sessionProfileTypeConfigurations[index] = this.profileTypeConfigurations[index] = item;
             } else {
-                // eslint-disable-next-line deprecation/deprecation
+                // eslint-disable-next-line @typescript-eslint/no-deprecated
                 this.profileTypeConfigurations.push(item);
                 ProfilesCache.sessionProfileTypeConfigurations.push(item);
             }
@@ -95,6 +95,7 @@ export class ProfilesCache {
      * Get the credential manager options from imperative.json
      * @returns Record<string, any> | undefined the credential manager options, or undefined if not specified
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static getCredentialManagerOptions(): Record<string, any> | undefined {
         try {
             const settingsFilePath = path.join(FileManagement.getZoweDir(), "settings", "imperative.json");
@@ -105,6 +106,7 @@ export class ProfilesCache {
             const imperativeConfig = JSON.parse(settingsFile);
             const credentialManagerOptions = imperativeConfig?.credentialManagerOptions;
             if (credentialManagerOptions && typeof credentialManagerOptions === "object") {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 return credentialManagerOptions as Record<string, any>;
             }
             return undefined;

@@ -1,15 +1,29 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
 "use strict";
 
 const rule = require("../../../lib/rules/no-floating-promises");
-const { ESLintUtils } = require("@typescript-eslint/utils");
+const { RuleTester } = require("@typescript-eslint/rule-tester");
+const path = require("path");
 
-const ruleTester = new ESLintUtils.RuleTester({
-  parser: "@typescript-eslint/parser",
-  parserOptions: {
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser: require("@typescript-eslint/parser"),
+    parserOptions: {
+      projectService: true,
+      tsconfigRootDir: path.resolve(__dirname, "..")
+    },
     ecmaVersion: 2015,
-    project: "./tsconfig.eslint.json",
     sourceType: "module",
-    tsconfigRootDir: __dirname + "/.."
   }
 });
 

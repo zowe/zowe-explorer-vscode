@@ -406,13 +406,13 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
 });
 
 describe("USSTree Unit Tests - Function checkDuplicateLabel", () => {
-    it("Tests that checkDuplicateLabel() returns null if passed a unique name", async () => {
+    it("Tests that checkDuplicateLabel() returns null if passed a unique name", () => {
         const globalMocks = createGlobalMocks();
 
         const returnVal = globalMocks.testTree.checkDuplicateLabel("totallyNewLabel", [globalMocks.testUSSNode]);
         expect(returnVal).toEqual(null);
     });
-    it("Tests that checkDuplicateLabel() returns an error message if passed a name that's already used for an existing folder", async () => {
+    it("Tests that checkDuplicateLabel() returns an error message if passed a name that's already used for an existing folder", () => {
         const globalMocks = createGlobalMocks();
 
         const returnVal = globalMocks.testTree.checkDuplicateLabel("/u/myuser/usstest", [globalMocks.testUSSNode]);
@@ -421,7 +421,7 @@ describe("USSTree Unit Tests - Function checkDuplicateLabel", () => {
 });
 
 describe("USSTree Unit Tests - Functions addFileHistory & getFileHistory", () => {
-    it("Tests that addFileHistory() & getFileHistory() are executed successfully", async () => {
+    it("Tests that addFileHistory() & getFileHistory() are executed successfully", () => {
         const globalMocks = createGlobalMocks();
 
         globalMocks.testTree.addFileHistory("testHistory");
@@ -430,7 +430,7 @@ describe("USSTree Unit Tests - Functions addFileHistory & getFileHistory", () =>
 });
 
 describe("USSTree Unit Tests - Functions removeFileHistory", () => {
-    it("Tests that removeFileHistory() is executed successfully", async () => {
+    it("Tests that removeFileHistory() is executed successfully", () => {
         const globalMocks = createGlobalMocks();
 
         globalMocks.testTree.removeFileHistory("testHistory");
@@ -584,7 +584,7 @@ describe("USSTree Unit Tests - Function addSession", () => {
             profile: globalMocks.testProfile,
         });
         globalMocks.testTree.mSessionNodes.push(testSessionNode);
-        globalMocks.testTree.addSession("testSessionNode");
+        await globalMocks.testTree.addSession("testSessionNode");
 
         const foundNode = globalMocks.testTree.mSessionNodes.includes(testSessionNode);
         expect(foundNode).toEqual(true);
@@ -615,7 +615,7 @@ describe("USSTree Unit Tests - Function deleteSession", () => {
         return newMocks;
     }
 
-    it("Tests that deleteSession works properly", async () => {
+    it("Tests that deleteSession works properly", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -1257,7 +1257,7 @@ describe("USSTree Unit Tests - Function findFavoritedNode", () => {
 
         expect(foundNode).toStrictEqual(ussFavNode);
     });
-    it("Tests that findFavoritedNode() does not error when there is no favorite or matching profile node in Favorites", async () => {
+    it("Tests that findFavoritedNode() does not error when there is no favorite or matching profile node in Favorites", () => {
         const globalMocks = createGlobalMocks();
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
 
@@ -2030,7 +2030,7 @@ describe("USSTree Unit Tests - Function editSession", () => {
             }),
             configurable: true,
         });
-        globalMocks.testTree.editSession(testSessionNode);
+        await globalMocks.testTree.editSession(testSessionNode);
         expect(checkSession).toHaveBeenCalled();
     });
 
@@ -2059,12 +2059,12 @@ describe("USSTree Unit Tests - Function editSession", () => {
             }),
             configurable: true,
         });
-        globalMocks.testTree.editSession(testSessionNode);
+        await globalMocks.testTree.editSession(testSessionNode);
         expect(checkSession).toHaveBeenCalled();
     });
 
     describe("removeSearchHistory", () => {
-        it("removes the search item passed in from the current history", async () => {
+        it("removes the search item passed in from the current history", () => {
             const globalMocks = createGlobalMocks();
             expect(globalMocks.testTree["mPersistence"]["mSearchHistory"].length).toEqual(1);
             globalMocks.testTree.removeSearchHistory("/u/myuser");
@@ -2073,7 +2073,7 @@ describe("USSTree Unit Tests - Function editSession", () => {
     });
 
     describe("resetSearchHistory", () => {
-        it("clears the entire search history", async () => {
+        it("clears the entire search history", () => {
             const globalMocks = createGlobalMocks();
             expect(globalMocks.testTree["mPersistence"]["mSearchHistory"].length).toEqual(1);
             globalMocks.testTree.resetSearchHistory();
@@ -2082,7 +2082,7 @@ describe("USSTree Unit Tests - Function editSession", () => {
     });
 
     describe("resetFileHistory", () => {
-        it("clears the entire file history", async () => {
+        it("clears the entire file history", () => {
             const globalMocks = createGlobalMocks();
             globalMocks.testTree["mPersistence"]["mFileHistory"] = ["test1", "test2"];
             expect(globalMocks.testTree["mPersistence"]["mFileHistory"].length).toEqual(2);
@@ -2093,7 +2093,7 @@ describe("USSTree Unit Tests - Function editSession", () => {
     });
 
     describe("getSessions", () => {
-        it("gets all the available sessions from persistent object", async () => {
+        it("gets all the available sessions from persistent object", () => {
             const globalMocks = createGlobalMocks();
             globalMocks.testTree["mPersistence"]["mSessions"] = ["sestest"];
             expect(globalMocks.testTree.getSessions()).toEqual(["sestest"]);
@@ -2101,7 +2101,7 @@ describe("USSTree Unit Tests - Function editSession", () => {
     });
 
     describe("getFavorites", () => {
-        it("gets all the favorites from persistent object", async () => {
+        it("gets all the favorites from persistent object", () => {
             const globalMocks = createGlobalMocks();
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
                 favorites: ["test1", "test2", "test3"],
@@ -2172,7 +2172,7 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
 });
 
 describe("USSTree Unit Tests - Function handleDrag", () => {
-    it("adds a DataTransferItem containing info about the dragged USS node", async () => {
+    it("adds a DataTransferItem containing info about the dragged USS node", () => {
         const globalMocks = createGlobalMocks();
         const ussnode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
         const dataTransferSetMock = jest.fn();
@@ -2250,12 +2250,11 @@ describe("USSTree Unit Tests - Function handleDrop", () => {
 
 describe("USSTree.handleDrop - blocking behavior", () => {
     let ussTree: USSTree;
-    let gm: any;
 
     beforeEach(() => {
         jest.resetAllMocks();
         jest.clearAllMocks();
-        gm = createGlobalMocks();
+        createGlobalMocks();
         ussTree = new USSTree();
     });
 
@@ -2278,7 +2277,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         srcNode.fullPath = "/u/source/file2.txt";
 
         const dragged = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         // Create a DataTransfer-like object whose get throws to simulate a malformed DT implementation
@@ -2292,20 +2291,20 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         const resolvedTarget = {
             fullPath: "/u/target",
             getProfile: () => ({ name: "DST" }),
-            getChildren: async () => [],
+            getChildren: () => Promise.resolve([]),
             getParent: () => null,
         } as any;
 
         const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
         // Call handleDrop with a DT whose get throws; the code should catch and set droppedItems = null, then return
-        // @ts-ignore token intentionally undefined
-        await ussTree.handleDrop(throwingDT as any, resolvedTarget as any, undefined);
+        // @ts-expect-error token intentionally undefined
+        await ussTree.handleDrop(throwingDT, resolvedTarget, undefined);
 
         // No Gui error and no changes to draggedNodes
         expect(errorSpy).not.toHaveBeenCalled();
         expect((ussTree as any).draggedNodes).toEqual({
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         // Ensure the DT.get was invoked (proves the try/catch path executed)
@@ -2344,7 +2343,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         targetNode.fullPath = "/u/foo/bar";
 
         new MockedProperty(ussTree as any, "draggedNodes", undefined, {
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         const payload = { value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }] };
@@ -2353,8 +2352,8 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP = "cannot drop into descendant";
 
-        // @ts-ignore
-        await ussTree.handleDrop(dataTransfer as any, targetNode as any, undefined);
+        // @ts-expect-error token intentionally undefined
+        await ussTree.handleDrop(dataTransfer, targetNode as any, undefined);
 
         expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("cannot drop into descendant"));
     });
@@ -2376,7 +2375,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
 
         // Put the dragged node into ussTree.draggedNodes using MockedProperty helper pattern
         const draggedMock = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         // Build a DataTransfer-like object that will be passed in the targetNode slot (swapped args)
@@ -2390,23 +2389,23 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         const fakeTargetNode = {
             fullPath: "NOT_A_PATH", // intentionally invalid -> triggers "You must specify a directory before moving."
             getProfile: () => ({ name: "DST_LPAR" }),
-            getChildren: async () => [],
+            getChildren: () => Promise.resolve([]),
             getParent: () => null,
         } as any;
 
         // Make SharedUtils / SharedContext permissive for the rest of validation
-        // @ts-ignore
+        // @ts-expect-error node intentionally undefined
         jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
         jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
-        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockReturnValue(false);
         jest.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
 
         // Spy on GUI error to assert it was invoked
         const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
         // Act: call handleDrop with DataTransfer passed as first arg (normalized in implementation)
-        // @ts-ignore token intentionally undefined
-        await ussTree.handleDrop(fakeDataTransfer as any, fakeTargetNode as any, undefined);
+        // @ts-expect-error token intentionally undefined
+        await ussTree.handleDrop(fakeDataTransfer, fakeTargetNode, undefined);
 
         // Assert: error message was shown and draggedNodes cleared
         expect(errorSpy).toHaveBeenCalled();
@@ -2455,7 +2454,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         // Ensure helpers are permissive
         jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
         jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
-        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockReturnValue(false);
         jest.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
 
         // Mock ZoweExplorerApiRegister to advertise a move API
@@ -2463,15 +2462,15 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         const moveSpy = jest.spyOn(UssFSProvider.instance as any, "move").mockResolvedValue(true);
 
         // Call handleDrop - should find the node by endsWith logic and call UssFSProvider.move
-        // @ts-ignore
-        await ussTree.handleDrop(dataTransfer as any, target as any, undefined);
+        // @ts-expect-error token intentionally undefined
+        await ussTree.handleDrop(dataTransfer, target as any, undefined);
 
         expect(moveSpy).toHaveBeenCalled();
         moveSpy.mockRestore();
         dragged[Symbol.dispose]();
     });
     it("blocks drop and shows error when SharedUtils.isLikelySameUssObjectByUris returns true", async () => {
-        const ussTree = new USSTree();
+        const xUssTree = new USSTree();
 
         const session = createISession();
         const srcProfile = createIProfile();
@@ -2499,8 +2498,8 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
         targetNode.fullPath = "/u/foo";
 
-        const draggedNodeMock = new MockedProperty(ussTree, "draggedNodes", undefined, {
-            [srcNode.resourceUri!.path]: srcNode,
+        const draggedNodeMock = new MockedProperty(xUssTree, "draggedNodes", undefined, {
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         const payload = {
@@ -2509,14 +2508,14 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
         expect(typeof dataTransfer.get).toBe("function"); // sanity
 
-        (SharedUtils as any).isLikelySameUssObjectByUris = jest.fn().mockResolvedValue(true);
+        (SharedUtils as any).isLikelySameUssObjectByUris = jest.fn().mockReturnValue(true);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
             "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
 
         const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
-        // @ts-ignore
-        await ussTree.handleDrop(dataTransfer as any, targetNode, undefined);
+        // @ts-expect-error token intentionally undefined
+        await xUssTree.handleDrop(dataTransfer, targetNode, undefined);
 
         expect((SharedUtils as any).isLikelySameUssObjectByUris).toHaveBeenCalled();
         expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Cannot move:"));
@@ -2548,7 +2547,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         target.children = [child];
 
         new MockedProperty(ussTree, "draggedNodes", undefined, {
-            [child.resourceUri!.path]: child,
+            [child.resourceUri.path]: child,
         });
 
         const payload = { value: [{ label: child.label as string, uri: child.resourceUri }] };
@@ -2557,8 +2556,8 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         const moveSpy = jest.spyOn(UssFSProvider.instance as any, "move").mockResolvedValue(true);
 
         // child.getParent() === target, so should be skipped and move not called
-        // @ts-ignore
-        await ussTree.handleDrop(target as any, dataTransfer as any, undefined);
+        // @ts-expect-error token intentionally undefined
+        await ussTree.handleDrop(target as any, dataTransfer, undefined);
 
         expect(moveSpy).not.toHaveBeenCalled();
         moveSpy.mockRestore();
@@ -2619,14 +2618,14 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
         // Create a DataTransfer-like object using the fake payload
         const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
-        expect(typeof (dataTransfer as any).get).toBe("function");
+        expect(typeof dataTransfer.get).toBe("function");
 
         (SharedUtils as any).hasNameCollision = jest.fn().mockReturnValue(true);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
             "Cannot move: The source and the target are the same. You are using a different profile to view the target. Refresh to view changes.";
 
-        // @ts-ignore token intentionally undefined
-        await ussTree.handleDrop(dataTransfer as any, targetFolder, undefined);
+        // @ts-expect-error token intentionally undefined
+        await ussTree.handleDrop(dataTransfer, targetFolder, undefined);
     });
 
     describe("USSTree Unit Tests - Function crossLparMove", () => {
@@ -2711,7 +2710,7 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         srcNode.fullPath = "/u/source/file.txt";
 
         const dragged = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         const targetNodeArg = new ZoweUSSNode({
@@ -2739,14 +2738,14 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         } as any);
         jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
         jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
-        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockReturnValue(false);
         jest.spyOn(UssFSProvider.instance as any, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
         jest.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue(undefined);
 
         const statusBarSpy = jest.spyOn(Gui, "setStatusBarMessage");
 
-        // @ts-ignore
-        await ussTree.handleDrop(targetNodeArg as any, targetArgAsPayload as any, undefined);
+        // @ts-expect-error token intentionally undefined
+        await ussTree.handleDrop(targetNodeArg as any, targetArgAsPayload, undefined);
 
         // check handleDrop normalized the args and proceeded (observed via status bar call and cleared draggedNodes)
         expect(statusBarSpy).toHaveBeenCalled();
@@ -2771,7 +2770,7 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         srcNode.fullPath = "/u/source/file2.txt";
 
         const dragged = new MockedProperty(ussTree as any, "draggedNodes", undefined, {
-            [srcNode.resourceUri!.path]: srcNode,
+            [srcNode.resourceUri.path]: srcNode,
         });
 
         const payload = { value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }] };
@@ -2798,15 +2797,15 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         } as any);
         jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
         jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
-        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockReturnValue(false);
 
         jest.spyOn(UssFSProvider.instance as any, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
         jest.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue(undefined);
 
         const statusBarSpy = jest.spyOn(Gui, "setStatusBarMessage");
 
-        // @ts-ignore
-        await ussTree.handleDrop(dataTransferAsPayload as any, targetNode as any, undefined);
+        // @ts-expect-error token intentionally undefined
+        await ussTree.handleDrop(dataTransferAsPayload, targetNode as any, undefined);
 
         // check status bar was used and draggedNodes cleared
         expect(statusBarSpy).toHaveBeenCalled();

@@ -9,7 +9,6 @@
  *
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { FTPConfig, zosNodeAccessor } from "@zowe/zos-ftp-for-zowe-cli";
 import * as crypto from "crypto";
 import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";

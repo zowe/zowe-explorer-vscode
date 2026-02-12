@@ -15,10 +15,6 @@ import { JobUtils, DataSetUtils, TransferMode, IJob, IJobStatus, ISpoolFile, IGe
 import { AbstractFtpApi, ConnectionType } from "./ZoweExplorerAbstractFtpApi";
 import { ZoweFtpExtensionError } from "./ZoweFtpExtensionError";
 
-// The Zowe FTP CLI plugin is written and uses mostly JavaScript, so relax the rules here.
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 export class FtpJesApi extends AbstractFtpApi implements MainframeInteraction.IJes {
     public async getJobsByParameters(params: zosJobs.IGetJobsParms): Promise<zosJobs.IJob[]> {
         const result = this.getIJobResponse();

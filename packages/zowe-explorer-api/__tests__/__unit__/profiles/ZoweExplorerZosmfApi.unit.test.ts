@@ -631,7 +631,7 @@ describe("ZosmfMvsApi", () => {
     });
 
     describe("deleteDataSet with undefined options", () => {
-        it("should call Delete.dataSet and not throw TypeError when options is undefined", async () => {
+        it("should call Delete.dataSet and not throw TypeError when options is undefined", () => {
             const mvsApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
             const deleteDataSetSpy = jest.spyOn(zosfiles.Delete, "dataSet").mockResolvedValue({ success: true });
             const deleteVsamSpy = jest.spyOn(zosfiles.Delete, "vsam").mockResolvedValue({ success: true });
