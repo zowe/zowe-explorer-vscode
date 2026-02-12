@@ -4362,8 +4362,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
-            expect((nodes.pds.sort as any)?.method).toBe(Sorting.DatasetSortOpts.UserId);
-            expect((nodes.pds.sort as any)?.direction).toBe(Sorting.SortDirection.Descending);
+            expect((nodes.session.sort as any)?.method).toBe(Sorting.DatasetSortOpts.UserId);
+            expect((nodes.session.sort as any)?.direction).toBe(Sorting.SortDirection.Descending);
         });
 
         it("does not interfere with sort when getSortSetting returns undefined", async () => {
