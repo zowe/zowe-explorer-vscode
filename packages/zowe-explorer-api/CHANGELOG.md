@@ -6,6 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Implemented request caching in the BaseProvider class, enabling implementations to cache ongoing requests. [#3844](https://github.com/zowe/zowe-explorer-vscode/issues/3554)
 - Enhanced `DataSetAttributesProvider` to pass raw API response attributes to extenders via the `DsInfo` context object. Extenders can now access the `attributes` field in the context to retrieve data set information without making additional API calls. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)
 
 ### Bug fixes

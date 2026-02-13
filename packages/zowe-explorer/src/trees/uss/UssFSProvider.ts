@@ -25,6 +25,8 @@ import {
     UriFsInfo,
     ZoweExplorerApiType,
     AuthHandler,
+    IFileSystemEntry,
+    FeatureFlags,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { USSFileStructure } from "./USSFileStructure";
@@ -33,6 +35,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
+import dayjs = require("dayjs");
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
@@ -57,15 +60,25 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return UssFSProvider._instance;
     }
 
-    /* Public functions: File operations */
+    protected async lookupWithCache(uri: vscode.Uri): Promise<UssDirectory | UssFile | IFileSystemEntry> {
+        try {
+            // Check cache for resource
+            const localLookup = this.lookup(uri);
+            if (localLookup) return localLookup;
+        } catch {}
+        // If resource not found, remote lookup
+        return this.remoteLookupForResource(uri);
+    }
 
     /**
-     * Returns file statistics about a given URI.
-     * @param uri A URI that must exist as an entry in the provider
-     * @returns A structure containing file type, time, size and other metrics
+     * Executes the core logic for the stat operation on a given URI.
+     * This is separated to facilitate caching and testing.
+     * @param uri The URI of the resource to stat.
+     * @returns A promise that resolves to a vscode.FileStat object.
      */
-    public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        ZoweLogger.trace(`[UssFSProvider] stat called with ${uri.toString()}`);
+    private async statImplementation(uri: vscode.Uri): Promise<vscode.FileStat> {
+        ZoweLogger.trace(`[UssFSProvider] statImplementation called with ${uri.toString()}`);
+
         let isFetching = false;
 
         if (uri.query) {
@@ -78,7 +91,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
 
-        const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
+        const fetchByDefault: boolean = FeatureFlags.get("fetchByDefault");
+
+        const entry = isFetching
+            ? await this.remoteLookupForResource(uri)
+            : fetchByDefault
+            ? await this.lookupWithCache(uri)
+            : this.lookup(uri, false);
+
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const apiRegister = ZoweExplorerApiRegister.getInstance();
         const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
@@ -94,7 +114,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on USS files only
-        if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
+        if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry) || !isFetching) {
             return entry;
         }
 
@@ -118,8 +138,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (fileResp.success) {
                 // Regardless of the resource type, it will be the first item in a successful response.
                 // When listing a folder, the folder's stats will be represented as the "." entry.
-                const newTime = (fileResp.apiResponse?.items ?? [])?.[0]?.mtime ?? entry.mtime;
-
+                const newTime = dayjs((fileResp.apiResponse?.items ?? [])?.[0]?.mtime ?? entry.mtime).valueOf();
                 if (entry.mtime != newTime) {
                     entry.mtime = newTime;
                     // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
@@ -133,6 +152,49 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         return entry;
+    }
+
+    /**
+     * Returns file statistics about a given URI.
+     * @param uri A URI that must exist as an entry in the provider
+     * @returns A structure containing file type, time, size and other metrics
+     */
+    public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
+        const result = await this.executeWithReuse<vscode.FileStat>(uri, {
+            keyGenerator: (u) => {
+                const queryKey = this.getQueryKey(u);
+                const cleanUri = this.getCleanUriString(u);
+                const selfKey = "list_" + queryKey + cleanUri;
+
+                const parentPath = path.posix.dirname(cleanUri);
+                if (parentPath && parentPath !== cleanUri && parentPath !== "/") {
+                    const parentKey = "list_" + queryKey + parentPath;
+                    if (this.requestCache.has(parentKey)) {
+                        return parentKey;
+                    }
+                }
+
+                return selfKey;
+            },
+            checkLocal: () => !!this.lookup(uri, false),
+            execute: () => this.statImplementation(uri),
+        });
+
+        const entry = result as UssDirectory | UssFile;
+
+        if (!entry || !entry.metadata || !entry.metadata.path) {
+            return result;
+        }
+
+        const uriInfo = this._getInfoFromUri(uri);
+
+        const entryPath = entry.metadata.path.replace(/\/+/g, "/");
+        const reqPath = uriInfo.path.replace(/\/+/g, "/");
+        if (entryPath !== reqPath) {
+            return this.lookup(uri, false);
+        }
+
+        return result;
     }
 
     /**
@@ -205,7 +267,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
             // If request was successful, create directories for the path if it doesn't exist
             if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
-                await vscode.workspace.fs.createDirectory(uri.with({ query: "" }));
+                this._createDirectoryRecursive(uri);
             }
         });
 
@@ -216,6 +278,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 items: (response.apiResponse.items ?? []).filter(keepRelative ? Boolean : (it): boolean => !/^\.{1,3}$/.test(it.name as string)),
             },
         };
+    }
+
+    private _createDirectoryRecursive(uri: vscode.Uri): void {
+        const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
+        if (parentUri.path !== uri.path && parentUri.path !== "/" && !this.exists(parentUri)) {
+            this._createDirectoryRecursive(parentUri);
+        }
+
+        if (!this.exists(uri)) {
+            this.createDirectory(uri);
+        }
     }
 
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
@@ -268,12 +341,19 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (parentDir == null) {
                 const parentPath = path.posix.join(uri.path, "..");
                 const parentUri = uri.with({ path: parentPath, query: "" });
-                await vscode.workspace.fs.createDirectory(parentUri);
+                this._createDirectoryRecursive(parentUri);
                 parentDir = this.lookupParentDirectory(uri, false);
                 parentDir.metadata = this._getInfoFromUri(parentUri);
             }
             const filename = path.posix.basename(uri.path);
             const file = new UssFile(filename);
+
+            if (resp.apiResponse.items && resp.apiResponse.items.length > 0) {
+                const item = resp.apiResponse.items[0];
+                if (item.mtime) file.mtime = dayjs(item.mtime).valueOf();
+                if (item.size) file.size = item.size;
+            }
+
             file.metadata = { profile: uriInfo.profile, path: path.posix.join(parentDir.metadata.path, filename) };
             parentDir.entries.set(filename, file);
             return parentDir.entries.get(filename) as UssFile;
@@ -288,6 +368,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // skip over existing entries if they are the same type
             const existingEntry = entry.entries.get(itemName);
             if (existingEntry && existingEntry.type === newEntryType) {
+                if (item.mtime) existingEntry.mtime = dayjs(item.mtime).valueOf();
+                if (item.size) existingEntry.size = item.size;
                 continue;
             }
 
@@ -295,6 +377,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             const UssType = item.mode?.startsWith("d") ? UssDirectory : UssFile;
             const newEntry = new UssType(itemName);
             newEntry.metadata = { ...entry.metadata, path: path.posix.join(entry.metadata.path, itemName) };
+
+            if (item.mtime) {
+                newEntry.mtime = dayjs(item.mtime).valueOf();
+            }
+            if (item.size) {
+                newEntry.size = item.size;
+            }
+
             entry.entries.set(itemName, newEntry);
         }
 
@@ -302,6 +392,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<UssDirectory | UssFile> {
+        // TODO: Remove
+        console.log("remoteLookupCalled");
+
         await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: uriInfo.profileName });
@@ -322,30 +415,40 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return this.fetchEntries(uri, uriInfo);
     }
 
-    /**
-     * Reads a directory located at the given URI.
-     * @param uri A valid URI within the provider
-     * @returns An array of tuples containing each entry name and type
-     */
-    public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+    private async readDirectoryImplementation(uri: vscode.Uri): Promise<UssDirectory> {
         /**
          * TODOs:
          * - Look into pre-fetching a directory level below the one given
          * - Should we support symlinks and can we use z/OSMF "report" option?
          */
+        let dir: UssDirectory;
         try {
             this._lookupAsDirectory(uri, false) as UssDirectory;
         } catch (err) {
-            // Errors unrelated to the filesystem cannot be handled here
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
                 throw err;
             }
         }
 
         // check to see if contents have updated on the remote system before returning its children.
-        const dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
+        dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
 
-        return Array.from(dir.entries.entries()).map((e: [string, UssDirectory | UssFile]) => [e[0], e[1].type]);
+        return dir;
+    }
+
+    /**
+     * Reads a directory located at the given URI.
+     * @param uri A valid URI within the provider
+     * @returns An array of tuples containing each entry name and type
+     */
+    public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+        const dir = await this.executeWithReuse<UssDirectory>(uri, {
+            keyGenerator: (u) => "list_" + this.getQueryKey(u) + this.getCleanUriString(u),
+            checkLocal: () => !!this._lookupAsDirectory(uri, true),
+            execute: () => this.readDirectoryImplementation(uri),
+        });
+
+        return Array.from(dir.entries.entries()).map((e) => [e[0], e[1].type]);
     }
 
     /**
@@ -473,12 +576,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return file.encoding;
     }
 
-    /**
-     * Reads a file at the given URI and fetches it from the remote system (if not yet accessed).
-     * @param uri The URI pointing to a valid file on the remote system
-     * @returns The file's contents as an array of bytes
-     */
-    public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
+    private async readFileImplementation(uri: vscode.Uri): Promise<Uint8Array> {
         let file: UssFile | UssDirectory;
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
@@ -525,6 +623,26 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         return isConflict ? file.conflictData.contents : file.data;
+    }
+
+    /**
+     * Reads a file at the given URI and fetches it from the remote system (if not yet accessed).
+     * @param uri The URI pointing to a valid file on the remote system
+     * @returns The file's contents as an array of bytes
+     */
+    public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
+        return this.executeWithReuse<Uint8Array>(uri, {
+            keyGenerator: (u) => "readFile_" + this.getQueryKey(u) + this.getCleanUriString(u),
+            checkLocal: () => {
+                try {
+                    const entry = this._lookupAsFile(uri, { silent: true }) as UssFile;
+                    return entry && entry.wasAccessed;
+                } catch {
+                    return false;
+                }
+            },
+            execute: () => this.readFileImplementation(uri),
+        });
     }
 
     private async uploadEntry(
@@ -978,5 +1096,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private _getInfoFromUri(uri: vscode.Uri): EntryMetadata {
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         return { profile: uriInfo.profile, path: uriInfo.isRoot ? "/" : uri.path.substring(uriInfo.slashAfterProfilePos) };
+    }
+
+    /**
+     * Helper to clean URI string for cache keys (removes trailing slash)
+     */
+    private getCleanUriString(uri: vscode.Uri): string {
+        return uri.path.endsWith("/") ? uri.path.slice(0, -1) : uri.path;
     }
 }
