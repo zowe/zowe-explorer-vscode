@@ -426,6 +426,62 @@ describe("UssFSProvider", () => {
 
             remoteLookupSpy.mockRestore();
         });
+
+        it("does not reuse readDirectory request for subsequent child readDirectory call", async () => {
+            const parentPath = "/sestest/reuseDir";
+            const childPath = "/sestest/reuseDir/child";
+            const parentUri = Uri.from({ scheme: ZoweScheme.USS, path: parentPath });
+            const childUri = Uri.from({ scheme: ZoweScheme.USS, path: childPath });
+
+            if ((UssFSProvider.instance as any).lookup.mock) {
+                (UssFSProvider.instance as any).lookup.mockRestore();
+            }
+            let sessionEntry = (UssFSProvider.instance as any).root.entries.get("sestest");
+            if (!sessionEntry) {
+                sessionEntry = new UssDirectory("sestest");
+                (UssFSProvider.instance as any).root.entries.set("sestest", sessionEntry);
+            }
+            sessionEntry.entries.delete("reuseDir");
+            (UssFSProvider.instance as any).requestCache.clear();
+
+            const remoteLookupSpy = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockImplementation(async (uri) => {
+                if (uri.path === parentPath) {
+                    const parentEntry = new UssDirectory("reuseDir");
+                    parentEntry.metadata = { profile: testProfile, path: parentPath };
+
+                    const childEntry = new UssDirectory("child");
+                    childEntry.metadata = { profile: testProfile, path: childPath };
+                    parentEntry.entries.set("child", childEntry);
+
+                    sessionEntry.entries.set("reuseDir", parentEntry);
+                    return parentEntry;
+                }
+
+                if (uri.path === childPath) {
+                    const childDirEntry = new UssDirectory("child");
+                    childDirEntry.metadata = { profile: testProfile, path: childPath };
+
+                    const grandChildEntry = new UssFile("grandchild.txt");
+                    grandChildEntry.metadata = { profile: testProfile, path: childPath + "/grandchild.txt" };
+                    childDirEntry.entries.set("grandchild.txt", grandChildEntry);
+
+                    return childDirEntry;
+                }
+            });
+
+            const readDirPromise = UssFSProvider.instance.readDirectory(parentUri);
+            const readChildDirPromise = UssFSProvider.instance.readDirectory(childUri);
+
+            const [readDirResult, readChildDirResult] = await Promise.all([readDirPromise, readChildDirPromise]);
+
+            expect(remoteLookupSpy).toHaveBeenCalledTimes(2);
+            expect(remoteLookupSpy).toHaveBeenCalledWith(parentUri);
+            expect(remoteLookupSpy).toHaveBeenCalledWith(childUri);
+            expect(readDirResult).toEqual([["child", FileType.Directory]]);
+            expect(readChildDirResult).toEqual([["grandchild.txt", FileType.File]]);
+
+            remoteLookupSpy.mockRestore();
+        });
     });
 
     describe("move", () => {
