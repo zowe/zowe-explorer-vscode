@@ -28,6 +28,7 @@ export function App(): JSX.Element {
   const [dropdownOptions, setDropdownOptions] = useState<Record<string, string>>({});
   const [versionOptions, setVersionOptions] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"releaseNotes" | "changelog">("releaseNotes");
+  const [l10nReady, setL10nReady] = useState<boolean>(false);
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
@@ -36,6 +37,15 @@ export function App(): JSX.Element {
       }
 
       if (!event.data) {
+        return;
+      }
+
+      if (event.data.command === "GET_LOCALIZATION") {
+        const { contents } = event.data;
+        if (contents) {
+          l10n.config({ contents });
+        }
+        setL10nReady(true);
         return;
       }
 
@@ -60,6 +70,7 @@ export function App(): JSX.Element {
         setVersionOptions(versionOptions);
       }
     });
+    PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "GET_LOCALIZATION" });
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
   }, []);
 
@@ -78,8 +89,98 @@ export function App(): JSX.Element {
   const rewriteImageUrls = (markdown: string) =>
     markdown.replace(/!\[([^\]]*)\]\(\.\/resources\/release-notes\/([^)]+)\)/g, `![$1](${RESOURCES_BASE}/$2)`);
 
+  const cleanTextForL10n = (text: string): string => {
+    return text
+      .replace(/!\[[^\]]*\]\([^)]+\)/g, "") // Remove images
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "<a>$1</a>") // Replace link URLs with <a> tags
+      .replace(/```[\s\S]*?```/g, "") // Remove code blocks
+      .replace(/`([^`]+)`/g, "$1") // Remove inline code backticks but keep content
+      .replace(/\s+/g, " ") // Normalize whitespace
+      .trim();
+  };
+
+  /**
+   * Basically does the same thing as parseMarkdown in generateReleaseNotesL10n.js
+   * but it just inserts the localized strings into the correct markdown content
+   */
+  const localizeMarkdown = (markdown: string): string => {
+    if (!l10nReady) {
+      return markdown;
+    }
+
+    const lines = markdown.split("\n");
+    const result: string[] = [];
+
+    const extractUrls = (text: string): string[] => {
+      const urls: string[] = [];
+      const regex = /\[[^\]]+\]\(([^)]+)\)/g;
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        urls.push(match[1]);
+      }
+      return urls;
+    };
+
+    const restoreUrls = (localizedText: string, urls: string[]): string => {
+      let index = 0;
+      return localizedText.replace(/<a>(.*?)<\/a>/g, (_, text) => {
+        const url = urls[index++] || "";
+        return `[${text}](${url})`;
+      });
+    };
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      if (trimmed === "" || /^!\[[^\]]*\]\([^)]+\)$/.test(trimmed)) {
+        result.push(line);
+        continue;
+      }
+
+      const sectionMatch = trimmed.match(/^### (.+)$/);
+      if (sectionMatch) {
+        const originalText = sectionMatch[1];
+        const urls = extractUrls(originalText);
+        const cleanedText = cleanTextForL10n(originalText);
+        const localizedText = l10n.t(cleanedText);
+        const restoredText = restoreUrls(localizedText, urls);
+        result.push(`### ${restoredText}`);
+        continue;
+      }
+
+      const listMatch = trimmed.match(/^([-*])\s+(.+)$/);
+      if (listMatch) {
+        const indent = line.match(/^\s*/)?.[0] ?? "";
+        const bullet = listMatch[1];
+        const originalText = listMatch[2];
+        const urls = extractUrls(originalText);
+        const cleanedText = cleanTextForL10n(originalText);
+        const localizedText = l10n.t(cleanedText);
+        const restoredText = restoreUrls(localizedText, urls);
+        result.push(`${indent}${bullet} ${restoredText}`);
+        continue;
+      }
+
+      if (trimmed && !trimmed.startsWith("##")) {
+        const urls = extractUrls(trimmed);
+        const cleanedText = cleanTextForL10n(trimmed);
+        if (cleanedText) {
+          const localizedText = l10n.t(cleanedText);
+          const restoredText = restoreUrls(localizedText, urls);
+          result.push(restoredText);
+          continue;
+        }
+      }
+
+      result.push(line);
+    }
+
+    return result.join("\n");
+  };
+
   const renderMarkdown = (markdown: string) => {
-    const withResources = rewriteImageUrls(markdown);
+    const localized = localizeMarkdown(markdown);
+    const withResources = rewriteImageUrls(localized);
     // @ts-expect-error marked may return a Promise, but I know it can't be here
     const rawHtml: string = marked(withResources);
     return DOMPurify.sanitize(rawHtml);

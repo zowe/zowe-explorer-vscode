@@ -196,8 +196,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const loadedProfile = Profiles.getInstance().loadNamedProfile(profile.name);
 
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
-        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
 
         let response: IZosFilesResponse;
 
@@ -222,6 +221,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
         const entryExists = this.exists(uri);
         const apiRegister = ZoweExplorerApiRegister.getInstance();
+
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
             apiName: vscode.l10n.t("Common API"),
             registeredTypes: apiRegister.registeredApiTypes(),
@@ -301,6 +302,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<UssDirectory | UssFile> {
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: uriInfo.profileName });
 
@@ -485,8 +487,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
         // If the extenderProfileReady map does not contain the profile, create a deferred promise for the profile.
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
-        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         try {
             file = this._lookupAsFile(uri) as UssFile;
         } catch (err) {
