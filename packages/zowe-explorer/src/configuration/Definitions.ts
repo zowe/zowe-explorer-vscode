@@ -42,7 +42,7 @@ export namespace Definitions {
     export type DataSetDownloadOptions = {
         overwrite?: boolean;
         generateDirectory?: boolean;
-        preserveCase?: boolean;
+        uppercaseNames?: boolean;
         chooseEncoding?: boolean;
         encoding?: ZosEncoding;
         selectedPath?: vscode.Uri;

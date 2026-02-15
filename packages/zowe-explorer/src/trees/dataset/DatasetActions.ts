@@ -633,7 +633,7 @@ export class DatasetActions {
 
         dataSetDownloadOptions.overwrite ??= true;
         dataSetDownloadOptions.generateDirectory ??= true;
-        dataSetDownloadOptions.preserveCase ??= true;
+        dataSetDownloadOptions.uppercaseNames ??= true;
         dataSetDownloadOptions.chooseEncoding ??= false;
         dataSetDownloadOptions.overrideExtension ??= false;
         dataSetDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
@@ -674,12 +674,12 @@ export class DatasetActions {
                 picked: dataSetDownloadOptions.generateDirectory,
             },
             {
-                label: vscode.l10n.t("Preserve Original Letter Case"),
-                description: vscode.l10n.t("Specifies if the automatically generated directories and files use the original letter case"),
-                picked: dataSetDownloadOptions.preserveCase,
+                label: vscode.l10n.t("Use Uppercase Names"),
+                description: vscode.l10n.t("Downloads files and directories using uppercase names. When disabled, names are converted to lowercase"),
+                picked: dataSetDownloadOptions.uppercaseNames,
             },
             {
-                label: vscode.l10n.t("Override Extension"),
+                label: vscode.l10n.t("Override File Extension"),
                 description: getExtensionDescription(),
                 picked: dataSetDownloadOptions.overrideExtension,
             },
@@ -726,7 +726,7 @@ export class DatasetActions {
         const getOption = (label: string): boolean => selectedOptions.some((opt) => opt.label === vscode.l10n.t(label));
         dataSetDownloadOptions.overwrite = getOption("Overwrite");
         dataSetDownloadOptions.generateDirectory = getOption("Generate Directory Structure");
-        dataSetDownloadOptions.preserveCase = getOption("Preserve Original Letter Case");
+        dataSetDownloadOptions.uppercaseNames = getOption("Use Uppercase Names");
         dataSetDownloadOptions.chooseEncoding = getOption("Choose Encoding");
         dataSetDownloadOptions.overrideExtension = getOption("Override Extension");
 
@@ -786,7 +786,7 @@ export class DatasetActions {
         return dataSetDownloadOptions;
     }
 
-    private static generateDirectoryPath(datasetName: string, selectedPath: vscode.Uri, generateDirectory: boolean, preserveCase: boolean): string {
+    private static generateDirectoryPath(datasetName: string, selectedPath: vscode.Uri, generateDirectory: boolean, uppercaseNames: boolean): string {
         if (!generateDirectory) {
             return selectedPath.fsPath;
         }
@@ -794,11 +794,11 @@ export class DatasetActions {
         const dirsFromDataset = zosfiles.ZosFilesUtils.getDirsFromDataSet(datasetName);
         if (!dirsFromDataset) {
             const fallbackDirs = datasetName.replace(/\./g, path.sep);
-            return preserveCase
+            return uppercaseNames
                 ? path.join(selectedPath.fsPath, fallbackDirs.toUpperCase())
                 : path.join(selectedPath.fsPath, fallbackDirs.toLowerCase());
         }
-        return preserveCase ? path.join(selectedPath.fsPath, dirsFromDataset.toUpperCase()) : path.join(selectedPath.fsPath, dirsFromDataset);
+        return uppercaseNames ? path.join(selectedPath.fsPath, dirsFromDataset.toUpperCase()) : path.join(selectedPath.fsPath, dirsFromDataset);
     }
 
     private static async executeDownloadWithProgress(
@@ -868,15 +868,7 @@ export class DatasetActions {
         if (!dataSetDownloadOptions) {
             return;
         }
-        const {
-            overwrite,
-            generateDirectory,
-            preserveCase: preserveOriginalLetterCase,
-            encoding,
-            selectedPath,
-            overrideExtension,
-            fileExtension,
-        } = dataSetDownloadOptions;
+        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath, overrideExtension, fileExtension } = dataSetDownloadOptions;
 
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading all members"),
@@ -901,22 +893,17 @@ export class DatasetActions {
 
                 const extensionMap = await DatasetUtils.getExtensionMap(
                     node,
-                    preserveOriginalLetterCase,
+                    uppercaseNames,
                     overrideExtension && fileExtension ? fileExtension : undefined
                 );
 
-                const generatedFileDirectory = DatasetActions.generateDirectoryPath(
-                    datasetName,
-                    selectedPath,
-                    generateDirectory,
-                    preserveOriginalLetterCase
-                );
+                const generatedFileDirectory = DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames);
 
                 const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
                 const downloadOptions: zosfiles.IDownloadOptions = {
                     directory: generatedFileDirectory,
                     maxConcurrentRequests,
-                    preserveOriginalLetterCase,
+                    preserveOriginalLetterCase: uppercaseNames,
                     extensionMap,
                     binary: encoding?.kind === "binary",
                     record: isRecordEncoding,
@@ -951,15 +938,7 @@ export class DatasetActions {
         if (!dataSetDownloadOptions) {
             return;
         }
-        const {
-            overwrite,
-            generateDirectory,
-            preserveCase: preserveOriginalLetterCase,
-            encoding,
-            selectedPath,
-            overrideExtension,
-            fileExtension,
-        } = dataSetDownloadOptions;
+        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath, overrideExtension, fileExtension } = dataSetDownloadOptions;
 
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading member"),
@@ -969,17 +948,17 @@ export class DatasetActions {
                 const memberName = node.getLabel() as string;
                 const fullDatasetName = `${datasetName}(${memberName})`;
 
-                const fileName = preserveOriginalLetterCase ? memberName : memberName.toLowerCase();
+                const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
 
                 const extensionMap = await DatasetUtils.getExtensionMap(
                     parent,
-                    preserveOriginalLetterCase,
+                    uppercaseNames,
                     overrideExtension && fileExtension ? fileExtension : undefined
                 );
                 const extension = extensionMap[fileName] ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
 
                 const targetDirectory = generateDirectory
-                    ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, preserveOriginalLetterCase)
+                    ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
                     : selectedPath.fsPath;
                 const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
 
@@ -1023,15 +1002,7 @@ export class DatasetActions {
         if (!dataSetDownloadOptions) {
             return;
         }
-        const {
-            overwrite,
-            generateDirectory,
-            preserveCase: preserveOriginalLetterCase,
-            encoding,
-            selectedPath,
-            overrideExtension,
-            fileExtension,
-        } = dataSetDownloadOptions;
+        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath, overrideExtension, fileExtension } = dataSetDownloadOptions;
 
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading data set"),
@@ -1039,7 +1010,7 @@ export class DatasetActions {
                 const datasetName = node.getLabel() as string;
 
                 // Extract the last part as filename when generating directories
-                let fileName = preserveOriginalLetterCase ? datasetName : datasetName.toLowerCase();
+                let fileName = uppercaseNames ? datasetName : datasetName.toLowerCase();
                 if (generateDirectory) {
                     const pathParts = fileName.split(".");
                     fileName = pathParts[pathParts.length - 1];
@@ -1053,7 +1024,7 @@ export class DatasetActions {
                 }
 
                 const targetDirectory = generateDirectory
-                    ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, preserveOriginalLetterCase)
+                    ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
                     : selectedPath.fsPath;
                 const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
 

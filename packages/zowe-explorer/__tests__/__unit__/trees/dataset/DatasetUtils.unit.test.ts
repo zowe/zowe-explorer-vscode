@@ -151,7 +151,7 @@ describe("Dataset utils unit tests - function getExtensionMap", () => {
         });
     });
 
-    it("should preserve case when preserveCase is true", async () => {
+    it("should preserve case when uppercaseNames is true", async () => {
         const mockNode = createMockNode("TEST.PDS", [{ label: "MEMBER1" }, { label: "COBOL" }, { label: ".f@K3" }]);
 
         const result = await DatasetUtils.getExtensionMap(mockNode, true);
@@ -237,7 +237,7 @@ describe("Dataset utils unit tests - function getExtensionMap", () => {
         expect(result["member"]).toBe("jcl");
     });
 
-    it("should apply override extension with preserveCase", async () => {
+    it("should apply override extension with uppercaseNames", async () => {
         const mockNode = createMockNode("TEST.PDS", [{ label: "MEMBER1" }, { label: "MEMBER2" }, { label: ".f@K3" }]);
 
         const result = await DatasetUtils.getExtensionMap(mockNode, true, "xml");

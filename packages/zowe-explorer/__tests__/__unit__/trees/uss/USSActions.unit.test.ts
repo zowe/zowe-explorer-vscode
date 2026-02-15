@@ -1766,7 +1766,6 @@ describe("USS Action Unit Tests - downloading functions", () => {
             }
         });
 
-        jest.spyOn(USSUtils, "countAllFilesRecursively").mockResolvedValue(5);
         jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" });
         jest.spyOn(SharedUtils, "handleDownloadResponse").mockResolvedValue();
 

@@ -236,17 +236,21 @@ export class DatasetInit {
         );
 
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.downloadAllMembers", async (node: IZoweDatasetTreeNode) =>
-                DatasetActions.downloadAllMembers(node)
-            )
+            vscode.commands.registerCommand("zowe.ds.downloadAllMembers", async (node: IZoweDatasetTreeNode): Promise<void> => {
+                await DatasetActions.downloadAllMembers(node);
+            })
         );
 
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.downloadMember", async (node: IZoweDatasetTreeNode) => DatasetActions.downloadMember(node))
+            vscode.commands.registerCommand("zowe.ds.downloadMember", async (node: IZoweDatasetTreeNode): Promise<void> => {
+                await DatasetActions.downloadMember(node);
+            })
         );
 
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.downloadDataSet", async (node: IZoweDatasetTreeNode) => DatasetActions.downloadDataSet(node))
+            vscode.commands.registerCommand("zowe.ds.downloadDataSet", async (node: IZoweDatasetTreeNode): Promise<void> => {
+                await DatasetActions.downloadDataSet(node);
+            })
         );
 
         SharedInit.initSubscribers(context, datasetProvider);

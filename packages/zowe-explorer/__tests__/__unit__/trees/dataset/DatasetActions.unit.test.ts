@@ -5352,7 +5352,7 @@ describe("DatasetActions - downloading functions", () => {
     const defaultDownloadOptions = {
         overwrite: true,
         generateDirectory: false,
-        preserveCase: false,
+        uppercaseNames: false,
         chooseEncoding: false,
         overrideExtension: false,
         encoding: undefined,
@@ -5482,7 +5482,7 @@ describe("DatasetActions - downloading functions", () => {
             expect(result).toEqual({
                 overwrite: true,
                 generateDirectory: false,
-                preserveCase: false,
+                uppercaseNames: false,
                 chooseEncoding: false,
                 overrideExtension: false,
                 encoding: undefined,
@@ -5509,7 +5509,7 @@ describe("DatasetActions - downloading functions", () => {
             const storedOptions = {
                 overwrite: false,
                 generateDirectory: true,
-                preserveCase: true,
+                uppercaseNames: true,
                 chooseEncoding: false,
                 encoding: { kind: "other", codepage: "IBM-1047" } as any,
                 selectedPath: vscode.Uri.file("/stored/path"),
@@ -5519,7 +5519,7 @@ describe("DatasetActions - downloading functions", () => {
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
                 mockQuickPick.selectedItems = [
                     { label: "Generate Directory Structure", picked: true },
-                    { label: "Preserve Original Letter Case", picked: true },
+                    { label: "Use Uppercase Names", picked: true },
                 ];
                 callback();
             });
@@ -5529,7 +5529,7 @@ describe("DatasetActions - downloading functions", () => {
             const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
 
             expect(result.generateDirectory).toBe(true);
-            expect(result.preserveCase).toBe(true);
+            expect(result.uppercaseNames).toBe(true);
             expect(result.chooseEncoding).toBe(false);
             expect(result.overwrite).toBe(false);
         });
@@ -5622,7 +5622,7 @@ describe("DatasetActions - downloading functions", () => {
             expect(result).toEqual({
                 overwrite: false,
                 generateDirectory: false,
-                preserveCase: false,
+                uppercaseNames: false,
                 chooseEncoding: false,
                 overrideExtension: false,
                 encoding: undefined,
@@ -6289,7 +6289,7 @@ describe("DatasetActions - downloading functions", () => {
         it("should handle member with preserve case and generate directory options", async () => {
             const optionsWithCase = {
                 ...defaultDownloadOptions,
-                preserveCase: true,
+                uppercaseNames: true,
                 generateDirectory: true,
                 overwrite: true,
             };
@@ -6543,7 +6543,7 @@ describe("DatasetActions - downloading functions", () => {
             const optionsWithDirectory = {
                 ...defaultDownloadOptions,
                 generateDirectory: true,
-                preserveCase: true,
+                uppercaseNames: true,
                 overwrite: true,
                 overrideExtension: false,
             };

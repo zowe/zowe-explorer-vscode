@@ -164,7 +164,7 @@ export class DatasetUtils {
      */
     public static async getExtensionMap(
         node: IZoweDatasetTreeNode,
-        preserveCase: boolean,
+        uppercaseNames: boolean,
         overrideExtension?: string
     ): Promise<{ [key: string]: string }> {
         const extensionMap: { [key: string]: string } = {};
@@ -202,7 +202,7 @@ export class DatasetUtils {
                 }
             }
 
-            if (!preserveCase) {
+            if (!uppercaseNames) {
                 label = label.toLowerCase();
             }
 

@@ -760,9 +760,12 @@ export class USSActions {
                 totalFileCount = listResponse.apiResponse.items.length;
             }
         } catch (e) {
-            // Fallback to an inaccurate count of items from the tree
-            // Inaccurate as it doesnt take into account the filter options
-            totalFileCount = await USSUtils.countAllFilesRecursively(node, downloadOptions.dirFilterOptions?.depth);
+            await AuthUtils.errorHandling(e, {
+                apiType: ZoweExplorerApiType.Uss,
+                profile,
+                scenario: vscode.l10n.t("Unable to find USS directory contents:"),
+            });
+            return;
         }
 
         if (totalFileCount === 0) {
