@@ -2562,10 +2562,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(ZoweLogger.trace).toHaveBeenCalledWith("uss.actions.downloadUssDirectory called.");
             expect(globalMocks.ussApi.fileList).toHaveBeenCalledWith("/u/test/directory", expect.objectContaining({ type: "f" }));
             expect(ZoweExplorerApiRegister.getUssApi).toHaveBeenCalledWith(mockNode.getProfile());
+            const expectedDir = path.join("/test/download/path", "directory");
             expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
                 "/u/test/directory",
                 expect.objectContaining({
-                    directory: "/test/download/path/directory",
+                    directory: expectedDir,
                     overwrite: true,
                     binary: false,
                     encoding: "IBM-1047",
@@ -2580,7 +2581,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                "/test/download/path/directory"
+                expectedDir
             );
         });
 
@@ -2684,7 +2685,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                "/test/download/path/file.txt"
+                path.join("/test/download/path", "file.txt")
             );
         });
 
@@ -2816,7 +2817,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                "/test/download/path/file.txt"
+                path.join("/test/download/path", "file.txt")
             );
         });
     });
