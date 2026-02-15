@@ -2565,7 +2565,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
                 "/u/test/directory",
                 expect.objectContaining({
-                    directory: "/test/download/path",
+                    directory: "/test/download/path/directory",
                     overwrite: true,
                     binary: false,
                     encoding: "IBM-1047",
@@ -2580,7 +2580,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                "/test/download/path"
+                "/test/download/path/directory"
             );
         });
 
@@ -2684,7 +2684,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                "/test/download/path"
+                "/test/download/path/file.txt"
             );
         });
 
@@ -2816,7 +2816,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                "/test/download/path"
+                "/test/download/path/file.txt"
             );
         });
     });

@@ -810,7 +810,7 @@ export class USSActions {
 
                 const directoryPath = downloadOptions.generateDirectory
                     ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
-                    : downloadOptions.selectedPath.fsPath;
+                    : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath));
 
                 const options: zosfiles.IDownloadOptions = {
                     directory: directoryPath,
