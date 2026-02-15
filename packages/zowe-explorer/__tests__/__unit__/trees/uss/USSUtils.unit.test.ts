@@ -17,7 +17,6 @@ import { USSUtils } from "../../../../src/trees/uss/USSUtils";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
-import { Constants } from "../../../../src/configuration/Constants";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 
 jest.mock("../../../../src/tools/ZoweLogger");

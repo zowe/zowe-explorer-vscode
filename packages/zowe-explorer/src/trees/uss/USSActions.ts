@@ -322,6 +322,20 @@ export class USSActions {
         const filterOptions: Definitions.UssDirFilterOptions = currentOptions ?? {};
         const quickPickItems: (vscode.QuickPickItem & { key: keyof Definitions.UssDirFilterOptions; inputType: string })[] = [
             {
+                label: vscode.l10n.t("Include Hidden Files"),
+                description: vscode.l10n.t("Include hidden files when downloading directories"),
+                key: "includeHidden",
+                inputType: "boolean",
+                picked: filterOptions.includeHidden ?? false,
+            },
+            {
+                label: vscode.l10n.t("Search All Filesystems"),
+                description: vscode.l10n.t("Search all mounted filesystems under the path"),
+                key: "filesys",
+                inputType: "boolean",
+                picked: filterOptions.filesys ?? false,
+            },
+            {
                 label: vscode.l10n.t("Group"),
                 description: filterOptions.group
                     ? vscode.l10n.t("Filter by group owner or GID (current: {0})", filterOptions.group.toString())
@@ -420,6 +434,12 @@ export class USSActions {
 
         const newFilterOptions: Definitions.UssDirFilterOptions = {};
         for (const filter of selectedFilters) {
+            // Boolean filters are simply toggled by being checked/unchecked
+            if (filter.inputType === "boolean") {
+                (newFilterOptions as any)[filter.key] = true;
+                continue;
+            }
+
             const currentValue = filterOptions[filter.key];
             let prompt: string;
             let placeholder: string;
@@ -491,11 +511,11 @@ export class USSActions {
         downloadOpts.chooseEncoding ??= false;
         downloadOpts.selectedPath ??= LocalFileManagement.getDefaultUri();
         downloadOpts.dirOptions ??= {};
-        downloadOpts.dirOptions.includeHidden ??= false;
+        downloadOpts.dirOptions.followSymlinks ??= true;
         downloadOpts.dirOptions.chooseFilterOptions ??= false;
-        downloadOpts.dirOptions.filesys ??= false;
-        downloadOpts.dirOptions.symlinks ??= false;
         downloadOpts.dirFilterOptions ??= {};
+        downloadOpts.dirFilterOptions.includeHidden ??= false;
+        downloadOpts.dirFilterOptions.filesys ??= false;
 
         if (downloadOpts.encoding && USSUtils.zosEncodingToString(downloadOpts.encoding) == "text") {
             downloadOpts.encoding = undefined;
@@ -538,7 +558,7 @@ export class USSActions {
             },
             {
                 label: vscode.l10n.t("Generate Directory Structure"),
-                description: vscode.l10n.t("Generates sub-folders based on the USS path"),
+                description: vscode.l10n.t("Generates sub-folders based on the entire USS path"),
                 picked: downloadOpts.generateDirectory,
             },
         ];
@@ -547,19 +567,9 @@ export class USSActions {
         if (isDirectory) {
             optionItems.push(
                 {
-                    label: vscode.l10n.t("Include Hidden Files"),
-                    description: vscode.l10n.t("Include hidden files when downloading directories"),
-                    picked: downloadOpts.dirOptions.includeHidden,
-                },
-                {
-                    label: vscode.l10n.t("Search All Filesystems"),
-                    description: vscode.l10n.t("Search all mounted filesystems under the path"),
-                    picked: downloadOpts.dirOptions.filesys,
-                },
-                {
-                    label: vscode.l10n.t("Return Symlinks"),
-                    description: vscode.l10n.t("Return symbolic links instead of following them"),
-                    picked: downloadOpts.dirOptions.symlinks,
+                    label: vscode.l10n.t("Follow Symlinks"),
+                    description: vscode.l10n.t("Follow symbolic links to their targets instead of returning them"),
+                    picked: downloadOpts.dirOptions.followSymlinks,
                 },
                 {
                     label: vscode.l10n.t("Apply Filter Options"),
@@ -615,9 +625,7 @@ export class USSActions {
             overwrite: vscode.l10n.t("Overwrite"),
             generateDirectory: vscode.l10n.t("Generate Directory Structure"),
             chooseEncoding: vscode.l10n.t("Choose Encoding"),
-            includeHidden: vscode.l10n.t("Include Hidden Files"),
-            searchAllFilesystems: vscode.l10n.t("Search All Filesystems"),
-            returnSymlinks: vscode.l10n.t("Return Symlinks"),
+            followSymlinks: vscode.l10n.t("Follow Symlinks"),
             applyFilterOptions: vscode.l10n.t("Apply Filter Options"),
         };
 
@@ -628,9 +636,7 @@ export class USSActions {
 
         // Only set directory-specific options when downloading directories
         if (isDirectory) {
-            downloadOpts.dirOptions.includeHidden = getOption(localizedLabels.includeHidden);
-            downloadOpts.dirOptions.filesys = getOption(localizedLabels.searchAllFilesystems);
-            downloadOpts.dirOptions.symlinks = getOption(localizedLabels.returnSymlinks);
+            downloadOpts.dirOptions.followSymlinks = getOption(localizedLabels.followSymlinks);
             downloadOpts.dirOptions.chooseFilterOptions = getOption(localizedLabels.applyFilterOptions);
 
             if (getOption(localizedLabels.applyFilterOptions)) {
@@ -749,11 +755,16 @@ export class USSActions {
 
         let totalFileCount = 0;
         try {
+            // need to destructure includeHidden because its in IDOwnloadOptions not in IUSSListOptions
+            // and need to not pass it into the IUSSListOptions call
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { includeHidden: _countIncludeHidden = false, ...countFilterOpts } = downloadOptions.dirOptions.chooseFilterOptions
+                ? downloadOptions.dirFilterOptions
+                : {};
             const countListOptions: zosfiles.IUSSListOptions = {
-                ...(downloadOptions.dirOptions.chooseFilterOptions ? downloadOptions.dirFilterOptions : {}),
+                ...countFilterOpts,
                 type: "f",
-                filesys: downloadOptions.dirOptions.filesys,
-                symlinks: downloadOptions.dirOptions.symlinks,
+                symlinks: !downloadOptions.dirOptions.followSymlinks,
             };
             const listResponse = await ZoweExplorerApiRegister.getUssApi(profile).fileList(node.fullPath, countListOptions);
             if (listResponse?.apiResponse?.items) {
@@ -812,10 +823,13 @@ export class USSActions {
                     ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
                     : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath));
 
+                const filterOpts = downloadOptions.dirOptions.chooseFilterOptions ? downloadOptions.dirFilterOptions : {};
+                const { includeHidden = false, ...listFilterOpts } = filterOpts;
+
                 const options: zosfiles.IDownloadOptions = {
                     directory: directoryPath,
                     overwrite: downloadOptions.overwrite,
-                    includeHidden: downloadOptions.dirOptions.includeHidden,
+                    includeHidden: includeHidden,
                     maxConcurrentRequests: profile?.profile?.maxConcurrentRequests || 1,
                     task,
                     responseTimeout: profile?.profile?.responseTimeout,
@@ -830,13 +844,10 @@ export class USSActions {
                             : profile.profile?.encoding;
                 }
 
-                // only apply filter options if chooseFilterOptions is enabled
-                const filterOpts = downloadOptions.dirOptions.chooseFilterOptions ? downloadOptions.dirFilterOptions : {};
                 const listOptions: zosfiles.IUSSListOptions = {
-                    ...filterOpts,
-                    type: filterOpts.type ?? "f", // fallback to files only
-                    filesys: downloadOptions.dirOptions.filesys,
-                    symlinks: downloadOptions.dirOptions.symlinks,
+                    ...listFilterOpts,
+                    type: listFilterOpts.type ?? "f", // fallback to files only
+                    symlinks: !downloadOptions.dirOptions.followSymlinks,
                 };
 
                 try {

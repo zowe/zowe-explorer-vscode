@@ -59,9 +59,7 @@ export namespace Definitions {
         dirFilterOptions?: UssDirFilterOptions;
     };
     export type UssDirOptions = {
-        filesys?: boolean;
-        symlinks?: boolean;
-        includeHidden?: boolean;
+        followSymlinks?: boolean;
         chooseFilterOptions?: boolean;
         directoryEncoding?: "auto-detect" | ZosEncoding;
     };
@@ -73,6 +71,8 @@ export namespace Definitions {
         perm?: string;
         type?: string;
         depth?: number;
+        filesys?: boolean;
+        includeHidden?: boolean;
     };
     export type FavoriteData = {
         profileName: string;

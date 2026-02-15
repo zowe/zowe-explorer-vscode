@@ -2091,7 +2091,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
         const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
 
-        expect(getUssDirFilterOptionsSpy).toHaveBeenCalledWith({});
+        expect(getUssDirFilterOptionsSpy).toHaveBeenCalledWith({ includeHidden: false, filesys: false });
         expect(result.dirFilterOptions).toEqual(filterOptions);
 
         l10nSpy.mockRestore();
@@ -2143,9 +2143,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
         mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
             mockQuickPick.selectedItems = [
-                { label: "Include Hidden Files" },
-                { label: "Search All Filesystems" },
-                { label: "Return Symlinks" },
+                { label: "Follow Symlinks" },
                 { label: "Apply Filter Options" },
             ];
             callback();
@@ -2155,9 +2153,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
         const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
 
-        expect(result.dirOptions.includeHidden).toBe(true);
-        expect(result.dirOptions.filesys).toBe(true);
-        expect(result.dirOptions.symlinks).toBe(true);
+        expect(result.dirOptions.followSymlinks).toBe(true);
         expect(result.dirFilterOptions).toEqual(filterOptions);
 
         l10nSpy.mockRestore();
@@ -2184,12 +2180,13 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 chooseEncoding: false,
                 selectedPath: vscode.Uri.file("/user/selected/path"),
                 dirOptions: {
-                    includeHidden: false,
-                    filesys: false,
-                    symlinks: false,
+                    followSymlinks: true,
                     chooseFilterOptions: false,
                 },
-                dirFilterOptions: {},
+                dirFilterOptions: {
+                    includeHidden: false,
+                    filesys: false,
+                },
             });
             expect(mockQuickPick.show).toHaveBeenCalled();
             expect(mockShowOpenDialog).toHaveBeenCalledWith({
@@ -2208,7 +2205,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
                 mockQuickPick.selectedItems = [
                     { label: "Overwrite", picked: true },
-                    { label: "Include Hidden Files", picked: true },
+                    { label: "Follow Symlinks", picked: true },
                     { label: "Generate Directory Structure", picked: true },
                 ];
                 callback();
@@ -2219,7 +2216,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
 
             expect(result.overwrite).toBe(true);
-            expect(result.dirOptions.includeHidden).toBe(true);
+            expect(result.dirOptions.followSymlinks).toBe(true);
             expect(result.generateDirectory).toBe(true);
         });
 
@@ -2230,7 +2227,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 generateDirectory: false,
                 chooseEncoding: false,
                 selectedPath: vscode.Uri.file("/stored/path"),
-                dirOptions: { includeHidden: true },
+                dirOptions: { followSymlinks: true },
             };
             mockZoweLocalStorage.mockReturnValue(storedOptions);
 
@@ -2328,12 +2325,13 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 chooseEncoding: false,
                 selectedPath: vscode.Uri.file("/test/path"),
                 dirOptions: {
-                    includeHidden: false,
-                    filesys: false,
-                    symlinks: false,
+                    followSymlinks: true,
                     chooseFilterOptions: false,
                 },
-                dirFilterOptions: {},
+                dirFilterOptions: {
+                    includeHidden: false,
+                    filesys: false,
+                },
             });
         });
 
@@ -2543,10 +2541,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 generateDirectory: false,
                 overwrite: true,
                 dirOptions: {
-                    includeHidden: false,
+                    followSymlinks: true,
+                    chooseFilterOptions: false,
                     directoryEncoding: { kind: "other", codepage: "IBM-1047" },
                 },
-                dirFilterOptions: {},
+                dirFilterOptions: { includeHidden: false, filesys: false },
                 encoding: { kind: "other", codepage: "IBM-1047" },
             };
 
@@ -2574,8 +2573,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
                     maxConcurrentRequests: 1,
                 }),
                 expect.objectContaining({
-                    filesys: undefined,
-                    symlinks: undefined,
+                    symlinks: false,
+                    type: "f",
                 })
             );
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
@@ -2592,8 +2591,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: true,
                 overwrite: false,
-                dirOptions: { includeHidden: true },
-                dirFilterOptions: {},
+                dirOptions: { followSymlinks: true, chooseFilterOptions: true },
+                dirFilterOptions: { includeHidden: true, filesys: false },
                 encoding: { kind: "binary" },
             };
 
@@ -2615,8 +2614,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 }),
                 expect.objectContaining({
                     type: "f",
-                    filesys: undefined,
-                    symlinks: undefined,
+                    symlinks: false,
                 })
             );
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
@@ -2632,8 +2630,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: false,
-                dirOptions: { includeHidden: false },
-                dirFilterOptions: {},
+                dirOptions: { followSymlinks: true, chooseFilterOptions: false },
+                dirFilterOptions: { includeHidden: false, filesys: false },
                 encoding: { kind: "binary" },
             };
 
@@ -2652,8 +2650,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: false,
-                dirOptions: { includeHidden: false },
-                dirFilterOptions: {},
+                dirOptions: { followSymlinks: true, chooseFilterOptions: false },
+                dirFilterOptions: { includeHidden: false, filesys: false },
                 encoding: undefined,
             };
 
@@ -2695,8 +2693,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: false,
-                dirOptions: { includeHidden: false },
-                dirFilterOptions: {},
+                dirOptions: { followSymlinks: true, chooseFilterOptions: false },
+                dirFilterOptions: { includeHidden: false, filesys: false },
                 encoding: undefined,
             };
 
@@ -2717,8 +2715,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: false,
-                dirOptions: { includeHidden: false },
-                dirFilterOptions: {},
+                dirOptions: { followSymlinks: true, chooseFilterOptions: false },
+                dirFilterOptions: { includeHidden: false, filesys: false },
                 encoding: undefined,
             };
 
@@ -2751,8 +2749,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: false,
-                dirOptions: { includeHidden: false },
-                dirFilterOptions: {},
+                dirOptions: { followSymlinks: true, chooseFilterOptions: false },
+                dirFilterOptions: { includeHidden: false, filesys: false },
                 encoding: undefined,
             };
 
@@ -2788,8 +2786,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 selectedPath: vscode.Uri.file("/test/download/path"),
                 generateDirectory: false,
                 overwrite: false,
-                dirOptions: { includeHidden: false },
-                dirFilterOptions: {},
+                dirOptions: { followSymlinks: true, chooseFilterOptions: false },
+                dirFilterOptions: { includeHidden: false, filesys: false },
                 encoding: undefined,
             };
 
@@ -2810,8 +2808,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 }),
                 expect.objectContaining({
                     type: "f",
-                    filesys: undefined,
-                    symlinks: undefined,
+                    symlinks: false,
                 })
             );
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
