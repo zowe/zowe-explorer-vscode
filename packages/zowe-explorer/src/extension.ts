@@ -74,10 +74,6 @@ export async function migrateShowHiddenFilesDefault(context: vscode.ExtensionCon
     const MIGRATION_KEY = "showHiddenFiles.defaultMigrated";
     const config = vscode.workspace.getConfiguration("zowe.files");
 
-    if (context.globalState.get(MIGRATION_KEY)) {
-        return;
-    }
-
     // Check if user has explicitly set the value
     const inspectResult = config.inspect<boolean>("ShowHiddenFiles.disabled");
     const hasUserValue = inspectResult?.globalValue !== undefined || inspectResult?.workspaceValue !== undefined;
