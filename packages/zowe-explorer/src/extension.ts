@@ -38,6 +38,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
     await ProfilesUtils.handleV1MigrationStatus();
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
+    await migrateShowHiddenFilesDefault(context);
 
     const providers = await SharedTreeProviders.initializeProviders({
         ds: () => DatasetInit.initDatasetProvider(context),
@@ -63,4 +64,34 @@ export async function deactivate(): Promise<void> {
     await ZoweSaveQueue.all();
     Constants.ACTIVATED = false;
     ZoweLogger.disposeZoweLogger();
+}
+/**
+ * Called by the activate function to monitor the default value of setting showHiddenFiles
+ *
+ * @export
+ */
+export async function migrateShowHiddenFilesDefault(context: vscode.ExtensionContext): Promise<void> {
+    const MIGRATION_KEY = "showHiddenFiles.defaultMigrated";
+    const config = vscode.workspace.getConfiguration("zowe.files");
+
+    if (context.globalState.get(MIGRATION_KEY)) {
+        return;
+    }
+
+    // Check if user has explicitly set the value
+    const inspectResult = config.inspect<boolean>("ShowHiddenFiles.disabled");
+    const hasUserValue = inspectResult?.globalValue !== undefined || inspectResult?.workspaceValue !== undefined;
+
+    if (!hasUserValue) {
+        // Get current extension version
+        const extensionVersion = context.extension.packageJSON.version;
+        const majorVersion = parseInt(extensionVersion.split(".")[0]);
+
+        // Set default based on version
+        const defaultValue = majorVersion <= 3 ? true : false;
+        await config.update("ShowHiddenFiles.disabled", defaultValue, vscode.ConfigurationTarget.Global);
+    }
+
+    // Mark migration as complete
+    await context.globalState.update(MIGRATION_KEY, true);
 }
