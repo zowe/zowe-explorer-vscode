@@ -649,7 +649,7 @@
   "Added a new Poll For Job Completion button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting Zowe > Jobs: Poll Interval. <a>#3967</a>": "",
   "Added a new setting Secure Credentials Enabled, default value is selected for security and will have to be unselected to allow creation of team configuration files without default secure arrays to support environments that don't have access to Zowe CLI's Secure Credential Management.": "",
   "Added a new setting zowe.files.logsFolder.path that can be used to override Zowe Explorer logs folder if default location is read-only. <a>#2186</a>": "",
-  "Added a new VS Code toggle setting that allows users to show or hide hidden files in the USS tree view.<a>#3912</a>": "",
+  "Added a new VS Code toggle setting that allows users to show or hide hidden files in the Unix System Service (USS) tree view.<a>#3912</a>": "",
   "Added a new Zowe Explorer setting, zowe.logger, with a default setting of INFO.": "",
   "Added a prompt to create a new Zowe client configuration for an environment that does not have any Zowe client configurations. <a>#3148</a>": "",
   "Added a Release Notes page which opens when VS Code is launched or from the command palette Display Release Notes. The zowe.settings.displayReleaseNotes setting can be changed to set when the release notes display. <a>#3621</a>": "",
