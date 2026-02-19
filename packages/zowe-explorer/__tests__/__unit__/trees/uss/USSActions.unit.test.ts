@@ -1796,6 +1796,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
     describe("getUssDirFilterOptions", () => {
         let filterQuickPick: any;
         let filterShowInputBox: jest.SpyInstance;
+        let resolveQuickPickSpy: jest.SpyInstance;
 
         beforeEach(() => {
             filterQuickPick = {
@@ -1810,18 +1811,18 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 show: jest.fn(),
                 hide: jest.fn(),
                 dispose: jest.fn(),
+                matchOnDescription: false,
             };
 
             jest.spyOn(Gui, "createQuickPick").mockReturnValue(filterQuickPick);
+            resolveQuickPickSpy = jest.spyOn(Gui, "resolveQuickPick");
             filterShowInputBox = jest.spyOn(Gui, "showInputBox");
             jest.clearAllMocks();
         });
 
-        it("should return empty object when no filters are selected", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [];
-                callback();
-            });
+        it("should return filter options when user selects Done immediately", async () => {
+            // User selects Done without changing anything
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u2714 Ready to download" });
 
             const result = await (USSActions as any).getUssDirFilterOptions();
 
@@ -1830,10 +1831,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(filterQuickPick.dispose).toHaveBeenCalled();
         });
 
-        it("should return null when user cancels selection", async () => {
-            filterQuickPick.onDidHide.mockImplementation((callback: () => void) => {
-                callback();
-            });
+        it("should return null when user cancels (dismisses quick pick)", async () => {
+            resolveQuickPickSpy.mockResolvedValueOnce(undefined);
 
             const result = await (USSActions as any).getUssDirFilterOptions();
 
@@ -1841,141 +1840,89 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(filterQuickPick.dispose).toHaveBeenCalled();
         });
 
-        it("should handle group filter input", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [{ key: "group", inputType: "string" }];
-                callback();
-            });
+        it("should handle group filter input then Done", async () => {
+            // User clicks Group, enters value, then clicks Done
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Group" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
             filterShowInputBox.mockResolvedValue("admin");
 
             const result = await (USSActions as any).getUssDirFilterOptions();
 
             expect(result).toEqual({ group: "admin" });
-            expect(filterShowInputBox).toHaveBeenCalledWith({
-                prompt: expect.stringContaining("group"),
-                placeHolder: expect.stringContaining("admin"),
-                value: "",
-                validateInput: expect.any(Function),
-            });
+            expect(filterShowInputBox).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    value: "",
+                    validateInput: expect.any(Function),
+                })
+            );
         });
 
-        it("should handle user filter input", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [{ key: "user", inputType: "string" }];
-                callback();
-            });
+        it("should handle user filter input then Done", async () => {
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F User" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
             filterShowInputBox.mockResolvedValue("1001");
 
             const result = await (USSActions as any).getUssDirFilterOptions();
 
             expect(result).toEqual({ user: "1001" });
-            expect(filterShowInputBox).toHaveBeenCalledWith({
-                prompt: expect.stringContaining("user"),
-                placeHolder: expect.stringContaining("IBMUSER"),
-                value: "",
-                validateInput: expect.any(Function),
-            });
+            expect(filterShowInputBox).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    value: "",
+                    validateInput: expect.any(Function),
+                })
+            );
         });
 
-        it("should handle mtime filter input", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [{ key: "mtime", inputType: "string" }];
-                callback();
-            });
+        it("should handle mtime filter input then Done", async () => {
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Modification Time" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
             filterShowInputBox.mockResolvedValue("+7");
 
             const result = await (USSActions as any).getUssDirFilterOptions();
 
             expect(result).toEqual({ mtime: "+7" });
-            expect(filterShowInputBox).toHaveBeenCalledWith({
-                prompt: expect.stringContaining("modification time"),
-                placeHolder: expect.stringContaining("+7"),
-                value: "",
-                validateInput: expect.any(Function),
-            });
         });
 
-        it("should handle size filter input", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [{ key: "size", inputType: "string" }];
-                callback();
-            });
+        it("should handle size filter input then Done", async () => {
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Size" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
             filterShowInputBox.mockResolvedValue("+1M");
 
             const result = await (USSActions as any).getUssDirFilterOptions();
 
             expect(result).toEqual({ size: "+1M" });
-            expect(filterShowInputBox).toHaveBeenCalledWith({
-                prompt: expect.stringContaining("size"),
-                placeHolder: expect.stringContaining("+1M"),
-                value: "",
-                validateInput: expect.any(Function),
-            });
         });
 
-        it("should handle permission filter input", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [{ key: "perm", inputType: "string" }];
-                callback();
-            });
+        it("should handle permission filter input then Done", async () => {
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Permissions" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
             filterShowInputBox.mockResolvedValue("755");
 
             const result = await (USSActions as any).getUssDirFilterOptions();
 
             expect(result).toEqual({ perm: "755" });
-            expect(filterShowInputBox).toHaveBeenCalledWith({
-                prompt: expect.stringContaining("permission"),
-                placeHolder: expect.stringContaining("755"),
-                value: "",
-                validateInput: expect.any(Function),
-            });
         });
 
-        it("should handle type filter input", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [{ key: "type", inputType: "string" }];
-                callback();
-            });
+        it("should handle type filter input then Done", async () => {
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F File Type" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
             filterShowInputBox.mockResolvedValue("d");
 
             const result = await (USSActions as any).getUssDirFilterOptions();
 
             expect(result).toEqual({ type: "d" });
-            expect(filterShowInputBox).toHaveBeenCalledWith({
-                prompt: expect.stringContaining("file type"),
-                placeHolder: expect.stringContaining("c, d, f, l, p, or s"),
-                value: "",
-                validateInput: expect.any(Function),
-            });
         });
 
-        it("should handle depth filter input as number", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [{ key: "depth", inputType: "number" }];
-                callback();
-            });
+        it("should handle depth filter input as number then Done", async () => {
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Depth" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
             filterShowInputBox.mockResolvedValue("3");
 
             const result = await (USSActions as any).getUssDirFilterOptions();
 
             expect(result).toEqual({ depth: 3 });
-            expect(filterShowInputBox).toHaveBeenCalledWith({
-                prompt: expect.stringContaining("depth"),
-                placeHolder: expect.stringContaining("2 levels"),
-                value: "",
-                validateInput: expect.any(Function),
-            });
         });
 
-        it("should handle multiple filters", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [
-                    { key: "user", inputType: "string" },
-                    { key: "depth", inputType: "number" },
-                    { key: "size", inputType: "string" },
-                ];
-                callback();
-            });
+        it("should handle multiple filters edited in sequence", async () => {
+            // User edits user, then depth, then size, then clicks Done
+            resolveQuickPickSpy
+                .mockResolvedValueOnce({ label: "\u270F User" })
+                .mockResolvedValueOnce({ label: "\u270F Depth" })
+                .mockResolvedValueOnce({ label: "\u270F Size" })
+                .mockResolvedValueOnce({ label: "\u2714 Ready to download" });
             filterShowInputBox.mockResolvedValueOnce("IBMUSER").mockResolvedValueOnce("2").mockResolvedValueOnce("+100K");
 
             const result = await (USSActions as any).getUssDirFilterOptions();
@@ -1984,55 +1931,80 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(filterShowInputBox).toHaveBeenCalledTimes(3);
         });
 
-        it("should use current filter values as initial values", async () => {
+        it("should use current filter values as initial values in input box", async () => {
             const currentOptions = {
                 group: "ibmgroup",
                 mtime: "+30",
                 depth: 1,
             };
 
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [{ key: "group", inputType: "string" }];
-                callback();
-            });
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Group" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
             filterShowInputBox.mockResolvedValue("admin");
 
             const result = await (USSActions as any).getUssDirFilterOptions(currentOptions);
 
-            expect(filterShowInputBox).toHaveBeenCalledWith({
-                prompt: expect.stringContaining("group"),
-                placeHolder: expect.stringContaining("admin"),
-                value: "ibmgroup",
-                validateInput: expect.any(Function),
-            });
-            expect(result).toEqual({ group: "admin" });
+            expect(filterShowInputBox).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    value: "ibmgroup",
+                    validateInput: expect.any(Function),
+                })
+            );
+            expect(result).toEqual({ group: "admin", mtime: "+30", depth: 1 });
         });
 
-        it("should validate empty input", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [{ key: "user", inputType: "string" }];
-                callback();
-            });
+        it("should toggle boolean filter (includeHidden) when clicked", async () => {
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Include Hidden Files" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ includeHidden: true });
+            // Boolean filters should NOT show an input box
+            expect(filterShowInputBox).not.toHaveBeenCalled();
+        });
+
+        it("should toggle boolean filter (filesys) when clicked", async () => {
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Search All Filesystems" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            expect(result).toEqual({ filesys: true });
+            expect(filterShowInputBox).not.toHaveBeenCalled();
+        });
+
+        it("should toggle boolean back to false when clicked twice", async () => {
+            resolveQuickPickSpy
+                .mockResolvedValueOnce({ label: "\u270F Include Hidden Files" })
+                .mockResolvedValueOnce({ label: "\u270F Include Hidden Files" })
+                .mockResolvedValueOnce({ label: "\u2714 Ready to download" });
+
+            const result = await (USSActions as any).getUssDirFilterOptions();
+
+            // Toggled on then off
+            expect(result.includeHidden).toBeFalsy();
+        });
+
+        it("should allow empty input to clear a filter", async () => {
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F User" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
 
             filterShowInputBox.mockImplementation(({ validateInput: validator }: any) => {
-                const result = validator("");
-                return result === null ? Promise.resolve("test") : Promise.resolve(null);
+                const validationResult = validator("");
+                expect(validationResult).toBeNull();
+                return Promise.resolve("");
             });
 
-            await (USSActions as any).getUssDirFilterOptions();
+            const result = await (USSActions as any).getUssDirFilterOptions({ user: "IBMUSER" });
 
             expect(filterShowInputBox).toHaveBeenCalled();
+            expect(result.user).toBeUndefined();
         });
 
         it("should validate numeric input for depth", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [{ key: "depth", inputType: "number" }];
-                callback();
-            });
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Depth" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
 
             filterShowInputBox.mockImplementation(({ validateInput: validator }: any) => {
-                const result = validator("abc");
-                return result === null ? Promise.resolve("3") : Promise.resolve(null);
+                const validationResult = validator("abc");
+                expect(validationResult).not.toBeNull();
+                return Promise.resolve("3");
             });
 
             await (USSActions as any).getUssDirFilterOptions();
@@ -2040,14 +2012,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(filterShowInputBox).toHaveBeenCalled();
         });
 
-        it("should skip filter when input is cancelled", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [
-                    { key: "user", inputType: "string" },
-                    { key: "group", inputType: "string" },
-                ];
-                callback();
-            });
+        it("should skip filter update when input is cancelled", async () => {
+            resolveQuickPickSpy
+                .mockResolvedValueOnce({ label: "\u270F User" })
+                .mockResolvedValueOnce({ label: "\u270F Group" })
+                .mockResolvedValueOnce({ label: "\u2714 Ready to download" });
             filterShowInputBox.mockResolvedValueOnce("IBMUSER").mockResolvedValueOnce(null); // cancelled
 
             const result = await (USSActions as any).getUssDirFilterOptions();
@@ -2055,19 +2024,29 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(result).toEqual({ user: "IBMUSER" });
         });
 
-        it("should skip filter when input is empty after trim", async () => {
-            filterQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                filterQuickPick.selectedItems = [
-                    { key: "user", inputType: "string" },
-                    { key: "group", inputType: "string" },
-                ];
-                callback();
-            });
-            filterShowInputBox.mockResolvedValueOnce("IBMUSER").mockResolvedValueOnce("   "); // empty after trim
+        it("should clear filter when input is empty after trim", async () => {
+            resolveQuickPickSpy
+                .mockResolvedValueOnce({ label: "\u270F User" })
+                .mockResolvedValueOnce({ label: "\u270F Group" })
+                .mockResolvedValueOnce({ label: "\u2714 Ready to download" });
+            filterShowInputBox.mockResolvedValueOnce("IBMUSER").mockResolvedValueOnce("   ");
 
-            const result = await (USSActions as any).getUssDirFilterOptions();
+            const result = await (USSActions as any).getUssDirFilterOptions({ group: "admin" });
 
             expect(result).toEqual({ user: "IBMUSER" });
+            expect(result.group).toBeUndefined();
+        });
+
+        it("should clear an existing filter when user submits empty value", async () => {
+            const currentOptions = { user: "IBMUSER", depth: 3, size: "+1M" };
+
+            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Depth" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
+            filterShowInputBox.mockResolvedValueOnce("");
+
+            const result = await (USSActions as any).getUssDirFilterOptions(currentOptions);
+
+            expect(result).toEqual({ user: "IBMUSER", size: "+1M" });
+            expect(result.depth).toBeUndefined();
         });
     });
 
@@ -2142,10 +2121,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
         });
 
         mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-            mockQuickPick.selectedItems = [
-                { label: "Follow Symlinks" },
-                { label: "Apply Filter Options" },
-            ];
+            mockQuickPick.selectedItems = [{ label: "Follow Symlinks" }, { label: "Apply Filter Options" }];
             callback();
         });
 
@@ -2274,14 +2250,24 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(result).toBeUndefined();
         });
 
-        it("should return undefined when user cancels encoding selection", async () => {
+        it("should return to quick pick when user cancels encoding selection, then return undefined on dismiss", async () => {
             const mockNode = createMockNode();
             mockZoweLocalStorage.mockReturnValue({});
 
-            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: "Choose Encoding", picked: true }];
-                callback();
-            });
+            // First iteration: accept with encoding selected → encoding cancelled → retry
+            // Second iteration: dismiss quick pick
+            mockQuickPick.onDidAccept
+                .mockImplementationOnce((callback: () => void) => {
+                    mockQuickPick.selectedItems = [{ label: "Choose Encoding", picked: true }];
+                    callback();
+                })
+                .mockImplementationOnce(() => {});
+
+            mockQuickPick.onDidHide
+                .mockImplementationOnce(() => {})
+                .mockImplementationOnce((callback: () => void) => {
+                    callback();
+                });
 
             jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(undefined);
 
@@ -2359,7 +2345,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             mockZoweLocalStorage.mockReturnValue({});
             const mockUssApi = { getTag: jest.fn().mockResolvedValue("utf-8") } as any;
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi);
-            jest.spyOn(SharedUtils, "promptForDirectoryEncoding").mockResolvedValue(undefined);
+            jest.spyOn(SharedUtils, "promptForDirectoryEncoding").mockResolvedValue({ kind: "other", codepage: "UTF-8" });
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
                 mockQuickPick.selectedItems = [{ label: "Choose Encoding", picked: true }];
