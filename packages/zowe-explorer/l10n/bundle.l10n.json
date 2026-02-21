@@ -477,7 +477,7 @@
     ]
   },
   "Duplicated profile schema writing on repeated Team Config file initialization:": "Duplicated profile schema writing on repeated Team Config file initialization:",
-  "e.g. MEM*": "e.g. MEM*",
+  "e.g. MEM* or MEM1,MEM2": "e.g. MEM* or MEM1,MEM2",
   "e.g., USER.*, PUBLIC.DATA.*, etc.": "e.g., USER.*, PUBLIC.DATA.*, etc.",
   "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>": "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>",
   "EBCDIC": "EBCDIC",

@@ -1986,20 +1986,25 @@ Would you like to do this now?`,
             return;
         }
 
-        const dateValidation = (value): string => {
-            return dayjs(value).isValid() ? null : vscode.l10n.t("Invalid date format specified");
+        const dateValidation = (value: string): string => {
+            const parts = value.split(",").map((v) => v.trim());
+            return parts.every((p) => p.length > 0 && dayjs(p).isValid()) ? null : vscode.l10n.t("Invalid date format specified");
         };
 
         const getValidation = (): ((value: string) => string) => {
             if (filterMethod === Sorting.DatasetFilterOpts.LastModified || filterMethod === Sorting.DatasetFilterOpts.DateCreated) {
                 return dateValidation;
             }
-            return (val): string => (val.length > 0 ? null : vscode.l10n.t("Invalid filter specified"));
+            return (val: string): string => (val.split(",").every((v) => v.trim().length > 0) ? null : vscode.l10n.t("Invalid filter specified"));
+        };
+
+        const placeholders: Partial<Record<Sorting.DatasetFilterOpts, string>> = {
+            [Sorting.DatasetFilterOpts.Name]: vscode.l10n.t("e.g. MEM* or MEM1,MEM2"),
         };
 
         const filter = await Gui.showInputBox({
             title: vscode.l10n.t("Enter a value to filter by"),
-            placeHolder: filterMethod === Sorting.DatasetFilterOpts.Name ? vscode.l10n.t("e.g. MEM*") : "",
+            placeHolder: placeholders[filterMethod] ?? "",
             validateInput: getValidation(),
         });
 

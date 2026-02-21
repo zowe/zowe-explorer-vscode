@@ -4614,6 +4614,39 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["MEM1", "MEM2"]);
         });
 
+        it("filters PDS by comma-separated names returning matching members", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(case-sensitive) Name" as any);
+            mocks.showInputBox.mockResolvedValueOnce("A,C");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "C"]);
+        });
+
+        it("filters PDS by comma-separated user IDs returning matching members", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(account) User ID" as any);
+            mocks.showInputBox.mockResolvedValueOnce("someUser,anotherUser");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+        });
+
+        it("filters PDS by comma-separated modified dates returning matching members", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
+            mocks.showInputBox.mockResolvedValueOnce("2022-01-01,2022-03-15");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "C"]);
+        });
+
         it("filters PDS members using the session node filter", async () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
