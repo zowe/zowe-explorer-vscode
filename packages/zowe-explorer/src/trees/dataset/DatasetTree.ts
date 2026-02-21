@@ -1954,7 +1954,10 @@ Would you like to do this now?`,
             : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;
         const selection = (
             await Gui.showQuickPick(
-                [...DatasetUtils.DATASET_FILTER_OPTS.map((sortOpt, i) => (node.filter?.method === i ? `${sortOpt} $(check)` : sortOpt)), clearFilter],
+                [
+                    ...DatasetUtils.DATASET_FILTER_OPTS.map(({ label, method }) => (node.filter?.method === method ? `${label} $(check)` : label)),
+                    clearFilter,
+                ],
                 {
                     placeHolder: vscode.l10n.t({
                         message: "Set a filter for {0}",
@@ -1965,7 +1968,7 @@ Would you like to do this now?`,
             )
         )?.replace(" $(check)", "");
 
-        const filterMethod = DatasetUtils.DATASET_FILTER_OPTS.indexOf(selection);
+        const filterMethod = DatasetUtils.DATASET_FILTER_OPTS.find(({ label }) => label === selection)?.method ?? -1;
 
         const userDismissed = filterMethod < 0;
         if (userDismissed || selection === clearFilter) {
@@ -2010,7 +2013,7 @@ Would you like to do this now?`,
         this.updateFilterForNode(
             node,
             {
-                method: filterMethod,
+                method: filterMethod as Sorting.DatasetFilterOpts,
                 value: filter,
             },
             isSession

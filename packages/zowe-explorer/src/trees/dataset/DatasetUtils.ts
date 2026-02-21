@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { DS_EXTENSION_MAP, Types } from "@zowe/zowe-explorer-api";
+import { DS_EXTENSION_MAP, Sorting, Types } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import dayjs = require("dayjs");
@@ -23,12 +23,14 @@ export class DatasetUtils {
         `$(fold) ${vscode.l10n.t("Sort Direction")}`,
     ];
 
-    // eslint-disable-next-line no-magic-numbers
-    public static readonly DATASET_FILTER_OPTS = [
-        this.DATASET_SORT_OPTS[2],
-        this.DATASET_SORT_OPTS[3],
-        this.DATASET_SORT_OPTS[0],
-        this.DATASET_SORT_OPTS[1],
+    // Reorder the filter opts to match the sort options
+    // as changing the order in the API would be a breaking change
+    public static readonly DATASET_FILTER_OPTS: { label: string; method: Sorting.DatasetFilterOpts }[] = [
+        { label: this.DATASET_SORT_OPTS[0], method: Sorting.DatasetFilterOpts.Name },
+        { label: this.DATASET_SORT_OPTS[1], method: Sorting.DatasetFilterOpts.DateCreated },
+        { label: this.DATASET_SORT_OPTS[2], method: Sorting.DatasetFilterOpts.LastModified },
+        // eslint-disable-next-line no-magic-numbers
+        { label: this.DATASET_SORT_OPTS[3], method: Sorting.DatasetFilterOpts.UserId },
     ];
 
     public static getProfileAndDataSetName(node: Types.IZoweNodeType): {
