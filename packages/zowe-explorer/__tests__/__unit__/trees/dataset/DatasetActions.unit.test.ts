@@ -5725,7 +5725,7 @@ describe("DatasetActions - downloading functions", () => {
             mockPromptForDownloadEncoding[Symbol.dispose]();
         });
 
-        it("should handle override extension selection with valid extension", async () => {
+        it("should handle override file extension selection with valid extension", async () => {
             const mockNode = new ZoweDatasetNode({
                 label: "TEST.DS",
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -5738,7 +5738,7 @@ describe("DatasetActions - downloading functions", () => {
             const mockShowInputBox = new MockedProperty(Gui, "showInputBox", undefined, jest.fn().mockResolvedValue("csv"));
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Extension"), picked: true }];
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override File Extension"), picked: true }];
                 callback();
             });
 
@@ -5753,7 +5753,7 @@ describe("DatasetActions - downloading functions", () => {
             mockShowInputBox[Symbol.dispose]();
         });
 
-        it("should handle override extension with dot", async () => {
+        it("should handle override file extension with dot", async () => {
             const mockNode = new ZoweDatasetNode({
                 label: "TEST.DS",
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -5766,7 +5766,7 @@ describe("DatasetActions - downloading functions", () => {
             const mockShowInputBox = new MockedProperty(Gui, "showInputBox", undefined, jest.fn().mockResolvedValue(".csv"));
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Extension"), picked: true }];
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override File Extension"), picked: true }];
                 callback();
             });
 
@@ -5793,7 +5793,7 @@ describe("DatasetActions - downloading functions", () => {
             const mockShowInputBox = new MockedProperty(Gui, "showInputBox", undefined, jest.fn().mockResolvedValue(undefined));
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Extension"), picked: true }];
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override File Extension"), picked: true }];
                 callback();
             });
 
@@ -5805,7 +5805,7 @@ describe("DatasetActions - downloading functions", () => {
             mockShowInputBox[Symbol.dispose]();
         });
 
-        it("should preserve saved fileExtension when override extension is unchecked", async () => {
+        it("should preserve saved fileExtension when override file extension is unchecked", async () => {
             const mockNode = new ZoweDatasetNode({
                 label: "TEST.DS",
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -5850,7 +5850,7 @@ describe("DatasetActions - downloading functions", () => {
             const mockShowInputBox = new MockedProperty(Gui, "showInputBox", undefined, jest.fn().mockResolvedValue("json"));
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Extension"), picked: true }];
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override File Extension"), picked: true }];
                 callback();
             });
 
