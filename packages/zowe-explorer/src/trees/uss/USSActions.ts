@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, IZoweUSSTreeNode, Types, ZoweExplorerApiType, ZosEncoding } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, IZoweUSSTreeNode, Types, ZoweExplorerApiType, ZosEncoding, MessageSeverity } from "@zowe/zowe-explorer-api";
 import { isBinaryFileSync } from "isbinaryfile";
 import { USSAttributeView } from "./USSAttributeView";
 import { USSFileStructure } from "./USSFileStructure";
@@ -22,12 +22,15 @@ import { Constants } from "../../configuration/Constants";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { LocalFileManagement } from "../../management/LocalFileManagement";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+import { FilterItem } from "../../management/FilterManagement";
 import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfileManagement } from "../../management/ProfileManagement";
 import { Definitions } from "../../configuration/Definitions";
+import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
+import { USSUtils } from "./USSUtils";
 
 export class USSActions {
     /**
@@ -312,6 +315,541 @@ export class USSActions {
         } catch (e) {
             await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile: node.getProfile() });
         }
+    }
+
+    private static readonly USS_FILTER_PROPERTIES: {
+        key: keyof Definitions.UssDirFilterOptions;
+        label: string;
+        inputType: "boolean" | "string" | "number";
+        placeHolder: string;
+        defaultDescription: string;
+    }[] = [
+        {
+            key: "includeHidden",
+            label: vscode.l10n.t("Include Hidden Files"),
+            inputType: "boolean",
+            placeHolder: "",
+            defaultDescription: vscode.l10n.t("Include hidden files when downloading directories"),
+        },
+        {
+            key: "filesys",
+            label: vscode.l10n.t("Search All Filesystems"),
+            inputType: "boolean",
+            placeHolder: "",
+            defaultDescription: vscode.l10n.t("Search all mounted filesystems under the path"),
+        },
+        {
+            key: "group",
+            label: vscode.l10n.t("Group"),
+            inputType: "string",
+            placeHolder: vscode.l10n.t("e.g., admin or 100"),
+            defaultDescription: vscode.l10n.t("Filter by group owner or GID"),
+        },
+        {
+            key: "user",
+            label: vscode.l10n.t("User"),
+            inputType: "string",
+            placeHolder: vscode.l10n.t("e.g., IBMUSER or 1001"),
+            defaultDescription: vscode.l10n.t("Filter by user name or UID"),
+        },
+        {
+            key: "mtime",
+            label: vscode.l10n.t("Modification Time"),
+            inputType: "string",
+            placeHolder: vscode.l10n.t("e.g., +7 (older than 7 days), -1 (newer than 1 day), 30 (exactly 30 days)"),
+            defaultDescription: vscode.l10n.t("Filter by modification time in days"),
+        },
+        {
+            key: "size",
+            label: vscode.l10n.t("Size"),
+            inputType: "string",
+            placeHolder: vscode.l10n.t("e.g., +1M (larger than 1MB), -500K (smaller than 500KB), 100G"),
+            defaultDescription: vscode.l10n.t("Filter by file size"),
+        },
+        {
+            key: "perm",
+            label: vscode.l10n.t("Permissions"),
+            inputType: "string",
+            placeHolder: vscode.l10n.t("e.g., 755, -644 (not 644)"),
+            defaultDescription: vscode.l10n.t("Filter by permission octal mask"),
+        },
+        {
+            key: "type",
+            label: vscode.l10n.t("File Type"),
+            inputType: "string",
+            placeHolder: vscode.l10n.t("c, d, f, l, p, or s"),
+            defaultDescription: vscode.l10n.t("Filter by file type (c=character, d=directory, f=file, l=symlink, p=pipe, s=socket)"),
+        },
+        {
+            key: "depth",
+            label: vscode.l10n.t("Depth"),
+            inputType: "number",
+            placeHolder: vscode.l10n.t("e.g., 2 (search 2 levels deep)"),
+            defaultDescription: vscode.l10n.t("Directory depth to search (number of levels)"),
+        },
+    ];
+
+    private static async getUssDirFilterOptions(currentOptions?: Definitions.UssDirFilterOptions): Promise<Definitions.UssDirFilterOptions> {
+        ZoweLogger.trace("uss.actions.configureFilterOptions called.");
+
+        const filterOptions: Definitions.UssDirFilterOptions = { ...(currentOptions ?? {}) };
+        return USSActions.handleFilterSelection(filterOptions);
+    }
+
+    private static async handleFilterSelection(filterOptions: Definitions.UssDirFilterOptions): Promise<Definitions.UssDirFilterOptions> {
+        const qpItems: FilterItem[] = [];
+        qpItems.push(new FilterItem({ text: `\u2714 ${vscode.l10n.t("Ready to download")}`, show: true }));
+        for (const prop of USSActions.USS_FILTER_PROPERTIES) {
+            const currentValue = filterOptions[prop.key];
+            let description: string;
+
+            if (prop.inputType === "boolean") {
+                const status = currentValue ? vscode.l10n.t("Enabled") : vscode.l10n.t("Disabled");
+                description = `[${status}] ${prop.defaultDescription}`;
+            } else if (currentValue != null && currentValue !== "") {
+                description = vscode.l10n.t({
+                    message: "[{0}] {1}",
+                    args: [currentValue.toString(), prop.defaultDescription],
+                    comment: ["Current filter value", "Filter description"],
+                });
+            } else {
+                description = vscode.l10n.t({
+                    message: "[{0}] {1}",
+                    args: [vscode.l10n.t("not set"), prop.defaultDescription],
+                    comment: ["Not set indicator", "Filter description"],
+                });
+            }
+            qpItems.push(new FilterItem({ text: `\u270F ${prop.label}`, description, show: true }));
+        }
+
+        const quickpick = Gui.createQuickPick();
+        quickpick.title = vscode.l10n.t("Configure Filter Options");
+        quickpick.placeholder = vscode.l10n.t("Click on a filter to change its value");
+        quickpick.ignoreFocusOut = true;
+        quickpick.items = [...qpItems];
+        quickpick.matchOnDescription = false;
+
+        quickpick.show();
+        const choice = await Gui.resolveQuickPick(quickpick);
+        quickpick.dispose();
+
+        if (!choice) {
+            return null;
+        }
+
+        const selectedLabel = choice.label;
+        if (selectedLabel.includes(vscode.l10n.t("Ready to download"))) {
+            return filterOptions;
+        }
+
+        const property = USSActions.USS_FILTER_PROPERTIES.find((prop) => selectedLabel.includes(prop.label));
+        if (!property) {
+            return filterOptions;
+        }
+
+        if (property.inputType === "boolean") {
+            (filterOptions as any)[property.key] = !filterOptions[property.key];
+        } else {
+            const currentValue = filterOptions[property.key];
+            const inputValue = await Gui.showInputBox({
+                prompt: vscode.l10n.t({
+                    message: "Enter value for {0} (leave empty to clear)",
+                    args: [property.label],
+                    comment: ["Filter property label"],
+                }),
+                placeHolder: property.placeHolder,
+                value: currentValue?.toString() ?? "",
+                validateInput: (value) => {
+                    if (value.trim() && property.inputType === "number" && isNaN(parseInt(value))) {
+                        return vscode.l10n.t("Must be a valid number");
+                    }
+                    return null;
+                },
+            });
+
+            if (inputValue == null) {
+                // User pressed Escape
+            } else if (!inputValue.trim()) {
+                delete (filterOptions as any)[property.key];
+            } else if (property.inputType === "number") {
+                (filterOptions as any)[property.key] = parseInt(inputValue);
+            } else {
+                (filterOptions as any)[property.key] = inputValue.trim();
+            }
+        }
+
+        return USSActions.handleFilterSelection(filterOptions);
+    }
+
+    private static async getUssDownloadOptions(node: IZoweUSSTreeNode, isDirectory: boolean = false): Promise<Definitions.UssDownloadOptions> {
+        const downloadOpts: Definitions.UssDownloadOptions =
+            ZoweLocalStorage.getValue<Definitions.UssDownloadOptions>(Definitions.LocalStorageKey.USS_DOWNLOAD_OPTIONS) ?? {};
+
+        downloadOpts.overwrite ??= false;
+        downloadOpts.generateDirectory ??= false;
+        downloadOpts.chooseEncoding ??= false;
+        downloadOpts.selectedPath ??= LocalFileManagement.getDefaultUri();
+        downloadOpts.dirOptions ??= {};
+        downloadOpts.dirOptions.followSymlinks ??= true;
+        downloadOpts.dirOptions.chooseFilterOptions ??= false;
+        downloadOpts.dirFilterOptions ??= {};
+        downloadOpts.dirFilterOptions.includeHidden ??= false;
+        downloadOpts.dirFilterOptions.filesys ??= false;
+
+        if (downloadOpts.encoding && USSUtils.zosEncodingToString(downloadOpts.encoding) == "text") {
+            downloadOpts.encoding = undefined;
+        }
+
+        const getEncodingDescription = (): string => {
+            if (isDirectory) {
+                const currentEncoding = downloadOpts.dirOptions.directoryEncoding;
+                if (!currentEncoding || currentEncoding === "auto-detect") {
+                    return vscode.l10n.t("Select default encoding for directory files (current: Auto-detect from file tags)");
+                }
+
+                const encodingName =
+                    currentEncoding.kind === "binary" ? "binary" : currentEncoding.kind === "other" ? currentEncoding.codepage : "EBCDIC";
+
+                return vscode.l10n.t("Select default encoding for directory files (current: {0})", encodingName);
+            } else {
+                if (!downloadOpts.encoding) {
+                    return vscode.l10n.t("Select specific encoding for file");
+                }
+
+                const encodingName =
+                    downloadOpts.encoding.kind === "binary"
+                        ? "binary"
+                        : downloadOpts.encoding.kind === "other"
+                        ? downloadOpts.encoding.codepage
+                        : "EBCDIC";
+
+                return vscode.l10n.t("Select specific encoding for file (current: {0})", encodingName);
+            }
+        };
+
+        // Loop so that cancelling sub-prompts (filter options, encoding) returns to this quick pick
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            const optionItems: vscode.QuickPickItem[] = [
+                {
+                    label: vscode.l10n.t("Overwrite"),
+                    description: isDirectory
+                        ? vscode.l10n.t("Overwrite existing files when downloading directories")
+                        : vscode.l10n.t("Overwrite existing file"),
+                    picked: downloadOpts.overwrite,
+                },
+                {
+                    label: vscode.l10n.t("Generate Directory Structure"),
+                    description: vscode.l10n.t("Generates sub-folders based on the entire USS path"),
+                    picked: downloadOpts.generateDirectory,
+                },
+            ];
+
+            if (isDirectory) {
+                optionItems.push(
+                    {
+                        label: vscode.l10n.t("Follow Symlinks"),
+                        description: vscode.l10n.t("Follow symbolic links to their targets instead of returning them"),
+                        picked: downloadOpts.dirOptions.followSymlinks,
+                    },
+                    {
+                        label: vscode.l10n.t("Apply Filter Options"),
+                        description:
+                            downloadOpts.dirFilterOptions && Object.keys(downloadOpts.dirFilterOptions).length > 0
+                                ? vscode.l10n.t("Configure and apply file filtering options (currently configured)")
+                                : vscode.l10n.t("Configure and apply file filtering options"),
+                        picked: downloadOpts.dirOptions.chooseFilterOptions,
+                    }
+                );
+            }
+
+            optionItems.push({
+                label: vscode.l10n.t("Choose Encoding"),
+                description: getEncodingDescription(),
+                picked: downloadOpts.chooseEncoding,
+            });
+
+            const optionsQuickPick = Gui.createQuickPick();
+            optionsQuickPick.title = vscode.l10n.t("Download Options");
+            optionsQuickPick.placeholder = vscode.l10n.t("Select download options");
+            optionsQuickPick.ignoreFocusOut = true;
+            optionsQuickPick.canSelectMany = true;
+            optionsQuickPick.items = optionItems;
+            optionsQuickPick.selectedItems = optionItems.filter((item) => item.picked);
+
+            const selectedOptions: vscode.QuickPickItem[] = await new Promise((resolve) => {
+                let wasAccepted = false;
+
+                optionsQuickPick.onDidAccept(() => {
+                    wasAccepted = true;
+                    resolve(Array.from(optionsQuickPick.selectedItems));
+                    optionsQuickPick.hide();
+                });
+
+                optionsQuickPick.onDidHide(() => {
+                    if (!wasAccepted) {
+                        resolve(null);
+                    }
+                });
+
+                optionsQuickPick.show();
+            });
+            optionsQuickPick.dispose();
+
+            if (selectedOptions === null) {
+                return;
+            }
+
+            const localizedLabels = {
+                overwrite: vscode.l10n.t("Overwrite"),
+                generateDirectory: vscode.l10n.t("Generate Directory Structure"),
+                chooseEncoding: vscode.l10n.t("Choose Encoding"),
+                followSymlinks: vscode.l10n.t("Follow Symlinks"),
+                applyFilterOptions: vscode.l10n.t("Apply Filter Options"),
+            };
+
+            const getOption = (localizedLabel: string): boolean => selectedOptions.some((opt) => opt.label === localizedLabel);
+            downloadOpts.overwrite = getOption(localizedLabels.overwrite);
+            downloadOpts.generateDirectory = getOption(localizedLabels.generateDirectory);
+            downloadOpts.chooseEncoding = getOption(localizedLabels.chooseEncoding);
+
+            let shouldRetry = false;
+
+            if (isDirectory) {
+                downloadOpts.dirOptions.followSymlinks = getOption(localizedLabels.followSymlinks);
+                downloadOpts.dirOptions.chooseFilterOptions = getOption(localizedLabels.applyFilterOptions);
+
+                if (getOption(localizedLabels.applyFilterOptions)) {
+                    const filterOptions = await USSActions.getUssDirFilterOptions(downloadOpts.dirFilterOptions);
+                    if (filterOptions == null) {
+                        shouldRetry = true;
+                    } else if (Object.keys(filterOptions).length > 0) {
+                        downloadOpts.dirFilterOptions = filterOptions;
+                    }
+                }
+            }
+
+            if (!shouldRetry && downloadOpts.chooseEncoding) {
+                if (isDirectory) {
+                    const profile = node.getProfile();
+
+                    downloadOpts.dirOptions.directoryEncoding = await SharedUtils.promptForDirectoryEncoding(
+                        profile,
+                        node.fullPath,
+                        downloadOpts.dirOptions.directoryEncoding
+                    );
+
+                    if (downloadOpts.dirOptions.directoryEncoding === undefined) {
+                        shouldRetry = true;
+                    }
+                } else {
+                    const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
+                    let taggedEncoding: string;
+
+                    if (ussApi.getTag != null) {
+                        taggedEncoding = await ussApi.getTag(node.fullPath);
+                    }
+
+                    downloadOpts.encoding = await SharedUtils.promptForEncoding(node, taggedEncoding !== "untagged" ? taggedEncoding : undefined);
+                    if (downloadOpts.encoding === undefined) {
+                        shouldRetry = true;
+                    }
+                }
+            }
+
+            if (shouldRetry) {
+                continue;
+            }
+
+            const dialogOptions: vscode.OpenDialogOptions = {
+                canSelectFiles: false,
+                canSelectFolders: true,
+                canSelectMany: false,
+                openLabel: vscode.l10n.t("Select Download Location"),
+                defaultUri: downloadOpts.selectedPath,
+            };
+
+            const downloadPath = await Gui.showOpenDialog(dialogOptions);
+            if (!downloadPath || downloadPath.length === 0) {
+                return;
+            }
+
+            const selectedPath = downloadPath[0].fsPath;
+            downloadOpts.selectedPath = vscode.Uri.file(selectedPath);
+            await ZoweLocalStorage.setValue<Definitions.UssDownloadOptions>(Definitions.LocalStorageKey.USS_DOWNLOAD_OPTIONS, downloadOpts);
+
+            return downloadOpts;
+        }
+    }
+
+    public static async downloadUssFile(node: IZoweUSSTreeNode): Promise<void> {
+        ZoweLogger.trace("uss.actions.downloadUssFile called.");
+
+        const profile = node.getProfile();
+
+        const downloadOptions = await USSActions.getUssDownloadOptions(node);
+        if (!downloadOptions) {
+            Gui.showMessage(vscode.l10n.t("Operation cancelled"));
+            return;
+        }
+
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: vscode.l10n.t("Downloading USS file..."),
+                cancellable: true,
+            },
+            async () => {
+                const filePath = downloadOptions.generateDirectory
+                    ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
+                    : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath));
+
+                const options: zosfiles.IDownloadSingleOptions = {
+                    file: filePath,
+                    binary: downloadOptions.encoding?.kind === "binary",
+                    encoding: downloadOptions.encoding?.kind === "other" ? downloadOptions.encoding.codepage : profile.profile?.encoding,
+                    overwrite: downloadOptions.overwrite,
+                };
+
+                try {
+                    const response = await ZoweExplorerApiRegister.getUssApi(profile).getContents(node.fullPath, options);
+                    void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS file"), filePath);
+                } catch (e) {
+                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
+                }
+            }
+        );
+    }
+
+    public static async downloadUssDirectory(node: IZoweUSSTreeNode): Promise<void> {
+        ZoweLogger.trace("uss.actions.downloadUssDirectory called.");
+
+        const profile = node.getProfile();
+
+        const ussApi = ZoweExplorerApiRegister.getUssApi(profile);
+        if (!ussApi.downloadDirectory) {
+            Gui.errorMessage(
+                vscode.l10n.t("The downloadDirectory API is not supported for this profile type. Please contact the extension developer.")
+            );
+            return;
+        }
+
+        const downloadOptions = await USSActions.getUssDownloadOptions(node, true);
+        if (!downloadOptions) {
+            Gui.showMessage(vscode.l10n.t("Operation cancelled"));
+            return;
+        }
+
+        let totalFileCount = 0;
+        try {
+            // need to destructure includeHidden because its in IDOwnloadOptions not in IUSSListOptions
+            // and need to not pass it into the IUSSListOptions call
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { includeHidden: _countIncludeHidden = false, ...countFilterOpts } = downloadOptions.dirOptions.chooseFilterOptions
+                ? downloadOptions.dirFilterOptions
+                : {};
+            const countListOptions: zosfiles.IUSSListOptions = {
+                ...countFilterOpts,
+                type: "f",
+                symlinks: !downloadOptions.dirOptions.followSymlinks,
+            };
+            const listResponse = await ZoweExplorerApiRegister.getUssApi(profile).fileList(node.fullPath, countListOptions);
+            if (listResponse?.apiResponse?.items) {
+                totalFileCount = listResponse.apiResponse.items.length;
+            }
+        } catch (e) {
+            await AuthUtils.errorHandling(e, {
+                apiType: ZoweExplorerApiType.Uss,
+                profile,
+                scenario: vscode.l10n.t("Unable to find USS directory contents:"),
+            });
+            return;
+        }
+
+        if (totalFileCount === 0) {
+            Gui.infoMessage(vscode.l10n.t("The selected directory contains no files to download."));
+            return;
+        }
+
+        if (totalFileCount > Constants.MIN_WARN_DOWNLOAD_FILES) {
+            const proceed = await Gui.showMessage(
+                vscode.l10n.t(
+                    "This directory has {0} members. Downloading a large number of files may take a long time. Do you want to continue?",
+                    totalFileCount
+                ),
+                { severity: MessageSeverity.WARN, items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")], vsCodeOpts: { modal: true } }
+            );
+            if (proceed !== vscode.l10n.t("Yes")) {
+                return;
+            }
+        }
+
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: vscode.l10n.t("Downloading USS directory"),
+                cancellable: true,
+            },
+            async (progress, token) => {
+                let realPercentComplete = 0;
+                const realTotalEntries = totalFileCount;
+                const task: imperative.ITaskWithStatus = {
+                    set percentComplete(value: number) {
+                        realPercentComplete = value;
+                        // eslint-disable-next-line no-magic-numbers
+                        Gui.reportProgress(progress, realTotalEntries, Math.floor((value * realTotalEntries) / 100), "");
+                    },
+                    get percentComplete(): number {
+                        return realPercentComplete;
+                    },
+                    statusMessage: "",
+                    stageName: 0, // TaskStage.IN_PROGRESS
+                };
+
+                const directoryPath = downloadOptions.generateDirectory
+                    ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
+                    : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath));
+
+                const filterOpts = downloadOptions.dirOptions.chooseFilterOptions ? downloadOptions.dirFilterOptions : {};
+                const { includeHidden = false, ...listFilterOpts } = filterOpts;
+
+                const options: zosfiles.IDownloadOptions = {
+                    directory: directoryPath,
+                    overwrite: downloadOptions.overwrite,
+                    includeHidden: includeHidden,
+                    maxConcurrentRequests: profile?.profile?.maxConcurrentRequests || 1,
+                    task,
+                    responseTimeout: profile?.profile?.responseTimeout,
+                };
+
+                // only set encoding/binary if user chose a specific encoding (not auto detect)
+                if (downloadOptions.dirOptions.directoryEncoding && downloadOptions.dirOptions.directoryEncoding !== "auto-detect") {
+                    options.binary = downloadOptions.dirOptions.directoryEncoding.kind === "binary";
+                    options.encoding =
+                        downloadOptions.dirOptions.directoryEncoding.kind === "other"
+                            ? downloadOptions.dirOptions.directoryEncoding.codepage
+                            : profile.profile?.encoding;
+                }
+
+                const listOptions: zosfiles.IUSSListOptions = {
+                    ...listFilterOpts,
+                    type: listFilterOpts.type ?? "f", // fallback to files only
+                    symlinks: !downloadOptions.dirOptions.followSymlinks,
+                };
+
+                try {
+                    if (token.isCancellationRequested) {
+                        Gui.showMessage(vscode.l10n.t("Download cancelled"));
+                        return;
+                    }
+
+                    const response = await ussApi.downloadDirectory(node.fullPath, options, listOptions);
+                    void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"), directoryPath);
+                } catch (e) {
+                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
+                }
+            }
+        );
     }
 
     public static editAttributes(context: vscode.ExtensionContext, fileProvider: Types.IZoweUSSTreeType, node: IZoweUSSTreeNode): USSAttributeView {

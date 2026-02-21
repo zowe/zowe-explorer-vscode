@@ -7,6 +7,20 @@
     ]
   },
   "(default)": "(default)",
+  "[{0}] {1}/Current filter valueFilter description": {
+    "message": "[{0}] {1}",
+    "comment": [
+      "Current filter value",
+      "Filter description"
+    ]
+  },
+  "[{0}] {1}/Not set indicatorFilter description": {
+    "message": "[{0}] {1}",
+    "comment": [
+      "Not set indicator",
+      "Filter description"
+    ]
+  },
   "[{0}] Members of {1}/Profile namePDS name": {
     "message": "[{0}] Members of {1}",
     "comment": [
@@ -22,6 +36,11 @@
     ]
   },
   "[{0}]: *": "[{0}]: *",
+  "{0}\n\nSome files may have been skipped.": "{0}\n\nSome files may have been skipped.",
+  "{0}\n\nSome files may not have been downloaded.": "{0}\n\nSome files may not have been downloaded.",
+  "{0} download completed with errors.": "{0} download completed with errors.",
+  "{0} download completed.": "{0} download completed.",
+  "{0} downloaded successfully.": "{0} downloaded successfully.",
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -74,6 +93,7 @@
       "Node type"
     ]
   },
+  "A profile does not exist for this file.": "A profile does not exist for this file.",
   "A search must be set for {0} before it can be added to a workspace./Name of USS session": {
     "message": "A search must be set for {0} before it can be added to a workspace.",
     "comment": [
@@ -183,6 +203,7 @@
   "Added support for custom credential manager extensions in Zowe Explorer <a>#2212</a>": "Added support for custom credential manager extensions in Zowe Explorer <a>#2212</a>",
   "Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, refer to the <a>\"Troubleshooting Zowe CLI credentials\"</a> page on Zowe Docs.": "Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, refer to the <a>\"Troubleshooting Zowe CLI credentials\"</a> page on Zowe Docs.",
   "Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, refer to the <a>\"Troubleshooting Zowe CLI credentials\"</a> page on Zowe Docs. <a>#3935</a>": "Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, refer to the <a>\"Troubleshooting Zowe CLI credentials\"</a> page on Zowe Docs. <a>#3935</a>",
+  "Added support for downloading data sets, data set members, USS files, and USS directories. <a>#3843</a>": "Added support for downloading data sets, data set members, USS files, and USS directories. <a>#3843</a>",
   "Added support for enabling/disabling validation for a Zowe profile across all trees <a>#2570</a>": "Added support for enabling/disabling validation for a Zowe profile across all trees <a>#2570</a>",
   "Added support for encoding profile property when retrieving JCL with z/OSMF. <a>#3877</a>": "Added support for encoding profile property when retrieving JCL with z/OSMF. <a>#3877</a>",
   "Added support for encoding profile property when retrieving JCL with z/OSMF. For example, include \"encoding\": \"IBM-1147\" in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.": "Added support for encoding profile property when retrieving JCL with z/OSMF. For example, include \"encoding\": \"IBM-1147\" in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.",
@@ -254,6 +275,7 @@
   "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "An SSH profile will be used for issuing UNIX commands with the profile {0}.",
   "Applied credential manager options from imperative.json to default credential manager": "Applied credential manager options from imperative.json to default credential manager",
   "Apply changes": "Apply changes",
+  "Apply Filter Options": "Apply Filter Options",
   "Apply to all trees": "Apply to all trees",
   "Apply to current tree selected": "Apply to current tree selected",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}/Job name": {
@@ -279,6 +301,7 @@
   "Attributes": "Attributes",
   "Auth Method: ": "Auth Method: ",
   "Auto Store: ": "Auto Store: ",
+  "Auto-detect from file tags": "Auto-detect from file tags",
   "Auto-detect global team configuration": "Auto-detect global team configuration",
   "Back": "Back",
   "Basic Authentication": "Basic Authentication",
@@ -287,9 +310,11 @@
   "Bug fixes": "Bug fixes",
   "Bugfix: Added validation check while creating, renaming and using allocate alike feature for datasets <a>#1849</a>": "Bugfix: Added validation check while creating, renaming and using allocate alike feature for datasets <a>#1849</a>",
   "Bump @zowe/secrets-for-zowe-sdk to 7.18.4 to handle install errors gracefully and to allow running without MSVC redistributables.": "Bump @zowe/secrets-for-zowe-sdk to 7.18.4 to handle install errors gracefully and to allow running without MSVC redistributables.",
+  "c, d, f, l, p, or s": "c, d, f, l, p, or s",
   "Cancel": "Cancel",
   "Cancelled selected jobs successfully.": "Cancelled selected jobs successfully.",
   "Cannot delete, item invalid.": "Cannot delete, item invalid.",
+  "Cannot download this type of data set.": "Cannot download this type of data set.",
   "Cannot download, item invalid.": "Cannot download, item invalid.",
   "Cannot drop a dataset member into a profile node.": "Cannot drop a dataset member into a profile node.",
   "Cannot drop a partitioned dataset or member into a sequential dataset.": "Cannot drop a partitioned dataset or member into a sequential dataset.",
@@ -324,6 +349,7 @@
       "Node type"
     ]
   },
+  "Choose Encoding": "Choose Encoding",
   "Choose encoding for {0}/Context label": {
     "message": "Choose encoding for {0}",
     "comment": [
@@ -334,6 +360,21 @@
     "message": "Choose encoding for {0}",
     "comment": [
       "Node label"
+    ]
+  },
+  "Choose encoding for download (current: {0})": "Choose encoding for download (current: {0})",
+  "Choose encoding for download (current: Binary)": "Choose encoding for download (current: Binary)",
+  "Choose encoding for download (current: EBCDIC)": "Choose encoding for download (current: EBCDIC)",
+  "Choose encoding for download from {0}/Context label": {
+    "message": "Choose encoding for download from {0}",
+    "comment": [
+      "Context label"
+    ]
+  },
+  "Choose encoding for files in {0}/Directory path": {
+    "message": "Choose encoding for files in {0}",
+    "comment": [
+      "Directory path"
     ]
   },
   "Choose encoding for upload to {0}/Context label": {
@@ -349,6 +390,7 @@
   "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
   "Clear filter for PDS": "Clear filter for PDS",
   "Clear filter for profile": "Clear filter for profile",
+  "Click on a filter to change its value": "Click on a filter to change its value",
   "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:": "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:",
   "Click on parameters to change them": "Click on parameters to change them",
   "Command response: {0}/Command response": {
@@ -359,6 +401,9 @@
   },
   "Common API": "Common API",
   "Config File: ": "Config File: ",
+  "Configure and apply file filtering options": "Configure and apply file filtering options",
+  "Configure and apply file filtering options (currently configured)": "Configure and apply file filtering options (currently configured)",
+  "Configure Filter Options": "Configure Filter Options",
   "Confirm": "Confirm",
   "Connection Name": "Connection Name",
   "Contents": "Contents",
@@ -416,8 +461,11 @@
     ]
   },
   "Custom credential manager failed to activate": "Custom credential manager failed to activate",
+  "Data set": "Data set",
   "Data set {0} does not exist or cannot be opened.": "Data set {0} does not exist or cannot be opened.",
+  "Data set member": "Data set member",
   "Data set member {0} does not exist or cannot be opened in data set {1}.": "Data set member {0} does not exist or cannot be opened in data set {1}.",
+  "Data set members": "Data set members",
   "Data Set Name": "Data Set Name",
   "Data Set Organization": "Data Set Organization",
   "Data set pattern cannot be empty": "Data set pattern cannot be empty",
@@ -455,8 +503,10 @@
     ]
   },
   "Deleting items": "Deleting items",
+  "Depth": "Depth",
   "Descending": "Descending",
   "Diagnostic Information": "Diagnostic Information",
+  "Directory depth to search (number of levels)": "Directory depth to search (number of levels)",
   "Disable Profile Validation": "Disable Profile Validation",
   "Disable validation of server check for profile": "Disable validation of server check for profile",
   "Disabled": "Disabled",
@@ -468,6 +518,8 @@
   "Do you wish to use this credential manager instead?": "Do you wish to use this credential manager instead?",
   "Don't ask again": "Don't ask again",
   "Download": "Download",
+  "Download cancelled": "Download cancelled",
+  "Download Options": "Download Options",
   "Download single spool operation not implemented by extender. Please contact the extension developer(s).": "Download single spool operation not implemented by extender. Please contact the extension developer(s).",
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
@@ -475,7 +527,19 @@
       "Download time"
     ]
   },
+  "Downloading all members": "Downloading all members",
+  "Downloading data set": "Downloading data set",
+  "Downloading member": "Downloading member",
+  "Downloading USS directory": "Downloading USS directory",
+  "Downloading USS file...": "Downloading USS file...",
+  "Downloads files and directories using uppercase names. When disabled, names are converted to lowercase": "Downloads files and directories using uppercase names. When disabled, names are converted to lowercase",
   "Duplicated profile schema writing on repeated Team Config file initialization:": "Duplicated profile schema writing on repeated Team Config file initialization:",
+  "e.g., +1M (larger than 1MB), -500K (smaller than 500KB), 100G": "e.g., +1M (larger than 1MB), -500K (smaller than 500KB), 100G",
+  "e.g., +7 (older than 7 days), -1 (newer than 1 day), 30 (exactly 30 days)": "e.g., +7 (older than 7 days), -1 (newer than 1 day), 30 (exactly 30 days)",
+  "e.g., 2 (search 2 levels deep)": "e.g., 2 (search 2 levels deep)",
+  "e.g., 755, -644 (not 644)": "e.g., 755, -644 (not 644)",
+  "e.g., admin or 100": "e.g., admin or 100",
+  "e.g., IBMUSER or 1001": "e.g., IBMUSER or 1001",
   "e.g., USER.*, PUBLIC.DATA.*, etc.": "e.g., USER.*, PUBLIC.DATA.*, etc.",
   "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>": "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>",
   "EBCDIC": "EBCDIC",
@@ -493,6 +557,7 @@
   "Edit Profile": "Edit Profile",
   "Enable Profile Validation": "Enable Profile Validation",
   "Enable validation of server check for profile": "Enable validation of server check for profile",
+  "Enabled": "Enabled",
   "Encoding History": "Encoding History",
   "Encoding: {0}/Encoding name": {
     "message": "Encoding: {0}",
@@ -523,6 +588,7 @@
   "Enter an SMS data class": "Enter an SMS data class",
   "Enter command here...": "Enter command here...",
   "Enter Data Set Pattern": "Enter Data Set Pattern",
+  "Enter file extension (e.g. csv)": "Enter file extension (e.g. csv)",
   "Enter job owner ID": "Enter job owner ID",
   "Enter job prefix": "Enter job prefix",
   "Enter job status": "Enter job status",
@@ -562,6 +628,12 @@
   "Enter the volume serial on which the data set should be placed": "Enter the volume serial on which the data set should be placed",
   "Enter valid dataset name": "Enter valid dataset name",
   "Enter valid member name": "Enter valid member name",
+  "Enter value for {0} (leave empty to clear)/Filter property label": {
+    "message": "Enter value for {0} (leave empty to clear)",
+    "comment": [
+      "Filter property label"
+    ]
+  },
   "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.": "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.",
   "Error creating data set favorite node: {0} for profile {1}./LabelProfile name": {
     "message": "Error creating data set favorite node: {0} for profile {1}.",
@@ -763,8 +835,17 @@
   "Fetching data set...": "Fetching data set...",
   "Fetching spool file...": "Fetching spool file...",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
+  "File extension can only contain letters, numbers, hyphens, and underscores": "File extension can only contain letters, numbers, hyphens, and underscores",
+  "File extension cannot be empty": "File extension cannot be empty",
   "File History": "File History",
   "File Properties": "File Properties",
+  "File Type": "File Type",
+  "Filter by file size": "Filter by file size",
+  "Filter by file type (c=character, d=directory, f=file, l=symlink, p=pipe, s=socket)": "Filter by file type (c=character, d=directory, f=file, l=symlink, p=pipe, s=socket)",
+  "Filter by group owner or GID": "Filter by group owner or GID",
+  "Filter by modification time in days": "Filter by modification time in days",
+  "Filter by permission octal mask": "Filter by permission octal mask",
+  "Filter by user name or UID": "Filter by user name or UID",
   "Filter cleared for {0}/Job label": {
     "message": "Filter cleared for {0}",
     "comment": [
@@ -861,6 +942,7 @@
   "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>": "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>",
   "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>": "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>",
   "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>": "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>",
+  "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>": "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>",
   "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>": "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>",
   "Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. <a>#3923</a>": "Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. <a>#3923</a>",
   "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>": "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>",
@@ -1054,6 +1136,8 @@
   "Fixed Zowe Explorer failing to activate in environment with empty workspace. <a>#1994</a>": "Fixed Zowe Explorer failing to activate in environment with empty workspace. <a>#1994</a>",
   "Fixed zowe.settings.version being added to settings.json in workspaces. <a>#2312</a>": "Fixed zowe.settings.version being added to settings.json in workspaces. <a>#2312</a>",
   "Focus": "Focus",
+  "Follow symbolic links to their targets instead of returning them": "Follow symbolic links to their targets instead of returning them",
+  "Follow Symlinks": "Follow Symlinks",
   "Found PDS '{0}' but could not reveal member '{1}'/PDS nameMember name": {
     "message": "Found PDS '{0}' but could not reveal member '{1}'",
     "comment": [
@@ -1067,6 +1151,9 @@
       "Profile name"
     ]
   },
+  "Generate Directory Structure": "Generate Directory Structure",
+  "Generates sub-folders based on the data set name": "Generates sub-folders based on the data set name",
+  "Generates sub-folders based on the entire USS path": "Generates sub-folders based on the entire USS path",
   "Get JCL": "Get JCL",
   "Getting data set templates.": "Getting data set templates.",
   "Global": "Global",
@@ -1103,6 +1190,8 @@
   "Implemented the VS Code FileSystemProvider for the Data Sets, Jobs, and USS trees to handle all read/write actions as well as conflict resolution. <a>#2207</a>": "Implemented the VS Code FileSystemProvider for the Data Sets, Jobs, and USS trees to handle all read/write actions as well as conflict resolution. <a>#2207</a>",
   "Improved integrated terminal behavior to match standard terminal functionality. Now, users can smoothly maintain proper cursor position when typing and backspacing. <a>#3391</a>": "Improved integrated terminal behavior to match standard terminal functionality. Now, users can smoothly maintain proper cursor position when typing and backspacing. <a>#3391</a>",
   "Improved USS filtering": "Improved USS filtering",
+  "Include Hidden Files": "Include Hidden Files",
+  "Include hidden files when downloading directories": "Include hidden files when downloading directories",
   "Initial Records": "Initial Records",
   "Initialized logger for Zowe Explorer": "Initialized logger for Zowe Explorer",
   "Initializing profiles with data set favorites.": "Initializing profiles with data set favorites.",
@@ -1249,6 +1338,7 @@
   "Large job spool files now load faster by displaying a Load more… button at the bottom of the spool file to fetch additional lines as needed. For active jobs, use this button to retrieve new output without refreshing the **JOBS** tree. It is recommended to use the default keyboard shortcut Ctrl + L to quickly load more lines. The number of lines per page and the toggle for pagination can be configured in the settings under **Zowe > Jobs > Paginate**. The default is 100 lines per page.": "Large job spool files now load faster by displaying a Load more… button at the bottom of the spool file to fetch additional lines as needed. For active jobs, use this button to retrieve new output without refreshing the **JOBS** tree. It is recommended to use the default keyboard shortcut Ctrl + L to quickly load more lines. The number of lines per page and the toggle for pagination can be configured in the settings under **Zowe > Jobs > Paginate**. The default is 100 lines per page.",
   "Last Modified By": "Last Modified By",
   "Last refreshed:": "Last refreshed:",
+  "Let the API infer encoding from individual USS file tags": "Let the API infer encoding from individual USS file tags",
   "Loading changelog...": "Loading changelog...",
   "Loading profile: {0} for data set favorites/Profile name": {
     "message": "Loading profile: {0} for data set favorites",
@@ -1313,12 +1403,14 @@
   },
   "Minimized activation function for Zowe Explorer to load only necessary items on activation. <a>#1985</a>": "Minimized activation function for Zowe Explorer to load only necessary items on activation. <a>#1985</a>",
   "Modification Level": "Modification Level",
+  "Modification Time": "Modification Time",
   "Modified Date": "Modified Date",
   "Modified Records": "Modified Records",
   "Modify Command": "Modify Command",
   "Moved schema warnings into the log file (rather than a UI message) to minimize end-user disruption. <a>#2860</a>": "Moved schema warnings into the log file (rather than a UI message) to minimize end-user disruption. <a>#2860</a>",
   "Moving MVS files...": "Moving MVS files...",
   "Moving USS files...": "Moving USS files...",
+  "Must be a valid number": "Must be a valid number",
   "MVS command submitted.": "MVS command submitted.",
   "MVS data set enhancements": "MVS data set enhancements",
   "Name": "Name",
@@ -1397,6 +1489,7 @@
       "Profile type"
     ]
   },
+  "not set": "not set",
   "Off": "Off",
   "Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command:": "Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command:",
   "Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command: <a>#2853</a>": "Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command: <a>#2853</a>",
@@ -1412,6 +1505,8 @@
   "onResourceChanged function to the ZoweExplorerApiRegister class to allow extenders to subscribe to any changes to Zowe resources (data sets, USS files/folders, jobs, etc.). See the <a>FileSystemProvider wiki page</a> for more information on Zowe resources.": "onResourceChanged function to the ZoweExplorerApiRegister class to allow extenders to subscribe to any changes to Zowe resources (data sets, USS files/folders, jobs, etc.). See the <a>FileSystemProvider wiki page</a> for more information on Zowe resources.",
   "onVaultUpdate VS Code events to notify extenders when credentials are updated on the OS vault by other applications. <a>#2994</a>": "onVaultUpdate VS Code events to notify extenders when credentials are updated on the OS vault by other applications. <a>#2994</a>",
   "Open": "Open",
+  "Open File": "Open File",
+  "Open Folder": "Open Folder",
   "Open selected data set": "Open selected data set",
   "Open the **Command Palette** and search for Zowe Explorer: List Data Sets, select a profile, and enter a search filter.": "Open the **Command Palette** and search for Zowe Explorer: List Data Sets, select a profile, and enter a search filter.",
   "Open the data set": "Open the data set",
@@ -1425,6 +1520,13 @@
   "Options": "Options",
   "Other": "Other",
   "Other user jobs": "Other user jobs",
+  "Override file extension": "Override file extension",
+  "Override File Extension": "Override File Extension",
+  "Override file extension (current: {0})": "Override file extension (current: {0})",
+  "Overwrite": "Overwrite",
+  "Overwrite existing file": "Overwrite existing file",
+  "Overwrite existing files": "Overwrite existing files",
+  "Overwrite existing files when downloading directories": "Overwrite existing files when downloading directories",
   "Owner": "Owner",
   "Owner: ": "Owner: ",
   "Page": "Page",
@@ -1447,6 +1549,7 @@
   "PDS {0} could not be found.": "PDS {0} could not be found.",
   "PDS already in favorites": "PDS already in favorites",
   "Perform the search with case sensitivity": "Perform the search with case sensitivity",
+  "Permissions": "Permissions",
   "Phase": "Phase",
   "Phase Name": "Phase Name",
   "Pin": "Pin",
@@ -1547,7 +1650,6 @@
       "Name of the selected profile"
     ]
   },
-  "Profile does not exist for this file.": "Profile does not exist for this file.",
   "Profile info hover": "Profile info hover",
   "Profile is invalid": "Profile is invalid",
   "Profile is invalid, check connection details.": "Profile is invalid, check connection details.",
@@ -1581,6 +1683,7 @@
     ]
   },
   "Reading imperative.json failed. Will try to create file.": "Reading imperative.json failed. Will try to create file.",
+  "Ready to download": "Ready to download",
   "Recall of data set {0} requested./Data Set name": {
     "message": "Recall of data set {0} requested.",
     "comment": [
@@ -1660,6 +1763,8 @@
   "Saving data set...": "Saving data set...",
   "Saving USS file...": "Saving USS file...",
   "SCLM": "SCLM",
+  "Search All Filesystems": "Search All Filesystems",
+  "Search all mounted filesystems under the path": "Search all mounted filesystems under the path",
   "Search by job ID": "Search by job ID",
   "Search data sets": "Search data sets",
   "Search data sets: use a comma to separate multiple patterns": "Search data sets: use a comma to separate multiple patterns",
@@ -1740,8 +1845,14 @@
   },
   "Select Certificate": "Select Certificate",
   "Select Certificate Key": "Select Certificate Key",
+  "Select default encoding for directory files (current: {0})": "Select default encoding for directory files (current: {0})",
+  "Select default encoding for directory files (current: Auto-detect from file tags)": "Select default encoding for directory files (current: Auto-detect from file tags)",
+  "Select Download Location": "Select Download Location",
+  "Select download options": "Select download options",
   "Select multiple data sets or members for bulk open": "Select multiple data sets or members for bulk open",
   "Select search options": "Select search options",
+  "Select specific encoding for file": "Select specific encoding for file",
+  "Select specific encoding for file (current: {0})": "Select specific encoding for file (current: {0})",
   "Select text in the editor, right-click, and choose **Open Selected Data Set**. If the selected text is a valid data set name, it opens in a new editor tab or focus onto an existing tab if already open. If the selected text is a valid partitioned data set, it opens in the **DATA SETS** tree. This is equivalent to the ZOOM command in ISPF.": "Select text in the editor, right-click, and choose **Open Selected Data Set**. If the selected text is a valid data set name, it opens in a new editor tab or focus onto an existing tab if already open. If the selected text is a valid partitioned data set, it opens in the **DATA SETS** tree. This is equivalent to the ZOOM command in ISPF.",
   "Select the location of the config file to edit": "Select the location of the config file to edit",
   "Select the location where the config file will be initialized": "Select the location where the config file will be initialized",
@@ -1780,6 +1891,7 @@
       "Label"
     ]
   },
+  "Size": "Size",
   "Solved issue with a conflicting keybinding for Edit History, changed keybinding to Ctrl+Alt+y for Windows and ⌘ Cmd+⌥ Opt+y for macOS. <a>#2543</a>": "Solved issue with a conflicting keybinding for Edit History, changed keybinding to Ctrl+Alt+y for Windows and ⌘ Cmd+⌥ Opt+y for macOS. <a>#2543</a>",
   "Sort Direction": "Sort Direction",
   "Sort encoding by the latest encoding and filter any duplicate encoding if it already exists.": "Sort encoding by the latest encoding and filter any duplicate encoding if it already exists.",
@@ -1831,6 +1943,8 @@
   "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
   "The Data Sets tree and any data sets with many members now display <- Previous page and -> Next page navigation buttons to page through members. Only a subset of members is loaded at a time, allowing for large filters and data sets to load members faster. The number of members per page is configurable in the settings under **Zowe > Ds > Paginate**. The default is 100 members per page.": "The Data Sets tree and any data sets with many members now display <- Previous page and -> Next page navigation buttons to page through members. Only a subset of members is loaded at a time, allowing for large filters and data sets to load members faster. The number of members per page is configurable in the settings under **Zowe > Ds > Paginate**. The default is 100 members per page.",
   "The default sort order of every data set or job can now be changed. For example, to always open a data set to see the most recently edited members, set the default sort order to be by descending, date modified. The following settings are available:": "The default sort order of every data set or job can now be changed. For example, to always open a data set to see the most recently edited members, set the default sort order to be by descending, date modified. The following settings are available:",
+  "The downloadAllMembers API is not supported for this profile type. Please contact the extension developer.": "The downloadAllMembers API is not supported for this profile type. Please contact the extension developer.",
+  "The downloadDirectory API is not supported for this profile type. Please contact the extension developer.": "The downloadDirectory API is not supported for this profile type. Please contact the extension developer.",
   "The following {0} item(s) were deleted:\n{1}{2}/Data Sets deleted lengthData Sets deletedAdditional datasets count": {
     "message": "The following {0} item(s) were deleted:\n{1}{2}",
     "comment": [
@@ -1873,12 +1987,16 @@
   },
   "The refresh button in each tree view (Data Sets, Unix System Services, and Jobs) now refreshes all profile nodes in the tree. <a>#3524</a>": "The refresh button in each tree view (Data Sets, Unix System Services, and Jobs) now refreshes all profile nodes in the tree. <a>#3524</a>",
   "The response from Zowe CLI was not successful": "The response from Zowe CLI was not successful",
+  "The selected data set has no members to download.": "The selected data set has no members to download.",
+  "The selected directory contains no files to download.": "The selected directory contains no files to download.",
   "The selected jobs were already cancelled.": "The selected jobs were already cancelled.",
   "The selected sort order for a data set is now persisted between sessions. <a>#3798</a>": "The selected sort order for a data set is now persisted between sessions. <a>#3798</a>",
   "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.": "The Team configuration file has been opened in the editor. Editing or removal of profiles will need to be done manually.",
   "This action is only supported for partitioned data sets.": "This action is only supported for partitioned data sets.",
   "This action is only supported for session and PDS nodes. Please select a session or PDS node.": "This action is only supported for session and PDS nodes. Please select a session or PDS node.",
   "This action is only supported for USS directories.": "This action is only supported for USS directories.",
+  "This data set has {0} members. Downloading a large number of files can take a long time. Do you want to continue?": "This data set has {0} members. Downloading a large number of files can take a long time. Do you want to continue?",
+  "This directory has {0} members. Downloading a large number of files may take a long time. Do you want to continue?": "This directory has {0} members. Downloading a large number of files may take a long time. Do you want to continue?",
   "This log file can be found at {0}/Log file location": {
     "message": "This log file can be found at {0}",
     "comment": [
@@ -1941,6 +2059,7 @@
       "Error message"
     ]
   },
+  "Unable to find USS directory contents:": "Unable to find USS directory contents:",
   "Unable to gather more information": "Unable to gather more information",
   "Unable to list attributes.": "Unable to list attributes.",
   "Unable to log in with {0}. {1}/Service profile nameError message": {
@@ -2031,6 +2150,7 @@
   "Use the search button to display data sets": "Use the search button to display data sets",
   "Use the search button to display jobs": "Use the search button to display jobs",
   "Use the search button to list USS files": "Use the search button to list USS files",
+  "Use Uppercase Names": "Use Uppercase Names",
   "User": "User",
   "User dismissed the Certificate Wizard.": "User dismissed the Certificate Wizard.",
   "User ID": "User ID",
@@ -2039,6 +2159,8 @@
   "Users can now follow a prompt to create a new Zowe client configuration. The prompt displays when VS Code is opened with Zowe Explorer installed, but the user does not have any Zowe client configurations. <a>#3148</a>": "Users can now follow a prompt to create a new Zowe client configuration. The prompt displays when VS Code is opened with Zowe Explorer installed, but the user does not have any Zowe client configurations. <a>#3148</a>",
   "Users can now update the credentials for a profile when the autoStore property is set to false in a team configuration. When autoStore is false, the new credentials are only saved in memory, and these credentials persist until the user updates them again or closes VS Code. <a>#3524</a>": "Users can now update the credentials for a profile when the autoStore property is set to false in a team configuration. When autoStore is false, the new credentials are only saved in memory, and these credentials persist until the user updates them again or closes VS Code. <a>#3524</a>",
   "USS directories, PDS nodes, job nodes and session nodes now update with their respective \"collapsed icon\" when collapsed.": "USS directories, PDS nodes, job nodes and session nodes now update with their respective \"collapsed icon\" when collapsed.",
+  "USS directory": "USS directory",
+  "USS file": "USS file",
   "USS file tag": "USS file tag",
   "USS path cannot be empty": "USS path cannot be empty",
   "USS path must start with /": "USS path must start with /",
@@ -2057,6 +2179,7 @@
   },
   "Value": "Value",
   "Version": "Version",
+  "View Details": "View Details",
   "View JCL (opens as an unsaved editor file)": "View JCL (opens as an unsaved editor file)",
   "View members of a partitioned data set": "View members of a partitioned data set",
   "Volumes": "Volumes",
