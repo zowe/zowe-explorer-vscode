@@ -728,7 +728,7 @@ export class DatasetActions {
         dataSetDownloadOptions.generateDirectory = getOption("Generate Directory Structure");
         dataSetDownloadOptions.uppercaseNames = getOption("Use Uppercase Names");
         dataSetDownloadOptions.chooseEncoding = getOption("Choose Encoding");
-        dataSetDownloadOptions.overrideExtension = getOption("Override Extension");
+        dataSetDownloadOptions.overrideExtension = getOption("Override File Extension");
 
         if (dataSetDownloadOptions.chooseEncoding) {
             const encoding = await SharedUtils.promptForDownloadEncoding(profile, node.label as string);
