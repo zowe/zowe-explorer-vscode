@@ -4552,6 +4552,17 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B"]);
         });
 
+        it("filters single PDS by date created", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Created" as any);
+            mocks.showInputBox.mockResolvedValueOnce("2022-02-01");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["C"]);
+        });
+
         it("filters single PDS by name", async () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();

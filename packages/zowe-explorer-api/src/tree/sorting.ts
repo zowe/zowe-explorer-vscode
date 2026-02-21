@@ -26,6 +26,7 @@ export namespace Sorting {
         LastModified,
         UserId,
         Name,
+        DateCreated,
     }
 
     export type DatasetFilter = {

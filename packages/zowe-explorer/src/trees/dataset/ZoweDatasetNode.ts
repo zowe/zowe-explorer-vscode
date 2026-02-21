@@ -660,6 +660,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     const pattern = filter.value.toUpperCase().replace(/\*/g, ".*");
                     return new RegExp(`^${pattern}$`).test(label);
                 }
+                case Sorting.DatasetFilterOpts.DateCreated:
+                    if (!isDateFilter(filter.value)) {
+                        return true;
+                    }
+
+                    return dayjs(node.getStats()?.createdDate).isSame(filter.value, "day");
             }
         };
     }

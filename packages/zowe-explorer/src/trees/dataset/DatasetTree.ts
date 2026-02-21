@@ -1988,7 +1988,7 @@ Would you like to do this now?`,
         };
 
         const getValidation = (): ((value: string) => string) => {
-            if (filterMethod === Sorting.DatasetFilterOpts.LastModified) {
+            if (filterMethod === Sorting.DatasetFilterOpts.LastModified || filterMethod === Sorting.DatasetFilterOpts.DateCreated) {
                 return dateValidation;
             }
             return (val): string => (val.length > 0 ? null : vscode.l10n.t("Invalid filter specified"));

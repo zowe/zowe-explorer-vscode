@@ -24,7 +24,12 @@ export class DatasetUtils {
     ];
 
     // eslint-disable-next-line no-magic-numbers
-    public static readonly DATASET_FILTER_OPTS = [this.DATASET_SORT_OPTS[2], this.DATASET_SORT_OPTS[3], this.DATASET_SORT_OPTS[0]];
+    public static readonly DATASET_FILTER_OPTS = [
+        this.DATASET_SORT_OPTS[2],
+        this.DATASET_SORT_OPTS[3],
+        this.DATASET_SORT_OPTS[0],
+        this.DATASET_SORT_OPTS[1],
+    ];
 
     public static getProfileAndDataSetName(node: Types.IZoweNodeType): {
         profileName: string;
