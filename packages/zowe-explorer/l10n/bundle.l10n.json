@@ -94,6 +94,7 @@
   "Add deprecation message to history settings explaining to users how to edit items. <a>#2303</a>": "Add deprecation message to history settings explaining to users how to edit items. <a>#2303</a>",
   "Add localization support to release notes and changelogs. <a>#4047</a>": "Add localization support to release notes and changelogs. <a>#4047</a>",
   "Add New History Item": "Add New History Item",
+  "Add support for filtering PDS members by name and by date created. <a>#4075</a>": "Add support for filtering PDS members by name and by date created. <a>#4075</a>",
   "Add to workspace": "Add to workspace",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
   "Added \"Cancel Job\" feature for job nodes in Jobs tree view. <a>#2251</a>": "Added \"Cancel Job\" feature for job nodes in Jobs tree view. <a>#2251</a>",
@@ -476,6 +477,7 @@
     ]
   },
   "Duplicated profile schema writing on repeated Team Config file initialization:": "Duplicated profile schema writing on repeated Team Config file initialization:",
+  "e.g. MEM*": "e.g. MEM*",
   "e.g., USER.*, PUBLIC.DATA.*, etc.": "e.g., USER.*, PUBLIC.DATA.*, etc.",
   "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>": "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>",
   "EBCDIC": "EBCDIC",
@@ -861,6 +863,7 @@
   "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>": "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>",
   "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>": "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>",
   "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>": "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>",
+  "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>": "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>",
   "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>": "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>",
   "Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. <a>#3923</a>": "Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. <a>#3923</a>",
   "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>": "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>",

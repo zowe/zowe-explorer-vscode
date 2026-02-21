@@ -7,6 +7,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ### New features and enhancements
 
 - Enhanced `DataSetAttributesProvider` to pass raw API response attributes to extenders via the `DsInfo` context object. Extenders can now access the `attributes` field in the context to retrieve data set information without making additional API calls. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)
+- Added `Name` and `DateCreated` to `Sorting.DatasetFilterOpts`. [#4075](https://github.com/zowe/zowe-explorer-vscode/pull/4075)
 
 ### Bug fixes
 
