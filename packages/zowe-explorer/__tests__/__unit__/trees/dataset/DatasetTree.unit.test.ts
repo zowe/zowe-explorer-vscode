@@ -4679,6 +4679,54 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(mocks.refreshElement).not.toHaveBeenCalled();
             expect(updateFilterForNode).toHaveBeenCalledWith(nodes.pds, null, false);
         });
+
+        it("filterBy returns true for LastModified when value is not a valid date", () => {
+            const nodes = nodesForSuite();
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.LastModified, value: "not-a-date" });
+            for (const child of nodes.pds.children) {
+                expect(filterFn(child)).toBe(true);
+            }
+        });
+
+        it("filterBy returns true for DateCreated when value is not a valid date", () => {
+            const nodes = nodesForSuite();
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.DateCreated, value: "not-a-date" });
+            for (const child of nodes.pds.children) {
+                expect(filterFn(child)).toBe(true);
+            }
+        });
+
+        it("filterBy returns true for an unrecognised filter method", () => {
+            const nodes = nodesForSuite();
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+            const filterFn = ZoweDatasetNode.filterBy({ method: 99 as Sorting.DatasetFilterOpts, value: "anything" });
+            for (const child of nodes.pds.children) {
+                expect(filterFn(child)).toBe(true);
+            }
+        });
+
+        it("filterBy returns true for nodes whose parent is not a PDS", () => {
+            const nodes = nodesForSuite();
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.Name, value: "testPds" });
+            expect(filterFn(nodes.pds)).toBe(true);
+            expect(filterFn(nodes.session)).toBe(true);
+        });
+
+        it("validates date filter input correctly via validateInput callback", async () => {
+            const mocks = getBlockMocks();
+            let capturedValidateInput: ((v: string) => string) | undefined;
+            mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
+            mocks.showInputBox.mockImplementation((opts: vscode.InputBoxOptions) => {
+                capturedValidateInput = opts.validateInput as (v: string) => string;
+                return Promise.resolve("2022-03-15") as any;
+            });
+            await tree.filterPdsMembersDialog(nodesForSuite().pds);
+            expect(capturedValidateInput).toBeDefined();
+            expect(capturedValidateInput("2022-03-15")).toBeNull();
+            expect(capturedValidateInput("2022-03-15,2022-01-01")).toBeNull();
+            expect(capturedValidateInput("not-a-date")).toBeTruthy();
+            expect(capturedValidateInput("2022-03-15,not-a-date")).toBeTruthy();
+        });
     });
 
     describe("removeSearchHistory", () => {
