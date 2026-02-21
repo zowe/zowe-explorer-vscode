@@ -1987,13 +1987,17 @@ Would you like to do this now?`,
             return dayjs(value).isValid() ? null : vscode.l10n.t("Invalid date format specified");
         };
 
+        const getValidation = (): ((value: string) => string) => {
+            if (filterMethod === Sorting.DatasetFilterOpts.LastModified) {
+                return dateValidation;
+            }
+            return (val): string => (val.length > 0 ? null : vscode.l10n.t("Invalid filter specified"));
+        };
+
         const filter = await Gui.showInputBox({
             title: vscode.l10n.t("Enter a value to filter by"),
-            placeHolder: "",
-            validateInput:
-                filterMethod === Sorting.DatasetFilterOpts.LastModified
-                    ? dateValidation
-                    : (val): string => (val.length > 0 ? null : vscode.l10n.t("Invalid filter specified")),
+            placeHolder: filterMethod === Sorting.DatasetFilterOpts.Name ? vscode.l10n.t("e.g. MEM*") : "",
+            validateInput: getValidation(),
         });
 
         // User dismissed filter entry, go back to filter selection

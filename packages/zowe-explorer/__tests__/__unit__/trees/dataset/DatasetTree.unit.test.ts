@@ -4552,6 +4552,57 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B"]);
         });
 
+        it("filters single PDS by name", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(case-sensitive) Name" as any);
+            mocks.showInputBox.mockResolvedValueOnce("A");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A"]);
+        });
+
+        it("filters single PDS by name with wildcard", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(case-sensitive) Name" as any);
+            mocks.showInputBox.mockResolvedValueOnce("*");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+        });
+
+        it("filters PDS by name prefix wildcard returning only matching members", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            const mem1 = new ZoweDatasetNode({
+                label: "MEM1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: nodes.pds,
+            });
+            const mem2 = new ZoweDatasetNode({
+                label: "MEM2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: nodes.pds,
+            });
+            const other = new ZoweDatasetNode({
+                label: "OTHER",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: nodes.pds,
+            });
+            nodes.pds.children = [mem1, mem2, other];
+
+            mocks.showQuickPick.mockResolvedValueOnce("$(case-sensitive) Name" as any);
+            mocks.showInputBox.mockResolvedValueOnce("MEM*");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["MEM1", "MEM2"]);
+        });
+
         it("filters PDS members using the session node filter", async () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();

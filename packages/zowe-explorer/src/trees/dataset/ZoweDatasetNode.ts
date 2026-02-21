@@ -655,6 +655,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     return dayjs(node.getStats()?.modifiedDate).isSame(filter.value, "day");
                 case Sorting.DatasetFilterOpts.UserId:
                     return node.getStats()?.user === filter.value;
+                case Sorting.DatasetFilterOpts.Name: {
+                    const label = (node.label as string).toUpperCase();
+                    const pattern = filter.value.toUpperCase().replace(/\*/g, ".*");
+                    return new RegExp(`^${pattern}$`).test(label);
+                }
             }
         };
     }
