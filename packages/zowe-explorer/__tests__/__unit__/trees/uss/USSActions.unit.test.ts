@@ -1872,7 +1872,9 @@ describe("USS Action Unit Tests - downloading functions", () => {
         });
 
         it("should handle mtime filter input then Done", async () => {
-            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Modification Time" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
+            resolveQuickPickSpy
+                .mockResolvedValueOnce({ label: "\u270F Modification Time" })
+                .mockResolvedValueOnce({ label: "\u2714 Ready to download" });
             filterShowInputBox.mockResolvedValue("+7");
 
             const result = await (USSActions as any).getUssDirFilterOptions();
@@ -1953,7 +1955,9 @@ describe("USS Action Unit Tests - downloading functions", () => {
         });
 
         it("should toggle boolean filter (includeHidden) when clicked", async () => {
-            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Include Hidden Files" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
+            resolveQuickPickSpy
+                .mockResolvedValueOnce({ label: "\u270F Include Hidden Files" })
+                .mockResolvedValueOnce({ label: "\u2714 Ready to download" });
 
             const result = await (USSActions as any).getUssDirFilterOptions();
 
@@ -1963,7 +1967,9 @@ describe("USS Action Unit Tests - downloading functions", () => {
         });
 
         it("should toggle boolean filter (filesys) when clicked", async () => {
-            resolveQuickPickSpy.mockResolvedValueOnce({ label: "\u270F Search All Filesystems" }).mockResolvedValueOnce({ label: "\u2714 Ready to download" });
+            resolveQuickPickSpy
+                .mockResolvedValueOnce({ label: "\u270F Search All Filesystems" })
+                .mockResolvedValueOnce({ label: "\u2714 Ready to download" });
 
             const result = await (USSActions as any).getUssDirFilterOptions();
 
