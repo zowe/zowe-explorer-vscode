@@ -71,8 +71,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public resourceUri?: vscode.Uri;
     public persistence = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
     public inFilterPrompt = false;
-    public pdsFavoriteState: Definitions.PdsFavoriteState = Definitions.PdsFavoriteState.NotFavorited;
-    public favoritedMemberNames: string[] = [];
+    public pdsFavoriteState?: Definitions.PdsFavoriteState;
+    public favoritedMemberNames?: string[];
 
     private paginator?: Paginator<IZosFilesResponse>;
     private paginatorData?: {
@@ -486,7 +486,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 .sort(ZoweDatasetNode.sortBy(sortOpts));
 
             // For favorited PDS with specific member favorites, filter to only show those members
-            if (SharedContext.isFavoritePds(this) && this.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers) {
+            if (SharedContext.isFavoritePds(this) && this.favoritedMemberNames != null) {
                 this.children = this.children.filter((child) => this.favoritedMemberNames.includes(child.label as string));
             }
 

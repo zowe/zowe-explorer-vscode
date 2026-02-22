@@ -412,10 +412,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                             continue;
                         }
                         const memberName = item.label as string;
-                        const shouldBeFav =
-                            favPds.pdsFavoriteState === Definitions.PdsFavoriteState.EntirePds ||
-                            (favPds.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers &&
-                                favPds.favoritedMemberNames.includes(memberName));
+                        const shouldBeFav = favPds.favoritedMemberNames == null || favPds.favoritedMemberNames.includes(memberName);
                         if (shouldBeFav && !SharedContext.isFavorite(item)) {
                             item.contextValue = SharedContext.asFavorite(item);
                         }
@@ -872,7 +869,8 @@ Would you like to do this now?`,
             if (existingFav && existingFav.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers) {
                 // PDS has specific member favourites so upgrade to full PDS favourite
                 existingFav.pdsFavoriteState = Definitions.PdsFavoriteState.EntirePds;
-                existingFav.favoritedMemberNames = [];
+                existingFav.favoritedMemberNames = undefined;
+                existingFav.description = undefined;
                 existingFav.dirty = true;
                 this.updateFavorites();
                 this.refreshElement(this.mFavoriteSession);
@@ -936,7 +934,7 @@ Would you like to do this now?`,
         // If the member is already inside a favorited PDS node, the entire PDS must already be favorited
         if (SharedContext.isFavoritePds(parentPds)) {
             const favParent = parentPds as ZoweDatasetNode;
-            if (favParent.pdsFavoriteState === Definitions.PdsFavoriteState.EntirePds) {
+            if (favParent.pdsFavoriteState !== Definitions.PdsFavoriteState.SpecificMembers) {
                 Gui.showMessage(vscode.l10n.t("PDS already in favorites"));
             } else if (
                 favParent.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers &&
@@ -960,7 +958,7 @@ Would you like to do this now?`,
             | undefined;
 
         if (existingPdsInFav) {
-            if (existingPdsInFav.pdsFavoriteState === Definitions.PdsFavoriteState.EntirePds) {
+            if (existingPdsInFav.pdsFavoriteState !== Definitions.PdsFavoriteState.SpecificMembers) {
                 Gui.showMessage(vscode.l10n.t("PDS already in favorites"));
                 return;
             }
@@ -1042,11 +1040,7 @@ Would you like to do this now?`,
                         continue;
                     }
                     const memberName = member.label as string;
-                    const shouldBeFav =
-                        favPds != null &&
-                        (favPds.pdsFavoriteState === Definitions.PdsFavoriteState.EntirePds ||
-                            (favPds.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers &&
-                                favPds.favoritedMemberNames.includes(memberName)));
+                    const shouldBeFav = favPds != null && (favPds.favoritedMemberNames == null || favPds.favoritedMemberNames.includes(memberName));
                     const isFav = SharedContext.isFavorite(member);
 
                     if (shouldBeFav && !isFav) {
