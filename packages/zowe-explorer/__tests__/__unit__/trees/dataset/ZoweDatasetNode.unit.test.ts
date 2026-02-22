@@ -42,7 +42,6 @@ import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
-import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
