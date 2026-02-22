@@ -32,6 +32,7 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { DatasetUtils } from "./DatasetUtils";
 import { Constants } from "../../configuration/Constants";
+import { Definitions } from "../../configuration/Definitions";
 import { Profiles } from "../../configuration/Profiles";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
@@ -395,6 +396,58 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE) > 0
             );
 
+            // For non-favorited PDS nodes in the search tree, update member context
+            // to reflect their favorite status
+            if (SharedContext.isPds(element) && !SharedContext.isFavorite(element)) {
+                const profileName = element.getProfileName();
+                const pdsName = element.label as string;
+                const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+                const favPds = profileNodeInFavorites?.children.find((child) => child.label === pdsName && SharedContext.isFavoritePds(child)) as
+                    | ZoweDatasetNode
+                    | undefined;
+
+                if (favPds) {
+                    for (const item of response) {
+                        if (!SharedContext.isDsMember(item)) {
+                            continue;
+                        }
+                        const memberName = item.label as string;
+                        const shouldBeFav =
+                            favPds.pdsFavoriteState === Definitions.PdsFavoriteState.EntirePds ||
+                            (favPds.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers &&
+                                favPds.favoritedMemberNames.includes(memberName));
+                        if (shouldBeFav && !SharedContext.isFavorite(item)) {
+                            item.contextValue = SharedContext.asFavorite(item);
+                        }
+                    }
+                }
+            }
+
+            // For session nodes, mark PDS/DS children that are in favorites with _fav context
+            if (SharedContext.isDsSession(element) && !SharedContext.isFavorite(element)) {
+                const profileName = element.getProfileName();
+                const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+                if (profileNodeInFavorites) {
+                    for (const item of response) {
+                        if (SharedContext.isFavorite(item)) {
+                            continue;
+                        }
+                        const itemLabel = item.label as string;
+                        if (SharedContext.isPds(item)) {
+                            const isFav = profileNodeInFavorites.children.some((fav) => fav.label === itemLabel && SharedContext.isFavoritePds(fav));
+                            if (isFav) {
+                                item.contextValue = SharedContext.asFavorite(item);
+                            }
+                        } else if (SharedContext.isDs(item)) {
+                            const isFav = profileNodeInFavorites.children.some((fav) => fav.label === itemLabel && SharedContext.isFavoriteDs(fav));
+                            if (isFav) {
+                                item.contextValue = SharedContext.asFavorite(item);
+                            }
+                        }
+                    }
+                }
+            }
+
             const finalResponse: IZoweDatasetTreeNode[] = [];
             for (const item of response) {
                 if (item instanceof NavigationTreeItem) {
@@ -510,7 +563,36 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 this.findMatchingProfileInArray(this.mFavorites, fav.profileName) ??
                 (await this.createProfileNodeForFavs(fav.profileName, profileType));
 
-            if (favProfileNode == null || fav.contextValue == null || favProfileNode.children.some((child) => child.label === fav.label)) {
+            if (favProfileNode == null || fav.contextValue == null) {
+                continue;
+            }
+
+            const memberMatch = Constants.DS_HAS_MEMBER_REGEX_CHECK.exec(fav.label);
+            if (memberMatch && fav.contextValue === Constants.DS_PDS_CONTEXT) {
+                const pdsName = memberMatch[1];
+                const memberName = memberMatch[2];
+
+                // Find or create PDS node in favorites
+                let pdsNode = favProfileNode.children.find((child) => child.label === pdsName && SharedContext.isFavoritePds(child)) as
+                    | ZoweDatasetNode
+                    | undefined;
+
+                if (!pdsNode) {
+                    pdsNode = await this.initializeFavChildNodeForProfile(pdsName, fav.contextValue, favProfileNode);
+                    pdsNode.pdsFavoriteState = Definitions.PdsFavoriteState.SpecificMembers;
+                    pdsNode.favoritedMemberNames = [memberName];
+                    favProfileNode.children.push(pdsNode);
+                } else {
+                    if (pdsNode.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers) {
+                        if (!pdsNode.favoritedMemberNames.includes(memberName)) {
+                            pdsNode.favoritedMemberNames.push(memberName);
+                        }
+                    }
+                }
+                continue;
+            }
+
+            if (favProfileNode.children.some((child) => child.label === fav.label)) {
                 continue;
             }
 
@@ -757,12 +839,7 @@ Would you like to do this now?`,
             profileNodeInFavorites = await this.createProfileNodeForFavs(profileName);
         }
         if (SharedContext.isDsMember(node)) {
-            if (SharedContext.isFavoritePds(node.getParent())) {
-                // This only returns true for members whose PDS **node** is literally already in the Favorites section.
-                Gui.showMessage(vscode.l10n.t("PDS already in favorites"));
-                return;
-            }
-            await this.addFavorite(node.getParent() as IZoweDatasetTreeNode);
+            this.addMemberToFavorites(node, profileNodeInFavorites);
             return;
         } else if (SharedContext.isDsSession(node)) {
             if (!node.pattern && !node.resourceUri.query?.includes("pattern=")) {
@@ -789,6 +866,21 @@ Would you like to do this now?`,
             }
         } else {
             // pds | ds
+            const existingFav = profileNodeInFavorites.children.find(
+                (child) => child.label === (node.label as string) && SharedContext.isFavoritePds(child)
+            ) as ZoweDatasetNode | undefined;
+            if (existingFav && existingFav.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers) {
+                // PDS has specific member favourites so upgrade to full PDS favourite
+                existingFav.pdsFavoriteState = Definitions.PdsFavoriteState.EntirePds;
+                existingFav.favoritedMemberNames = [];
+                existingFav.dirty = true;
+                this.updateFavorites();
+                this.refreshElement(this.mFavoriteSession);
+                this.updateMemberFavContext(node.getProfileName(), node.label as string);
+                this.updateNodeFavContext(node.getProfileName(), node.label as string, "pds");
+                return;
+            }
+
             temp = new ZoweDatasetNode({
                 label: node.label as string,
                 collapsibleState: node.collapsibleState,
@@ -814,6 +906,231 @@ Would you like to do this now?`,
             SharedUtils.sortTreeItems(this.mFavorites, Constants.FAV_PROFILE_CONTEXT);
             this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
+            if (SharedContext.isFavoritePds(temp)) {
+                this.updateMemberFavContext(node.getProfileName(), node.label as string);
+                this.updateNodeFavContext(node.getProfileName(), node.label as string, "pds");
+            } else if (SharedContext.isFavoriteDs(temp)) {
+                this.updateNodeFavContext(node.getProfileName(), node.label as string, "ds");
+            } else if (SharedContext.isDsSession(temp)) {
+                this.updateSessionFilterFavContext(node.getProfileName());
+            }
+        }
+    }
+
+    /**
+     * Adds a specific data set member to favorites.
+     * The parent PDS is added to favorites with only the selected member(s) tracked
+     * via the favoritedMemberNames property.
+     *
+     * @param node The member node to add to favorites
+     * @param profileNodeInFavorites The profile node in favorites to add under
+     */
+    private addMemberToFavorites(node: IZoweDatasetTreeNode, profileNodeInFavorites: IZoweDatasetTreeNode): void {
+        ZoweLogger.trace("DatasetTree.addMemberToFavorites called.");
+
+        const parentPds = node.getParent() as IZoweDatasetTreeNode;
+        const memberName = node.label as string;
+        const pdsLabel = parentPds.label as string;
+
+        // Check in favorites tree
+        // If the member is already inside a favorited PDS node, the entire PDS must already be favorited
+        if (SharedContext.isFavoritePds(parentPds)) {
+            const favParent = parentPds as ZoweDatasetNode;
+            if (favParent.pdsFavoriteState === Definitions.PdsFavoriteState.EntirePds) {
+                Gui.showMessage(vscode.l10n.t("PDS already in favorites"));
+            } else if (
+                favParent.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers &&
+                favParent.favoritedMemberNames.includes(memberName)
+            ) {
+                Gui.showMessage(
+                    vscode.l10n.t({
+                        message: "Member {0} is already in favorites",
+                        args: [memberName],
+                        comment: ["Member name"],
+                    })
+                );
+            }
+            return;
+        }
+
+        // Check in session tree
+        // Check if PDS is already in favorites
+        const existingPdsInFav = profileNodeInFavorites.children.find((child) => child.label === pdsLabel && SharedContext.isFavoritePds(child)) as
+            | ZoweDatasetNode
+            | undefined;
+
+        if (existingPdsInFav) {
+            if (existingPdsInFav.pdsFavoriteState === Definitions.PdsFavoriteState.EntirePds) {
+                Gui.showMessage(vscode.l10n.t("PDS already in favorites"));
+                return;
+            }
+            // PDS has specific member favorites - check if this member is already in it
+            if (existingPdsInFav.favoritedMemberNames.includes(memberName)) {
+                Gui.showMessage(
+                    vscode.l10n.t({
+                        message: "Member {0} is already in favorites",
+                        args: [memberName],
+                        comment: ["Member name"],
+                    })
+                );
+                return;
+            }
+            // Add member to the existing favorites list
+            existingPdsInFav.favoritedMemberNames.push(memberName);
+            existingPdsInFav.dirty = true;
+            this.updateFavorites();
+            this.refreshElement(this.mFavoriteSession);
+            this.updateMemberFavContext(node.getProfileName(), pdsLabel);
+            return;
+        }
+
+        // PDS not in favorites - create it with specific member favorites
+        const temp = new ZoweDatasetNode({
+            label: pdsLabel,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: profileNodeInFavorites,
+            contextOverride: parentPds.contextValue,
+            profile: parentPds.getProfile(),
+        });
+        temp.contextValue = SharedContext.asFavorite(temp);
+        temp.resourceUri = parentPds.resourceUri;
+        temp.pdsFavoriteState = Definitions.PdsFavoriteState.SpecificMembers;
+        temp.favoritedMemberNames = [memberName];
+
+        const icon = IconGenerator.getIconByNode(temp);
+        if (icon) {
+            temp.iconPath = icon.path;
+        }
+
+        if (!profileNodeInFavorites.children.find((tempNode) => tempNode.label === temp.label && tempNode.contextValue === temp.contextValue)) {
+            profileNodeInFavorites.children.push(temp);
+            SharedUtils.sortTreeItems(profileNodeInFavorites.children, Constants.DS_SESSION_CONTEXT + Constants.FAV_SUFFIX);
+            SharedUtils.sortTreeItems(this.mFavorites, Constants.FAV_PROFILE_CONTEXT);
+            this.updateFavorites();
+            this.refreshElement(this.mFavoriteSession);
+            this.updateMemberFavContext(node.getProfileName(), pdsLabel);
+        }
+    }
+
+    /**
+     * Updates the context values of PDS member nodes in the search tree to reflect their favorite status.
+     *
+     * @param profileName The profile name to search for
+     * @param pdsName The PDS label to match
+     */
+    private updateMemberFavContext(profileName: string, pdsName: string): void {
+        ZoweLogger.trace("DatasetTree.updateMemberFavContext called.");
+
+        // which members are favorited for this PDS
+        const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+        const favPds = profileNodeInFavorites?.children.find((child) => child.label === pdsName && SharedContext.isFavoritePds(child)) as
+            | ZoweDatasetNode
+            | undefined;
+
+        // Find all PDS nodes in the search tree mattching this name
+        for (const sessionNode of this.mSessionNodes) {
+            if (sessionNode.label !== profileName) {
+                continue;
+            }
+            for (const child of sessionNode.children ?? []) {
+                if (child.label !== pdsName || !SharedContext.isPds(child)) {
+                    continue;
+                }
+                // Update each member's context
+                for (const member of child.children ?? []) {
+                    if (!SharedContext.isDsMember(member)) {
+                        continue;
+                    }
+                    const memberName = member.label as string;
+                    const shouldBeFav =
+                        favPds != null &&
+                        (favPds.pdsFavoriteState === Definitions.PdsFavoriteState.EntirePds ||
+                            (favPds.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers &&
+                                favPds.favoritedMemberNames.includes(memberName)));
+                    const isFav = SharedContext.isFavorite(member);
+
+                    if (shouldBeFav && !isFav) {
+                        member.contextValue = SharedContext.asFavorite(member);
+                    } else if (!shouldBeFav && isFav) {
+                        member.contextValue = member.contextValue.replace(Constants.FAV_SUFFIX, "");
+                    }
+                }
+                this.nodeDataChanged(child);
+            }
+        }
+    }
+
+    /**
+     * Updates the context value of a PDS, data set, or session node in the search tree to reflect whether it is currently favorited.
+     *
+     * @param profileName The profile name to search for
+     * @param nodeLabel The label of the node to match
+     * @param nodeType "pds" | "ds" | "session" - the type of node to update
+     */
+    private updateNodeFavContext(profileName: string, nodeLabel: string, nodeType: "pds" | "ds"): void {
+        ZoweLogger.trace("DatasetTree.updateNodeFavContext called.");
+        const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+
+        for (const sessionNode of this.mSessionNodes) {
+            if (sessionNode.label !== profileName) {
+                continue;
+            }
+
+            // For pds | ds nodes, find matching children of the session node
+            for (const child of sessionNode.children ?? []) {
+                if (child.label !== nodeLabel) {
+                    continue;
+                }
+                const matchesType = nodeType === "pds" ? SharedContext.isPds(child) : SharedContext.isDs(child);
+                if (!matchesType) {
+                    continue;
+                }
+                const isFavInTree = SharedContext.isFavorite(child);
+                const isFavMatcher = (n: IZoweDatasetTreeNode): boolean =>
+                    nodeType === "pds" ? SharedContext.isFavoritePds(n) : SharedContext.isFavoriteDs(n);
+                const existsInFavs = profileNodeInFavorites?.children.some((fav) => fav.label === nodeLabel && isFavMatcher(fav)) ?? false;
+
+                if (existsInFavs && !isFavInTree) {
+                    child.contextValue = SharedContext.asFavorite(child);
+                    this.nodeDataChanged(child);
+                } else if (!existsInFavs && isFavInTree) {
+                    child.contextValue = child.contextValue.replace(Constants.FAV_SUFFIX, "");
+                    this.nodeDataChanged(child);
+                }
+            }
+        }
+    }
+
+    /**
+     * Updates the `_filterFav` context on session nodes in the search tree based on whether
+     * the session's current pattern matches a saved search in favorites.
+     *
+     * @param profileName The profile name to search for
+     */
+    private updateSessionFilterFavContext(profileName: string): void {
+        const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
+
+        for (const sessionNode of this.mSessionNodes) {
+            if (sessionNode.label !== profileName) {
+                continue;
+            }
+
+            const sessionPattern = sessionNode.pattern;
+            const hasFilterFav = sessionNode.contextValue.includes(Constants.FILTER_SAVED);
+            const patternIsFavorited =
+                sessionPattern != null &&
+                (profileNodeInFavorites?.children.some(
+                    (child) => child.label === sessionPattern && SharedContext.isFavorite(child) && SharedContext.isDsSession(child)
+                ) ??
+                    false);
+
+            if (patternIsFavorited && !hasFilterFav) {
+                sessionNode.contextValue += Constants.FILTER_SAVED;
+                this.nodeDataChanged(sessionNode);
+            } else if (!patternIsFavorited && hasFilterFav) {
+                sessionNode.contextValue = sessionNode.contextValue.replace(Constants.FILTER_SAVED, "");
+                this.nodeDataChanged(sessionNode);
+            }
         }
     }
 
@@ -945,14 +1262,88 @@ Would you like to do this now?`,
      */
     public async removeFavorite(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.removeFavorite called.");
-        // Get node's profile node in favorites
+
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
-
         if (profileNodeInFavorites === undefined) {
             return;
         }
 
+        // Handle removing a saved search from the search-tree session node (via context menu)
+        // The node is the session/profile node in the search tree, not a favorites-tree node
+        // Find the matching saved search favorite by the session's current pattern and remove it
+        if (SharedContext.isDsSession(node) && !SharedContext.isFavorite(node) && node.contextValue.includes(Constants.FILTER_SAVED)) {
+            const sessionPattern = (node as ZoweDatasetNode).pattern;
+            if (sessionPattern != null) {
+                const matchIndex = profileNodeInFavorites.children.findIndex(
+                    (child) => child.label === sessionPattern && SharedContext.isFavorite(child) && SharedContext.isDsSession(child)
+                );
+                if (matchIndex >= 0) {
+                    profileNodeInFavorites.children.splice(matchIndex, 1);
+                    if (profileNodeInFavorites.children.length < 1) {
+                        await this.removeFavProfile(profileName, false);
+                    }
+                    this.updateFavorites();
+                    this.refreshElement(this.mFavoriteSession);
+                    this.updateSessionFilterFavContext(profileName);
+                }
+            }
+            return;
+        }
+
+        // Handle removing a member from a favorited PDS
+        if (SharedContext.isDsMember(node)) {
+            const parentPds = node.getParent() as ZoweDatasetNode;
+            if (SharedContext.isFavoritePds(parentPds)) {
+                const memberName = node.label as string;
+                const pdsLabel = parentPds.label as string;
+
+                if (parentPds.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers) {
+                    // PDS has specific member favorites — remove this member from the list
+                    const remaining = parentPds.favoritedMemberNames.filter((m) => m !== memberName);
+
+                    if (remaining.length === 0) {
+                        // No more members - remove the entire PDS from favorites
+                        profileNodeInFavorites.children = profileNodeInFavorites.children.filter((c) => c !== parentPds);
+                        if (profileNodeInFavorites.children.length < 1) {
+                            await this.removeFavProfile(profileName, false);
+                        }
+                    } else {
+                        parentPds.favoritedMemberNames = remaining;
+                        parentPds.dirty = true;
+                    }
+                } else {
+                    // Entire PDS is favorited (pdsFavoriteState is EntirePds).
+                    // Convert to "all members EXCEPT the removed one" by enumerating current children.
+                    const allMembers = parentPds.children
+                        .filter((c) => SharedContext.isDsMember(c))
+                        .map((c) => c.label as string)
+                        .filter((m) => m !== memberName);
+
+                    if (allMembers.length === 0) {
+                        // Only member was the one being removed — remove the PDS from favorites
+                        profileNodeInFavorites.children = profileNodeInFavorites.children.filter((c) => c !== parentPds);
+                        if (profileNodeInFavorites.children.length < 1) {
+                            await this.removeFavProfile(profileName, false);
+                        }
+                    } else {
+                        parentPds.pdsFavoriteState = Definitions.PdsFavoriteState.SpecificMembers;
+                        parentPds.favoritedMemberNames = allMembers;
+                        parentPds.dirty = true;
+                    }
+                }
+
+                this.updateFavorites();
+                this.refreshElement(this.mFavoriteSession);
+                this.updateMemberFavContext(profileName, pdsLabel);
+                return;
+            }
+        }
+
+        const removedNodeLabel = node.label as string;
+        const wasPds = SharedContext.isFavoritePds(node);
+        const wasDs = SharedContext.isFavoriteDs(node);
+        const wasSession = SharedContext.isFavorite(node) && SharedContext.isDsSession(node);
         profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
             (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
         );
@@ -962,19 +1353,48 @@ Would you like to do this now?`,
         }
         this.updateFavorites();
         this.refreshElement(this.mFavoriteSession);
+        if (wasPds) {
+            this.updateMemberFavContext(profileName, removedNodeLabel);
+            this.updateNodeFavContext(profileName, removedNodeLabel, "pds");
+        } else if (wasDs) {
+            this.updateNodeFavContext(profileName, removedNodeLabel, "ds");
+        } else if (wasSession) {
+            this.updateSessionFilterFavContext(profileName);
+        }
     }
 
     /**
      * Writes favorites to the settings file.
+     * For PDS nodes with specific member favorites, each member is stored as a separate entry
+     * in the format: [profile]: PDS.NAME(MEMBER){contextValue}
+     * else, each favorite is stored in the format: [profile]: NAME{contextValue}
      */
     public updateFavorites(): void {
         ZoweLogger.trace("DatasetTree.updateFavorites called.");
         const favoritesArray = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((favorite) => {
-                const favoriteEntry =
-                    "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + SharedContext.getBaseContext(favorite) + "}";
-                favoritesArray.push(favoriteEntry);
+                const pdsNode = favorite as ZoweDatasetNode;
+                if (SharedContext.isFavoritePds(favorite) && pdsNode.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers) {
+                    // Store each favorited member as a separate persistence entry
+                    for (const member of pdsNode.favoritedMemberNames) {
+                        const favoriteEntry =
+                            "[" +
+                            profileNode.label.toString() +
+                            "]: " +
+                            favorite.label.toString() +
+                            "(" +
+                            member +
+                            "){" +
+                            SharedContext.getBaseContext(favorite) +
+                            "}";
+                        favoritesArray.push(favoriteEntry);
+                    }
+                } else {
+                    const favoriteEntry =
+                        "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + SharedContext.getBaseContext(favorite) + "}";
+                    favoritesArray.push(favoriteEntry);
+                }
             });
         });
         this.mPersistence.updateFavorites(favoritesArray);
@@ -1504,6 +1924,11 @@ Would you like to do this now?`,
         }
         if (addToHistory) {
             this.addSearchHistory(pattern);
+        }
+
+        // Update context menu for session node
+        if (SharedContext.isDsSession(node) && !SharedContext.isFavorite(node)) {
+            this.updateSessionFilterFavContext(node.getProfileName());
         }
     }
 

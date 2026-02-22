@@ -42,7 +42,7 @@ import { IconGenerator } from "../../icons/IconGenerator";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
 import { AuthUtils } from "../../utils/AuthUtils";
-import type { Definitions } from "../../configuration/Definitions";
+import { Definitions } from "../../configuration/Definitions";
 import type { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
@@ -71,6 +71,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public resourceUri?: vscode.Uri;
     public persistence = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
     public inFilterPrompt = false;
+    public pdsFavoriteState: Definitions.PdsFavoriteState = Definitions.PdsFavoriteState.NotFavorited;
+    public favoritedMemberNames: string[] = [];
 
     private paginator?: Paginator<IZosFilesResponse>;
     private paginatorData?: {
@@ -482,6 +484,19 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 .filter((c) => (c.label as string) in elementChildren)
                 .filter(filter ? ZoweDatasetNode.filterBy(filter) : (_c): boolean => true)
                 .sort(ZoweDatasetNode.sortBy(sortOpts));
+
+            // For favorited PDS with specific member favorites, filter to only show those members
+            if (SharedContext.isFavoritePds(this) && this.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers) {
+                this.children = this.children.filter((child) => this.favoritedMemberNames.includes(child.label as string));
+            }
+
+            if (SharedContext.isFavoritePds(this)) {
+                for (const child of this.children) {
+                    if (SharedContext.isDsMember(child) && !SharedContext.isFavorite(child)) {
+                        child.contextValue = SharedContext.asFavorite(child);
+                    }
+                }
+            }
 
             if (SharedContext.isSession(this)) {
                 const dsTree = SharedTreeProviders.ds as DatasetTree;

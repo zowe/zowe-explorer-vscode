@@ -1301,7 +1301,7 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         expect(testTree.mFavorites[0].children[0].label).toBe(node.label?.toString());
         expect(testTree.mFavorites[0].children[0].contextValue).toBe(Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX);
     });
-    it("Checking adding of PDS Member node", async () => {
+    it("Checking adding of PDS Member node - adds PDS with favoritedMemberNames", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -1323,6 +1323,81 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         expect(testTree.mFavorites[0].contextValue).toBe(Constants.FAV_PROFILE_CONTEXT);
         expect(testTree.mFavorites[0].children[0].label).toBe(parent.label?.toString());
         expect(testTree.mFavorites[0].children[0].contextValue).toBe(Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX);
+        // Verify favoritedMemberNames is set for the specific member
+        const favPds = testTree.mFavorites[0].children[0] as ZoweDatasetNode;
+        expect(favPds.favoritedMemberNames).toEqual(["Child"]);
+        expect(favPds.description).toBeUndefined();
+    });
+    it("Checking adding a second member to the same PDS favorite appends to favoritedMemberNames", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode({
+            label: "Dataset",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        const child1 = new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        const child2 = new ZoweDatasetNode({ label: "MEMBER2", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        parent.contextValue = Constants.DS_PDS_CONTEXT;
+        child1.contextValue = Constants.DS_MEMBER_CONTEXT;
+        child2.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        await testTree.addFavorite(child1);
+        await testTree.addFavorite(child2);
+
+        // Should still have only one PDS node in favorites
+        expect(testTree.mFavorites[0].children.length).toBe(1);
+        const favPds = testTree.mFavorites[0].children[0] as ZoweDatasetNode;
+        expect(favPds.favoritedMemberNames).toEqual(["MEMBER1", "MEMBER2"]);
+        expect(favPds.description).toBeUndefined();
+    });
+    it("Checking adding a duplicate member shows a message", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode({
+            label: "Dataset",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        const child = new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        parent.contextValue = Constants.DS_PDS_CONTEXT;
+        child.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        await testTree.addFavorite(child);
+        await testTree.addFavorite(child);
+
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Member MEMBER1 is already in favorites");
+    });
+    it("Checking member added to PDS that is already entirely favorited shows PDS message", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode({
+            label: "Dataset",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        const child = new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        parent.contextValue = Constants.DS_PDS_CONTEXT;
+        child.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        // First, add the entire PDS to favorites
+        await testTree.addFavorite(parent);
+        // Then try to add a member of that PDS
+        await testTree.addFavorite(child);
+
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("PDS already in favorites");
     });
     it("Checking adding of Session node", async () => {
         createGlobalMocks();
@@ -1378,6 +1453,98 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         await testTree.addFavorite(child);
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("PDS already in favorites");
+    });
+    it("Checking adding entire PDS when member favorites already exist upgrades to full PDS favorite", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode({
+            label: "Dataset",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        const child = new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        parent.contextValue = Constants.DS_PDS_CONTEXT;
+        child.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        // First add a member favorite
+        await testTree.addFavorite(child);
+        const favPds = testTree.mFavorites[0].children[0] as ZoweDatasetNode;
+        expect(favPds.favoritedMemberNames).toEqual(["MEMBER1"]);
+
+        // Now add the entire PDS - should upgrade to full PDS favorite
+        await testTree.addFavorite(parent);
+        expect(favPds.favoritedMemberNames).toBeUndefined();
+        expect(favPds.description).toBeUndefined();
+        // Should still only have one PDS node
+        expect(testTree.mFavorites[0].children.length).toBe(1);
+    });
+    it("Checking addFavorite updates PDS node context in search tree with _fav", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const pdsNode = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        pdsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        testTree.mSessionNodes[1].children = [pdsNode];
+
+        expect(SharedContext.isFavorite(pdsNode)).toBe(false);
+
+        await testTree.addFavorite(pdsNode);
+
+        // The PDS node in the search tree should now have _fav context
+        expect(SharedContext.isFavorite(pdsNode)).toBe(true);
+        expect(pdsNode.contextValue).toContain(Constants.FAV_SUFFIX);
+    });
+    it("Checking addFavorite updates DS node context in search tree with _fav", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const dsNode = new ZoweDatasetNode({
+            label: "MY.SEQ.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        dsNode.contextValue = Constants.DS_DS_CONTEXT;
+        testTree.mSessionNodes[1].children = [dsNode];
+
+        expect(SharedContext.isFavorite(dsNode)).toBe(false);
+
+        await testTree.addFavorite(dsNode);
+
+        // The DS node in the search tree should now have _fav context
+        expect(SharedContext.isFavorite(dsNode)).toBe(true);
+        expect(dsNode.contextValue).toContain(Constants.FAV_SUFFIX);
+    });
+    it("Checking addFavorite updates session node context with _filterFav when saving search", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].pattern = "HLQ.*";
+
+        expect(testTree.mSessionNodes[1].contextValue).not.toContain(Constants.FILTER_SAVED);
+
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+
+        // The session node should now have _filterFav context (not _fav)
+        expect(testTree.mSessionNodes[1].contextValue).toContain(Constants.FILTER_SAVED);
+        expect(SharedContext.isFavorite(testTree.mSessionNodes[1])).toBe(false);
     });
 });
 describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
@@ -1471,6 +1638,298 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         await testTree.removeFavorite(node);
         expect(removeFavoriteSpy).toHaveReturned();
         expect(updateFavoritesSpy).not.toHaveBeenCalled();
+    });
+
+    it("Checking removeFavorite for a member from a favorited PDS with multiple members", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode({
+            label: "Dataset",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        parent.contextValue = Constants.DS_PDS_CONTEXT;
+        const child1 = new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        const child2 = new ZoweDatasetNode({ label: "MEMBER2", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        child1.contextValue = Constants.DS_MEMBER_CONTEXT;
+        child2.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        // Add both members as favorites
+        await testTree.addFavorite(child1);
+        await testTree.addFavorite(child2);
+
+        const profileNodeInFavs = testTree.mFavorites[0];
+        const favPds = profileNodeInFavs.children[0] as ZoweDatasetNode;
+        expect(favPds.favoritedMemberNames).toEqual(["MEMBER1", "MEMBER2"]);
+
+        // Create a member node inside the favorited PDS to remove
+        const favMember1 = new ZoweDatasetNode({
+            label: "MEMBER1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: favPds,
+        });
+        favMember1.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        await testTree.removeFavorite(favMember1);
+
+        // Check that only MEMBER2 remains
+        expect(favPds.favoritedMemberNames).toEqual(["MEMBER2"]);
+        expect(profileNodeInFavs.children.length).toBe(1);
+    });
+
+    it("Checking removeFavorite for the last member removes the entire PDS from favorites", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode({
+            label: "Dataset",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        parent.contextValue = Constants.DS_PDS_CONTEXT;
+        const child = new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        child.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        // Add one member as a favorite
+        await testTree.addFavorite(child);
+
+        const profileNodeInFavs = testTree.mFavorites[0];
+        const favPds = profileNodeInFavs.children[0] as ZoweDatasetNode;
+
+        // Create a member node inside the favorited PDS to remove
+        const favMember = new ZoweDatasetNode({
+            label: "MEMBER1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: favPds,
+        });
+        favMember.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        const removeFavProfileSpy = jest.spyOn(testTree, "removeFavProfile");
+        await testTree.removeFavorite(favMember);
+
+        // PDS should be completely removed from favorites
+        expect(removeFavProfileSpy).toHaveBeenCalledWith(profileNodeInFavs.label, false);
+        expect(testTree.mFavorites.length).toBe(0);
+    });
+
+    it("Checking removeFavorite for a member from a fully-favorited PDS converts to member-specific favorites", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode({
+            label: "Dataset",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        parent.contextValue = Constants.DS_PDS_CONTEXT;
+
+        // Add entire PDS to favorites
+        await testTree.addFavorite(parent);
+
+        const profileNodeInFavs = testTree.mFavorites[0];
+        const favPds = profileNodeInFavs.children[0] as ZoweDatasetNode;
+        expect(favPds.favoritedMemberNames).toBeUndefined();
+
+        // Simulate children loaded in the favorited PDS
+        const mem1 = new ZoweDatasetNode({ label: "MEM1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: favPds });
+        const mem2 = new ZoweDatasetNode({ label: "MEM2", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: favPds });
+        const mem3 = new ZoweDatasetNode({ label: "MEM3", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: favPds });
+        mem1.contextValue = Constants.DS_MEMBER_CONTEXT;
+        mem2.contextValue = Constants.DS_MEMBER_CONTEXT;
+        mem3.contextValue = Constants.DS_MEMBER_CONTEXT;
+        favPds.children = [mem1, mem2, mem3];
+
+        // Remove MEM2 - should convert to member-specific favorites with MEM1 and MEM3
+        await testTree.removeFavorite(mem2);
+
+        expect(favPds.favoritedMemberNames).toEqual(["MEM1", "MEM3"]);
+        expect(profileNodeInFavs.children.length).toBe(1);
+    });
+
+    it("Checking removeFavorite removes _fav context from PDS in search tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const pdsNode = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        pdsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        testTree.mSessionNodes[1].children = [pdsNode];
+
+        // Add PDS to favorites
+        await testTree.addFavorite(pdsNode);
+        expect(SharedContext.isFavorite(pdsNode)).toBe(true);
+
+        // Remove from favorites
+        const favPds = testTree.mFavorites[0].children[0];
+        await testTree.removeFavorite(favPds);
+
+        // PDS in search tree should no longer have _fav context
+        expect(SharedContext.isFavorite(pdsNode)).toBe(false);
+    });
+
+    it("Checking removeFavorite removes _fav context from DS in search tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const dsNode = new ZoweDatasetNode({
+            label: "MY.SEQ.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        dsNode.contextValue = Constants.DS_DS_CONTEXT;
+        testTree.mSessionNodes[1].children = [dsNode];
+
+        // Add DS to favorites
+        await testTree.addFavorite(dsNode);
+        expect(SharedContext.isFavorite(dsNode)).toBe(true);
+
+        // Remove from favorites
+        const favDs = testTree.mFavorites[0].children[0];
+        await testTree.removeFavorite(favDs);
+
+        // DS in search tree should no longer have _fav context
+        expect(SharedContext.isFavorite(dsNode)).toBe(false);
+    });
+    it("Checking removeFavorite from search-tree session node removes matching saved search", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].pattern = "HLQ.*";
+
+        // Add saved search to favorites
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        expect(testTree.mFavorites[0].children.length).toBe(1);
+        expect(testTree.mSessionNodes[1].contextValue).toContain(Constants.FILTER_SAVED);
+
+        // Remove from the search-tree session node (not from favorites tree)
+        await testTree.removeFavorite(testTree.mSessionNodes[1]);
+
+        // The saved search should be removed from favorites
+        expect(testTree.mFavorites.length === 0 || testTree.mFavorites[0]?.children?.length === 0).toBe(true);
+        // The session node should no longer have _filterFav context
+        expect(testTree.mSessionNodes[1].contextValue).not.toContain(Constants.FILTER_SAVED);
+    });
+    it("Checking removeFavorite from search-tree session updates _filterFav when pattern does not match", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].pattern = "HLQ.*";
+
+        // Add saved search to favorites
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        // Change the session pattern so it no longer matches
+        testTree.mSessionNodes[1].pattern = "OTHER.*";
+        testTree.mSessionNodes[1].contextValue = testTree.mSessionNodes[1].contextValue.replace(Constants.FILTER_SAVED, "");
+
+        // removeFavorite on session node (without _filterFav) should do nothing to favorites
+        // since the node doesn't have the context indicating saved search
+        expect(testTree.mFavorites[0].children.length).toBe(1);
+    });
+});
+describe("Dataset Tree Unit Tests - Function updateSessionFilterFavContext", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+
+        return {
+            session,
+            datasetSessionNode,
+            treeView,
+        };
+    }
+
+    it("sets _filterFav when session pattern matches saved favorite", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].pattern = "HLQ.*";
+
+        // Save the search
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+
+        // Session node should have _filterFav
+        expect(testTree.mSessionNodes[1].contextValue).toContain(Constants.FILTER_SAVED);
+    });
+
+    it("removes _filterFav when session pattern changes to non-favorited value", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].pattern = "HLQ.*";
+
+        // Save the search, then change pattern
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+        expect(testTree.mSessionNodes[1].contextValue).toContain(Constants.FILTER_SAVED);
+
+        // Simulate pattern change by calling updateSessionFilterFavContext after pattern change
+        testTree.mSessionNodes[1].pattern = "OTHER.*";
+        (testTree as any).updateSessionFilterFavContext(testTree.mSessionNodes[1].getProfileName());
+
+        expect(testTree.mSessionNodes[1].contextValue).not.toContain(Constants.FILTER_SAVED);
+    });
+
+    it("does not add _filterFav when session has no pattern", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].pattern = undefined;
+
+        (testTree as any).updateSessionFilterFavContext(testTree.mSessionNodes[1].getProfileName());
+
+        expect(testTree.mSessionNodes[1].contextValue).not.toContain(Constants.FILTER_SAVED);
+    });
+
+    it("does not set _fav on session node (only _filterFav)", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].pattern = "HLQ.*";
+
+        await testTree.addFavorite(testTree.mSessionNodes[1]);
+
+        // The session/profile node should NEVER get _fav, only _filterFav
+        expect(SharedContext.isFavorite(testTree.mSessionNodes[1])).toBe(false);
+        expect(testTree.mSessionNodes[1].contextValue).toContain(Constants.FILTER_SAVED);
+        expect(testTree.mSessionNodes[1].contextValue).not.toContain(Constants.FAV_SUFFIX);
     });
 });
 describe("Dataset Tree Unit Tests - Function removeFavProfile", () => {
@@ -3964,7 +4423,464 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
         expect(blockMocks.testTree.mFavorites[0].children?.map((item) => item.label)).toEqual(["SAMPLE.DS"]);
     });
+
+    it("restores member-specific PDS favorites from persistence", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
+            readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}", "[test]: SAMPLE.PS.DS{ds}"],
+        });
+        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        const profileNode = blockMocks.testTree.mFavorites[0];
+        expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PDS", "SAMPLE.PS.DS"]);
+
+        // Check that the PDS node has the correct member favorites
+        const pdsNode = profileNode.children[0] as ZoweDatasetNode;
+        expect(pdsNode.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
+        expect(SharedContext.isFavoritePds(pdsNode)).toBe(true);
+    });
+
+    it("does not duplicate member favorites when refreshing", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
+            readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}"],
+        });
+        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+
+        const profileNode = blockMocks.testTree.mFavorites[0];
+        const pdsNode = profileNode.children[0] as ZoweDatasetNode;
+        expect(pdsNode.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
+
+        // Refresh should not duplicate members
+        await blockMocks.testTree.refreshFavorites();
+        const pdsNodeAfterRefresh = blockMocks.testTree.mFavorites[0].children[0] as ZoweDatasetNode;
+        expect(pdsNodeAfterRefresh.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
+    });
 });
+
+describe("Dataset Tree Unit Tests - Function updateFavorites with member favorites", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const fspStat = jest.spyOn(DatasetFSProvider.instance, "stat").mockReturnValue({
+            etag: "123ABC",
+        } as any);
+
+        return {
+            session,
+            datasetSessionNode,
+            treeView,
+            imperativeProfile,
+            fspStat,
+        };
+    }
+
+    it("persists member favorites as separate entries with parenthesized member names", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        parent.contextValue = Constants.DS_PDS_CONTEXT;
+        const child1 = new ZoweDatasetNode({ label: "MEM1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        const child2 = new ZoweDatasetNode({ label: "MEM2", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        child1.contextValue = Constants.DS_MEMBER_CONTEXT;
+        child2.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        // Add member favorites
+        await testTree.addFavorite(child1);
+        await testTree.addFavorite(child2);
+
+        // Spy on persistence to verify what gets saved
+        const updateFavSpy = jest.spyOn(testTree["mPersistence"], "updateFavorites");
+        testTree.updateFavorites();
+
+        const profileLabel = blockMocks.datasetSessionNode.label?.toString();
+        expect(updateFavSpy).toHaveBeenCalledWith([`[${profileLabel}]: MY.PDS(MEM1){pds}`, `[${profileLabel}]: MY.PDS(MEM2){pds}`]);
+    });
+
+    it("persists full PDS favorite as single entry without member names", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const pds = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        pds.contextValue = Constants.DS_PDS_CONTEXT;
+
+        // Add entire PDS
+        await testTree.addFavorite(pds);
+
+        const updateFavSpy = jest.spyOn(testTree["mPersistence"], "updateFavorites");
+        testTree.updateFavorites();
+
+        const profileLabel = blockMocks.datasetSessionNode.label?.toString();
+        expect(updateFavSpy).toHaveBeenCalledWith([`[${profileLabel}]: MY.PDS{pds}`]);
+    });
+
+    it("persists mix of full PDS and member-specific PDS favorites correctly", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        const pds1 = new ZoweDatasetNode({
+            label: "FULL.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        pds1.contextValue = Constants.DS_PDS_CONTEXT;
+
+        const pds2 = new ZoweDatasetNode({
+            label: "MEMBER.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        pds2.contextValue = Constants.DS_PDS_CONTEXT;
+        const mem = new ZoweDatasetNode({ label: "MYMEM", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pds2 });
+        mem.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        // Add entire PDS and a member favorite for different PDS
+        await testTree.addFavorite(pds1);
+        await testTree.addFavorite(mem);
+
+        const updateFavSpy = jest.spyOn(testTree["mPersistence"], "updateFavorites");
+        testTree.updateFavorites();
+
+        const profileLabel = blockMocks.datasetSessionNode.label?.toString();
+        expect(updateFavSpy).toHaveBeenCalledWith([`[${profileLabel}]: FULL.PDS{pds}`, `[${profileLabel}]: MEMBER.PDS(MYMEM){pds}`]);
+    });
+});
+
+describe("Dataset Tree Unit Tests - getChildren marks favorite members in search tree", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const profile = createInstanceOfProfile(imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
+        bindMvsApi(mvsApi);
+
+        return {
+            session,
+            datasetSessionNode,
+            treeView,
+            profile,
+            imperativeProfile,
+            mvsApi,
+        };
+    }
+
+    it("sets _fav context on members of a fully-favorited PDS in the search tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        // Create PDS in search tree with members
+        const searchPds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+        });
+        searchPds.contextValue = Constants.DS_PDS_CONTEXT;
+        const searchMember = new ZoweDatasetNode({
+            label: "MEM1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: searchPds,
+            profile: blockMocks.imperativeProfile,
+        });
+        searchMember.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        // Mock getChildren to return the member
+        jest.spyOn(searchPds, "getChildren").mockResolvedValue([searchMember]);
+
+        // Add entire PDS to favorites (favoritedMemberNames = undefined)
+        const favPds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        favPds.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
+        // favoritedMemberNames is undefined = fully favorited
+
+        // Set up favorites structure
+        const profileNodeInFavs = new ZoweDatasetNode({
+            label: blockMocks.datasetSessionNode.label as string,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        });
+        profileNodeInFavs.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        profileNodeInFavs.children = [favPds];
+        testTree.mFavorites = [profileNodeInFavs];
+
+        const children = await testTree.getChildren(searchPds);
+
+        // Member should have _fav context since entire PDS is favorited
+        const member = children.find((c) => c.label === "MEM1");
+        expect(member).toBeDefined();
+        expect(SharedContext.isFavorite(member)).toBe(true);
+    });
+
+    it("sets _fav context only on specific favorited members in the search tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        // Create PDS in search tree with multiple members
+        const searchPds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+        });
+        searchPds.contextValue = Constants.DS_PDS_CONTEXT;
+        const mem1 = new ZoweDatasetNode({
+            label: "MEM1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: searchPds,
+            profile: blockMocks.imperativeProfile,
+        });
+        mem1.contextValue = Constants.DS_MEMBER_CONTEXT;
+        const mem2 = new ZoweDatasetNode({
+            label: "MEM2",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: searchPds,
+            profile: blockMocks.imperativeProfile,
+        });
+        mem2.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        jest.spyOn(searchPds, "getChildren").mockResolvedValue([mem1, mem2]);
+
+        // Add only MEM1 to favorites
+        const favPds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        favPds.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
+        (favPds as ZoweDatasetNode).favoritedMemberNames = ["MEM1"];
+
+        const profileNodeInFavs = new ZoweDatasetNode({
+            label: blockMocks.datasetSessionNode.label as string,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        });
+        profileNodeInFavs.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        profileNodeInFavs.children = [favPds];
+        testTree.mFavorites = [profileNodeInFavs];
+
+        const children = await testTree.getChildren(searchPds);
+
+        // MEM1 should be favorited, MEM2 should not
+        const retMem1 = children.find((c) => c.label === "MEM1");
+        const retMem2 = children.find((c) => c.label === "MEM2");
+        expect(SharedContext.isFavorite(retMem1)).toBe(true);
+        expect(SharedContext.isFavorite(retMem2)).toBe(false);
+    });
+
+    it("does not set _fav context when PDS has no favorites", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        const searchPds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+        });
+        searchPds.contextValue = Constants.DS_PDS_CONTEXT;
+        const mem1 = new ZoweDatasetNode({
+            label: "MEM1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: searchPds,
+            profile: blockMocks.imperativeProfile,
+        });
+        mem1.contextValue = Constants.DS_MEMBER_CONTEXT;
+        jest.spyOn(searchPds, "getChildren").mockResolvedValue([mem1]);
+
+        // No favorites at all
+        testTree.mFavorites = [];
+
+        const children = await testTree.getChildren(searchPds);
+
+        const retMem1 = children.find((c) => c.label === "MEM1");
+        expect(SharedContext.isFavorite(retMem1)).toBe(false);
+    });
+});
+
+describe("Dataset Tree Unit Tests - getChildren marks favorited PDS/DS nodes in search tree", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const treeView = createTreeView();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const profile = createInstanceOfProfile(imperativeProfile);
+        const mvsApi = createMvsApi(imperativeProfile);
+        bindMvsApi(mvsApi);
+
+        return {
+            session,
+            datasetSessionNode,
+            treeView,
+            profile,
+            imperativeProfile,
+            mvsApi,
+        };
+    }
+
+    it("marks PDS node with _fav context when it is in favorites", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        // Create a PDS child in the session
+        const pdsNode = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+        });
+        pdsNode.contextValue = Constants.DS_PDS_CONTEXT;
+
+        jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockResolvedValue([pdsNode]);
+
+        // Add PDS to favorites
+        const favPds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        favPds.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
+
+        const profileNodeInFavs = new ZoweDatasetNode({
+            label: blockMocks.datasetSessionNode.label as string,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        });
+        profileNodeInFavs.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        profileNodeInFavs.children = [favPds];
+        testTree.mFavorites = [profileNodeInFavs];
+
+        const children = await testTree.getChildren(testTree.mSessionNodes[1]);
+
+        const retPds = children.find((c) => c.label === "SAMPLE.PDS");
+        expect(retPds).toBeDefined();
+        expect(SharedContext.isFavorite(retPds)).toBe(true);
+    });
+
+    it("marks DS node with _fav context when it is in favorites", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        // Create a DS child in the session
+        const dsNode = new ZoweDatasetNode({
+            label: "SAMPLE.SEQ.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+        });
+        dsNode.contextValue = Constants.DS_DS_CONTEXT;
+
+        jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockResolvedValue([dsNode]);
+
+        // Add DS to favorites
+        const favDs = new ZoweDatasetNode({
+            label: "SAMPLE.SEQ.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        favDs.contextValue = Constants.DS_DS_CONTEXT + Constants.FAV_SUFFIX;
+
+        const profileNodeInFavs = new ZoweDatasetNode({
+            label: blockMocks.datasetSessionNode.label as string,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        });
+        profileNodeInFavs.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        profileNodeInFavs.children = [favDs];
+        testTree.mFavorites = [profileNodeInFavs];
+
+        const children = await testTree.getChildren(testTree.mSessionNodes[1]);
+
+        const retDs = children.find((c) => c.label === "SAMPLE.SEQ.DS");
+        expect(retDs).toBeDefined();
+        expect(SharedContext.isFavorite(retDs)).toBe(true);
+    });
+
+    it("does not mark PDS/DS nodes when they are not in favorites", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        const pdsNode = new ZoweDatasetNode({
+            label: "OTHER.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+        });
+        pdsNode.contextValue = Constants.DS_PDS_CONTEXT;
+        const dsNode = new ZoweDatasetNode({
+            label: "OTHER.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+        });
+        dsNode.contextValue = Constants.DS_DS_CONTEXT;
+
+        jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockResolvedValue([pdsNode, dsNode]);
+        testTree.mFavorites = [];
+
+        const children = await testTree.getChildren(testTree.mSessionNodes[1]);
+
+        expect(SharedContext.isFavorite(children.find((c) => c.label === "OTHER.PDS"))).toBe(false);
+        expect(SharedContext.isFavorite(children.find((c) => c.label === "OTHER.DS"))).toBe(false);
+    });
+});
+
 describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
     createGlobalMocks();
     mocked(vscode.window.createTreeView).mockReturnValueOnce(createTreeView());
