@@ -375,6 +375,12 @@
       "USS node label"
     ]
   },
+  "Create {0}/Node type": {
+    "message": "Create {0}",
+    "comment": [
+      "Node type"
+    ]
+  },
   "Create a new filter": "Create a new filter",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
   "Create a new MVS command": "Create a new MVS command",
@@ -509,6 +515,12 @@
   "Enter a device type (unit)": "Enter a device type (unit)",
   "Enter a filter": "Enter a filter",
   "Enter a job ID": "Enter a job ID",
+  "Enter a name for the {0}, then press Enter to create/Node type": {
+    "message": "Enter a name for the {0}, then press Enter to create",
+    "comment": [
+      "Node type"
+    ]
+  },
   "Enter a name for the connection.": "Enter a name for the connection.",
   "Enter a name for the new data set": "Enter a name for the new data set",
   "Enter a new name for the {0}/Node type": {
@@ -823,6 +835,7 @@
   "Fixed a regression with the AuthUtils.syncSessionNode function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. <a>#3795</a>": "Fixed a regression with the AuthUtils.syncSessionNode function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. <a>#3795</a>",
   "Fixed a z/OSMF issue for Data Sets and Jobs with special characters in the names. <a>#2175</a>": "Fixed a z/OSMF issue for Data Sets and Jobs with special characters in the names. <a>#2175</a>",
   "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>": "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>",
+  "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>": "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>",
   "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>": "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>",
   "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>": "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>",
   "Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the \"Show Config\" action. <a>#3322</a>": "Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the \"Show Config\" action. <a>#3322</a>",
@@ -861,6 +874,7 @@
   "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>": "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>",
   "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>": "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>",
   "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>": "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>",
+  "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>": "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>",
   "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>": "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>",
   "Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. <a>#3923</a>": "Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. <a>#3923</a>",
   "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>": "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>",
@@ -1325,7 +1339,6 @@
   "Name of Data Set": "Name of Data Set",
   "Name of data set member": "Name of data set member",
   "Name of Data Set Template": "Name of Data Set Template",
-  "Name of file or directory": "Name of file or directory",
   "Name of member": "Name of member",
   "New features and enhancements": "New features and enhancements",
   "New filter": "New filter",
@@ -2007,7 +2020,7 @@
   "Updated Zowe SDKs to 8.16.0 to include the latest enhancements from Imperative and the z/OS Files SDK. <a>#3526</a>": "Updated Zowe SDKs to 8.16.0 to include the latest enhancements from Imperative and the z/OS Files SDK. <a>#3526</a>",
   "Updated Zowe SDKs to 8.21.0 for technical currency. <a>#3668</a>": "Updated Zowe SDKs to 8.21.0 for technical currency. <a>#3668</a>",
   "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>": "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>",
-  "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>": "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>",
+  "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>": "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>",
   "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>": "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>",
   "Updating data set templates.": "Updating data set templates.",
   "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
