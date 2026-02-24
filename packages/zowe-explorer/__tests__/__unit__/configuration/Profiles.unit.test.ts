@@ -39,6 +39,7 @@ import {
     ProfilesCache,
     Sorting,
     AuthHandler,
+    PersistenceSchemaEnum,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
@@ -387,6 +388,43 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile selection has been cancelled.");
         expect(ZoweLogger.debug).toHaveBeenCalledWith("Profile selection has been cancelled.");
         spy.mockClear();
+    });
+
+    it.each([
+        [PersistenceSchemaEnum.Dataset, "DATA SETS tree."],
+        [PersistenceSchemaEnum.Job, "JOBS tree."],
+        [PersistenceSchemaEnum.USS, "USS tree."],
+    ])("Tests that createZoweSession sets quickpick title and placeholder for %s tree", async (treeType, expectedTreeLabel) => {
+        createGlobalMocks();
+        const showQuickPick = jest.fn();
+        const hideQuickPick = jest.fn();
+        const quickPick = {
+            items: [],
+            placeholder: "",
+            title: "",
+            show: showQuickPick,
+            hide: hideQuickPick,
+            ignoreFocusOut: false,
+        } as any;
+
+        jest.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick);
+        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+
+        const treeProvider = {
+            getTreeType: jest.fn().mockReturnValue(treeType),
+            mSessionNodes: [],
+            addSession: jest.fn(),
+        } as any;
+
+        await Profiles.getInstance().createZoweSession(treeProvider);
+
+        expect(quickPick.title).toBe("Add Profile to Tree");
+        expect(quickPick.placeholder).toContain("Create a New Team Configuration File");
+        expect(quickPick.placeholder).toContain("Edit Team Configuration File");
+        expect(quickPick.placeholder).toContain(expectedTreeLabel);
+        expect(quickPick.ignoreFocusOut).toBe(true);
+        expect(showQuickPick).toHaveBeenCalledTimes(1);
+        expect(hideQuickPick).toHaveBeenCalledTimes(1);
     });
 
     it("Tests that createZoweSession runs successfully", async () => {
