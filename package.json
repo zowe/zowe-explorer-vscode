@@ -73,6 +73,7 @@
     "clean": "pnpm -r clean",
     "fresh-clone": "pnpm -r --parallel fresh-clone && (rimraf node_modules || true)",
     "prepare": "husky install",
+    "verify:lockfile-config": "node scripts/verifyPnpmLockfileConfig.mjs",
     "lint": "pnpm -r lint",
     "lint:html": "pnpm -r lint:html",
     "madge": "pnpm -r madge",
