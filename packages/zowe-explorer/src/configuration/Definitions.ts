@@ -145,6 +145,11 @@ export namespace Definitions {
         OtherUserJobs,
         AllJobs,
     }
+    export enum PdsFavoriteState {
+        NotFavorited,
+        EntirePds,
+        SpecificMembers,
+    }
     export enum V1MigrationStatus {
         None,
         JustMigrated,
