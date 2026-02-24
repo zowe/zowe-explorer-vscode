@@ -1162,6 +1162,7 @@
   "Fixed errors encountered from not having Zowe CLI installed by creating the ~/.zowe/settings/imperative.json file during activation if it doesn't already exist. This file is for Zowe Explorer to know the Security Credential Manager used for secure profile information and removes the Zowe CLI installation prerequisite. <a>#1850</a>": "",
   "Fixed extension being slow to load large team config files. <a>#1911</a>": "",
   "Fixed failure to refresh token value after user logs in to authentication. <a>#2638</a>": "",
+  "Fixed incorrect tooltip under Unix System Services profiles. <a>#4019</a>": "",
   "Fixed issue handling job files with the same DD names across different steps. <a>#2279</a>": "",
   "Fixed issue handling job files with unnamed steps. <a>#2315</a>": "",
   "Fixed issue of migrate/recall icons and right-click options now update instantly upon selection, eliminating the need to reload VS Code. <a>#2755</a>": "",
