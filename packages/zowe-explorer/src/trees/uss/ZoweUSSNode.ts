@@ -119,6 +119,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
                 this.tooltip = toolTipList.join("\n");
             } else if (this.contextValue === Constants.INFORMATION_CONTEXT) {
+                this.tooltip = this.label as string;
                 this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
             } else if (this.collapsibleState === vscode.TreeItemCollapsibleState.None) {
                 this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
