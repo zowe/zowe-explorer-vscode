@@ -22,7 +22,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue with the "Create New Data Set" feature where a data set attribute's original value was deleted after the user dismissed the input box. Now, the attribute's value is preserved when the user cancels their input. [#4003](https://github.com/zowe/zowe-explorer-vscode/issues/4003)
 - Fixed an issue where favoriting a single member in a PDS was adding the entire PDS with all members to the favorites tree. [#1356](https://github.com/zowe/zowe-explorer-vscode/issues/1356)
 - Fixed an issue where adding an item to favorites was still incorrectly showing the "Add to Favorites" icon on it. [#3712](https://github.com/zowe/zowe-explorer-vscode/issues/3712)
-- Updated Zowe SDKs to `8.29.9` for technical currency. [#4040](https://github.com/zowe/zowe-explorer-vscode/pull/4040)
+- Updated Zowe SDKs to `8.30.1` for technical currency. [#4079](https://github.com/zowe/zowe-explorer-vscode/pull/4079)
 
 ## `3.4.0`
 
