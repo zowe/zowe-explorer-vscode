@@ -210,7 +210,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         ZoweLogger.trace(`ZoweUSSNode.getChildren called for ${this.label as string}.`);
         if ((!this.fullPath && SharedContext.isSession(this)) || SharedContext.isDocument(this)) {
             const placeholder = new ZoweUSSNode({
-                label: vscode.l10n.t("Use the search button to list USS files"),
+                label: vscode.l10n.t("Use the Search button to list USS files"),
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
                 contextOverride: Constants.INFORMATION_CONTEXT,
