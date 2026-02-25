@@ -1048,7 +1048,7 @@ export class DatasetActions {
                 ["cdate", "Create Date", "The dataset creation date"],
                 ["dev", "Device Type", "The type of the device the dataset is stored on"],
                 ["dsntp", "Data Set Type", "LIBRARY, (LIBRARY,1), (LIBRARY,2), PDS, HFS, EXTREQ, EXTPREF, BASIC or LARGE"],
-                ["dsorg", "Data Set Organization", "The organization of the data set as PS, PO, or DA"],
+                ["dsorg", "Data Set Organization", "PS, PO, or DA"],
                 ["edate", "Expiration Date", "The dataset expiration date"],
                 ["extx", "Extensions", "The number of extensions the dataset has"],
                 ["lrecl", "Logical Record Length", "The length in bytes of each record"],

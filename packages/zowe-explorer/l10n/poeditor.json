@@ -1269,6 +1269,7 @@
   "Fixed regression where PDS member attributes were no longer listed when using the \"Show Attributes\" feature from the data set context menu. <a>#3856</a>": "",
   "Fixed release notes displaying when the Zowe Explorer version is downgraded. <a>#3966</a>": "",
   "Fixed release notes displaying when Zowe Explorer is installed for the first time. <a>#3966</a>": "",
+  "Fixed screen reader cannot read dataset attributes from the dataset attribute webview.<a>#4023</a>": "",
   "Fixed secure credential storage not possible to enable in Theia.": "",
   "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>": "",
   "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>": "",
