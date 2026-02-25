@@ -216,7 +216,7 @@
   "JobId: ": "JobId: ",
   "Profile: ": "Profile: ",
   "Profile Type: ": "Profile Type: ",
-  "Use the search button to list USS files": "Use the search button to list USS files",
+  "Use the Search button to list USS files": "Use the Search button to list USS files",
   "Invalid node": "Invalid node",
   "Delete action was cancelled.": "Delete action was cancelled.",
   "Unable to delete node: {0}/Error message": {
