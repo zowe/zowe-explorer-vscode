@@ -77,7 +77,7 @@ export class USSActions {
                 comment: ["Placeholder for file or directory name"],
             }),
             prompt: vscode.l10n.t({
-                message: "Enter a name for the {0}, then press Enter to create",
+                message: "Enter a name for the {0} ",
                 args: [nodeType],
                 comment: ["Node type"],
             }),
