@@ -36,6 +36,24 @@
       "Like Data Set name"
     ]
   },
+  "{0}. Or select a profile to add to the DATA SETS tree./Instruction for add profile quick pick": {
+    "message": "{0}. Or select a profile to add to the DATA SETS tree.",
+    "comment": [
+      "Instruction for add profile quick pick"
+    ]
+  },
+  "{0}. Or select a profile to add to the JOBS tree./Instruction for add profile quick pick": {
+    "message": "{0}. Or select a profile to add to the JOBS tree.",
+    "comment": [
+      "Instruction for add profile quick pick"
+    ]
+  },
+  "{0}. Or select a profile to add to the USS tree./Instruction for add profile quick pick": {
+    "message": "{0}. Or select a profile to add to the USS tree.",
+    "comment": [
+      "Instruction for add profile quick pick"
+    ]
+  },
   "**Behavior:** Each command opens a dedicated terminal panel (for example, only MVS commands in the MVS terminal).": "**Behavior:** Each command opens a dedicated terminal panel (for example, only MVS commands in the MVS terminal).",
   "**Breaking:** Consolidated VS Code commands:": "**Breaking:** Consolidated VS Code commands:",
   "**Breaking:** Removed deprecated methods: <a>#2238</a>": "**Breaking:** Removed deprecated methods: <a>#2238</a>",
@@ -94,6 +112,7 @@
   "Add deprecation message to history settings explaining to users how to edit items. <a>#2303</a>": "Add deprecation message to history settings explaining to users how to edit items. <a>#2303</a>",
   "Add localization support to release notes and changelogs. <a>#4047</a>": "Add localization support to release notes and changelogs. <a>#4047</a>",
   "Add New History Item": "Add New History Item",
+  "Add Profile to Tree": "Add Profile to Tree",
   "Add to workspace": "Add to workspace",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
   "Added \"Cancel Job\" feature for job nodes in Jobs tree view. <a>#2251</a>": "Added \"Cancel Job\" feature for job nodes in Jobs tree view. <a>#2251</a>",
@@ -315,9 +334,6 @@
   "Changes in credential management detected, refreshing Zowe Explorer.": "Changes in credential management detected, refreshing Zowe Explorer.",
   "Changes in the credential vault detected, refreshing Zowe Explorer.": "Changes in the credential vault detected, refreshing Zowe Explorer.",
   "Changing authentication to basic was successful for profile {0}.": "Changing authentication to basic was successful for profile {0}.",
-  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
-  "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
-  "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",
   "Choose a location to create the {0}/Node type": {
     "message": "Choose a location to create the {0}",
     "comment": [
@@ -835,6 +851,7 @@
   "Fixed a regression with the AuthUtils.syncSessionNode function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. <a>#3795</a>": "Fixed a regression with the AuthUtils.syncSessionNode function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. <a>#3795</a>",
   "Fixed a z/OSMF issue for Data Sets and Jobs with special characters in the names. <a>#2175</a>": "Fixed a z/OSMF issue for Data Sets and Jobs with special characters in the names. <a>#2175</a>",
   "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>": "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>",
+  "Fixed an accessibility issue in the \"Add Profile\" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference \"Create a New Team Configuration File\" and \"Edit Team Configuration File\" to guide keyboard and screen reader users. <a>#4028</a>": "Fixed an accessibility issue in the \"Add Profile\" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference \"Create a New Team Configuration File\" and \"Edit Team Configuration File\" to guide keyboard and screen reader users. <a>#4028</a>",
   "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>": "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>",
   "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>": "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>",
   "Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the \"Show Config\" action. <a>#3322</a>": "Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the \"Show Config\" action. <a>#3322</a>",
@@ -1695,6 +1712,7 @@
   "Secure Credentials Enabled: ": "Secure Credentials Enabled: ",
   "See the <a>FileSystemProvider wiki page</a> for more information on the FileSystemProvider.": "See the <a>FileSystemProvider wiki page</a> for more information on the FileSystemProvider.",
   "Select": "Select",
+  "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles": "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles",
   "Select a certificate and certificate key in PEM format:": "Select a certificate and certificate key in PEM format:",
   "Select a data set organization (DSORG)": "Select a data set organization (DSORG)",
   "Select a filter": "Select a filter",
