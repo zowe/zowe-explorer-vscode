@@ -8,6 +8,12 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 - Updated Zowe SDKs to `8.30.1` for technical currency. [#4079](https://github.com/zowe/zowe-explorer-vscode/pull/4079)
 
+## `3.4.1`
+
+### Bug fixes
+
+- Updated Zowe SDKs to `8.29.9` for technical currency. [#4040](https://github.com/zowe/zowe-explorer-vscode/pull/4040)
+
 ## `3.4.0`
 
 ### New features and enhancements
@@ -16,7 +22,6 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
-- Fixed an issue where the `zftp` session type is set to `none` on VS Code reload. [#4049](https://github.com/zowe/zowe-explorer-vscode/pull/4049)
 - Fixed an issue where Zowe Explorer could not detect the volume in data set attributes returned from the FTP extension. Renamed the `volume` property in the data sets list response object to `vols`, establishing consistency with the z/OSMF API. [#3946](https://github.com/zowe/zowe-explorer-vscode/issues/3946)
 - Updated Zowe SDKs to `8.28.0` for technical currency. [#3877](https://github.com/zowe/zowe-explorer-vscode/pull/3877)
 
