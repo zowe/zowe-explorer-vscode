@@ -74,7 +74,13 @@ export class DatasetActions {
     private static async handleUserSelection(): Promise<string> {
         // Create the array of items in the quickpick list
         const qpItems = [];
-        qpItems.push(new FilterItem({ text: `\u002B ${DatasetActions.localizedStrings.allocString}`, show: true }));
+        qpItems.push(
+            new FilterItem({
+                text: `\u002B ${DatasetActions.localizedStrings.allocString}`,
+                description: vscode.l10n.t("Create the data set using the current attributes"),
+                show: true,
+            })
+        );
         DatasetActions.newDSProperties?.forEach((prop) => {
             const propLabel = `\u270F ${prop.label as string}`;
             qpItems.push(new FilterItem({ text: propLabel, description: prop.value, show: true }));
@@ -82,10 +88,11 @@ export class DatasetActions {
 
         // Provide the settings for the quickpick's appearance & behavior
         const quickpick = Gui.createQuickPick();
-        quickpick.placeholder = vscode.l10n.t("Click on parameters to change them");
+        quickpick.title = vscode.l10n.t("Create Data Set: Edit Attributes");
+        quickpick.placeholder = vscode.l10n.t("Select an attribute to edit, or select Allocate Data Set to create the data set");
         quickpick.ignoreFocusOut = true;
         quickpick.items = [...qpItems];
-        quickpick.matchOnDescription = false;
+        quickpick.matchOnDescription = true;
         quickpick.onDidHide(() => {
             if (quickpick.selectedItems.length === 0) {
                 ZoweLogger.debug(DatasetActions.localizedStrings.opCancelled);
@@ -104,6 +111,12 @@ export class DatasetActions {
         const showPatternOptions = async (): Promise<void> => {
             const property = DatasetActions.newDSProperties?.find((prop) => pattern.includes(prop.label));
             const options: vscode.InputBoxOptions = {
+                title: vscode.l10n.t("Create Data Set: Update Attribute Value"),
+                prompt: vscode.l10n.t({
+                    message: "Enter a value for {0}, then press Enter to continue",
+                    args: [property?.label],
+                    comment: ["Attribute label"],
+                }),
                 value: property?.value,
                 placeHolder: property?.placeHolder,
             };
@@ -127,6 +140,8 @@ export class DatasetActions {
 
     private static async getDataSetName(): Promise<string> {
         const options: vscode.InputBoxOptions = {
+            title: vscode.l10n.t("Create Data Set: Name"),
+            prompt: vscode.l10n.t("Enter a data set name, then press Enter to continue"),
             placeHolder: vscode.l10n.t("Name of Data Set"),
             ignoreFocusOut: true,
             validateInput: (text) => {
@@ -143,6 +158,7 @@ export class DatasetActions {
 
     private static async getDsTypeForCreation(datasetProvider: Types.IZoweDatasetTreeType): Promise<string> {
         const stepTwoOptions: vscode.QuickPickOptions = {
+            title: vscode.l10n.t("Create Data Set: Type"),
             placeHolder: vscode.l10n.t("Template of Data Set to be Created"),
             ignoreFocusOut: true,
             canPickMany: false,
@@ -244,6 +260,8 @@ export class DatasetActions {
 
     private static async allocateOrEditAttributes(): Promise<string> {
         const stepThreeOptions: vscode.QuickPickOptions = {
+            title: vscode.l10n.t("Create Data Set: Review Attributes"),
+            placeHolder: vscode.l10n.t("Select Allocate Data Set to create now, or Edit Attributes to review values"),
             ignoreFocusOut: true,
             canPickMany: false,
         };
