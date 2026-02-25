@@ -22,7 +22,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue with the "Create New Data Set" feature where a data set attribute's original value was deleted after the user dismissed the input box. Now, the attribute's value is preserved when the user cancels their input. [#4003](https://github.com/zowe/zowe-explorer-vscode/issues/4003)
 - Fixed an issue where the data set sort persistence was overriding the selected sort direction. [#4048](https://github.com/zowe/zowe-explorer-vscode/pull/4048)
 - Updated Zowe SDKs to `8.30.1` for technical currency. [#4079](https://github.com/zowe/zowe-explorer-vscode/pull/4079)
-- Fixed screen reader cannot read dataset attributes from the dataset attribute webview.[#4023](https://github.com/zowe/zowe-explorer-vscode/issues/4023)
+- Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.[#4023](https://github.com/zowe/zowe-explorer-vscode/issues/4023)
 
 ## `3.4.0`
 
