@@ -918,10 +918,24 @@
   "Profile is invalid, check connection details.": "Profile is invalid, check connection details.",
   "Allocate Data Set": "Allocate Data Set",
   "Edit Attributes": "Edit Attributes",
-  "Click on parameters to change them": "Click on parameters to change them",
+  "Create the data set using the current attributes": "Create the data set using the current attributes",
+  "Create Data Set: Edit Attributes": "Create Data Set: Edit Attributes",
+  "Select an attribute to edit, or select Allocate Data Set to create the data set": "Select an attribute to edit, or select Allocate Data Set to create the data set",
+  "Create Data Set: Update Attribute Value": "Create Data Set: Update Attribute Value",
+  "Enter a value for {0}, then press Enter to continue/Attribute label": {
+    "message": "Enter a value for {0}, then press Enter to continue",
+    "comment": [
+      "Attribute label"
+    ]
+  },
+  "Create Data Set: Name": "Create Data Set: Name",
+  "Enter a data set name, then press Enter to continue": "Enter a data set name, then press Enter to continue",
   "Name of Data Set": "Name of Data Set",
   "Enter valid dataset name": "Enter valid dataset name",
+  "Create Data Set: Type": "Create Data Set: Type",
   "Template of Data Set to be Created": "Template of Data Set to be Created",
+  "Create Data Set: Review Attributes": "Create Data Set: Review Attributes",
+  "Select Allocate Data Set to create now, or Edit Attributes to review values": "Select Allocate Data Set to create now, or Edit Attributes to review values",
   "Error encountered when creating data set.": "Error encountered when creating data set.",
   "Name of Data Set Template": "Name of Data Set Template",
   "Select the profile to which the original data set belongs": "Select the profile to which the original data set belongs",
