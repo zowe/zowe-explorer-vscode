@@ -458,6 +458,12 @@ describe("ZosmfUssApi", () => {
             args: ["ussPath", fakeProperties],
         },
         {
+            name: "downloadDirectory",
+            spy: jest.spyOn(zosfiles.Download, "ussDir"),
+            args: ["ussDirectoryPath", fakeProperties, undefined],
+            transform: (args) => [args[0], fakeProperties, args[2]],
+        },
+        {
             name: "putContent",
             spy: jest.spyOn(zosfiles.Upload, "fileToUssFile"),
             args: ["localPath", "ussPath", fakeProperties],
@@ -511,6 +517,11 @@ describe("ZosmfMvsApi", () => {
         {
             name: "getContents",
             spy: jest.spyOn(zosfiles.Download, "dataSet"),
+            args: ["dsname", fakeProperties],
+        },
+        {
+            name: "downloadAllMembers",
+            spy: jest.spyOn(zosfiles.Download, "allMembers"),
             args: ["dsname", fakeProperties],
         },
         {

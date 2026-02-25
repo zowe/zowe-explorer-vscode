@@ -130,3 +130,122 @@ describe("Dataset utils unit tests - function extractDataSetAndMember", () => {
         expect(result.memberName).toBe("");
     });
 });
+
+describe("Dataset utils unit tests - function getExtensionMap", () => {
+    function createMockNode(label: string, children: Array<{ label: string }>) {
+        return {
+            label,
+            getChildren: jest.fn().mockResolvedValue(children),
+        } as any;
+    }
+
+    it("should return extension map based on member names", async () => {
+        const mockNode = createMockNode("TEST.PDS", [{ label: "MEMBER1" }, { label: "COBOL" }, { label: "XML" }]);
+
+        const result = await DatasetUtils.getExtensionMap(mockNode, false);
+
+        expect(result).toEqual({
+            member1: "txt",
+            cobol: "cbl",
+            xml: "xml",
+        });
+    });
+
+    it("should preserve case when uppercaseNames is true", async () => {
+        const mockNode = createMockNode("TEST.PDS", [{ label: "MEMBER1" }, { label: "COBOL" }, { label: ".f@K3" }]);
+
+        const result = await DatasetUtils.getExtensionMap(mockNode, true);
+
+        expect(result).toEqual({
+            MEMBER1: "txt",
+            COBOL: "cbl",
+            ".f@K3": "txt",
+        });
+    });
+
+    it("should use parent PDS extension as fallback for members without recognised extensions", async () => {
+        const mockNode = createMockNode("TEST.JCL", [{ label: "MEMBER1" }, { label: "MEMBER2" }]);
+
+        const result = await DatasetUtils.getExtensionMap(mockNode, false);
+
+        expect(result).toEqual({
+            member1: "jcl",
+            member2: "jcl",
+        });
+    });
+
+    it("should use default .txt extension when no extension can be determined", async () => {
+        const mockNode = createMockNode("TEST.UNKNOWN", [{ label: "MEMBER1" }, { label: "MEMBER2" }]);
+
+        const result = await DatasetUtils.getExtensionMap(mockNode, false);
+
+        expect(result).toEqual({
+            member1: "txt",
+            member2: "txt",
+        });
+    });
+
+    it("should apply override extension to all members when provided", async () => {
+        const mockNode = createMockNode("TEST.PDS", [{ label: "MEMBER1" }, { label: "COBOL" }, { label: "XML" }]);
+
+        const result = await DatasetUtils.getExtensionMap(mockNode, false, "csv");
+
+        expect(result).toEqual({
+            member1: "csv",
+            cobol: "csv",
+            xml: "csv",
+        });
+    });
+
+    it("should strip prefix dot from override extension", async () => {
+        const mockNode = createMockNode("TEST.PDS", [{ label: "MEMBER1" }, { label: "MEMBER2" }]);
+
+        const result = await DatasetUtils.getExtensionMap(mockNode, false, ".json");
+
+        expect(result).toEqual({
+            member1: "json",
+            member2: "json",
+        });
+    });
+
+    it("should apply override extension even to members that would normally match DS_EXTENSION_MAP", async () => {
+        const mockNode = createMockNode("TEST.JCL", [{ label: "MEMBER1" }, { label: "COBOL" }, { label: "MEMBER3" }]);
+
+        const result = await DatasetUtils.getExtensionMap(mockNode, false, "txt");
+
+        expect(result).toEqual({
+            member1: "txt",
+            cobol: "txt",
+            member3: "txt",
+        });
+    });
+
+    it("should handle empty children array", async () => {
+        const mockNode = createMockNode("TEST.PDS", []);
+
+        const result = await DatasetUtils.getExtensionMap(mockNode, false);
+
+        expect(result).toEqual({});
+    });
+
+    it("should normalise extensions by removing dots from extension map matches", async () => {
+        const mockNode = createMockNode("TEST.JCL", [{ label: "MEMBER" }, { label: "JCL" }]);
+
+        const result = await DatasetUtils.getExtensionMap(mockNode, false);
+
+        expect(result["jcl"]).toBe("jcl");
+        expect(result["member"]).toBe("jcl");
+    });
+
+    it("should apply override extension with uppercaseNames", async () => {
+        const mockNode = createMockNode("TEST.PDS", [{ label: "MEMBER1" }, { label: "MEMBER2" }, { label: ".f@K3" }]);
+
+        const result = await DatasetUtils.getExtensionMap(mockNode, true, "xml");
+
+        expect(result).toEqual({
+            MEMBER1: "xml",
+            MEMBER2: "xml",
+            ".f@K3": "xml",
+        });
+    });
+});

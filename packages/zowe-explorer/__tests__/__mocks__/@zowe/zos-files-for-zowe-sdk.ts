@@ -187,4 +187,9 @@ export class IZosFilesResponse {
     public apiResponse?: any;
 }
 
+export class ZosFilesUtils {
+    public static getDirsFromDataSet = jest.fn().mockReturnValue("test/dataset/path");
+    public static DEFAULT_FILE_EXTENSION = "txt";
+}
+
 export const { Copy } = jest.requireActual("@zowe/zos-files-for-zowe-sdk");

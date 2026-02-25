@@ -13,6 +13,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
+import * as fs from "fs";
 import {
     Gui,
     IZoweTreeNode,
@@ -23,6 +24,7 @@ import {
     ZosEncoding,
     Sorting,
     imperative,
+    CorrelatedError,
 } from "@zowe/zowe-explorer-api";
 import { UssFSProvider } from "../uss/UssFSProvider";
 import { USSUtils } from "../uss/USSUtils";
@@ -213,9 +215,10 @@ export class SharedUtils {
      *
      * @param {imperative.IProfileLoaded} profile - The profile loaded
      * @param {string} taggedEncoding - The tagged encoding
+     * @param {boolean} isDirectory - Whether the target is a directory
      * @returns {vscode.QuickPickItem[]} The encoding options for the prompt
      */
-    private static buildEncodingOptions(profile: imperative.IProfileLoaded, taggedEncoding?: string): vscode.QuickPickItem[] {
+    private static buildEncodingOptions(profile: imperative.IProfileLoaded, taggedEncoding?: string, isDirectory?: boolean): vscode.QuickPickItem[] {
         const ebcdicItem: vscode.QuickPickItem = {
             label: vscode.l10n.t("EBCDIC"),
             description: vscode.l10n.t("z/OS default codepage"),
@@ -228,7 +231,16 @@ export class SharedUtils {
             label: vscode.l10n.t("Other"),
             description: vscode.l10n.t("Specify another codepage"),
         };
-        const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem, Constants.SEPARATORS.RECENT];
+        const items: vscode.QuickPickItem[] = [ebcdicItem, binaryItem, otherItem];
+
+        if (isDirectory) {
+            items.splice(0, 0, {
+                label: vscode.l10n.t("Auto-detect from file tags"),
+                description: vscode.l10n.t("Let the API infer encoding from individual USS file tags"),
+            });
+        }
+
+        items.push(Constants.SEPARATORS.RECENT);
 
         if (profile.profile?.encoding != null) {
             items.splice(0, 0, {
@@ -287,7 +299,7 @@ export class SharedUtils {
             case binaryLabel:
                 encoding = { kind: "binary" };
                 break;
-            case otherLabel:
+            case otherLabel: {
                 const customResponse = await Gui.showInputBox({
                     title: vscode.l10n.t({
                         message: "Choose encoding for {0}",
@@ -305,9 +317,16 @@ export class SharedUtils {
                     return undefined;
                 }
                 break;
-            default:
-                encoding = response === "binary" ? { kind: "binary" } : { kind: "other", codepage: response };
+            }
+            default: {
+                const autoDetectLabel = vscode.l10n.t("Auto-detect from file tags");
+                if (response === autoDetectLabel) {
+                    return { kind: "auto-detect" };
+                } else {
+                    encoding = response === "binary" ? { kind: "binary" } : { kind: "other", codepage: response };
+                }
                 break;
+            }
         }
         return encoding;
     }
@@ -359,12 +378,42 @@ export class SharedUtils {
         return SharedUtils.processEncodingResponse(response, contextLabel);
     }
 
+    /**
+     * Prompts user for encoding selection for download operations.
+     *
+     * @param {imperative.IProfileLoaded} profile - The profile loaded
+     * @param {string} contextLabel - The context label of the node (e.g. data set name)
+     * @returns {Promise<ZosEncoding | undefined>} The {@link ZosEncoding} object or `undefined` if the user dismisses the prompt
+     */
+    public static async promptForDownloadEncoding(profile: imperative.IProfileLoaded, contextLabel: string): Promise<ZosEncoding | undefined> {
+        const items = SharedUtils.buildEncodingOptions(profile);
+
+        // For downloads, default to profile encoding or EBCDIC
+        const defaultEncoding = profile.profile?.encoding ?? vscode.l10n.t("EBCDIC");
+
+        const response = await SharedUtils.promptForEncodingSelection(
+            items,
+            vscode.l10n.t({
+                message: "Choose encoding for download from {0}",
+                args: [contextLabel],
+                comment: ["Context label"],
+            }),
+            vscode.l10n.t({
+                message: "Default encoding is {0}",
+                args: [defaultEncoding],
+                comment: ["Encoding name"],
+            })
+        );
+
+        return SharedUtils.processEncodingResponse(response, contextLabel);
+    }
+
     public static async promptForEncoding(
         node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode,
         taggedEncoding?: string
     ): Promise<ZosEncoding | undefined> {
         const profile = node.getProfile();
-        const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding);
+        const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding, false);
 
         let zosEncoding = await node.getEncoding();
         if (zosEncoding === undefined && SharedUtils.isZoweUSSTreeNode(node)) {
@@ -395,6 +444,58 @@ export class SharedUtils {
         );
 
         return SharedUtils.processEncodingResponse(response, node.label as string);
+    }
+
+    /**
+     * Prompts user for encoding selection for USS directory downloads.
+     *
+     * @param {imperative.IProfileLoaded} profile - The profile loaded
+     * @param {string} contextLabel - The context label of the directory (e.g. USS directory path)
+     * @param {"auto-detect" | ZosEncoding} currentDirectoryEncoding - Current directory encoding preference
+     * @returns {Promise<ZosEncoding | undefined>} ZosEncoding object or undefined if dismissed
+     */
+    public static async promptForDirectoryEncoding(
+        profile: imperative.IProfileLoaded,
+        contextLabel: string,
+        currentDirectoryEncoding?: "auto-detect" | ZosEncoding
+    ): Promise<ZosEncoding | undefined> {
+        const items = SharedUtils.buildEncodingOptions(profile, undefined, true);
+
+        let currentEncoding: string | undefined;
+        if (
+            currentDirectoryEncoding === "auto-detect" ||
+            (typeof currentDirectoryEncoding !== "string" && currentDirectoryEncoding?.kind === "auto-detect")
+        ) {
+            currentEncoding = vscode.l10n.t("Auto-detect from file tags");
+        } else if (currentDirectoryEncoding && typeof currentDirectoryEncoding !== "string") {
+            if (currentDirectoryEncoding.kind === "binary") {
+                currentEncoding = vscode.l10n.t("Binary");
+            } else if (currentDirectoryEncoding.kind === "text") {
+                currentEncoding = vscode.l10n.t("EBCDIC");
+            } else if (currentDirectoryEncoding.kind === "other") {
+                currentEncoding = `${currentDirectoryEncoding.kind.toUpperCase()}-${currentDirectoryEncoding.codepage}`;
+            } else {
+                currentEncoding = vscode.l10n.t("Auto-detect from file tags");
+            }
+        } else {
+            currentEncoding = vscode.l10n.t("Auto-detect from file tags"); // Default for directories
+        }
+
+        const response = await SharedUtils.promptForEncodingSelection(
+            items,
+            vscode.l10n.t({
+                message: "Choose encoding for files in {0}",
+                args: [contextLabel],
+                comment: ["Directory path"],
+            }),
+            vscode.l10n.t({
+                message: "Current encoding is {0}",
+                args: [currentEncoding],
+                comment: ["Encoding name"],
+            })
+        );
+
+        return SharedUtils.processEncodingResponse(response, contextLabel);
     }
 
     public static getSessionLabel(node: IZoweTreeNode): string {
@@ -585,6 +686,157 @@ export class SharedUtils {
                 }
                 return;
             }
+        }
+    }
+
+    /**
+     * Handles download response and provides detailed feedback to user about successes, warnings, and failures
+     *
+     * @param response The response from the download API
+     * @param downloadType The type of download (File, Directory, Data set, etc.)
+     * @param downloadedPath The path to the downloaded file or directory (optional)
+     */
+    public static async handleDownloadResponse(response: any, downloadType: string, downloadedPath?: string): Promise<void> {
+        ZoweLogger.trace("SharedUtils.handleDownloadResponse called.");
+
+        if (!response) {
+            const message = vscode.l10n.t("{0} download completed.", downloadType);
+            await SharedUtils.showDownloadMessage(message, downloadedPath, false, false);
+            return;
+        }
+
+        let message = "";
+        let hasWarnings = false;
+        let hasErrors = false;
+        const detailedInfo: string[] = [];
+
+        if (response.success === false) {
+            hasErrors = true;
+            message = vscode.l10n.t("{0} download completed with errors.", downloadType);
+        } else {
+            message = vscode.l10n.t("{0} downloaded successfully.", downloadType);
+        }
+
+        if (response.commandResponse) {
+            const commandResponse = response.commandResponse.toString();
+
+            if (commandResponse.includes("already exists") || commandResponse.includes("skipped")) {
+                hasWarnings = true;
+                detailedInfo.push("Some files were skipped because they already exist.");
+            }
+
+            if (commandResponse.includes("failed") || commandResponse.includes("error")) {
+                hasErrors = true;
+                detailedInfo.push("Some files failed to download due to errors.");
+            }
+
+            ZoweLogger.info(`Download response details: ${String(commandResponse)}`);
+            detailedInfo.push(`Full response: ${String(commandResponse)}`);
+        }
+
+        if (response.apiResponse && Array.isArray(response.apiResponse)) {
+            const failedItems = response.apiResponse.filter((item: any) => item.error || item.status === "failed");
+            if (failedItems.length > 0) {
+                hasErrors = true;
+                const failedCount = String(failedItems.length);
+                ZoweLogger.warn(`${failedCount} items failed to download: ${JSON.stringify(failedItems)}`);
+                detailedInfo.push(`${failedCount} items failed to download`);
+                detailedInfo.push(`Failed items: ${JSON.stringify(failedItems, null, 2)}`);
+            }
+        }
+
+        let onViewDetails: (() => void) | undefined;
+        if (hasErrors) {
+            message = vscode.l10n.t("{0}\n\nSome files may not have been downloaded.", message);
+            const correlatedError = new CorrelatedError({
+                initialError: new Error(message),
+                correlation: {
+                    summary: `${downloadType} download completed with errors`,
+                },
+            });
+
+            onViewDetails = (): void => {
+                void vscode.commands.executeCommand("zowe.troubleshootError", correlatedError, detailedInfo.join("\n\n"));
+            };
+        } else if (hasWarnings) {
+            message = vscode.l10n.t("{0}\n\nSome files may have been skipped.", message);
+            const correlatedWarning = new CorrelatedError({
+                initialError: new Error(message),
+                correlation: {
+                    summary: `${downloadType} download completed with warnings`,
+                },
+            });
+
+            onViewDetails = (): void => {
+                void vscode.commands.executeCommand("zowe.troubleshootError", correlatedWarning, detailedInfo.join("\n\n"));
+            };
+        }
+
+        await SharedUtils.showDownloadMessage(message, downloadedPath, hasErrors, hasWarnings, onViewDetails);
+    }
+
+    /**
+     * Shows a download completion message with an optional link to open the file or directory
+     *
+     * @param message The message to display
+     * @param downloadedPath The path to the downloaded file or directory
+     * @param isError Whether this is an error message
+     * @param isWarning Whether this is a warning message
+     * @param onViewDetails Optional callback for View Details action
+     */
+    private static async showDownloadMessage(
+        message: string,
+        downloadedPath: string | undefined,
+        hasErrors: boolean,
+        hasWarnings: boolean,
+        onViewDetails?: () => void
+    ): Promise<void> {
+        const items: string[] = [];
+
+        if (onViewDetails) {
+            items.push(vscode.l10n.t("View Details"));
+        }
+
+        if (downloadedPath) {
+            const stats = fs.existsSync(downloadedPath) ? fs.statSync(downloadedPath) : null;
+
+            if (stats) {
+                if (stats.isDirectory()) {
+                    items.push(vscode.l10n.t("Open Folder"));
+                } else {
+                    items.push(vscode.l10n.t("Open File"));
+                }
+            }
+        }
+
+        let selection: string | undefined;
+        if (hasErrors) {
+            selection = await Gui.errorMessage(message, {
+                items,
+                vsCodeOpts: { modal: false },
+            });
+        } else if (hasWarnings) {
+            selection = await Gui.warningMessage(message, {
+                items,
+                vsCodeOpts: { modal: false },
+            });
+        } else {
+            if (items.length > 0) {
+                selection = await Gui.showMessage(message, { items });
+            } else {
+                Gui.showMessage(message);
+                return;
+            }
+        }
+
+        if (selection === vscode.l10n.t("View Details") && onViewDetails) {
+            onViewDetails();
+        } else if (selection === vscode.l10n.t("Open File") && downloadedPath) {
+            const fileUri = vscode.Uri.file(downloadedPath);
+            await vscode.commands.executeCommand("vscode.open", fileUri);
+        } else if (selection === vscode.l10n.t("Open Folder") && downloadedPath) {
+            const folderUri = vscode.Uri.file(downloadedPath);
+            await vscode.commands.executeCommand("revealFileInOS", folderUri);
         }
     }
 

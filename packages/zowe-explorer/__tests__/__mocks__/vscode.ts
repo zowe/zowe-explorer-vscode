@@ -1651,7 +1651,9 @@ export interface TextDocument {
 export class Uri {
     private static _regexp = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
     public static file(path: string): Uri {
-        return Uri.parse(path);
+        const uri = Uri.parse(path);
+        uri.fsPath = path;
+        return uri;
     }
     public static parse(value: string, _strict?: boolean): Uri {
         const match = Uri._regexp.exec(value);

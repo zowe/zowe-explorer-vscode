@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { DS_EXTENSION_MAP, Types } from "@zowe/zowe-explorer-api";
+import { DS_EXTENSION_MAP, IZoweDatasetTreeNode, Types } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import dayjs = require("dayjs");
@@ -157,5 +157,58 @@ export class DatasetUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * Gets a map of file extensions for all members of a PDS to be used for IDownloadOptions.
+     */
+    public static async getExtensionMap(
+        node: IZoweDatasetTreeNode,
+        uppercaseNames: boolean,
+        overrideExtension?: string
+    ): Promise<{ [key: string]: string }> {
+        const extensionMap: { [key: string]: string } = {};
+        const children = await node.getChildren();
+
+        for (const child of children) {
+            let extension;
+            let label = child.label as string;
+
+            if (overrideExtension) {
+                extension = overrideExtension;
+            } else {
+                for (const [ext, matches] of DS_EXTENSION_MAP.entries()) {
+                    if (ext === ".c") {
+                        // Special case for ".c" extension, skip the following logic
+                        // As it's not unique enough and would otherwise match on anything containing "C"
+                        // TODO: rrevisit later if this can be handled better while still allowing c files
+                        continue;
+                    }
+                    if (matches.some((match) => (match instanceof RegExp ? match.test(label) : label.includes(match)))) {
+                        extension = ext;
+                        break;
+                    }
+                }
+
+                // If no extension found, fall back to using the PDS name as extension
+                if (!extension) {
+                    const parentExtension = DatasetUtils.getExtension(node.label as string);
+                    if (parentExtension) {
+                        extension = parentExtension;
+                    } else {
+                        // Use default extension if nothing else matches
+                        extension = ".txt";
+                    }
+                }
+            }
+
+            if (!uppercaseNames) {
+                label = label.toLowerCase();
+            }
+
+            extensionMap[label] = extension.startsWith(".") ? extension.slice(1) : extension;
+        }
+
+        return extensionMap;
     }
 }
