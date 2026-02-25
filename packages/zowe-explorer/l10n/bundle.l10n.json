@@ -1215,9 +1215,26 @@
   "Global": "Global",
   "Project": "Project",
   "Secure Credentials Enabled: ": "Secure Credentials Enabled: ",
-  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
-  "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
-  "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",
+  "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles": "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles",
+  "{0}. Or select a profile to add to the DATA SETS tree./Instruction for add profile quick pick": {
+    "message": "{0}. Or select a profile to add to the DATA SETS tree.",
+    "comment": [
+      "Instruction for add profile quick pick"
+    ]
+  },
+  "{0}. Or select a profile to add to the JOBS tree./Instruction for add profile quick pick": {
+    "message": "{0}. Or select a profile to add to the JOBS tree.",
+    "comment": [
+      "Instruction for add profile quick pick"
+    ]
+  },
+  "{0}. Or select a profile to add to the USS tree./Instruction for add profile quick pick": {
+    "message": "{0}. Or select a profile to add to the USS tree.",
+    "comment": [
+      "Instruction for add profile quick pick"
+    ]
+  },
+  "Add Profile to Tree": "Add Profile to Tree",
   "Profile selection has been cancelled.": "Profile selection has been cancelled.",
   "The profile {0} has been added to the {1} tree./chosen profiletree type": {
     "message": "The profile {0} has been added to the {1} tree.",
