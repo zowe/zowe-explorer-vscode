@@ -24,6 +24,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an accessibility issue in the "Create New Data Set" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. [#4026](https://github.com/zowe/zowe-explorer-vscode/issues/4026)
 - Fixed an issue where the data set sort persistence was overriding the selected sort direction. [#4048](https://github.com/zowe/zowe-explorer-vscode/pull/4048)
 - Updated Zowe SDKs to `8.30.1` for technical currency. [#4079](https://github.com/zowe/zowe-explorer-vscode/pull/4079)
+- Fixed tooltip for Unix System Services profiles to display relevant text. [#4019](https://github.com/zowe/zowe-explorer-vscode/issues/4019)
 
 ## `3.4.0`
 
