@@ -1957,7 +1957,10 @@ Would you like to do this now?`,
             : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;
         const selection = (
             await Gui.showQuickPick(
-                [...DatasetUtils.DATASET_FILTER_OPTS.map((sortOpt, i) => (node.filter?.method === i ? `${sortOpt} $(check)` : sortOpt)), clearFilter],
+                [
+                    ...DatasetUtils.DATASET_FILTER_OPTS.map(({ label, method }) => (node.filter?.method === method ? `${label} $(check)` : label)),
+                    clearFilter,
+                ],
                 {
                     placeHolder: vscode.l10n.t({
                         message: "Set a filter for {0}",
@@ -1968,7 +1971,7 @@ Would you like to do this now?`,
             )
         )?.replace(" $(check)", "");
 
-        const filterMethod = DatasetUtils.DATASET_FILTER_OPTS.indexOf(selection);
+        const filterMethod = DatasetUtils.DATASET_FILTER_OPTS.find(({ label }) => label === selection)?.method ?? -1;
 
         const userDismissed = filterMethod < 0;
         if (userDismissed || selection === clearFilter) {
@@ -1986,17 +1989,26 @@ Would you like to do this now?`,
             return;
         }
 
-        const dateValidation = (value): string => {
-            return dayjs(value).isValid() ? null : vscode.l10n.t("Invalid date format specified");
+        const dateValidation = (value: string): string => {
+            const parts = value.split(",").map((v) => v.trim());
+            return parts.every((p) => p.length > 0 && dayjs(p).isValid()) ? null : vscode.l10n.t("Invalid date format specified");
+        };
+
+        const getValidation = (): ((value: string) => string) => {
+            if (filterMethod === Sorting.DatasetFilterOpts.LastModified || filterMethod === Sorting.DatasetFilterOpts.DateCreated) {
+                return dateValidation;
+            }
+            return (val: string): string => (val.split(",").every((v) => v.trim().length > 0) ? null : vscode.l10n.t("Invalid filter specified"));
+        };
+
+        const placeholders: Partial<Record<Sorting.DatasetFilterOpts, string>> = {
+            [Sorting.DatasetFilterOpts.Name]: vscode.l10n.t("e.g. MEM* or MEM1,MEM2"),
         };
 
         const filter = await Gui.showInputBox({
             title: vscode.l10n.t("Enter a value to filter by"),
-            placeHolder: "",
-            validateInput:
-                filterMethod === Sorting.DatasetFilterOpts.LastModified
-                    ? dateValidation
-                    : (val): string => (val.length > 0 ? null : vscode.l10n.t("Invalid filter specified")),
+            placeHolder: placeholders[filterMethod] ?? "",
+            validateInput: getValidation(),
         });
 
         // User dismissed filter entry, go back to filter selection
@@ -2009,7 +2021,7 @@ Would you like to do this now?`,
         this.updateFilterForNode(
             node,
             {
-                method: filterMethod,
+                method: filterMethod as Sorting.DatasetFilterOpts,
                 value: filter,
             },
             isSession

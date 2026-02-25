@@ -4617,6 +4617,101 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B"]);
         });
 
+        it("filters single PDS by date created", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Created" as any);
+            mocks.showInputBox.mockResolvedValueOnce("2022-02-01");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["C"]);
+        });
+
+        it("filters single PDS by name", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(case-sensitive) Name" as any);
+            mocks.showInputBox.mockResolvedValueOnce("A");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A"]);
+        });
+
+        it("filters single PDS by name with wildcard", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(case-sensitive) Name" as any);
+            mocks.showInputBox.mockResolvedValueOnce("*");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+        });
+
+        it("filters PDS by name prefix wildcard returning only matching members", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            const mem1 = new ZoweDatasetNode({
+                label: "MEM1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: nodes.pds,
+            });
+            const mem2 = new ZoweDatasetNode({
+                label: "MEM2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: nodes.pds,
+            });
+            const other = new ZoweDatasetNode({
+                label: "OTHER",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: nodes.pds,
+            });
+            nodes.pds.children = [mem1, mem2, other];
+
+            mocks.showQuickPick.mockResolvedValueOnce("$(case-sensitive) Name" as any);
+            mocks.showInputBox.mockResolvedValueOnce("MEM*");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["MEM1", "MEM2"]);
+        });
+
+        it("filters PDS by comma-separated names returning matching members", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(case-sensitive) Name" as any);
+            mocks.showInputBox.mockResolvedValueOnce("A,C");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "C"]);
+        });
+
+        it("filters PDS by comma-separated user IDs returning matching members", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(account) User ID" as any);
+            mocks.showInputBox.mockResolvedValueOnce("someUser,anotherUser");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+        });
+
+        it("filters PDS by comma-separated modified dates returning matching members", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
+            mocks.showInputBox.mockResolvedValueOnce("2022-01-01,2022-03-15");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "C"]);
+        });
+
         it("filters PDS members using the session node filter", async () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
@@ -4648,6 +4743,54 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             await tree.filterPdsMembersDialog(nodes.pds);
             expect(mocks.refreshElement).not.toHaveBeenCalled();
             expect(updateFilterForNode).toHaveBeenCalledWith(nodes.pds, null, false);
+        });
+
+        it("filterBy returns true for LastModified when value is not a valid date", () => {
+            const nodes = nodesForSuite();
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.LastModified, value: "not-a-date" });
+            for (const child of nodes.pds.children) {
+                expect(filterFn(child)).toBe(true);
+            }
+        });
+
+        it("filterBy returns true for DateCreated when value is not a valid date", () => {
+            const nodes = nodesForSuite();
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.DateCreated, value: "not-a-date" });
+            for (const child of nodes.pds.children) {
+                expect(filterFn(child)).toBe(true);
+            }
+        });
+
+        it("filterBy returns true for an unrecognised filter method", () => {
+            const nodes = nodesForSuite();
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+            const filterFn = ZoweDatasetNode.filterBy({ method: 99 as Sorting.DatasetFilterOpts, value: "anything" });
+            for (const child of nodes.pds.children) {
+                expect(filterFn(child)).toBe(true);
+            }
+        });
+
+        it("filterBy returns true for nodes whose parent is not a PDS", () => {
+            const nodes = nodesForSuite();
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.Name, value: "testPds" });
+            expect(filterFn(nodes.pds)).toBe(true);
+            expect(filterFn(nodes.session)).toBe(true);
+        });
+
+        it("validates date filter input correctly via validateInput callback", async () => {
+            const mocks = getBlockMocks();
+            let capturedValidateInput: ((v: string) => string) | undefined;
+            mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
+            mocks.showInputBox.mockImplementation((opts: vscode.InputBoxOptions) => {
+                capturedValidateInput = opts.validateInput as (v: string) => string;
+                return Promise.resolve("2022-03-15") as any;
+            });
+            await tree.filterPdsMembersDialog(nodesForSuite().pds);
+            expect(capturedValidateInput).toBeDefined();
+            expect(capturedValidateInput("2022-03-15")).toBeNull();
+            expect(capturedValidateInput("2022-03-15,2022-01-01")).toBeNull();
+            expect(capturedValidateInput("not-a-date")).toBeTruthy();
+            expect(capturedValidateInput("2022-03-15,not-a-date")).toBeTruthy();
         });
     });
 
