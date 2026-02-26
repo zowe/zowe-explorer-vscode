@@ -1777,7 +1777,7 @@ describe("ZoweUSSNode Unit Tests - Function getUssFiles() with showHidden settin
         blockMocks.rootNode.dirty = true;
         await blockMocks.rootNode.getChildren();
 
-        expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.files.ShowHiddenFiles.disabled");
+        expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.files.showHiddenFiles");
         expect(filterHiddenFilesSpy).not.toHaveBeenCalled();
 
         getDirectValueSpy.mockRestore();
@@ -1820,7 +1820,7 @@ describe("ZoweUSSNode Unit Tests - Function getUssFiles() with showHidden settin
         blockMocks.rootNode.dirty = true;
         const children = await blockMocks.rootNode.getChildren();
 
-        expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.files.ShowHiddenFiles.disabled");
+        expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.files.showHiddenFiles");
         expect(filterHiddenFilesSpy).toHaveBeenCalled();
         expect(children.length).toBe(2);
         expect(children[0].label).toBe("anotherFile.js");
@@ -1841,7 +1841,7 @@ describe("ZoweUSSNode Unit Tests - Function getUssFiles() with showHidden settin
         blockMocks.rootNode.dirty = true;
         const children = await blockMocks.rootNode.getChildren();
 
-        expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.files.ShowHiddenFiles.disabled");
+        expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.files.showHiddenFiles");
         expect(children.length).toBe(0);
         expect(globalMocks.showErrorMessage).toHaveBeenCalled();
 

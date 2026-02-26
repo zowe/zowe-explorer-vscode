@@ -302,8 +302,8 @@
   "zowe.files.logsFolder.path": {
     "Path to Zowe Explorer logs folder": ""
   },
-  "zowe.files.showHiddenFiles.disabled": {
-    "Toggle to show hidden files in USS explorer": ""
+  "zowe.files.showHiddenFiles": {
+    "Show hidden files in USS explorer": ""
   },
   "zowe.uss.history": {
     "Toggle if USS favorite files persist locally": ""

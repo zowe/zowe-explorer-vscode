@@ -1922,10 +1922,10 @@
           "description": "%zowe.files.logsFolder.path%",
           "scope": "window"
         },
-        "zowe.files.ShowHiddenFiles.disabled": {
+        "zowe.files.showHiddenFiles": {
           "type": "boolean",
-          "default": false,
-          "description": "%zowe.files.showHiddenFiles.disabled%",
+          "default": true,
+          "description": "%zowe.files.showHiddenFiles%",
           "scope": "window"
         },
         "zowe.uss.history": {

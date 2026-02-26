@@ -698,7 +698,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     private async getUssFiles(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse> {
         let response_list: zosfiles.IZosFilesResponse;
-        const showHidden = SettingsConfig.getDirectValue<boolean>("zowe.files.ShowHiddenFiles.disabled");
+        const showHidden = SettingsConfig.getDirectValue<boolean>("zowe.files.showHiddenFiles");
         try {
             if (!ZoweExplorerApiRegister.getUssApi(profile).getSession(profile)) {
                 ZoweLogger.warn(`[ZoweUSSNode.getUssFiles] Session undefined for profile ${profile.name}`);
