@@ -23,3 +23,18 @@ jobs:
 
       - name: Check Vulnerabilities
         run: pnpm audit --prod
+  audit-all:
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: |
+          npm install -g pnpm
+          pnpm install
+      - name: Check All Vulnerabilities (including dev)
+        run: pnpm audit --audit-level high
