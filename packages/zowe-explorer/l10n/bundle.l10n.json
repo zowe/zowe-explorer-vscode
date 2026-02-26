@@ -36,6 +36,24 @@
       "Like Data Set name"
     ]
   },
+  "{0}. Or select a profile to add to the DATA SETS tree./Instruction for add profile quick pick": {
+    "message": "{0}. Or select a profile to add to the DATA SETS tree.",
+    "comment": [
+      "Instruction for add profile quick pick"
+    ]
+  },
+  "{0}. Or select a profile to add to the JOBS tree./Instruction for add profile quick pick": {
+    "message": "{0}. Or select a profile to add to the JOBS tree.",
+    "comment": [
+      "Instruction for add profile quick pick"
+    ]
+  },
+  "{0}. Or select a profile to add to the USS tree./Instruction for add profile quick pick": {
+    "message": "{0}. Or select a profile to add to the USS tree.",
+    "comment": [
+      "Instruction for add profile quick pick"
+    ]
+  },
   "**Behavior:** Each command opens a dedicated terminal panel (for example, only MVS commands in the MVS terminal).": "**Behavior:** Each command opens a dedicated terminal panel (for example, only MVS commands in the MVS terminal).",
   "**Breaking:** Consolidated VS Code commands:": "**Breaking:** Consolidated VS Code commands:",
   "**Breaking:** Removed deprecated methods: <a>#2238</a>": "**Breaking:** Removed deprecated methods: <a>#2238</a>",
@@ -94,6 +112,7 @@
   "Add deprecation message to history settings explaining to users how to edit items. <a>#2303</a>": "Add deprecation message to history settings explaining to users how to edit items. <a>#2303</a>",
   "Add localization support to release notes and changelogs. <a>#4047</a>": "Add localization support to release notes and changelogs. <a>#4047</a>",
   "Add New History Item": "Add New History Item",
+  "Add Profile to Tree": "Add Profile to Tree",
   "Add to workspace": "Add to workspace",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
   "Added \"Cancel Job\" feature for job nodes in Jobs tree view. <a>#2251</a>": "Added \"Cancel Job\" feature for job nodes in Jobs tree view. <a>#2251</a>",
@@ -316,9 +335,6 @@
   "Changes in credential management detected, refreshing Zowe Explorer.": "Changes in credential management detected, refreshing Zowe Explorer.",
   "Changes in the credential vault detected, refreshing Zowe Explorer.": "Changes in the credential vault detected, refreshing Zowe Explorer.",
   "Changing authentication to basic was successful for profile {0}.": "Changing authentication to basic was successful for profile {0}.",
-  "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree": "Choose \"Create new...\" to define or select a profile to add to the DATA SETS tree",
-  "Choose \"Create new...\" to define or select a profile to add to the JOBS tree": "Choose \"Create new...\" to define or select a profile to add to the JOBS tree",
-  "Choose \"Create new...\" to define or select a profile to add to the USS tree": "Choose \"Create new...\" to define or select a profile to add to the USS tree",
   "Choose a location to create the {0}/Node type": {
     "message": "Choose a location to create the {0}",
     "comment": [
@@ -351,7 +367,6 @@
   "Clear filter for PDS": "Clear filter for PDS",
   "Clear filter for profile": "Clear filter for profile",
   "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:": "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:",
-  "Click on parameters to change them": "Click on parameters to change them",
   "Command response: {0}/Command response": {
     "message": "Command response: {0}",
     "comment": [
@@ -380,9 +395,15 @@
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
   "Create a new MVS command": "Create a new MVS command",
   "Create a new TSO command": "Create a new TSO command",
+  "Create Data Set: Edit Attributes": "Create Data Set: Edit Attributes",
+  "Create Data Set: Name": "Create Data Set: Name",
+  "Create Data Set: Review Attributes": "Create Data Set: Review Attributes",
+  "Create Data Set: Type": "Create Data Set: Type",
+  "Create Data Set: Update Attribute Value": "Create Data Set: Update Attribute Value",
   "Create job search filter": "Create job search filter",
   "Create New": "Create New",
   "Create new...": "Create new...",
+  "Create the data set using the current attributes": "Create the data set using the current attributes",
   "Creating new data set member {0}/Data Set member name": {
     "message": "Creating new data set member {0}",
     "comment": [
@@ -506,6 +527,7 @@
   "Enter a block size": "Enter a block size",
   "Enter a codepage (e.g., 1047, IBM-1047)": "Enter a codepage (e.g., 1047, IBM-1047)",
   "Enter a data set name": "Enter a data set name",
+  "Enter a data set name, then press Enter to continue": "Enter a data set name, then press Enter to continue",
   "Enter a dataset pattern to search for": "Enter a dataset pattern to search for",
   "Enter a device type (unit)": "Enter a device type (unit)",
   "Enter a filter": "Enter a filter",
@@ -519,6 +541,12 @@
     ]
   },
   "Enter a valid data set name.": "Enter a valid data set name.",
+  "Enter a value for {0}, then press Enter to continue/Attribute label": {
+    "message": "Enter a value for {0}, then press Enter to continue",
+    "comment": [
+      "Attribute label"
+    ]
+  },
   "Enter a value to filter by": "Enter a value to filter by",
   "Enter an allocation unit": "Enter an allocation unit",
   "Enter an SMS data class": "Enter an SMS data class",
@@ -824,6 +852,7 @@
   "Fixed a regression with the AuthUtils.syncSessionNode function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. <a>#3795</a>": "Fixed a regression with the AuthUtils.syncSessionNode function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. <a>#3795</a>",
   "Fixed a z/OSMF issue for Data Sets and Jobs with special characters in the names. <a>#2175</a>": "Fixed a z/OSMF issue for Data Sets and Jobs with special characters in the names. <a>#2175</a>",
   "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>": "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>",
+  "Fixed an accessibility issue in the \"Add Profile\" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference \"Create a New Team Configuration File\" and \"Edit Team Configuration File\" to guide keyboard and screen reader users. <a>#4028</a>": "Fixed an accessibility issue in the \"Add Profile\" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference \"Create a New Team Configuration File\" and \"Edit Team Configuration File\" to guide keyboard and screen reader users. <a>#4028</a>",
   "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>": "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>",
   "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>": "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>",
   "Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the \"Show Config\" action. <a>#3322</a>": "Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the \"Show Config\" action. <a>#3322</a>",
@@ -893,6 +922,7 @@
   "Fixed an issue where the contents of an editor did not update when polling spool content or using the \"Pull from Mainframe\" action with jobs. <a>#3249</a>": "Fixed an issue where the contents of an editor did not update when polling spool content or using the \"Pull from Mainframe\" action with jobs. <a>#3249</a>",
   "Fixed an issue where the Create Directory and Create File features would continue processing when the first prompt was dismissed, causing an incorrect URI to be generated. <a>#3183</a>": "Fixed an issue where the Create Directory and Create File features would continue processing when the first prompt was dismissed, causing an incorrect URI to be generated. <a>#3183</a>",
   "Fixed an issue where the Create Directory and Create File features would incorrectly handle user-specified locations with trailing slashes. <a>#3183</a>": "Fixed an issue where the Create Directory and Create File features would incorrectly handle user-specified locations with trailing slashes. <a>#3183</a>",
+  "Fixed an issue where the data set sort persistence was overriding the selected sort direction. <a>#4048</a>": "Fixed an issue where the data set sort persistence was overriding the selected sort direction. <a>#4048</a>",
   "Fixed an issue where the Delete action in the Data Sets tree could delete a PDS member previously selected in the tree rather than the one that was right-clicked. <a>#3883</a>": "Fixed an issue where the Delete action in the Data Sets tree could delete a PDS member previously selected in the tree rather than the one that was right-clicked. <a>#3883</a>",
   "Fixed an issue where the encoding of a USS file was not automatically detected when opened for the first time. <a>#3253</a>": "Fixed an issue where the encoding of a USS file was not automatically detected when opened for the first time. <a>#3253</a>",
   "Fixed an issue where the filesystem continued to use a profile with invalid credentials to fetch resources. Now, after an authentication error occurs for a profile, it cannot be used again in the filesystem until the authentication error is resolved. <a>#3329</a>": "Fixed an issue where the filesystem continued to use a profile with invalid credentials to fetch resources. Now, after an authentication error occurs for a profile, it cannot be used again in the filesystem until the authentication error is resolved. <a>#3329</a>",
@@ -1039,6 +1069,7 @@
   "Fixed regression where PDS member attributes were no longer listed when using the \"Show Attributes\" feature from the data set context menu. <a>#3856</a>": "Fixed regression where PDS member attributes were no longer listed when using the \"Show Attributes\" feature from the data set context menu. <a>#3856</a>",
   "Fixed release notes displaying when the Zowe Explorer version is downgraded. <a>#3966</a>": "Fixed release notes displaying when the Zowe Explorer version is downgraded. <a>#3966</a>",
   "Fixed release notes displaying when Zowe Explorer is installed for the first time. <a>#3966</a>": "Fixed release notes displaying when Zowe Explorer is installed for the first time. <a>#3966</a>",
+  "Fixed screen reader cannot read dataset attributes from the dataset attribute webview.<a>#4023</a>": "Fixed screen reader cannot read dataset attributes from the dataset attribute webview.<a>#4023</a>",
   "Fixed secure credential storage not possible to enable in Theia.": "Fixed secure credential storage not possible to enable in Theia.",
   "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>": "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>",
   "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>": "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>",
@@ -1048,6 +1079,7 @@
   "Fixed the loading of previously saved profiles in the tree views.": "Fixed the loading of previously saved profiles in the tree views.",
   "Fixed the recent search job id filter. <a>#2562</a>": "Fixed the recent search job id filter. <a>#2562</a>",
   "Fixed the Secure Credentials Enabled setting to update the ~/.zowe/settings/imperative.json file upon change of the setting without overwriting preexisting data in the file.": "Fixed the Secure Credentials Enabled setting to update the ~/.zowe/settings/imperative.json file upon change of the setting without overwriting preexisting data in the file.",
+  "Fixed tooltip for Unix System Services profiles to display relevant text. <a>#4019</a>": "Fixed tooltip for Unix System Services profiles to display relevant text. <a>#4019</a>",
   "Fixed tree item labels failing to update after renaming an MVS or USS file or folder. <a>#2656</a>": "Fixed tree item labels failing to update after renaming an MVS or USS file or folder. <a>#2656</a>",
   "Fixed unintended behavior in ProfileUtils.isProfileUsingBasicAuth. <a>#2664</a>": "Fixed unintended behavior in ProfileUtils.isProfileUsingBasicAuth. <a>#2664</a>",
   "Fixed vNext-only issue where users are not able to create data sets. <a>#2783</a>.": "Fixed vNext-only issue where users are not able to create data sets. <a>#2783</a>.",
@@ -1683,6 +1715,7 @@
   "Secure Credentials Enabled: ": "Secure Credentials Enabled: ",
   "See the <a>FileSystemProvider wiki page</a> for more information on the FileSystemProvider.": "See the <a>FileSystemProvider wiki page</a> for more information on the FileSystemProvider.",
   "Select": "Select",
+  "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles": "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles",
   "Select a certificate and certificate key in PEM format:": "Select a certificate and certificate key in PEM format:",
   "Select a data set organization (DSORG)": "Select a data set organization (DSORG)",
   "Select a filter": "Select a filter",
@@ -1727,6 +1760,8 @@
       "Current work directory"
     ]
   },
+  "Select Allocate Data Set to create now, or Edit Attributes to review values": "Select Allocate Data Set to create now, or Edit Attributes to review values",
+  "Select an attribute to edit, or select Allocate Data Set to create the data set": "Select an attribute to edit, or select Allocate Data Set to create the data set",
   "Select an item before deleting": "Select an item before deleting",
   "Select an MVS command to run against {0} (An option to edit will follow)/Host name": {
     "message": "Select an MVS command to run against {0} (An option to edit will follow)",
@@ -2009,7 +2044,7 @@
   "Updated Zowe SDKs to 8.16.0 to include the latest enhancements from Imperative and the z/OS Files SDK. <a>#3526</a>": "Updated Zowe SDKs to 8.16.0 to include the latest enhancements from Imperative and the z/OS Files SDK. <a>#3526</a>",
   "Updated Zowe SDKs to 8.21.0 for technical currency. <a>#3668</a>": "Updated Zowe SDKs to 8.21.0 for technical currency. <a>#3668</a>",
   "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>": "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>",
-  "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>": "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>",
+  "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>": "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>",
   "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>": "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>",
   "Updating data set templates.": "Updating data set templates.",
   "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
@@ -2032,7 +2067,7 @@
   "Use the \"Troubleshoot\" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. <a>#3243</a>": "Use the \"Troubleshoot\" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. <a>#3243</a>",
   "Use the search button to display data sets": "Use the search button to display data sets",
   "Use the search button to display jobs": "Use the search button to display jobs",
-  "Use the search button to list USS files": "Use the search button to list USS files",
+  "Use the Search button to list USS files": "Use the Search button to list USS files",
   "User": "User",
   "User dismissed the Certificate Wizard.": "User dismissed the Certificate Wizard.",
   "User ID": "User ID",

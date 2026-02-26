@@ -179,7 +179,6 @@ function createGlobalMocks() {
 describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
     it("Checks that the ZoweUSSNode structure matches the snapshot", async () => {
         const globalMocks = createGlobalMocks();
-
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -218,7 +217,6 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
 
     it("Tests that creating a new USS node initializes all methods and properties", async () => {
         const globalMocks = createGlobalMocks();
-
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -229,7 +227,6 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
             profile: globalMocks.profileOne,
         });
         testNode.contextValue = Constants.USS_SESSION_CONTEXT;
-
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
         expect(testNode.label).toBeDefined();
@@ -239,7 +236,6 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
 
     it("Tests that creating a new binary USS node initializes all methods and properties", async () => {
         const globalMocks = createGlobalMocks();
-
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -250,12 +246,27 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
             profile: globalMocks.profileOne,
         });
         testNode.contextValue = Constants.USS_SESSION_CONTEXT;
-
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
         expect(testNode.label).toBeDefined();
         expect(testNode.getParent()).toBeUndefined();
         expect(testNode.getSession()).toBeDefined();
+    });
+
+    it("Sets tooltip to label for INFORMATION_CONTEXT", async () => {
+        const globalMocks = createGlobalMocks();
+
+        const placeholderNode = new ZoweUSSNode({
+            label: vscode.l10n.t("Use the Search button to list USS files"),
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: {} as any,
+            contextOverride: Constants.INFORMATION_CONTEXT,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        expect(placeholderNode.contextValue).toBe(Constants.INFORMATION_CONTEXT);
+        expect(placeholderNode.tooltip).toBe("Use the Search button to list USS files");
+        expect(placeholderNode.command?.command).toBe("zowe.placeholderCommand");
     });
 });
 
@@ -967,7 +978,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
         blockMocks.rootNode.contextValue = Constants.USS_SESSION_CONTEXT;
         const expectedNode = new ZoweUSSNode({
-            label: "Use the search button to list USS files",
+            label: "Use the Search button to list USS files",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.rootNode,
             contextOverride: Constants.INFORMATION_CONTEXT,
