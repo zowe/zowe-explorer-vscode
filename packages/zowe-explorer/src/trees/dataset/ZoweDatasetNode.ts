@@ -470,8 +470,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 .filter((label) => this.children.find((c) => (c.label as string) === label) == null)
                 .map((label) => elementChildren[label]);
 
-            // Determine sort options: persistence > node > session
-            const sortOpts = this.persistence.getSortSetting(this) ?? this.sort ?? this.getSessionNode().sort;
+            // Determine sort options: node > persistence > session
+            const sortOpts = this.sort ?? this.persistence.getSortSetting(this) ?? this.getSessionNode().sort;
 
             // use the PDS filter if one is set, otherwise try using the session filter
             const sessionFilter = SharedContext.isSession(this) ? this.filter : this.getSessionNode().filter;

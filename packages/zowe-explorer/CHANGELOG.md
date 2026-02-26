@@ -6,7 +6,19 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Expose commands to drive search in the USS views. [#3933](https://github.com/zowe/zowe-explorer-vscode/issues/3933)
+- Expose commands to drive filtering in the Data Sets views [#3992](https://github.com/zowe/zowe-explorer-vscode/issues/3992)
+
 ### Bug fixes
+
+- Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. [#4049](https://github.com/zowe/zowe-explorer-vscode/pull/4049)
+- Fixed an issue where the data set sort persistence was overriding the selected sort direction. [#4048](https://github.com/zowe/zowe-explorer-vscode/pull/4048)
+- Fixed an accessibility issue in the "Create New Data Set" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. [#4026](https://github.com/zowe/zowe-explorer-vscode/issues/4026)
+- Updated Zowe SDKs to `8.30.1` for technical currency. [#4079](https://github.com/zowe/zowe-explorer-vscode/pull/4079)
+- Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.[#4023](https://github.com/zowe/zowe-explorer-vscode/issues/4023)
+- Fixed tooltip for Unix System Services profiles to display relevant text. [#4019](https://github.com/zowe/zowe-explorer-vscode/issues/4019)
+- Fixed an accessibility issue in the "Add Profile" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference "Create a New Team Configuration File" and "Edit Team Configuration File" to guide keyboard and screen reader users. [#4028](https://github.com/zowe/zowe-explorer-vscode/issues/4028)
+- Fixed an accessibility issue where the "Create File" and "Create Directory" actions used the same generic instruction "Name of file or directory". The instructions are now specific to the selected action and clearly indicate what is required. [#4027](https://github.com/zowe/zowe-explorer-vscode/issues/4027)
 
 ## `3.4.1`
 
