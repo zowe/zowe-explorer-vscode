@@ -492,16 +492,31 @@ export class Profiles extends ProfilesCache {
 
         const quickpick = Gui.createQuickPick();
         let addProfilePlaceholder = "";
+        const createNewInstruction = vscode.l10n.t(
+            "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles"
+        );
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the DATA SETS tree`);
+                addProfilePlaceholder = vscode.l10n.t({
+                    message: "{0}. Or select a profile to add to the DATA SETS tree.",
+                    args: [createNewInstruction],
+                    comment: ["Instruction for add profile quick pick"],
+                });
                 break;
             case PersistenceSchemaEnum.Job:
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the JOBS tree`);
+                addProfilePlaceholder = vscode.l10n.t({
+                    message: "{0}. Or select a profile to add to the JOBS tree.",
+                    args: [createNewInstruction],
+                    comment: ["Instruction for add profile quick pick"],
+                });
                 break;
             default:
                 // Use USS View as default for placeholder text
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the USS tree`);
+                addProfilePlaceholder = vscode.l10n.t({
+                    message: "{0}. Or select a profile to add to the USS tree.",
+                    args: [createNewInstruction],
+                    comment: ["Instruction for add profile quick pick"],
+                });
         }
         if (allProfiles.length > 0) {
             quickpick.items = [configPick, configEdit, ...items];
@@ -509,6 +524,7 @@ export class Profiles extends ProfilesCache {
             quickpick.items = [configPick, ...items];
         }
         quickpick.placeholder = addProfilePlaceholder;
+        quickpick.title = vscode.l10n.t("Add Profile to Tree");
         quickpick.ignoreFocusOut = true;
         quickpick.show();
         const choice = await Gui.resolveQuickPick(quickpick);
