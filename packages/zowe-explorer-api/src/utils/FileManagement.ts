@@ -73,6 +73,7 @@ export class FileManagement {
         );
         for (const folder of foldersWithProfile) {
             try {
+                // TODO: FEATURE-FLAG(fetchByDefault): remove fetch=true
                 await workspace.fs.stat(folder.uri.with({ query: "fetch=true" }));
             } catch (err) {
                 if (err instanceof Error) {

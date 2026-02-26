@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added support to delete VSAM data sets. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824).
+- Added a new `Poll For Job Completion` button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting `Zowe > Jobs: Poll Interval`. [#3967](https://github.com/zowe/zowe-explorer-vscode/pull/3967)
 - Enhanced "Show Attributes" feature with improved visual presentation: aligned all attribute table columns consistently across core and extender sections, added thousands separators for numeric values, and automatically appends the `%` symbol to "Used Space" values for better readability. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)
 - Expose commands to drive search in the USS views. [#3933](https://github.com/zowe/zowe-explorer-vscode/issues/3933)
 - Added a new `Poll For Job Completion` button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting `Zowe > Jobs: Poll Interval`. [#3967](https://github.com/zowe/zowe-explorer-vscode/pull/3967)
@@ -14,6 +16,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. [#3554](https://github.com/zowe/zowe-explorer-vscode/issues/3554)
+- Fixed an issue where file system URIs with trailing slashes failed to resolve. [#3904](https://github.com/zowe/zowe-explorer-vscode/issues/3904)
 - Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. [#4049](https://github.com/zowe/zowe-explorer-vscode/pull/4049)
 - Fixed an issue where the "Created Date" and "Modified Date" columns were not sortable in the data sets table view, specifically when the user's locale differs from the default value (`en (en-US)`). Now, sorting works regardless of the VS Code language setting, and dates are now formatted with the user's locale. [#4008](https://github.com/zowe/zowe-explorer-vscode/pull/4008)
 - Fixed issue seen with profile hover information getting out of date or out of sync. [#3638](https://github.com/zowe/zowe-explorer-vscode/issues/3638)

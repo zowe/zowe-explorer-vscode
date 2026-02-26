@@ -23,6 +23,7 @@ import { SharedInit } from "./trees/shared/SharedInit";
 import { SharedTreeProviders } from "./trees/shared/SharedTreeProviders";
 import { USSInit } from "./trees/uss/USSInit";
 import { ProfilesUtils } from "./utils/ProfilesUtils";
+import { FeatureFlags } from "@zowe/zowe-explorer-api";
 
 /**
  * The function that runs when the extension is loaded
@@ -34,6 +35,8 @@ import { ProfilesUtils } from "./utils/ProfilesUtils";
 export async function activate(context: vscode.ExtensionContext): Promise<ZoweExplorerApiRegister> {
     ZoweLocalStorage.initializeZoweLocalStorage(context.globalState, context.workspaceState);
     await SharedInit.initZoweLogger(context);
+
+    await FeatureFlags.init();
 
     await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
     await ProfilesUtils.handleV1MigrationStatus();
@@ -52,6 +55,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await SharedInit.watchForZoweButtonClick();
 
     SharedInit.onDidActivateExtensionEmitter.fire();
+
     return ZoweExplorerApiRegister.getInstance();
 }
 /**
