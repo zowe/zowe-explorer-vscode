@@ -110,6 +110,8 @@ export class SettingsConfig {
         if (!globalIsMigrated) {
             await SettingsConfig.standardizeGlobalSettings();
         }
+
+        await SettingsConfig.migrateShowHiddenFilesDefault();
     }
 
     private static get configurations(): vscode.WorkspaceConfiguration {
@@ -248,5 +250,45 @@ export class SettingsConfig {
 
     public static setCliLoggerSetting(setting: boolean): void {
         ZoweLocalStorage.setValue(Definitions.LocalStorageKey.CLI_LOGGER_SETTING_PRESENTED, setting);
+    }
+
+    /**
+     * In V3, the default was true (show hidden files). In V4, the default is false (hide hidden files).
+     * This migration only runs once and only if the user hasn't explicitly set the value.
+     */
+    private static async migrateShowHiddenFilesDefault(): Promise<void> {
+        try {
+            // Check if migration has already been completed
+            const migrationCompleted = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED);
+            if (migrationCompleted) {
+                return;
+            }
+
+            const config = vscode.workspace.getConfiguration("zowe.files");
+
+            // Check if user has explicitly set the value
+            const inspectResult = config.inspect<boolean>("showHiddenFiles");
+            const hasUserValue = inspectResult?.globalValue !== undefined || inspectResult?.workspaceValue !== undefined;
+
+            if (!hasUserValue) {
+                // Get current extension version from package.json
+                const extensionId = "Zowe.vscode-extension-for-zowe";
+                const extension = vscode.extensions.getExtension(extensionId);
+                if (extension) {
+                    const extensionVersion = extension.packageJSON.version;
+                    const majorVersion = parseInt(extensionVersion.split(".")[0]);
+
+                    // Set default based on version: V3 and earlier = true, V4+ = false
+                    const defaultValue = majorVersion <= 3 ? true : false;
+                    await config.update("showHiddenFiles", defaultValue, vscode.ConfigurationTarget.Global);
+                }
+            }
+
+            // Mark migration complete
+            await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            void Gui.errorMessage(`Failed to migrate showHiddenFiles setting: ${errorMsg}`);
+        }
     }
 }

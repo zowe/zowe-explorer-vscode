@@ -64,6 +64,7 @@ export class LocalStorageAccess extends ZoweLocalStorage {
         [Definitions.LocalStorageKey.CLI_LOGGER_SETTING_PRESENTED]: StorageAccessLevel.Read,
         [Definitions.LocalStorageKey.SETTINGS_LOCAL_STORAGE_MIGRATED]: StorageAccessLevel.Read,
         [Definitions.LocalStorageKey.SETTINGS_OLD_SETTINGS_MIGRATED]: StorageAccessLevel.Read,
+        [Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED]: StorageAccessLevel.Read,
         [Definitions.LocalStorageKey.ENCODING_HISTORY]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [Definitions.LocalStorageKey.DS_SEARCH_OPTIONS]: StorageAccessLevel.Read | StorageAccessLevel.Write,
         [Definitions.LocalStorageKey.DISPLAY_RELEASE_NOTES_VERSION]: StorageAccessLevel.Read | StorageAccessLevel.Write,
