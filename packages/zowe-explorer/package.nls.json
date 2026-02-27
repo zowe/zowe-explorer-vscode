@@ -100,6 +100,7 @@
   "zowe.ds.history": "Toggle if favorite files persist locally",
   "zowe.ds.templates": "Zowe Explorer saved data set templates",
   "zowe.files.logsFolder.path": "Path to Zowe Explorer logs folder",
+  "zowe.files.showHiddenFiles": "Show hidden files in USS explorer",
   "zowe.uss.history": "Toggle if USS favorite files persist locally",
   "zowe.jobs.history": "Toggle if Jobs favorite files persist locally",
   "zowe.jobs.default.sort": "Default sort order of job tree",

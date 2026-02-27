@@ -37,6 +37,7 @@ import { isDataTransfer, isPayload, SharedUtils } from "../shared/SharedUtils";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { FilterDescriptor, FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 /**
  * A tree that contains nodes of sessions and USS Files
@@ -579,6 +580,38 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     public deleteSession(node: IZoweUSSTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("USSTree.deleteSession called.");
         super.deleteSession(node, hideFromAllTrees);
+    }
+
+    public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent): Promise<void> {
+        ZoweLogger.trace("USSTree.onDidChangeConfiguration called.");
+        // Handle persistence setting changes
+        if (e.affectsConfiguration(USSTree.persistenceSchema)) {
+            const setting: any = {
+                ...SettingsConfig.getDirectValue(USSTree.persistenceSchema),
+            };
+            if (!setting.persistence) {
+                setting.favorites = [];
+                setting.history = [];
+                await SettingsConfig.setDirectValue(USSTree.persistenceSchema, setting);
+            }
+        }
+        // Handle showHiddenFiles setting changes - refresh the tree to show/hide hidden files
+        if (e.affectsConfiguration("zowe.files.showHiddenFiles")) {
+            ZoweLogger.debug("showHiddenFiles setting changed, refreshing USS tree");
+            for (const sessionNode of this.mSessionNodes) {
+                if (!sessionNode.contextValue.includes(Constants.FAVORITE_CONTEXT)) {
+                    sessionNode.children = [];
+                    sessionNode.dirty = true;
+                }
+            }
+            for (const favProfile of this.mFavorites) {
+                for (const child of favProfile.children) {
+                    child.children = [];
+                    child.dirty = true;
+                }
+            }
+            this.refresh();
+        }
     }
 
     /**

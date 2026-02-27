@@ -1922,6 +1922,12 @@
           "description": "%zowe.files.logsFolder.path%",
           "scope": "window"
         },
+        "zowe.files.showHiddenFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.files.showHiddenFiles%",
+          "scope": "window"
+        },
         "zowe.uss.history": {
           "default": {
             "persistence": true,
