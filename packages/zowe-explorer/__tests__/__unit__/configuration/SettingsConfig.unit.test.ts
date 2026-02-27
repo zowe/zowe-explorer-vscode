@@ -14,6 +14,7 @@ import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
+import { Definitions } from "../../../src/configuration/Definitions";
 
 describe("SettingsConfig Unit Tests", () => {
     beforeEach(() => {
@@ -261,6 +262,247 @@ describe("SettingsConfig Unit Tests", () => {
                 expect(value).toEqual(undefined);
                 expect(target).toBe(vscode.ConfigurationTarget.Global);
             }
+        });
+    });
+
+    describe("function migrateShowHiddenFilesDefault", () => {
+        let getValueSpy: jest.SpyInstance;
+        let setValueSpy: jest.SpyInstance;
+        let getConfigurationSpy: jest.SpyInstance;
+        let getExtensionSpy: jest.SpyInstance;
+        let errorMessageSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+            getValueSpy = jest.spyOn(ZoweLocalStorage, "getValue");
+            setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
+            getConfigurationSpy = jest.spyOn(vscode.workspace, "getConfiguration");
+            getExtensionSpy = jest.spyOn(vscode.extensions, "getExtension");
+            errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+        });
+
+        it("should skip migration if already completed", async () => {
+            getValueSpy.mockReturnValue(true);
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(getValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED);
+            expect(getConfigurationSpy).not.toHaveBeenCalled();
+            expect(setValueSpy).not.toHaveBeenCalled();
+        });
+
+        it("should not set value if user has explicitly set globalValue", async () => {
+            getValueSpy.mockReturnValue(false);
+            const mockConfig = {
+                inspect: jest.fn().mockReturnValue({
+                    globalValue: true,
+                    workspaceValue: undefined,
+                }),
+                update: jest.fn(),
+            };
+            getConfigurationSpy.mockReturnValue(mockConfig);
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(mockConfig.inspect).toHaveBeenCalledWith("showHiddenFiles");
+            expect(mockConfig.update).not.toHaveBeenCalled();
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+        });
+
+        it("should not set value if user has explicitly set workspaceValue", async () => {
+            getValueSpy.mockReturnValue(false);
+            const mockConfig = {
+                inspect: jest.fn().mockReturnValue({
+                    globalValue: undefined,
+                    workspaceValue: false,
+                }),
+                update: jest.fn(),
+            };
+            getConfigurationSpy.mockReturnValue(mockConfig);
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(mockConfig.inspect).toHaveBeenCalledWith("showHiddenFiles");
+            expect(mockConfig.update).not.toHaveBeenCalled();
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+        });
+
+        it("should set default to true for V3 extension when user has not set value", async () => {
+            getValueSpy.mockReturnValue(false);
+            const mockConfig = {
+                inspect: jest.fn().mockReturnValue({
+                    globalValue: undefined,
+                    workspaceValue: undefined,
+                }),
+                update: jest.fn().mockResolvedValue(undefined),
+            };
+            getConfigurationSpy.mockReturnValue(mockConfig);
+            getExtensionSpy.mockReturnValue({
+                packageJSON: { version: "3.5.2" },
+            });
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(getExtensionSpy).toHaveBeenCalledWith("Zowe.vscode-extension-for-zowe");
+            expect(mockConfig.update).toHaveBeenCalledWith("showHiddenFiles", true, vscode.ConfigurationTarget.Global);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+        });
+
+        it("should set default to true for V2 extension when user has not set value", async () => {
+            getValueSpy.mockReturnValue(false);
+            const mockConfig = {
+                inspect: jest.fn().mockReturnValue({
+                    globalValue: undefined,
+                    workspaceValue: undefined,
+                }),
+                update: jest.fn().mockResolvedValue(undefined),
+            };
+            getConfigurationSpy.mockReturnValue(mockConfig);
+            getExtensionSpy.mockReturnValue({
+                packageJSON: { version: "2.18.0" },
+            });
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(mockConfig.update).toHaveBeenCalledWith("showHiddenFiles", true, vscode.ConfigurationTarget.Global);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+        });
+
+        it("should set default to true for V1 extension when user has not set value", async () => {
+            getValueSpy.mockReturnValue(false);
+            const mockConfig = {
+                inspect: jest.fn().mockReturnValue({
+                    globalValue: undefined,
+                    workspaceValue: undefined,
+                }),
+                update: jest.fn().mockResolvedValue(undefined),
+            };
+            getConfigurationSpy.mockReturnValue(mockConfig);
+            getExtensionSpy.mockReturnValue({
+                packageJSON: { version: "1.28.1" },
+            });
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(mockConfig.update).toHaveBeenCalledWith("showHiddenFiles", true, vscode.ConfigurationTarget.Global);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+        });
+
+        it("should set default to false for V4 extension when user has not set value", async () => {
+            getValueSpy.mockReturnValue(false);
+            const mockConfig = {
+                inspect: jest.fn().mockReturnValue({
+                    globalValue: undefined,
+                    workspaceValue: undefined,
+                }),
+                update: jest.fn().mockResolvedValue(undefined),
+            };
+            getConfigurationSpy.mockReturnValue(mockConfig);
+            getExtensionSpy.mockReturnValue({
+                packageJSON: { version: "4.0.0" },
+            });
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(mockConfig.update).toHaveBeenCalledWith("showHiddenFiles", false, vscode.ConfigurationTarget.Global);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+        });
+
+        it("should set default to false for V5 extension when user has not set value", async () => {
+            getValueSpy.mockReturnValue(false);
+            const mockConfig = {
+                inspect: jest.fn().mockReturnValue({
+                    globalValue: undefined,
+                    workspaceValue: undefined,
+                }),
+                update: jest.fn().mockResolvedValue(undefined),
+            };
+            getConfigurationSpy.mockReturnValue(mockConfig);
+            getExtensionSpy.mockReturnValue({
+                packageJSON: { version: "5.2.1" },
+            });
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(mockConfig.update).toHaveBeenCalledWith("showHiddenFiles", false, vscode.ConfigurationTarget.Global);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+        });
+
+        it("should mark migration complete even if extension is not found", async () => {
+            getValueSpy.mockReturnValue(false);
+            const mockConfig = {
+                inspect: jest.fn().mockReturnValue({
+                    globalValue: undefined,
+                    workspaceValue: undefined,
+                }),
+                update: jest.fn(),
+            };
+            getConfigurationSpy.mockReturnValue(mockConfig);
+            getExtensionSpy.mockReturnValue(undefined);
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(mockConfig.update).not.toHaveBeenCalled();
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+        });
+
+        it("should handle errors gracefully and show error message", async () => {
+            getValueSpy.mockReturnValue(false);
+            const testError = new Error("Test error");
+            getConfigurationSpy.mockImplementation(() => {
+                throw testError;
+            });
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("Failed to migrate showHiddenFiles setting: Test error");
+        });
+
+        it("should handle non-Error exceptions and show error message", async () => {
+            getValueSpy.mockReturnValue(false);
+            getConfigurationSpy.mockImplementation(() => {
+                throw "String error";
+            });
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("Failed to migrate showHiddenFiles setting: String error");
+        });
+
+        it("should handle version with pre-release suffix correctly", async () => {
+            getValueSpy.mockReturnValue(false);
+            const mockConfig = {
+                inspect: jest.fn().mockReturnValue({
+                    globalValue: undefined,
+                    workspaceValue: undefined,
+                }),
+                update: jest.fn().mockResolvedValue(undefined),
+            };
+            getConfigurationSpy.mockReturnValue(mockConfig);
+            getExtensionSpy.mockReturnValue({
+                packageJSON: { version: "4.1.0-SNAPSHOT" },
+            });
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(mockConfig.update).toHaveBeenCalledWith("showHiddenFiles", false, vscode.ConfigurationTarget.Global);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+        });
+
+        it("should handle edge case where both globalValue and workspaceValue are set", async () => {
+            getValueSpy.mockReturnValue(false);
+            const mockConfig = {
+                inspect: jest.fn().mockReturnValue({
+                    globalValue: true,
+                    workspaceValue: false,
+                }),
+                update: jest.fn(),
+            };
+            getConfigurationSpy.mockReturnValue(mockConfig);
+
+            await (SettingsConfig as any).migrateShowHiddenFilesDefault();
+
+            expect(mockConfig.update).not.toHaveBeenCalled();
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
         });
     });
 });
