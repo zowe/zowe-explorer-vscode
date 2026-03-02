@@ -1795,9 +1795,12 @@ Would you like to do this now?`,
             SharedUtils.getDefaultSortOptions(DatasetUtils.DATASET_SORT_OPTS, Constants.SETTINGS_DS_DEFAULT_SORT, Sorting.DatasetSortOpts);
 
         // Override the default sort method if the node already has sort setting in persistence
-        const sortSetting = this.getSortSetting(node);
-        if (sortSetting) {
-            sortOpts = sortSetting;
+        // But only do this if the user hasn't already selected a sort method for this node in the current session
+        if (node.sort == null) {
+            const sortSetting = this.getSortSetting(node);
+            if (sortSetting) {
+                sortOpts = sortSetting;
+            }
         }
 
         // Adapt menus to user based on the node that was interacted with

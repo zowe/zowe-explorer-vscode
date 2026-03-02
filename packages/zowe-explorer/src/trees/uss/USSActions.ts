@@ -67,7 +67,20 @@ export class USSActions {
         }
 
         const nameOptions: vscode.InputBoxOptions = {
-            placeHolder: vscode.l10n.t("Name of file or directory"),
+            title: vscode.l10n.t({
+                message: "Create {0}",
+                args: [nodeType === "file" ? "File" : "Directory"],
+                comment: ["Node type"],
+            }),
+            placeHolder: vscode.l10n.t({
+                message: nodeType === "file" ? "Enter a file name" : "Enter a directory name",
+                comment: ["Placeholder for file or directory name"],
+            }),
+            prompt: vscode.l10n.t({
+                message: "Enter a name for the {0} ",
+                args: [nodeType],
+                comment: ["Node type"],
+            }),
         };
         const name = await Gui.showInputBox(nameOptions);
         if (name && filePath) {

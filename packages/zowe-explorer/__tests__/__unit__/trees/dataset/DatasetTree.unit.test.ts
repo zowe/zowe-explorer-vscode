@@ -4257,6 +4257,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
 
+            nodes.pds.sort = undefined;
+
             const persistedSort = {
                 method: Sorting.DatasetSortOpts.DateCreated,
                 direction: Sorting.SortDirection.Descending,
@@ -4268,8 +4270,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
-            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.Name);
-            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Descending);
+            expect((nodes.pds.sort as any)?.method).toBe(Sorting.DatasetSortOpts.Name);
+            expect((nodes.pds.sort as any)?.direction).toBe(Sorting.SortDirection.Descending);
         });
 
         it("falls back to default sort options when no persistence available", async () => {
@@ -4285,8 +4287,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
-            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.DateCreated);
-            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Ascending);
+            expect((nodes.pds.sort as any)?.method).toBe(Sorting.DatasetSortOpts.DateCreated);
+            expect((nodes.pds.sort as any)?.direction).toBe(Sorting.SortDirection.Ascending);
         });
 
         it("saves sort settings to persistence after sorting", async () => {
@@ -4351,6 +4353,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
 
+            nodes.session.sort = undefined;
+
             const persistedSessionSort = {
                 method: Sorting.DatasetSortOpts.LastModified,
                 direction: Sorting.SortDirection.Descending,
@@ -4362,8 +4366,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
-            expect(nodes.session.sort?.method).toBe(Sorting.DatasetSortOpts.UserId);
-            expect(nodes.session.sort?.direction).toBe(Sorting.SortDirection.Descending);
+            expect((nodes.session.sort as any)?.method).toBe(Sorting.DatasetSortOpts.UserId);
+            expect((nodes.session.sort as any)?.direction).toBe(Sorting.SortDirection.Descending);
         });
 
         it("does not interfere with sort when getSortSetting returns undefined", async () => {
@@ -4417,8 +4421,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             mocks.showQuickPick.mockResolvedValueOnce({ label: "$(account) User ID" });
             await tree.sortPdsMembersDialog(nodes.pds);
 
-            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.UserId);
-            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Descending);
+            expect((nodes.pds.sort as any)?.method).toBe(Sorting.DatasetSortOpts.UserId);
+            expect((nodes.pds.sort as any)?.direction).toBe(Sorting.SortDirection.Descending);
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
         });
 
@@ -4490,6 +4494,67 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(favPdsNode.sort?.direction).toBe(Sorting.SortDirection.Descending);
 
             expect(favPdsNode.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["C", "B", "A"]);
+        });
+
+        it("allows changing sort direction when node already has sort set and persistence exists", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            nodes.pds.sort = {
+                method: Sorting.DatasetSortOpts.Name,
+                direction: Sorting.SortDirection.Descending,
+            };
+
+            const persistedSort = {
+                method: Sorting.DatasetSortOpts.Name,
+                direction: Sorting.SortDirection.Descending,
+            };
+            const getSortSettingSpy = jest.spyOn(DatasetTree.prototype, "getSortSetting").mockReturnValue(persistedSort);
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(fold) Sort Direction" });
+            mocks.showQuickPick.mockResolvedValueOnce("Ascending");
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name" });
+
+            await tree.sortPdsMembersDialog(nodes.pds);
+
+            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Ascending);
+            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.Name);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+
+            getSortSettingSpy.mockRestore();
+        });
+
+        it("does not let persistence override sort direction changes by user", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            nodes.pds.sort = {
+                method: Sorting.DatasetSortOpts.Name,
+                direction: Sorting.SortDirection.Ascending,
+            };
+
+            const persistedSort = {
+                method: Sorting.DatasetSortOpts.Name,
+                direction: Sorting.SortDirection.Ascending,
+            };
+            jest.spyOn(DatasetTree.prototype, "getSortSetting").mockReturnValue(persistedSort);
+            const addSortSettingSpy = jest.spyOn(DatasetTree.prototype, "addSortSetting");
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(fold) Sort Direction" });
+            mocks.showQuickPick.mockResolvedValueOnce("Descending");
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name" });
+
+            await tree.sortPdsMembersDialog(nodes.pds);
+
+            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Descending);
+
+            expect(addSortSettingSpy).toHaveBeenCalledWith(
+                nodes.pds,
+                expect.objectContaining({
+                    method: Sorting.DatasetSortOpts.Name,
+                    direction: Sorting.SortDirection.Descending,
+                })
+            );
         });
     });
 
