@@ -1960,7 +1960,6 @@ describe("DatasetFSProvider", () => {
                     isRoot: false,
                     slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
                     profileName: "sestest",
-                    profile: testEntries.ps.metadata.profile,
                 });
 
                 isProfileLockedMock.mockReturnValue(true);
