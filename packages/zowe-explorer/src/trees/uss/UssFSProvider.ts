@@ -26,7 +26,6 @@ import {
     ZoweExplorerApiType,
     AuthHandler,
     IFileSystemEntry,
-    FeatureFlags,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { USSFileStructure } from "./USSFileStructure";
@@ -91,13 +90,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
 
-        const fetchByDefault: boolean = FeatureFlags.get("fetchByDefault");
-
-        const entry = isFetching
-            ? await this.remoteLookupForResource(uri)
-            : fetchByDefault
-            ? await this.lookupWithCache(uri)
-            : this.lookup(uri, false);
+        const entry = isFetching ? await this.remoteLookupForResource(uri) : await this.lookupWithCache(uri);
 
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const apiRegister = ZoweExplorerApiRegister.getInstance();
@@ -392,9 +385,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<UssDirectory | UssFile> {
-        // TODO: Remove
-        console.log("remoteLookupCalled");
-
         await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: uriInfo.profileName });

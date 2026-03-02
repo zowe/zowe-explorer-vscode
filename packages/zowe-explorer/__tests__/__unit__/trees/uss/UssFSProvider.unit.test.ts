@@ -23,7 +23,6 @@ import {
     ZoweScheme,
     imperative,
     ZoweVsCodeExtension,
-    FeatureFlags,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
@@ -357,9 +356,7 @@ describe("UssFSProvider", () => {
             cacheGetSpy.mockRestore();
         });
 
-        it("should make a system call if fetchByDefault is enabled and the entry is not in the cache", async () => {
-            jest.spyOn(FeatureFlags, "get").mockReturnValue(true);
-
+        it("should make a system call the entry is not in the cache", async () => {
             const fetchUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/usr/test/newfileFetchBD.txt" });
             const mockFile = {
                 ...testEntries.file,

@@ -116,7 +116,7 @@ describe("FeatureFlags", () => {
 });
 
 describe("FeatureFlagsAccess (ACL)", () => {
-    beforeEach(async () => {
+    beforeEach(() => {
         (FeatureFlags as any).flags = {};
         jest.clearAllMocks();
         (FeatureFlagsAccess as any).accessControl = {

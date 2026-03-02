@@ -26,7 +26,6 @@ import {
     FsAbstractUtils,
     UriFsInfo,
     FsJobsUtils,
-    FeatureFlags,
 } from "@zowe/zowe-explorer-api";
 import { SharedActions } from "./SharedActions";
 import { SharedHistoryView } from "./SharedHistoryView";
@@ -473,10 +472,7 @@ export class SharedInit {
                 ) {
                     continue;
                 }
-                // TODO: FEATURE-FLAG(fetchByDefault): remove fetch = true query param
-                FeatureFlags.get("fetchByDefault")
-                    ? readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri))
-                    : readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri.with({ query: "fetch=true" })));
+                readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri));
             } catch (err) {
                 if (err instanceof Error) {
                     ZoweLogger.error(err.message);

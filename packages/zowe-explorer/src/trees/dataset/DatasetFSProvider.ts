@@ -31,7 +31,6 @@ import {
     Types,
     imperative,
     IFileSystemEntry,
-    FeatureFlags,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -73,13 +72,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             // Check cache for resource
             const localLookup = this.lookup(uri);
-            //TODO Remove
-            console.log("fetch: false");
             if (localLookup) return localLookup;
         } catch {}
         // If resource not found, remote lookup
-        //TODO Remove
-        console.log("fetch: true");
         return this.remoteLookupForResource(uri);
     }
 
@@ -102,8 +97,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             return this.lookup(uri, false);
         }
 
-        const fetchByDefault: boolean = FeatureFlags.get("fetchByDefault");
-
         isFetching = queryParams?.has("fetch") && queryParams?.get("fetch") === "true";
 
         await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
@@ -123,11 +116,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
-        const entry = isFetching
-            ? await this.remoteLookupForResource(uri)
-            : fetchByDefault
-            ? await this.lookupWithCache(uri)
-            : this.lookup(uri, false);
+        const entry = isFetching ? await this.remoteLookupForResource(uri) : await this.lookupWithCache(uri);
         // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on PS or PDS members only
         if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
             return entry;
@@ -426,9 +415,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<DirEntry | DsEntry> {
-        //TODO Remove
-        console.log("remoteLookupCalled: " + uri);
-
         await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: uriInfo.profileName });
@@ -464,8 +450,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 throw err;
             }
 
-            //TODO Feature Flag
-            if (err.code === "FileNotFound" && FeatureFlags.get("fetchByDefault") && !shouldFetch) {
+            if (err.code === "FileNotFound" && !shouldFetch) {
                 dsEntry = await this.remoteLookupForResource(uri);
             }
         }

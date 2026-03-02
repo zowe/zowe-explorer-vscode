@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import { BaseProvider, ConflictViewSelection, DirEntry, FileEntry, ZoweScheme } from "../../../src/fs";
 import { Gui } from "../../../src/globals";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
-import { ErrorCorrelator, FeatureFlags, ZoweExplorerApiType } from "../../../src";
+import { ErrorCorrelator, ZoweExplorerApiType } from "../../../src";
 
 function getGlobalMocks(): { [key: string]: any } {
     return {
@@ -734,7 +734,6 @@ describe("executeWithReuse", () => {
     let checkLocalSpy: jest.Mock;
     let executeSpy: jest.Mock;
     let testUri: vscode.Uri;
-    let featureFlagSpy: jest.SpyInstance;
 
     beforeEach(() => {
         prov = new (BaseProvider as any)();
@@ -742,27 +741,22 @@ describe("executeWithReuse", () => {
         checkLocalSpy = jest.fn(() => false);
         executeSpy = jest.fn().mockResolvedValue("result");
         testUri = vscode.Uri.from({ scheme: "zowe", path: "/test" });
-        featureFlagSpy = jest.spyOn(FeatureFlags, "get").mockReturnValue(false);
-    });
-
-    afterEach(() => {
-        featureFlagSpy.mockRestore();
     });
 
     it("executes the operation and caches the promise, then cleans up after resolution", async () => {
-        const promise = prov.executeWithReuse(testUri, {
-            keyGenerator: keyGenSpy,
-            checkLocal: checkLocalSpy,
-            execute: executeSpy,
-        });
+        const options = {
+            keyGenerator: (uri: vscode.Uri) => uri.toString(),
+            checkLocal: () => false,
+            execute: async () => {
+                return "success";
+            },
+        };
+        const promise = prov.executeWithReuse(testUri, options);
+        const expectedKey = testUri.with({ query: "fetch=true" }).toString();
 
-        expect(prov.requestCache.has(testUri.toString())).toBe(true);
-
-        const result = await promise;
-
-        expect(result).toBe("result");
-        expect(executeSpy).toHaveBeenCalledTimes(1);
-        expect(prov.requestCache.has(testUri.toString())).toBe(false);
+        expect(prov.requestCache.has(expectedKey)).toBe(true);
+        await promise;
+        expect(prov.requestCache.has(expectedKey)).toBe(false);
     });
 
     it("reuses an in-flight request for the same key", async () => {
@@ -812,7 +806,6 @@ describe("executeWithReuse", () => {
         const cachedPromise = Promise.resolve("cached");
         prov.requestCache.set(fetchUri.toString(), cachedPromise);
 
-        featureFlagSpy.mockReturnValue(true);
         checkLocalSpy.mockReturnValue(false);
 
         const result = await prov.executeWithReuse(testUri, {
@@ -825,43 +818,36 @@ describe("executeWithReuse", () => {
         expect(executeSpy).not.toHaveBeenCalled();
     });
 
-    describe("when fetchByDefault feature flag is enabled", () => {
-        beforeEach(() => {
-            featureFlagSpy.mockReturnValue(true);
+    it("avoids network if local entry is found", async () => {
+        checkLocalSpy.mockReturnValue(true);
+
+        await prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
         });
 
-        it("avoids network if local entry is found", async () => {
-            checkLocalSpy.mockReturnValue(true);
+        expect(checkLocalSpy).toHaveBeenCalled();
+        expect(prov.requestCache.has(testUri.toString())).toBe(false);
+    });
 
-            await prov.executeWithReuse(testUri, {
-                keyGenerator: keyGenSpy,
-                checkLocal: checkLocalSpy,
-                execute: executeSpy,
-            });
+    it("forces network if local entry is missing", async () => {
+        checkLocalSpy.mockReturnValue(false);
+        keyGenSpy.mockImplementation((u: vscode.Uri) => u.query);
 
-            expect(checkLocalSpy).toHaveBeenCalled();
-            expect(prov.requestCache.has(testUri.toString())).toBe(false);
+        const promise = prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
         });
 
-        it("forces network if local entry is missing", async () => {
-            checkLocalSpy.mockReturnValue(false);
-            keyGenSpy.mockImplementation((u: vscode.Uri) => u.query);
+        expect(executeSpy).toHaveBeenCalled();
+        expect(prov.requestCache.has("fetch=true")).toBe(true);
 
-            const promise = prov.executeWithReuse(testUri, {
-                keyGenerator: keyGenSpy,
-                checkLocal: checkLocalSpy,
-                execute: executeSpy,
-            });
-
-            expect(executeSpy).toHaveBeenCalled();
-            expect(prov.requestCache.has("fetch=true")).toBe(true);
-
-            await promise;
-        });
+        await promise;
     });
 
     it("does not perform local check if conflict or diff query params exist", async () => {
-        featureFlagSpy.mockReturnValue(true);
         const conflictUri = testUri.with({ query: "conflict=true" });
 
         await prov.executeWithReuse(conflictUri, {

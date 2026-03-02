@@ -16,7 +16,6 @@ import { FsAbstractUtils } from "./utils";
 import { Gui } from "../globals/Gui";
 import { ZosEncoding } from "../tree";
 import { ErrorCorrelator, ZoweExplorerApiType } from "../utils/ErrorCorrelator";
-import { FeatureFlags } from "../utils";
 
 export class BaseProvider {
     // eslint-disable-next-line no-magic-numbers
@@ -530,7 +529,6 @@ export class BaseProvider {
         const queryParams = new URLSearchParams(uri.query);
         const isExplicitFetch = queryParams.get("fetch") === "true";
         const hasConflictOrDiff = queryParams.has("conflict") || queryParams.has("inDiff");
-        const fetchByDefault = FeatureFlags.get("fetchByDefault");
 
         // Generate fetch key (simulate fetch=true)
         const fetchQueryParams = new URLSearchParams(uri.query);
@@ -546,7 +544,7 @@ export class BaseProvider {
 
         // Check local entry to see if it will fallback to a remote lookup
         let localEntryFound = false;
-        if (!isExplicitFetch && !hasConflictOrDiff && fetchByDefault) {
+        if (!isExplicitFetch && !hasConflictOrDiff) {
             try {
                 if (options.checkLocal()) {
                     localEntryFound = true;
@@ -554,21 +552,15 @@ export class BaseProvider {
             } catch {} // eslint-disable-line no-empty
         }
 
-        const needNetwork = isExplicitFetch || (fetchByDefault && !hasConflictOrDiff && !localEntryFound);
+        const needNetwork = isExplicitFetch || (!hasConflictOrDiff && !localEntryFound);
 
         if (needNetwork && this.requestCache.has(fetchKey)) {
-            //TODO: Remove
-            // eslint-disable-next-line no-console
-            console.log(`[Reuse] Reusing explicit fetch for request: ${fetchKey}`);
             return (await this.requestCache.get(fetchKey)) as T;
         }
 
         const keyToUse = needNetwork ? fetchKey : actualKey;
 
         if (this.requestCache.has(keyToUse)) {
-            //TODO: Remove
-            // eslint-disable-next-line no-console
-            console.log(`[Reuse] Request reuse for: ${keyToUse}`);
             return (await this.requestCache.get(keyToUse)) as T;
         }
 
