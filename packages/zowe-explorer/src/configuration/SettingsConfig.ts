@@ -259,8 +259,8 @@ export class SettingsConfig {
     private static async migrateShowHiddenFilesDefault(): Promise<void> {
         try {
             // Check if migration has already been completed
-            const migrationCompleted = ZoweLocalStorage.getValue<boolean>(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED);
-            if (migrationCompleted) {
+            const migrationStatus = ZoweLocalStorage.getValue<Definitions.V3MigrationStatus>(Definitions.LocalStorageKey.V3_MIGRATION_STATUS);
+            if (migrationStatus === Definitions.V3MigrationStatus.JustMigrated) {
                 return;
             }
 
@@ -285,7 +285,7 @@ export class SettingsConfig {
             }
 
             // Mark migration complete
-            await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+            await ZoweLocalStorage.setValue(Definitions.LocalStorageKey.V3_MIGRATION_STATUS, Definitions.V3MigrationStatus.JustMigrated);
         } catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
             void Gui.errorMessage(`Failed to migrate showHiddenFiles setting: ${errorMsg}`);

@@ -281,17 +281,17 @@ describe("SettingsConfig Unit Tests", () => {
         });
 
         it("should skip migration if already completed", async () => {
-            getValueSpy.mockReturnValue(true);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.JustMigrated);
 
             await (SettingsConfig as any).migrateShowHiddenFilesDefault();
 
-            expect(getValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED);
+            expect(getValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.V3_MIGRATION_STATUS);
             expect(getConfigurationSpy).not.toHaveBeenCalled();
             expect(setValueSpy).not.toHaveBeenCalled();
         });
 
         it("should not set value if user has explicitly set globalValue", async () => {
-            getValueSpy.mockReturnValue(false);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
                 inspect: jest.fn().mockReturnValue({
                     globalValue: true,
@@ -305,11 +305,11 @@ describe("SettingsConfig Unit Tests", () => {
 
             expect(mockConfig.inspect).toHaveBeenCalledWith("showHiddenFiles");
             expect(mockConfig.update).not.toHaveBeenCalled();
-            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.V3_MIGRATION_STATUS, Definitions.V3MigrationStatus.JustMigrated);
         });
 
         it("should not set value if user has explicitly set workspaceValue", async () => {
-            getValueSpy.mockReturnValue(false);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
                 inspect: jest.fn().mockReturnValue({
                     globalValue: undefined,
@@ -323,11 +323,11 @@ describe("SettingsConfig Unit Tests", () => {
 
             expect(mockConfig.inspect).toHaveBeenCalledWith("showHiddenFiles");
             expect(mockConfig.update).not.toHaveBeenCalled();
-            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.V3_MIGRATION_STATUS, Definitions.V3MigrationStatus.JustMigrated);
         });
 
         it("should set default to true for V3 extension when user has not set value", async () => {
-            getValueSpy.mockReturnValue(false);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
                 inspect: jest.fn().mockReturnValue({
                     globalValue: undefined,
@@ -344,11 +344,11 @@ describe("SettingsConfig Unit Tests", () => {
 
             expect(getExtensionSpy).toHaveBeenCalledWith("Zowe.vscode-extension-for-zowe");
             expect(mockConfig.update).toHaveBeenCalledWith("showHiddenFiles", true, vscode.ConfigurationTarget.Global);
-            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.V3_MIGRATION_STATUS, Definitions.V3MigrationStatus.JustMigrated);
         });
 
         it("should set default to true for V2 extension when user has not set value", async () => {
-            getValueSpy.mockReturnValue(false);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
                 inspect: jest.fn().mockReturnValue({
                     globalValue: undefined,
@@ -364,11 +364,11 @@ describe("SettingsConfig Unit Tests", () => {
             await (SettingsConfig as any).migrateShowHiddenFilesDefault();
 
             expect(mockConfig.update).toHaveBeenCalledWith("showHiddenFiles", true, vscode.ConfigurationTarget.Global);
-            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.V3_MIGRATION_STATUS, Definitions.V3MigrationStatus.JustMigrated);
         });
 
         it("should set default to true for V1 extension when user has not set value", async () => {
-            getValueSpy.mockReturnValue(false);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
                 inspect: jest.fn().mockReturnValue({
                     globalValue: undefined,
@@ -384,11 +384,11 @@ describe("SettingsConfig Unit Tests", () => {
             await (SettingsConfig as any).migrateShowHiddenFilesDefault();
 
             expect(mockConfig.update).toHaveBeenCalledWith("showHiddenFiles", true, vscode.ConfigurationTarget.Global);
-            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.V3_MIGRATION_STATUS, Definitions.V3MigrationStatus.JustMigrated);
         });
 
         it("should set default to false for V4 extension when user has not set value", async () => {
-            getValueSpy.mockReturnValue(false);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
                 inspect: jest.fn().mockReturnValue({
                     globalValue: undefined,
@@ -404,11 +404,11 @@ describe("SettingsConfig Unit Tests", () => {
             await (SettingsConfig as any).migrateShowHiddenFilesDefault();
 
             expect(mockConfig.update).toHaveBeenCalledWith("showHiddenFiles", false, vscode.ConfigurationTarget.Global);
-            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.V3_MIGRATION_STATUS, Definitions.V3MigrationStatus.JustMigrated);
         });
 
         it("should set default to false for V5 extension when user has not set value", async () => {
-            getValueSpy.mockReturnValue(false);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
                 inspect: jest.fn().mockReturnValue({
                     globalValue: undefined,
@@ -424,11 +424,11 @@ describe("SettingsConfig Unit Tests", () => {
             await (SettingsConfig as any).migrateShowHiddenFilesDefault();
 
             expect(mockConfig.update).toHaveBeenCalledWith("showHiddenFiles", false, vscode.ConfigurationTarget.Global);
-            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.V3_MIGRATION_STATUS, Definitions.V3MigrationStatus.JustMigrated);
         });
 
         it("should mark migration complete even if extension is not found", async () => {
-            getValueSpy.mockReturnValue(false);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
                 inspect: jest.fn().mockReturnValue({
                     globalValue: undefined,
@@ -442,11 +442,11 @@ describe("SettingsConfig Unit Tests", () => {
             await (SettingsConfig as any).migrateShowHiddenFilesDefault();
 
             expect(mockConfig.update).not.toHaveBeenCalled();
-            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.V3_MIGRATION_STATUS, Definitions.V3MigrationStatus.JustMigrated);
         });
 
         it("should handle errors gracefully and show error message", async () => {
-            getValueSpy.mockReturnValue(false);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const testError = new Error("Test error");
             getConfigurationSpy.mockImplementation(() => {
                 throw testError;
@@ -458,7 +458,7 @@ describe("SettingsConfig Unit Tests", () => {
         });
 
         it("should handle non-Error exceptions and show error message", async () => {
-            getValueSpy.mockReturnValue(false);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             getConfigurationSpy.mockImplementation(() => {
                 throw "String error";
             });
@@ -469,7 +469,7 @@ describe("SettingsConfig Unit Tests", () => {
         });
 
         it("should handle version with pre-release suffix correctly", async () => {
-            getValueSpy.mockReturnValue(false);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
                 inspect: jest.fn().mockReturnValue({
                     globalValue: undefined,
@@ -485,11 +485,11 @@ describe("SettingsConfig Unit Tests", () => {
             await (SettingsConfig as any).migrateShowHiddenFilesDefault();
 
             expect(mockConfig.update).toHaveBeenCalledWith("showHiddenFiles", false, vscode.ConfigurationTarget.Global);
-            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.V3_MIGRATION_STATUS, Definitions.V3MigrationStatus.JustMigrated);
         });
 
         it("should handle edge case where both globalValue and workspaceValue are set", async () => {
-            getValueSpy.mockReturnValue(false);
+            getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
                 inspect: jest.fn().mockReturnValue({
                     globalValue: true,
@@ -502,7 +502,7 @@ describe("SettingsConfig Unit Tests", () => {
             await (SettingsConfig as any).migrateShowHiddenFilesDefault();
 
             expect(mockConfig.update).not.toHaveBeenCalled();
-            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.SHOW_HIDDEN_FILES_MIGRATED, true);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.V3_MIGRATION_STATUS, Definitions.V3MigrationStatus.JustMigrated);
         });
     });
 });
