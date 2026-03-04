@@ -911,4 +911,30 @@ describe("executeWithReuse", () => {
 
         await expect(promise).rejects.toThrow(vscode.FileSystemError.FileIsADirectory(testUri));
     });
+
+    describe("validateResult", () => {
+        let prov: any;
+        let testUri: vscode.Uri;
+
+        beforeEach(() => {
+            prov = new (BaseProvider as any)();
+            testUri = vscode.Uri.from({ scheme: "zowe", path: "/test" });
+        });
+
+        it("throws FileNotADirectory if action is readDirectory and result type is File", () => {
+            const fileResult = { type: vscode.FileType.File };
+
+            expect(() => {
+                prov.validateResult(fileResult, testUri, "readDirectory");
+            }).toThrow(vscode.FileSystemError.FileNotADirectory(testUri));
+        });
+
+        it("throws FileIsADirectory if action is readFile and result type is Directory", () => {
+            const dirResult = { type: vscode.FileType.Directory };
+
+            expect(() => {
+                prov.validateResult(dirResult, testUri, "readFile");
+            }).toThrow(vscode.FileSystemError.FileIsADirectory(testUri));
+        });
+    });
 });

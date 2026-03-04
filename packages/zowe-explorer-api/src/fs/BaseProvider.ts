@@ -514,6 +514,22 @@ export class BaseProvider {
     }
 
     /**
+     * Validates the result of a file system operation to ensure the type matches the requested action.
+     * @param result The result object to validate
+     * @param uri The URI of the resource being requested
+     * @param action The action being performed
+     * @returns The validated result
+     */
+    protected validateResult<T>(result: any, uri: vscode.Uri, action?: "readFile" | "readDirectory" | "stat"): T {
+        if (action === "readDirectory" && result?.type === vscode.FileType.File) {
+            throw vscode.FileSystemError.FileNotADirectory(uri);
+        } else if (action === "readFile" && result?.type === vscode.FileType.Directory) {
+            throw vscode.FileSystemError.FileIsADirectory(uri);
+        }
+        return result as T;
+    }
+
+    /**
      * Executes the given operation with reuse logic to avoid duplicate network requests.
      * @param uri The URI of the resource being requested
      * @param options Logic options for key generation, local checks, and execution
@@ -555,28 +571,19 @@ export class BaseProvider {
 
         const needNetwork = isExplicitFetch || (!hasConflictOrDiff && !localEntryFound);
 
-        const validateResult = (result: any): T => {
-            if (options.action === "readDirectory" && result?.type === vscode.FileType.File) {
-                throw vscode.FileSystemError.FileNotADirectory(uri);
-            } else if (options.action === "readFile" && result?.type === vscode.FileType.Directory) {
-                throw vscode.FileSystemError.FileIsADirectory(uri);
-            }
-            return result as T;
-        };
-
         if (needNetwork && this.requestCache.has(fetchKey)) {
-            return validateResult(await this.requestCache.get(fetchKey));
+            return this.validateResult(await this.requestCache.get(fetchKey), uri, options.action);
         }
 
         const keyToUse = needNetwork ? fetchKey : actualKey;
 
         if (this.requestCache.has(keyToUse)) {
-            return validateResult(await this.requestCache.get(keyToUse));
+            return this.validateResult(await this.requestCache.get(keyToUse), uri, options.action);
         }
 
         const requestPromise = (async (): Promise<T> => {
             try {
-                return validateResult(await options.execute());
+                return this.validateResult(await options.execute(), uri, options.action);
             } finally {
                 if (this.requestCache.get(keyToUse) === requestPromise) {
                     this.requestCache.delete(keyToUse);
