@@ -859,4 +859,56 @@ describe("executeWithReuse", () => {
         expect(checkLocalSpy).not.toHaveBeenCalled();
         expect(executeSpy).toHaveBeenCalled();
     });
+
+    it("returns successfully for readDirectory action with a directory result", async () => {
+        executeSpy.mockResolvedValue({ type: vscode.FileType.Directory });
+
+        const result = await prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+            action: "readDirectory",
+        });
+
+        expect(result).toEqual({ type: vscode.FileType.Directory });
+    });
+
+    it("throws FileNotADirectory for readDirectory action with a file result", async () => {
+        executeSpy.mockResolvedValue({ type: vscode.FileType.File });
+
+        const promise = prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+            action: "readDirectory",
+        });
+
+        await expect(promise).rejects.toThrow(vscode.FileSystemError.FileNotADirectory(testUri));
+    });
+
+    it("returns successfully for readFile action with a file result", async () => {
+        executeSpy.mockResolvedValue({ type: vscode.FileType.File });
+
+        const result = await prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+            action: "readFile",
+        });
+
+        expect(result).toEqual({ type: vscode.FileType.File });
+    });
+
+    it("throws FileIsADirectory for readFile action with a directory result", async () => {
+        executeSpy.mockResolvedValue({ type: vscode.FileType.Directory });
+
+        const promise = prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+            action: "readFile",
+        });
+
+        await expect(promise).rejects.toThrow(vscode.FileSystemError.FileIsADirectory(testUri));
+    });
 });

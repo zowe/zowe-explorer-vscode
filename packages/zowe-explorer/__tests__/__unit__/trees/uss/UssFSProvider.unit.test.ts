@@ -192,7 +192,7 @@ describe("UssFSProvider", () => {
                 throw new Error("invalid profile");
             });
             await expect(UssFSProvider.instance.stat(testUris.file)).rejects.toThrow("invalid profile");
-            expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
+            expect(lookupMock).toHaveBeenCalledWith(testUris.file, true);
         });
 
         describe("request caching", () => {
@@ -373,7 +373,7 @@ describe("UssFSProvider", () => {
             await UssFSProvider.instance.stat(fetchUri);
 
             expect(cacheResourceSpy).toHaveBeenCalledWith(fetchUri);
-            expect(lookupSpy).toHaveBeenCalledWith(fetchUri);
+            expect(lookupSpy).toHaveBeenCalledWith(fetchUri, true);
             expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri);
         });
 

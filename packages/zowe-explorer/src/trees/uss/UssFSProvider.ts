@@ -60,11 +60,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     protected async lookupWithCache(uri: vscode.Uri): Promise<UssDirectory | UssFile | IFileSystemEntry> {
-        try {
-            // Check cache for resource
-            const localLookup = this.lookup(uri);
-            if (localLookup) return localLookup;
-        } catch {}
+        // Check cache for resource
+        const localLookup = this.lookup(uri, true);
+        if (localLookup) return localLookup;
         // If resource not found, remote lookup
         return this.remoteLookupForResource(uri);
     }
@@ -156,7 +154,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const result = await this.executeWithReuse<vscode.FileStat>(uri, {
             keyGenerator: (u) => {
                 const queryKey = this.getQueryKey(u);
-                const cleanUri = this.getCleanUriString(u);
+                const cleanUri = this.pathWithoutTrailingSlash(u);
                 const selfKey = "list_" + queryKey + cleanUri;
 
                 const parentPath = path.posix.dirname(cleanUri);
@@ -169,7 +167,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
                 return selfKey;
             },
-            checkLocal: () => !!this.lookup(uri, false),
+            checkLocal: () => !!this.lookup(uri, true),
             execute: () => this.statImplementation(uri),
         });
 
@@ -328,6 +326,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (FsAbstractUtils.isFileEntry(entry)) {
             return entry;
         }
+
+        // TODO fix: Undefined behavior when creating FS entries with dot-segments i.e "/u/users/<user>/a/b/c/../../../TEST";
         if (entry == null && resp?.success) {
             // if entry is null, listFiles did not create a new directory entry - this is a file
             let parentDir = this.lookupParentDirectory(uri, true);
@@ -433,9 +433,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         const dir = await this.executeWithReuse<UssDirectory>(uri, {
-            keyGenerator: (u) => "list_" + this.getQueryKey(u) + this.getCleanUriString(u),
+            keyGenerator: (u) => "list_" + this.getQueryKey(u) + this.pathWithoutTrailingSlash(u),
             checkLocal: () => !!this._lookupAsDirectory(uri, true),
             execute: () => this.readDirectoryImplementation(uri),
+            action: "readDirectory",
         });
 
         return Array.from(dir.entries.entries()).map((e) => [e[0], e[1].type]);
@@ -622,16 +623,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return this.executeWithReuse<Uint8Array>(uri, {
-            keyGenerator: (u) => "readFile_" + this.getQueryKey(u) + this.getCleanUriString(u),
+            keyGenerator: (u) => "readFile_" + this.getQueryKey(u) + this.pathWithoutTrailingSlash(u),
             checkLocal: () => {
-                try {
-                    const entry = this._lookupAsFile(uri, { silent: true }) as UssFile;
-                    return entry && entry.wasAccessed;
-                } catch {
-                    return false;
-                }
+                const entry = this._lookupAsFile(uri, { silent: true }) as UssFile;
+                return entry?.wasAccessed ?? false;
             },
             execute: () => this.readFileImplementation(uri),
+            action: "readFile",
         });
     }
 
@@ -1091,7 +1089,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     /**
      * Helper to clean URI string for cache keys (removes trailing slash)
      */
-    private getCleanUriString(uri: vscode.Uri): string {
+    private pathWithoutTrailingSlash(uri: vscode.Uri): string {
         return uri.path.endsWith("/") ? uri.path.slice(0, -1) : uri.path;
     }
 }

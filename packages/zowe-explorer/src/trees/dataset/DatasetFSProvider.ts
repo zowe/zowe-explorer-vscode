@@ -180,6 +180,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
                 checkLocal: () => !!this._lookupAsDirectory(parentUri, true),
                 execute: () => this.readDirectoryImplementation(parentUri),
+                action: "readDirectory",
             });
 
             if (pdsEntry && pdsEntry.entries) {
@@ -474,6 +475,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
             checkLocal: () => !!this._lookupAsDirectory(uri, true),
             execute: () => this.readDirectoryImplementation(uri),
+            action: "readDirectory",
         });
 
         return Array.from(dirEntry.entries.entries()).map(
@@ -687,14 +689,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         return this.executeWithReuse<Uint8Array>(uri, {
             keyGenerator: (u) => "readFile" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
             checkLocal: () => {
-                try {
-                    const entry = this._lookupAsFile(uri, { silent: true }) as DsEntry;
-                    return entry && entry.wasAccessed;
-                } catch {
-                    return false;
-                }
+                const entry = this._lookupAsFile(uri, { silent: true }) as DsEntry;
+                return entry?.wasAccessed ?? false;
             },
             execute: () => this.readFileImplementation(uri),
+            action: "readFile",
         });
     }
 

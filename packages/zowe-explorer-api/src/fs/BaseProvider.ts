@@ -524,6 +524,7 @@ export class BaseProvider {
             keyGenerator: (uri: vscode.Uri) => string;
             checkLocal: () => boolean;
             execute: () => Promise<T>;
+            action?: "readFile" | "readDirectory" | "stat";
         }
     ): Promise<T> {
         const queryParams = new URLSearchParams(uri.query);
@@ -554,19 +555,28 @@ export class BaseProvider {
 
         const needNetwork = isExplicitFetch || (!hasConflictOrDiff && !localEntryFound);
 
+        const validateResult = (result: any): T => {
+            if (options.action === "readDirectory" && result?.type === vscode.FileType.File) {
+                throw vscode.FileSystemError.FileNotADirectory(uri);
+            } else if (options.action === "readFile" && result?.type === vscode.FileType.Directory) {
+                throw vscode.FileSystemError.FileIsADirectory(uri);
+            }
+            return result as T;
+        };
+
         if (needNetwork && this.requestCache.has(fetchKey)) {
-            return (await this.requestCache.get(fetchKey)) as T;
+            return validateResult(await this.requestCache.get(fetchKey));
         }
 
         const keyToUse = needNetwork ? fetchKey : actualKey;
 
         if (this.requestCache.has(keyToUse)) {
-            return (await this.requestCache.get(keyToUse)) as T;
+            return validateResult(await this.requestCache.get(keyToUse));
         }
 
         const requestPromise = (async (): Promise<T> => {
             try {
-                return await options.execute();
+                return validateResult(await options.execute());
             } finally {
                 if (this.requestCache.get(keyToUse) === requestPromise) {
                     this.requestCache.delete(keyToUse);
