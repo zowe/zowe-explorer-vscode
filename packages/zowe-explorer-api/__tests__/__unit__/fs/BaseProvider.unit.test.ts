@@ -913,14 +913,6 @@ describe("executeWithReuse", () => {
     });
 
     describe("validateResult", () => {
-        let prov: any;
-        let testUri: vscode.Uri;
-
-        beforeEach(() => {
-            prov = new (BaseProvider as any)();
-            testUri = vscode.Uri.from({ scheme: "zowe", path: "/test" });
-        });
-
         it("throws FileNotADirectory if action is readDirectory and result type is File", () => {
             const fileResult = { type: vscode.FileType.File };
 
