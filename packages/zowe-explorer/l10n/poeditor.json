@@ -1760,7 +1760,7 @@
   "To continue in current authentication": "",
   "To fix error when user clicks on a favourited job <a>#2618</a>": "",
   "To fix Strange behaviour with the Job label in Job Favorites <a>#2632</a>": "",
-  "To update the attributes use the checkboxes to change permissions. Changes will only be applied to the currently selected file and will not affect other files with the same attributes.": "",
+  "To update permissions, use the checkboxes to select or change the required access. Any changes you make will apply only to the file that is currently selected. These updates will not affect other files, even if they have the same permissions or attributes.": "",
   "Token-based Authentication": "",
   "Treat the search query as a regex": "",
   "Tree item is not a Zowe Explorer item.": "",

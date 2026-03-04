@@ -222,8 +222,8 @@ export function App() {
             </VSCodeTextField>
           </div>
           {attributes.current.perms ? (
-            <VSCodeDataGrid style={{ marginTop: "1em" }} aria-label={l10n.t("File permissions")} role="table">
-              <VSCodeDataGridRow role="row">
+            <VSCodeDataGrid style={{ marginTop: "1em" }} aria-label={l10n.t("File permissions")}>
+              <VSCodeDataGridRow row-type="header">
                 <VSCodeDataGridCell cellType="columnheader" gridColumn="1" role="columnheader">
                   {l10n.t("Permission Group")}
                 </VSCodeDataGridCell>
@@ -237,14 +237,14 @@ export function App() {
               </VSCodeDataGridRow>
               {localizedPermissionGroups.map(({ key, localized }) => {
                 return (
-                  <VSCodeDataGridRow key={`${key}-row`} role="row">
-                    <VSCodeDataGridCell cellType="rowheader" gridColumn="1" role="rowheader">
+                  <VSCodeDataGridRow key={`${key}-row`} row-type="data">
+                    <VSCodeDataGridCell cellType="rowheader" gridColumn="1" row-type="header">
                       {localized}
                     </VSCodeDataGridCell>
                     {PERMISSION_TYPES.map((perm, i) => {
                       const permLabel = localizedPermissionTypes.find((p) => p.key === perm)?.localized || perm;
                       return (
-                        <VSCodeDataGridCell gridColumn={(i + 2).toString()} key={`${key}-${perm}-checkbox`} role="cell">
+                        <VSCodeDataGridCell gridColumn={(i + 2).toString()} key={`${key}-${perm}-checkbox`} row-type="data">
                           <VSCodeCheckbox
                             checked={attributes.current!.perms[key as keyof FilePermissions][perm]}
                             onChange={(e: any) => updatePerm(key as keyof FilePermissions, perm, e.target.checked)}
@@ -272,10 +272,10 @@ export function App() {
             {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} aria-label={l10n.t("Updating file attributes")} role="status" />}
           </div>
           <div role="note" aria-label={l10n.t("Information")}>
-            <span style={{ marginLeft: "1em", color: "var(--vscode-editorLightBulb-foreground)" }}>
+            <span style={{ marginLeft: "1em" }}>
               {l10n.t("Note:")}{" "}
               {l10n.t(
-                "To update the attributes use the checkboxes to change permissions. Changes will only be applied to the currently selected file and will not affect other files with the same attributes."
+                "To update permissions, use the checkboxes to select or change the required access. Any changes you make will apply only to the file that is currently selected. These updates will not affect other files, even if they have the same permissions or attributes."
               )}
             </span>
           </div>
