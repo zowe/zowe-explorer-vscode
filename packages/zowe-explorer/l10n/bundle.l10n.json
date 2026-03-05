@@ -22,7 +22,6 @@
     ]
   },
   "[{0}]: *": "[{0}]: *",
-  "{0} {1} permission": "{0} {1} permission",
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -30,7 +29,6 @@
     ]
   },
   "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
-  "{0} permissions row": "{0} permissions row",
   "{0} was created like {1}./New Data Set nameLike Data Set name": {
     "message": "{0} was created like {1}.",
     "comment": [
@@ -275,7 +273,6 @@
   "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "An SSH profile will be used for issuing UNIX commands with the profile {0}.",
   "Applied credential manager options from imperative.json to default credential manager": "Applied credential manager options from imperative.json to default credential manager",
   "Apply changes": "Apply changes",
-  "Apply changes to file attributes": "Apply changes to file attributes",
   "Apply to all trees": "Apply to all trees",
   "Apply to current tree selected": "Apply to current tree selected",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}/Job name": {
@@ -309,7 +306,6 @@
   "Bug fixes": "Bug fixes",
   "Bugfix: Added validation check while creating, renaming and using allocate alike feature for datasets <a>#1849</a>": "Bugfix: Added validation check while creating, renaming and using allocate alike feature for datasets <a>#1849</a>",
   "Bump @zowe/secrets-for-zowe-sdk to 7.18.4 to handle install errors gracefully and to allow running without MSVC redistributables.": "Bump @zowe/secrets-for-zowe-sdk to 7.18.4 to handle install errors gracefully and to allow running without MSVC redistributables.",
-  "Button is disabled because there are no changes to apply": "Button is disabled because there are no changes to apply",
   "Cancel": "Cancel",
   "Cancelled selected jobs successfully.": "Cancelled selected jobs successfully.",
   "Cannot delete, item invalid.": "Cannot delete, item invalid.",
@@ -582,7 +578,6 @@
   "Enter the logical record length": "Enter the logical record length",
   "Enter the name of the data set to copy attributes from": "Enter the name of the data set to copy attributes from",
   "Enter the number of directory blocks": "Enter the number of directory blocks",
-  "Enter the owner and group for this file": "Enter the owner and group for this file",
   "Enter the password for the {0} connection. Leave blank to not store./Profile name": {
     "message": "Enter the password for the {0} connection. Leave blank to not store.",
     "comment": [
@@ -807,12 +802,8 @@
   "Favorites": "Favorites",
   "Fetching data set...": "Fetching data set...",
   "Fetching spool file...": "Fetching spool file...",
-  "File attributes section": "File attributes section",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "File History": "File History",
-  "File ownership": "File ownership",
-  "File path": "File path",
-  "File permissions": "File permissions",
   "File Properties": "File Properties",
   "Filter cleared for {0}/Job label": {
     "message": "Filter cleared for {0}",
@@ -1129,7 +1120,6 @@
   "Go to Local Filtering": "Go to Local Filtering",
   "Group": "Group",
   "Grouped Common methods into Singleton classes. <a>#2109</a>": "Grouped Common methods into Singleton classes. <a>#2109</a>",
-  "Header actions": "Header actions",
   "Hide Profile": "Hide Profile",
   "Hide profile name from tree view": "Hide profile name from tree view",
   "HLQ.**.DATASET or HLQ.DATASET.NAME": "HLQ.**.DATASET or HLQ.DATASET.NAME",
@@ -1306,7 +1296,6 @@
   "Last Modified By": "Last Modified By",
   "Last refreshed:": "Last refreshed:",
   "Loading changelog...": "Loading changelog...",
-  "Loading file properties": "Loading file properties",
   "Loading profile: {0} for data set favorites/Profile name": {
     "message": "Loading profile: {0} for data set favorites",
     "comment": [
@@ -1503,8 +1492,6 @@
   "PDS {0} could not be found.": "PDS {0} could not be found.",
   "PDS already in favorites": "PDS already in favorites",
   "Perform the search with case sensitivity": "Perform the search with case sensitivity",
-  "Permission grid with rows for User, Group, and All, and columns for Read, Write, and Execute permissions": "Permission grid with rows for User, Group, and All, and columns for Read, Write, and Execute permissions",
-  "Permission Group": "Permission Group",
   "Phase": "Phase",
   "Phase Name": "Phase Name",
   "Pin": "Pin",
@@ -1655,7 +1642,6 @@
   "Refactored behavior and management of Favorites in Zowe Explorer. <a>#2026</a>": "Refactored behavior and management of Favorites in Zowe Explorer. <a>#2026</a>",
   "Refactored data set pagination to use the new getCount API (if available) to optimize access to the total item count.<a>#3844</a>": "Refactored data set pagination to use the new getCount API (if available) to optimize access to the total item count.<a>#3844</a>",
   "Refresh": "Refresh",
-  "Refresh file properties": "Refresh file properties",
   "refreshUSS() called from invalid node.": "refreshUSS() called from invalid node.",
   "Regex": "Regex",
   "Release notes": "Release notes",
@@ -1880,7 +1866,6 @@
   "Support VS Code engine 1.79.0 and higher.": "Support VS Code engine 1.79.0 and higher.",
   "Surfaced any errors from a dataset Recall/Migrate operation. <a>#2032</a>": "Surfaced any errors from a dataset Recall/Migrate operation. <a>#2032</a>",
   "Tag": "Tag",
-  "Tag section": "Tag section",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated, refreshing Zowe Explorer.": "Team config file updated, refreshing Zowe Explorer.",
@@ -1942,7 +1927,6 @@
   "This action is only supported for partitioned data sets.": "This action is only supported for partitioned data sets.",
   "This action is only supported for session and PDS nodes. Please select a session or PDS node.": "This action is only supported for session and PDS nodes. Please select a session or PDS node.",
   "This action is only supported for USS directories.": "This action is only supported for USS directories.",
-  "This field is read-only because tag is not supported": "This field is read-only because tag is not supported",
   "This log file can be found at {0}/Log file location": {
     "message": "This log file can be found at {0}",
     "comment": [
@@ -2075,7 +2059,6 @@
   "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>": "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>",
   "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>": "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>",
   "Updating data set templates.": "Updating data set templates.",
-  "Updating file attributes": "Updating file attributes",
   "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
     "message": "Updating imperative.json credential manager to {0}.\n{1}",
     "comment": [
