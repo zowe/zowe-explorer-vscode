@@ -273,6 +273,8 @@
   "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "An SSH profile will be used for issuing UNIX commands with the profile {0}.",
   "Applied credential manager options from imperative.json to default credential manager": "Applied credential manager options from imperative.json to default credential manager",
   "Apply changes": "Apply changes",
+  "Apply changes button - click to save your modifications": "Apply changes button - click to save your modifications",
+  "Apply changes button - disabled. Make changes to file properties to activate this button": "Apply changes button - disabled. Make changes to file properties to activate this button",
   "Apply to all trees": "Apply to all trees",
   "Apply to current tree selected": "Apply to current tree selected",
   "Are you sure you want to delete the following item?\nThis will permanently remove the following job from your system.\n\n{0}/Job name": {

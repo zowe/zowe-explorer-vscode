@@ -198,7 +198,7 @@ export function App() {
       )}
       <div style={{ marginTop: "1em" }}>
         <div style={{ maxWidth: "fit-content" }}>
-          <div style={{ display: "flex", marginLeft: "1em" }} aria-label="Section which mentions owner and group with text fields to edit them">
+          <div style={{ display: "flex", marginLeft: "1em" }} role="group" aria-label="Owner and group information with text fields to edit them">
             <VSCodeTextField value={attributes.current.owner} onInput={(e: any) => updateFileAttributes("owner", e.target.value)}>
               {l10n.t("Owner")}
             </VSCodeTextField>
@@ -247,13 +247,18 @@ export function App() {
           <div style={{ display: "flex", alignItems: "center", marginLeft: "1em", marginTop: "1em", marginBottom: "1em" }}>
             <VSCodeButton
               disabled={!allowUpdate || readonly}
+              aria-label={
+                !allowUpdate || readonly
+                  ? l10n.t("Apply changes button - disabled. Make changes to file properties to activate this button")
+                  : l10n.t("Apply changes button - click to save your modifications")
+              }
               onClick={() => {
                 applyAttributes();
               }}
             >
               {l10n.t("Apply changes")}
             </VSCodeButton>
-            {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} />}
+            {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} aria-label="Updating file properties" />}
           </div>
           {readonly && (
             <span style={{ marginLeft: "1em", color: "var(--vscode-editorLightBulb-foreground)" }}>
