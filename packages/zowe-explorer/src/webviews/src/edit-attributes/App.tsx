@@ -167,20 +167,22 @@ export function App() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1>{l10n.t("File Properties")}</h1>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }} aria-label="Header actions">
           {timestamp && (
             <p style={{ fontStyle: "italic", marginRight: "1em" }}>
               {l10n.t("Last refreshed:")} {timestamp.toLocaleString(navigator.language)}
             </p>
           )}
-          <VSCodeButton appearance="secondary" onClick={() => vscodeApi.postMessage({ command: "refresh" })}>
+          <VSCodeButton appearance="secondary" aria-label="Refresh File Properties" onClick={() => vscodeApi.postMessage({ command: "refresh" })}>
             <span style={{ marginRight: "0.5em" }}>⟳</span>
             {l10n.t("Refresh")}
           </VSCodeButton>
         </div>
       </div>
       <strong>
-        <pre style={{ fontSize: "1.25em" }}>{attributes.current.name}</pre>
+        <pre style={{ fontSize: "1.25em" }} aria-label="File path">
+          {attributes.current.name}
+        </pre>
       </strong>
       <VSCodeDivider />
       {attributes.initial?.directory ?? false ? null : (
@@ -196,7 +198,7 @@ export function App() {
       )}
       <div style={{ marginTop: "1em" }}>
         <div style={{ maxWidth: "fit-content" }}>
-          <div style={{ display: "flex", marginLeft: "1em" }}>
+          <div style={{ display: "flex", marginLeft: "1em" }} role="group" aria-label="Owner and group information with text fields to edit them">
             <VSCodeTextField value={attributes.current.owner} onInput={(e: any) => updateFileAttributes("owner", e.target.value)}>
               {l10n.t("Owner")}
             </VSCodeTextField>
@@ -209,7 +211,7 @@ export function App() {
             </VSCodeTextField>
           </div>
           {attributes.current.perms ? (
-            <VSCodeDataGrid style={{ marginTop: "1em" }}>
+            <VSCodeDataGrid style={{ marginTop: "1em" }} aria-label="File permissions with checkboxes to toggle them">
               <VSCodeDataGridRow>
                 <VSCodeDataGridCell cellType="columnheader" gridColumn="1"></VSCodeDataGridCell>
                 {localizedPermissionTypes.map(({ key, localized }, i) => {
@@ -237,18 +239,26 @@ export function App() {
                   </VSCodeDataGridRow>
                 );
               })}
+              <span id="permissions-description" className="visually-hidden">
+                {l10n.t("Use checkboxes to toggle read, write, and execute permissions for user, group, and all users")}
+              </span>
             </VSCodeDataGrid>
           ) : null}
           <div style={{ display: "flex", alignItems: "center", marginLeft: "1em", marginTop: "1em", marginBottom: "1em" }}>
             <VSCodeButton
               disabled={!allowUpdate || readonly}
+              aria-label={
+                !allowUpdate || readonly
+                  ? l10n.t("Apply changes button - disabled. Make changes to file properties to activate this button")
+                  : l10n.t("Apply changes button - click to save your modifications")
+              }
               onClick={() => {
                 applyAttributes();
               }}
             >
               {l10n.t("Apply changes")}
             </VSCodeButton>
-            {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} />}
+            {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} aria-label="Updating file properties" />}
           </div>
           {readonly && (
             <span style={{ marginLeft: "1em", color: "var(--vscode-editorLightBulb-foreground)" }}>
