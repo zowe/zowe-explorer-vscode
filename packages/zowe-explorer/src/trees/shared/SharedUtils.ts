@@ -457,25 +457,20 @@ export class SharedUtils {
     public static async promptForDirectoryEncoding(
         profile: imperative.IProfileLoaded,
         contextLabel: string,
-        currentDirectoryEncoding?: "auto-detect" | ZosEncoding
+        currentDirectoryEncoding?: ZosEncoding
     ): Promise<ZosEncoding | undefined> {
         const items = SharedUtils.buildEncodingOptions(profile, undefined, true);
 
         let currentEncoding: string | undefined;
-        if (
-            currentDirectoryEncoding === "auto-detect" ||
-            (typeof currentDirectoryEncoding !== "string" && currentDirectoryEncoding?.kind === "auto-detect")
-        ) {
+        if (currentDirectoryEncoding?.kind === "auto-detect") {
             currentEncoding = vscode.l10n.t("Auto-detect from file tags");
-        } else if (currentDirectoryEncoding && typeof currentDirectoryEncoding !== "string") {
+        } else if (currentDirectoryEncoding) {
             if (currentDirectoryEncoding.kind === "binary") {
                 currentEncoding = vscode.l10n.t("Binary");
             } else if (currentDirectoryEncoding.kind === "text") {
                 currentEncoding = vscode.l10n.t("EBCDIC");
             } else if (currentDirectoryEncoding.kind === "other") {
                 currentEncoding = `${currentDirectoryEncoding.kind.toUpperCase()}-${currentDirectoryEncoding.codepage}`;
-            } else {
-                currentEncoding = vscode.l10n.t("Auto-detect from file tags");
             }
         } else {
             currentEncoding = vscode.l10n.t("Auto-detect from file tags"); // Default for directories
@@ -936,5 +931,46 @@ export class SharedUtils {
     public static hasNameCollision(srcNames: string[], tgtNames: string[]): boolean {
         const tgtSet = new Set(tgtNames.map((n) => n.toUpperCase().trim()));
         return srcNames.some((name) => tgtSet.has(name.toUpperCase().trim()));
+    }
+
+    /**
+     * Shows a multi select quick pick.
+     *
+     * @param items The items to display in the quick pick
+     * @param options Title and placeholder for the quick pick
+     * @returns The selected items or null if dismissed
+     */
+    public static async showMultiSelectQuickPick(
+        items: vscode.QuickPickItem[],
+        options: { title: string; placeholder: string }
+    ): Promise<vscode.QuickPickItem[] | null> {
+        const quickPick = Gui.createQuickPick();
+        quickPick.title = options.title;
+        quickPick.placeholder = options.placeholder;
+        quickPick.ignoreFocusOut = true;
+        quickPick.canSelectMany = true;
+        quickPick.items = items;
+        quickPick.selectedItems = items.filter((item) => item.picked);
+
+        const selectedOptions: vscode.QuickPickItem[] | null = await new Promise((resolve) => {
+            let wasAccepted = false;
+
+            quickPick.onDidAccept(() => {
+                wasAccepted = true;
+                resolve(Array.from(quickPick.selectedItems));
+                quickPick.hide();
+            });
+
+            quickPick.onDidHide(() => {
+                if (!wasAccepted) {
+                    resolve(null);
+                }
+            });
+
+            quickPick.show();
+        });
+        quickPick.dispose();
+
+        return selectedOptions;
     }
 }

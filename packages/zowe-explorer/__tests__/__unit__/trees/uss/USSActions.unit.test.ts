@@ -2701,30 +2701,6 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(globalMocks.ussApi.downloadDirectory).not.toHaveBeenCalled();
         });
 
-        it("should handle cancellation during download", async () => {
-            const mockNode = createMockNode();
-            const mockDownloadOptions = {
-                selectedPath: vscode.Uri.file("/test/download/path"),
-                generateDirectory: false,
-                overwrite: false,
-                dirOptions: { followSymlinks: true, chooseFilterOptions: false },
-                dirFilterOptions: { includeHidden: false, filesys: false },
-                encoding: undefined,
-            };
-
-            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
-            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [{}, {}, {}, {}, {}] } });
-
-            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
-                return await callback({ report: jest.fn() }, { isCancellationRequested: true });
-            });
-
-            await USSActions.downloadUssDirectory(mockNode);
-
-            expect(globalMocks.showMessage).toHaveBeenCalledWith("Download cancelled");
-            expect(globalMocks.ussApi.downloadDirectory).not.toHaveBeenCalled();
-        });
-
         it("should show cancellation message when download options are cancelled", async () => {
             const mockNode = createMockNode();
             jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(undefined);

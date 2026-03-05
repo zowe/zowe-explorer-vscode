@@ -1732,7 +1732,7 @@ describe("Shared utils unit tests - function promptForDirectoryEncoding", () => 
         const blockMocks = createBlockMocks();
         blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Binary") });
 
-        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", "auto-detect");
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", { kind: "auto-detect" });
 
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
@@ -2131,5 +2131,112 @@ describe("SharedUtils helpers", () => {
         const label = "bar";
         expect(await SharedUtils.isLikelySameUssObjectByUris(srcNode, targetParent, label)).toBe(true);
         expect(await SharedUtils.isLikelySameUssObjectByUris({ fullPath: "/u/other" } as any, targetParent, "bar")).toBe(false);
+    });
+
+    describe("showMultiSelectQuickPick", () => {
+        let mockQuickPick: any;
+
+        beforeEach(() => {
+            mockQuickPick = {
+                title: "",
+                placeholder: "",
+                ignoreFocusOut: false,
+                canSelectMany: false,
+                items: [],
+                selectedItems: [],
+                onDidAccept: jest.fn(),
+                onDidHide: jest.fn(),
+                show: jest.fn(),
+                hide: jest.fn(),
+                dispose: jest.fn(),
+            };
+            jest.spyOn(Gui, "createQuickPick").mockReturnValue(mockQuickPick as any);
+        });
+
+        afterEach(() => {
+            jest.restoreAllMocks();
+        });
+
+        it("returns selected items when the user accepts", async () => {
+            const items: vscode.QuickPickItem[] = [
+                { label: "Option A", picked: true },
+                { label: "Option B", picked: false },
+            ];
+
+            mockQuickPick.onDidAccept.mockImplementation((cb: () => void) => {
+                mockQuickPick.selectedItems = [items[0]];
+                cb();
+            });
+
+            const result = await SharedUtils.showMultiSelectQuickPick(items, {
+                title: "Test Title",
+                placeholder: "Test Placeholder",
+            });
+
+            expect(result).toEqual([items[0]]);
+            expect(mockQuickPick.title).toBe("Test Title");
+            expect(mockQuickPick.placeholder).toBe("Test Placeholder");
+            expect(mockQuickPick.ignoreFocusOut).toBe(true);
+            expect(mockQuickPick.canSelectMany).toBe(true);
+            expect(mockQuickPick.show).toHaveBeenCalled();
+            expect(mockQuickPick.dispose).toHaveBeenCalled();
+        });
+
+        it("returns null when the user dismisses the quick pick", async () => {
+            const items: vscode.QuickPickItem[] = [{ label: "Option A" }];
+
+            mockQuickPick.onDidHide.mockImplementation((cb: () => void) => {
+                cb();
+            });
+
+            const result = await SharedUtils.showMultiSelectQuickPick(items, {
+                title: "Test Title",
+                placeholder: "Test Placeholder",
+            });
+
+            expect(result).toBeNull();
+            expect(mockQuickPick.dispose).toHaveBeenCalled();
+        });
+
+        it("pre-selects items that have picked set to true", async () => {
+            const items: vscode.QuickPickItem[] = [
+                { label: "Option A", picked: true },
+                { label: "Option B", picked: true },
+                { label: "Option C", picked: false },
+            ];
+
+            mockQuickPick.onDidAccept.mockImplementation((cb: () => void) => {
+                mockQuickPick.selectedItems = [items[0], items[1]];
+                cb();
+            });
+
+            const result = await SharedUtils.showMultiSelectQuickPick(items, {
+                title: "Test",
+                placeholder: "Test",
+            });
+
+            expect(result).toEqual([items[0], items[1]]);
+            // Verify selectedItems were set from picked items
+            expect(mockQuickPick.selectedItems).toEqual([items[0], items[1]]);
+        });
+
+        it("returns empty array when user accepts with no selections", async () => {
+            const items: vscode.QuickPickItem[] = [
+                { label: "Option A", picked: false },
+                { label: "Option B", picked: false },
+            ];
+
+            mockQuickPick.onDidAccept.mockImplementation((cb: () => void) => {
+                mockQuickPick.selectedItems = [];
+                cb();
+            });
+
+            const result = await SharedUtils.showMultiSelectQuickPick(items, {
+                title: "Test",
+                placeholder: "Test",
+            });
+
+            expect(result).toEqual([]);
+        });
     });
 });

@@ -516,7 +516,7 @@ export class USSActions {
         const getEncodingDescription = (): string => {
             if (isDirectory) {
                 const currentEncoding = downloadOpts.dirOptions.directoryEncoding;
-                if (!currentEncoding || currentEncoding === "auto-detect") {
+                if (!currentEncoding || currentEncoding.kind === "auto-detect") {
                     return vscode.l10n.t("Select default encoding for directory files (current: Auto-detect from file tags)");
                 }
 
@@ -582,32 +582,10 @@ export class USSActions {
                 picked: downloadOpts.chooseEncoding,
             });
 
-            const optionsQuickPick = Gui.createQuickPick();
-            optionsQuickPick.title = vscode.l10n.t("Download Options");
-            optionsQuickPick.placeholder = vscode.l10n.t("Select download options");
-            optionsQuickPick.ignoreFocusOut = true;
-            optionsQuickPick.canSelectMany = true;
-            optionsQuickPick.items = optionItems;
-            optionsQuickPick.selectedItems = optionItems.filter((item) => item.picked);
-
-            const selectedOptions: vscode.QuickPickItem[] = await new Promise((resolve) => {
-                let wasAccepted = false;
-
-                optionsQuickPick.onDidAccept(() => {
-                    wasAccepted = true;
-                    resolve(Array.from(optionsQuickPick.selectedItems));
-                    optionsQuickPick.hide();
-                });
-
-                optionsQuickPick.onDidHide(() => {
-                    if (!wasAccepted) {
-                        resolve(null);
-                    }
-                });
-
-                optionsQuickPick.show();
+            const selectedOptions = await SharedUtils.showMultiSelectQuickPick(optionItems, {
+                title: vscode.l10n.t("Download Options"),
+                placeholder: vscode.l10n.t("Select download options"),
             });
-            optionsQuickPick.dispose();
 
             if (selectedOptions === null) {
                 return;
@@ -710,7 +688,7 @@ export class USSActions {
             {
                 location: vscode.ProgressLocation.Notification,
                 title: vscode.l10n.t("Downloading USS file..."),
-                cancellable: true,
+                cancellable: false,
             },
             async () => {
                 const filePath = downloadOptions.generateDirectory
@@ -801,9 +779,9 @@ export class USSActions {
             {
                 location: vscode.ProgressLocation.Notification,
                 title: vscode.l10n.t("Downloading USS directory"),
-                cancellable: true,
+                cancellable: false, // TODO: Add cancellation support at SDK level and then enable cancellation here as well
             },
-            async (progress, token) => {
+            async (progress) => {
                 let realPercentComplete = 0;
                 const realTotalEntries = totalFileCount;
                 const task: imperative.ITaskWithStatus = {
@@ -836,7 +814,7 @@ export class USSActions {
                 };
 
                 // only set encoding/binary if user chose a specific encoding (not auto detect)
-                if (downloadOptions.dirOptions.directoryEncoding && downloadOptions.dirOptions.directoryEncoding !== "auto-detect") {
+                if (downloadOptions.dirOptions.directoryEncoding && downloadOptions.dirOptions.directoryEncoding.kind !== "auto-detect") {
                     options.binary = downloadOptions.dirOptions.directoryEncoding.kind === "binary";
                     options.encoding =
                         downloadOptions.dirOptions.directoryEncoding.kind === "other"
@@ -851,11 +829,6 @@ export class USSActions {
                 };
 
                 try {
-                    if (token.isCancellationRequested) {
-                        Gui.showMessage(vscode.l10n.t("Download cancelled"));
-                        return;
-                    }
-
                     const response = await ussApi.downloadDirectory(node.fullPath, options, listOptions);
                     void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"), directoryPath);
                 } catch (e) {

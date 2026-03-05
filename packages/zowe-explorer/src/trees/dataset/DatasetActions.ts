@@ -708,32 +708,10 @@ export class DatasetActions {
             },
         ];
 
-        const optionsQuickPick = Gui.createQuickPick();
-        optionsQuickPick.title = vscode.l10n.t("Download Options");
-        optionsQuickPick.placeholder = vscode.l10n.t("Select download options");
-        optionsQuickPick.ignoreFocusOut = true;
-        optionsQuickPick.canSelectMany = true;
-        optionsQuickPick.items = optionItems;
-        optionsQuickPick.selectedItems = optionItems.filter((item) => item.picked);
-
-        const selectedOptions: vscode.QuickPickItem[] = await new Promise((resolve) => {
-            let wasAccepted = false;
-
-            optionsQuickPick.onDidAccept(() => {
-                wasAccepted = true;
-                resolve(Array.from(optionsQuickPick.selectedItems));
-                optionsQuickPick.hide();
-            });
-
-            optionsQuickPick.onDidHide(() => {
-                if (!wasAccepted) {
-                    resolve(null);
-                }
-            });
-
-            optionsQuickPick.show();
+        const selectedOptions = await SharedUtils.showMultiSelectQuickPick(optionItems, {
+            title: vscode.l10n.t("Download Options"),
+            placeholder: vscode.l10n.t("Select download options"),
         });
-        optionsQuickPick.dispose();
 
         // Do this instead of checking for length because unchecking all options is a valid choice
         if (selectedOptions === null) {
@@ -829,7 +807,7 @@ export class DatasetActions {
             {
                 location: vscode.ProgressLocation.Notification,
                 title,
-                cancellable: true,
+                cancellable: false, // TODO: Add cancellation support at SDK level and then enable cancellation here as well
             },
             async (progress) => {
                 try {

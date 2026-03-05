@@ -61,7 +61,7 @@ export namespace Definitions {
     export type UssDirOptions = {
         followSymlinks?: boolean;
         chooseFilterOptions?: boolean;
-        directoryEncoding?: "auto-detect" | ZosEncoding;
+        directoryEncoding?: ZosEncoding;
     };
     export type UssDirFilterOptions = {
         group?: number | string;
@@ -194,6 +194,5 @@ export namespace Definitions {
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
         DS_DOWNLOAD_OPTIONS = "zowe.dsDownloadOptions",
         USS_DOWNLOAD_OPTIONS = "zowe.ussDownloadOptions",
-        USS_DIRECTORY_ENCODING = "zowe.ussDirectoryEncoding",
     }
 }
