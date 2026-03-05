@@ -22,6 +22,7 @@
     ]
   },
   "[{0}]: *": "[{0}]: *",
+  "{0} {1} permission": "{0} {1} permission",
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [
@@ -29,6 +30,7 @@
     ]
   },
   "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
+  "{0} permissions": "{0} permissions",
   "{0} was created like {1}./New Data Set nameLike Data Set name": {
     "message": "{0} was created like {1}.",
     "comment": [
@@ -803,12 +805,17 @@
   "Favorites": "Favorites",
   "Fetching data set...": "Fetching data set...",
   "Fetching spool file...": "Fetching spool file...",
+  "File attributes and permissions": "File attributes and permissions",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "File History": "File History",
   "File ownership": "File ownership",
   "File path": "File path",
+  "File path: {0}": "File path: {0}",
   "File permissions": "File permissions",
+  "File permissions table": "File permissions table",
   "File Properties": "File Properties",
+  "File Properties Editor": "File Properties Editor",
+  "File tag section": "File tag section",
   "Filter cleared for {0}/Job label": {
     "message": "Filter cleared for {0}",
     "comment": [
@@ -1392,6 +1399,7 @@
     ]
   },
   "No changelog entries found for this version.": "No changelog entries found for this version.",
+  "No changes to apply": "No changes to apply",
   "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
   "No data set favorites found.": "No data set favorites found.",
   "No data set profiles found. Please add a profile first.": "No data set profiles found. Please add a profile first.",
@@ -1481,6 +1489,7 @@
   "Owner": "Owner",
   "Owner: ": "Owner: ",
   "Page": "Page",
+  "Page actions": "Page actions",
   "Page Size:": "Page Size:",
   "Partitioned Data Set: Binary": "Partitioned Data Set: Binary",
   "Partitioned Data Set: C": "Partitioned Data Set: C",
@@ -1876,6 +1885,7 @@
   "Support VS Code engine 1.79.0 and higher.": "Support VS Code engine 1.79.0 and higher.",
   "Surfaced any errors from a dataset Recall/Migrate operation. <a>#2032</a>": "Surfaced any errors from a dataset Recall/Migrate operation. <a>#2032</a>",
   "Tag": "Tag",
+  "Tag editing is not supported for this file": "Tag editing is not supported for this file",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated, refreshing Zowe Explorer.": "Team config file updated, refreshing Zowe Explorer.",
@@ -2086,6 +2096,7 @@
   "Uploading USS file": "Uploading USS file",
   "Uploading USS file with encoding": "Uploading USS file with encoding",
   "Uploading USS files...": "Uploading USS files...",
+  "Use checkboxes to toggle read, write, and execute permissions for user, group, and all users": "Use checkboxes to toggle read, write, and execute permissions for user, group, and all users",
   "Use Default": "Use Default",
   "Use the \"Troubleshoot\" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. <a>#3243</a>": "Use the \"Troubleshoot\" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. <a>#3243</a>",
   "Use the search button to display data sets": "Use the search button to display data sets",
