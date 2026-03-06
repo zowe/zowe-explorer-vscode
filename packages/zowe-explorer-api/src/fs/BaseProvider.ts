@@ -562,9 +562,11 @@ export class BaseProvider {
         // Check local entry to see if it will fallback to a remote lookup
         let localEntryFound = false;
         if (!isExplicitFetch && !hasConflictOrDiff) {
-            if (options.checkLocal()) {
-                localEntryFound = true;
-            }
+            try {
+                if (options.checkLocal()) {
+                    localEntryFound = true;
+                }
+            } catch {} // eslint-disable-line no-empty
         }
 
         const needNetwork = isExplicitFetch || (!hasConflictOrDiff && !localEntryFound);
