@@ -1569,6 +1569,47 @@ describe("USSTree Unit Tests - Function rename", () => {
         jest.spyOn(globalMocks.testUSSNode as unknown as any, "rename").mockRejectedValueOnce(Error("testError"));
         await expect(globalMocks.testTree.rename(globalMocks.testUSSNode)).rejects.toThrow("testError");
     });
+
+    it("Tests that USSTree.rename() restores focus and shows confirmation message for file", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        const revealSpy = jest.spyOn(globalMocks.testTree.getTreeView(), "reveal");
+
+        globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
+        const renameNode = jest.spyOn(globalMocks.testUSSNode, "rename");
+        renameNode.mockResolvedValue(false);
+        globalMocks.showInputBox.mockReturnValueOnce("newfile.txt");
+
+        await globalMocks.testTree.rename(globalMocks.testUSSNode);
+
+        expect(revealSpy).toHaveBeenCalledWith(globalMocks.testUSSNode, { select: true, focus: true });
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("renamed"));
+    });
+
+    it("Tests that USSTree.rename() restores focus and shows confirmation message for directory", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        const revealSpy = jest.spyOn(globalMocks.testTree.getTreeView(), "reveal");
+
+        const testUSSDir = new ZoweUSSNode({
+            label: "testdir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+            parentPath: "/",
+        });
+        globalMocks.testTree.mSessionNodes[1].children.push(testUSSDir);
+        const renameNode = jest.spyOn(testUSSDir, "rename");
+        renameNode.mockResolvedValue(false);
+        globalMocks.showInputBox.mockReturnValueOnce("newdir");
+
+        await globalMocks.testTree.rename(testUSSDir);
+
+        expect(revealSpy).toHaveBeenCalledWith(testUSSDir, { select: true, focus: true });
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("renamed"));
+    });
 });
 
 describe("USSTree Unit Tests - Function addFavorite", () => {
