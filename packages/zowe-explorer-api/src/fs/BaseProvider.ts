@@ -32,7 +32,7 @@ export class BaseProvider {
 
     protected constructor() {}
 
-    public requestCache = new Map<string, Promise<any>>();
+    public requestCache = new Map<string, Promise<unknown>>();
 
     /**
      * Compares the data for 2 Uint8Arrays, byte by byte.
@@ -562,11 +562,9 @@ export class BaseProvider {
         // Check local entry to see if it will fallback to a remote lookup
         let localEntryFound = false;
         if (!isExplicitFetch && !hasConflictOrDiff) {
-            try {
-                if (options.checkLocal()) {
-                    localEntryFound = true;
-                }
-            } catch {} // eslint-disable-line no-empty
+            if (options.checkLocal()) {
+                localEntryFound = true;
+            }
         }
 
         const needNetwork = isExplicitFetch || (!hasConflictOrDiff && !localEntryFound);

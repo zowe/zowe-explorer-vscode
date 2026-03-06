@@ -69,11 +69,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     protected async lookupWithCache(uri: vscode.Uri): Promise<DirEntry | DsEntry | IFileSystemEntry> {
-        try {
-            // Check cache for resource
-            const localLookup = this.lookup(uri);
-            if (localLookup) return localLookup;
-        } catch {}
+        // Check cache for resource
+        const localLookup = this.lookup(uri, true);
+        if (localLookup) return localLookup;
         // If resource not found, remote lookup
         return this.remoteLookupForResource(uri);
     }

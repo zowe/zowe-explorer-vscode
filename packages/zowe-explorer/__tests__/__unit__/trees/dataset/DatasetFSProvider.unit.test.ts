@@ -1293,14 +1293,9 @@ describe("DatasetFSProvider", () => {
                 profile: testEntries.ps.metadata.profile,
             });
 
-            const lookupSpy = jest
-                .spyOn(DatasetFSProvider.instance as any, "lookup")
-                .mockImplementationOnce(() => {
-                    return [];
-                })
-                .mockImplementationOnce(() => {
-                    throw new vscode.FileSystemError();
-                });
+            const lookupSpy = jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockImplementationOnce(() => {
+                return [];
+            });
 
             const remoteLookupSpy = jest.spyOn(DatasetFSProvider.instance as any, "remoteLookupForResource").mockResolvedValue(testEntries.ps);
 
