@@ -511,15 +511,44 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         const newFullPath = "/u/user/newName";
         await blockMocks.ussDir.rename(newFullPath);
 
-        // Expect renamed ussDir's subdirectory's short labels to be updated with newName
-        expect(ussSubDir.fullPath).toContain(newFullPath);
-        expect(ussSubDir.tooltip).toContain(newFullPath);
-
-        // Expect ussDir's nested file's short labels to be updated with newName
-        const updatedChild = blockMocks.ussDir.children;
-        expect(updatedChild[0].fullPath).toContain(newFullPath);
-        expect(updatedChild[0].tooltip).toContain(newFullPath);
+        // Expect renamed ussDir's loaded descendants to have USS paths (without profile prefix)
+        expect(ussSubDir.fullPath).toEqual(`${newFullPath}/ussSubDir`);
+        expect(ussSubDir.tooltip).toContain(`${newFullPath}/ussSubDir`);
+        expect(ussSubDirChild.fullPath).toEqual(`${newFullPath}/ussSubDir/ussChildFile`);
+        expect(ussSubDirChild.tooltip).toContain(`${newFullPath}/ussSubDir/ussChildFile`);
+        expect(ussSubDir.fullPath.startsWith(`/${globalMocks.profileOne.name}/`)).toBe(false);
+        expect(ussSubDirChild.fullPath.startsWith(`/${globalMocks.profileOne.name}/`)).toBe(false);
     });
+
+    it("Uses node resourceUri as source path during rename", async () => {
+        const globalMocks = createGlobalMocks();
+        createBlockMocks(globalMocks);
+        const ussFile = new ZoweUSSNode({
+            label: "testFile3.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u/user",
+        });
+        ussFile.contextValue = Constants.USS_TEXT_FILE_CONTEXT;
+
+        // Simulate a stale/corrupted fullPath that already includes the profile name.
+        ussFile.fullPath = `/${globalMocks.profileOne.name}/u/user/testFile3.txt`;
+        ussFile.resourceUri = vscode.Uri.from({
+            scheme: ZoweScheme.USS,
+            path: `/${globalMocks.profileOne.name}/u/user/testFile3.txt`,
+        });
+
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockResolvedValue(undefined);
+        await ussFile.rename(`/${globalMocks.profileOne.name}/u/user/testFile4.txt`);
+
+        const [actualOldUri, actualNewUri] = renameMock.mock.calls.at(-1);
+        expect(actualOldUri.path).toBe(`/${globalMocks.profileOne.name}/u/user/testFile3.txt`);
+        expect(actualNewUri.path).toBe(`/${globalMocks.profileOne.name}/u/user/testFile4.txt`);
+        expect(ussFile.fullPath).toBe("/u/user/testFile4.txt");
+        renameMock.mockRestore();
+    });
+
     it("Retries rename after catching FileExists error and deleting local entry", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
