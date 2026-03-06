@@ -390,19 +390,10 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 const oldName = path.basename(parentPath + originalNode.label.toString().replace(/^\[.+\]:\s/, ""));
                 // Use setImmediate to allow tree to refresh before revealing
                 setImmediate(() => {
-                    this.getTreeView()
-                        .reveal(originalNode, { select: true, focus: true })
-                        .then(
-                            () => {
-                                // Successfully revealed
-                            },
-                            (revealErr) => {
-                                // If reveal fails, just log it - the rename was still successful
-                                ZoweLogger.warn(
-                                    `Could not reveal renamed node: ${revealErr instanceof Error ? revealErr.message : String(revealErr)}`
-                                );
-                            }
-                        );
+                    Promise.resolve(this.getTreeView().reveal(originalNode, { select: true, focus: true })).catch((revealErr) => {
+                        // If reveal fails, just log it - the rename was still successful
+                        ZoweLogger.warn(`Could not reveal renamed node: ${revealErr instanceof Error ? revealErr.message : String(revealErr)}`);
+                    });
                 });
                 Gui.showMessage(
                     vscode.l10n.t({

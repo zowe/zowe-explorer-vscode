@@ -1582,6 +1582,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         globalMocks.showInputBox.mockReturnValueOnce("newfile.txt");
 
         await globalMocks.testTree.rename(globalMocks.testUSSNode);
+        await new Promise((resolve) => setImmediate(resolve));
 
         expect(revealSpy).toHaveBeenCalledWith(globalMocks.testUSSNode, { select: true, focus: true });
         expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("renamed"));
@@ -1606,6 +1607,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         globalMocks.showInputBox.mockReturnValueOnce("newdir");
 
         await globalMocks.testTree.rename(testUSSDir);
+        await new Promise((resolve) => setImmediate(resolve));
 
         expect(revealSpy).toHaveBeenCalledWith(testUSSDir, { select: true, focus: true });
         expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("renamed"));
