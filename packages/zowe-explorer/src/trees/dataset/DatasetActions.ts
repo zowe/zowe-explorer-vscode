@@ -1005,11 +1005,21 @@ export class DatasetActions {
             async () => {
                 const datasetName = node.getLabel() as string;
 
-                // Extract the last part as filename when generating directories
-                let fileName = uppercaseNames ? datasetName : datasetName.toLowerCase();
+                let fileName: string;
+                let targetDirectory: string;
                 if (generateDirectory) {
-                    const pathParts = fileName.split(".");
-                    fileName = pathParts[pathParts.length - 1];
+                    const pathParts = datasetName.split(".");
+                    const lastSegment = pathParts[pathParts.length - 1];
+                    fileName = uppercaseNames ? lastSegment : lastSegment.toLowerCase();
+                    if (pathParts.length > 1) {
+                        const directoryDatasetName = pathParts.slice(0, -1).join(".");
+                        targetDirectory = DatasetActions.generateDirectoryPath(directoryDatasetName, selectedPath, true, uppercaseNames);
+                    } else {
+                        targetDirectory = selectedPath.fsPath;
+                    }
+                } else {
+                    fileName = uppercaseNames ? datasetName : datasetName.toLowerCase();
+                    targetDirectory = selectedPath.fsPath;
                 }
 
                 let extension: string;
@@ -1019,9 +1029,6 @@ export class DatasetActions {
                     extension = DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
                 }
 
-                const targetDirectory = generateDirectory
-                    ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
-                    : selectedPath.fsPath;
                 const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
 
                 const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";

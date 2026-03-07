@@ -6472,6 +6472,50 @@ describe("DatasetActions - downloading functions", () => {
             );
         });
 
+        it("should successfully download a sequential dataset with directory generation enabled", async () => {
+            const dsNode = new ZoweDatasetNode({
+                label: "TEST.DATASET.SEQ",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            const optionsWithDirectory = {
+                overwrite: true,
+                generateDirectory: true,
+                uppercaseNames: false,
+                chooseEncoding: false,
+                overrideExtension: false,
+                encoding: undefined,
+                selectedPath: vscode.Uri.file("/test/path"),
+            };
+            mockGetDataSetDownloadOptions.mock.mockResolvedValue(optionsWithDirectory);
+
+            dsNode.getLabel = jest.fn().mockReturnValue("TEST.DATASET.SEQ");
+            dsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            const getContentsSpy = jest.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue(undefined);
+            mockGetExtension.mock.mockReturnValue("txt");
+
+            await DatasetActions.downloadDataSet(dsNode);
+
+            expect(mockGetDataSetDownloadOptions.mock).toHaveBeenCalled();
+            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalledWith("Downloading data set", expect.any(Function), "Data set", dsNode);
+
+            const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
+            await downloadFn();
+            expect(getContentsSpy).toHaveBeenCalledWith(
+                "TEST.DATASET.SEQ",
+                expect.objectContaining({
+                    file: expect.stringMatching(/test[/\\]dataset[/\\]seq\.txt$/),
+                    binary: false,
+                    encoding: undefined,
+                    overwrite: true,
+                    responseTimeout: 30000,
+                })
+            );
+        });
+
         it("should reject PDS datasets", async () => {
             const pdsNode = new ZoweDatasetNode({
                 label: "TEST.PDS",
