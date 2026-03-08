@@ -80,6 +80,19 @@ export namespace MainframeInteraction {
          * @returns {string} the token type name as defined by a CLI plugin that implements the profile.
          */
         getTokenTypeName?(): string;
+
+        /**
+         * Change the password for a user on the remote system.
+         *
+         * Unlike "Update Credentials", which only updates the locally stored
+         * password, this operation contacts the server to change the password
+         * on the mainframe and then updates the local credential store.
+         *
+         * @param {imperative.Session} session The session containing the current (old) credentials.
+         * @param {string} newPassword The new password to set on the remote system.
+         * @returns {Promise<void>} Resolves when the password has been changed.
+         */
+        changePassword?(session: imperative.Session, newPassword: string): Promise<void>;
     }
 
     /**

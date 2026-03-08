@@ -56,6 +56,7 @@ export class ProfileManagement {
     }
     public static AuthQpLabels = {
         add: "add-credentials",
+        changePassword: "change-password",
         disable: "disable-validation",
         edit: "edit-profile",
         enable: "enable-validation",
@@ -75,6 +76,12 @@ export class ProfileManagement {
         [ProfileManagement.AuthQpLabels.update]: {
             label: `$(refresh) ${vscode.l10n.t("Update Credentials")}`,
             description: vscode.l10n.t("Update stored username and password"),
+        },
+    };
+    public static readonly changePasswordQpItems: Record<string, vscode.QuickPickItem> = {
+        [ProfileManagement.AuthQpLabels.changePassword]: {
+            label: `$(lock) ${vscode.l10n.t("Change Password")}`,
+            description: vscode.l10n.t("Change your password on the mainframe and update stored credentials"),
         },
     };
     public static readonly disableProfileValildationQpItem: Record<string, vscode.QuickPickItem> = {
@@ -175,6 +182,10 @@ export class ProfileManagement {
                 await ProfilesUtils.promptCredentials(node);
                 break;
             }
+            case this.changePasswordQpItems[this.AuthQpLabels.changePassword]: {
+                await ProfilesUtils.changePassword(node);
+                break;
+            }
             case this.hideProfileQpItems[this.AuthQpLabels.hide]: {
                 await this.handleHideProfiles(node);
                 break;
@@ -219,7 +230,16 @@ export class ProfileManagement {
     }
 
     private static basicAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
+        const profile = node.getProfile();
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthUpdateQpItems);
+        try {
+            const commonApi = ZoweExplorerApiRegister.getInstance().getCommonApi(profile);
+            if (typeof commonApi.changePassword === "function") {
+                quickPickOptions.push(this.changePasswordQpItems[this.AuthQpLabels.changePassword]);
+            }
+        } catch {
+            ZoweLogger.debug(`Profile ${profile.name} doesn't support change password, will not provide option.`);
+        }
         quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
         return this.addFinalQpOptions(node, quickPickOptions);
     }

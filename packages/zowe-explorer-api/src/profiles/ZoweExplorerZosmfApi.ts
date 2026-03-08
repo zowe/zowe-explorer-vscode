@@ -9,7 +9,7 @@
  *
  */
 
-import { Login, Logout } from "@zowe/core-for-zowe-sdk";
+import { Login, Logout, IChangePasswordParms } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
 import * as zosconsole from "@zowe/zos-console-for-zowe-sdk";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
@@ -107,6 +107,15 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
 
         public logout(session: imperative.Session): Promise<void> {
             return Logout.apimlLogout(session);
+        }
+
+        public async changePassword(session: imperative.Session, newPassword: string): Promise<void> {
+            const parms: IChangePasswordParms = { newPassword };
+            const response = await zosmf.ZosmfChangePassword.changePassword(session, parms);
+            if (!response.success) {
+                const msg = (response.data as { message?: string })?.message ?? "Password change failed";
+                throw new Error(msg);
+            }
         }
     }
 
