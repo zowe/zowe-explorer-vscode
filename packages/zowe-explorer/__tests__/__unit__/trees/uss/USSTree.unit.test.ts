@@ -1572,7 +1572,6 @@ describe("USSTree Unit Tests - Function rename", () => {
 
     it("Tests that USSTree.rename() restores focus and shows confirmation message for file", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
         const showMessageSpy = jest.spyOn(Gui, "showMessage");
         const revealSpy = jest.spyOn(globalMocks.testTree.getTreeView(), "reveal");
 
@@ -1590,7 +1589,6 @@ describe("USSTree Unit Tests - Function rename", () => {
 
     it("Tests that USSTree.rename() restores focus and shows confirmation message for directory", async () => {
         const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
         const showMessageSpy = jest.spyOn(Gui, "showMessage");
         const revealSpy = jest.spyOn(globalMocks.testTree.getTreeView(), "reveal");
 
