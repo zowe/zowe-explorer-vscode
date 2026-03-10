@@ -25,6 +25,7 @@ import {
     type AttributeInfo,
     DataSetAttributesProvider,
     ZosEncoding,
+    MessageSeverity,
     Poller,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
@@ -46,6 +47,7 @@ import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
+import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
 
 type ClipboardItem = {
     profileName: string;
@@ -74,7 +76,13 @@ export class DatasetActions {
     private static async handleUserSelection(): Promise<string> {
         // Create the array of items in the quickpick list
         const qpItems = [];
-        qpItems.push(new FilterItem({ text: `\u002B ${DatasetActions.localizedStrings.allocString}`, show: true }));
+        qpItems.push(
+            new FilterItem({
+                text: `\u002B ${DatasetActions.localizedStrings.allocString}`,
+                description: vscode.l10n.t("Create the data set using the current attributes"),
+                show: true,
+            })
+        );
         DatasetActions.newDSProperties?.forEach((prop) => {
             const propLabel = `\u270F ${prop.label as string}`;
             qpItems.push(new FilterItem({ text: propLabel, description: prop.value, show: true }));
@@ -82,10 +90,11 @@ export class DatasetActions {
 
         // Provide the settings for the quickpick's appearance & behavior
         const quickpick = Gui.createQuickPick();
-        quickpick.placeholder = vscode.l10n.t("Click on parameters to change them");
+        quickpick.title = vscode.l10n.t("Create Data Set: Edit Attributes");
+        quickpick.placeholder = vscode.l10n.t("Select an attribute to edit, or select Allocate Data Set to create the data set");
         quickpick.ignoreFocusOut = true;
         quickpick.items = [...qpItems];
-        quickpick.matchOnDescription = false;
+        quickpick.matchOnDescription = true;
         quickpick.onDidHide(() => {
             if (quickpick.selectedItems.length === 0) {
                 ZoweLogger.debug(DatasetActions.localizedStrings.opCancelled);
@@ -104,6 +113,12 @@ export class DatasetActions {
         const showPatternOptions = async (): Promise<void> => {
             const property = DatasetActions.newDSProperties?.find((prop) => pattern.includes(prop.label));
             const options: vscode.InputBoxOptions = {
+                title: vscode.l10n.t("Create Data Set: Update Attribute Value"),
+                prompt: vscode.l10n.t({
+                    message: "Enter a value for {0}, then press Enter to continue",
+                    args: [property?.label],
+                    comment: ["Attribute label"],
+                }),
                 value: property?.value,
                 placeHolder: property?.placeHolder,
             };
@@ -127,6 +142,8 @@ export class DatasetActions {
 
     private static async getDataSetName(): Promise<string> {
         const options: vscode.InputBoxOptions = {
+            title: vscode.l10n.t("Create Data Set: Name"),
+            prompt: vscode.l10n.t("Enter a data set name, then press Enter to continue"),
             placeHolder: vscode.l10n.t("Name of Data Set"),
             ignoreFocusOut: true,
             validateInput: (text) => {
@@ -143,6 +160,7 @@ export class DatasetActions {
 
     private static async getDsTypeForCreation(datasetProvider: Types.IZoweDatasetTreeType): Promise<string> {
         const stepTwoOptions: vscode.QuickPickOptions = {
+            title: vscode.l10n.t("Create Data Set: Type"),
             placeHolder: vscode.l10n.t("Template of Data Set to be Created"),
             ignoreFocusOut: true,
             canPickMany: false,
@@ -244,6 +262,8 @@ export class DatasetActions {
 
     private static async allocateOrEditAttributes(): Promise<string> {
         const stepThreeOptions: vscode.QuickPickOptions = {
+            title: vscode.l10n.t("Create Data Set: Review Attributes"),
+            placeHolder: vscode.l10n.t("Select Allocate Data Set to create now, or Edit Attributes to review values"),
             ignoreFocusOut: true,
             canPickMany: false,
         };
@@ -623,6 +643,410 @@ export class DatasetActions {
         } catch (e) {
             await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
         }
+    }
+
+    private static async getDataSetDownloadOptions(node: IZoweDatasetTreeNode): Promise<Definitions.DataSetDownloadOptions> {
+        const dataSetDownloadOptions: Definitions.DataSetDownloadOptions =
+            ZoweLocalStorage.getValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS) ?? {};
+
+        dataSetDownloadOptions.overwrite ??= true;
+        dataSetDownloadOptions.generateDirectory ??= true;
+        dataSetDownloadOptions.uppercaseNames ??= true;
+        dataSetDownloadOptions.chooseEncoding ??= false;
+        dataSetDownloadOptions.overrideExtension ??= false;
+        dataSetDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
+
+        const profile = node.getProfile();
+        const getEncodingDescription = (): string => {
+            if (dataSetDownloadOptions.encoding) {
+                if (dataSetDownloadOptions.encoding.kind === "binary") {
+                    return vscode.l10n.t("Choose encoding for download (current: Binary)");
+                } else if (dataSetDownloadOptions.encoding.kind === "text") {
+                    return vscode.l10n.t("Choose encoding for download (current: EBCDIC)");
+                } else if (dataSetDownloadOptions.encoding.kind === "other") {
+                    return vscode.l10n.t("Choose encoding for download (current: {0})", dataSetDownloadOptions.encoding.codepage);
+                }
+            }
+            if (profile.profile?.encoding) {
+                return vscode.l10n.t("Choose encoding for download (current: {0})", profile.profile.encoding);
+            }
+            return vscode.l10n.t("Choose encoding for download (current: EBCDIC)");
+        };
+
+        const getExtensionDescription = (): string => {
+            if (dataSetDownloadOptions.fileExtension) {
+                return vscode.l10n.t("Override file extension (current: {0})", dataSetDownloadOptions.fileExtension);
+            }
+            return vscode.l10n.t("Override file extension");
+        };
+
+        const optionItems: vscode.QuickPickItem[] = [
+            {
+                label: vscode.l10n.t("Overwrite"),
+                description: vscode.l10n.t("Overwrite existing files"),
+                picked: dataSetDownloadOptions.overwrite,
+            },
+            {
+                label: vscode.l10n.t("Generate Directory Structure"),
+                description: vscode.l10n.t("Generates sub-folders based on the data set name"),
+                picked: dataSetDownloadOptions.generateDirectory,
+            },
+            {
+                label: vscode.l10n.t("Use Uppercase Names"),
+                description: vscode.l10n.t("Downloads files and directories using uppercase names. When disabled, names are converted to lowercase"),
+                picked: dataSetDownloadOptions.uppercaseNames,
+            },
+            {
+                label: vscode.l10n.t("Override File Extension"),
+                description: getExtensionDescription(),
+                picked: dataSetDownloadOptions.overrideExtension,
+            },
+            {
+                label: vscode.l10n.t("Choose Encoding"),
+                description: getEncodingDescription(),
+                picked: dataSetDownloadOptions.chooseEncoding,
+            },
+        ];
+
+        const selectedOptions = await SharedUtils.showMultiSelectQuickPick(optionItems, {
+            title: vscode.l10n.t("Download Options"),
+            placeholder: vscode.l10n.t("Select download options"),
+        });
+
+        // Do this instead of checking for length because unchecking all options is a valid choice
+        if (selectedOptions === null) {
+            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+            return;
+        }
+
+        const getOption = (label: string): boolean => selectedOptions.some((opt) => opt.label === vscode.l10n.t(label));
+        dataSetDownloadOptions.overwrite = getOption("Overwrite");
+        dataSetDownloadOptions.generateDirectory = getOption("Generate Directory Structure");
+        dataSetDownloadOptions.uppercaseNames = getOption("Use Uppercase Names");
+        dataSetDownloadOptions.chooseEncoding = getOption("Choose Encoding");
+        dataSetDownloadOptions.overrideExtension = getOption("Override File Extension");
+
+        if (dataSetDownloadOptions.chooseEncoding) {
+            const encoding = await SharedUtils.promptForDownloadEncoding(profile, node.label as string);
+            if (encoding === undefined) {
+                Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                return;
+            }
+            dataSetDownloadOptions.encoding = encoding;
+        } else {
+            dataSetDownloadOptions.encoding = undefined;
+        }
+
+        if (dataSetDownloadOptions.overrideExtension) {
+            const extensionInput = await Gui.showInputBox({
+                placeHolder: vscode.l10n.t("Enter file extension (e.g. csv)"),
+                value: dataSetDownloadOptions.fileExtension || "",
+                ignoreFocusOut: true,
+                validateInput: (text: string) => {
+                    if (!text || text.trim().length === 0) {
+                        return vscode.l10n.t("File extension cannot be empty");
+                    }
+                    const ext = text.trim().startsWith(".") ? text.trim().slice(1) : text.trim();
+                    if (!/^[a-zA-Z0-9_-]+$/.test(ext)) {
+                        return vscode.l10n.t("File extension can only contain letters, numbers, hyphens, and underscores");
+                    }
+                    return null;
+                },
+            });
+            if (extensionInput === undefined) {
+                Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                return;
+            }
+            const normalizedExtension = extensionInput.trim().startsWith(".") ? extensionInput.trim().slice(1) : extensionInput.trim();
+            dataSetDownloadOptions.fileExtension = normalizedExtension;
+        }
+
+        const dialogOptions: vscode.OpenDialogOptions = {
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            openLabel: vscode.l10n.t("Select Download Location"),
+            defaultUri: dataSetDownloadOptions.selectedPath,
+        };
+
+        const downloadPath = await Gui.showOpenDialog(dialogOptions);
+        if (!downloadPath || downloadPath.length === 0) {
+            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+            return;
+        }
+
+        const selectedPath = downloadPath[0].fsPath;
+        dataSetDownloadOptions.selectedPath = vscode.Uri.file(selectedPath);
+        await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS, dataSetDownloadOptions);
+
+        return dataSetDownloadOptions;
+    }
+
+    private static generateDirectoryPath(datasetName: string, selectedPath: vscode.Uri, generateDirectory: boolean, uppercaseNames: boolean): string {
+        if (!generateDirectory) {
+            return selectedPath.fsPath;
+        }
+
+        const dirsFromDataset = zosfiles.ZosFilesUtils.getDirsFromDataSet(datasetName);
+        if (!dirsFromDataset) {
+            const fallbackDirs = datasetName.replace(/\./g, path.sep);
+            return uppercaseNames
+                ? path.join(selectedPath.fsPath, fallbackDirs.toUpperCase())
+                : path.join(selectedPath.fsPath, fallbackDirs.toLowerCase());
+        }
+        return uppercaseNames ? path.join(selectedPath.fsPath, dirsFromDataset.toUpperCase()) : path.join(selectedPath.fsPath, dirsFromDataset);
+    }
+
+    private static async executeDownloadWithProgress(
+        title: string,
+        downloadFn: (progress?: vscode.Progress<{ message?: string; increment?: number }>) => Promise<{ response?: any; downloadedPath?: string }>,
+        downloadType: string,
+        node: IZoweDatasetTreeNode
+    ): Promise<void> {
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title,
+                cancellable: false, // TODO: Add cancellation support at SDK level and then enable cancellation here as well
+            },
+            async (progress) => {
+                try {
+                    const { response, downloadedPath } = await downloadFn(progress);
+                    void SharedUtils.handleDownloadResponse(response, downloadType, downloadedPath);
+                } catch (e) {
+                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+                }
+            }
+        );
+    }
+
+    /**
+     * Downloads all the members of a PDS
+     */
+    public static async downloadAllMembers(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadDataset called.");
+
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+        if (!mvsApi.downloadAllMembers) {
+            Gui.errorMessage(
+                vscode.l10n.t("The downloadAllMembers API is not supported for this profile type. Please contact the extension developer.")
+            );
+            return;
+        }
+
+        const children = await node.getChildren();
+        if (!children || children.length === 0) {
+            Gui.showMessage(vscode.l10n.t("The selected data set has no members to download."));
+            return;
+        }
+
+        if (children.length > Constants.MIN_WARN_DOWNLOAD_FILES) {
+            const proceed = await Gui.showMessage(
+                vscode.l10n.t(
+                    "This data set has {0} members. Downloading a large number of files can take a long time. Do you want to continue?",
+                    children.length
+                ),
+                { severity: MessageSeverity.WARN, items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")], vsCodeOpts: { modal: true } }
+            );
+            if (proceed !== vscode.l10n.t("Yes")) {
+                return;
+            }
+        }
+
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions(node);
+        if (!dataSetDownloadOptions) {
+            return;
+        }
+        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath, overrideExtension, fileExtension } = dataSetDownloadOptions;
+
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading all members"),
+            async (progress) => {
+                let realPercentComplete = 0;
+                const realTotalEntries = children.length;
+                const task: imperative.ITaskWithStatus = {
+                    set percentComplete(value: number) {
+                        realPercentComplete = value;
+                        // eslint-disable-next-line no-magic-numbers
+                        Gui.reportProgress(progress, realTotalEntries, Math.floor((value * realTotalEntries) / 100), "");
+                    },
+                    get percentComplete(): number {
+                        return realPercentComplete;
+                    },
+                    statusMessage: "",
+                    stageName: 0, // TaskStage.IN_PROGRESS
+                };
+
+                const datasetName = node.label as string;
+                const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
+
+                const extensionMap = await DatasetUtils.getExtensionMap(
+                    node,
+                    uppercaseNames,
+                    overrideExtension && fileExtension ? fileExtension : undefined
+                );
+
+                const generatedFileDirectory = DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames);
+
+                const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
+                const downloadOptions: zosfiles.IDownloadOptions = {
+                    directory: generatedFileDirectory,
+                    maxConcurrentRequests,
+                    preserveOriginalLetterCase: uppercaseNames,
+                    extensionMap,
+                    binary: encoding?.kind === "binary",
+                    record: isRecordEncoding,
+                    encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
+                    overwrite,
+                    task,
+                    responseTimeout: profile?.profile?.responseTimeout,
+                };
+
+                const response = await mvsApi.downloadAllMembers(datasetName, downloadOptions);
+                return { response, downloadedPath: generatedFileDirectory };
+            },
+            vscode.l10n.t("Data set members"),
+            node
+        );
+    }
+
+    /**
+     * Downloads a member
+     */
+    public static async downloadMember(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadMember called.");
+
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions(node);
+        if (!dataSetDownloadOptions) {
+            return;
+        }
+        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath, overrideExtension, fileExtension } = dataSetDownloadOptions;
+
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading member"),
+            async () => {
+                const parent = node.getParent() as IZoweDatasetTreeNode;
+                const datasetName = parent.getLabel() as string;
+                const memberName = node.getLabel() as string;
+                const fullDatasetName = `${datasetName}(${memberName})`;
+
+                const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
+
+                const extensionMap = await DatasetUtils.getExtensionMap(
+                    parent,
+                    uppercaseNames,
+                    overrideExtension && fileExtension ? fileExtension : undefined
+                );
+                const extension = extensionMap[fileName] ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+
+                const targetDirectory = generateDirectory
+                    ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
+                    : selectedPath.fsPath;
+                const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+
+                const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
+                const downloadOptions = {
+                    file: filePath,
+                    binary: encoding?.kind === "binary",
+                    record: isRecordEncoding,
+                    encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
+                    overwrite,
+                    responseTimeout: profile?.profile?.responseTimeout,
+                };
+
+                const response = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
+                return { response, downloadedPath: filePath };
+            },
+            vscode.l10n.t("Data set member"),
+            node
+        );
+    }
+
+    /**
+     * Downloads a sequential data set
+     */
+    public static async downloadDataSet(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadDataSet called.");
+
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        if (SharedContext.isPds(node) || SharedContext.isVsam(node)) {
+            Gui.showMessage(vscode.l10n.t("Cannot download this type of data set."));
+            return;
+        }
+
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions(node);
+        if (!dataSetDownloadOptions) {
+            return;
+        }
+        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath, overrideExtension, fileExtension } = dataSetDownloadOptions;
+
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading data set"),
+            async () => {
+                const datasetName = node.getLabel() as string;
+
+                let fileName: string;
+                let targetDirectory: string;
+                if (generateDirectory) {
+                    const pathParts = datasetName.split(".");
+                    const lastSegment = pathParts[pathParts.length - 1];
+                    fileName = uppercaseNames ? lastSegment : lastSegment.toLowerCase();
+                    if (pathParts.length > 1) {
+                        const directoryDatasetName = pathParts.slice(0, -1).join(".");
+                        targetDirectory = DatasetActions.generateDirectoryPath(directoryDatasetName, selectedPath, true, uppercaseNames);
+                    } else {
+                        targetDirectory = selectedPath.fsPath;
+                    }
+                } else {
+                    fileName = uppercaseNames ? datasetName : datasetName.toLowerCase();
+                    targetDirectory = selectedPath.fsPath;
+                }
+
+                let extension: string;
+                if (overrideExtension && fileExtension) {
+                    extension = fileExtension;
+                } else {
+                    extension = DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+                }
+
+                const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+
+                const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
+                const downloadOptions = {
+                    file: filePath,
+                    binary: encoding?.kind === "binary",
+                    record: isRecordEncoding,
+                    encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
+                    overwrite,
+                    responseTimeout: profile?.profile?.responseTimeout,
+                };
+
+                const response = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(datasetName, downloadOptions);
+                return { response, downloadedPath: filePath };
+            },
+            vscode.l10n.t("Data set"),
+            node
+        );
     }
 
     /**
@@ -1030,7 +1454,7 @@ export class DatasetActions {
                 ["cdate", "Create Date", "The dataset creation date"],
                 ["dev", "Device Type", "The type of the device the dataset is stored on"],
                 ["dsntp", "Data Set Type", "LIBRARY, (LIBRARY,1), (LIBRARY,2), PDS, HFS, EXTREQ, EXTPREF, BASIC or LARGE"],
-                ["dsorg", "Data Set Organization", "The organization of the data set as PS, PO, or DA"],
+                ["dsorg", "Data Set Organization", "PS, PO, or DA"],
                 ["edate", "Expiration Date", "The dataset expiration date"],
                 ["extx", "Extensions", "The number of extensions the dataset has"],
                 ["lrecl", "Logical Record Length", "The length in bytes of each record"],

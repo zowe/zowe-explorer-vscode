@@ -497,9 +497,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
             await AuthUtils.retryRequest(metadata.profile, async () => {
+                const isRecordEncoding = dsEntry?.encoding?.kind === "other" && dsEntry?.encoding.codepage?.toLowerCase() === "record";
                 resp = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(metadata.dsName, {
                     binary: dsEntry?.encoding?.kind === "binary",
-                    encoding: dsEntry?.encoding?.kind === "other" ? dsEntry?.encoding.codepage : profileEncoding,
+                    record: isRecordEncoding,
+                    encoding: dsEntry?.encoding?.kind === "other" && !isRecordEncoding ? dsEntry?.encoding.codepage : profileEncoding,
                     responseTimeout: profile.profile?.responseTimeout,
                     returnEtag: true,
                     stream: bufBuilder,
@@ -604,7 +606,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         if (ds && ds.metadata?.profile == null) {
-            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
+            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("A profile does not exist for this file."));
         }
 
         // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
