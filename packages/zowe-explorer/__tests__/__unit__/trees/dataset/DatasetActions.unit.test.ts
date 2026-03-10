@@ -2634,7 +2634,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         jest.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockRejectedValue(testError);
         const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockResolvedValue();
 
-        await expect(DatasetActions.copyProcessor([clipboardItem], "ps", jest.fn())).resolves.not.toThrow();
+        await DatasetActions.copyProcessor([clipboardItem], "ps", jest.fn());
 
         expect(errorHandlingSpy).toHaveBeenCalledWith(
             testError,
