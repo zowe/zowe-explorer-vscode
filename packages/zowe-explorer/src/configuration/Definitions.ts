@@ -39,6 +39,41 @@ export namespace Definitions {
         caseSensitive?: boolean;
         regex?: boolean;
     };
+    export type DataSetDownloadOptions = {
+        overwrite?: boolean;
+        generateDirectory?: boolean;
+        uppercaseNames?: boolean;
+        chooseEncoding?: boolean;
+        encoding?: ZosEncoding;
+        selectedPath?: vscode.Uri;
+        overrideExtension?: boolean;
+        fileExtension?: string;
+    };
+    export type UssDownloadOptions = {
+        overwrite?: boolean;
+        generateDirectory?: boolean;
+        chooseEncoding?: boolean;
+        encoding?: ZosEncoding | null;
+        selectedPath?: vscode.Uri;
+        dirOptions?: UssDirOptions;
+        dirFilterOptions?: UssDirFilterOptions;
+    };
+    export type UssDirOptions = {
+        followSymlinks?: boolean;
+        chooseFilterOptions?: boolean;
+        directoryEncoding?: ZosEncoding;
+    };
+    export type UssDirFilterOptions = {
+        group?: number | string;
+        user?: number | string;
+        mtime?: number | string;
+        size?: number | string;
+        perm?: string;
+        type?: string;
+        depth?: number;
+        filesys?: boolean;
+        includeHidden?: boolean;
+    };
     export type FavoriteData = {
         profileName: string;
         label: string;
@@ -162,5 +197,7 @@ export namespace Definitions {
         V3_MIGRATION_STATUS = "zowe.v3MigrationStatus",
         DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
+        DS_DOWNLOAD_OPTIONS = "zowe.dsDownloadOptions",
+        USS_DOWNLOAD_OPTIONS = "zowe.ussDownloadOptions",
     }
 }
