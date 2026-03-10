@@ -2409,10 +2409,9 @@ export class DatasetActions {
                 }
             } catch (error) {
                 if (error instanceof Error) {
-                    const nodelabels = await DatasetUtils.getNodeLabels(node);
                     await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
-                        dsName: nodelabels[0].dataSetName,
+                        dsName: node.dataSetName,
                         scenario: vscode.l10n.t("Unable to copy data set."),
                     });
                 }
