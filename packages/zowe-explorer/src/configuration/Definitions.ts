@@ -184,12 +184,17 @@ export namespace Definitions {
         None,
         JustMigrated,
     }
+    export enum V3MigrationStatus {
+        None,
+        JustMigrated,
+    }
     export enum LocalStorageKey {
         CLI_LOGGER_SETTING_PRESENTED = "zowe.cliLoggerSetting.presented",
         ENCODING_HISTORY = "zowe.encodingHistory",
         SETTINGS_LOCAL_STORAGE_MIGRATED = "zowe.settings.localStorageMigrated",
         SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated",
         V1_MIGRATION_STATUS = "zowe.v1MigrationStatus",
+        V3_MIGRATION_STATUS = "zowe.v3MigrationStatus",
         DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
         DS_DOWNLOAD_OPTIONS = "zowe.dsDownloadOptions",
