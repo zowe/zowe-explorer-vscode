@@ -561,7 +561,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 1 item(s) were deleted:\n ` +
-                `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
+            `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
         );
         expect(blockMocks.fixMultiSelectMock).toHaveBeenCalledWith(blockMocks.testDatasetTree, blockMocks.testMemberNode.getParent());
     });
@@ -611,7 +611,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 2 item(s) were deleted:\n ` +
-                `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testVsamNode.getLabel().toString()}`
+            `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testVsamNode.getLabel().toString()}`
         );
     });
 
@@ -644,7 +644,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
             `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
-                `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}`,
+            `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
     });
@@ -662,7 +662,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
             `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
-                `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}(${blockMocks.testFavMemberNode.getLabel().toString()})`,
+            `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}(${blockMocks.testFavMemberNode.getLabel().toString()})`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
     });
@@ -694,7 +694,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 2 item(s) were deleted:\n ` +
-                `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testFavoritedNode.getLabel().toString()}`
+            `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testFavoritedNode.getLabel().toString()}`
         );
     });
 
@@ -721,7 +721,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree, blockMocks.testMemberNode);
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 1 item(s) were deleted:\n ` +
-                `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
+            `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
         );
     });
 
@@ -2610,6 +2610,43 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         spyListDs.mockReset().mockClear();
     });
 
+    it("Testing copyProcessor() handles error from allocateLikeDataSet without crashing (test for extenders that don't support allocateLikeDataSet)", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        blockMocks.profileInstance.allProfiles = [blockMocks.imperativeProfile];
+        blockMocks.profileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
+
+        const clipboardItem = {
+            dataSetName: "HLQ.TEST.BEFORE.NODE",
+            profileName: blockMocks.imperativeProfile.name,
+            contextValue: Constants.DS_DS_CONTEXT,
+        };
+
+        mocked(vscode.window.showInputBox).mockResolvedValue("HLQ.TEST.NEW.DS");
+        jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: { items: [] },
+        });
+
+        const testError = new Error("Allocate like data set is not supported.");
+        jest.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockRejectedValue(testError);
+        const errorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockResolvedValue();
+
+        await expect(DatasetActions.copyProcessor([clipboardItem], "ps", jest.fn())).resolves.not.toThrow();
+
+        expect(errorHandlingSpy).toHaveBeenCalledWith(
+            testError,
+            expect.objectContaining({
+                apiType: ZoweExplorerApiType.Mvs,
+                dsName: "HLQ.TEST.BEFORE.NODE",
+            })
+        );
+
+        errorHandlingSpy.mockRestore();
+    });
+
     it("Testing pasteDataSet() fails and gives error with empty clipboard", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -3823,9 +3860,9 @@ describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
         createBlockMocks();
         jest.spyOn(vscode.workspace, "getConfiguration").mockImplementation(
             () =>
-                ({
-                    get: () => Constants.JOB_SUBMIT_DIALOG_OPTS[1],
-                } as any)
+            ({
+                get: () => Constants.JOB_SUBMIT_DIALOG_OPTS[1],
+            } as any)
         );
         jest.spyOn(Gui, "warningMessage").mockResolvedValue({
             title: "Submit",
