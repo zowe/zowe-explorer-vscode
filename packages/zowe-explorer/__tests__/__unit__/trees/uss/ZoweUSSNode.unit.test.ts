@@ -35,6 +35,7 @@ import { USSUtils } from "../../../../src/trees/uss/USSUtils";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 jest.mock("fs");
 
@@ -1548,20 +1549,25 @@ describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
     it("fetches the attributes for a file from host", async () => {
         const globalMocks = createGlobalMocks();
         const fileEntry = new UssFile("testFile");
+        fileEntry.type = vscode.FileType.File;
         fileEntry.attributes = attrs1;
-        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
-        const node = new ZoweUSSNode({
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValue(fileEntry);
+
+        const uss_node = new ZoweUSSNode({
             label: "testFile",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentPath: "/",
             profile: globalMocks.profileOne,
         });
-        jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+
+        jest.spyOn(uss_node as any, "getUssFiles").mockResolvedValueOnce({
             success: true,
             apiResponse: { items: fileAttrs },
             commandResponse: "",
         });
-        jest.spyOn(node, "setAttributes").mockImplementation();
-        expect(await node.fetchAttributes()).toStrictEqual(attrs2);
+
+        jest.spyOn(uss_node, "setAttributes").mockImplementation();
+        expect(await uss_node.fetchAttributes()).toStrictEqual(attrs2);
         lookupMock.mockRestore();
     });
     it("returns undefined if no entry is found", async () => {
@@ -1711,5 +1717,134 @@ describe("ZoweUSSNode Unit Tests - Function getUssFiles", () => {
         expect(warnLoggerSpy).toHaveBeenCalledTimes(1);
         expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweUSSNode.getUssFiles] Session undefined for profile sestest");
         ussApiMock.mockRestore();
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function getUssFiles() with showHidden setting", () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    function createBlockMocks(globalMocks) {
+        const newMocks = {
+            rootNode: new ZoweUSSNode({
+                label: "/u/user",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session: globalMocks.session,
+                profile: globalMocks.profileOne,
+                parentPath: "/u",
+            }),
+            mockListFiles: jest.fn(),
+            mockFilterHiddenFiles: jest.fn(),
+        };
+
+        return newMocks;
+    }
+
+    it("should filter hidden files when ShowHiddenFiles.disabled is true", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+
+        const mockResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { name: "visibleFile.txt", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: ".hiddenDir", mode: "drwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: ".hiddenFile", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: "anotherFile.js", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                ],
+            },
+        };
+
+        const filteredResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { name: "visibleFile.txt", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: "anotherFile.js", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                ],
+            },
+        };
+
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce(mockResponse);
+        const filterHiddenFilesSpy = jest.spyOn(USSUtils, "filterHiddenFiles").mockResolvedValue(filteredResponse);
+
+        blockMocks.rootNode.dirty = true;
+        await blockMocks.rootNode.getChildren();
+
+        expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.files.showHiddenFiles");
+        expect(filterHiddenFilesSpy).not.toHaveBeenCalled();
+
+        getDirectValueSpy.mockRestore();
+        filterHiddenFilesSpy.mockRestore();
+    });
+
+    it("should not filter hidden files when ShowHiddenFiles.disabled is false", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+
+        const mockResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { name: "visibleFile.txt", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: ".hiddenFile", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: "anotherFile.js", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: ".hiddenDir", mode: "drwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                ],
+            },
+        };
+
+        const filteredResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { name: "visibleFile.txt", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: "anotherFile.js", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                ],
+            },
+        };
+
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce(mockResponse);
+        const filterHiddenFilesSpy = jest.spyOn(USSUtils, "filterHiddenFiles").mockResolvedValueOnce(filteredResponse);
+
+        blockMocks.rootNode.dirty = true;
+        const children = await blockMocks.rootNode.getChildren();
+
+        expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.files.showHiddenFiles");
+        expect(filterHiddenFilesSpy).toHaveBeenCalled();
+        expect(children.length).toBe(2);
+        expect(children[0].label).toBe("anotherFile.js");
+        expect(children[1].label).toBe("visibleFile.txt");
+
+        getDirectValueSpy.mockRestore();
+        filterHiddenFilesSpy.mockRestore();
+    });
+
+    it("should handle error when getUssFiles fails with showHidden setting", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockRejectedValue(new Error("Connection failed"));
+
+        blockMocks.rootNode.dirty = true;
+        const children = await blockMocks.rootNode.getChildren();
+
+        expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.files.showHiddenFiles");
+        expect(children.length).toBe(0);
+        expect(globalMocks.showErrorMessage).toHaveBeenCalled();
+
+        getDirectValueSpy.mockRestore();
     });
 });
