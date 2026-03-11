@@ -48,6 +48,14 @@
     ]
   },
   "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
+  "{0} renamed from {1} to {2}/Node typeOld nameNew name": {
+    "message": "{0} renamed from {1} to {2}",
+    "comment": [
+      "Node type",
+      "Old name",
+      "New name"
+    ]
+  },
   "{0} was created like {1}./New Data Set nameLike Data Set name": {
     "message": "{0} was created like {1}.",
     "comment": [
@@ -154,6 +162,7 @@
   "Added a new Poll For Job Completion button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting Zowe > Jobs: Poll Interval. <a>#3967</a>": "Added a new Poll For Job Completion button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting Zowe > Jobs: Poll Interval. <a>#3967</a>",
   "Added a new setting Secure Credentials Enabled, default value is selected for security and will have to be unselected to allow creation of team configuration files without default secure arrays to support environments that don't have access to Zowe CLI's Secure Credential Management.": "Added a new setting Secure Credentials Enabled, default value is selected for security and will have to be unselected to allow creation of team configuration files without default secure arrays to support environments that don't have access to Zowe CLI's Secure Credential Management.",
   "Added a new setting zowe.files.logsFolder.path that can be used to override Zowe Explorer logs folder if default location is read-only. <a>#2186</a>": "Added a new setting zowe.files.logsFolder.path that can be used to override Zowe Explorer logs folder if default location is read-only. <a>#2186</a>",
+  "Added a new VS Code toggle setting that allows users to show or hide hidden files in the Unix System Service (USS) tree view.<a>#3912</a>": "Added a new VS Code toggle setting that allows users to show or hide hidden files in the Unix System Service (USS) tree view.<a>#3912</a>",
   "Added a new Zowe Explorer setting, zowe.logger, with a default setting of INFO.": "Added a new Zowe Explorer setting, zowe.logger, with a default setting of INFO.",
   "Added a prompt to create a new Zowe client configuration for an environment that does not have any Zowe client configurations. <a>#3148</a>": "Added a prompt to create a new Zowe client configuration for an environment that does not have any Zowe client configurations. <a>#3148</a>",
   "Added a Release Notes page which opens when VS Code is launched or from the command palette Display Release Notes. The zowe.settings.displayReleaseNotes setting can be changed to set when the release notes display. <a>#3621</a>": "Added a Release Notes page which opens when VS Code is launched or from the command palette Display Release Notes. The zowe.settings.displayReleaseNotes setting can be changed to set when the release notes display. <a>#3621</a>",
@@ -496,6 +505,13 @@
   "Data Set Name": "Data Set Name",
   "Data Set Organization": "Data Set Organization",
   "Data set pattern cannot be empty": "Data set pattern cannot be empty",
+  "Data set renamed from {0} to {1}/Old data set nameNew data set name": {
+    "message": "Data set renamed from {0} to {1}",
+    "comment": [
+      "Old data set name",
+      "New data set name"
+    ]
+  },
   "Data set searches now support case sensitivity and regular expressions. Enable these options in the Search PDS members Quick Pick dialog.": "Data set searches now support case sensitivity and regular expressions. Enable these options in the Search PDS members Quick Pick dialog.",
   "Data Set Template Save Location": "Data Set Template Save Location",
   "Data set tree pagination": "Data set tree pagination",
@@ -946,6 +962,7 @@
   "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>": "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>",
   "Fixed an accessibility issue in the \"Add Profile\" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference \"Create a New Team Configuration File\" and \"Edit Team Configuration File\" to guide keyboard and screen reader users. <a>#4028</a>": "Fixed an accessibility issue in the \"Add Profile\" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference \"Create a New Team Configuration File\" and \"Edit Team Configuration File\" to guide keyboard and screen reader users. <a>#4028</a>",
   "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>": "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>",
+  "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>": "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>",
   "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>": "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>",
   "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>": "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>",
   "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>": "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>",
@@ -1439,6 +1456,13 @@
     ]
   },
   "Member Name": "Member Name",
+  "Member renamed from {0} to {1}/Old member nameNew member name": {
+    "message": "Member renamed from {0} to {1}",
+    "comment": [
+      "Old member name",
+      "New member name"
+    ]
+  },
   "Migrate from Yarn to PNPM.": "Migrate from Yarn to PNPM.",
   "Migrate package manager from Yarn to PNPM. <a>#2424</a>": "Migrate package manager from Yarn to PNPM. <a>#2424</a>",
   "Migrated": "Migrated",
