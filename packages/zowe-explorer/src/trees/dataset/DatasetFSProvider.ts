@@ -177,7 +177,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const pdsEntry = await this.executeWithReuse<DirEntry>(parentUri, {
                 keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
                 checkLocal: () => !!this._lookupAsDirectory(parentUri, true),
-                execute: () => this.readDirectoryImplementation(parentUri),
+                execute: () => this.readDirectoryImplementation(parentUri, false),
                 action: "readDirectory",
             });
 
@@ -302,9 +302,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 tempEntry = new DsEntry(fullMemberName, true);
                 tempEntry.metadata = new DsEntryMetadata({ ...entry.metadata, path: path.posix.join(entry.metadata.path, fullMemberName) });
             }
-            const { m4date, mtime, msec } = ds;
-            const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
-            tempEntry.mtime = newTime;
+
+            if (ds.m4date && ds.mtime) {
+                const newTime = dayjs(`${ds.m4date} ${ds.mtime}:${ds.msec || "00"}`).valueOf();
+                tempEntry.mtime = newTime || tempEntry.mtime;
+            }
+
             entry.entries.set(fullMemberName, tempEntry);
         }
     }
@@ -437,10 +440,17 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
     }
 
-    public async readDirectoryImplementation(uri: vscode.Uri): Promise<DirEntry> {
+    //TODO: forceRemote is required to differentiate between stat calls on PDS members and readDirectory calls on a PDS.
+    //TODO: if they are not differentiated, PDS member calls will also always fetch.
+    //TODO: this will be removed when readDirectory caching is implemented
+    public async readDirectoryImplementation(uri: vscode.Uri, forceRemote: boolean = false): Promise<DirEntry> {
         let dsEntry: DirEntry | DsEntry = null;
-        const query = new URLSearchParams(uri.query);
-        const shouldFetch = query.get("fetch") === "true" || query.has("pattern");
+
+        const queryParams = new URLSearchParams(uri.query);
+        const isExplicitFetch = queryParams.get("fetch") === "true";
+
+        // Fetch if the URI explicitly asks for it, OR if the caller forces it
+        const shouldFetch = forceRemote || isExplicitFetch;
 
         try {
             dsEntry = shouldFetch ? await this.remoteLookupForResource(uri) : this._lookupAsDirectory(uri, false);
@@ -448,7 +458,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             if (!(err instanceof vscode.FileSystemError)) {
                 throw err;
             }
-
+            // If the local lookup fails (e.g. it wasn't cached yet), fallback to network
             if (err.code === "FileNotFound" && !shouldFetch) {
                 dsEntry = await this.remoteLookupForResource(uri);
             }
@@ -471,8 +481,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         const dirEntry = await this.executeWithReuse<DirEntry>(uri, {
             keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
-            checkLocal: () => !!this._lookupAsDirectory(uri, true),
-            execute: () => this.readDirectoryImplementation(uri),
+            checkLocal: () => false,
+            execute: () => this.readDirectoryImplementation(uri, true),
             action: "readDirectory",
         });
 

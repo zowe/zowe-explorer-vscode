@@ -298,7 +298,27 @@ describe("DatasetFSProvider", () => {
                 expect(result1).toStrictEqual(result2);
             });
 
-            it("should NOT coalesce with explicit fetch when local entry exists (checkLocal returns true)", async () => {
+            //TODO: Replace below test once readDirectory caching is implemented
+            // it("should NOT coalesce with explicit fetch when local entry exists (checkLocal returns true)", async () => {
+            //     const testUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
+            //     const fetchUri = testUri.with({ query: "fetch=true" });
+
+            //     // Simulate local entry exists
+            //     jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue({
+            //         type: FileType.Directory,
+            //         entries: new Map(),
+            //     });
+
+            //     const call1 = DatasetFSProvider.instance.readDirectory(testUri);
+            //     const call2 = DatasetFSProvider.instance.readDirectory(fetchUri);
+
+            //     await Promise.all([call1, call2]);
+
+            //     expect(readDirImplSpy).toHaveBeenCalledTimes(2);
+            // });
+
+            //TODO: Replace with above test once readDirectory caching is implemented
+            it("should coalesce with explicit fetch because readDirectory always bypasses the local cache", async () => {
                 const testUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
                 const fetchUri = testUri.with({ query: "fetch=true" });
 
@@ -313,7 +333,8 @@ describe("DatasetFSProvider", () => {
 
                 await Promise.all([call1, call2]);
 
-                expect(readDirImplSpy).toHaveBeenCalledTimes(2);
+                // Expect 1 call: Since readDirectory forces network, it perfectly pools with a fetch=true request
+                expect(readDirImplSpy).toHaveBeenCalledTimes(1);
             });
         });
     });
@@ -2035,7 +2056,33 @@ describe("DatasetFSProvider", () => {
                 });
             });
 
-            it("should reuse the promise from readDirectory when a member stat is requested simultaneously", async () => {
+            //TODO: Replace below test once readDirectory caching implemented
+            // it("should reuse the promise from readDirectory when a member stat is requested simultaneously", async () => {
+            //     const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
+            //     const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS/MEMBER1" });
+
+            //     const mockPdsEntry = {
+            //         type: FileType.Directory,
+            //         entries: new Map([["MEMBER1", { type: FileType.File, size: 123 }]]),
+            //     } as unknown as DirEntry;
+
+            //     const readDirImplSpy = jest.spyOn(DatasetFSProvider.instance as any, "readDirectoryImplementation").mockImplementation(async () => {
+            //         await new Promise((resolve) => setTimeout(resolve, 50)); // Simulate async delay
+            //         return mockPdsEntry;
+            //     });
+
+            //     const readDirPromise = DatasetFSProvider.instance.readDirectory(pdsUri);
+            //     const statPromise = DatasetFSProvider.instance.stat(memberUri);
+
+            //     const [dirResult, statResult] = await Promise.all([readDirPromise, statPromise]);
+
+            //     expect(readDirImplSpy).toHaveBeenCalledTimes(2);
+            //     expect(dirResult).toContainEqual(["MEMBER1", FileType.File]);
+            //     expect(statResult.size).toBe(123);
+            // });
+
+            //TODO: Replace with above test once readDirectory caching implemented
+            it("should not coalesce readDirectory and stat requests when a local entry exists because readDirectory bypasses the cache", async () => {
                 const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
                 const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS/MEMBER1" });
 
@@ -2054,7 +2101,7 @@ describe("DatasetFSProvider", () => {
 
                 const [dirResult, statResult] = await Promise.all([readDirPromise, statPromise]);
 
-                expect(readDirImplSpy).toHaveBeenCalledTimes(1);
+                expect(readDirImplSpy).toHaveBeenCalledTimes(2);
                 expect(dirResult).toContainEqual(["MEMBER1", FileType.File]);
                 expect(statResult.size).toBe(123);
             });
