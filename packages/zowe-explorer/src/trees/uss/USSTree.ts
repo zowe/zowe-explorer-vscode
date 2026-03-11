@@ -340,6 +340,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             ignoreFocusOut: true,
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
+        const oldName = originalNode.label.toString().replace(/^\[.+\]:\s/, "");
         const newName = await Gui.showInputBox(options);
         if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
@@ -388,7 +389,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 this.updateFavorites();
 
                 // Restore focus to the renamed node and show confirmation message
-                const oldName = path.basename(parentPath + originalNode.label.toString().replace(/^\[.+\]:\s/, ""));
                 // Use setImmediate to allow tree to refresh before revealing
                 setImmediate(() => {
                     Promise.resolve(this.getTreeView().reveal(originalNode, { select: true, focus: true })).catch((revealErr) => {
