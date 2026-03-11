@@ -196,8 +196,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const loadedProfile = Profiles.getInstance().loadNamedProfile(profile.name);
 
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
-        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
 
         let response: IZosFilesResponse;
 
@@ -222,6 +221,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
         const entryExists = this.exists(uri);
         const apiRegister = ZoweExplorerApiRegister.getInstance();
+
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
             apiName: vscode.l10n.t("Common API"),
             registeredTypes: apiRegister.registeredApiTypes(),
@@ -301,6 +302,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<UssDirectory | UssFile> {
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: uriInfo.profileName });
 
@@ -464,10 +466,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         });
     }
 
+    /**
+     * Attempts to fetches the encoding for a file at the given URI.
+     * @param uri The URI pointing to a valid file on the remote system
+     * @returns The file's encoding
+     */
     public async fetchEncodingForUri(uri: vscode.Uri): Promise<ZosEncoding> {
         const file = this._lookupAsFile(uri) as UssFile;
         await this.autoDetectEncoding(file);
-
         return file.encoding;
     }
 
@@ -481,8 +487,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
         // If the extenderProfileReady map does not contain the profile, create a deferred promise for the profile.
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
-        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         try {
             file = this._lookupAsFile(uri) as UssFile;
         } catch (err) {
@@ -507,7 +512,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profInfo = this._getInfoFromUri(uri);
 
         if (profInfo.profile == null) {
-            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
+            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("A profile does not exist for this file."));
         }
 
         const urlQuery = new URLSearchParams(uri.query);
@@ -716,13 +721,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         Gui.errorMessage(err.message);
                         return;
                     }
-                } catch (err) {
-                    if (err.name === "Error" && Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
+                } catch (listError) {
+                    if (listError.name === "Error" && Number(listError.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
                         const parent = this.lookupParentDirectory(newUri);
                         parent.entries.delete(path.posix.basename(newUri.path));
                         await ZoweExplorerApiRegister.getUssApi(profile).rename(entry.metadata.path, newPath);
                     } else {
-                        throw err;
+                        throw listError;
                     }
                 }
             } else {

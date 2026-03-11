@@ -89,6 +89,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
 
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
 
         const apiRegister = ZoweExplorerApiRegister.getInstance();
@@ -275,6 +276,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let pdsMember: boolean;
         let uriPath: string[];
 
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const apiRegister = ZoweExplorerApiRegister.getInstance();
         const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
             apiName: vscode.l10n.t("Common API"),
@@ -368,6 +370,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<DirEntry | DsEntry> {
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: uriInfo.profileName });
         // Ensure that an entry exists for the given profile
@@ -492,10 +495,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             let resp;
 
+            await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
             await AuthUtils.retryRequest(metadata.profile, async () => {
+                const isRecordEncoding = dsEntry?.encoding?.kind === "other" && dsEntry?.encoding.codepage?.toLowerCase() === "record";
                 resp = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(metadata.dsName, {
                     binary: dsEntry?.encoding?.kind === "binary",
-                    encoding: dsEntry?.encoding?.kind === "other" ? dsEntry?.encoding.codepage : profileEncoding,
+                    record: isRecordEncoding,
+                    encoding: dsEntry?.encoding?.kind === "other" && !isRecordEncoding ? dsEntry?.encoding.codepage : profileEncoding,
                     responseTimeout: profile.profile?.responseTimeout,
                     returnEtag: true,
                     stream: bufBuilder,
@@ -560,8 +566,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
         // If the extenderProfileReady map does not contain the profile, create a deferred promise for the profile.
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
         const apiRegister = ZoweExplorerApiRegister.getInstance();
         const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
@@ -600,7 +606,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         if (ds && ds.metadata?.profile == null) {
-            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
+            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("A profile does not exist for this file."));
         }
 
         // we need to fetch the contents from the mainframe if the file hasn't been accessed yet
@@ -644,6 +650,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         forceUpload?: boolean,
         encoding?: string
     ): Promise<IZosFilesResponse> {
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         // /DATA.SET/MEMBER
         const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");

@@ -40,6 +40,7 @@ import { USSFileStructure } from "./USSFileStructure";
 import { UssFSProvider } from "./UssFSProvider";
 import { AuthUtils } from "../../utils/AuthUtils";
 import type { Definitions } from "../../configuration/Definitions";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -119,6 +120,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
                 this.tooltip = toolTipList.join("\n");
             } else if (this.contextValue === Constants.INFORMATION_CONTEXT) {
+                this.tooltip = this.label as string;
                 this.command = { command: "zowe.placeholderCommand", title: "Placeholder" };
             } else if (this.collapsibleState === vscode.TreeItemCollapsibleState.None) {
                 this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
@@ -209,7 +211,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         ZoweLogger.trace(`ZoweUSSNode.getChildren called for ${this.label as string}.`);
         if ((!this.fullPath && SharedContext.isSession(this)) || SharedContext.isDocument(this)) {
             const placeholder = new ZoweUSSNode({
-                label: vscode.l10n.t("Use the search button to list USS files"),
+                label: vscode.l10n.t("Use the Search button to list USS files"),
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
                 contextOverride: Constants.INFORMATION_CONTEXT,
@@ -695,13 +697,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     }
 
     private async getUssFiles(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse> {
+        let response_list: zosfiles.IZosFilesResponse;
+        const showHidden = SettingsConfig.getDirectValue<boolean>("zowe.files.showHiddenFiles");
         try {
             if (!ZoweExplorerApiRegister.getUssApi(profile).getSession(profile)) {
                 ZoweLogger.warn(`[ZoweUSSNode.getUssFiles] Session undefined for profile ${profile.name}`);
                 return { success: false, commandResponse: "Session is not defined for profile" };
             }
             if (SharedContext.isSession(this)) {
-                return await UssFSProvider.instance.listFiles(
+                response_list = await UssFSProvider.instance.listFiles(
                     profile,
                     SharedContext.isFavorite(this)
                         ? this.resourceUri
@@ -710,8 +714,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                           })
                 );
             } else {
-                return await UssFSProvider.instance.listFiles(profile, this.resourceUri);
+                response_list = await UssFSProvider.instance.listFiles(profile, this.resourceUri);
             }
+            return showHidden ? response_list : await USSUtils.filterHiddenFiles(response_list);
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {
                 apiType: ZoweExplorerApiType.Uss,

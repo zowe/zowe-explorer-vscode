@@ -405,4 +405,73 @@ describe("ReleaseNotes Webview", () => {
             expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Error parsing changelog for versions: Error: File not found"));
         });
     });
+
+    describe("Localization", () => {
+        let originalL10n: any;
+
+        beforeEach(() => {
+            originalL10n = vscode.l10n;
+        });
+
+        afterEach(() => {
+            if (originalL10n !== undefined) {
+                Object.defineProperty(vscode, "l10n", { value: originalL10n, configurable: true, writable: true });
+            }
+        });
+
+        it("should send localization content when command is GET_LOCALIZATION", async () => {
+            const rn = new ReleaseNotes(context, "3.2");
+            (rn as any).panel = panelMock;
+            const l10nPath = "zowe-explorer/l10n/bundle.l10n.json";
+
+            Object.defineProperty(vscode, "l10n", {
+                value: { uri: { fsPath: l10nPath }, t: (s: string) => s, bundle: undefined },
+                configurable: true,
+                writable: true,
+            });
+
+            const l10nContent = JSON.stringify({ test: "content" });
+            (fs.readFile as jest.Mock).mockResolvedValueOnce(l10nContent);
+
+            await rn.onDidReceiveMessage({ command: "GET_LOCALIZATION" });
+
+            expect(fs.readFile).toHaveBeenCalledWith(l10nPath, { encoding: "utf8" });
+            expect(postMessageMock).toHaveBeenCalledWith({
+                command: "GET_LOCALIZATION",
+                contents: l10nContent,
+            });
+        });
+
+        it("should log warning if reading localization file fails", async () => {
+            const rn = new ReleaseNotes(context, "3.2");
+            const l10nPath = "zowe-explorer/l10n/bundle.l10n.json";
+
+            Object.defineProperty(vscode, "l10n", {
+                value: { uri: { fsPath: l10nPath }, t: (s: string) => s, bundle: undefined },
+                configurable: true,
+                writable: true,
+            });
+
+            (fs.readFile as jest.Mock).mockRejectedValueOnce(new Error("Read failed"));
+            const loggerSpy = jest.spyOn(ZoweLogger, "warn").mockImplementation(() => {});
+
+            await rn.onDidReceiveMessage({ command: "GET_LOCALIZATION" });
+
+            expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Could not load localization file"));
+        });
+
+        it("should do nothing if l10n.uri is undefined", async () => {
+            const rn = new ReleaseNotes(context, "3.2");
+
+            Object.defineProperty(vscode, "l10n", {
+                value: { uri: undefined, t: (s: string) => s, bundle: undefined },
+                configurable: true,
+                writable: true,
+            });
+
+            await rn.onDidReceiveMessage({ command: "GET_LOCALIZATION" });
+
+            expect(postMessageMock).not.toHaveBeenCalled();
+        });
+    });
 });
