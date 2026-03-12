@@ -84,6 +84,7 @@ export class Constants {
     public static readonly SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS = "zowe.security.checkForCustomCredentialManagers";
     public static readonly SETTINGS_DATASETS_PER_PAGE = "zowe.ds.paginate.dataSetsPerPage";
     public static readonly SETTINGS_DISPLAY_RELEASE_NOTES = "zowe.settings.displayReleaseNotes";
+    public static readonly SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS = "zowe.settings.zosmfMaxConcurrentRequests";
     public static readonly LOGGER_SETTINGS = "zowe.logger";
     public static readonly SETTINGS_OVERRIDE_WITH_ENV_VAR = "zowe.settings.overrideWithEnvironmentVariables";
     public static EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];

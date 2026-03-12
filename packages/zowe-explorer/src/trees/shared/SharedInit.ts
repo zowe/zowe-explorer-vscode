@@ -55,6 +55,7 @@ import { ZoweUriHandler } from "../../utils/UriHandler";
 import { TroubleshootError } from "../../utils/TroubleshootError";
 import { ReleaseNotes } from "../../utils/ReleaseNotes";
 import { JobFSProvider } from "../job/JobFSProvider";
+import { ZosmfRestClient } from "@zowe/core-for-zowe-sdk";
 
 export class SharedInit {
     public static onDidActivateExtensionEmitter = new vscode.EventEmitter<void>();
@@ -173,6 +174,11 @@ export class SharedInit {
                 }
                 if (e.affectsConfiguration(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
                     await vscode.commands.executeCommand("zowe.updateSecureCredentials");
+                }
+                if (e.affectsConfiguration(Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS)) {
+                    ZosmfRestClient.setThrottlingOptions({
+                        maxConcurrentRequests: SettingsConfig.getDirectValue(Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS),
+                    });
                 }
             })
         );
@@ -347,6 +353,10 @@ export class SharedInit {
             // initialize the Constants.filesToCompare array during initialization
             LocalFileManagement.resetCompareSelection();
         }
+
+        ZosmfRestClient.setThrottlingOptions({
+            maxConcurrentRequests: SettingsConfig.getDirectValue(Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS),
+        });
 
         SharedInit.onDidActivateExtension((_e) => vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", "zosmf"));
 

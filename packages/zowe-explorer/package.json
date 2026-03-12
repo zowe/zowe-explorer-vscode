@@ -2215,6 +2215,14 @@
           "description": "%zowe.settings.displayReleaseNotes%",
           "scope": "window"
         },
+        "zowe.settings.zosmfMaxConcurrentRequests": {
+          "type": "integer",
+          "default": 4,
+          "description": "%zowe.settings.zosmfMaxConcurrentRequests%",
+          "scope": "machine",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
         "zowe.table.maxPinnedRows": {
           "type": "integer",
           "default": 10,
