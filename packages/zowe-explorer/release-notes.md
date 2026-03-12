@@ -8,7 +8,7 @@ Updated minimum VS Code version from 1.79 to 1.90. We are dropping support for V
 
 #### Loading credential manager options
 
-Added support for loading credential manager options from the imperative.json file. Added a `credentialManagerOptions` object in the JSON object in `imperative.json` to specify options for the current credential manager.
+Added support for loading credential manager options from the imperative.json file. Add a `credentialManagerOptions` object in the JSON object in `imperative.json` to specify options for the current credential manager.
 
 #### Windows custom persistence levels
 
@@ -28,11 +28,11 @@ Added support to delete VSAM data sets via right-click action.
 
 #### Get JCL encoding
 
-Added support for `encoding` profile property when retrieving JCL with z/OSMF. For example, include `"encoding": "IBM-1147"` in the z/OSMF profile to view JCL with "IBM-1147" encoding via the right-click `Get JCL` job option.
+Added support for `encoding` profile property when retrieving JCL with z/OSMF, i.e. `"encoding": "IBM-1147"` included in the z/OSMF profile to view JCL with "IBM-1147" encoding via the right-click `Get JCL` job option.
 
 #### Submit job with encoding
 
-Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. For example, include `"jobEncoding": "IBM-1147"` in the z/OSMF profile to submit jobs with "IBM-1147" encoding.
+Added support for `jobEncoding` profile property when submitting jobs to z/OSMF, i.e. `"jobEncoding": "IBM-1147"` included in the z/OSMF profile to submit jobs with "IBM-1147" encoding.
 
 ## `3.3.0`
 
