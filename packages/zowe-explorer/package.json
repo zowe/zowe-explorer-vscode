@@ -193,6 +193,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.setDataSetFilter",
+        "title": "%ds.setDatasetFilter%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.tableView",
         "title": "%tableView%",
         "category": "Zowe Explorer"
@@ -542,6 +547,11 @@
       {
         "command": "zowe.uss.copyRelativePath",
         "title": "%uss.copyRelativePath%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.uss.setUssPath",
+        "title": "%uss.setUssPath%",
         "category": "Zowe Explorer"
       },
       {
@@ -2215,7 +2225,7 @@
     "glob": "^7.1.6",
     "jest-silent-reporter": "^0.5.0",
     "log4js": "^6.4.6",
-    "markdownlint-cli": "^0.33.0",
+    "markdownlint-cli": "^0.40.0",
     "sinon": "^19.0.2",
     "ts-node": "^10.9.2",
     "wdio-vscode-service": "^6.1.3",
@@ -2224,11 +2234,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.29.9",
+    "@zowe/core-for-zowe-sdk": "^8.30.1",
     "@zowe/secrets-for-zowe-sdk": "^8.29.4",
-    "@zowe/zos-files-for-zowe-sdk": "^8.29.9",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.29.9",
-    "@zowe/zosmf-for-zowe-sdk": "^8.29.9",
+    "@zowe/zos-files-for-zowe-sdk": "^8.30.1",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.30.1",
+    "@zowe/zosmf-for-zowe-sdk": "^8.30.1",
     "@zowe/zowe-explorer-api": "workspace:*",
     "dayjs": "^1.11.10",
     "isbinaryfile": "4.0.4",

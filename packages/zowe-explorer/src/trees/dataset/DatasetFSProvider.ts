@@ -89,6 +89,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
 
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
 
         const apiRegister = ZoweExplorerApiRegister.getInstance();
@@ -275,6 +276,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let pdsMember: boolean;
         let uriPath: string[];
 
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const apiRegister = ZoweExplorerApiRegister.getInstance();
         const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
             apiName: vscode.l10n.t("Common API"),
@@ -368,6 +370,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<DirEntry | DsEntry> {
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: uriInfo.profileName });
         // Ensure that an entry exists for the given profile
@@ -492,6 +495,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             let resp;
 
+            await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
             await AuthUtils.retryRequest(metadata.profile, async () => {
                 resp = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(metadata.dsName, {
                     binary: dsEntry?.encoding?.kind === "binary",
@@ -560,8 +564,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
         // If the extenderProfileReady map does not contain the profile, create a deferred promise for the profile.
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
 
         const apiRegister = ZoweExplorerApiRegister.getInstance();
         const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
@@ -644,6 +648,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         forceUpload?: boolean,
         encoding?: string
     ): Promise<IZosFilesResponse> {
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         // /DATA.SET/MEMBER
         const uriPath = uri.path.substring(uriInfo.slashAfterProfilePos + 1).split("/");
