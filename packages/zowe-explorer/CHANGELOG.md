@@ -15,6 +15,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. [#3554](https://github.com/zowe/zowe-explorer-vscode/issues/3554)
+- Fixed an issue where file system URIs with trailing slashes failed to resolve. [#3904](https://github.com/zowe/zowe-explorer-vscode/issues/3904)
 - Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. [#4032](https://github.com/zowe/zowe-explorer-vscode/issues/4032)
 - Fixed an issue where pasting data sets failed with "e.getChildren is not a function" when using extenders that don't support `allocateLikeDataSet`, a function that allocates a copy of a data set with specified options. [#4107](https://github.com/zowe/zowe-explorer-vscode/pull/4107)
 - Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. [#4049](https://github.com/zowe/zowe-explorer-vscode/pull/4049)

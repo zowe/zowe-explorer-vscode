@@ -423,12 +423,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     if (dsNode.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
                         // Create an entry for the PDS if it doesn't exist.
                         if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
-                            await vscode.workspace.fs.createDirectory(dsNode.resourceUri);
+                            DatasetFSProvider.instance.createDirectory(dsNode.resourceUri);
                         }
                     } else {
                         // Create an entry for the data set if it doesn't exist.
                         if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
-                            await vscode.workspace.fs.writeFile(dsNode.resourceUri, new Uint8Array());
+                            await DatasetFSProvider.instance.writeFile(dsNode.resourceUri, new Uint8Array(), { create: true, overwrite: false });
                         }
                     }
                     dsNode.updateStats(item);
