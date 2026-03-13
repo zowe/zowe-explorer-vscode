@@ -104,9 +104,14 @@ describe("UssFSProvider", () => {
                 return 1;
             }
         });
+        Object.defineProperty(vscode.window, "visibleTextEditors", {
+            get: () => [],
+            configurable: true,
+        });
     });
 
     afterAll(() => {
+        delete (vscode.window as any).visibleTextEditors;
         mockedProperty[Symbol.dispose]();
     });
 
@@ -219,7 +224,7 @@ describe("UssFSProvider", () => {
                 const call2 = UssFSProvider.instance.stat(testUri);
                 let [callResult1, callResult2] = await Promise.all([call1, call2]);
 
-                expect(statSpy).toHaveBeenCalledWith(testUri);
+                expect(statSpy).toHaveBeenCalledWith(testUri, false);
                 expect(callResult1).toStrictEqual(callResult2);
             });
 
@@ -231,7 +236,7 @@ describe("UssFSProvider", () => {
                 const promises = Array.from({ length: 100 }, () => UssFSProvider.instance.stat(testUri));
                 const results = await Promise.all(promises);
 
-                expect(statSpy).toHaveBeenCalledWith(testUri);
+                expect(statSpy).toHaveBeenCalledWith(testUri, false);
 
                 const firstResult = results[0];
                 results.forEach((result) => {
@@ -247,7 +252,7 @@ describe("UssFSProvider", () => {
                 const call2 = UssFSProvider.instance.stat(testUriNoQuery);
                 let [callResult1, callResult2] = await Promise.all([call1, call2]);
 
-                expect(statSpy).toHaveBeenCalledWith(testUriFetchFalse);
+                expect(statSpy).toHaveBeenCalledWith(testUriFetchFalse, false);
                 expect(callResult1).toStrictEqual(callResult2);
             });
 
@@ -259,7 +264,7 @@ describe("UssFSProvider", () => {
                 const call2 = UssFSProvider.instance.stat(testUri);
                 let [callResult1, callResult2] = await Promise.all([call1, call2]);
 
-                expect(statSpy).toHaveBeenCalledWith(testUriTrailingSlash);
+                expect(statSpy).toHaveBeenCalledWith(testUriTrailingSlash, false);
                 expect(callResult1).toStrictEqual(callResult2);
             });
             it("should handle subsequent FS calls - different query parameters - should trigger distinct requests", async () => {
@@ -309,11 +314,90 @@ describe("UssFSProvider", () => {
 
                 let [callResult1, callResult2] = await Promise.all([call1, call2]);
 
-                expect(statSpy).toHaveBeenCalledWith(testUriFile1);
-                expect(statSpy).toHaveBeenCalledWith(testUriFile2);
+                expect(statSpy).toHaveBeenCalledWith(testUriFile1, false);
+                expect(statSpy).toHaveBeenCalledWith(testUriFile2, false);
                 expect(callResult1).not.toStrictEqual(callResult2);
                 expect((callResult1 as any).size).toBe(100);
                 expect((callResult2 as any).size).toBe(200);
+            });
+
+            describe("isVisibleEditor logic", () => {
+                let visibleTextEditorsSpy: jest.Mock;
+                let executeWithReuseSpy: jest.SpyInstance;
+
+                beforeEach(() => {
+                    visibleTextEditorsSpy = jest.fn();
+
+                    Object.defineProperty(vscode.window, "visibleTextEditors", {
+                        get: visibleTextEditorsSpy,
+                        configurable: true,
+                    });
+
+                    executeWithReuseSpy = jest.spyOn(UssFSProvider.instance as any, "executeWithReuse");
+                    (UssFSProvider.instance as any).requestCache.clear();
+                });
+
+                afterEach(() => {
+                    delete (vscode.window as any).visibleTextEditors;
+                    executeWithReuseSpy.mockRestore();
+                });
+
+                it("bypasses local cache and executes remote fetch when file is in a visible editor", async () => {
+                    const statUri = testUris.file;
+
+                    visibleTextEditorsSpy.mockReturnValue([
+                        {
+                            document: { uri: statUri },
+                        },
+                    ] as any);
+
+                    lookupMock.mockReturnValue(testEntries.file);
+
+                    const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+                        success: true,
+                        apiResponse: {
+                            items: [{ name: testEntries.file.name, mtime: 12345 }],
+                        },
+                        commandResponse: "",
+                    });
+
+                    await UssFSProvider.instance.stat(statUri);
+
+                    const executeOpts = executeWithReuseSpy.mock.calls[0][1];
+                    expect(executeOpts.checkLocal()).toBe(false);
+
+                    expect(listFilesMock).toHaveBeenCalled();
+
+                    listFilesMock.mockRestore();
+                });
+
+                it("uses local cache and skips remote fetch when file is NOT in a visible editor", async () => {
+                    const statUri = testUris.file;
+                    const visibleUri = testUris.innerFile;
+
+                    visibleTextEditorsSpy.mockReturnValue([
+                        {
+                            document: { uri: visibleUri },
+                        },
+                    ] as any);
+
+                    lookupMock.mockReturnValue(testEntries.file);
+
+                    const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles");
+                    const statImplementationSpy = jest.spyOn(UssFSProvider.instance as any, "statImplementation");
+
+                    await UssFSProvider.instance.stat(statUri);
+
+                    const executeOpts = executeWithReuseSpy.mock.calls[0][1];
+                    expect(executeOpts.checkLocal()).toBe(true);
+
+                    expect(statImplementationSpy).toHaveBeenCalledWith(statUri, false);
+
+                    expect(listFilesMock).not.toHaveBeenCalled();
+
+                    listFilesMock.mockRestore();
+                    statImplementationSpy.mockRestore();
+                });
             });
         });
 

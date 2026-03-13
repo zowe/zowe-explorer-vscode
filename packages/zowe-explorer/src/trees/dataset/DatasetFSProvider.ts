@@ -169,6 +169,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const segments = uri.path.split("/").filter((s) => s.length > 0);
         const isMemberRequest = segments.length === 3;
 
+        const targetPrefix = uri.path.split("/").slice(0, 3).join("/") + "/";
+
+        const isVisibleEditor = vscode.window.visibleTextEditors.some((editor) => {
+            const editorUri = editor.document.uri;
+            return editorUri.toString() === uri.toString() || editorUri.path.startsWith(targetPrefix);
+        });
+
         if (isMemberRequest) {
             const memberName = segments[2];
             const parentPath = segments.slice(0, 2).join("/");
@@ -176,8 +183,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             const pdsEntry = await this.executeWithReuse<DirEntry>(parentUri, {
                 keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
-                checkLocal: () => !!this._lookupAsDirectory(parentUri, true),
-                execute: () => this.readDirectoryImplementation(parentUri, false),
+                checkLocal: () => (isVisibleEditor ? false : !!this._lookupAsDirectory(parentUri, true)),
+                execute: () => this.readDirectoryImplementation(parentUri, isVisibleEditor),
                 action: "readDirectory",
             });
 
@@ -305,7 +312,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             if (ds.m4date && ds.mtime) {
                 const newTime = dayjs(`${ds.m4date} ${ds.mtime}:${ds.msec || "00"}`).valueOf();
-                tempEntry.mtime = newTime || tempEntry.mtime;
+                if (newTime && tempEntry.mtime !== newTime) {
+                    tempEntry.mtime = newTime;
+                    tempEntry.wasAccessed = false;
+                }
             }
 
             entry.entries.set(fullMemberName, tempEntry);

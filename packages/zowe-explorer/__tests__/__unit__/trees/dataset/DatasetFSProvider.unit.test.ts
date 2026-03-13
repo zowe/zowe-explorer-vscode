@@ -105,9 +105,14 @@ describe("DatasetFSProvider", () => {
         });
         jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
         DatasetFSProvider.instance.requestCache.clear();
+        Object.defineProperty(vscode.window, "visibleTextEditors", {
+            get: () => [],
+            configurable: true,
+        });
     });
 
     afterAll(() => {
+        delete (vscode.window as any).visibleTextEditors;
         mockedProperty[Symbol.dispose]();
     });
 
@@ -335,6 +340,60 @@ describe("DatasetFSProvider", () => {
 
                 // Expect 1 call: Since readDirectory forces network, it perfectly pools with a fetch=true request
                 expect(readDirImplSpy).toHaveBeenCalledTimes(1);
+            });
+        });
+        describe("isVisibleEditor tests", () => {
+            let visibleTextEditorsSpy: jest.Mock;
+            let remoteLookupSpy: jest.SpyInstance;
+            let localLookupSpy: jest.SpyInstance;
+
+            beforeEach(() => {
+                visibleTextEditorsSpy = jest.fn();
+                Object.defineProperty(vscode.window, "visibleTextEditors", {
+                    get: visibleTextEditorsSpy,
+                    configurable: true,
+                });
+
+                remoteLookupSpy = jest.spyOn(DatasetFSProvider.instance as any, "remoteLookupForResource").mockResolvedValue(testEntries.pds);
+                localLookupSpy = jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(testEntries.pds);
+            });
+
+            afterEach(() => {
+                delete (vscode.window as any).visibleTextEditors;
+                remoteLookupSpy.mockRestore();
+                localLookupSpy.mockRestore();
+            });
+
+            it("bypasses local lookup and executes remote fetch when a visible editor is a MEMBER of the directory", async () => {
+                const targetUri = testUris.pds;
+                const childUri = testUris.pdsMember;
+
+                visibleTextEditorsSpy.mockReturnValue([
+                    {
+                        document: { uri: childUri },
+                    },
+                ] as any);
+
+                await (DatasetFSProvider.instance as any).readDirectoryImplementation(targetUri, true);
+
+                expect(remoteLookupSpy).toHaveBeenCalledWith(targetUri);
+                expect(localLookupSpy).not.toHaveBeenCalled();
+            });
+
+            it("uses local cache and skips remote fetch when directory is NOT a visible editor or child", async () => {
+                const targetUri = testUris.pds;
+                const visibleUri = testUris.ps;
+
+                visibleTextEditorsSpy.mockReturnValue([
+                    {
+                        document: { uri: visibleUri },
+                    },
+                ] as any);
+
+                await (DatasetFSProvider.instance as any).readDirectoryImplementation(targetUri, false);
+
+                expect(localLookupSpy).toHaveBeenCalledWith(targetUri, false);
+                expect(remoteLookupSpy).not.toHaveBeenCalled();
             });
         });
     });

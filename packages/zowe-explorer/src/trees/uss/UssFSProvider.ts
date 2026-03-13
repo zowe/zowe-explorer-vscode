@@ -73,7 +73,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param uri The URI of the resource to stat.
      * @returns A promise that resolves to a vscode.FileStat object.
      */
-    private async statImplementation(uri: vscode.Uri): Promise<vscode.FileStat> {
+    private async statImplementation(uri: vscode.Uri, isActiveEditor: boolean = false): Promise<vscode.FileStat> {
         ZoweLogger.trace(`[UssFSProvider] statImplementation called with ${uri.toString()}`);
 
         let isFetching = false;
@@ -87,6 +87,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
+
+        const shouldFetch = isFetching || isActiveEditor;
 
         const entry = isFetching ? await this.remoteLookupForResource(uri) : await this.lookupWithCache(uri);
 
@@ -105,7 +107,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on USS files only
-        if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry) || !isFetching) {
+        if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry) || !shouldFetch) {
             return entry;
         }
 
@@ -151,6 +153,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns A structure containing file type, time, size and other metrics
      */
     public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
+        const isVisibleEditor = vscode.window.visibleTextEditors.some((editor) => editor.document.uri.toString() === uri.toString());
+
         const result = await this.executeWithReuse<vscode.FileStat>(uri, {
             keyGenerator: (u) => {
                 const queryKey = this.getQueryKey(u);
@@ -167,8 +171,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
                 return selfKey;
             },
-            checkLocal: () => !!this.lookup(uri, true),
-            execute: () => this.statImplementation(uri),
+            checkLocal: () => (isVisibleEditor ? false : !!this.lookup(uri, true)),
+            execute: () => this.statImplementation(uri, isVisibleEditor),
         });
 
         const entry = result as UssDirectory | UssFile;
