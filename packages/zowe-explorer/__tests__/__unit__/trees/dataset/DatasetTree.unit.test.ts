@@ -3550,6 +3550,66 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(refreshElementSpy).toHaveBeenCalled();
     });
 
+    it("Tests that rename() restores focus to renamed dataset and shows confirmation message", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.NEWNAME");
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const revealSpy = jest.spyOn(blockMocks.treeView, "reveal");
+
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.OLDNAME",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        testTree.mSessionNodes[1].children.push(node);
+
+        await testTree.rename(node);
+
+        expect(revealSpy).toHaveBeenCalledWith(node, { select: true, focus: true });
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Data set renamed from HLQ.TEST.OLDNAME to HLQ.TEST.NEWNAME"));
+    });
+
+    it("Tests that rename() restores focus to renamed member and shows confirmation message", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("NEWMEM");
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const revealSpy = jest.spyOn(blockMocks.treeView, "reveal");
+
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode({
+            label: "HLQ.TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+            session: blockMocks.session,
+        });
+        const member = new ZoweDatasetNode({
+            label: "OLDMEM",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+            parentNode: parent,
+        });
+        parent.children.push(member);
+        testTree.mSessionNodes[1].children.push(parent);
+
+        await testTree.rename(member);
+
+        expect(revealSpy).toHaveBeenCalledWith(member, { select: true, focus: true });
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Member renamed from OLDMEM to NEWMEM"));
+    });
+
     it("Checking function with PDS Member given in lowercase", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -4253,6 +4313,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
 
+            nodes.pds.sort = undefined;
+
             const persistedSort = {
                 method: Sorting.DatasetSortOpts.DateCreated,
                 direction: Sorting.SortDirection.Descending,
@@ -4264,8 +4326,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
-            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.Name);
-            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Descending);
+            expect((nodes.pds.sort as any)?.method).toBe(Sorting.DatasetSortOpts.Name);
+            expect((nodes.pds.sort as any)?.direction).toBe(Sorting.SortDirection.Descending);
         });
 
         it("falls back to default sort options when no persistence available", async () => {
@@ -4281,8 +4343,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
-            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.DateCreated);
-            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Ascending);
+            expect((nodes.pds.sort as any)?.method).toBe(Sorting.DatasetSortOpts.DateCreated);
+            expect((nodes.pds.sort as any)?.direction).toBe(Sorting.SortDirection.Ascending);
         });
 
         it("saves sort settings to persistence after sorting", async () => {
@@ -4347,6 +4409,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
 
+            nodes.session.sort = undefined;
+
             const persistedSessionSort = {
                 method: Sorting.DatasetSortOpts.LastModified,
                 direction: Sorting.SortDirection.Descending,
@@ -4358,8 +4422,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
 
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
             expect(mocks.refreshElement).not.toHaveBeenCalled();
-            expect(nodes.session.sort?.method).toBe(Sorting.DatasetSortOpts.UserId);
-            expect(nodes.session.sort?.direction).toBe(Sorting.SortDirection.Descending);
+            expect((nodes.session.sort as any)?.method).toBe(Sorting.DatasetSortOpts.UserId);
+            expect((nodes.session.sort as any)?.direction).toBe(Sorting.SortDirection.Descending);
         });
 
         it("does not interfere with sort when getSortSetting returns undefined", async () => {
@@ -4413,8 +4477,8 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             mocks.showQuickPick.mockResolvedValueOnce({ label: "$(account) User ID" });
             await tree.sortPdsMembersDialog(nodes.pds);
 
-            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.UserId);
-            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Descending);
+            expect((nodes.pds.sort as any)?.method).toBe(Sorting.DatasetSortOpts.UserId);
+            expect((nodes.pds.sort as any)?.direction).toBe(Sorting.SortDirection.Descending);
             expect(mocks.nodeDataChanged).toHaveBeenCalled();
         });
 
@@ -4486,6 +4550,67 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(favPdsNode.sort?.direction).toBe(Sorting.SortDirection.Descending);
 
             expect(favPdsNode.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["C", "B", "A"]);
+        });
+
+        it("allows changing sort direction when node already has sort set and persistence exists", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            nodes.pds.sort = {
+                method: Sorting.DatasetSortOpts.Name,
+                direction: Sorting.SortDirection.Descending,
+            };
+
+            const persistedSort = {
+                method: Sorting.DatasetSortOpts.Name,
+                direction: Sorting.SortDirection.Descending,
+            };
+            const getSortSettingSpy = jest.spyOn(DatasetTree.prototype, "getSortSetting").mockReturnValue(persistedSort);
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(fold) Sort Direction" });
+            mocks.showQuickPick.mockResolvedValueOnce("Ascending");
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name" });
+
+            await tree.sortPdsMembersDialog(nodes.pds);
+
+            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Ascending);
+            expect(nodes.pds.sort?.method).toBe(Sorting.DatasetSortOpts.Name);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+
+            getSortSettingSpy.mockRestore();
+        });
+
+        it("does not let persistence override sort direction changes by user", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            nodes.pds.sort = {
+                method: Sorting.DatasetSortOpts.Name,
+                direction: Sorting.SortDirection.Ascending,
+            };
+
+            const persistedSort = {
+                method: Sorting.DatasetSortOpts.Name,
+                direction: Sorting.SortDirection.Ascending,
+            };
+            jest.spyOn(DatasetTree.prototype, "getSortSetting").mockReturnValue(persistedSort);
+            const addSortSettingSpy = jest.spyOn(DatasetTree.prototype, "addSortSetting");
+
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(fold) Sort Direction" });
+            mocks.showQuickPick.mockResolvedValueOnce("Descending");
+            mocks.showQuickPick.mockResolvedValueOnce({ label: "$(case-sensitive) Name" });
+
+            await tree.sortPdsMembersDialog(nodes.pds);
+
+            expect(nodes.pds.sort?.direction).toBe(Sorting.SortDirection.Descending);
+
+            expect(addSortSettingSpy).toHaveBeenCalledWith(
+                nodes.pds,
+                expect.objectContaining({
+                    method: Sorting.DatasetSortOpts.Name,
+                    direction: Sorting.SortDirection.Descending,
+                })
+            );
         });
     });
 

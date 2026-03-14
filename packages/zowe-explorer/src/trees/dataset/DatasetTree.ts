@@ -1672,6 +1672,16 @@ Would you like to do this now?`,
                 this.refreshElement(otherParent as IZoweDatasetTreeNode);
             }
             this.refreshElement(node.getParent() as IZoweDatasetTreeNode);
+
+            // Restore focus to the renamed node and show confirmation message
+            await this.getTreeView().reveal(node, { select: true, focus: true });
+            Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Member renamed from {0} to {1}",
+                    args: [beforeMemberName, afterMemberName],
+                    comment: ["Old member name", "New member name"],
+                })
+            );
         }
     }
 
@@ -1742,6 +1752,16 @@ Would you like to do this now?`,
 
             this.refreshElement(node.getParent() as IZoweDatasetTreeNode);
             this.updateFavorites();
+
+            // Restore focus to the renamed node and show confirmation message
+            await this.getTreeView().reveal(node, { select: true, focus: true });
+            Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Data set renamed from {0} to {1}",
+                    args: [beforeDataSetName, afterDataSetName],
+                    comment: ["Old data set name", "New data set name"],
+                })
+            );
         }
     }
 
@@ -1795,9 +1815,12 @@ Would you like to do this now?`,
             SharedUtils.getDefaultSortOptions(DatasetUtils.DATASET_SORT_OPTS, Constants.SETTINGS_DS_DEFAULT_SORT, Sorting.DatasetSortOpts);
 
         // Override the default sort method if the node already has sort setting in persistence
-        const sortSetting = this.getSortSetting(node);
-        if (sortSetting) {
-            sortOpts = sortSetting;
+        // But only do this if the user hasn't already selected a sort method for this node in the current session
+        if (node.sort == null) {
+            const sortSetting = this.getSortSetting(node);
+            if (sortSetting) {
+                sortOpts = sortSetting;
+            }
         }
 
         // Adapt menus to user based on the node that was interacted with

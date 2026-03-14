@@ -6,6 +6,8 @@ All notable changes to the "eslint-plugin-zowe-explorer" package will be documen
 
 ### Bug fixes
 
+## `3.4.1`
+
 ## `3.4.0`
 
 ## `3.3.1`
