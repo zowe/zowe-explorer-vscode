@@ -1521,6 +1521,130 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
     });
 });
 
+describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavior", () => {
+    const session = createISession();
+    const profileOne: imperative.IProfileLoaded = createIProfile();
+
+    beforeEach(() => {
+        jest.resetAllMocks();
+    });
+
+    it("filters children to only favorited members when favoritedMemberNames is set", async () => {
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const getSessionNodeSpy = jest.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
+
+        const pds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX,
+        });
+        pds.dirty = true;
+        pds.favoritedMemberNames = ["MEM1", "MEM3"];
+
+        jest.spyOn(pds as any, "getDatasets").mockResolvedValueOnce([
+            {
+                success: true,
+                apiResponse: {
+                    items: [{ member: "MEM1" }, { member: "MEM2" }, { member: "MEM3" }],
+                    returnedRows: 3,
+                },
+            },
+        ]);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+
+        const children = await pds.getChildren();
+
+        // Only MEM1 and MEM3 should be returned
+        expect(children.map((c) => c.label)).toEqual(["MEM1", "MEM3"]);
+        getSessionNodeSpy.mockRestore();
+    });
+
+    it("returns all members when favoritedMemberNames is undefined (full PDS favorite)", async () => {
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const getSessionNodeSpy = jest.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
+
+        const pds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX,
+        });
+        pds.dirty = true;
+        // favoritedMemberNames is undefined = entire PDS favorited
+
+        jest.spyOn(pds as any, "getDatasets").mockResolvedValueOnce([
+            {
+                success: true,
+                apiResponse: {
+                    items: [{ member: "MEM1" }, { member: "MEM2" }, { member: "MEM3" }],
+                    returnedRows: 3,
+                },
+            },
+        ]);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+
+        const children = await pds.getChildren();
+
+        // All members should be returned
+        expect(children.map((c) => c.label)).toEqual(["MEM1", "MEM2", "MEM3"]);
+        getSessionNodeSpy.mockRestore();
+    });
+
+    it("marks all children of a favorited PDS with _fav context", async () => {
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const getSessionNodeSpy = jest.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
+
+        const pds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX,
+        });
+        pds.dirty = true;
+
+        jest.spyOn(pds as any, "getDatasets").mockResolvedValueOnce([
+            {
+                success: true,
+                apiResponse: {
+                    items: [{ member: "MEM1" }, { member: "MEM2" }],
+                    returnedRows: 2,
+                },
+            },
+        ]);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+
+        const children = await pds.getChildren();
+
+        // All children should have _fav context
+        for (const child of children) {
+            expect(child.contextValue).toContain(Constants.FAV_SUFFIX);
+        }
+        getSessionNodeSpy.mockRestore();
+    });
+});
+
 describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
     it("returns undefined from listDatasets() when session is invalid - profile node", async () => {
         const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
