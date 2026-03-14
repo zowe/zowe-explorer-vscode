@@ -636,8 +636,42 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns A function that sorts 2 nodes based on the given sorting method
      */
     public static filterBy(filter: Sorting.DatasetFilter): (node: IZoweDatasetTreeNode) => boolean {
-        const isDateFilter = (f: string): boolean => {
-            return dayjs(f).isValid();
+        const isDateFilter = (f: string): boolean => dayjs(f).isValid();
+        const matchesDateStat = (node: IZoweDatasetTreeNode, value: string, statName: "createdDate" | "modifiedDate"): boolean => {
+            if (!isDateFilter(value)) {
+                return true;
+            }
+
+            const statDate = node.getStats()?.[statName];
+            if (statDate == null) {
+                return false;
+            }
+
+            const parsedDate = dayjs(statDate);
+            return parsedDate.isValid() && parsedDate.isSame(value, "day");
+        };
+
+        const values = filter.value
+            .split(",")
+            .map((v) => v.trim())
+            .filter((v) => v.length > 0);
+
+        const matchesValue = (node: IZoweDatasetTreeNode, value: string): boolean => {
+            switch (filter.method) {
+                case Sorting.DatasetFilterOpts.LastModified:
+                    return matchesDateStat(node, value, "modifiedDate");
+                case Sorting.DatasetFilterOpts.UserId:
+                    return node.getStats()?.user === value;
+                case Sorting.DatasetFilterOpts.Name: {
+                    const label = (node.label as string).toUpperCase();
+                    const pattern = value.toUpperCase().replace(/\*/g, ".*");
+                    return new RegExp(`^${pattern}$`).test(label);
+                }
+                case Sorting.DatasetFilterOpts.DateCreated:
+                    return matchesDateStat(node, value, "createdDate");
+                default:
+                    return true;
+            }
         };
 
         return (node): boolean => {
@@ -645,17 +679,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             if (aParent == null || !SharedContext.isPds(aParent)) {
                 return true;
             }
-
-            switch (filter.method) {
-                case Sorting.DatasetFilterOpts.LastModified:
-                    if (!isDateFilter(filter.value)) {
-                        return true;
-                    }
-
-                    return dayjs(node.getStats()?.modifiedDate).isSame(filter.value, "day");
-                case Sorting.DatasetFilterOpts.UserId:
-                    return node.getStats()?.user === filter.value;
-            }
+            return values.some((v) => matchesValue(node, v));
         };
     }
 
