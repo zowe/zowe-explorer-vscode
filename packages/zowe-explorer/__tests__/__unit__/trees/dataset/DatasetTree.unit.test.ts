@@ -1929,126 +1929,6 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         expect(SharedContext.isFavorite(sessionMem1)).toBe(false);
     });
 
-    it("removeFavorite preserves EntirePds state during member deletion flow when wasEntirePdsFavorite is true", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-
-        const sessionPds = new ZoweDatasetNode({
-            label: "MY.PDS",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            parentNode: testTree.mSessionNodes[1],
-        });
-        sessionPds.contextValue = Constants.DS_PDS_CONTEXT;
-        const sessionMem1 = new ZoweDatasetNode({
-            label: "MEM1",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: sessionPds,
-        });
-        sessionMem1.contextValue = Constants.DS_MEMBER_CONTEXT;
-        const sessionMem2 = new ZoweDatasetNode({
-            label: "MEM2",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: sessionPds,
-        });
-        sessionMem2.contextValue = Constants.DS_MEMBER_CONTEXT;
-        sessionPds.children = [sessionMem1, sessionMem2];
-        testTree.mSessionNodes[1].children = [sessionPds];
-
-        await testTree.addFavorite(sessionPds);
-
-        const favPds = testTree.mFavorites[0]?.children[0] as ZoweDatasetNode;
-        favPds.pdsFavoriteState = Definitions.PdsFavoriteState.EntirePds;
-
-        expect(favPds.pdsFavoriteState).toBe(Definitions.PdsFavoriteState.EntirePds);
-        expect(favPds.favoritedMemberNames).toBeUndefined();
-
-        await testTree.removeFavorite(sessionMem1, { preserveEntirePdsState: true });
-
-        expect(favPds.pdsFavoriteState).toBe(Definitions.PdsFavoriteState.EntirePds);
-        expect(favPds.favoritedMemberNames).toBeUndefined();
-    });
-
-    it("removeFavorite does not preserve EntirePds state when wasEntirePdsFavorite is false", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-
-        const sessionPds = new ZoweDatasetNode({
-            label: "MY.PDS",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            parentNode: testTree.mSessionNodes[1],
-        });
-        sessionPds.contextValue = Constants.DS_PDS_CONTEXT;
-        const sessionMem1 = new ZoweDatasetNode({
-            label: "MEM1",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: sessionPds,
-        });
-        sessionMem1.contextValue = Constants.DS_MEMBER_CONTEXT;
-        const sessionMem2 = new ZoweDatasetNode({
-            label: "MEM2",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: sessionPds,
-        });
-        sessionMem2.contextValue = Constants.DS_MEMBER_CONTEXT;
-        sessionPds.children = [sessionMem1, sessionMem2];
-        testTree.mSessionNodes[1].children = [sessionPds];
-
-        await testTree.addFavorite(sessionPds);
-
-        const favPds = testTree.mFavorites[0]?.children[0] as ZoweDatasetNode;
-        favPds.pdsFavoriteState = Definitions.PdsFavoriteState.NotFavorited; // So PDS is not EntirePds
-        favPds.favoritedMemberNames = undefined;
-
-        await testTree.removeFavorite(sessionMem1, { preserveEntirePdsState: true });
-
-        expect(favPds.pdsFavoriteState).toBe(Definitions.PdsFavoriteState.SpecificMembers);
-        expect(favPds.favoritedMemberNames).toEqual(["MEM2"]);
-    });
-
-    it("removeFavorite with preserveEntirePdsState removes empty PDS favorite when last member is deleted", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
-
-        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const testTree = new DatasetTree();
-        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
-
-        const sessionPds = new ZoweDatasetNode({
-            label: "MY.PDS",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            parentNode: testTree.mSessionNodes[1],
-        });
-        sessionPds.contextValue = Constants.DS_PDS_CONTEXT;
-        const sessionMem1 = new ZoweDatasetNode({
-            label: "MEM1",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            parentNode: sessionPds,
-        });
-        sessionMem1.contextValue = Constants.DS_MEMBER_CONTEXT;
-        sessionPds.children = [sessionMem1];
-        testTree.mSessionNodes[1].children = [sessionPds];
-
-        await testTree.addFavorite(sessionPds);
-        expect(testTree.mFavorites[0]?.children?.length).toBe(1);
-
-        await testTree.removeFavorite(sessionMem1, { preserveEntirePdsState: true });
-
-        const profileFavs = testTree.mFavorites[0];
-        if (profileFavs) {
-            expect(profileFavs.children.length).toBe(0);
-        } else {
-            expect(profileFavs).toBeUndefined();
-        }
-    });
-
     it("removeFavorite removes a single-member PDS from favorites when the session PDS has no _fav", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -2094,6 +1974,39 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
 
         expect(profileNodeInFavs.children.length).toBe(0);
         expect(SharedContext.isFavorite(sessionMem1)).toBe(false);
+    });
+
+    it("removeFavorite clears PDS _fav when deleting the last member from a fully favorited PDS", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        const sessionPds = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        sessionPds.contextValue = Constants.DS_PDS_CONTEXT;
+        const sessionMem1 = new ZoweDatasetNode({
+            label: "MEM1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: sessionPds,
+        });
+        sessionMem1.contextValue = Constants.DS_MEMBER_CONTEXT;
+        sessionPds.children = [sessionMem1];
+        testTree.mSessionNodes[1].children = [sessionPds];
+
+        // Entire-PDS favorite should mark the PDS as favorited in the session tree.
+        await testTree.addFavorite(sessionPds);
+        expect(SharedContext.isFavorite(sessionPds)).toBe(true);
+
+        await testTree.removeFavorite(sessionMem1);
+
+        expect(testTree.mFavorites.length).toBe(0);
+        expect(SharedContext.isFavorite(sessionPds)).toBe(false);
     });
 
     it("addMemberToFavorites re-adds an unfavorited member", async () => {

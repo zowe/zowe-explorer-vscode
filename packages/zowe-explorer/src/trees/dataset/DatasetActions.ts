@@ -1185,7 +1185,14 @@ export class DatasetActions {
         // refresh Tree View & favorites
         datasetProvider.refresh();
         for (const member of memberParents) {
-            datasetProvider.refreshElement(member);
+            const equivalentParent = datasetProvider.findEquivalentNode(member, SharedContext.isFavorite(member)) as IZoweDatasetTreeNode;
+            const nodeToRefresh = equivalentParent ?? (SharedContext.isFavorite(member) ? undefined : member);
+
+            // When deleting the last member of a favorited PDS, the favorite parent can be removed.
+            // Refresh the surviving equivalent node when available to avoid stale tree-item references.
+            if (nodeToRefresh != null) {
+                datasetProvider.refreshElement(nodeToRefresh);
+            }
         }
         await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodes[0].getParent());
     }
@@ -2063,8 +2070,31 @@ export class DatasetActions {
         } else {
             node.getSessionNode().dirty = true;
         }
+
         const isMember = SharedContext.isDsMember(node);
-        await datasetProvider.removeFavorite(node, { preserveEntirePdsState: isMember });
+
+        // If the deleted node is a member, and the PDS is "EntirePds" state, then don't downgrade it to "SpecificMembers"
+        // as the member no longer exists so the entire Pds is still favorited
+        // unless the deleted member is the only one left in the PDS, then remove the PDS from favorites
+        if (isMember) {
+            const parentPds = node.getParent();
+            const profileName = node.getProfileName();
+            const profileNodeInFavorites = datasetProvider.mFavorites.find((favProfile) => favProfile.label?.toString() === profileName);
+            const favPds = profileNodeInFavorites?.children.find(
+                (child) => child.label === parentPds?.label && SharedContext.isFavoritePds(child)
+            ) as ZoweDatasetNode | undefined;
+
+            const isEntirePdsFavorite =
+                favPds != null && (favPds.pdsFavoriteState == null || favPds.pdsFavoriteState === Definitions.PdsFavoriteState.EntirePds);
+            const knownMemberCount = (parentPds?.children ?? []).filter((c) => SharedContext.isDsMember(c)).length;
+            const hasOtherKnownMembers = knownMemberCount > 1;
+
+            if (!(isEntirePdsFavorite && hasOtherKnownMembers)) {
+                await datasetProvider.removeFavorite(node);
+            }
+        } else {
+            await datasetProvider.removeFavorite(node);
+        }
 
         // If the node is a dataset member, go up a level in the node tree
         // to find the relevant, matching node

@@ -126,9 +126,9 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
 
     /**
      * Removes a favorite node
-     * @param favorite Adds a favorite node
+     * @param node Adds a favorite node
      */
-    removeFavorite(node: IZoweTreeNode, options?: { preserveEntirePdsState?: boolean }): void | Promise<void>;
+    removeFavorite(node: IZoweTreeNode): void | Promise<void>;
 
     /**
      * Removes profile node from Favorites section
@@ -143,13 +143,13 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
 
     /**
      * Refreshes an element of the tree
-     * @param favorite Node to refresh
+     * @param node Node to refresh
      */
     refreshElement(node: IZoweTreeNode): void;
 
     /**
      * Signals that node data has changed in the tree view
-     * @param element to pass to event listener callback
+     * @param node to pass to event listener callback
      */
     nodeDataChanged?(node: IZoweTreeNode): void;
 
@@ -180,7 +180,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
 
     /**
      * Rename the node. Begins a dialog.
-     * @param the node to be renamed
+     * @param node to be renamed
      */
     rename(node: IZoweTreeNode): void | Promise<void>;
 

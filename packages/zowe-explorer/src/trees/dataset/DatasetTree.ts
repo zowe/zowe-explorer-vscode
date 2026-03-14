@@ -1280,7 +1280,7 @@ Would you like to do this now?`,
      *
      * @param node
      */
-    public async removeFavorite(node: IZoweDatasetTreeNode, options?: { preserveEntirePdsState?: boolean }): Promise<void> {
+    public async removeFavorite(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("DatasetTree.removeFavorite called.");
 
         const profileName = node.getProfileName();
@@ -1353,10 +1353,6 @@ Would you like to do this now?`,
                         .map((c) => c.label as string)
                         .filter((m) => m !== memberName);
 
-                    // Preserve "entire PDS" only when this favorite was already EntirePds
-                    const wasEntirePdsFavorite =
-                        parentPds.pdsFavoriteState == null || parentPds.pdsFavoriteState === Definitions.PdsFavoriteState.EntirePds;
-
                     if (allMembers.length === 0) {
                         // remove the now empty PDS favorite
                         profileNodeInFavorites.children = profileNodeInFavorites.children.filter((c) => c !== parentPds);
@@ -1364,22 +1360,16 @@ Would you like to do this now?`,
                             await this.removeFavProfile(profileName, false);
                         }
                     } else {
-                        if (options?.preserveEntirePdsState && wasEntirePdsFavorite) {
-                            // When deleting, keep PDS as EntirePds so newly created members remain favorited
-                            parentPds.pdsFavoriteState = Definitions.PdsFavoriteState.EntirePds;
-                            parentPds.favoritedMemberNames = undefined;
-                            parentPds.dirty = true;
-                        } else {
-                            parentPds.pdsFavoriteState = Definitions.PdsFavoriteState.SpecificMembers;
-                            parentPds.favoritedMemberNames = allMembers;
-                            parentPds.dirty = true;
-                        }
+                        parentPds.pdsFavoriteState = Definitions.PdsFavoriteState.SpecificMembers;
+                        parentPds.favoritedMemberNames = allMembers;
+                        parentPds.dirty = true;
                     }
                 }
 
                 this.updateFavorites();
                 this.refreshElement(this.mFavoriteSession);
                 this.updateMemberFavContext(profileName, pdsLabel);
+                this.updateNodeFavContext(profileName, pdsLabel, "pds");
                 return;
             }
         }
