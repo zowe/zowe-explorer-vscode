@@ -128,7 +128,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
      * Removes a favorite node
      * @param favorite Adds a favorite node
      */
-    removeFavorite(node: IZoweTreeNode): void | Promise<void>;
+    removeFavorite(node: IZoweTreeNode, options?: { preserveEntirePdsState?: boolean }): void | Promise<void>;
 
     /**
      * Removes profile node from Favorites section

@@ -2063,9 +2063,8 @@ export class DatasetActions {
         } else {
             node.getSessionNode().dirty = true;
         }
-        await datasetProvider.removeFavorite(node);
-
         const isMember = SharedContext.isDsMember(node);
+        await datasetProvider.removeFavorite(node, { preserveEntirePdsState: isMember });
 
         // If the node is a dataset member, go up a level in the node tree
         // to find the relevant, matching node
