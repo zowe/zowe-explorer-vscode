@@ -718,6 +718,25 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         expect(refreshElementSpy).not.toHaveBeenCalledWith(blockMocks.testFavoritedNode);
     });
 
+    it("Should use stable node for fixVsCodeMultiSelect when deleting last member from favorite PDS", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testFavMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        const lastCall = blockMocks.fixMultiSelectMock.mock.calls[blockMocks.fixMultiSelectMock.mock.calls.length - 1];
+        const refreshedNode = lastCall?.[1] as any;
+
+        expect(refreshedNode?.label).toBe(globalMocks.datasetSessionNode.label);
+        expect((refreshedNode?.contextValue as string) ?? "").toContain(Constants.DS_SESSION_CONTEXT);
+        expect(refreshedNode?.label).not.toBe(blockMocks.testFavoritedNode.label);
+    });
+
     it("Should not consider a session for deletion", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);

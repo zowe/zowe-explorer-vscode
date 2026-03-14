@@ -1194,7 +1194,16 @@ export class DatasetActions {
                 datasetProvider.refreshElement(nodeToRefresh);
             }
         }
-        await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodes[0].getParent());
+
+        let nodeForMultiSelect = nodes[0].getParent() as IZoweDatasetTreeNode;
+        if (nodeForMultiSelect != null && SharedContext.isFavorite(nodeForMultiSelect)) {
+            const equivalentNode = datasetProvider.findEquivalentNode(nodeForMultiSelect, true) as IZoweDatasetTreeNode;
+            nodeForMultiSelect =
+                equivalentNode ??
+                datasetProvider.mSessionNodes.find((ses) => ses.label?.toString() === nodes[0].getProfileName()) ??
+                nodeForMultiSelect;
+        }
+        await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodeForMultiSelect);
     }
 
     /**
