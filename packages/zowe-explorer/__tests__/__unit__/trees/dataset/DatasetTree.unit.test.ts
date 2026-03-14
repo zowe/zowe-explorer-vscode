@@ -4821,6 +4821,26 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             }
         });
 
+        it("filterBy excludes members with no modified date when filtering by Date Modified", () => {
+            const nodes = nodesForSuite();
+            (nodes.pds.children[0].getStats as jest.Mock).mockReturnValue({ user: "someUser" });
+
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.LastModified, value: "2022-03-15" });
+            expect(filterFn(nodes.pds.children[0])).toBe(false);
+            expect(filterFn(nodes.pds.children[1])).toBe(false);
+            expect(filterFn(nodes.pds.children[2])).toBe(true);
+        });
+
+        it("filterBy excludes members with no creation date when filtering by Date Created", () => {
+            const nodes = nodesForSuite();
+            (nodes.pds.children[0].getStats as jest.Mock).mockReturnValue({ user: "someUser" });
+
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.DateCreated, value: "2022-02-01" });
+            expect(filterFn(nodes.pds.children[0])).toBe(false);
+            expect(filterFn(nodes.pds.children[1])).toBe(false);
+            expect(filterFn(nodes.pds.children[2])).toBe(true);
+        });
+
         it("filterBy returns true for an unrecognised filter method", () => {
             const nodes = nodesForSuite();
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument

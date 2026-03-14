@@ -637,6 +637,20 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public static filterBy(filter: Sorting.DatasetFilter): (node: IZoweDatasetTreeNode) => boolean {
         const isDateFilter = (f: string): boolean => dayjs(f).isValid();
+        const matchesDateStat = (node: IZoweDatasetTreeNode, value: string, statName: "createdDate" | "modifiedDate"): boolean => {
+            if (!isDateFilter(value)) {
+                return true;
+            }
+
+            const statDate = node.getStats()?.[statName];
+            if (statDate == null) {
+                return false;
+            }
+
+            const parsedDate = dayjs(statDate);
+            return parsedDate.isValid() && parsedDate.isSame(value, "day");
+        };
+
         const values = filter.value
             .split(",")
             .map((v) => v.trim())
@@ -645,10 +659,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const matchesValue = (node: IZoweDatasetTreeNode, value: string): boolean => {
             switch (filter.method) {
                 case Sorting.DatasetFilterOpts.LastModified:
-                    if (!isDateFilter(value)) {
-                        return true;
-                    }
-                    return dayjs(node.getStats()?.modifiedDate).isSame(value, "day");
+                    return matchesDateStat(node, value, "modifiedDate");
                 case Sorting.DatasetFilterOpts.UserId:
                     return node.getStats()?.user === value;
                 case Sorting.DatasetFilterOpts.Name: {
@@ -657,10 +668,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     return new RegExp(`^${pattern}$`).test(label);
                 }
                 case Sorting.DatasetFilterOpts.DateCreated:
-                    if (!isDateFilter(value)) {
-                        return true;
-                    }
-                    return dayjs(node.getStats()?.createdDate).isSame(value, "day");
+                    return matchesDateStat(node, value, "createdDate");
                 default:
                     return true;
             }
