@@ -169,12 +169,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const segments = uri.path.split("/").filter((s) => s.length > 0);
         const isMemberRequest = segments.length === 3;
 
-        const targetPrefix = uri.path.split("/").slice(0, 3).join("/") + "/";
-
-        const isVisibleEditor = vscode.window.visibleTextEditors.some((editor) => {
-            const editorUri = editor.document.uri;
-            return editorUri.toString() === uri.toString() || editorUri.path.startsWith(targetPrefix);
-        });
+        const isVisibleEditor = vscode.window.visibleTextEditors.some((editor) => editor.document.uri.toString() === uri.toString());
 
         if (isMemberRequest) {
             const memberName = segments[2];

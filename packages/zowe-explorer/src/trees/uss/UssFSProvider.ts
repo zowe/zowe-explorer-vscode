@@ -73,7 +73,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param uri The URI of the resource to stat.
      * @returns A promise that resolves to a vscode.FileStat object.
      */
-    private async statImplementation(uri: vscode.Uri, isActiveEditor: boolean = false): Promise<vscode.FileStat> {
+    private async statImplementation(uri: vscode.Uri, isVisibleEditor: boolean = false): Promise<vscode.FileStat> {
         ZoweLogger.trace(`[UssFSProvider] statImplementation called with ${uri.toString()}`);
 
         let isFetching = false;
@@ -88,7 +88,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
 
-        const shouldFetch = isFetching || isActiveEditor;
+        const shouldFetch = isFetching || isVisibleEditor;
 
         const entry = isFetching ? await this.remoteLookupForResource(uri) : await this.lookupWithCache(uri);
 

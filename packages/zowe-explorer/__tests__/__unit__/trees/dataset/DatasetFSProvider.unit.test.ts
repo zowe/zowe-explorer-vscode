@@ -518,6 +518,66 @@ describe("DatasetFSProvider", () => {
             expect(fakePo.etag).toBe("123ANETAG");
             expect(_updateResourceInEditorMock).toHaveBeenCalledWith(testUris.ps);
         });
+
+        it("updates mtime if the fetched e-tag differs from the existing e-tag", async () => {
+            const contents = "dataset contents";
+            const oldMtime = 1000;
+            const newMtime = 2000;
+
+            const mockMvsApi = {
+                getContents: jest.fn((dsn, opts) => {
+                    opts.stream.write(contents);
+                    return {
+                        apiResponse: {
+                            etag: "NEW_ETAG",
+                        },
+                    };
+                }),
+            };
+
+            const fakePo = { ...testEntries.ps, etag: "OLD_ETAG", mtime: oldMtime };
+            jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(fakePo);
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+            const dateNowSpy = jest.spyOn(Date, "now").mockReturnValue(newMtime);
+
+            await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
+
+            expect(fakePo.etag).toBe("NEW_ETAG");
+            expect(fakePo.mtime).toBe(newMtime);
+
+            dateNowSpy.mockRestore();
+        });
+
+        it("does not update mtime if the fetched e-tag matches the existing e-tag", async () => {
+            const contents = "dataset contents";
+            const oldMtime = 1000;
+            const newMtime = 2000;
+
+            const mockMvsApi = {
+                getContents: jest.fn((dsn, opts) => {
+                    opts.stream.write(contents);
+                    return {
+                        apiResponse: {
+                            etag: "SAME_ETAG",
+                        },
+                    };
+                }),
+            };
+
+            const fakePo = { ...testEntries.ps, etag: "SAME_ETAG", mtime: oldMtime };
+            jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(fakePo);
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+            const dateNowSpy = jest.spyOn(Date, "now").mockReturnValue(newMtime);
+
+            await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
+
+            expect(fakePo.etag).toBe("SAME_ETAG");
+            expect(fakePo.mtime).toBe(oldMtime);
+
+            dateNowSpy.mockRestore();
+        });
     });
     describe("readFile", () => {
         it("throws an error if the entry does not have a profile", async () => {
