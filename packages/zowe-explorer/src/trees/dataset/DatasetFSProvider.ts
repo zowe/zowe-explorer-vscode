@@ -612,7 +612,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     dsEntry.data = data;
                     dsEntry.etag = resp.apiResponse.etag;
                     dsEntry.size = dsEntry.data.byteLength;
-                    dsEntry.mtime = Date.now();
+                    if (!dsEntry.mtime) {
+                        dsEntry.mtime = Date.now();
+                    }
                 }
             });
             ZoweLogger.trace(`[DatasetFSProvider] fetchDatasetAtUri fired a change event for ${uri.toString()}`);
