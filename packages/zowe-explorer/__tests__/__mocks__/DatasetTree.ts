@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
 import { MockMethod } from "../__decorators__/MockMethod";
+import { ZowePersistentFilters } from "../../src/tools/ZowePersistentFilters";
 
 /**
  * A tree that contains nodes of files and folders
@@ -84,5 +85,9 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
     @MockMethod()
     public removeFavorite(_node: ZoweDatasetNode): void | Promise<void> {
         return Promise.resolve();
+    }
+
+    public get persistence(): ZowePersistentFilters {
+        return { getSortSetting: jest.fn() } as unknown as ZowePersistentFilters;
     }
 }
