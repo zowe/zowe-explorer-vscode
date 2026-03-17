@@ -26,9 +26,9 @@ packages/zowe-explorer/__tests__/__unit__/trees/job/         person-a person-b
 # ============================================================================
 # File system (FS providers, entries, buffers)
 # ============================================================================
-packages/zowe-explorer-api/src/fs/                           person-a person-b
-packages/zowe-explorer/src/trees/*/**FSProvider.ts           person-a person-b
-packages/zowe-explorer-api/__tests__/__unit__/fs/            person-a person-b
+packages/zowe-explorer-api/src/fs/                           @traeok person-b
+packages/zowe-explorer/src/trees/*/**FSProvider.ts           @traeok person-b
+packages/zowe-explorer-api/__tests__/__unit__/fs/            @traeok person-b
 
 # ============================================================================
 # Secure credentials & credential managers
@@ -48,12 +48,12 @@ packages/zowe-explorer/src/utils/CertificateWizard.ts        person-a person-b
 # ============================================================================
 # Web views
 # ============================================================================
-packages/zowe-explorer/src/webviews/                         person-a person-b
-packages/zowe-explorer-api/src/vscode/ui/WebView.ts          person-a person-b
-packages/zowe-explorer-api/src/vscode/ui/TableView*.ts       person-a person-b
-packages/zowe-explorer-api/src/vscode/ui/utils/              person-a person-b
+packages/zowe-explorer/src/webviews/                         @traeok person-b
+packages/zowe-explorer-api/src/vscode/ui/WebView.ts          @traeok person-b
+packages/zowe-explorer-api/src/vscode/ui/TableView*.ts       @traeok person-b
+packages/zowe-explorer-api/src/vscode/ui/utils/              @traeok person-b
 packages/zowe-explorer/src/zosconsole/                       person-a person-b
-webviews/                                                    person-a person-b
+webviews/                                                    @traeok person-b
 
 # ============================================================================
 # Commands & terminals
@@ -76,7 +76,7 @@ scripts/                                                     person-a person-b
 # ============================================================================
 # End-to-end testing
 # ============================================================================
-packages/zowe-explorer/__tests__/__e2e__/                    person-a person-b
+packages/zowe-explorer/__tests__/__e2e__/                    @traeok person-b
 
 # ============================================================================
 # CI/CD
@@ -88,11 +88,11 @@ packages/zowe-explorer/__tests__/__integration__/ci/         person-a person-b
 # ============================================================================
 # Profiles
 # ============================================================================
-packages/zowe-explorer-api/src/profiles/                     person-a person-b
+packages/zowe-explorer-api/src/profiles/                     @traeok person-b
 packages/zowe-explorer/src/configuration/Profiles.ts         person-a person-b
 packages/zowe-explorer/src/management/ProfileManagement.ts   person-a person-b
 packages/zowe-explorer/src/utils/ProfilesUtils.ts            person-a person-b
-packages/zowe-explorer-api/__tests__/__unit__/profiles/      person-a person-b
+packages/zowe-explorer-api/__tests__/__unit__/profiles/      @traeok person-b
 
 # ============================================================================
 # ZE API registration
