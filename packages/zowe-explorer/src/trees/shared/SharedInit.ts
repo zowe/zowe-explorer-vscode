@@ -60,8 +60,61 @@ export class SharedInit {
     public static onDidActivateExtensionEmitter = new vscode.EventEmitter<void>();
     public static onDidActivateExtension = SharedInit.onDidActivateExtensionEmitter.event;
 
+    // Track the last focused tree node for focus restoration
+    private static lastFocusedNode: { provider: IZoweTree<IZoweTreeNode>; node: IZoweTreeNode } | undefined;
+    private static isRestoringFocus = false;
+
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
+
+        // Register event listener for tab close to restore focus to tree
+        context.subscriptions.push(
+            vscode.window.tabGroups.onDidChangeTabs(async (e) => {
+                // Check if a tab was closed and we have a last focused node
+                if (e.closed.length > 0 && SharedInit.lastFocusedNode && !SharedInit.isRestoringFocus) {
+                    const closedTab = e.closed[0];
+
+                    // Check if the closed tab was a Zowe resource (DS, USS, or Jobs)
+                    const isZoweResource =
+                        closedTab.input instanceof vscode.TabInputText &&
+                        (closedTab.input.uri.scheme === ZoweScheme.DS ||
+                            closedTab.input.uri.scheme === ZoweScheme.USS ||
+                            closedTab.input.uri.scheme === ZoweScheme.Jobs);
+
+                    if (isZoweResource) {
+                        // Restore focus to the last focused tree node
+                        SharedInit.isRestoringFocus = true;
+                        try {
+                            const { provider, node } = SharedInit.lastFocusedNode;
+                            const nodeLabel = typeof node.label === "string" ? node.label : node.label?.label || "item";
+
+                            // Small delay to ensure the tab close operation completes
+                            await new Promise((resolve) => setTimeout(resolve, 150));
+
+                            // Reveal and focus the node in the tree
+                            await provider.getTreeView().reveal(node, { select: true, focus: true });
+
+                            // Additional delay to ensure focus is set before announcement
+                            await new Promise((resolve) => setTimeout(resolve, 50));
+
+                            // Announce to screen reader
+                            // Use setStatusBarMessage which is picked up by screen readers
+                            const message = vscode.l10n.t("Editor closed. Focus returned to {0}", nodeLabel);
+                            const statusMsg = vscode.window.setStatusBarMessage(message);
+
+                            // Dispose after screen reader has time to announce
+                            setTimeout(() => statusMsg.dispose(), 4000);
+
+                            ZoweLogger.trace(`Focus restored to tree node: ${nodeLabel}`);
+                        } catch (err) {
+                            ZoweLogger.trace(`Could not restore focus to tree node: ${err}`);
+                        } finally {
+                            SharedInit.isRestoringFocus = false;
+                        }
+                    }
+                }
+            })
+        );
 
         // Update imperative.json to false only when VS Code setting is set to false
         context.subscriptions.push(
@@ -446,6 +499,16 @@ export class SharedInit {
         });
         theTreeView.onDidExpandElement(async (e) => {
             await theProvider.onCollapsibleStateChange?.(e.element, vscode.TreeItemCollapsibleState.Expanded);
+        });
+
+        // Track selection changes to remember the last focused node
+        theTreeView.onDidChangeSelection((e) => {
+            if (e.selection.length > 0) {
+                SharedInit.lastFocusedNode = {
+                    provider: theProvider,
+                    node: e.selection[0],
+                };
+            }
         });
     }
 

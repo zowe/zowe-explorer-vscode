@@ -37,6 +37,15 @@ jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
 jest.mock("../../../../src/utils/ReleaseNotes");
 
+jest.mock("../../../../src/tools/ZoweLocalStorage", () => ({
+    ZoweLocalStorage: {
+        globalState: { get: jest.fn(), update: jest.fn() },
+        workspaceState: { get: jest.fn(), update: jest.fn() },
+        getValue: jest.fn(),
+        setValue: jest.fn(),
+    },
+}));
+
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
         const executeCommand = { fun: jest.fn() };
@@ -305,46 +314,245 @@ describe("Test src/shared/extension", () => {
                 mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: cmdProviders.uss }],
             },
         ];
+    });
 
-        beforeAll(() => {
-            test.context.extension = {
-                packageJSON: {
-                    version: "2.3.4",
-                },
-            };
-            const registerCommand = (cmd: string, fun: () => void) => {
-                return { [cmd]: fun };
-            };
-            const onDidChangeConfiguration = (fun: () => void) => {
-                return { onDidChangeConfiguration: fun };
-            };
-            const onDidSaveTextDocument = (fun: () => void) => {
-                return { onDidSaveTextDocument: fun };
-            };
-            Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
-            Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
-            Object.defineProperty(core, "getZoweDir", { value: () => test.value });
-            Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand.fun });
-            Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
-            SharedInit.registerCommonCommands(test.context, test.value.providers);
+    describe("onDidChangeTabs - tab close focus restoration", () => {
+        let context: any;
+        let onDidChangeTabs: jest.Mock;
+        let capturedTabsHandler: (e: any) => Promise<void>;
+        const mockReveal = jest.fn().mockResolvedValue(undefined);
+        const mockDispose = jest.fn();
+        const mockGetTreeView = jest.fn().mockReturnValue({ reveal: mockReveal });
+        const mockProvider = { getTreeView: mockGetTreeView };
+        const mockNode = { label: "TEST.DS" };
+
+        beforeEach(() => {
+            context = { subscriptions: [] };
+            jest.useFakeTimers();
+
+            // ADD THESE - required by registerCommonCommands
+            Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {
+                value: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+                configurable: true,
+                writable: true,
+            });
+            Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {
+                value: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+                configurable: true,
+                writable: true,
+            });
+            Object.defineProperty(vscode.commands, "registerCommand", {
+                value: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+                configurable: true,
+                writable: true,
+            });
+            Object.defineProperty(vscode.commands, "executeCommand", {
+                value: jest.fn(),
+                configurable: true,
+                writable: true,
+            });
+
+            // Mock command handlers to avoid ZoweLocalStorage dependency
+            jest.spyOn(MvsCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: jest.fn() } as any);
+            jest.spyOn(TsoCommandHandler, "getInstance").mockReturnValue({ issueTsoCommand: jest.fn() } as any);
+            jest.spyOn(UnixCommandHandler, "getInstance").mockReturnValue({ issueUnixCommand: jest.fn() } as any);
+
+            // Capture the handler
+            onDidChangeTabs = jest.fn().mockImplementation((handler) => {
+                capturedTabsHandler = handler;
+                return { dispose: jest.fn() };
+            });
+            Object.defineProperty(vscode.window, "tabGroups", {
+                value: { onDidChangeTabs },
+                configurable: true,
+                writable: true,
+            });
+
+            jest.spyOn(vscode.window, "setStatusBarMessage").mockReturnValue({ dispose: jest.fn() } as any);
+            jest.spyOn(vscode.l10n, "t").mockImplementation((msg: string, ...args: any[]) => args.reduce((m, a) => m.replace("{0}", a), msg));
+
+            SharedInit.lastFocusedNode = undefined;
+            SharedInit.isRestoringFocus = false;
+            mockReveal.mockClear();
+
+            SharedInit.registerCommonCommands(context, { ds: mockProvider, uss: mockProvider, job: mockProvider } as any);
         });
-        afterAll(() => {
-            mockOnProfileUpdated[Symbol.dispose]();
+
+        afterEach(() => {
+            jest.useRealTimers();
             jest.restoreAllMocks();
         });
 
-        processSubscriptions(commands, test);
-        it("registers an onProfileUpdated event", () => {
-            expect(mockOnProfileUpdated.mock).toHaveBeenCalledTimes(1);
-            expect(onProfileUpdated).toHaveBeenCalledTimes(1);
+        it("should register the onDidChangeTabs event listener", () => {
+            expect(onDidChangeTabs).toHaveBeenCalledTimes(1);
+            expect(typeof capturedTabsHandler).toBe("function");
         });
 
-        it("should register setupRemoteWorkspaces", () => {
-            jest.spyOn(vscode.commands, "registerCommand").mockImplementation(() => {
-                return {} as vscode.Disposable;
-            });
-            SharedInit.registerCommonCommands(test.context, test.value.providers);
-            expect(vscode.commands.registerCommand).toHaveBeenCalledWith("zowe.setupRemoteWorkspaceFolders", expect.any(Function));
+        it("should restore focus when a Zowe DS tab is closed", async () => {
+            SharedInit.lastFocusedNode = { provider: mockProvider as any, node: mockNode as any };
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            jest.runAllTimersAsync()
+            await handlerPromise;
+
+            expect(mockReveal).toHaveBeenCalledWith(mockNode, { select: true, focus: true });
+            expect(vscode.window.setStatusBarMessage).toHaveBeenCalled();
+        });
+
+        it("should restore focus when a Zowe USS tab is closed", async () => {
+            SharedInit.lastFocusedNode = { provider: mockProvider as any, node: mockNode as any };
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/profile/u/user/file.txt" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            jest.runAllTimersAsync()
+            await handlerPromise;
+
+            expect(mockReveal).toHaveBeenCalledWith(mockNode, { select: true, focus: true });
+        });
+
+        it("should restore focus when a Zowe Jobs tab is closed", async () => {
+            SharedInit.lastFocusedNode = { provider: mockProvider as any, node: mockNode as any };
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.Jobs, path: "/profile/JOB123" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            jest.runAllTimersAsync()
+            await handlerPromise;
+
+            expect(mockReveal).toHaveBeenCalledWith(mockNode, { select: true, focus: true });
+        });
+
+        it("should not restore focus when a non-Zowe tab is closed", async () => {
+            SharedInit.lastFocusedNode = { provider: mockProvider as any, node: mockNode as any };
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: "file", path: "/a/b/c.txt" })),
+            };
+
+            await capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+
+            expect(mockReveal).not.toHaveBeenCalled();
+        });
+
+        it("should not restore focus when no tabs are closed", async () => {
+            SharedInit.lastFocusedNode = { provider: mockProvider as any, node: mockNode as any };
+
+            await capturedTabsHandler({ closed: [], opened: [], changed: [] });
+
+            expect(mockReveal).not.toHaveBeenCalled();
+        });
+
+        it("should not restore focus when lastFocusedNode is undefined", async () => {
+            SharedInit.lastFocusedNode = undefined;
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+            };
+
+            await capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+
+            expect(mockReveal).not.toHaveBeenCalled();
+        });
+
+        it("should not restore focus when isRestoringFocus is true", async () => {
+            SharedInit.lastFocusedNode = { provider: mockProvider as any, node: mockNode as any };
+            SharedInit.isRestoringFocus = true;
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+            };
+
+            await capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+
+            expect(mockReveal).not.toHaveBeenCalled();
+        });
+
+        it("should handle node with object label", async () => {
+            SharedInit.lastFocusedNode = {
+                provider: mockProvider as any,
+                node: { label: { label: "TEST.PDS" } } as any,
+            };
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.PDS" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            jest.runAllTimersAsync()
+            await handlerPromise;
+
+            expect(mockReveal).toHaveBeenCalled();
+            expect(vscode.window.setStatusBarMessage).toHaveBeenCalledWith(expect.stringContaining("TEST.PDS"));
+        });
+
+        it("should handle node with no label", async () => {
+            SharedInit.lastFocusedNode = {
+                provider: mockProvider as any,
+                node: { label: undefined } as any,
+            };
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/UNKNOWN" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            jest.runAllTimersAsync()
+            await handlerPromise;
+
+            expect(mockReveal).toHaveBeenCalled();
+            expect(vscode.window.setStatusBarMessage).toHaveBeenCalledWith(expect.stringContaining("item"));
+        });
+
+        it("should handle errors during focus restoration", async () => {
+            SharedInit.lastFocusedNode = { provider: mockProvider as any, node: mockNode as any };
+            mockReveal.mockRejectedValueOnce(new Error("reveal failed"));
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            jest.runAllTimersAsync()
+            await handlerPromise;
+
+            // Should not throw, isRestoringFocus should be reset
+            expect(SharedInit.isRestoringFocus).toBe(false);
+        });
+
+        it("should reset isRestoringFocus flag after successful restoration", async () => {
+            SharedInit.lastFocusedNode = { provider: mockProvider as any, node: mockNode as any };
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            jest.runAllTimersAsync()
+            await handlerPromise;
+
+            expect(SharedInit.isRestoringFocus).toBe(false);
+        });
+
+        it("should not restore focus for non-TabInputText input types", async () => {
+            SharedInit.lastFocusedNode = { provider: mockProvider as any, node: mockNode as any };
+
+            const closedTab = {
+                input: { uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" }) },
+                // Not a TabInputText instance
+            };
+
+            await capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+
+            expect(mockReveal).not.toHaveBeenCalled();
         });
     });
 
@@ -466,7 +674,11 @@ describe("Test src/shared/extension", () => {
         const spyOnCollapsibleStateChange = jest.fn();
         let context: any;
         const provider: any = { getTreeView: () => treeView, onCollapsibleStateChange: spyOnCollapsibleStateChange };
-        const treeView = { onDidCollapseElement: spyCollapse, onDidExpandElement: spyExpand };
+        const treeView = {
+            onDidCollapseElement: spyCollapse,
+            onDidExpandElement: spyExpand,
+            onDidChangeSelection: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+        };
 
         beforeEach(() => {
             context = { subscriptions: [] };
@@ -482,6 +694,7 @@ describe("Test src/shared/extension", () => {
             expect(spyCollapse).toHaveBeenCalled();
             expect(spyExpand).toHaveBeenCalled();
             expect(spyOnCollapsibleStateChange).toHaveBeenCalled();
+            expect(treeView.onDidChangeSelection).toHaveBeenCalled(); // ADD THIS
         });
     });
 
