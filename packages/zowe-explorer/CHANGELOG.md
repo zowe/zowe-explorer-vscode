@@ -28,6 +28,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated Zowe SDKs to `8.30.1` for technical currency. [#4079](https://github.com/zowe/zowe-explorer-vscode/pull/4079)
 - Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.[#4023](https://github.com/zowe/zowe-explorer-vscode/issues/4023)
 - Fixed tooltip for Unix System Services profiles to display relevant text. [#4019](https://github.com/zowe/zowe-explorer-vscode/issues/4019)
+- Fixed an issue where focus was lost on the previously selected tree item after opening a Zowe resource (DS, USS, or Jobs) in the editor and closing it using Ctrl+W, and screen readers will now announce when focus is restored. [#4025](https://github.com/zowe/zowe-explorer-vscode/issues/4025)
 
 ## `3.4.1`
 
