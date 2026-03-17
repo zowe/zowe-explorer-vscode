@@ -340,6 +340,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             ignoreFocusOut: true,
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
+        const oldName = originalNode.label.toString().replace(/^\[.+\]:\s/, "");
         const newName = await Gui.showInputBox(options);
         if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
@@ -386,6 +387,22 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 }
                 this.mOnDidChangeTreeData.fire();
                 this.updateFavorites();
+
+                // Restore focus to the renamed node and show confirmation message
+                // Use setImmediate to allow tree to refresh before revealing
+                setImmediate(() => {
+                    Promise.resolve(this.getTreeView().reveal(originalNode, { select: true, focus: true })).catch((revealErr) => {
+                        // If reveal fails, just log it - the rename was still successful
+                        ZoweLogger.warn(`Could not reveal renamed node: ${revealErr instanceof Error ? revealErr.message : String(revealErr)}`);
+                    });
+                });
+                Gui.showMessage(
+                    vscode.l10n.t({
+                        message: "{0} renamed from {1} to {2}",
+                        args: [nodeType === "folder" ? "Directory" : "File", oldName, newName],
+                        comment: ["Node type", "Old name", "New name"],
+                    })
+                );
             } catch (err) {
                 if (err instanceof Error) {
                     await AuthUtils.errorHandling(err, {

@@ -48,6 +48,14 @@
     ]
   },
   "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
+  "{0} renamed from {1} to {2}/Node typeOld nameNew name": {
+    "message": "{0} renamed from {1} to {2}",
+    "comment": [
+      "Node type",
+      "Old name",
+      "New name"
+    ]
+  },
   "{0} was created like {1}./New Data Set nameLike Data Set name": {
     "message": "{0} was created like {1}.",
     "comment": [
@@ -231,14 +239,14 @@
   "Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, refer to the <a>\"Troubleshooting Zowe CLI credentials\"</a> page on Zowe Docs. <a>#3935</a>": "Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, refer to the <a>\"Troubleshooting Zowe CLI credentials\"</a> page on Zowe Docs. <a>#3935</a>",
   "Added support for downloading data sets, data set members, USS files, and USS directories. <a>#3843</a>": "Added support for downloading data sets, data set members, USS files, and USS directories. <a>#3843</a>",
   "Added support for enabling/disabling validation for a Zowe profile across all trees <a>#2570</a>": "Added support for enabling/disabling validation for a Zowe profile across all trees <a>#2570</a>",
+  "Added support for encoding profile property when retrieving JCL with z/OSMF, i.e. \"encoding\": \"IBM-1147\" included in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.": "Added support for encoding profile property when retrieving JCL with z/OSMF, i.e. \"encoding\": \"IBM-1147\" included in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.",
   "Added support for encoding profile property when retrieving JCL with z/OSMF. <a>#3877</a>": "Added support for encoding profile property when retrieving JCL with z/OSMF. <a>#3877</a>",
-  "Added support for encoding profile property when retrieving JCL with z/OSMF. For example, include \"encoding\": \"IBM-1147\" in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.": "Added support for encoding profile property when retrieving JCL with z/OSMF. For example, include \"encoding\": \"IBM-1147\" in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.",
   "Added support for fetching virtual workspaces in parallel after Zowe Explorer activation. <a>#3880</a>": "Added support for fetching virtual workspaces in parallel after Zowe Explorer activation. <a>#3880</a>",
   "Added support for hiding a Zowe profile across all trees <a>#2567</a>": "Added support for hiding a Zowe profile across all trees <a>#2567</a>",
+  "Added support for jobEncoding profile property when submitting jobs to z/OSMF, i.e. \"jobEncoding\": \"IBM-1147\" included in the z/OSMF profile to submit jobs with \"IBM-1147\" encoding.": "Added support for jobEncoding profile property when submitting jobs to z/OSMF, i.e. \"jobEncoding\": \"IBM-1147\" included in the z/OSMF profile to submit jobs with \"IBM-1147\" encoding.",
   "Added support for jobEncoding profile property when submitting jobs to z/OSMF. <a>#3826</a>": "Added support for jobEncoding profile property when submitting jobs to z/OSMF. <a>#3826</a>",
-  "Added support for jobEncoding profile property when submitting jobs to z/OSMF. For example, include \"jobEncoding\": \"IBM-1147\" in the z/OSMF profile to submit jobs with \"IBM-1147\" encoding.": "Added support for jobEncoding profile property when submitting jobs to z/OSMF. For example, include \"jobEncoding\": \"IBM-1147\" in the z/OSMF profile to submit jobs with \"IBM-1147\" encoding.",
+  "Added support for loading credential manager options from the imperative.json file. Add a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager.": "Added support for loading credential manager options from the imperative.json file. Add a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager.",
   "Added support for loading credential manager options from the imperative.json file. Add a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager. <a>#3935</a>": "Added support for loading credential manager options from the imperative.json file. Add a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager. <a>#3935</a>",
-  "Added support for loading credential manager options from the imperative.json file. Added a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager.": "Added support for loading credential manager options from the imperative.json file. Added a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager.",
   "Added support for Local Storage settings for persistent settings in Zowe Explorer <a>#2208</a>": "Added support for Local Storage settings for persistent settings in Zowe Explorer <a>#2208</a>",
   "Added support for logging in to multiple API ML instances per team config file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team config file. <a>#2264</a>",
   "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>",
@@ -458,6 +466,7 @@
       "USS node label"
     ]
   },
+  "Corrected description of the mnorc attribute for PDS members. <a>#4116</a>": "Corrected description of the mnorc attribute for PDS members. <a>#4116</a>",
   "Create {0}/Node type": {
     "message": "Create {0}",
     "comment": [
@@ -521,6 +530,13 @@
   "Data Set Name": "Data Set Name",
   "Data Set Organization": "Data Set Organization",
   "Data set pattern cannot be empty": "Data set pattern cannot be empty",
+  "Data set renamed from {0} to {1}/Old data set nameNew data set name": {
+    "message": "Data set renamed from {0} to {1}",
+    "comment": [
+      "Old data set name",
+      "New data set name"
+    ]
+  },
   "Data set searches now support case sensitivity and regular expressions. Enable these options in the Search PDS members Quick Pick dialog.": "Data set searches now support case sensitivity and regular expressions. Enable these options in the Search PDS members Quick Pick dialog.",
   "Data Set Template Save Location": "Data Set Template Save Location",
   "Data set tree pagination": "Data set tree pagination",
@@ -776,8 +792,8 @@
     ]
   },
   "Execute": "Execute",
-  "Expose commands to drive filtering in the Data Sets views. <a>#3992</a>": "Expose commands to drive filtering in the Data Sets views. <a>#3992</a>",
-  "Expose commands to drive search in the USS views. <a>#3933</a>": "Expose commands to drive search in the USS views. <a>#3933</a>",
+  "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>": "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>",
+  "Exposed commands to drive search in the USS views. <a>#3933</a>": "Exposed commands to drive search in the USS views. <a>#3933</a>",
   "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>": "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>",
   "Failed to copy {0} to {1}/Source pathDestination path": {
     "message": "Failed to copy {0} to {1}",
@@ -977,6 +993,7 @@
   "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>": "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>",
   "Fixed an accessibility issue in the \"Add Profile\" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference \"Create a New Team Configuration File\" and \"Edit Team Configuration File\" to guide keyboard and screen reader users. <a>#4028</a>": "Fixed an accessibility issue in the \"Add Profile\" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference \"Create a New Team Configuration File\" and \"Edit Team Configuration File\" to guide keyboard and screen reader users. <a>#4028</a>",
   "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>": "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>",
+  "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>": "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>",
   "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>": "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>",
   "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>": "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>",
   "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>": "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>",
@@ -1036,7 +1053,7 @@
   "Fixed an issue where renaming or deleting a USS file or data set did not update the opened editor. <a>#3260</a>": "Fixed an issue where renaming or deleting a USS file or data set did not update the opened editor. <a>#3260</a>",
   "Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. <a>#3772</a>": "Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. <a>#3772</a>",
   "Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. <a>#3516</a>": "Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. <a>#3516</a>",
-  "Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.<a>#4023</a>": "Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.<a>#4023</a>",
+  "Fixed an issue where screen readers could not read data set attributes from the data set attribute webview.<a>#4023</a>": "Fixed an issue where screen readers could not read data set attributes from the data set attribute webview.<a>#4023</a>",
   "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>": "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>",
   "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>": "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>",
   "Fixed an issue where ssh type profiles were throwing errors when making file system calls. <a>#3891</a>": "Fixed an issue where ssh type profiles were throwing errors when making file system calls. <a>#3891</a>",
@@ -1198,6 +1215,7 @@
   "Fixed secure credential storage not possible to enable in Theia.": "Fixed secure credential storage not possible to enable in Theia.",
   "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>": "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>",
   "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>": "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>",
+  "Fixed slow performance when listing a large number of data sets or members. <a>#4116</a>": "Fixed slow performance when listing a large number of data sets or members. <a>#4116</a>",
   "Fixed submitting local JCL using command pallet option Zowe Explorer: Submit as JCL by adding a check for chosen profile returned to continue the action. <a>#1625</a>": "Fixed submitting local JCL using command pallet option Zowe Explorer: Submit as JCL by adding a check for chosen profile returned to continue the action. <a>#1625</a>",
   "Fixed the \"Edit Profile\" operation to open the correct files when both global and project team configs are present. <a>#3125</a>": "Fixed the \"Edit Profile\" operation to open the correct files when both global and project team configs are present. <a>#3125</a>",
   "Fixed the allocate-like functionality by removing the inclusion of DS item in the filter history. <a>#2620</a>": "Fixed the allocate-like functionality by removing the inclusion of DS item in the filter history. <a>#2620</a>",
@@ -1472,6 +1490,13 @@
     ]
   },
   "Member Name": "Member Name",
+  "Member renamed from {0} to {1}/Old member nameNew member name": {
+    "message": "Member renamed from {0} to {1}",
+    "comment": [
+      "Old member name",
+      "New member name"
+    ]
+  },
   "Merged First": "Merged First",
   "Merged Last": "Merged Last",
   "Migrate from Yarn to PNPM.": "Migrate from Yarn to PNPM.",
@@ -2261,7 +2286,7 @@
   "Updated Zowe SDKs to 8.21.0 for technical currency. <a>#3668</a>": "Updated Zowe SDKs to 8.21.0 for technical currency. <a>#3668</a>",
   "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>": "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>",
   "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>": "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>",
-  "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>": "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>",
+  "Updated Zowe SDKs to 8.30.4 for technical currency. <a>#4117</a>": "Updated Zowe SDKs to 8.30.4 for technical currency. <a>#4117</a>",
   "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>": "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>",
   "Updating data set templates.": "Updating data set templates.",
   "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {

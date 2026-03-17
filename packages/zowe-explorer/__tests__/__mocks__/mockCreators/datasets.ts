@@ -104,6 +104,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         getDsTemplates: jest.fn(),
         addDsTemplate: jest.fn(),
     });
+    jest.spyOn(testDatasetTree, "persistence", "get").mockReturnValue({ getSortSetting: jest.fn() });
     if (!favoritesNode) {
         return testDatasetTree;
     }

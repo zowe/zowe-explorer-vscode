@@ -46,6 +46,7 @@ import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { DataSetTemplates } from "./DatasetTemplates";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
 
 /**
  * A tree that contains nodes of sessions and data sets
@@ -1672,6 +1673,16 @@ Would you like to do this now?`,
                 this.refreshElement(otherParent as IZoweDatasetTreeNode);
             }
             this.refreshElement(node.getParent() as IZoweDatasetTreeNode);
+
+            // Restore focus to the renamed node and show confirmation message
+            await this.getTreeView().reveal(node, { select: true, focus: true });
+            Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Member renamed from {0} to {1}",
+                    args: [beforeMemberName, afterMemberName],
+                    comment: ["Old member name", "New member name"],
+                })
+            );
         }
     }
 
@@ -1742,6 +1753,16 @@ Would you like to do this now?`,
 
             this.refreshElement(node.getParent() as IZoweDatasetTreeNode);
             this.updateFavorites();
+
+            // Restore focus to the renamed node and show confirmation message
+            await this.getTreeView().reveal(node, { select: true, focus: true });
+            Gui.showMessage(
+                vscode.l10n.t({
+                    message: "Data set renamed from {0} to {1}",
+                    args: [beforeDataSetName, afterDataSetName],
+                    comment: ["Old data set name", "New data set name"],
+                })
+            );
         }
     }
 
@@ -2033,5 +2054,9 @@ Would you like to do this now?`,
             node.setEncoding(encoding);
             await node.openDs(true, false, this);
         }
+    }
+
+    public get persistence(): ZowePersistentFilters {
+        return this.mPersistence;
     }
 }

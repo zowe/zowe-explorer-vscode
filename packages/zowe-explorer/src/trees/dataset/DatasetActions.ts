@@ -1478,7 +1478,7 @@ export class DatasetActions {
                 ["msec", "Modified Seconds", "Seconds value of the last change time"],
                 ["cnorc", "Current Records", "Current number of records"],
                 ["inorc", "Initial Records", "Initial number of records"],
-                ["mnorc", "Maximum Records", "Maximum number of records"],
+                ["mnorc", "Modified Records", "Number of changed records"],
                 ["user", "User", "User ID of last user to change the given member"],
                 ["sclm", "Modified by ISPF/SCLM", "Indicates whether the member was last modified by SCLM or ISPF"],
             ];

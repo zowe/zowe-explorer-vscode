@@ -1981,6 +1981,8 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             parentNode: testTree.mSessionNodes[1],
         });
         testTree.mSessionNodes[1].children = [newNode];
+        jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(testTree);
+
         const updateStatsSpy = jest.spyOn(ZoweDatasetNode.prototype, "updateStats");
         const getDatasetsSpy = jest.spyOn((ZoweDatasetNode as any).prototype, "getDatasets");
         getDatasetsSpy.mockResolvedValueOnce([
@@ -3548,6 +3550,66 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
         expect(parent.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE");
         expect(child.resourceUri?.path).toBe("/sestest/HLQ.TEST.NEWNAME.NODE/mem1");
         expect(refreshElementSpy).toHaveBeenCalled();
+    });
+
+    it("Tests that rename() restores focus to renamed dataset and shows confirmation message", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.NEWNAME");
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const revealSpy = jest.spyOn(blockMocks.treeView, "reveal");
+
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.OLDNAME",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        testTree.mSessionNodes[1].children.push(node);
+
+        await testTree.rename(node);
+
+        expect(revealSpy).toHaveBeenCalledWith(node, { select: true, focus: true });
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Data set renamed from HLQ.TEST.OLDNAME to HLQ.TEST.NEWNAME"));
+    });
+
+    it("Tests that rename() restores focus to renamed member and shows confirmation message", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("NEWMEM");
+        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const revealSpy = jest.spyOn(blockMocks.treeView, "reveal");
+
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const parent = new ZoweDatasetNode({
+            label: "HLQ.TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+            parentNode: testTree.mSessionNodes[1],
+            profile: blockMocks.imperativeProfile,
+            session: blockMocks.session,
+        });
+        const member = new ZoweDatasetNode({
+            label: "OLDMEM",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+            parentNode: parent,
+        });
+        parent.children.push(member);
+        testTree.mSessionNodes[1].children.push(parent);
+
+        await testTree.rename(member);
+
+        expect(revealSpy).toHaveBeenCalledWith(member, { select: true, focus: true });
+        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Member renamed from OLDMEM to NEWMEM"));
     });
 
     it("Checking function with PDS Member given in lowercase", async () => {
