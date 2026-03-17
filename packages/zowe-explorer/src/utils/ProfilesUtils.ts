@@ -765,15 +765,13 @@ export class ProfilesUtils {
 
     public static async awaitExtenderType(uri: vscode.Uri, profCache: ProfilesCache): Promise<void> {
         const uriInfo = FsAbstractUtils.getInfoForUri(uri);
-        const configProfile = await profCache.getProfileFromConfig(uriInfo.profileName);
-        if (!configProfile) {
-            return;
-        }
-        const type = configProfile.profType;
-        const name = configProfile.profName;
+        const name = uriInfo.profileName;
+        // Search allProfiles directly to avoid reloading profiles from disk
+        const profLoaded = profCache.allProfiles.find((prof) => prof.name === uriInfo.profileName);
+        const type = profLoaded?.type;
 
-        const apiRegister = ProfilesUtils.apiRegister;
-        const isApiRegistered = apiRegister ? apiRegister.registeredApiTypes().includes(type) : false;
+        const apiRegister = profLoaded ? ProfilesUtils.apiRegister : undefined;
+        const isApiRegistered = apiRegister?.registeredApiTypes().includes(type);
 
         if (!isApiRegistered && !ProfilesUtils.extenderProfileReady.has(name)) {
             const deferredPromise = new imperative.DeferredPromise<void>();

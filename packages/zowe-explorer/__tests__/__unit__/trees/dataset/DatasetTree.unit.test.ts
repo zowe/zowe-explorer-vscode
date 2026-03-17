@@ -1985,6 +1985,8 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             parentNode: testTree.mSessionNodes[1],
         });
         testTree.mSessionNodes[1].children = [newNode];
+        jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(testTree);
+
         const updateStatsSpy = jest.spyOn(ZoweDatasetNode.prototype, "updateStats");
         const getDatasetsSpy = jest.spyOn((ZoweDatasetNode as any).prototype, "getDatasets");
         getDatasetsSpy.mockResolvedValueOnce([
