@@ -195,10 +195,9 @@ describe("AuthUtils", () => {
 
             // Setup common mocks
             loadNamedProfileMock = jest.fn().mockReturnValue(createIProfile());
-            getProfileFromConfigMock = jest.fn().mockReturnValue({ profType: "zosmf", profName: "test" } as IProfAttrs);
             jest.spyOn(Profiles, "getInstance").mockReturnValue({
                 loadNamedProfile: loadNamedProfileMock,
-                getProfileFromConfig: getProfileFromConfigMock,
+                allProfiles: [{ name: "test", type: "zosmf" }],
             } as any);
 
             mockMvsApi = {
