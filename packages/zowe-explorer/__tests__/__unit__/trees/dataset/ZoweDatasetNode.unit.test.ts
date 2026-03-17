@@ -121,6 +121,8 @@ describe("ZoweDatasetNode Unit Tests", () => {
         withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
+        const datasetTree = createDatasetTree(createDatasetSessionNode(session, profileOne), createTreeView());
+        jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(datasetTree);
     });
 
     const showErrorMessage = jest.fn();
