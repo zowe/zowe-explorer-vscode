@@ -186,6 +186,9 @@ async function createGlobalMocks() {
             "zowe.ds.tableView",
             "zowe.ds.listDataSets",
             "zowe.ds.setDataSetFilter",
+            "zowe.ds.downloadAllMembers",
+            "zowe.ds.downloadMember",
+            "zowe.ds.downloadDataSet",
             "zowe.uss.addSession",
             "zowe.uss.refreshAll",
             "zowe.uss.refresh",
@@ -202,6 +205,8 @@ async function createGlobalMocks() {
             "zowe.uss.uploadDialog",
             "zowe.uss.uploadDialogBinary",
             "zowe.uss.uploadDialogWithEncoding",
+            "zowe.uss.downloadFile",
+            "zowe.uss.downloadDirectory",
             "zowe.uss.copyPath",
             "zowe.uss.editFile",
             "zowe.uss.editAttributes",
@@ -416,6 +421,11 @@ async function createGlobalMocks() {
                         packageInfo: "Zowe Explorer",
                         version: "2.x.x",
                     },
+                },
+                globalState: {
+                    get: jest.fn(),
+                    update: jest.fn(),
+                    keys: jest.fn(() => []),
                 },
             } as unknown as vscode.ExtensionContext)
     );
