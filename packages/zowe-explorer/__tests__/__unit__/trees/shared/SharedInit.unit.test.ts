@@ -330,7 +330,6 @@ describe("Test src/shared/extension", () => {
             context = { subscriptions: [] };
             jest.useFakeTimers();
 
-            // ADD THESE - required by registerCommonCommands
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {
                 value: jest.fn().mockReturnValue({ dispose: jest.fn() }),
                 configurable: true,
@@ -352,7 +351,6 @@ describe("Test src/shared/extension", () => {
                 writable: true,
             });
 
-            // Mock command handlers to avoid ZoweLocalStorage dependency
             jest.spyOn(MvsCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: jest.fn() } as any);
             jest.spyOn(TsoCommandHandler, "getInstance").mockReturnValue({ issueTsoCommand: jest.fn() } as any);
             jest.spyOn(UnixCommandHandler, "getInstance").mockReturnValue({ issueUnixCommand: jest.fn() } as any);
@@ -396,7 +394,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            jest.runAllTimersAsync()
+            jest.runAllTimersAsync();
             await handlerPromise;
 
             expect(mockReveal).toHaveBeenCalledWith(mockNode, { select: true, focus: true });
@@ -411,7 +409,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            jest.runAllTimersAsync()
+            jest.runAllTimersAsync();
             await handlerPromise;
 
             expect(mockReveal).toHaveBeenCalledWith(mockNode, { select: true, focus: true });
@@ -425,7 +423,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            jest.runAllTimersAsync()
+            jest.runAllTimersAsync();
             await handlerPromise;
 
             expect(mockReveal).toHaveBeenCalledWith(mockNode, { select: true, focus: true });
@@ -487,7 +485,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            jest.runAllTimersAsync()
+            jest.runAllTimersAsync();
             await handlerPromise;
 
             expect(mockReveal).toHaveBeenCalled();
@@ -505,7 +503,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            jest.runAllTimersAsync()
+            jest.runAllTimersAsync();
             await handlerPromise;
 
             expect(mockReveal).toHaveBeenCalled();
@@ -521,7 +519,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            jest.runAllTimersAsync()
+            jest.runAllTimersAsync();
             await handlerPromise;
 
             // Should not throw, isRestoringFocus should be reset
@@ -536,7 +534,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            jest.runAllTimersAsync()
+            jest.runAllTimersAsync();
             await handlerPromise;
 
             expect(SharedInit.isRestoringFocus).toBe(false);
@@ -547,7 +545,6 @@ describe("Test src/shared/extension", () => {
 
             const closedTab = {
                 input: { uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" }) },
-                // Not a TabInputText instance
             };
 
             await capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
@@ -694,7 +691,7 @@ describe("Test src/shared/extension", () => {
             expect(spyCollapse).toHaveBeenCalled();
             expect(spyExpand).toHaveBeenCalled();
             expect(spyOnCollapsibleStateChange).toHaveBeenCalled();
-            expect(treeView.onDidChangeSelection).toHaveBeenCalled(); // ADD THIS
+            expect(treeView.onDidChangeSelection).toHaveBeenCalled();
         });
     });
 
