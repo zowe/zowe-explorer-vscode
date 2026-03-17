@@ -2220,7 +2220,7 @@
           "default": 4,
           "description": "%zowe.settings.zosmfMaxConcurrentRequests%",
           "scope": "machine",
-          "minimum": 1,
+          "minimum": 0,
           "maximum": 2147483647
         },
         "zowe.table.maxPinnedRows": {
