@@ -444,6 +444,7 @@
       "USS node label"
     ]
   },
+  "Corrected description of the mnorc attribute for PDS members. <a>#4116</a>": "Corrected description of the mnorc attribute for PDS members. <a>#4116</a>",
   "Create {0}/Node type": {
     "message": "Create {0}",
     "comment": [
@@ -1183,6 +1184,7 @@
   "Fixed secure credential storage not possible to enable in Theia.": "Fixed secure credential storage not possible to enable in Theia.",
   "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>": "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>",
   "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>": "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>",
+  "Fixed slow performance when listing a large number of data sets or members. <a>#4116</a>": "Fixed slow performance when listing a large number of data sets or members. <a>#4116</a>",
   "Fixed submitting local JCL using command pallet option Zowe Explorer: Submit as JCL by adding a check for chosen profile returned to continue the action. <a>#1625</a>": "Fixed submitting local JCL using command pallet option Zowe Explorer: Submit as JCL by adding a check for chosen profile returned to continue the action. <a>#1625</a>",
   "Fixed the \"Edit Profile\" operation to open the correct files when both global and project team configs are present. <a>#3125</a>": "Fixed the \"Edit Profile\" operation to open the correct files when both global and project team configs are present. <a>#3125</a>",
   "Fixed the allocate-like functionality by removing the inclusion of DS item in the filter history. <a>#2620</a>": "Fixed the allocate-like functionality by removing the inclusion of DS item in the filter history. <a>#2620</a>",
@@ -2198,7 +2200,7 @@
   "Updated Zowe SDKs to 8.21.0 for technical currency. <a>#3668</a>": "Updated Zowe SDKs to 8.21.0 for technical currency. <a>#3668</a>",
   "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>": "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>",
   "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>": "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>",
-  "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>": "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>",
+  "Updated Zowe SDKs to 8.30.4 for technical currency. <a>#4117</a>": "Updated Zowe SDKs to 8.30.4 for technical currency. <a>#4117</a>",
   "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>": "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>",
   "Updating data set templates.": "Updating data set templates.",
   "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
