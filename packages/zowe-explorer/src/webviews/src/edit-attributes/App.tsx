@@ -228,14 +228,18 @@ export function App() {
                     <VSCodeDataGridCell cellType="rowheader" gridColumn="1">
                       {localized}
                     </VSCodeDataGridCell>
-                    {PERMISSION_TYPES.map((perm, i) => (
-                      <VSCodeDataGridCell gridColumn={(i + 2).toString()} key={`${key}-${perm}-checkbox`}>
-                        <VSCodeCheckbox
-                          checked={attributes.current!.perms[key as keyof FilePermissions][perm]}
-                          onChange={(e: any) => updatePerm(key as keyof FilePermissions, perm, e.target.checked)}
-                        />
-                      </VSCodeDataGridCell>
-                    ))}
+                    {PERMISSION_TYPES.map((perm, i) => {
+                      const permLabel = localizedPermissionTypes.find((p) => p.key === perm)?.localized || perm;
+                      return (
+                        <VSCodeDataGridCell gridColumn={(i + 2).toString()} key={`${key}-${perm}-checkbox`}>
+                          <VSCodeCheckbox
+                            checked={attributes.current!.perms[key as keyof FilePermissions][perm]}
+                            onChange={(e: any) => updatePerm(key as keyof FilePermissions, perm, e.target.checked)}
+                            aria-label={`${localized} ${permLabel}`}
+                          />
+                        </VSCodeDataGridCell>
+                      );
+                    })}
                   </VSCodeDataGridRow>
                 );
               })}
